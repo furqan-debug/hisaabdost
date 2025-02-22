@@ -1,8 +1,43 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Dashboard = () => {
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(8450);
+  const [monthlyExpenses, setMonthlyExpenses] = useState<number>(3240);
+  
+  // Auto-calculated values
+  const totalBalance = monthlyIncome - monthlyExpenses;
+  const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+
+  // Formatting helpers
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatPercentage = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value / 100);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (value: number) => void
+  ) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setter(value ? parseInt(value, 10) : 0);
+  };
+
   return (
     <div className="space-y-6">
       <header className="space-y-1">
@@ -19,7 +54,7 @@ const Dashboard = () => {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,450</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
             <p className="text-xs text-muted-foreground">Current account balance</p>
           </CardContent>
         </Card>
@@ -30,8 +65,17 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$3,240</div>
-            <div className="flex items-center text-expense-high text-xs">
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                value={monthlyExpenses}
+                onChange={(e) => handleInputChange(e, setMonthlyExpenses)}
+                className="pl-9 pr-4"
+                min={0}
+              />
+            </div>
+            <div className="flex items-center text-expense-high text-xs mt-2">
               <ArrowUpRight className="h-3 w-3 mr-1" />
               12% from last month
             </div>
@@ -44,8 +88,17 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$8,450</div>
-            <div className="flex items-center text-expense-low text-xs">
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                value={monthlyIncome}
+                onChange={(e) => handleInputChange(e, setMonthlyIncome)}
+                className="pl-9 pr-4"
+                min={0}
+              />
+            </div>
+            <div className="flex items-center text-expense-low text-xs mt-2">
               <ArrowUpRight className="h-3 w-3 mr-1" />
               8% from last month
             </div>
@@ -58,7 +111,7 @@ const Dashboard = () => {
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24%</div>
+            <div className="text-2xl font-bold">{formatPercentage(savingsRate)}</div>
             <div className="flex items-center text-expense-low text-xs">
               <ArrowDownRight className="h-3 w-3 mr-1" />
               2% from last month
