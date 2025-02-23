@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
 import Expenses from "./pages/Expenses";
+import Budget from "./pages/Budget"; // Import the actual Budget component
 
 const queryClient = new QueryClient();
 
@@ -37,7 +38,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-const Budget = () => <PlaceholderPage title="Budget" />;
 const Analytics = () => <PlaceholderPage title="Analytics" />;
 const Goals = () => <PlaceholderPage title="Goals" />;
 
