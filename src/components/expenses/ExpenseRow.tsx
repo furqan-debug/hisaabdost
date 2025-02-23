@@ -3,8 +3,17 @@ import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
-import { CheckSquare, Pencil, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Eye, MoreVertical, Pencil, Square, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { ViewReceiptDialog } from "./ViewReceiptDialog";
 
 interface ExpenseRowProps {
   expense: Expense;
@@ -21,6 +30,8 @@ export function ExpenseRow({
   onEdit,
   onDelete,
 }: ExpenseRowProps) {
+  const [showReceipt, setShowReceipt] = useState(false);
+
   return (
     <TableRow>
       <TableCell>
@@ -69,22 +80,45 @@ export function ExpenseRow({
       </TableCell>
       <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
       <TableCell className="text-right">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(expense)}
-          className="h-8 w-8 p-0 mr-2"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(expense.id)}
-          className="h-8 w-8 p-0 text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 p-0"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(expense)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            {expense.receiptUrl && (
+              <>
+                <DropdownMenuItem onClick={() => setShowReceipt(true)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Receipt
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(expense.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <ViewReceiptDialog
+          open={showReceipt}
+          onOpenChange={setShowReceipt}
+          receiptUrl={expense.receiptUrl}
+        />
       </TableCell>
     </TableRow>
   );
