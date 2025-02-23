@@ -19,26 +19,15 @@ import {
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import {
-  Bar,
-  BarChart,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-} from "recharts";
 import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { SampleDataButton } from "@/components/SampleDataButton";
 import { useAuth } from "@/lib/auth";
+import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
+import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
+import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
+import { formatCurrency } from "@/utils/chartUtils";
 
 const Dashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
@@ -58,15 +47,6 @@ const Dashboard = () => {
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
@@ -83,224 +63,14 @@ const Dashboard = () => {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-  const CATEGORY_COLORS = {
-    'Food': '#0088FE',
-    'Rent': '#00C49F',
-    'Utilities': '#FFBB28',
-    'Transportation': '#FF8042',
-    'Entertainment': '#8884D8',
-    'Shopping': '#82CA9D',
-    'Other': '#A4DE6C'
-  };
-
-  const categoryTotals = expenses.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const pieChartData = Object.entries(categoryTotals).map(([name, value]) => ({
-    name,
-    value,
-    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C'
-  }));
-
-  const processMonthlyData = () => {
-    const expensesByMonth = expenses.reduce((acc, expense) => {
-      const month = format(new Date(expense.date), 'MMM yyyy');
-      if (!acc[month]) {
-        acc[month] = {};
-      }
-      if (!acc[month][expense.category]) {
-        acc[month][expense.category] = 0;
-      }
-      acc[month][expense.category] += expense.amount;
-      return acc;
-    }, {} as Record<string, Record<string, number>>);
-
-    const months = Object.keys(expensesByMonth).sort(
-      (a, b) => new Date(a).getTime() - new Date(b).getTime()
-    );
-
-    return months.map(month => ({
-      month,
-      ...Object.keys(CATEGORY_COLORS).reduce((acc, category) => ({
-        ...acc,
-        [category]: expensesByMonth[month][category] || 0
-      }), {})
-    }));
-  };
-
-  const lineChartData = processMonthlyData();
-
-  const renderPieChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <PieChart>
-        <Pie
-          data={pieChartData}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          outerRadius={150}
-          innerRadius={75}
-          paddingAngle={2}
-          label={false}
-        >
-          {pieChartData.map((entry) => (
-            <Cell key={entry.name} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip 
-          content={({ active, payload }) => {
-            if (!active || !payload || !payload.length) return null;
-            const data = payload[0];
-            return (
-              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
-                  {data.name}: {formatCurrency(Number(data.value))}
-                </p>
-              </div>
-            );
-          }}
-        />
-        <Legend
-          verticalAlign="middle"
-          align="right"
-          layout="vertical"
-          formatter={(value, entry) => {
-            const { payload } = entry as any;
-            return `${value}: ${formatCurrency(Number(payload.value))}`;
-          }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
-  );
-
-  const renderBarChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart 
-        data={lineChartData}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-        <XAxis 
-          dataKey="month" 
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis 
-          tickFormatter={(value) => `$${Number(value)/1000}k`}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Tooltip
-          cursor={{ fillOpacity: 0.1 }}
-          content={({ active, payload, label }) => {
-            if (!active || !payload || !payload.length) return null;
-            
-            const hoverData = payload.find(p => Number(p.value) > 0);
-            if (!hoverData) return null;
-
-            return (
-              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                <p className="text-sm font-semibold">{label}</p>
-                <p className="text-sm" style={{ color: hoverData.color }}>
-                  {hoverData.name}: {formatCurrency(Number(hoverData.value))}
-                </p>
-              </div>
-            );
-          }}
-        />
-        <Legend />
-        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
-          <Bar
-            key={category}
-            dataKey={category}
-            name={category}
-            fill={color}
-            barSize={20}
-            radius={[4, 4, 0, 0]}
-          />
-        ))}
-      </BarChart>
-    </ResponsiveContainer>
-  );
-
-  const renderLineChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <LineChart 
-        data={lineChartData}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-        <XAxis 
-          dataKey="month" 
-          axisLine={false}
-          tickLine={false}
-        />
-        <YAxis 
-          tickFormatter={(value) => `$${Number(value)/1000}k`}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Tooltip
-          content={({ active, payload, label }) => {
-            if (!active || !payload || !payload.length) return null;
-            
-            const validData = payload.filter(p => Number(p.value) > 0);
-            
-            return (
-              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                <p className="text-sm font-semibold">{label}</p>
-                {validData.map((entry) => (
-                  <p 
-                    key={entry.name}
-                    className="text-sm"
-                    style={{ color: entry.color }}
-                  >
-                    {entry.name}: {formatCurrency(Number(entry.value))}
-                  </p>
-                ))}
-              </div>
-            );
-          }}
-        />
-        <Legend />
-        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
-          <Line
-            key={category}
-            type="monotone"
-            dataKey={category}
-            name={category}
-            stroke={color}
-            strokeWidth={2}
-            dot={{ 
-              fill: color,
-              r: 4,
-              strokeWidth: 2,
-              stroke: 'var(--background)'
-            }}
-            activeDot={{ 
-              r: 6,
-              stroke: color,
-              strokeWidth: 2,
-              fill: 'var(--background)'
-            }}
-            connectNulls
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
-  );
-
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
-        return renderPieChart();
+        return <ExpensePieChart expenses={expenses} />;
       case 'bar':
-        return renderBarChart();
+        return <ExpenseBarChart expenses={expenses} />;
       case 'line':
-        return renderLineChart();
+        return <ExpenseLineChart expenses={expenses} />;
       default:
         return null;
     }
