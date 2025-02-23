@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import Auth from "./pages/Auth";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
+import Expenses from "./pages/Expenses";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +37,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-const Expenses = () => <PlaceholderPage title="Expenses" />;
 const Budget = () => <PlaceholderPage title="Budget" />;
 const Analytics = () => <PlaceholderPage title="Analytics" />;
 const Goals = () => <PlaceholderPage title="Goals" />;
