@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,17 +110,13 @@ const Dashboard = () => {
       acc[month] = {
         month,
         ...Object.keys(CATEGORY_COLORS).reduce((cats, cat) => ({ ...cats, [cat]: 0 }), {}),
-        savings: monthlyIncome
       };
     }
     acc[month][expense.category] = (acc[month][expense.category] || 0) + expense.amount;
-    const totalExpenses = Object.keys(CATEGORY_COLORS)
-      .reduce((total, cat) => total + (acc[month][cat] || 0), 0);
-    acc[month].savings = monthlyIncome - totalExpenses;
     return acc;
   }, {} as Record<string, any>);
 
-  const barAndLineData = Object.values(monthlyData)
+  const lineChartData = Object.values(monthlyData)
     .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
   const renderPieChart = () => (
@@ -136,22 +131,19 @@ const Dashboard = () => {
           outerRadius={150}
           innerRadius={75}
           paddingAngle={2}
-          label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
+          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
         >
           {pieChartData.map((entry) => (
             <Cell key={entry.name} fill={entry.color} />
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number, name: string) => [
-            formatCurrency(value),
-            name
-          ]}
+          formatter={(value: number) => formatCurrency(value)}
           contentStyle={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--background)',
             borderRadius: '8px',
             padding: '8px',
-            border: '1px solid #ccc'
+            border: '1px solid var(--border)'
           }}
         />
       </PieChart>
@@ -161,7 +153,7 @@ const Dashboard = () => {
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={400}>
       <BarChart 
-        data={barAndLineData}
+        data={lineChartData}
         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
@@ -175,16 +167,19 @@ const Dashboard = () => {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip 
-          formatter={(value: number, name: string) => [
-            formatCurrency(value),
-            name === 'savings' ? 'Savings' : name
-          ]}
-          contentStyle={{
-            backgroundColor: '#fff',
-            borderRadius: '8px',
-            padding: '8px',
-            border: '1px solid #ccc'
+        <Tooltip
+          cursor={{ fill: 'var(--accent)' }}
+          content={({ active, payload, label }) => {
+            if (!active || !payload || !payload.length) return null;
+            const data = payload[0];
+            return (
+              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <p className="text-sm font-semibold">{label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {data.name}: {formatCurrency(data.value)}
+                </p>
+              </div>
+            );
           }}
         />
         <Legend />
@@ -205,7 +200,7 @@ const Dashboard = () => {
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart 
-        data={barAndLineData}
+        data={lineChartData}
         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
@@ -219,16 +214,23 @@ const Dashboard = () => {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip 
-          formatter={(value: number, name: string) => [
-            formatCurrency(value),
-            name === 'savings' ? 'Savings' : name
-          ]}
-          contentStyle={{
-            backgroundColor: '#fff',
-            borderRadius: '8px',
-            padding: '8px',
-            border: '1px solid #ccc'
+        <Tooltip
+          content={({ active, payload, label }) => {
+            if (!active || !payload || !payload.length) return null;
+            return (
+              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <p className="text-sm font-semibold">{label}</p>
+                {payload.map((entry) => (
+                  <p 
+                    key={entry.name}
+                    className="text-sm text-muted-foreground"
+                    style={{ color: entry.color }}
+                  >
+                    {entry.name}: {formatCurrency(entry.value)}
+                  </p>
+                ))}
+              </div>
+            );
           }}
         />
         <Legend />
@@ -244,13 +246,13 @@ const Dashboard = () => {
               fill: color,
               r: 4,
               strokeWidth: 2,
-              stroke: '#fff'
+              stroke: 'var(--background)'
             }}
             activeDot={{ 
               r: 6,
               stroke: color,
               strokeWidth: 2,
-              fill: '#fff'
+              fill: 'var(--background)'
             }}
           />
         ))}
