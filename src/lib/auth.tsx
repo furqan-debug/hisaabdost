@@ -1,9 +1,9 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 type AuthContextType = {
   user: User | null;
@@ -23,13 +23,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
@@ -61,10 +59,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Google auth error:", error);
+        throw error;
+      }
+      
+      toast({
+        title: "Redirecting to Google...",
+        description: "Please wait while we redirect you to Google for authentication.",
+      });
     } catch (error: any) {
+      console.error("Google auth error:", error);
       toast({
         variant: "destructive",
         title: "Error signing in with Google",
