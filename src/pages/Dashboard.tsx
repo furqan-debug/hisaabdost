@@ -1,14 +1,19 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import AddExpenseSheet from "@/components/AddExpenseSheet";
-
-interface Expense {
-  amount: number;
-  description: string;
-  date: string;
-}
+import { format } from "date-fns";
+import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 
 const Dashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
@@ -19,6 +24,7 @@ const Dashboard = () => {
     const saved = localStorage.getItem('expenses');
     return saved ? JSON.parse(saved) : [];
   });
+  const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   
   // Calculate total monthly expenses from all expenses
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
@@ -63,7 +69,20 @@ const Dashboard = () => {
   };
 
   const handleAddExpense = (newExpense: Expense) => {
-    setExpenses([...expenses, newExpense]);
+    if (expenseToEdit) {
+      setExpenses(expenses.map(exp => exp.id === newExpense.id ? newExpense : exp));
+      setExpenseToEdit(undefined);
+    } else {
+      setExpenses([...expenses, newExpense]);
+    }
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setExpenseToEdit(expense);
+  };
+
+  const handleDeleteExpense = (expenseId: string) => {
+    setExpenses(expenses.filter(exp => exp.id !== expenseId));
   };
 
   return (
@@ -140,8 +159,67 @@ const Dashboard = () => {
       </div>
 
       <div className="mt-6">
-        <AddExpenseSheet onAddExpense={handleAddExpense} />
+        <AddExpenseSheet 
+          onAddExpense={handleAddExpense} 
+          expenseToEdit={expenseToEdit}
+          onClose={() => setExpenseToEdit(undefined)}
+        />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {expenses.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No expenses added yet. Add your first expense using the button above.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                expenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditExpense(expense)}
+                        className="h-8 w-8 p-0 mr-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteExpense(expense.id)}
+                        className="h-8 w-8 p-0 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };
