@@ -124,21 +124,21 @@ const Dashboard = () => {
   const monthlyData = expenses.reduce((acc, expense) => {
     const month = format(new Date(expense.date), 'MMM yyyy');
     if (!acc[month]) {
-      acc[month] = {};
+      acc[month] = {
+        month,
+        ...Object.keys(CATEGORY_COLORS).reduce((cats, cat) => ({ ...cats, [cat]: 0 }), {}),
+        savings: monthlyIncome
+      };
     }
-    if (!acc[month][expense.category]) {
-      acc[month][expense.category] = 0;
-    }
-    acc[month][expense.category] += expense.amount;
-    acc[month].totalExpenses = (acc[month].totalExpenses || 0) + expense.amount;
-    acc[month].savings = monthlyIncome - acc[month].totalExpenses;
+    acc[month][expense.category] = (acc[month][expense.category] || 0) + expense.amount;
+    const totalExpenses = Object.keys(CATEGORY_COLORS)
+      .reduce((total, cat) => total + (acc[month][cat] || 0), 0);
+    acc[month].savings = monthlyIncome - totalExpenses;
     return acc;
   }, {} as Record<string, any>);
 
-  const barAndLineData = Object.entries(monthlyData).map(([month, data]) => ({
-    month,
-    ...data,
-  }));
+  const barAndLineData = Object.values(monthlyData)
+    .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
 
   const renderPieChart = () => (
     <ResponsiveContainer width="100%" height={400}>
@@ -170,23 +170,24 @@ const Dashboard = () => {
     <ResponsiveContainer width="100%" height={400}>
       <BarChart data={barAndLineData}>
         <XAxis dataKey="month" />
-        <YAxis />
-        <Tooltip formatter={(value: number) => formatCurrency(value)} />
-        {Object.keys(CATEGORY_COLORS).map((category) => (
+        <YAxis 
+          tickFormatter={(value) => `$${value/1000}k`}
+        />
+        <Tooltip 
+          formatter={(value: number, name: string) => [
+            formatCurrency(value),
+            name === 'savings' ? 'Savings' : name
+          ]}
+        />
+        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Bar
             key={category}
             dataKey={category}
             name={category}
-            stackId="a"
-            fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            fill={color}
+            barSize={30}
           />
         ))}
-        <Bar
-          dataKey="savings"
-          name="Savings"
-          stackId="b"
-          fill="#36A2EB"
-        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -195,25 +196,27 @@ const Dashboard = () => {
     <ResponsiveContainer width="100%" height={400}>
       <LineChart data={barAndLineData}>
         <XAxis dataKey="month" />
-        <YAxis />
-        <Tooltip formatter={(value: number) => formatCurrency(value)} />
-        {Object.keys(CATEGORY_COLORS).map((category) => (
+        <YAxis 
+          tickFormatter={(value) => `$${value/1000}k`}
+        />
+        <Tooltip 
+          formatter={(value: number, name: string) => [
+            formatCurrency(value),
+            name === 'savings' ? 'Savings' : name
+          ]}
+        />
+        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Line
             key={category}
             type="monotone"
             dataKey={category}
             name={category}
-            stroke={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            stroke={color}
             strokeWidth={2}
+            dot={{ fill: color }}
+            activeDot={{ r: 6 }}
           />
         ))}
-        <Line
-          type="monotone"
-          dataKey="savings"
-          name="Savings"
-          stroke="#36A2EB"
-          strokeWidth={2}
-        />
       </LineChart>
     </ResponsiveContainer>
   );
