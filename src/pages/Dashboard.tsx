@@ -131,14 +131,14 @@ const Dashboard = () => {
           outerRadius={150}
           innerRadius={75}
           paddingAngle={2}
-          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+          label={({ name, value }) => `${name}: ${formatCurrency(Number(value))}`}
         >
           {pieChartData.map((entry) => (
             <Cell key={entry.name} fill={entry.color} />
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number) => formatCurrency(value)}
+          formatter={(value: number | string) => formatCurrency(Number(value))}
           contentStyle={{
             backgroundColor: 'var(--background)',
             borderRadius: '8px',
@@ -163,7 +163,7 @@ const Dashboard = () => {
           tickLine={false}
         />
         <YAxis 
-          tickFormatter={(value) => `$${value/1000}k`}
+          tickFormatter={(value) => `$${Number(value)/1000}k`}
           axisLine={false}
           tickLine={false}
         />
@@ -176,7 +176,7 @@ const Dashboard = () => {
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
                 <p className="text-sm text-muted-foreground">
-                  {data.name}: {formatCurrency(data.value)}
+                  {data.name}: {formatCurrency(Number(data.value))}
                 </p>
               </div>
             );
@@ -210,7 +210,7 @@ const Dashboard = () => {
           tickLine={false}
         />
         <YAxis 
-          tickFormatter={(value) => `$${value/1000}k`}
+          tickFormatter={(value) => `$${Number(value)/1000}k`}
           axisLine={false}
           tickLine={false}
         />
@@ -226,7 +226,7 @@ const Dashboard = () => {
                     className="text-sm text-muted-foreground"
                     style={{ color: entry.color }}
                   >
-                    {entry.name}: {formatCurrency(entry.value)}
+                    {entry.name}: {formatCurrency(Number(entry.value))}
                   </p>
                 ))}
               </div>
