@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,8 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export interface Expense {
   id: string;
@@ -24,14 +28,10 @@ export interface Expense {
   description: string;
   date: string;
   category: string;
-}
-
-interface AddExpenseSheetProps {
-  onAddExpense: (expense: Expense) => void;
-  expenseToEdit?: Expense;
-  onClose?: () => void;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  paymentMethod?: string;
+  notes?: string;
+  isRecurring?: boolean;
+  receiptUrl?: string;
 }
 
 const EXPENSE_CATEGORIES = [
@@ -44,6 +44,24 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
+const PAYMENT_METHODS = [
+  "Cash",
+  "Credit Card",
+  "Debit Card",
+  "Bank Transfer",
+  "PayPal",
+  "Mobile Wallet",
+  "Other"
+];
+
+interface AddExpenseSheetProps {
+  onAddExpense: (expense: Expense) => void;
+  expenseToEdit?: Expense;
+  onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 const AddExpenseSheet = ({ 
   onAddExpense, 
   expenseToEdit, 
@@ -55,6 +73,11 @@ const AddExpenseSheet = ({
   const [description, setDescription] = useState<string>(expenseToEdit?.description || "");
   const [date, setDate] = useState<string>(expenseToEdit?.date || new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState<string>(expenseToEdit?.category || "Other");
+  const [paymentMethod, setPaymentMethod] = useState<string>(expenseToEdit?.paymentMethod || "Cash");
+  const [notes, setNotes] = useState<string>(expenseToEdit?.notes || "");
+  const [isRecurring, setIsRecurring] = useState<boolean>(expenseToEdit?.isRecurring || false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string>(expenseToEdit?.receiptUrl || "");
 
   useEffect(() => {
     if (expenseToEdit) {
@@ -62,6 +85,10 @@ const AddExpenseSheet = ({
       setDescription(expenseToEdit.description);
       setDate(expenseToEdit.date);
       setCategory(expenseToEdit.category);
+      setPaymentMethod(expenseToEdit.paymentMethod || "Cash");
+      setNotes(expenseToEdit.notes || "");
+      setIsRecurring(expenseToEdit.isRecurring || false);
+      setReceiptUrl(expenseToEdit.receiptUrl || "");
     }
   }, [expenseToEdit]);
 
@@ -75,6 +102,10 @@ const AddExpenseSheet = ({
       description,
       date,
       category,
+      paymentMethod,
+      notes,
+      isRecurring,
+      receiptUrl, // We'll implement file upload in the next iteration
     });
 
     // Reset form
@@ -82,7 +113,21 @@ const AddExpenseSheet = ({
     setDescription("");
     setDate(new Date().toISOString().split('T')[0]);
     setCategory("Other");
+    setPaymentMethod("Cash");
+    setNotes("");
+    setIsRecurring(false);
+    setReceiptFile(null);
+    setReceiptUrl("");
     onClose?.();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      // Create a temporary URL for preview
+      setReceiptUrl(URL.createObjectURL(file));
+    }
   };
 
   return (
@@ -93,7 +138,7 @@ const AddExpenseSheet = ({
           {expenseToEdit ? "Edit Expense" : "Add Expense"}
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</SheetTitle>
           <SheetDescription>
@@ -102,9 +147,7 @@ const AddExpenseSheet = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              Expense Name
-            </label>
+            <Label htmlFor="description">Expense Name</Label>
             <Input
               id="description"
               type="text"
@@ -114,10 +157,9 @@ const AddExpenseSheet = ({
               required
             />
           </div>
+          
           <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium">
-              Amount ($)
-            </label>
+            <Label htmlFor="amount">Amount ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -129,10 +171,9 @@ const AddExpenseSheet = ({
               required
             />
           </div>
+
           <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-medium">
-              Category
-            </label>
+            <Label htmlFor="category">Category</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
@@ -146,10 +187,25 @@ const AddExpenseSheet = ({
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
-            <label htmlFor="date" className="text-sm font-medium">
-              Date
-            </label>
+            <Label htmlFor="paymentMethod">Payment Method</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((method) => (
+                  <SelectItem key={method} value={method}>
+                    {method}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
             <Input
               id="date"
               type="date"
@@ -158,6 +214,64 @@ const AddExpenseSheet = ({
               required
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional details about the expense..."
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="recurring"
+              checked={isRecurring}
+              onCheckedChange={setIsRecurring}
+            />
+            <Label htmlFor="recurring">Recurring Expense</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receipt">Receipt</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="receipt"
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('receipt')?.click()}
+                className="w-full"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Receipt
+              </Button>
+            </div>
+            {receiptUrl && (
+              <div className="mt-2">
+                {receiptUrl.startsWith('data:image') || receiptUrl.startsWith('blob:') ? (
+                  <img
+                    src={receiptUrl}
+                    alt="Receipt"
+                    className="max-h-32 rounded-md border"
+                  />
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Receipt uploaded
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <Button type="submit" className="w-full">
             {expenseToEdit ? "Save Changes" : "Add Expense"}
           </Button>

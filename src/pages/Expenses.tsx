@@ -307,6 +307,7 @@ const Expenses = () => {
                         Category {getSortIcon('category')}
                       </Button>
                     </TableHead>
+                    <TableHead>Payment</TableHead>
                     <TableHead className="text-right">
                       <Button 
                         variant="ghost" 
@@ -352,7 +353,21 @@ const Expenses = () => {
                           </Button>
                         </TableCell>
                         <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{expense.description}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div>{expense.description}</div>
+                            {expense.isRecurring && (
+                              <div className="text-xs text-muted-foreground">
+                                Recurring
+                              </div>
+                            )}
+                            {expense.notes && (
+                              <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {expense.notes}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <span 
                             className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
@@ -363,6 +378,9 @@ const Expenses = () => {
                           >
                             {expense.category}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          {expense.paymentMethod || 'Cash'}
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                         <TableCell className="text-right">
