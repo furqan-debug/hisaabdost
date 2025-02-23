@@ -46,14 +46,10 @@ const Dashboard = () => {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   
-  // Calculate total monthly expenses from all expenses
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
-  
-  // Auto-calculated values
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Save to localStorage whenever values change
   useEffect(() => {
     localStorage.setItem('monthlyIncome', monthlyIncome.toString());
   }, [monthlyIncome]);
@@ -62,7 +58,6 @@ const Dashboard = () => {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-  // Formatting helpers
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -105,7 +100,16 @@ const Dashboard = () => {
     setExpenses(expenses.filter(exp => exp.id !== expenseId));
   };
 
-  // Chart data preparation
+  const CATEGORY_COLORS = {
+    'Food': '#0088FE',
+    'Rent': '#00C49F',
+    'Utilities': '#FFBB28',
+    'Transportation': '#FF8042',
+    'Entertainment': '#8884D8',
+    'Shopping': '#82CA9D',
+    'Other': '#A4DE6C'
+  };
+
   const categoryTotals = expenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
     return acc;
@@ -114,28 +118,28 @@ const Dashboard = () => {
   const pieChartData = Object.entries(categoryTotals).map(([name, value]) => ({
     name,
     value,
+    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C'
   }));
 
   const monthlyData = expenses.reduce((acc, expense) => {
     const month = format(new Date(expense.date), 'MMM yyyy');
     if (!acc[month]) {
-      acc[month] = { expenses: 0, savings: monthlyIncome };
+      acc[month] = {};
     }
-    acc[month].expenses += expense.amount;
-    acc[month].savings = monthlyIncome - acc[month].expenses;
+    if (!acc[month][expense.category]) {
+      acc[month][expense.category] = 0;
+    }
+    acc[month][expense.category] += expense.amount;
+    acc[month].totalExpenses = (acc[month].totalExpenses || 0) + expense.amount;
+    acc[month].savings = monthlyIncome - acc[month].totalExpenses;
     return acc;
-  }, {} as Record<string, { expenses: number; savings: number }>);
+  }, {} as Record<string, any>);
 
   const barAndLineData = Object.entries(monthlyData).map(([month, data]) => ({
     month,
-    expenses: data.expenses,
-    savings: data.savings,
+    ...data,
   }));
 
-  // Colors for the pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C'];
-
-  // Chart components
   const renderPieChart = () => (
     <ResponsiveContainer width="100%" height={400}>
       <PieChart>
@@ -148,11 +152,16 @@ const Dashboard = () => {
           outerRadius={150}
           label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
         >
-          {pieChartData.map((entry, index) => (
-            <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+          {pieChartData.map((entry) => (
+            <Cell key={entry.name} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+        <Tooltip
+          formatter={(value: number, name: string) => [
+            formatCurrency(value),
+            name
+          ]}
+        />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -163,8 +172,21 @@ const Dashboard = () => {
         <XAxis dataKey="month" />
         <YAxis />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
-        <Bar dataKey="expenses" fill="#FF8042" name="Expenses" />
-        <Bar dataKey="savings" fill="#0088FE" name="Savings" />
+        {Object.keys(CATEGORY_COLORS).map((category) => (
+          <Bar
+            key={category}
+            dataKey={category}
+            name={category}
+            stackId="a"
+            fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+          />
+        ))}
+        <Bar
+          dataKey="savings"
+          name="Savings"
+          stackId="b"
+          fill="#36A2EB"
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -175,8 +197,23 @@ const Dashboard = () => {
         <XAxis dataKey="month" />
         <YAxis />
         <Tooltip formatter={(value: number) => formatCurrency(value)} />
-        <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" />
-        <Line type="monotone" dataKey="savings" stroke="#0088FE" name="Savings" />
+        {Object.keys(CATEGORY_COLORS).map((category) => (
+          <Line
+            key={category}
+            type="monotone"
+            dataKey={category}
+            name={category}
+            stroke={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            strokeWidth={2}
+          />
+        ))}
+        <Line
+          type="monotone"
+          dataKey="savings"
+          name="Savings"
+          stroke="#36A2EB"
+          strokeWidth={2}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
