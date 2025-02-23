@@ -105,19 +105,28 @@ const Dashboard = () => {
   }));
 
   const processMonthlyData = () => {
-    const months = Array.from(new Set(expenses.map(e => format(new Date(e.date), 'MMM yyyy'))));
-    months.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    
+    const expensesByMonth = expenses.reduce((acc, expense) => {
+      const month = format(new Date(expense.date), 'MMM yyyy');
+      if (!acc[month]) {
+        acc[month] = {};
+      }
+      if (!acc[month][expense.category]) {
+        acc[month][expense.category] = 0;
+      }
+      acc[month][expense.category] += expense.amount;
+      return acc;
+    }, {} as Record<string, Record<string, number>>);
+
+    const months = Object.keys(expensesByMonth).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+
     return months.map(month => ({
       month,
-      ...Object.keys(CATEGORY_COLORS).reduce((acc, category) => {
-        const categoryExpenses = expenses.filter(e => 
-          format(new Date(e.date), 'MMM yyyy') === month &&
-          e.category === category
-        );
-        acc[category] = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
-        return acc;
-      }, {} as Record<string, number>)
+      ...Object.keys(CATEGORY_COLORS).reduce((acc, category) => ({
+        ...acc,
+        [category]: expensesByMonth[month][category] || 0
+      }), {})
     }));
   };
 
@@ -141,13 +150,17 @@ const Dashboard = () => {
             <Cell key={entry.name} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip
-          formatter={(value: number | string) => formatCurrency(Number(value))}
-          contentStyle={{
-            backgroundColor: 'var(--background)',
-            borderRadius: '8px',
-            padding: '8px',
-            border: '1px solid var(--border)'
+        <Tooltip 
+          content={({ active, payload }) => {
+            if (!active || !payload || !payload.length) return null;
+            const data = payload[0];
+            return (
+              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
+                  {data.name}: {formatCurrency(Number(data.value))}
+                </p>
+              </div>
+            );
           }}
         />
         <Legend
@@ -184,17 +197,15 @@ const Dashboard = () => {
           cursor={{ fillOpacity: 0.1 }}
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
-            const activePayload = payload.find(p => Number(p.value) > 0);
-            if (!activePayload) return null;
+            
+            const hoverData = payload.find(p => Number(p.value) > 0);
+            if (!hoverData) return null;
 
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
-                <p 
-                  className="text-sm"
-                  style={{ color: activePayload.color }}
-                >
-                  {activePayload.name}: {formatCurrency(Number(activePayload.value))}
+                <p className="text-sm" style={{ color: hoverData.color }}>
+                  {hoverData.name}: {formatCurrency(Number(hoverData.value))}
                 </p>
               </div>
             );
@@ -235,12 +246,13 @@ const Dashboard = () => {
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
-            const validPayloads = payload.filter(p => Number(p.value) > 0);
+            
+            const validData = payload.filter(p => Number(p.value) > 0);
             
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
-                {validPayloads.map((entry) => (
+                {validData.map((entry) => (
                   <p 
                     key={entry.name}
                     className="text-sm"
