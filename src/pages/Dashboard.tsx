@@ -184,7 +184,12 @@ const Dashboard = () => {
           <AddExpenseSheet 
             onAddExpense={handleAddExpense} 
             expenseToEdit={expenseToEdit}
-            onClose={() => setExpenseToEdit(undefined)}
+            onClose={() => {
+              setExpenseToEdit(undefined);
+              setShowAddExpense(false);
+            }}
+            open={showAddExpense || expenseToEdit !== undefined}
+            onOpenChange={setShowAddExpense}
           />
         </OnboardingTooltip>
       </div>
@@ -225,7 +230,10 @@ const Dashboard = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setExpenseToEdit(expense)}
+                        onClick={() => {
+                          setExpenseToEdit(expense);
+                          setShowAddExpense(true);
+                        }}
                         className="h-8 w-8 p-0 mr-2"
                       >
                         <Pencil className="h-4 w-4" />

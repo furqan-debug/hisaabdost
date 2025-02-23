@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface Expense {
   id: string;
@@ -31,6 +30,8 @@ interface AddExpenseSheetProps {
   onAddExpense: (expense: Expense) => void;
   expenseToEdit?: Expense;
   onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const EXPENSE_CATEGORIES = [
@@ -43,12 +44,26 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
-const AddExpenseSheet = ({ onAddExpense, expenseToEdit, onClose }: AddExpenseSheetProps) => {
+const AddExpenseSheet = ({ 
+  onAddExpense, 
+  expenseToEdit, 
+  onClose,
+  open,
+  onOpenChange 
+}: AddExpenseSheetProps) => {
   const [amount, setAmount] = useState<string>(expenseToEdit?.amount.toString() || "");
   const [description, setDescription] = useState<string>(expenseToEdit?.description || "");
   const [date, setDate] = useState<string>(expenseToEdit?.date || new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState<string>(expenseToEdit?.category || "Other");
-  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (expenseToEdit) {
+      setAmount(expenseToEdit.amount.toString());
+      setDescription(expenseToEdit.description);
+      setDate(expenseToEdit.date);
+      setCategory(expenseToEdit.category);
+    }
+  }, [expenseToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,17 +77,16 @@ const AddExpenseSheet = ({ onAddExpense, expenseToEdit, onClose }: AddExpenseShe
       category,
     });
 
-    // Reset form and close sheet
+    // Reset form
     setAmount("");
     setDescription("");
     setDate(new Date().toISOString().split('T')[0]);
     setCategory("Other");
-    setIsOpen(false);
     onClose?.();
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" className="w-full">
           <Plus className="mr-2 h-4 w-4" />
