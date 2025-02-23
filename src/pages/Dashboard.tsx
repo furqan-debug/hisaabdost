@@ -168,15 +168,20 @@ const Dashboard = () => {
           tickLine={false}
         />
         <Tooltip
-          cursor={{ fill: 'var(--accent)' }}
+          cursor={false}
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
-            const data = payload[0];
+            const activeBar = payload.find(p => p.dataKey === payload[0].dataKey);
+            if (!activeBar) return null;
+
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
-                <p className="text-sm text-muted-foreground">
-                  {data.name}: {formatCurrency(Number(data.value))}
+                <p 
+                  className="text-sm text-muted-foreground"
+                  style={{ color: activeBar.color }}
+                >
+                  {activeBar.name}: {formatCurrency(Number(activeBar.value))}
                 </p>
               </div>
             );
@@ -191,6 +196,7 @@ const Dashboard = () => {
             fill={color}
             barSize={20}
             radius={[4, 4, 0, 0]}
+            isAnimationActive={false}
           />
         ))}
       </BarChart>
