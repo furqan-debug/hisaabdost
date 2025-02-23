@@ -104,20 +104,24 @@ const Dashboard = () => {
     color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C'
   }));
 
-  const monthlyData = expenses.reduce((acc, expense) => {
-    const month = format(new Date(expense.date), 'MMM yyyy');
-    if (!acc[month]) {
-      acc[month] = {
-        month,
-        ...Object.keys(CATEGORY_COLORS).reduce((cats, cat) => ({ ...cats, [cat]: 0 }), {}),
-      };
-    }
-    acc[month][expense.category] = (acc[month][expense.category] || 0) + expense.amount;
-    return acc;
-  }, {} as Record<string, any>);
+  const processMonthlyData = () => {
+    const months = Array.from(new Set(expenses.map(e => format(new Date(e.date), 'MMM yyyy'))));
+    months.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    
+    return months.map(month => ({
+      month,
+      ...Object.keys(CATEGORY_COLORS).reduce((acc, category) => {
+        const categoryExpenses = expenses.filter(e => 
+          format(new Date(e.date), 'MMM yyyy') === month &&
+          e.category === category
+        );
+        acc[category] = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
+        return acc;
+      }, {} as Record<string, number>)
+    }));
+  };
 
-  const lineChartData = Object.values(monthlyData)
-    .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+  const lineChartData = processMonthlyData();
 
   const renderPieChart = () => (
     <ResponsiveContainer width="100%" height={400}>
@@ -131,7 +135,7 @@ const Dashboard = () => {
           outerRadius={150}
           innerRadius={75}
           paddingAngle={2}
-          label={({ name, value }) => `${name}: ${formatCurrency(Number(value))}`}
+          label={false}
         >
           {pieChartData.map((entry) => (
             <Cell key={entry.name} fill={entry.color} />
@@ -144,6 +148,15 @@ const Dashboard = () => {
             borderRadius: '8px',
             padding: '8px',
             border: '1px solid var(--border)'
+          }}
+        />
+        <Legend
+          verticalAlign="middle"
+          align="right"
+          layout="vertical"
+          formatter={(value, entry) => {
+            const { payload } = entry as any;
+            return `${value}: ${formatCurrency(Number(payload.value))}`;
           }}
         />
       </PieChart>
@@ -168,20 +181,20 @@ const Dashboard = () => {
           tickLine={false}
         />
         <Tooltip
-          cursor={false}
+          cursor={{ fillOpacity: 0.1 }}
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
-            const activeBar = payload.find(p => p.dataKey === payload[0].dataKey);
-            if (!activeBar) return null;
+            const activePayload = payload.find(p => Number(p.value) > 0);
+            if (!activePayload) return null;
 
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
                 <p 
-                  className="text-sm text-muted-foreground"
-                  style={{ color: activeBar.color }}
+                  className="text-sm"
+                  style={{ color: activePayload.color }}
                 >
-                  {activeBar.name}: {formatCurrency(Number(activeBar.value))}
+                  {activePayload.name}: {formatCurrency(Number(activePayload.value))}
                 </p>
               </div>
             );
@@ -196,7 +209,6 @@ const Dashboard = () => {
             fill={color}
             barSize={20}
             radius={[4, 4, 0, 0]}
-            isAnimationActive={false}
           />
         ))}
       </BarChart>
@@ -223,13 +235,15 @@ const Dashboard = () => {
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
+            const validPayloads = payload.filter(p => Number(p.value) > 0);
+            
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
-                {payload.map((entry) => (
+                {validPayloads.map((entry) => (
                   <p 
                     key={entry.name}
-                    className="text-sm text-muted-foreground"
+                    className="text-sm"
                     style={{ color: entry.color }}
                   >
                     {entry.name}: {formatCurrency(Number(entry.value))}
@@ -260,6 +274,7 @@ const Dashboard = () => {
               strokeWidth: 2,
               fill: 'var(--background)'
             }}
+            connectNulls
           />
         ))}
       </LineChart>
