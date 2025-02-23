@@ -12,6 +12,8 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
 
+const queryClient = new QueryClient();
+
 const AuthCallback = () => {
   const navigate = useNavigate();
 
@@ -52,10 +54,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
-const queryClient = new QueryClient();
-
 const AppWithProviders = () => (
-  <ThemeProvider defaultTheme="system" enableSystem>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
