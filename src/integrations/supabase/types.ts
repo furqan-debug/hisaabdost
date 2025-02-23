@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      budget_alerts: {
+        Row: {
+          budget_id: string
+          created_at: string
+          email_enabled: boolean | null
+          id: string
+          push_enabled: boolean | null
+          threshold: number
+          user_id: string
+        }
+        Insert: {
+          budget_id: string
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          threshold?: number
+          user_id: string
+        }
+        Update: {
+          budget_id?: string
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          threshold?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_alerts_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          amount: number
+          carry_forward: boolean | null
+          category: string
+          created_at: string
+          id: string
+          period: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          carry_forward?: boolean | null
+          category: string
+          created_at?: string
+          id?: string
+          period: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          carry_forward?: boolean | null
+          category?: string
+          created_at?: string
+          id?: string
+          period?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

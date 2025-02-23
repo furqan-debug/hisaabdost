@@ -22,6 +22,7 @@ import { z } from "zod";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { Budget } from "@/pages/Budget";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -45,6 +46,7 @@ export function BudgetForm({
   budget,
   onSuccess,
 }: BudgetFormProps) {
+  const { user } = useAuth();
   const { register, handleSubmit, reset, setValue, watch } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: budget || {
@@ -56,15 +58,22 @@ export function BudgetForm({
   });
 
   const onSubmit = async (data: BudgetFormData) => {
+    if (!user) return;
+    
     try {
+      const budgetData = {
+        ...data,
+        user_id: user.id,
+      };
+
       if (budget) {
         const { error } = await supabase
           .from("budgets")
-          .update(data)
+          .update(budgetData)
           .eq("id", budget.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("budgets").insert([data]);
+        const { error } = await supabase.from("budgets").insert([budgetData]);
         if (error) throw error;
       }
       reset();

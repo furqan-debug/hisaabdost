@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,14 +14,16 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/utils/chartUtils";
 
-export type Budget = {
+// Define a type that matches what we store in Supabase
+export interface Budget {
   id: string;
+  user_id: string;
   category: string;
   amount: number;
   period: 'monthly' | 'quarterly' | 'yearly';
   carry_forward: boolean;
   created_at: string;
-};
+}
 
 const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
