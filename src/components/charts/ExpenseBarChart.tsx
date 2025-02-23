@@ -32,15 +32,23 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
-            const hoverData = payload.find(p => Number(p.value) > 0);
-            if (!hoverData) return null;
-
+            // Filter out categories with no expenses (value === 0 or null)
+            const validData = payload.filter(p => p.value && Number(p.value) > 0);
+            
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold">{label}</p>
-                <p className="text-sm" style={{ color: hoverData.color }}>
-                  {hoverData.name}: {formatCurrency(Number(hoverData.value))}
-                </p>
+                <div className="space-y-1">
+                  {validData.map((entry) => (
+                    <p 
+                      key={entry.name}
+                      className="text-sm"
+                      style={{ color: entry.color }}
+                    >
+                      {entry.name}: {formatCurrency(Number(entry.value))}
+                    </p>
+                  ))}
+                </div>
               </div>
             );
           }}
