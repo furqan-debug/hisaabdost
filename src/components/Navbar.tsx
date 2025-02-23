@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, LogOut, Plus, Settings, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -24,6 +25,7 @@ const Navbar = () => {
         <Button variant="ghost" size="icon" className="w-10 h-10">
           <Bell className="h-4 w-4" />
         </Button>
+        <ThemeToggle />
         <Button variant="ghost" size="icon" className="w-10 h-10">
           <Settings className="h-4 w-4" />
         </Button>

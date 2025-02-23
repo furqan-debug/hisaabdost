@@ -10,8 +10,8 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeProvider } from "next-themes";
 
-// Auth callback handler component
 const AuthCallback = () => {
   const navigate = useNavigate();
 
@@ -26,7 +26,6 @@ const AuthCallback = () => {
   return <div>Loading...</div>;
 };
 
-// Temporary placeholder components until we implement the full features
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="space-y-4">
     <h1 className="text-2xl font-bold">{title}</h1>
@@ -56,71 +55,73 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const queryClient = new QueryClient();
 
 const AppWithProviders = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/expenses"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Expenses />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/budget"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Budget />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Analytics />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/goals"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Goals />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+  <ThemeProvider defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/expenses"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Expenses />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/budget"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Budget />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Analytics />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/goals"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Goals />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default AppWithProviders;
