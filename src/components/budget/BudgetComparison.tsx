@@ -32,7 +32,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="period" />
-            <YAxis tickFormatter={(value) => formatCurrency(value)} />
+            <YAxis tickFormatter={(value) => formatCurrency(Number(value))} />
             <Tooltip 
               content={({ active, payload, label }) => {
                 if (!active || !payload || !payload.length) return null;
@@ -43,9 +43,9 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                       <p 
                         key={entry.name} 
                         className="text-sm"
-                        style={{ color: entry.color }}
+                        style={{ color: entry.color as string }}
                       >
-                        {entry.name}: {formatCurrency(entry.value)}
+                        {entry.name}: {formatCurrency(Number(entry.value))}
                       </p>
                     ))}
                   </div>
