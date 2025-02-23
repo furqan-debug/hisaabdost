@@ -3,10 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
 import { useState, useEffect } from "react";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
+
+interface Expense {
+  amount: number;
+  description: string;
+  date: string;
+}
 
 const Dashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState<number>(8450);
-  const [monthlyExpenses, setMonthlyExpenses] = useState<number>(3240);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  
+  // Calculate total monthly expenses from all expenses
+  const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   
   // Auto-calculated values
   const totalBalance = monthlyIncome - monthlyExpenses;
@@ -38,6 +48,10 @@ const Dashboard = () => {
     setter(value ? parseInt(value, 10) : 0);
   };
 
+  const handleAddExpense = (newExpense: Expense) => {
+    setExpenses([...expenses, newExpense]);
+  };
+
   return (
     <div className="space-y-6">
       <header className="space-y-1">
@@ -65,16 +79,7 @@ const Dashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                value={monthlyExpenses}
-                onChange={(e) => handleInputChange(e, setMonthlyExpenses)}
-                className="pl-9 pr-4"
-                min={0}
-              />
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(monthlyExpenses)}</div>
             <div className="flex items-center text-expense-high text-xs mt-2">
               <ArrowUpRight className="h-3 w-3 mr-1" />
               12% from last month
@@ -118,6 +123,10 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <AddExpenseSheet onAddExpense={handleAddExpense} />
       </div>
     </div>
   );
