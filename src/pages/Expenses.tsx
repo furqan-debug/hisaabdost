@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { format } from "date-fns";
 
@@ -19,7 +19,15 @@ interface Expense {
 }
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>(() => {
+    const saved = localStorage.getItem('expenses');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save to localStorage whenever expenses change
+  useEffect(() => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+  }, [expenses]);
 
   const handleAddExpense = (newExpense: Expense) => {
     setExpenses([...expenses, newExpense]);

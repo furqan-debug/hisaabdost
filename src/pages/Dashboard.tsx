@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
@@ -12,8 +11,14 @@ interface Expense {
 }
 
 const Dashboard = () => {
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(8450);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
+    const saved = localStorage.getItem('monthlyIncome');
+    return saved ? Number(saved) : 8450;
+  });
+  const [expenses, setExpenses] = useState<Expense[]>(() => {
+    const saved = localStorage.getItem('expenses');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // Calculate total monthly expenses from all expenses
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
@@ -21,6 +26,15 @@ const Dashboard = () => {
   // Auto-calculated values
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+
+  // Save to localStorage whenever values change
+  useEffect(() => {
+    localStorage.setItem('monthlyIncome', monthlyIncome.toString());
+  }, [monthlyIncome]);
+
+  useEffect(() => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+  }, [expenses]);
 
   // Formatting helpers
   const formatCurrency = (amount: number) => {
