@@ -57,12 +57,16 @@ export function BudgetForm({
     },
   });
 
-  const onSubmit = async (data: BudgetFormData) => {
+  const onSubmit = async (formData: BudgetFormData) => {
     if (!user) return;
     
     try {
+      // Ensure all required fields are present
       const budgetData = {
-        ...data,
+        amount: formData.amount,
+        category: formData.category,
+        period: formData.period,
+        carry_forward: formData.carry_forward,
         user_id: user.id,
       };
 
@@ -73,7 +77,9 @@ export function BudgetForm({
           .eq("id", budget.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("budgets").insert([budgetData]);
+        const { error } = await supabase
+          .from("budgets")
+          .insert(budgetData); // Remove the array wrapper
         if (error) throw error;
       }
       reset();
