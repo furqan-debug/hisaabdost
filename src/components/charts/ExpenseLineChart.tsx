@@ -31,7 +31,8 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
-            const validData = payload.filter(p => Number(p.value) > 0);
+            // Only show categories that have actual values (not null)
+            const validData = payload.filter(p => p.value !== null);
             
             return (
               <div className="rounded-lg border bg-background p-2 shadow-sm">
@@ -70,7 +71,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
               strokeWidth: 2,
               fill: 'var(--background)'
             }}
-            connectNulls
+            connectNulls={false}
           />
         ))}
       </LineChart>

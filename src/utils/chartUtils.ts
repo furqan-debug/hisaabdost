@@ -21,30 +21,64 @@ export const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
+// Helper to get all months between two dates
+const getMonthsBetween = (startDate: Date, endDate: Date): string[] => {
+  const months: string[] = [];
+  const currentDate = new Date(startDate);
+  
+  while (currentDate <= endDate) {
+    months.push(format(currentDate, 'MMM yyyy'));
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
+  
+  return months;
+};
+
 export const processMonthlyData = (expenses: Expense[]) => {
-  const expensesByMonth = expenses.reduce((acc, expense) => {
-    const month = format(new Date(expense.date), 'MMM yyyy');
-    if (!acc[month]) {
-      acc[month] = {};
-    }
-    if (!acc[month][expense.category]) {
-      acc[month][expense.category] = 0;
-    }
-    acc[month][expense.category] += expense.amount;
+  if (expenses.length === 0) return [];
+
+  // Get date range
+  const dates = expenses.map(e => new Date(e.date));
+  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  
+  // Get all months in range
+  const allMonths = getMonthsBetween(startDate, endDate);
+
+  // Group expenses by category and month
+  const expensesByCategory = Object.keys(CATEGORY_COLORS).reduce((acc, category) => {
+    const categoryExpenses = expenses.filter(e => e.category === category);
+    
+    // For each month, sum the expenses for this category
+    const monthlyData = allMonths.map(month => {
+      const monthExpenses = categoryExpenses.filter(
+        e => format(new Date(e.date), 'MMM yyyy') === month
+      );
+      
+      // If there are expenses this month, sum them. Otherwise, return null
+      const total = monthExpenses.length > 0
+        ? monthExpenses.reduce((sum, e) => sum + e.amount, 0)
+        : null;
+      
+      return {
+        month,
+        [category]: total
+      };
+    });
+    
+    acc[category] = monthlyData;
     return acc;
-  }, {} as Record<string, Record<string, number>>);
+  }, {} as Record<string, Array<{ month: string; [key: string]: string | number | null }>>);
 
-  const months = Object.keys(expensesByMonth).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
-  );
-
-  return months.map(month => ({
-    month,
-    ...Object.keys(CATEGORY_COLORS).reduce((acc, category) => ({
-      ...acc,
-      [category]: expensesByMonth[month][category] || 0
-    }), {})
-  }));
+  // Merge all categories into a single array of data points
+  return allMonths.map(month => {
+    const monthData = { month };
+    Object.keys(CATEGORY_COLORS).forEach(category => {
+      const categoryData = expensesByCategory[category].find(d => d.month === month);
+      monthData[category] = categoryData ? categoryData[category] : null;
+    });
+    return monthData;
+  });
 };
 
 export const calculatePieChartData = (expenses: Expense[]) => {
