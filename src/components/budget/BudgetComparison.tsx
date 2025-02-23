@@ -1,76 +1,69 @@
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { formatCurrency } from "@/utils/chartUtils";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
 }
 
 export function BudgetComparison({ budgets }: BudgetComparisonProps) {
-  const [period, setPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  // Group budgets by period and calculate totals
+  const budgetsByPeriod = budgets.reduce((acc, budget) => {
+    if (!acc[budget.period]) {
+      acc[budget.period] = {
+        period: budget.period,
+      };
+    }
+    acc[budget.period][budget.category] = budget.amount;
+    return acc;
+  }, {} as Record<string, any>);
 
-  const data = budgets
-    .filter((budget) => budget.period === period)
-    .map((budget) => ({
-      category: budget.category,
-      Budgeted: budget.amount,
-      Spent: 0, // TODO: Calculate from expenses
-    }));
+  const data = Object.values(budgetsByPeriod);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="quarterly">Quarterly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Card>
-        <CardContent className="pt-6">
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="category" />
-              <YAxis
-                tickFormatter={(value) => `$${value}`}
-                width={80}
+    <Card>
+      <CardHeader>
+        <CardTitle>Budget Comparison by Period</CardTitle>
+      </CardHeader>
+      <CardContent className="h-[400px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="period" />
+            <YAxis tickFormatter={(value) => formatCurrency(value)} />
+            <Tooltip 
+              content={({ active, payload, label }) => {
+                if (!active || !payload || !payload.length) return null;
+                return (
+                  <div className="rounded-lg border bg-background p-2 shadow-sm">
+                    <p className="font-semibold mb-1">{label}</p>
+                    {payload.map((entry) => (
+                      <p 
+                        key={entry.name} 
+                        className="text-sm"
+                        style={{ color: entry.color }}
+                      >
+                        {entry.name}: {formatCurrency(entry.value)}
+                      </p>
+                    ))}
+                  </div>
+                );
+              }}
+            />
+            <Legend />
+            {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+              <Bar 
+                key={category} 
+                dataKey={category} 
+                fill={color}
+                stackId="a"
               />
-              <Tooltip
-                formatter={(value) => formatCurrency(Number(value))}
-              />
-              <Legend />
-              <Bar dataKey="Budgeted" fill="#0088FE" />
-              <Bar dataKey="Spent" fill="#00C49F" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </div>
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 }
