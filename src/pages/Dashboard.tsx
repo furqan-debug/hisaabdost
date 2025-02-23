@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 
 const Dashboard = () => {
@@ -25,6 +44,7 @@ const Dashboard = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
+  const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   
   // Calculate total monthly expenses from all expenses
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
@@ -83,6 +103,95 @@ const Dashboard = () => {
 
   const handleDeleteExpense = (expenseId: string) => {
     setExpenses(expenses.filter(exp => exp.id !== expenseId));
+  };
+
+  // Chart data preparation
+  const categoryTotals = expenses.reduce((acc, expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const pieChartData = Object.entries(categoryTotals).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const monthlyData = expenses.reduce((acc, expense) => {
+    const month = format(new Date(expense.date), 'MMM yyyy');
+    if (!acc[month]) {
+      acc[month] = { expenses: 0, savings: monthlyIncome };
+    }
+    acc[month].expenses += expense.amount;
+    acc[month].savings = monthlyIncome - acc[month].expenses;
+    return acc;
+  }, {} as Record<string, { expenses: number; savings: number }>);
+
+  const barAndLineData = Object.entries(monthlyData).map(([month, data]) => ({
+    month,
+    expenses: data.expenses,
+    savings: data.savings,
+  }));
+
+  // Colors for the pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#A4DE6C'];
+
+  // Chart components
+  const renderPieChart = () => (
+    <ResponsiveContainer width="100%" height={400}>
+      <PieChart>
+        <Pie
+          data={pieChartData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={150}
+          label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
+        >
+          {pieChartData.map((entry, index) => (
+            <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+
+  const renderBarChart = () => (
+    <ResponsiveContainer width="100%" height={400}>
+      <BarChart data={barAndLineData}>
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+        <Bar dataKey="expenses" fill="#FF8042" name="Expenses" />
+        <Bar dataKey="savings" fill="#0088FE" name="Savings" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+
+  const renderLineChart = () => (
+    <ResponsiveContainer width="100%" height={400}>
+      <LineChart data={barAndLineData}>
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+        <Line type="monotone" dataKey="expenses" stroke="#FF8042" name="Expenses" />
+        <Line type="monotone" dataKey="savings" stroke="#0088FE" name="Savings" />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
+  const renderChart = () => {
+    switch (chartType) {
+      case 'pie':
+        return renderPieChart();
+      case 'bar':
+        return renderBarChart();
+      case 'line':
+        return renderLineChart();
+      default:
+        return null;
+    }
   };
 
   return (
@@ -218,6 +327,31 @@ const Dashboard = () => {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Expense Analytics</CardTitle>
+          <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select chart type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pie">Pie Chart</SelectItem>
+              <SelectItem value="bar">Bar Chart</SelectItem>
+              <SelectItem value="line">Line Chart</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {expenses.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              Add some expenses to see analytics
+            </div>
+          ) : (
+            renderChart()
+          )}
         </CardContent>
       </Card>
     </div>
