@@ -31,6 +31,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  CartesianGrid,
+  Legend,
 } from "recharts";
 import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 
@@ -150,6 +152,8 @@ const Dashboard = () => {
           cx="50%"
           cy="50%"
           outerRadius={150}
+          innerRadius={75}
+          paddingAngle={2}
           label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
         >
           {pieChartData.map((entry) => (
@@ -161,6 +165,12 @@ const Dashboard = () => {
             formatCurrency(value),
             name
           ]}
+          contentStyle={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            padding: '8px',
+            border: '1px solid #ccc'
+          }}
         />
       </PieChart>
     </ResponsiveContainer>
@@ -168,24 +178,42 @@ const Dashboard = () => {
 
   const renderBarChart = () => (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={barAndLineData}>
-        <XAxis dataKey="month" />
+      <BarChart 
+        data={barAndLineData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+        <XAxis 
+          dataKey="month" 
+          axisLine={false}
+          tickLine={false}
+        />
         <YAxis 
           tickFormatter={(value) => `$${value/1000}k`}
+          axisLine={false}
+          tickLine={false}
         />
         <Tooltip 
           formatter={(value: number, name: string) => [
             formatCurrency(value),
             name === 'savings' ? 'Savings' : name
           ]}
+          contentStyle={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            padding: '8px',
+            border: '1px solid #ccc'
+          }}
         />
+        <Legend />
         {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Bar
             key={category}
             dataKey={category}
             name={category}
             fill={color}
-            barSize={30}
+            barSize={20}
+            radius={[4, 4, 0, 0]}
           />
         ))}
       </BarChart>
@@ -194,17 +222,34 @@ const Dashboard = () => {
 
   const renderLineChart = () => (
     <ResponsiveContainer width="100%" height={400}>
-      <LineChart data={barAndLineData}>
-        <XAxis dataKey="month" />
+      <LineChart 
+        data={barAndLineData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+        <XAxis 
+          dataKey="month" 
+          axisLine={false}
+          tickLine={false}
+        />
         <YAxis 
           tickFormatter={(value) => `$${value/1000}k`}
+          axisLine={false}
+          tickLine={false}
         />
         <Tooltip 
           formatter={(value: number, name: string) => [
             formatCurrency(value),
             name === 'savings' ? 'Savings' : name
           ]}
+          contentStyle={{
+            backgroundColor: '#fff',
+            borderRadius: '8px',
+            padding: '8px',
+            border: '1px solid #ccc'
+          }}
         />
+        <Legend />
         {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Line
             key={category}
@@ -213,8 +258,18 @@ const Dashboard = () => {
             name={category}
             stroke={color}
             strokeWidth={2}
-            dot={{ fill: color }}
-            activeDot={{ r: 6 }}
+            dot={{ 
+              fill: color,
+              r: 4,
+              strokeWidth: 2,
+              stroke: '#fff'
+            }}
+            activeDot={{ 
+              r: 6,
+              stroke: color,
+              strokeWidth: 2,
+              fill: '#fff'
+            }}
           />
         ))}
       </LineChart>
