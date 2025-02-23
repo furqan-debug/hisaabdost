@@ -1,5 +1,14 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -308,7 +317,7 @@ const Dashboard = () => {
           </Card>
         </OnboardingTooltip>
         
-        <Card className="animate-fade-in [animation-delay:400ms]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -322,7 +331,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in [animation-delay:600ms]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -330,7 +339,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="relative">
               <Input
-                type="text"
+                type="number"
                 value={monthlyIncome}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9]/g, '');
@@ -347,7 +356,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in [animation-delay:800ms]">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
@@ -401,42 +410,34 @@ const Dashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No expenses added yet. Add your first expense using the button above.
+                {expenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setExpenseToEdit(expense)}
+                        className="h-8 w-8 p-0 mr-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setExpenses(expenses.filter(exp => exp.id !== expense.id));
+                        }}
+                        className="h-8 w-8 p-0 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  expenses.map((expense) => (
-                    <TableRow key={expense.id}>
-                      <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
-                      <TableCell>{expense.description}</TableCell>
-                      <TableCell>{expense.category}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setExpenseToEdit(expense)}
-                          className="h-8 w-8 p-0 mr-2"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setExpenses(expenses.filter(exp => exp.id !== expense.id));
-                          }}
-                          className="h-8 w-8 p-0 text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           )}
