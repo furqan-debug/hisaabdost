@@ -18,7 +18,7 @@ interface ExpenseFiltersProps {
     start: string;
     end: string;
   };
-  setDateRange: (dateRange: { start: string; end: string }) => void;
+  setDateRange: (dateRange: { start: string; end: string; }) => void;
 }
 
 export function ExpenseFilters({
@@ -59,13 +59,19 @@ export function ExpenseFilters({
         <Input
           type="date"
           value={dateRange.start}
-          onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+          onChange={(e) => setDateRange({
+            ...dateRange,
+            start: e.target.value
+          })}
           className="w-auto"
         />
         <Input
           type="date"
           value={dateRange.end}
-          onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+          onChange={(e) => setDateRange({
+            ...dateRange,
+            end: e.target.value
+          })}
           className="w-auto"
         />
       </div>
