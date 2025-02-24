@@ -14,6 +14,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -24,6 +26,18 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch expenses
+  const { data: expenses } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*');
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleDeleteBudget = async (budgetId: string) => {
     try {
       const { error } = await supabase
@@ -33,7 +47,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
 
       if (error) throw error;
 
-      // Invalidate and refetch budgets
       await queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
       toast({
@@ -50,9 +63,23 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  // For now, we'll use mock spent values. In a real app, this would come from actual transaction data
   const getSpentAmount = (budget: Budget) => {
-    return Math.random() * budget.amount; // Mock data - replace with actual spent amount
+    if (!expenses) return 0;
+
+    const now = new Date();
+    const start = startOfMonth(now);
+    const end = endOfMonth(now);
+
+    return expenses
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return (
+          expense.category === budget.category &&
+          expenseDate >= start &&
+          expenseDate <= end
+        );
+      })
+      .reduce((total, expense) => total + Number(expense.amount), 0);
   };
 
   return (

@@ -5,6 +5,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +62,6 @@ export function BudgetForm({
     if (!user) return;
     
     try {
-      // Ensure all required fields are present
       const budgetData = {
         amount: formData.amount,
         category: formData.category,
@@ -79,7 +79,7 @@ export function BudgetForm({
       } else {
         const { error } = await supabase
           .from("budgets")
-          .insert(budgetData); // Remove the array wrapper
+          .insert(budgetData);
         if (error) throw error;
       }
       reset();
@@ -94,6 +94,7 @@ export function BudgetForm({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>{budget ? "Edit" : "New"} Budget</SheetTitle>
+          <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none" />
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-8">
@@ -156,9 +157,9 @@ export function BudgetForm({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+            <SheetClose asChild>
+              <Button variant="outline" type="button">Cancel</Button>
+            </SheetClose>
             <Button type="submit">Save</Button>
           </div>
         </form>
