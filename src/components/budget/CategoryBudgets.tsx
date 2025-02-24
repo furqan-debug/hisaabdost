@@ -55,9 +55,12 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
 
   const getSpentAmount = (budget: Budget) => {
     if (!expenses || expenses.length === 0) {
-      console.log('No expenses found');
+      console.log('No expenses found for category:', budget.category);
       return 0;
     }
+
+    // Log all expenses for debugging
+    console.log('All expenses:', expenses);
     
     const today = new Date();
     const startOfCurrentMonth = startOfMonth(today);
@@ -68,33 +71,49 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
     // Filter expenses based on category and period
     const relevantExpenses = expenses.filter(expense => {
       try {
+        // Log each expense for debugging
+        console.log('Processing expense:', expense);
+        
         const expenseDate = parseISO(expense.date);
         const matchesCategory = expense.category.toLowerCase() === budget.category.toLowerCase();
         
+        if (!matchesCategory) {
+          return false;
+        }
+
         // Different date range based on budget period
         if (budget.period === 'monthly') {
-          return matchesCategory && isWithinInterval(expenseDate, {
+          const isInMonth = isWithinInterval(expenseDate, {
             start: startOfCurrentMonth,
             end: endOfCurrentMonth
           });
+          console.log(`Expense ${expense.id} in current month: ${isInMonth}`);
+          return isInMonth;
         } else if (budget.period === 'yearly') {
-          return matchesCategory && isWithinInterval(expenseDate, {
+          const isInYear = isWithinInterval(expenseDate, {
             start: startOfCurrentYear,
             end: endOfCurrentYear
           });
+          console.log(`Expense ${expense.id} in current year: ${isInYear}`);
+          return isInYear;
         }
-        return matchesCategory;
+        
+        return true;
       } catch (error) {
         console.error('Error processing expense:', expense, error);
         return false;
       }
     });
 
-    console.log(`Category ${budget.category} - Period ${budget.period}:`, relevantExpenses);
+    console.log(`Relevant expenses for ${budget.category} (${budget.period}):`, relevantExpenses);
     
     const total = relevantExpenses.reduce((sum, expense) => {
       const amount = Number(expense.amount);
-      return isNaN(amount) ? sum : sum + amount;
+      if (isNaN(amount)) {
+        console.warn(`Invalid amount for expense ${expense.id}:`, expense.amount);
+        return sum;
+      }
+      return sum + amount;
     }, 0);
     
     console.log(`Total spent for ${budget.category}: ${total}`);
@@ -119,7 +138,7 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
           {budgets.map((budget) => {
             const spentAmount = getSpentAmount(budget);
             const remainingAmount = budget.amount - spentAmount;
-            const progress = budget.amount > 0 ? (spentAmount / budget.amount) * 100 : 0;
+            const progress = budget.amount > 0 ? Math.min((spentAmount / budget.amount) * 100, 100) : 0;
 
             return (
               <TableRow key={budget.id}>

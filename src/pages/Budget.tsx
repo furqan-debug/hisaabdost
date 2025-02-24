@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/utils/chartUtils";
 import type { Expense } from "@/types/database";
 
-// Define a type that matches what we store in Supabase
 export interface Budget {
   id: string;
   user_id: string;
@@ -45,14 +43,20 @@ const Budget = () => {
     },
   });
 
-  const { data: expenses } = useQuery({
+  const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('expenses')
-        .select('*');
+        .select('*')
+        .order('date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        throw error;
+      }
+      
+      console.log('Fetched expenses:', data);
       return data as Expense[];
     },
   });
@@ -83,12 +87,12 @@ const Budget = () => {
     link.click();
   };
 
-  if (budgetsLoading) {
+  if (budgetsLoading || expensesLoading) {
     return <div>Loading...</div>;
   }
 
   const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = calculateTotalSpent();
+  const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
   const remainingBalance = totalBudget - totalSpent;
   const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
