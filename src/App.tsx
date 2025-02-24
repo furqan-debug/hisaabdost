@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
 import Expenses from "./pages/Expenses";
-import Budget from "./pages/Budget"; // Import the actual Budget component
+import Budget from "./pages/Budget";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +56,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppWithProviders = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <ThemeProvider defaultTheme="system" attribute="class" enableSystem>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
