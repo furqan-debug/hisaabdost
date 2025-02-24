@@ -16,17 +16,26 @@ serve(async (req) => {
 
   try {
     const { prompt, type = 'chat' } = await req.json();
+    console.log('Received request:', { type, promptLength: prompt?.length });
 
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error('OpenAI API key is not set');
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    console.log('Initializing OpenAI client...');
     const openai = new OpenAI({
-      apiKey: Deno.env.get('OPENAI_API_KEY'),
+      apiKey: openaiApiKey,
     });
 
     let response;
     if (type === 'chat') {
+      console.log('Processing chat request...');
       response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -40,6 +49,7 @@ serve(async (req) => {
           }
         ],
       });
+      console.log('Chat response received');
 
       return new Response(
         JSON.stringify({ 
@@ -48,6 +58,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (type === 'analyze') {
+      console.log('Processing analysis request...');
       response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -61,6 +72,7 @@ serve(async (req) => {
           }
         ],
       });
+      console.log('Analysis response received');
 
       return new Response(
         JSON.stringify({ 
@@ -72,9 +84,12 @@ serve(async (req) => {
 
     throw new Error('Invalid type specified');
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in OpenAI function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
