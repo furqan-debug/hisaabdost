@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Expense } from "@/components/AddExpenseSheet";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -11,9 +14,27 @@ interface CategoryBudgetsProps {
 }
 
 export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
-  // For now, we'll use mock spent values. In a real app, this would come from actual transaction data
+  // Fetch all expenses for the current period
+  const { data: expenses } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as Expense[];
+    }
+  });
+
   const getSpentAmount = (budget: Budget) => {
-    return Math.random() * budget.amount; // Mock data - replace with actual spent amount
+    if (!expenses) return 0;
+    
+    // Filter expenses by category and sum their amounts
+    return expenses
+      .filter(expense => expense.category === budget.category)
+      .reduce((sum, expense) => sum + expense.amount, 0);
   };
 
   return (

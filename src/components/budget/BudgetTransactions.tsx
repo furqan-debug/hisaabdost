@@ -1,27 +1,29 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
-
-// Mock data - replace with actual transaction data from your backend
-const mockTransactions = [
-  {
-    id: "1",
-    date: new Date(),
-    category: "Food",
-    description: "Grocery shopping",
-    amount: 150.50,
-  },
-  {
-    id: "2",
-    date: new Date(),
-    category: "Transportation",
-    description: "Gas",
-    amount: 45.00,
-  },
-  // Add more mock transactions as needed
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Expense } from "@/components/AddExpenseSheet";
 
 export function BudgetTransactions() {
+  const { data: transactions, isLoading } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as Expense[];
+    }
+  });
+
+  if (isLoading) {
+    return <div>Loading transactions...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <Table>
@@ -34,9 +36,9 @@ export function BudgetTransactions() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockTransactions.map((transaction) => (
+          {transactions?.map((transaction) => (
             <TableRow key={transaction.id}>
-              <TableCell>{format(transaction.date, 'MMM dd, yyyy')}</TableCell>
+              <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
               <TableCell>{transaction.category}</TableCell>
               <TableCell>{transaction.description}</TableCell>
               <TableCell>{formatCurrency(transaction.amount)}</TableCell>
