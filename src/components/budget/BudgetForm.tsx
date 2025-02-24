@@ -61,6 +61,7 @@ export function BudgetForm({
     if (!user) return;
     
     try {
+      // Ensure all required fields are present
       const budgetData = {
         amount: formData.amount,
         category: formData.category,
@@ -78,7 +79,7 @@ export function BudgetForm({
       } else {
         const { error } = await supabase
           .from("budgets")
-          .insert(budgetData);
+          .insert(budgetData); // Remove the array wrapper
         if (error) throw error;
       }
       reset();

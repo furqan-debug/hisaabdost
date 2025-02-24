@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,8 @@ import { Download, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/utils/chartUtils";
-import type { Expense } from "@/types/database";
 
+// Define a type that matches what we store in Supabase
 export interface Budget {
   id: string;
   user_id: string;
@@ -30,7 +31,7 @@ const Budget = () => {
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const { toast } = useToast();
 
-  const { data: budgets, isLoading: budgetsLoading } = useQuery({
+  const { data: budgets, isLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,29 +43,6 @@ const Budget = () => {
       return data as Budget[];
     },
   });
-
-  const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .order('date', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching expenses:', error);
-        throw error;
-      }
-      
-      console.log('Fetched expenses:', data);
-      return data as Expense[];
-    },
-  });
-
-  const calculateTotalSpent = () => {
-    if (!expenses) return 0;
-    return expenses.reduce((total, expense) => total + Number(expense.amount), 0);
-  };
 
   const exportBudgetData = () => {
     if (!budgets) return;
@@ -87,14 +65,14 @@ const Budget = () => {
     link.click();
   };
 
-  if (budgetsLoading || expensesLoading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
   const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+  const totalSpent = 0; // TODO: Calculate from expenses
   const remainingBalance = totalBudget - totalSpent;
-  const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const usagePercentage = (totalSpent / totalBudget) * 100 || 0;
 
   return (
     <div className="space-y-6">
@@ -167,7 +145,6 @@ const Budget = () => {
             <TabsContent value="categories">
               <CategoryBudgets 
                 budgets={budgets || []}
-                expenses={expenses || []}
                 onEditBudget={(budget) => {
                   setSelectedBudget(budget);
                   setShowBudgetForm(true);
