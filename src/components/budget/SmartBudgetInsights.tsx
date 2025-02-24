@@ -101,6 +101,7 @@ export function SmartBudgetInsights() {
           size="icon"
           onClick={generateInsights}
           disabled={isLoading}
+          type="button"
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

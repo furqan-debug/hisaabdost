@@ -48,7 +48,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (type === 'analyze') {
-      // Analyze expenses or provide financial insights
       response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
