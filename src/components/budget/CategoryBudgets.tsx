@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -11,6 +21,35 @@ interface CategoryBudgetsProps {
 }
 
 export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleDeleteBudget = async (budgetId: string) => {
+    try {
+      const { error } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('id', budgetId);
+
+      if (error) throw error;
+
+      // Invalidate and refetch budgets
+      await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+
+      toast({
+        title: "Budget deleted",
+        description: "The budget has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error('Error deleting budget:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the budget. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // For now, we'll use mock spent values. In a real app, this would come from actual transaction data
   const getSpentAmount = (budget: Budget) => {
     return Math.random() * budget.amount; // Mock data - replace with actual spent amount
@@ -47,9 +86,26 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                   <Progress value={progress} className="w-full" />
                 </TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm" onClick={() => onEditBudget(budget)}>
-                    Edit
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEditBudget(budget)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteBudget(budget.id)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             );
