@@ -15,8 +15,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Processing request...');
     const { prompt, type = 'chat' } = await req.json();
-    console.log('Received request:', { type, promptLength: prompt?.length });
+    console.log('Request type:', type);
 
     if (!prompt) {
       throw new Error('Prompt is required');
@@ -28,61 +29,42 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
-    console.log('Initializing OpenAI client...');
     const openai = new OpenAI({
       apiKey: openaiApiKey,
     });
 
-    let response;
-    if (type === 'chat') {
-      console.log('Processing chat request...');
-      response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful financial advisor assistant that provides concise, practical advice."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-      });
-      console.log('Chat response received');
+    console.log('Making OpenAI request...');
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: type === 'analyze' 
+            ? "You are a financial analysis assistant. Analyze the provided data and give concise, actionable insights."
+            : "You are a helpful financial advisor assistant that provides concise, practical advice."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+    });
 
-      return new Response(
-        JSON.stringify({ 
-          text: response.choices[0].message.content
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } else if (type === 'analyze') {
-      console.log('Processing analysis request...');
-      response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a financial analysis assistant. Analyze the provided data and give concise, actionable insights."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-      });
-      console.log('Analysis response received');
+    console.log('OpenAI request successful');
+    const content = completion.choices[0].message.content;
 
-      return new Response(
-        JSON.stringify({ 
-          analysis: response.choices[0].message.content
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    return new Response(
+      JSON.stringify({ 
+        [type === 'analyze' ? 'analysis' : 'text']: content
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
 
-    throw new Error('Invalid type specified');
   } catch (error) {
     console.error('Error in OpenAI function:', error);
     return new Response(
