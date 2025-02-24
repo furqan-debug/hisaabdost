@@ -6,16 +6,8 @@ import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Expense {
-  id: string;
-  user_id: string;
-  amount: number;
-  description: string;
-  category: string;
-  date: string;
-  created_at: string;
-}
+import { Database } from "@/integrations/supabase/types";
+import type { Expense } from "@/types/database";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -23,7 +15,6 @@ interface CategoryBudgetsProps {
 }
 
 export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
-  // Fetch all expenses for the current period
   const { data: expenses } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
@@ -33,7 +24,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
         .order('date', { ascending: false });
       
       if (error) throw error;
-      return data as Expense[];
+      return data as unknown as Expense[];
     }
   });
 

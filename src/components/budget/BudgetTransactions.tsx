@@ -4,16 +4,8 @@ import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Expense {
-  id: string;
-  user_id: string;
-  amount: number;
-  description: string;
-  category: string;
-  date: string;
-  created_at: string;
-}
+import { Database } from "@/integrations/supabase/types";
+import type { Expense } from "@/types/database";
 
 export function BudgetTransactions() {
   const { data: transactions, isLoading } = useQuery({
@@ -25,7 +17,7 @@ export function BudgetTransactions() {
         .order('date', { ascending: false });
       
       if (error) throw error;
-      return data as Expense[];
+      return data as unknown as Expense[];
     }
   });
 
