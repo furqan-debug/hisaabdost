@@ -6,7 +6,16 @@ import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Expense } from "@/components/AddExpenseSheet";
+
+interface Expense {
+  id: string;
+  user_id: string;
+  amount: number;
+  description: string;
+  category: string;
+  date: string;
+  created_at: string;
+}
 
 interface CategoryBudgetsProps {
   budgets: Budget[];

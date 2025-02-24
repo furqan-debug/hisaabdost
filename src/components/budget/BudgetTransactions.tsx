@@ -4,7 +4,16 @@ import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Expense } from "@/components/AddExpenseSheet";
+
+interface Expense {
+  id: string;
+  user_id: string;
+  amount: number;
+  description: string;
+  category: string;
+  date: string;
+  created_at: string;
+}
 
 export function BudgetTransactions() {
   const { data: transactions, isLoading } = useQuery({
