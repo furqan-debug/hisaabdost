@@ -1,27 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { useAI } from '@/hooks/useAI';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { Loader2, RefreshCcw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/chartUtils';
 
 export function SmartBudgetInsights() {
-  const [insights, setInsights] = useState<string>('');
-  const { toast } = useToast();
-  const { generateResponse, isLoading } = useAI({
-    onError: (error) => {
-      toast({
-        title: 'Error generating insights',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
   // Fetch expenses and budgets
   const { data: expenses } = useQuery({
     queryKey: ['expenses'],
@@ -46,8 +29,9 @@ export function SmartBudgetInsights() {
     },
   });
 
-  const generateInsights = async () => {
-    if (!expenses || !budgets) return;
+  // Calculate basic insights
+  const getBasicInsights = () => {
+    if (!expenses || !budgets) return null;
 
     // Calculate total spent by category
     const spentByCategory = expenses.reduce((acc: Record<string, number>, expense) => {
@@ -55,70 +39,60 @@ export function SmartBudgetInsights() {
       return acc;
     }, {});
 
-    // Prepare data for AI analysis
-    const budgetData = budgets.map(budget => ({
-      category: budget.category,
-      budgeted: budget.amount,
-      spent: spentByCategory[budget.category] || 0,
-    }));
+    // Find categories over budget
+    const overBudgetCategories = budgets
+      .filter(budget => (spentByCategory[budget.category] || 0) > budget.amount)
+      .map(budget => ({
+        category: budget.category,
+        budgeted: budget.amount,
+        spent: spentByCategory[budget.category] || 0,
+        overspent: (spentByCategory[budget.category] || 0) - budget.amount
+      }))
+      .sort((a, b) => b.overspent - a.overspent);
 
-    const prompt = `
-      As a financial advisor, analyze this budget and expense data and provide key insights:
-      
-      Budget Data:
-      ${budgetData.map(b => `${b.category}: Budgeted ${formatCurrency(b.budgeted)}, Spent ${formatCurrency(b.spent)}`).join('\n')}
-      
-      Please provide:
-      1. Top spending categories
-      2. Categories with significant overspending
-      3. Potential savings opportunities
-      4. Specific recommendations for improvement
-      
-      Keep the response concise and actionable.
-    `;
+    // Calculate total budget and spending
+    const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+    const totalSpent = Object.values(spentByCategory).reduce((sum, amount) => sum + amount, 0);
 
-    try {
-      const response = await generateResponse(prompt, 'analyze');
-      setInsights(response.analysis);
-    } catch (error) {
-      console.error('Error generating insights:', error);
-    }
+    return {
+      totalBudget,
+      totalSpent,
+      overBudgetCategories
+    };
   };
 
-  // Generate insights when data is available
-  useEffect(() => {
-    if (expenses && budgets && !insights) {
-      generateInsights();
-    }
-  }, [expenses, budgets]);
+  const insights = getBasicInsights();
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-bold">Smart Budget Insights</CardTitle>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={generateInsights}
-          disabled={isLoading}
-          type="button"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCcw className="h-4 w-4" />
-          )}
-        </Button>
+      <CardHeader>
+        <CardTitle className="text-lg font-bold">Budget Overview</CardTitle>
       </CardHeader>
       <CardContent>
         {insights ? (
           <div className="space-y-4">
-            <div className="whitespace-pre-wrap text-sm">{insights}</div>
+            <div className="grid gap-4">
+              <div>
+                <p className="text-sm font-medium">Total Budget: {formatCurrency(insights.totalBudget)}</p>
+                <p className="text-sm font-medium">Total Spent: {formatCurrency(insights.totalSpent)}</p>
+              </div>
+              
+              {insights.overBudgetCategories.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">Categories Over Budget:</p>
+                  <ul className="space-y-2">
+                    {insights.overBudgetCategories.map(cat => (
+                      <li key={cat.category} className="text-sm">
+                        {cat.category}: Over by {formatCurrency(cat.overspent)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <p className="text-sm text-muted-foreground">No budget data available.</p>
         )}
       </CardContent>
     </Card>
