@@ -5,7 +5,7 @@ import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
 import type { Expense } from "@/types/database";
-import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, parseISO, startOfYear, endOfYear } from "date-fns";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -54,35 +54,50 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
   };
 
   const getSpentAmount = (budget: Budget) => {
-    if (!expenses) return 0;
+    if (!expenses || expenses.length === 0) {
+      console.log('No expenses found');
+      return 0;
+    }
     
     const today = new Date();
     const startOfCurrentMonth = startOfMonth(today);
     const endOfCurrentMonth = endOfMonth(today);
+    const startOfCurrentYear = startOfYear(today);
+    const endOfCurrentYear = endOfYear(today);
     
     // Filter expenses based on category and period
     const relevantExpenses = expenses.filter(expense => {
-      const expenseDate = parseISO(expense.date);
-      const matchesCategory = expense.category.toLowerCase() === budget.category.toLowerCase();
-      
-      // Different date range based on budget period
-      if (budget.period === 'monthly') {
-        return matchesCategory && isWithinInterval(expenseDate, {
-          start: startOfCurrentMonth,
-          end: endOfCurrentMonth
-        });
-      } else if (budget.period === 'yearly') {
-        return matchesCategory && expenseDate.getFullYear() === today.getFullYear();
+      try {
+        const expenseDate = parseISO(expense.date);
+        const matchesCategory = expense.category.toLowerCase() === budget.category.toLowerCase();
+        
+        // Different date range based on budget period
+        if (budget.period === 'monthly') {
+          return matchesCategory && isWithinInterval(expenseDate, {
+            start: startOfCurrentMonth,
+            end: endOfCurrentMonth
+          });
+        } else if (budget.period === 'yearly') {
+          return matchesCategory && isWithinInterval(expenseDate, {
+            start: startOfCurrentYear,
+            end: endOfCurrentYear
+          });
+        }
+        return matchesCategory;
+      } catch (error) {
+        console.error('Error processing expense:', expense, error);
+        return false;
       }
-      // Add quarterly logic if needed
-      return matchesCategory;
     });
 
     console.log(`Category ${budget.category} - Period ${budget.period}:`, relevantExpenses);
     
-    const total = relevantExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-    console.log(`Total spent for ${budget.category}: ${total}`);
+    const total = relevantExpenses.reduce((sum, expense) => {
+      const amount = Number(expense.amount);
+      return isNaN(amount) ? sum : sum + amount;
+    }, 0);
     
+    console.log(`Total spent for ${budget.category}: ${total}`);
     return total;
   };
 
@@ -104,7 +119,7 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
           {budgets.map((budget) => {
             const spentAmount = getSpentAmount(budget);
             const remainingAmount = budget.amount - spentAmount;
-            const progress = Math.min((spentAmount / budget.amount) * 100, 100);
+            const progress = budget.amount > 0 ? (spentAmount / budget.amount) * 100 : 0;
 
             return (
               <TableRow key={budget.id}>
