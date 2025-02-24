@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
@@ -13,9 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -25,18 +22,6 @@ interface CategoryBudgetsProps {
 export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Fetch expenses
-  const { data: expenses } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*');
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const handleDeleteBudget = async (budgetId: string) => {
     try {
@@ -63,23 +48,23 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  const getSpentAmount = (budget: Budget) => {
+  // Query expenses directly in the component
+  const { data: expenses } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
-
-    const now = new Date();
-    const start = startOfMonth(now);
-    const end = endOfMonth(now);
-
-    return expenses
-      .filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return (
-          expense.category === budget.category &&
-          expenseDate >= start &&
-          expenseDate <= end
-        );
-      })
-      .reduce((total, expense) => total + Number(expense.amount), 0);
+    
+    const categoryExpenses = expenses.filter(expense => expense.category === category);
+    return categoryExpenses.reduce((total, expense) => total + Number(expense.amount), 0);
   };
 
   return (
@@ -98,7 +83,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
         </TableHeader>
         <TableBody>
           {budgets.map((budget) => {
-            const spentAmount = getSpentAmount(budget);
+            const spentAmount = getSpentAmount(budget.category);
             const remainingAmount = budget.amount - spentAmount;
             const progress = (spentAmount / budget.amount) * 100;
 
