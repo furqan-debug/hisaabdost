@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
@@ -30,8 +30,9 @@ const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: budgets, isLoading } = useQuery({
+  const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,6 +42,18 @@ const Budget = () => {
 
       if (error) throw error;
       return data as Budget[];
+    },
+  });
+
+  const { data: expenses, isLoading: expensesLoading } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*');
+
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -65,14 +78,15 @@ const Budget = () => {
     link.click();
   };
 
-  if (isLoading) {
+  if (budgetsLoading || expensesLoading) {
     return <div>Loading...</div>;
   }
 
+  // Calculate total budget and spending
   const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = 0; // TODO: Calculate from expenses
+  const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
   const remainingBalance = totalBudget - totalSpent;
-  const usagePercentage = (totalSpent / totalBudget) * 100 || 0;
+  const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -170,6 +184,7 @@ const Budget = () => {
         onSuccess={() => {
           setShowBudgetForm(false);
           setSelectedBudget(null);
+          queryClient.invalidateQueries({ queryKey: ['budgets'] });
           toast({
             title: "Success",
             description: `Budget ${selectedBudget ? 'updated' : 'created'} successfully.`,
