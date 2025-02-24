@@ -4,56 +4,45 @@ import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
 import type { Expense } from "@/types/database";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
+  expenses: Expense[];
   onEditBudget: (budget: Budget) => void;
 }
 
-export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
-  const { data: expenses } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: async () => {
-      // Get the start and end of the current month
-      const startDate = startOfMonth(new Date()).toISOString();
-      const endDate = endOfMonth(new Date()).toISOString();
-
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching expenses:', error);
-        throw error;
-      }
-
-      console.log('Fetched expenses:', data); // Debug log
-      return data as unknown as Expense[];
-    }
-  });
-
+export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBudgetsProps) {
   const getSpentAmount = (budget: Budget) => {
     if (!expenses) return 0;
     
-    // Filter expenses by category and sum their amounts
-    const categoryExpenses = expenses.filter(expense => 
-      expense.category.toLowerCase() === budget.category.toLowerCase()
-    );
-
-    const total = categoryExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+    const today = new Date();
+    const startOfCurrentMonth = startOfMonth(today);
+    const endOfCurrentMonth = endOfMonth(today);
     
-    // Debug logs
-    console.log(`Category: ${budget.category}`);
-    console.log('Matching expenses:', categoryExpenses);
-    console.log('Total spent:', total);
+    // Filter expenses based on category and period
+    const relevantExpenses = expenses.filter(expense => {
+      const expenseDate = parseISO(expense.date);
+      const matchesCategory = expense.category.toLowerCase() === budget.category.toLowerCase();
+      
+      // Different date range based on budget period
+      if (budget.period === 'monthly') {
+        return matchesCategory && isWithinInterval(expenseDate, {
+          start: startOfCurrentMonth,
+          end: endOfCurrentMonth
+        });
+      } else if (budget.period === 'yearly') {
+        return matchesCategory && expenseDate.getFullYear() === today.getFullYear();
+      }
+      // Add quarterly logic if needed
+      return matchesCategory;
+    });
+
+    console.log(`Category ${budget.category} - Period ${budget.period}:`, relevantExpenses);
+    
+    const total = relevantExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+    console.log(`Total spent for ${budget.category}: ${total}`);
     
     return total;
   };
@@ -88,7 +77,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                 <TableCell className="w-[200px]">
                   <Progress 
                     value={progress} 
-                    className="w-full" 
+                    className="w-full"
                   />
                 </TableCell>
                 <TableCell>

@@ -14,6 +14,7 @@ import { Download, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/utils/chartUtils";
+import type { Expense } from "@/types/database";
 
 // Define a type that matches what we store in Supabase
 export interface Budget {
@@ -31,7 +32,7 @@ const Budget = () => {
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const { toast } = useToast();
 
-  const { data: budgets, isLoading } = useQuery({
+  const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,6 +44,23 @@ const Budget = () => {
       return data as Budget[];
     },
   });
+
+  const { data: expenses } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*');
+
+      if (error) throw error;
+      return data as Expense[];
+    },
+  });
+
+  const calculateTotalSpent = () => {
+    if (!expenses) return 0;
+    return expenses.reduce((total, expense) => total + Number(expense.amount), 0);
+  };
 
   const exportBudgetData = () => {
     if (!budgets) return;
@@ -65,14 +83,14 @@ const Budget = () => {
     link.click();
   };
 
-  if (isLoading) {
+  if (budgetsLoading) {
     return <div>Loading...</div>;
   }
 
   const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = 0; // TODO: Calculate from expenses
+  const totalSpent = calculateTotalSpent();
   const remainingBalance = totalBudget - totalSpent;
-  const usagePercentage = (totalSpent / totalBudget) * 100 || 0;
+  const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -145,6 +163,7 @@ const Budget = () => {
             <TabsContent value="categories">
               <CategoryBudgets 
                 budgets={budgets || []}
+                expenses={expenses || []}
                 onEditBudget={(budget) => {
                   setSelectedBudget(budget);
                   setShowBudgetForm(true);
