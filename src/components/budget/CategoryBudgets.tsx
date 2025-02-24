@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
@@ -41,7 +40,6 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
         description: "The budget has been successfully deleted.",
       });
 
-      // Refresh budgets data
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
     } catch (error) {
       console.error('Error deleting budget:', error);
@@ -53,14 +51,17 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
     }
   };
 
+  const normalizeCategory = (category: string) => {
+    return category.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
   const getSpentAmount = (budget: Budget) => {
     if (!expenses || expenses.length === 0) {
       console.log('No expenses found for category:', budget.category);
       return 0;
     }
 
-    // Log all expenses for debugging
-    console.log('All expenses:', expenses);
+    console.log('Calculating spent amount for budget category:', budget.category);
     
     const today = new Date();
     const startOfCurrentMonth = startOfMonth(today);
@@ -68,20 +69,29 @@ export function CategoryBudgets({ budgets, expenses, onEditBudget }: CategoryBud
     const startOfCurrentYear = startOfYear(today);
     const endOfCurrentYear = endOfYear(today);
     
-    // Filter expenses based on category and period
+    const normalizedBudgetCategory = normalizeCategory(budget.category);
+    
     const relevantExpenses = expenses.filter(expense => {
       try {
-        // Log each expense for debugging
-        console.log('Processing expense:', expense);
-        
         const expenseDate = parseISO(expense.date);
-        const matchesCategory = expense.category.toLowerCase() === budget.category.toLowerCase();
+        const normalizedExpenseCategory = normalizeCategory(expense.category);
+        const matchesCategory = normalizedExpenseCategory === normalizedBudgetCategory;
+
+        console.log('Expense:', {
+          id: expense.id,
+          category: expense.category,
+          normalizedCategory: normalizedExpenseCategory,
+          budgetCategory: budget.category,
+          normalizedBudgetCategory,
+          matches: matchesCategory,
+          amount: expense.amount,
+          date: expense.date
+        });
         
         if (!matchesCategory) {
           return false;
         }
 
-        // Different date range based on budget period
         if (budget.period === 'monthly') {
           const isInMonth = isWithinInterval(expenseDate, {
             start: startOfCurrentMonth,
