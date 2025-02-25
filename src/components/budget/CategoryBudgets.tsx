@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -48,23 +49,43 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  // Query expenses directly in the component
-  const { data: expenses } = useQuery({
+  // Query expenses directly in the component with proper error handling
+  const { data: expenses, error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      
       const { data, error } = await supabase
         .from('expenses')
-        .select('*');
+        .select('*')
+        .gte('date', firstDayOfMonth.toISOString())
+        .lte('date', currentDate.toISOString());
+        
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
+
+  if (expensesError) {
+    console.error('Error fetching expenses:', expensesError);
+  }
 
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     
-    const categoryExpenses = expenses.filter(expense => expense.category === category);
-    return categoryExpenses.reduce((total, expense) => total + Number(expense.amount), 0);
+    // Make the category comparison case-insensitive
+    const categoryExpenses = expenses.filter(
+      expense => expense.category.toLowerCase() === category.toLowerCase()
+    );
+    
+    // Sum up all expenses for this category
+    return categoryExpenses.reduce((total, expense) => {
+      const amount = typeof expense.amount === 'string' 
+        ? parseFloat(expense.amount) 
+        : Number(expense.amount);
+      return total + (isNaN(amount) ? 0 : amount);
+    }, 0);
   };
 
   return (
@@ -84,14 +105,16 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
         <TableBody>
           {budgets.map((budget) => {
             const spentAmount = getSpentAmount(budget.category);
-            const remainingAmount = budget.amount - spentAmount;
-            const progress = (spentAmount / budget.amount) * 100;
+            const remainingAmount = Number(budget.amount) - spentAmount;
+            const progress = Number(budget.amount) > 0 
+              ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
+              : 0;
 
             return (
               <TableRow key={budget.id}>
                 <TableCell>{budget.category}</TableCell>
                 <TableCell className="capitalize">{budget.period}</TableCell>
-                <TableCell>{formatCurrency(budget.amount)}</TableCell>
+                <TableCell>{formatCurrency(Number(budget.amount))}</TableCell>
                 <TableCell>{formatCurrency(spentAmount)}</TableCell>
                 <TableCell>{formatCurrency(remainingAmount)}</TableCell>
                 <TableCell className="w-[200px]">
