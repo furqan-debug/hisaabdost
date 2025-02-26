@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
@@ -50,10 +50,16 @@ export default function Goals() {
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('date', monthStart.toISOString())
+        .lte('date', monthEnd.toISOString());
 
       if (error) throw error;
       return data;
@@ -62,7 +68,7 @@ export default function Goals() {
   });
 
   const calculateProgress = (goal: Goal) => {
-    return (goal.current_amount / goal.target_amount) * 100;
+    return Math.min((goal.current_amount / goal.target_amount) * 100, 100);
   };
 
   const generateTip = (goal: Goal) => {
@@ -71,17 +77,25 @@ export default function Goals() {
       .reduce((sum, exp) => sum + exp.amount, 0) || 0;
 
     if (progress < 25) {
-      return `Consider reducing ${goal.category} expenses by ${monthlyExpenses > 0 ? Math.round((monthlyExpenses * 0.2)) : 20}% to reach your goal faster.`;
+      return monthlyExpenses > 0 
+        ? `Consider reducing ${goal.category} expenses by ${Math.round((monthlyExpenses * 0.2))}$ to reach your goal faster.`
+        : `Start by saving a small amount each month for your ${goal.category} goal.`;
     } else if (progress < 50) {
       return "You're making progress! Keep up the momentum by setting aside a fixed amount each month.";
     } else if (progress < 75) {
       return "You're well on your way! Consider automating your savings to reach your goal even faster.";
     } else {
-      return "Almost there! Make one final push to reach your goal.";
+      return progress === 100 
+        ? "Congratulations! You've reached your goal!" 
+        : "Almost there! Make one final push to reach your goal.";
     }
   };
 
   const handleDeleteGoal = async (goalId: string) => {
+    if (!window.confirm('Are you sure you want to delete this goal?')) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('goals')
@@ -127,59 +141,65 @@ export default function Goals() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {goals?.map((goal) => {
-            const progress = calculateProgress(goal);
-            const isOffTrack = progress < 30;
-            const tip = generateTip(goal);
+          {goals?.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-muted-foreground">No goals yet. Click "Add Goal" to create your first financial goal!</p>
+            </div>
+          ) : (
+            goals?.map((goal) => {
+              const progress = calculateProgress(goal);
+              const isOffTrack = progress < 30;
+              const tip = generateTip(goal);
 
-            return (
-              <Card key={goal.id} className="relative">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
-                      {goal.title}
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteGoal(goal.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardDescription>
-                    Target: ${goal.target_amount.toLocaleString()}
-                    <br />
-                    Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress ({Math.round(progress)}%)</span>
-                      <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+              return (
+                <Card key={goal.id} className="relative">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
+                        {goal.title}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteGoal(goal.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Progress value={progress} />
-                  </div>
+                    <CardDescription>
+                      Target: ${goal.target_amount.toLocaleString()}
+                      <br />
+                      Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Progress ({Math.round(progress)}%)</span>
+                        <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+                      </div>
+                      <Progress value={progress} />
+                    </div>
 
-                  {isOffTrack && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        You're falling behind on this goal. Consider adjusting your spending habits.
-                      </AlertDescription>
+                    {isOffTrack && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          You're falling behind on this goal. Consider adjusting your spending habits.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Alert>
+                      <AlertDescription>{tip}</AlertDescription>
                     </Alert>
-                  )}
-
-                  <Alert>
-                    <AlertDescription>{tip}</AlertDescription>
-                  </Alert>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
         </div>
       </div>
 
