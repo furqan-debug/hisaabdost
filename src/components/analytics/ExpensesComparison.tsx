@@ -1,4 +1,3 @@
-
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -96,10 +95,9 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
             <Progress 
               value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)} 
               className={cn(
-                "h-2 [&>[role=progressbar]]:bg-current",
-                "[&>[role=progressbar]]:transition-all"
+                "h-2 [&>[role=progressbar]]:bg-current transition-all"
               )}
-              style={{ "--tw-text-opacity": "1", color: color }}
+              style={{ color }}
             />
           </div>
         ))}
