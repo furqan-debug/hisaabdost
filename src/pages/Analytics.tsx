@@ -13,8 +13,10 @@ import { SparklesIcon } from "lucide-react";
 import { useState } from "react";
 import { subMonths, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/lib/auth";
 
 export default function Analytics() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
@@ -22,12 +24,15 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const { data: expenses, isLoading } = useQuery({
-    queryKey: ['expenses', dateRange],
+  const { data: expenses, isLoading, error } = useQuery({
+    queryKey: ['expenses', dateRange, user?.id],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', dateRange.start)
         .lte('date', dateRange.end)
         .order('date', { ascending: false });
@@ -35,6 +40,7 @@ export default function Analytics() {
       if (error) throw error;
       return data || [];
     },
+    enabled: !!user,
   });
 
   const filteredExpenses = expenses?.filter(expense => {
@@ -80,6 +86,14 @@ export default function Analytics() {
   };
 
   const insights = generateInsights();
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Error loading expenses data. Please try again later.</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (isLoading) {
     return (
