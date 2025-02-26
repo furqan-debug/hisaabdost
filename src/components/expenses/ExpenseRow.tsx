@@ -12,6 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
 
@@ -31,9 +40,10 @@ export function ExpenseRow({
   onDelete,
 }: ExpenseRowProps) {
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
-    <TableRow>
+    <TableRow className="animate-fade-in">
       <TableCell>
         <Button
           variant="ghost"
@@ -66,7 +76,7 @@ export function ExpenseRow({
       </TableCell>
       <TableCell>
         <span 
-          className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+          className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium transition-colors"
           style={{ 
             backgroundColor: `${CATEGORY_COLORS[expense.category as keyof typeof CATEGORY_COLORS]}20`,
             color: CATEGORY_COLORS[expense.category as keyof typeof CATEGORY_COLORS]
@@ -90,7 +100,7 @@ export function ExpenseRow({
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="animate-scale-in">
             <DropdownMenuItem onClick={() => onEdit(expense)}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit
@@ -106,13 +116,36 @@ export function ExpenseRow({
             )}
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => onDelete(expense.id)}
+              onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent className="animate-scale-in">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this expense? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDelete(expense.id);
+                  setShowDeleteConfirm(false);
+                }}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <ViewReceiptDialog
           open={showReceipt}
