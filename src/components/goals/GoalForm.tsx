@@ -58,7 +58,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<GoalFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
     defaultValues: goal ? {
       title: goal.title,
@@ -156,8 +156,8 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select
-              value={goal?.category}
-              onValueChange={(value) => register("category").onChange({ target: { value } })}
+              defaultValue={goal?.category}
+              onValueChange={(value) => setValue("category", value, { shouldValidate: true })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
