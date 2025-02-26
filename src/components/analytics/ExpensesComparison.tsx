@@ -95,8 +95,11 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
             </div>
             <Progress 
               value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)} 
-              className={cn("h-2")}
-              // Style is now applied directly through the className prop
+              className={cn(
+                "h-2 [&>[role=progressbar]]:bg-current",
+                "[&>[role=progressbar]]:transition-all"
+              )}
+              style={{ "--tw-text-opacity": "1", color: color }}
             />
           </div>
         ))}
