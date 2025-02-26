@@ -49,20 +49,27 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  // Query expenses directly in the component with proper error handling
+  // Modified query to log data and ensure proper date handling
   const { data: expenses, error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       const currentDate = new Date();
       const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       
+      console.log('Fetching expenses from:', firstDayOfMonth.toISOString(), 'to:', currentDate.toISOString());
+      
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .gte('date', firstDayOfMonth.toISOString())
-        .lte('date', currentDate.toISOString());
+        .gte('date', firstDayOfMonth.toISOString().split('T')[0])
+        .lte('date', currentDate.toISOString().split('T')[0]);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Retrieved expenses:', data);
       return data || [];
     },
   });
@@ -74,19 +81,35 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     
+    // Log the filtering process for debugging
+    console.log('Calculating spent amount for category:', category);
+    console.log('Available expenses:', expenses);
+    
     // Make the category comparison case-insensitive
-    const categoryExpenses = expenses.filter(
-      expense => expense.category.toLowerCase() === category.toLowerCase()
-    );
+    const categoryExpenses = expenses.filter(expense => {
+      const matches = expense.category.toLowerCase() === category.toLowerCase();
+      console.log('Expense:', expense, 'Matches category:', matches);
+      return matches;
+    });
+    
+    console.log('Matching expenses for category:', category, ':', categoryExpenses);
     
     // Sum up all expenses for this category
-    return categoryExpenses.reduce((total, expense) => {
+    const total = categoryExpenses.reduce((total, expense) => {
       const amount = typeof expense.amount === 'string' 
         ? parseFloat(expense.amount) 
         : Number(expense.amount);
-      return total + (isNaN(amount) ? 0 : amount);
+      const newTotal = total + (isNaN(amount) ? 0 : amount);
+      console.log('Adding amount:', amount, 'New total:', newTotal);
+      return newTotal;
     }, 0);
+
+    console.log('Final total for category:', category, ':', total);
+    return total;
   };
+
+  // Log the budgets we're working with
+  console.log('Current budgets:', budgets);
 
   return (
     <div className="space-y-4">
@@ -109,6 +132,15 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
             const progress = Number(budget.amount) > 0 
               ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
               : 0;
+
+            // Log the calculations for each budget row
+            console.log('Budget row calculations:', {
+              category: budget.category,
+              budgetAmount: budget.amount,
+              spentAmount,
+              remainingAmount,
+              progress
+            });
 
             return (
               <TableRow key={budget.id}>
