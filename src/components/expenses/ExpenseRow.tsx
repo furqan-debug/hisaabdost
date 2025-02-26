@@ -41,15 +41,34 @@ export function ExpenseRow({
 }: ExpenseRowProps) {
   const [showReceipt, setShowReceipt] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Ensure category exists in CATEGORY_COLORS, fallback to 'Other'
+  const category = CATEGORY_COLORS.hasOwnProperty(expense.category) 
+    ? expense.category 
+    : 'Other';
+  
+  const handleDelete = () => {
+    onDelete(expense.id);
+    setShowDeleteConfirm(false);
+    // Ensure expense is removed from selection if it was selected
+    if (selectedExpenses.has(expense.id)) {
+      toggleExpenseSelection(expense.id);
+    }
+  };
 
   return (
-    <TableRow className="animate-fade-in">
+    <TableRow 
+      className="animate-fade-in group"
+      data-state={selectedExpenses.has(expense.id) ? 'selected' : 'default'}
+    >
       <TableCell>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => toggleExpenseSelection(expense.id)}
+          onClick={() => !showDeleteConfirm && toggleExpenseSelection(expense.id)}
           className="h-8 w-8 p-0"
+          aria-label={selectedExpenses.has(expense.id) ? "Deselect expense" : "Select expense"}
+          disabled={showDeleteConfirm}
         >
           {selectedExpenses.has(expense.id) ? (
             <CheckSquare className="h-4 w-4" />
@@ -61,14 +80,14 @@ export function ExpenseRow({
       <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
       <TableCell>
         <div className="space-y-1">
-          <div>{expense.description}</div>
+          <div className="font-medium">{expense.description}</div>
           {expense.isRecurring && (
             <div className="text-xs text-muted-foreground">
               Recurring
             </div>
           )}
           {expense.notes && (
-            <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+            <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={expense.notes}>
               {expense.notes}
             </div>
           )}
@@ -78,36 +97,43 @@ export function ExpenseRow({
         <span 
           className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium transition-colors"
           style={{ 
-            backgroundColor: `${CATEGORY_COLORS[expense.category as keyof typeof CATEGORY_COLORS]}20`,
-            color: CATEGORY_COLORS[expense.category as keyof typeof CATEGORY_COLORS]
+            backgroundColor: `${CATEGORY_COLORS[category]}20`,
+            color: CATEGORY_COLORS[category]
           }}
         >
-          {expense.category}
+          {category}
         </span>
       </TableCell>
       <TableCell>
-        {expense.paymentMethod || 'Cash'}
+        {expense.payment || 'Cash'}
       </TableCell>
-      <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+      <TableCell className="text-right font-medium">{formatCurrency(expense.amount)}</TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Open expense actions"
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="animate-scale-in">
-            <DropdownMenuItem onClick={() => onEdit(expense)}>
+            <DropdownMenuItem 
+              onClick={() => onEdit(expense)}
+              disabled={showDeleteConfirm}
+            >
               <Pencil className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
             {expense.receiptUrl && (
               <>
-                <DropdownMenuItem onClick={() => setShowReceipt(true)}>
+                <DropdownMenuItem 
+                  onClick={() => setShowReceipt(true)}
+                  disabled={showDeleteConfirm}
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Receipt
                 </DropdownMenuItem>
@@ -129,17 +155,14 @@ export function ExpenseRow({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Expense</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this expense? This action cannot be undone.
+                Are you sure you want to delete this {expense.category} expense of {formatCurrency(expense.amount)}? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <Button
                 variant="destructive"
-                onClick={() => {
-                  onDelete(expense.id);
-                  setShowDeleteConfirm(false);
-                }}
+                onClick={handleDelete}
               >
                 Delete
               </Button>
