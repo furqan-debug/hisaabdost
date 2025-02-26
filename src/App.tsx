@@ -14,7 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
 import Expenses from "./pages/Expenses";
 import Budget from "./pages/Budget";
-import Analytics from "./pages/Analytics"; // Import the actual Analytics component
+import Analytics from "./pages/Analytics";
+import Goals from "./pages/Goals";
 
 const queryClient = new QueryClient();
 
@@ -31,15 +32,6 @@ const AuthCallback = () => {
 
   return <div>Loading...</div>;
 };
-
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="space-y-4">
-    <h1 className="text-2xl font-bold">{title}</h1>
-    <p className="text-muted-foreground">This feature is coming soon!</p>
-  </div>
-);
-
-const Goals = () => <PlaceholderPage title="Goals" />;
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
