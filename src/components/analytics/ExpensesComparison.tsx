@@ -3,6 +3,7 @@ import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface Expense {
   amount: number;
@@ -94,8 +95,8 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
             </div>
             <Progress 
               value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)} 
-              className="h-2"
-              indicatorClassName={`bg-[${color}]`}
+              className={cn("h-2")}
+              // Style is now applied directly through the className prop
             />
           </div>
         ))}
