@@ -110,6 +110,39 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          category: string
+          created_at: string
+          current_amount: number
+          deadline: string
+          id: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          current_amount?: number
+          deadline: string
+          id?: string
+          target_amount: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_amount?: number
+          deadline?: string
+          id?: string
+          target_amount?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
