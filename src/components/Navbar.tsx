@@ -30,7 +30,7 @@ const Navbar = () => {
           </Button>
         </SidebarTrigger>
         <h2 className="text-lg font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Smart Expense Tracker
+          AI-Budget Beacon
         </h2>
         <Button 
           variant="default" 
