@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon, SparklesIcon } from "lucide-react";
 import { subMonths, isAfter, isBefore } from "date-fns";
 
@@ -16,7 +17,7 @@ export interface Insight {
   recommendation: string | null;
 }
 
-export function useAnalyticsInsights(filteredExpenses: Expense[]) {
+export function useAnalyticsInsights(filteredExpenses: Expense[]): Insight[] {
   if (!filteredExpenses.length) return [];
 
   const insights: Insight[] = [];
@@ -52,7 +53,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]) {
     const categoryPercentage = (highestCategory[1] / totalExpenses) * 100;
     insights.push({
       type: 'highlight',
-      icon: <TrendingUpIcon className="h-4 w-4 text-orange-500" />,
+      icon: React.createElement(TrendingUpIcon, { className: "h-4 w-4 text-orange-500" }),
       message: `Your highest spending category is ${highestCategory[0]} at ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(highestCategory[1])} (${categoryPercentage.toFixed(1)}% of total)`,
       recommendation: categoryPercentage > 40 ? 
         "Consider setting a budget limit for this category as it represents a significant portion of your expenses." : 
@@ -65,7 +66,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]) {
   if (highTransactions.length > 0) {
     insights.push({
       type: 'alert',
-      icon: <AlertTriangleIcon className="h-4 w-4 text-yellow-500" />,
+      icon: React.createElement(AlertTriangleIcon, { className: "h-4 w-4 text-yellow-500" }),
       message: `You have ${highTransactions.length} unusually large transactions that are 50% above your average expense of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(avgExpense)}`,
       recommendation: "Review these transactions to ensure they were planned expenses."
     });
@@ -81,8 +82,8 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]) {
       insights.push({
         type: monthlyChange > 0 ? 'warning' : 'success',
         icon: monthlyChange > 0 ? 
-          <TrendingUpIcon className="h-4 w-4 text-red-500" /> : 
-          <TrendingDownIcon className="h-4 w-4 text-green-500" />,
+          React.createElement(TrendingUpIcon, { className: "h-4 w-4 text-red-500" }) : 
+          React.createElement(TrendingDownIcon, { className: "h-4 w-4 text-green-500" }),
         message: `Your average spending ${monthlyChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(monthlyChange).toFixed(1)}% compared to the previous period`,
         recommendation: monthlyChange > 0 ? 
           "Consider reviewing your recent spending habits and identify areas for potential savings." :
@@ -99,7 +100,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]) {
     const savingsTotal = smallCategories.reduce((sum, [,amount]) => sum + amount, 0);
     insights.push({
       type: 'tip',
-      icon: <SparklesIcon className="h-4 w-4 text-blue-500" />,
+      icon: React.createElement(SparklesIcon, { className: "h-4 w-4 text-blue-500" }),
       message: `You could save ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(savingsTotal)} by optimizing spending in smaller categories`,
       recommendation: "Consider consolidating or eliminating expenses in these smaller categories for potential savings."
     });
