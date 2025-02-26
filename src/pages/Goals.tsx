@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
+import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
   id: string;
@@ -84,66 +85,74 @@ export default function Goals() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Financial Goals</h1>
-          <p className="text-muted-foreground">Track and manage your financial targets</p>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Financial Goals</h1>
+            <p className="text-muted-foreground">Track and manage your financial targets</p>
+          </div>
+          <Button onClick={() => {
+            setSelectedGoal(null);
+            setShowGoalForm(true);
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Goal
+          </Button>
         </div>
-        <Button onClick={() => {
-          setSelectedGoal(null);
-          setShowGoalForm(true);
-        }}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Goal
-        </Button>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {goals?.map((goal) => {
-          const progress = calculateProgress(goal);
-          const isOffTrack = progress < 30;
-          const tip = generateTip(goal);
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {goals?.map((goal) => {
+            const progress = calculateProgress(goal);
+            const isOffTrack = progress < 30;
+            const tip = generateTip(goal);
 
-          return (
-            <Card key={goal.id} className="relative">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
-                  {goal.title}
-                </CardTitle>
-                <CardDescription>
-                  Target: ${goal.target_amount.toLocaleString()}
-                  <br />
-                  Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Progress ({Math.round(progress)}%)</span>
-                    <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+            return (
+              <Card key={goal.id} className="relative">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
+                    {goal.title}
+                  </CardTitle>
+                  <CardDescription>
+                    Target: ${goal.target_amount.toLocaleString()}
+                    <br />
+                    Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Progress ({Math.round(progress)}%)</span>
+                      <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+                    </div>
+                    <Progress value={progress} />
                   </div>
-                  <Progress value={progress} />
-                </div>
 
-                {isOffTrack && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      You're falling behind on this goal. Consider adjusting your spending habits.
-                    </AlertDescription>
+                  {isOffTrack && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        You're falling behind on this goal. Consider adjusting your spending habits.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Alert>
+                    <AlertDescription>{tip}</AlertDescription>
                   </Alert>
-                )}
-
-                <Alert>
-                  <AlertDescription>{tip}</AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      <GoalForm 
+        open={showGoalForm} 
+        onOpenChange={setShowGoalForm}
+        goal={selectedGoal}
+      />
+    </>
   );
 }
