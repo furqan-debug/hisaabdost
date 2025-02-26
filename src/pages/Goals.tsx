@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trophy, AlertTriangle } from "lucide-react";
+import { Plus, Trophy, AlertTriangle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ export default function Goals() {
   const { toast } = useToast();
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals', user?.id],
@@ -80,6 +81,30 @@ export default function Goals() {
     }
   };
 
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Goal deleted",
+        description: "Your goal has been successfully deleted.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete the goal. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -110,10 +135,20 @@ export default function Goals() {
             return (
               <Card key={goal.id} className="relative">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
-                    {goal.title}
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
+                      {goal.title}
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteGoal(goal.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <CardDescription>
                     Target: ${goal.target_amount.toLocaleString()}
                     <br />
