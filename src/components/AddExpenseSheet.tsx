@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -104,7 +105,7 @@ const AddExpenseSheet = ({
       paymentMethod,
       notes,
       isRecurring,
-      receiptUrl, // We'll implement file upload in the next iteration
+      receiptUrl,
     });
 
     // Reset form
@@ -123,18 +124,15 @@ const AddExpenseSheet = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.match('image.*') && file.type !== 'application/pdf') {
         alert('Please upload an image or PDF file');
         return;
       }
 
       setReceiptFile(file);
-      // Create a temporary URL for preview
       const url = URL.createObjectURL(file);
       setReceiptUrl(url);
 
-      // Clean up the old URL if it exists
       if (receiptUrl && receiptUrl.startsWith('blob:')) {
         URL.revokeObjectURL(receiptUrl);
       }
@@ -166,9 +164,10 @@ const AddExpenseSheet = ({
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Expense Name</Label>
+            <Label htmlFor="expense-description">Expense Name</Label>
             <Input
-              id="description"
+              id="expense-description"
+              name="description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -178,9 +177,10 @@ const AddExpenseSheet = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ($)</Label>
+            <Label htmlFor="expense-amount">Amount ($)</Label>
             <Input
-              id="amount"
+              id="expense-amount"
+              name="amount"
               type="number"
               min="0"
               step="0.01"
@@ -192,9 +192,9 @@ const AddExpenseSheet = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+            <Label htmlFor="expense-category">Category</Label>
+            <Select name="category" value={category} onValueChange={setCategory}>
+              <SelectTrigger id="expense-category">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -208,9 +208,9 @@ const AddExpenseSheet = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment Method</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger>
+            <Label htmlFor="expense-payment">Payment Method</Label>
+            <Select name="paymentMethod" value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger id="expense-payment">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
@@ -224,9 +224,10 @@ const AddExpenseSheet = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="expense-date">Date</Label>
             <Input
-              id="date"
+              id="expense-date"
+              name="date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -235,9 +236,10 @@ const AddExpenseSheet = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="expense-notes">Notes</Label>
             <Textarea
-              id="notes"
+              id="expense-notes"
+              name="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any additional details about the expense..."
@@ -247,15 +249,16 @@ const AddExpenseSheet = ({
 
           <div className="flex items-center space-x-2">
             <Switch
-              id="recurring"
+              id="expense-recurring"
+              name="isRecurring"
               checked={isRecurring}
               onCheckedChange={setIsRecurring}
             />
-            <Label htmlFor="recurring">Recurring Expense</Label>
+            <Label htmlFor="expense-recurring">Recurring Expense</Label>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="receipt">Receipt</Label>
+            <Label htmlFor="expense-receipt">Receipt</Label>
             <div className="space-y-2">
               {receiptUrl && (
                 <div className="relative group">
@@ -277,7 +280,7 @@ const AddExpenseSheet = ({
                       type="button"
                       variant="secondary"
                       size="sm"
-                      onClick={() => document.getElementById('receipt')?.click()}
+                      onClick={() => document.getElementById('expense-receipt')?.click()}
                     >
                       Replace
                     </Button>
@@ -286,7 +289,8 @@ const AddExpenseSheet = ({
               )}
               <div className="flex items-center gap-2">
                 <Input
-                  id="receipt"
+                  id="expense-receipt"
+                  name="receipt"
                   type="file"
                   accept="image/*,.pdf"
                   onChange={handleFileChange}
@@ -295,7 +299,7 @@ const AddExpenseSheet = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('receipt')?.click()}
+                  onClick={() => document.getElementById('expense-receipt')?.click()}
                   className="w-full"
                 >
                   <Upload className="mr-2 h-4 w-4" />
