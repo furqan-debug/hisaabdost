@@ -13,7 +13,8 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
 import Expenses from "./pages/Expenses";
-import Budget from "./pages/Budget"; // Import the actual Budget component
+import Budget from "./pages/Budget";
+import Analytics from "./pages/Analytics"; // Import the actual Analytics component
 
 const queryClient = new QueryClient();
 
@@ -38,7 +39,6 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-const Analytics = () => <PlaceholderPage title="Analytics" />;
 const Goals = () => <PlaceholderPage title="Goals" />;
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
