@@ -11,7 +11,7 @@ import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SparklesIcon, TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon } from "lucide-react";
 import { useState } from "react";
-import { subMonths, format, isWithinLastMonth } from "date-fns";
+import { subMonths, format, isAfter, isBefore } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 
@@ -55,6 +55,13 @@ export default function Analytics() {
 
     const insights = [];
     const currentDate = new Date();
+    const lastMonthStart = subMonths(currentDate, 1);
+    
+    // Helper function to check if a date is within the last month
+    const isWithinLastMonth = (date: Date) => {
+      return isAfter(date, lastMonthStart) && isBefore(date, currentDate);
+    };
+    
     const lastMonthExpenses = filteredExpenses.filter(exp => 
       isWithinLastMonth(new Date(exp.date))
     );
