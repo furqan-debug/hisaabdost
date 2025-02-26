@@ -105,7 +105,7 @@ export function ExpenseRow({
         </span>
       </TableCell>
       <TableCell>
-        {expense.payment || 'Cash'}
+        {expense.paymentMethod || 'Cash'}
       </TableCell>
       <TableCell className="text-right font-medium">{formatCurrency(expense.amount)}</TableCell>
       <TableCell className="text-right">
