@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, Plus, Settings, User } from "lucide-react";
+import { LogOut, Plus, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -17,42 +17,25 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 md:h-16 items-center px-4 gap-2 md:gap-4">
-        <h2 className="text-lg font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+      <div className="flex h-14 md:h-16 items-center px-4 gap-3">
+        <h2 className="text-lg font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           Smart Expense Tracker
         </h2>
         <Button 
-          variant="outline" 
+          variant="default" 
           size="icon" 
-          className="w-8 h-8 md:w-10 md:h-10 transition-transform hover:scale-105"
+          className="w-9 h-9 rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-r from-primary to-primary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-primary-foreground" />
           <span className="sr-only">Add new expense</span>
         </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="w-8 h-8 md:w-10 md:h-10 relative"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="sr-only">Notifications</span>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </Button>
         <ThemeToggle />
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="w-8 h-8 md:w-10 md:h-10"
-        >
-          <Settings className="h-4 w-4" />
-          <span className="sr-only">Settings</span>
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="w-8 h-8 md:w-10 md:h-10"
+              className="w-9 h-9 rounded-full hover:bg-muted transition-colors duration-300"
             >
               <User className="h-4 w-4" />
               <span className="sr-only">User menu</span>
