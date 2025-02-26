@@ -18,6 +18,10 @@ import { DateField } from "./expenses/form-fields/DateField";
 import { NotesField } from "./expenses/form-fields/NotesField";
 import { RecurringField } from "./expenses/form-fields/RecurringField";
 import { ReceiptField } from "./expenses/form-fields/ReceiptField";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface Expense {
   id: string;
@@ -46,6 +50,9 @@ const AddExpenseSheet = ({
   open,
   onOpenChange 
 }: AddExpenseSheetProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string>(expenseToEdit?.amount.toString() || "");
   const [description, setDescription] = useState<string>(expenseToEdit?.description || "");
   const [date, setDate] = useState<string>(expenseToEdit?.date || new Date().toISOString().split('T')[0]);
@@ -55,6 +62,7 @@ const AddExpenseSheet = ({
   const [isRecurring, setIsRecurring] = useState<boolean>(expenseToEdit?.isRecurring || false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string>(expenseToEdit?.receiptUrl || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (expenseToEdit) {
@@ -69,33 +77,70 @@ const AddExpenseSheet = ({
     }
   }, [expenseToEdit]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !description || !date || !category) return;
+    if (!amount || !description || !date || !category || !user) return;
 
-    onAddExpense({
-      id: expenseToEdit?.id || crypto.randomUUID(),
-      amount: parseFloat(amount),
-      description,
-      date,
-      category,
-      paymentMethod,
-      notes,
-      isRecurring,
-      receiptUrl,
-    });
+    setIsSubmitting(true);
+    try {
+      const expenseData = {
+        user_id: user.id,
+        amount: parseFloat(amount),
+        description,
+        date,
+        category,
+        payment: paymentMethod,
+      };
 
-    // Reset form
-    setAmount("");
-    setDescription("");
-    setDate(new Date().toISOString().split('T')[0]);
-    setCategory("Other");
-    setPaymentMethod("Cash");
-    setNotes("");
-    setIsRecurring(false);
-    setReceiptFile(null);
-    setReceiptUrl("");
-    onClose?.();
+      let error;
+      if (expenseToEdit) {
+        const { error: updateError } = await supabase
+          .from('expenses')
+          .update(expenseData)
+          .eq('id', expenseToEdit.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('expenses')
+          .insert([expenseData]);
+        error = insertError;
+      }
+
+      if (error) throw error;
+
+      // Invalidate both expenses and budgets queries to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+
+      toast({
+        title: expenseToEdit ? "Expense Updated" : "Expense Added",
+        description: expenseToEdit 
+          ? "Your expense has been updated successfully."
+          : "Your expense has been added successfully.",
+      });
+
+      // Reset form
+      setAmount("");
+      setDescription("");
+      setDate(new Date().toISOString().split('T')[0]);
+      setCategory("Other");
+      setPaymentMethod("Cash");
+      setNotes("");
+      setIsRecurring(false);
+      setReceiptFile(null);
+      setReceiptUrl("");
+      onClose?.();
+
+    } catch (error) {
+      console.error('Error saving expense:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save the expense. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,8 +194,8 @@ const AddExpenseSheet = ({
           <RecurringField value={isRecurring} onChange={setIsRecurring} />
           <ReceiptField receiptUrl={receiptUrl} onFileChange={handleFileChange} />
 
-          <Button type="submit" className="w-full">
-            {expenseToEdit ? "Save Changes" : "Add Expense"}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : (expenseToEdit ? "Save Changes" : "Add Expense")}
           </Button>
         </form>
       </SheetContent>

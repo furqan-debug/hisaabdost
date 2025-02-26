@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { startOfMonth } from "date-fns";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -49,20 +50,18 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  // Modified query to log data and ensure proper date handling
-  const { data: expenses, error: expensesError } = useQuery({
+  // Query expenses for the current month
+  const { data: expenses = [], error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
-      const currentDate = new Date();
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const startDate = startOfMonth(new Date());
       
-      console.log('Fetching expenses from:', firstDayOfMonth.toISOString(), 'to:', currentDate.toISOString());
+      console.log('Fetching expenses from:', startDate.toISOString());
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .gte('date', firstDayOfMonth.toISOString().split('T')[0])
-        .lte('date', currentDate.toISOString().split('T')[0]);
+        .gte('date', startDate.toISOString().split('T')[0]);
         
       if (error) {
         console.error('Supabase error:', error);
@@ -81,35 +80,16 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     
-    // Log the filtering process for debugging
-    console.log('Calculating spent amount for category:', category);
-    console.log('Available expenses:', expenses);
-    
-    // Make the category comparison case-insensitive
-    const categoryExpenses = expenses.filter(expense => {
-      const matches = expense.category.toLowerCase() === category.toLowerCase();
-      console.log('Expense:', expense, 'Matches category:', matches);
-      return matches;
-    });
-    
-    console.log('Matching expenses for category:', category, ':', categoryExpenses);
+    // Filter expenses by category (case-insensitive)
+    const categoryExpenses = expenses.filter(expense => 
+      expense.category.toLowerCase() === category.toLowerCase()
+    );
     
     // Sum up all expenses for this category
-    const total = categoryExpenses.reduce((total, expense) => {
-      const amount = typeof expense.amount === 'string' 
-        ? parseFloat(expense.amount) 
-        : Number(expense.amount);
-      const newTotal = total + (isNaN(amount) ? 0 : amount);
-      console.log('Adding amount:', amount, 'New total:', newTotal);
-      return newTotal;
+    return categoryExpenses.reduce((total, expense) => {
+      return total + Number(expense.amount);
     }, 0);
-
-    console.log('Final total for category:', category, ':', total);
-    return total;
   };
-
-  // Log the budgets we're working with
-  console.log('Current budgets:', budgets);
 
   return (
     <div className="space-y-4">
@@ -132,15 +112,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
             const progress = Number(budget.amount) > 0 
               ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
               : 0;
-
-            // Log the calculations for each budget row
-            console.log('Budget row calculations:', {
-              category: budget.category,
-              budgetAmount: budget.amount,
-              spentAmount,
-              remainingAmount,
-              progress
-            });
 
             return (
               <TableRow key={budget.id}>
