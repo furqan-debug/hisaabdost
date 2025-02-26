@@ -8,9 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Plus, User } from "lucide-react";
+import { LogOut, Menu, Plus, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
+import { SidebarTrigger } from "./ui/sidebar";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -18,6 +19,16 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 md:h-16 items-center px-4 gap-3">
+        <SidebarTrigger>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-9 h-9 rounded-full hover:bg-muted transition-all duration-300"
+          >
+            <Menu className="h-4 w-4" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        </SidebarTrigger>
         <h2 className="text-lg font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
           Smart Expense Tracker
         </h2>
@@ -35,7 +46,7 @@ const Navbar = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="w-9 h-9 rounded-full hover:bg-muted transition-colors duration-300"
+              className="w-9 h-9 rounded-full hover:bg-muted transition-all duration-300"
             >
               <User className="h-4 w-4" />
               <span className="sr-only">User menu</span>
