@@ -90,6 +90,9 @@ const AddExpenseSheet = ({
         date,
         category,
         payment: paymentMethod,
+        notes,
+        is_recurring: isRecurring,
+        receipt_url: receiptUrl
       };
 
       let error;

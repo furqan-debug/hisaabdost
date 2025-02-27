@@ -13,15 +13,18 @@ import { format } from "date-fns";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('expenses');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(new Set());
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
@@ -40,23 +43,75 @@ const Expenses = () => {
     end: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
+  // Fetch expenses from Supabase using React Query
+  const { data: expenses = [], isLoading } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load expenses. Please try again.",
+          variant: "destructive",
+        });
+        return [];
+      }
+      
+      return data.map(exp => ({
+        id: exp.id,
+        amount: Number(exp.amount),
+        description: exp.description,
+        date: exp.date,
+        category: exp.category,
+        paymentMethod: exp.payment || undefined,
+        notes: exp.notes || undefined,
+        isRecurring: exp.is_recurring || false,
+        receiptUrl: exp.receipt_url || undefined,
+      }));
+    },
+    enabled: !!user,
+  });
 
-  const handleAddExpense = (newExpense: Expense) => {
-    if (expenseToEdit) {
-      setExpenses(expenses.map(exp => exp.id === newExpense.id ? newExpense : exp));
-      setExpenseToEdit(undefined);
-    } else {
-      setExpenses([...expenses, newExpense]);
-    }
-    setShowAddExpense(false);
+  const handleAddExpense = () => {
+    // This just opens the sheet, actual adding is handled in the sheet component
+    setShowAddExpense(true);
   };
 
-  const handleDeleteSelected = () => {
-    setExpenses(expenses.filter(exp => !selectedExpenses.has(exp.id)));
-    setSelectedExpenses(new Set());
+  const handleDeleteSelected = async () => {
+    if (!user || selectedExpenses.size === 0) return;
+    
+    try {
+      const selectedIds = Array.from(selectedExpenses);
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .in('id', selectedIds);
+      
+      if (error) throw error;
+      
+      setSelectedExpenses(new Set());
+      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      
+      toast({
+        title: "Expenses Deleted",
+        description: `Successfully deleted ${selectedIds.length} expense(s).`,
+      });
+    } catch (error) {
+      console.error('Error deleting expenses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete expenses. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleSelectAll = () => {
@@ -147,7 +202,7 @@ const Expenses = () => {
         </div>
         <div className="flex items-center gap-2">
           <AddExpenseSheet 
-            onAddExpense={handleAddExpense}
+            onAddExpense={() => {}} // This is now handled internally in the component
             expenseToEdit={expenseToEdit}
             onClose={() => {
               setExpenseToEdit(undefined);
@@ -205,7 +260,15 @@ const Expenses = () => {
                   toggleSelectAll={toggleSelectAll}
                 />
                 <TableBody>
-                  {filteredExpenses.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <p className="text-muted-foreground">Loading expenses...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredExpenses.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-8">
                         <div className="flex flex-col items-center gap-2">
@@ -230,8 +293,27 @@ const Expenses = () => {
                           setExpenseToEdit(expense);
                           setShowAddExpense(true);
                         }}
-                        onDelete={(id) => {
-                          setExpenses(expenses.filter(exp => exp.id !== id));
+                        onDelete={async (id) => {
+                          const { error } = await supabase
+                            .from('expenses')
+                            .delete()
+                            .eq('id', id);
+                          
+                          if (error) {
+                            console.error('Error deleting expense:', error);
+                            toast({
+                              title: "Error",
+                              description: "Failed to delete the expense. Please try again.",
+                              variant: "destructive",
+                            });
+                          } else {
+                            await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+                            await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+                            toast({
+                              title: "Expense Deleted",
+                              description: "Expense has been deleted successfully.",
+                            });
+                          }
                         }}
                       />
                     ))

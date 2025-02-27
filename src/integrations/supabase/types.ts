@@ -85,7 +85,10 @@ export type Database = {
           date: string
           description: string
           id: string
+          is_recurring: boolean | null
+          notes: string | null
           payment: string | null
+          receipt_url: string | null
           user_id: string
         }
         Insert: {
@@ -95,7 +98,10 @@ export type Database = {
           date: string
           description: string
           id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
           payment?: string | null
+          receipt_url?: string | null
           user_id: string
         }
         Update: {
@@ -105,7 +111,10 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
           payment?: string | null
+          receipt_url?: string | null
           user_id?: string
         }
         Relationships: []
