@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,20 +29,62 @@ import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
 import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
 import { formatCurrency } from "@/utils/chartUtils";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
     const saved = localStorage.getItem('monthlyIncome');
     return saved ? Number(saved) : 0;
   });
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('expenses');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const { user } = useAuth();
+  
+  // Fetch expenses from Supabase using React Query
+  const { data: expenses = [], isLoading } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load expenses. Please try again.",
+          variant: "destructive",
+        });
+        return [];
+      }
+      
+      return data.map(exp => ({
+        id: exp.id,
+        amount: Number(exp.amount),
+        description: exp.description,
+        date: exp.date,
+        category: exp.category,
+        paymentMethod: exp.payment || undefined,
+        notes: exp.notes || undefined,
+        isRecurring: exp.is_recurring || false,
+        receiptUrl: exp.receipt_url || undefined,
+      }));
+    },
+    enabled: !!user,
+  });
+
+  // Calculate insights based on expenses
+  const insights = useAnalyticsInsights(expenses);
   
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
@@ -59,10 +102,6 @@ const Dashboard = () => {
     localStorage.setItem('monthlyIncome', monthlyIncome.toString());
   }, [monthlyIncome]);
 
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
-
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -78,14 +117,31 @@ const Dashboard = () => {
 
   const isNewUser = expenses.length === 0;
 
-  const handleAddExpense = (newExpense: Expense) => {
-    if (expenseToEdit) {
-      setExpenses(expenses.map(exp => exp.id === newExpense.id ? newExpense : exp));
-      setExpenseToEdit(undefined);
-    } else {
-      setExpenses([...expenses, newExpense]);
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId);
+      
+      if (error) throw error;
+      
+      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      toast({
+        title: "Expense Deleted",
+        description: "Expense has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the expense. Please try again.",
+        variant: "destructive",
+      });
     }
-    setShowAddExpense(false);
   };
 
   return (
@@ -182,7 +238,7 @@ const Dashboard = () => {
           defaultOpen={isNewUser}
         >
           <AddExpenseSheet 
-            onAddExpense={handleAddExpense} 
+            onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses'] })}
             expenseToEdit={expenseToEdit}
             onClose={() => {
               setExpenseToEdit(undefined);
@@ -199,14 +255,50 @@ const Dashboard = () => {
           <CardTitle>Recent Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          {isNewUser ? (
+          {isLoading ? (
+            <div className="flex justify-center p-6">
+              <p className="text-muted-foreground">Loading expenses...</p>
+            </div>
+          ) : isNewUser ? (
             <div className="space-y-4">
               <EmptyState
                 title="No expenses yet"
                 description="Start tracking your spending by adding your first expense."
                 onAction={() => setShowAddExpense(true)}
               />
-              <SampleDataButton onApply={setExpenses} />
+              <SampleDataButton onApply={async (sampleExpenses) => {
+                if (!user) return;
+                
+                try {
+                  const formattedExpenses = sampleExpenses.map(exp => ({
+                    user_id: user.id,
+                    amount: exp.amount,
+                    description: exp.description,
+                    date: exp.date,
+                    category: exp.category,
+                  }));
+                  
+                  const { error } = await supabase
+                    .from('expenses')
+                    .insert(formattedExpenses);
+                  
+                  if (error) throw error;
+                  
+                  await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+                  
+                  toast({
+                    title: "Sample Data Added",
+                    description: "Sample expenses have been added successfully.",
+                  });
+                } catch (error) {
+                  console.error('Error adding sample data:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to add sample data. Please try again.",
+                    variant: "destructive",
+                  });
+                }
+              }} />
             </div>
           ) : (
             <Table>
@@ -220,7 +312,7 @@ const Dashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.map((expense) => (
+                {expenses.slice(0, 5).map((expense) => (
                   <TableRow key={expense.id}>
                     <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
                     <TableCell>{expense.description}</TableCell>
@@ -241,9 +333,7 @@ const Dashboard = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          setExpenses(expenses.filter(exp => exp.id !== expense.id));
-                        }}
+                        onClick={() => handleDeleteExpense(expense.id)}
                         className="h-8 w-8 p-0 text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -272,7 +362,11 @@ const Dashboard = () => {
           </Select>
         </CardHeader>
         <CardContent>
-          {expenses.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center p-6">
+              <p className="text-muted-foreground">Loading analytics...</p>
+            </div>
+          ) : expenses.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               Add some expenses to see analytics
             </div>
