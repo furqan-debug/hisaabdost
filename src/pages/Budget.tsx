@@ -167,7 +167,7 @@ const Budget = () => {
             </TabsContent>
 
             <TabsContent value="transactions">
-              <BudgetTransactions />
+              <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent value="comparison">
