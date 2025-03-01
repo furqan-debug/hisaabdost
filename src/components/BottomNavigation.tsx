@@ -19,28 +19,30 @@ export function BottomNavigation() {
   if (!isMobile) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl shadow-lg animate-fade-in">
-      <nav className="flex h-18 items-center justify-around px-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/90 backdrop-blur-xl shadow-lg">
+      <nav className="flex h-20 items-center justify-around px-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link key={item.path} to={item.path} className="flex-1">
               <Button
-                variant={isActive ? "default" : "ghost"}
+                variant="ghost"
                 size="icon"
                 className={`flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-none transition-all duration-300 ${
                   isActive 
-                    ? "bg-accent/30 text-primary" 
-                    : "hover:bg-accent/10"
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
                 }`}
               >
-                <item.icon size={24} className={`${isActive ? "text-primary scale-110" : ""} transition-all`} />
-                <span className={`text-xs font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                <div className="relative">
+                  <item.icon size={24} className={`${isActive ? "text-primary scale-110" : ""} transition-all duration-300`} />
+                  {isActive && (
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary animate-scale-in" />
+                  )}
+                </div>
+                <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-primary" : ""}`}>
                   {item.label}
                 </span>
-                {isActive && (
-                  <span className="absolute -top-1 w-12 h-1 rounded-full bg-primary animate-scale-in" />
-                )}
               </Button>
             </Link>
           );

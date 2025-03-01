@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -29,20 +30,22 @@ export function ExpenseFilters({
   dateRange,
   setDateRange,
 }: ExpenseFiltersProps) {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-1 gap-2">
+    <div className={`flex flex-col gap-4 ${isMobile ? 'space-y-2' : 'md:flex-row md:items-center md:justify-between'}`}>
+      <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-1 gap-2'}`}>
         <Input
           placeholder="Search expenses..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-xs"
+          className={`${isMobile ? 'w-full' : 'max-w-xs'}`}
         />
         <Select
           value={categoryFilter}
           onValueChange={setCategoryFilter}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
@@ -55,7 +58,7 @@ export function ExpenseFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex gap-2">
+      <div className={`flex ${isMobile ? 'justify-between' : 'gap-2'}`}>
         <Input
           type="date"
           value={dateRange.start}
@@ -63,7 +66,7 @@ export function ExpenseFilters({
             ...dateRange,
             start: e.target.value
           })}
-          className="w-auto"
+          className={`${isMobile ? 'w-[48%]' : 'w-auto'}`}
         />
         <Input
           type="date"
@@ -72,7 +75,7 @@ export function ExpenseFilters({
             ...dateRange,
             end: e.target.value
           })}
-          className="w-auto"
+          className={`${isMobile ? 'w-[48%]' : 'w-auto'}`}
         />
       </div>
     </div>

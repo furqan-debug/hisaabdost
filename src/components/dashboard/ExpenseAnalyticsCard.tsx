@@ -6,6 +6,7 @@ import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
 import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
 import { Expense } from "@/components/AddExpenseSheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -20,6 +21,7 @@ export const ExpenseAnalyticsCard = ({
   chartType,
   setChartType,
 }: ExpenseAnalyticsCardProps) => {
+  const isMobile = useIsMobile();
 
   const renderChart = () => {
     switch (chartType) {
@@ -36,10 +38,10 @@ export const ExpenseAnalyticsCard = ({
 
   return (
     <Card className="mt-6">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Expense Analytics</CardTitle>
+      <CardHeader className={`flex flex-${isMobile ? 'col space-y-2' : 'row items-center justify-between'}`}>
+        <CardTitle className={isMobile ? 'text-lg' : ''}>Expense Analytics</CardTitle>
         <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
             <SelectValue placeholder="Select chart type" />
           </SelectTrigger>
           <SelectContent>
@@ -49,7 +51,7 @@ export const ExpenseAnalyticsCard = ({
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isMobile ? 'p-2' : ''}>
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -59,7 +61,9 @@ export const ExpenseAnalyticsCard = ({
             Add some expenses to see analytics
           </div>
         ) : (
-          renderChart()
+          <div className={`w-full ${isMobile ? 'h-64' : 'h-80'}`}>
+            {renderChart()}
+          </div>
         )}
       </CardContent>
     </Card>
