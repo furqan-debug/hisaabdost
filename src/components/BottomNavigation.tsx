@@ -19,25 +19,25 @@ export function BottomNavigation() {
   if (!isMobile) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/90 backdrop-blur-xl shadow-lg">
-      <nav className="flex h-20 items-center justify-around px-1">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl shadow-lg">
+      <nav className="flex h-16 items-center justify-around px-1">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link key={item.path} to={item.path} className="flex-1">
+            <Link key={item.path} to={item.path} className="w-1/5">
               <Button
                 variant="ghost"
                 size="icon"
-                className={`flex h-full w-full flex-col items-center justify-center gap-1.5 rounded-none transition-all duration-300 ${
+                className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-none transition-all duration-300 ${
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
                 }`}
               >
-                <div className="relative">
-                  <item.icon size={24} className={`${isActive ? "text-primary scale-110" : ""} transition-all duration-300`} />
+                <div className="relative flex items-center justify-center">
+                  <item.icon size={22} className={`${isActive ? "text-primary scale-110" : ""} transition-all duration-300`} />
                   {isActive && (
-                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary animate-scale-in" />
+                    <span className="absolute -top-1.5 h-1 w-6 rounded-full bg-primary animate-scale-in" />
                   )}
                 </div>
                 <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-primary" : ""}`}>
