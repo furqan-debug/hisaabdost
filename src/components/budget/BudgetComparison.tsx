@@ -40,11 +40,11 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="budget-card overflow-hidden">
+    <Card className="budget-card">
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2">
+      <CardContent className="budget-chart-container p-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={data} 

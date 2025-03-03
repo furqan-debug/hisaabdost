@@ -69,23 +69,9 @@
     @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl;
   }
   
-  /* Budget tab tab list scrolling - fix horizontal stretching */
+  /* Budget tab tab list scrolling */
   .tabs-list-scroll {
     @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Make tab items snap when scrolling */
-  .budget-tabs-trigger {
-    @apply flex-1 min-w-[120px];
-    scroll-snap-align: start;
-    white-space: nowrap;
-  }
-  
-  /* Prevent horizontal overflow issues */
-  .budget-container {
-    @apply max-w-full overflow-x-hidden;
   }
   
   /* Tab content padding for mobile */
@@ -110,7 +96,7 @@
   
   /* Adjust stats cards on mobile */
   .stat-grid {
-    @apply grid-cols-1 gap-3 w-full;
+    @apply grid-cols-1 gap-3;
   }
   
   /* Budget tab mobile cards for better UX */
@@ -123,29 +109,9 @@
     @apply space-y-4 mt-3;
   }
   
-  /* Make budget content fit properly on mobile */
-  .budget-content {
-    @apply w-full px-0 overflow-x-hidden;
-  }
-  
-  /* Category budget cards for better display */
-  .category-budget-card {
-    @apply p-3 rounded-xl bg-card/70 border border-border/30 mb-3;
-  }
-  
-  /* Budget info row layout */
-  .budget-info-row {
-    @apply grid grid-cols-2 gap-2 mb-2;
-  }
-  
-  /* Budget value display */
-  .budget-value {
-    @apply text-lg font-semibold;
-  }
-  
-  /* Budget label display */
-  .budget-label {
-    @apply text-xs text-muted-foreground;
+  /* Mobile budget tabs - full width triggers */
+  .budget-tabs-trigger {
+    @apply flex-1 min-w-[120px];
   }
 }
 

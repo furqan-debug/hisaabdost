@@ -95,7 +95,7 @@ const Budget = () => {
   const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8">
       <header className={isMobile ? "px-4 py-2" : "flex justify-between items-center"}>
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold">Budget</h1>
@@ -113,6 +113,17 @@ const Budget = () => {
             >
               <Download className="h-4 w-4 mr-2" />
               Export
+            </Button>
+            <Button 
+              onClick={() => {
+                setSelectedBudget(null);
+                setShowBudgetForm(true);
+              }}
+              size="sm"
+              className="flex-1"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget
             </Button>
           </div>
         ) : (
@@ -163,20 +174,20 @@ const Budget = () => {
       </div>
 
       <Card className="mx-4 md:mx-0 budget-card">
-        <CardContent className="p-0 md:p-6">
+        <CardContent className="p-3 md:p-6">
           <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
+            <TabsList className="w-full justify-start">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="comparison">Comparison</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="budget-section px-3">
+            <TabsContent value="overview" className="budget-section">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="budget-section px-3">
+            <TabsContent value="categories" className="budget-section">
               <CategoryBudgets 
                 budgets={budgets || []}
                 onEditBudget={(budget) => {
@@ -186,11 +197,11 @@ const Budget = () => {
               />
             </TabsContent>
 
-            <TabsContent value="transactions" className="budget-section px-3">
+            <TabsContent value="transactions" className="budget-section">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="budget-section px-3">
+            <TabsContent value="comparison" className="budget-section">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </Tabs>

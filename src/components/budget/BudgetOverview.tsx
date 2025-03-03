@@ -32,20 +32,20 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="budget-card overflow-hidden">
+      <Card className="budget-card">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2">
+        <CardContent className="budget-chart-container p-0">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
                 outerRadius={isMobile ? 80 : 150}
                 dataKey="value"
-                label={({ name, percentage }) => isMobile ? `${percentage}%` : `${name}: ${percentage}%`}
+                label={({ name, percentage }) => `${name}: ${percentage}%`}
                 labelLine={!isMobile}
               >
                 {data.map((entry, index) => (
