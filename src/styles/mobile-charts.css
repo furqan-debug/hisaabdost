@@ -7,4 +7,31 @@
     overflow: visible !important;
     width: 100% !important;
   }
+  
+  /* Make bars thinner and more elegant on mobile */
+  .recharts-bar-rectangle {
+    @apply opacity-90;
+  }
+  
+  /* Better tooltip on mobile */
+  .recharts-tooltip-wrapper {
+    @apply z-50;
+  }
+  
+  /* Improve chart margins for better display */
+  .budget-chart-container {
+    margin: 0 -10px !important;
+    width: calc(100% + 20px) !important;
+    max-width: calc(100% + 20px) !important;
+  }
+  
+  /* Ensure legend is readable */
+  .recharts-legend-item-text {
+    @apply text-xs;
+  }
+  
+  /* Better axis labels */
+  .recharts-cartesian-axis-tick-value {
+    @apply font-light;
+  }
 }

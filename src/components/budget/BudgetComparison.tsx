@@ -50,12 +50,12 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 0, left: -20, bottom: 60 } 
+                ? { top: 20, right: 15, left: -15, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
-            barGap={isMobile ? 1 : 8}
-            barSize={isMobile ? 8 : 30}
-            maxBarSize={isMobile ? 8 : 30}
+            barGap={isMobile ? 4 : 10}
+            barSize={isMobile ? 4 : 15}
+            maxBarSize={isMobile ? 4 : 15}
             style={{ maxWidth: '100%', overflow: 'hidden' }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -99,6 +99,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 dataKey={category} 
                 fill={color}
                 stackId="a"
+                radius={[2, 2, 0, 0]}
               />
             ))}
           </BarChart>

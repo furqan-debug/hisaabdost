@@ -65,8 +65,8 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             dataKey={category}
             name={category}
             fill={color}
-            barSize={isMobile ? 15 : 20}
-            radius={[4, 4, 0, 0]}
+            barSize={isMobile ? 5 : 12}
+            radius={[2, 2, 0, 0]}
           />
         ))}
       </BarChart>
