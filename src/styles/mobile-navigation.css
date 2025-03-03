@@ -21,3 +21,42 @@
     @apply bottom-8;
   }
 }
+
+/* Menu item animations */
+.menu-item {
+  @apply transition-all duration-300 hover:text-primary/80;
+}
+
+.menu-item:active .menu-icon-active {
+  @apply scale-90;
+}
+
+.menu-icon-active {
+  animation: pulse 2s infinite;
+}
+
+.menu-indicator {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    width: 0;
+  }
+  to {
+    opacity: 1;
+    width: 5px;
+  }
+}
+
+/* Minimalist black menu style */
+@media (max-width: 640px) {
+  .bottom-navigation-container {
+    @apply bg-black/95;
+  }
+  
+  .menu-item:hover .menu-icon {
+    @apply transform scale-110 transition-all duration-200;
+  }
+}

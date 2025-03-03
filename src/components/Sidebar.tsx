@@ -34,7 +34,7 @@ const Sidebar = () => {
     <SidebarComponent>
       <SidebarContent>
         <div className="flex items-center gap-2 px-4 py-6">
-          <Wallet className="h-7 w-7 text-[#9b87f5]" />
+          <Wallet className="h-7 w-7 text-primary animate-pulse" />
           <span className="font-bold text-lg bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
             Expense AI
           </span>
@@ -49,7 +49,7 @@ const Sidebar = () => {
                     asChild
                     isActive={location.pathname === item.path}
                   >
-                    <Link to={item.path} className="flex items-center gap-3 py-2.5 px-3">
+                    <Link to={item.path} className="menu-link flex items-center gap-3 py-2.5 px-3">
                       <item.icon className="h-5 w-5" />
                       <span className="font-medium">{item.label}</span>
                     </Link>

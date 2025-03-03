@@ -32,7 +32,27 @@
 }
 
 [data-sidebar="menu-button"][data-active=true] svg {
-  @apply text-primary scale-110;
+  @apply text-primary scale-110 animate-pulse;
+}
+
+/* Sidebar icon hover effects */
+[data-sidebar="menu-button"]:hover {
+  @apply bg-black/10 dark:bg-white/5;
+}
+
+[data-sidebar="menu-button"][data-active=true]:before {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(-10px) translateY(-50%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(-50%);
+    opacity: 1;
+  }
 }
 
 /* Floating Action Button */
