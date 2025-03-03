@@ -50,15 +50,14 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 15, left: -15, bottom: 60 } 
+                ? { top: 20, right: 15, left: -10, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
-            barGap={isMobile ? 4 : 10}
-            barSize={isMobile ? 4 : 15}
-            maxBarSize={isMobile ? 4 : 15}
+            barCategoryGap={isMobile ? "30%" : "40%"}
+            barGap={isMobile ? 1 : 3}
             style={{ maxWidth: '100%', overflow: 'hidden' }}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
             <XAxis 
               dataKey="period" 
               angle={isMobile ? -45 : 0}
@@ -98,8 +97,9 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 key={category} 
                 dataKey={category} 
                 fill={color}
+                fillOpacity={0.85}
                 stackId="a"
-                radius={[2, 2, 0, 0]}
+                radius={[4, 4, 0, 0]}
               />
             ))}
           </BarChart>
@@ -112,7 +112,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
               <div key={category} className="flex items-center">
-                <div className="w-3 h-3 mr-2" style={{ backgroundColor: color }}></div>
+                <div className="w-3 h-3 mr-2 rounded-sm" style={{ backgroundColor: color }}></div>
                 <span className="text-xs truncate">{category}</span>
               </div>
             ))}

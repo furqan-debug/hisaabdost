@@ -16,7 +16,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
       <LineChart 
         data={chartData}
-        margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 0 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+        margin={isMobile ? { top: 15, right: 5, left: 0, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
         <XAxis 
@@ -67,7 +67,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
             dot={{ 
               fill: color,
               r: isMobile ? 3 : 4,
-              strokeWidth: 2,
+              strokeWidth: 1,
               stroke: 'var(--background)'
             }}
             activeDot={{ 
@@ -76,7 +76,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
               strokeWidth: 2,
               fill: 'var(--background)'
             }}
-            connectNulls={false}
+            connectNulls={true}
           />
         ))}
       </LineChart>

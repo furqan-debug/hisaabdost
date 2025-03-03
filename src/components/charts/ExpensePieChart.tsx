@@ -15,20 +15,24 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 0, left: 0, bottom: 0 }}>
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 30, left: 30, bottom: 0 }}>
         <Pie
           data={pieChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
           cy="50%"
-          outerRadius={isMobile ? 100 : 150}
-          innerRadius={isMobile ? 50 : 75}
-          paddingAngle={2}
-          label={false}
+          outerRadius={isMobile ? 90 : 140}
+          innerRadius={isMobile ? 45 : 70}
+          paddingAngle={3}
+          label={({ name, percent }) => isMobile ? 
+            (percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '') : 
+            (percent > 0.03 ? `${name} (${(percent * 100).toFixed(0)}%)` : '')
+          }
+          labelLine={(percent) => percent > 0.05 ? true : false}
         >
           {pieChartData.map((entry) => (
-            <Cell key={entry.name} fill={entry.color} />
+            <Cell key={entry.name} fill={entry.color} stroke="var(--background)" strokeWidth={1} />
           ))}
         </Pie>
         <Tooltip 
@@ -39,6 +43,9 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}: {formatCurrency(Number(data.value))}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(data.payload.percent * 100).toFixed(1)}% of total
                 </p>
               </div>
             );

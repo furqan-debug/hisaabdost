@@ -16,7 +16,9 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
       <BarChart 
         data={chartData}
-        margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 0 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+        margin={isMobile ? { top: 15, right: 5, left: 0, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+        barCategoryGap={isMobile ? "20%" : "30%"}
+        barGap={isMobile ? 2 : 4}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
         <XAxis 
@@ -65,8 +67,9 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             dataKey={category}
             name={category}
             fill={color}
-            barSize={isMobile ? 5 : 12}
-            radius={[2, 2, 0, 0]}
+            fillOpacity={0.85}
+            barSize={isMobile ? 4 : 10}
+            radius={[4, 4, 0, 0]}
           />
         ))}
       </BarChart>

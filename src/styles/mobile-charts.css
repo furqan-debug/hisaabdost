@@ -3,14 +3,14 @@
 @media (max-width: 640px) {
   /* Fix chart overflow issues */
   .recharts-wrapper {
-    @apply max-w-full;
+    @apply max-w-full rounded-lg;
     overflow: visible !important;
     width: 100% !important;
   }
   
   /* Make bars thinner and more elegant on mobile */
   .recharts-bar-rectangle {
-    @apply opacity-90;
+    @apply opacity-95 shadow-sm;
   }
   
   /* Better tooltip on mobile */
@@ -20,18 +20,45 @@
   
   /* Improve chart margins for better display */
   .budget-chart-container {
-    margin: 0 -10px !important;
-    width: calc(100% + 20px) !important;
-    max-width: calc(100% + 20px) !important;
+    margin: 0 -5px !important;
+    width: calc(100% + 10px) !important;
+    max-width: calc(100% + 10px) !important;
+    padding: 0.5rem;
   }
   
   /* Ensure legend is readable */
   .recharts-legend-item-text {
-    @apply text-xs;
+    @apply text-xs font-medium;
   }
   
   /* Better axis labels */
   .recharts-cartesian-axis-tick-value {
-    @apply font-light;
+    @apply font-light text-xs;
+  }
+  
+  /* Smooth lines for line charts */
+  .recharts-curve.recharts-line-curve {
+    @apply stroke-2;
+  }
+  
+  /* Better dots for line charts */
+  .recharts-dot {
+    @apply stroke-2;
+  }
+  
+  /* Improve grid appearance */
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    @apply stroke-muted/20;
+  }
+  
+  /* Enhance pie chart appearance */
+  .recharts-pie {
+    @apply drop-shadow-sm;
+  }
+  
+  /* Make active elements more visible */
+  .recharts-active-dot {
+    @apply stroke-background stroke-2;
   }
 }
