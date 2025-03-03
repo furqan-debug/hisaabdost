@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -6,7 +5,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
-import { Download } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
@@ -17,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
@@ -25,6 +25,7 @@ const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(new Set());
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
@@ -80,7 +81,6 @@ const Expenses = () => {
   });
 
   const handleAddExpense = () => {
-    // This just opens the sheet, actual adding is handled in the sheet component
     setShowAddExpense(true);
   };
 
@@ -192,15 +192,15 @@ const Expenses = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-center">
+    <div className="space-y-5">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold">Expenses</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold">Expenses</h1>
+          <p className="text-sm text-muted-foreground">
             Manage and analyze your expenses
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
           <AddExpenseSheet 
             onAddExpense={() => {}} // This is now handled internally in the component
             expenseToEdit={expenseToEdit}
@@ -211,30 +211,58 @@ const Expenses = () => {
             open={showAddExpense || expenseToEdit !== undefined}
             onOpenChange={setShowAddExpense}
           />
-          {selectedExpenses.size > 0 && (
-            <Button 
-              variant="destructive"
-              onClick={handleDeleteSelected}
-              className="whitespace-nowrap"
-            >
-              Delete Selected ({selectedExpenses.size})
-            </Button>
+          
+          {isMobile ? (
+            <>
+              {selectedExpenses.size > 0 && (
+                <Button 
+                  variant="destructive"
+                  onClick={handleDeleteSelected}
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  Delete ({selectedExpenses.size})
+                </Button>
+              )}
+              
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={exportToCSV}
+              >
+                <Download className="h-4 w-4" />
+                <span className="sr-only">Export</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              {selectedExpenses.size > 0 && (
+                <Button 
+                  variant="destructive"
+                  onClick={handleDeleteSelected}
+                  className="whitespace-nowrap"
+                >
+                  Delete Selected ({selectedExpenses.size})
+                </Button>
+              )}
+              
+              <Button
+                variant="outline"
+                onClick={exportToCSV}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </>
           )}
-          <Button
-            variant="outline"
-            onClick={exportToCSV}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
         </div>
       </header>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <CardTitle>Expense List</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle className="text-lg">Expense List</CardTitle>
+            <p className="text-sm font-medium">
               Total: {formatCurrency(totalFilteredAmount)}
             </p>
           </div>
@@ -250,7 +278,7 @@ const Expenses = () => {
               setDateRange={setDateRange}
             />
 
-            <div className="rounded-md border">
+            <div className="rounded-lg border border-border/40 overflow-hidden">
               <Table>
                 <ExpenseTableHeader
                   sortConfig={sortConfig}
@@ -274,10 +302,12 @@ const Expenses = () => {
                         <div className="flex flex-col items-center gap-2">
                           <p className="text-muted-foreground">No expenses found</p>
                           <Button 
-                            variant="outline" 
+                            variant="purple" 
                             onClick={() => setShowAddExpense(true)}
+                            className="mt-2"
                           >
-                            Add an expense
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add expense
                           </Button>
                         </div>
                       </td>

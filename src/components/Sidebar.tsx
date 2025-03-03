@@ -34,8 +34,10 @@ const Sidebar = () => {
     <SidebarComponent>
       <SidebarContent>
         <div className="flex items-center gap-2 px-4 py-6">
-          <Wallet className="h-6 w-6 text-expense-low" />
-          <span className="font-semibold">Expense AI</span>
+          <Wallet className="h-7 w-7 text-[#9b87f5]" />
+          <span className="font-bold text-lg bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
+            Expense AI
+          </span>
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -47,9 +49,9 @@ const Sidebar = () => {
                     asChild
                     isActive={location.pathname === item.path}
                   >
-                    <Link to={item.path} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
+                    <Link to={item.path} className="flex items-center gap-3 py-2.5">
+                      <item.icon className="h-5 w-5" />
+                      <span className="font-medium">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
