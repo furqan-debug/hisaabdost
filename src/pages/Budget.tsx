@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus } from "lucide-react";
@@ -23,6 +23,10 @@ export interface Budget {
 const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
+    const saved = localStorage.getItem('monthlyIncome');
+    return saved ? Number(saved) : 0;
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -35,6 +39,10 @@ const Budget = () => {
     remainingBalance,
     usagePercentage
   } = useBudgetData();
+
+  useEffect(() => {
+    localStorage.setItem('monthlyIncome', monthlyIncome.toString());
+  }, [monthlyIncome]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -65,6 +73,8 @@ const Budget = () => {
         totalBudget={totalBudget}
         remainingBalance={remainingBalance}
         usagePercentage={usagePercentage}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
@@ -87,6 +97,8 @@ const Budget = () => {
             description: `Budget ${selectedBudget ? 'updated' : 'created'} successfully.`,
           });
         }}
+        monthlyIncome={monthlyIncome}
+        totalBudget={totalBudget}
       />
       
       {isMobile && (

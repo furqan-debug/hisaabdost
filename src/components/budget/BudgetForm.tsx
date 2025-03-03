@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -17,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -25,6 +25,8 @@ import { Budget } from "@/pages/Budget";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AlertCircle } from "lucide-react";
+import { formatCurrency } from "@/utils/chartUtils";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -40,6 +42,8 @@ interface BudgetFormProps {
   onOpenChange: (open: boolean) => void;
   budget: Budget | null;
   onSuccess: () => void;
+  monthlyIncome: number;
+  totalBudget: number;
 }
 
 export function BudgetForm({
@@ -47,6 +51,8 @@ export function BudgetForm({
   onOpenChange,
   budget,
   onSuccess,
+  monthlyIncome,
+  totalBudget,
 }: BudgetFormProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -59,6 +65,15 @@ export function BudgetForm({
       carry_forward: false,
     },
   });
+
+  const currentAmount = watch("amount");
+  const willExceedIncome = !budget 
+    ? (totalBudget + currentAmount > monthlyIncome && monthlyIncome > 0) 
+    : ((totalBudget - (budget?.amount || 0) + currentAmount) > monthlyIncome && monthlyIncome > 0);
+  
+  const exceedAmount = !budget 
+    ? (totalBudget + currentAmount - monthlyIncome) 
+    : ((totalBudget - (budget?.amount || 0) + currentAmount) - monthlyIncome);
 
   const onSubmit = async (formData: BudgetFormData) => {
     if (!user) return;
@@ -100,6 +115,15 @@ export function BudgetForm({
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6 budget-form-container">
+          {willExceedIncome && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Warning: This budget will exceed your monthly income by {formatCurrency(exceedAmount)}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select
