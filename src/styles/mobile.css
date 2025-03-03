@@ -66,16 +66,14 @@
 
   /* Budget specific mobile optimizations */
   .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl;
+    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl max-w-full overflow-hidden;
   }
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
   .tabs-list-scroll {
-    @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar;
+    @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar w-full max-w-[calc(100vw-32px)];
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
-    max-width: 100vw;
   }
   
   /* Make tab items snap when scrolling */
@@ -87,13 +85,13 @@
   
   /* Prevent horizontal overflow issues */
   .budget-container {
-    @apply w-full overflow-hidden px-0;
+    @apply w-full overflow-hidden px-0 max-w-full;
     max-width: 100vw;
   }
   
   /* Tab content padding for mobile */
   .tab-content-mobile {
-    @apply px-0;
+    @apply px-0 max-w-full overflow-hidden;
   }
   
   /* Fixed budget content height to avoid jumpy layout */
@@ -128,7 +126,7 @@
   
   /* Make budget content fit properly on mobile */
   .budget-content {
-    @apply w-full px-3 overflow-hidden;
+    @apply w-full px-3 overflow-hidden max-w-full;
     max-width: 100%;
   }
   

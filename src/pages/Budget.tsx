@@ -95,7 +95,7 @@ const Budget = () => {
   const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container max-w-full overflow-hidden">
       <header className={isMobile ? "px-4 py-2" : "flex justify-between items-center"}>
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold">Budget</h1>
@@ -113,6 +113,17 @@ const Budget = () => {
             >
               <Download className="h-4 w-4 mr-2" />
               Export
+            </Button>
+            <Button 
+              size="sm" 
+              className="flex-1"
+              onClick={() => {
+                setSelectedBudget(null);
+                setShowBudgetForm(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget
             </Button>
           </div>
         ) : (
@@ -136,7 +147,7 @@ const Budget = () => {
       </header>
 
       <div className={`grid gap-3 md:gap-6 px-4 md:px-0 ${isMobile ? 'stat-grid' : 'md:grid-cols-3'}`}>
-        <Card className="budget-card w-full">
+        <Card className="budget-card w-full max-w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Total Budget</CardTitle>
           </CardHeader>
@@ -144,7 +155,7 @@ const Budget = () => {
             <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
           </CardContent>
         </Card>
-        <Card className="budget-card w-full">
+        <Card className="budget-card w-full max-w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Remaining Balance</CardTitle>
           </CardHeader>
@@ -152,7 +163,7 @@ const Budget = () => {
             <div className="text-2xl font-bold">{formatCurrency(remainingBalance)}</div>
           </CardContent>
         </Card>
-        <Card className="budget-card w-full">
+        <Card className="budget-card w-full max-w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Budget Usage</CardTitle>
           </CardHeader>
@@ -162,22 +173,22 @@ const Budget = () => {
         </Card>
       </div>
 
-      <div className="mx-4 md:mx-0 w-full mobile-container-fix">
-        <Card className="budget-card w-full">
-          <CardContent className="p-0 md:p-6">
-            <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full">
-              <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
+      <div className="mx-4 md:mx-0 w-full mobile-container-fix max-w-full overflow-hidden">
+        <Card className="budget-card w-full max-w-full overflow-hidden">
+          <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
+            <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
+              <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="categories">Categories</TabsTrigger>
                 <TabsTrigger value="transactions">Transactions</TabsTrigger>
                 <TabsTrigger value="comparison">Comparison</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="budget-section">
+              <TabsContent value="overview" className="budget-section max-w-full overflow-hidden">
                 <BudgetOverview budgets={budgets || []} />
               </TabsContent>
 
-              <TabsContent value="categories" className="budget-section">
+              <TabsContent value="categories" className="budget-section max-w-full overflow-hidden">
                 <CategoryBudgets 
                   budgets={budgets || []}
                   onEditBudget={(budget) => {
@@ -187,11 +198,11 @@ const Budget = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="transactions" className="budget-section">
+              <TabsContent value="transactions" className="budget-section max-w-full overflow-hidden">
                 <BudgetTransactions budgets={budgets || []} />
               </TabsContent>
 
-              <TabsContent value="comparison" className="budget-section">
+              <TabsContent value="comparison" className="budget-section max-w-full overflow-hidden">
                 <BudgetComparison budgets={budgets || []} />
               </TabsContent>
             </Tabs>

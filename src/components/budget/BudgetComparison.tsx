@@ -40,11 +40,11 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="budget-card overflow-hidden w-full">
+    <Card className="budget-card overflow-hidden w-full max-w-full">
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2">
+      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
         <ResponsiveContainer width="99%" height="100%">
           <BarChart 
             data={data} 
@@ -102,7 +102,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       </CardContent>
       
       {isMobile && (
-        <div className="p-3 pt-0">
+        <div className="p-3 pt-0 max-w-full overflow-hidden">
           <h4 className="text-sm font-medium mb-2">Legend:</h4>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {Object.entries(CATEGORY_COLORS).map(([category, color]) => (

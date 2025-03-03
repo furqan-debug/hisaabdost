@@ -31,13 +31,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4 w-full overflow-hidden">
-      <Card className="budget-card overflow-hidden w-full">
+    <div className="space-y-4 w-full overflow-hidden max-w-full">
+      <Card className="budget-card overflow-hidden w-full max-w-full">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2">
-          <ResponsiveContainer width="100%" height="100%">
+        <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
+          <ResponsiveContainer width="99%" height="100%">
             <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={data}
@@ -75,7 +75,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       </Card>
       
       {isMobile && (
-        <div className="mt-3 space-y-2 w-full overflow-hidden">
+        <div className="mt-3 space-y-2 w-full overflow-hidden max-w-full">
           {data.map((item, index) => (
             <div 
               key={index} 
@@ -84,7 +84,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
             >
               <div className="flex items-center">
                 <div className="w-3 h-3 mr-2 rounded-sm" style={{ backgroundColor: item.color }}></div>
-                <span className="font-medium text-sm truncate max-w-[150px]">{item.name}</span>
+                <span className="font-medium text-sm truncate max-w-[120px]">{item.name}</span>
               </div>
               <div className="text-right">
                 <span className="text-sm font-semibold">{formatCurrency(item.value)}</span>
