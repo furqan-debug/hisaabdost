@@ -2,6 +2,7 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExpenseBarChartProps {
   expenses: Expense[];
@@ -9,23 +10,27 @@ interface ExpenseBarChartProps {
 
 export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
   const chartData = processMonthlyData(expenses);
+  const isMobile = useIsMobile();
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
       <BarChart 
         data={chartData}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        margin={isMobile ? { top: 10, right: 10, left: 0, bottom: 0 } : { top: 20, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
         <XAxis 
           dataKey="month" 
           axisLine={false}
           tickLine={false}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
         />
         <YAxis 
           tickFormatter={(value) => `$${Number(value)/1000}k`}
           axisLine={false}
           tickLine={false}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+          width={isMobile ? 30 : 40}
         />
         <Tooltip
           cursor={{ fillOpacity: 0.1 }}
@@ -53,14 +58,14 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             );
           }}
         />
-        <Legend />
+        <Legend wrapperStyle={isMobile ? { fontSize: '10px' } : undefined} />
         {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Bar
             key={category}
             dataKey={category}
             name={category}
             fill={color}
-            barSize={20}
+            barSize={isMobile ? 15 : 20}
             radius={[4, 4, 0, 0]}
           />
         ))}

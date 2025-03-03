@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 
 const navItems = [
-  { icon: Home, label: "Dashboard", path: "/" },
+  { icon: Home, label: "Home", path: "/" },
   { icon: Receipt, label: "Expenses", path: "/expenses" },
   { icon: PiggyBank, label: "Budget", path: "/budget" },
   { icon: BarChart2, label: "Analytics", path: "/analytics" },
@@ -25,8 +25,8 @@ export function BottomNavigation() {
   if (!isMobile || !mounted) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl shadow-lg">
-      <div className="flex h-20 items-center justify-around px-1 max-w-[480px] mx-auto relative">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/95 backdrop-blur-xl shadow-lg">
+      <div className="flex h-16 items-center justify-around px-1 max-w-[480px] mx-auto relative">
         {navItems.map((item, index) => {
           const isActive = location.pathname === item.path;
           
@@ -38,7 +38,7 @@ export function BottomNavigation() {
                   <Button 
                     variant="purple" 
                     size="icon-lg" 
-                    className="shadow-xl mx-auto flex items-center justify-center"
+                    className="shadow-xl mx-auto flex items-center justify-center h-14 w-14 rounded-full"
                   >
                     <Plus className="h-6 w-6 text-white" />
                     <span className="sr-only">Add new expense</span>
@@ -52,7 +52,7 @@ export function BottomNavigation() {
           return (
             <Link key={item.path} to={item.path} className="w-1/5">
               <div
-                className={`flex flex-col items-center justify-center h-16 ${
+                className={`flex flex-col items-center justify-center h-14 ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
@@ -64,11 +64,11 @@ export function BottomNavigation() {
                     }`} 
                   />
                   {isActive && (
-                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full animate-pulse" />
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-primary rounded-full" />
                   )}
                 </div>
                 <span 
-                  className={`text-xs font-medium mt-1.5 transition-colors duration-300 ${
+                  className={`text-xs font-medium mt-1 transition-colors duration-300 ${
                     isActive ? "text-primary" : ""
                   }`}
                 >

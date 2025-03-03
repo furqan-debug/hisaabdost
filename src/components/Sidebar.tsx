@@ -49,7 +49,7 @@ const Sidebar = () => {
                     asChild
                     isActive={location.pathname === item.path}
                   >
-                    <Link to={item.path} className="flex items-center gap-3 py-2.5">
+                    <Link to={item.path} className="flex items-center gap-3 py-2.5 px-3">
                       <item.icon className="h-5 w-5" />
                       <span className="font-medium">{item.label}</span>
                     </Link>

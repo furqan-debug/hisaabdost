@@ -38,20 +38,22 @@ export const ExpenseAnalyticsCard = ({
 
   return (
     <Card className="mt-6">
-      <CardHeader className={`flex flex-${isMobile ? 'col space-y-2' : 'row items-center justify-between'}`}>
-        <CardTitle className={isMobile ? 'text-lg' : ''}>Expense Analytics</CardTitle>
-        <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
-          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
-            <SelectValue placeholder="Select chart type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pie">Pie Chart</SelectItem>
-            <SelectItem value="bar">Bar Chart</SelectItem>
-            <SelectItem value="line">Line Chart</SelectItem>
-          </SelectContent>
-        </Select>
+      <CardHeader className="flex flex-col space-y-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
+          <CardTitle className={isMobile ? 'text-lg' : ''}>Expense Analytics</CardTitle>
+          <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
+            <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
+              <SelectValue placeholder="Select chart type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pie">Pie Chart</SelectItem>
+              <SelectItem value="bar">Bar Chart</SelectItem>
+              <SelectItem value="line">Line Chart</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
-      <CardContent className={isMobile ? 'p-2' : ''}>
+      <CardContent className="px-2 sm:px-4">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -61,7 +63,7 @@ export const ExpenseAnalyticsCard = ({
             Add some expenses to see analytics
           </div>
         ) : (
-          <div className={`w-full ${isMobile ? 'h-64' : 'h-80'}`}>
+          <div className="w-full overflow-hidden">
             {renderChart()}
           </div>
         )}
