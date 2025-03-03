@@ -24,6 +24,7 @@ import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { Budget } from "@/pages/Budget";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -48,7 +49,8 @@ export function BudgetForm({
   onSuccess,
 }: BudgetFormProps) {
   const { user } = useAuth();
-  const { register, handleSubmit, reset, setValue, watch } = useForm<BudgetFormData>({
+  const isMobile = useIsMobile();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: budget || {
       category: "",
@@ -91,13 +93,13 @@ export function BudgetForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90%]" : ""}>
         <SheetHeader>
           <SheetTitle>{budget ? "Edit" : "New"} Budget</SheetTitle>
           <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none" />
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select
@@ -115,6 +117,9 @@ export function BudgetForm({
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && (
+              <p className="text-xs text-red-500 mt-1">{errors.category.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -125,7 +130,11 @@ export function BudgetForm({
               min="0"
               step="0.01"
               {...register("amount", { valueAsNumber: true })}
+              className="text-base"
             />
+            {errors.amount && (
+              <p className="text-xs text-red-500 mt-1">{errors.amount.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -145,10 +154,15 @@ export function BudgetForm({
                 <SelectItem value="yearly">Yearly</SelectItem>
               </SelectContent>
             </Select>
+            {errors.period && (
+              <p className="text-xs text-red-500 mt-1">{errors.period.message}</p>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="carry_forward">Carry Forward Unused Amount</Label>
+            <Label htmlFor="carry_forward" className="flex-1">
+              Carry Forward Unused Amount
+            </Label>
             <Switch
               id="carry_forward"
               checked={watch("carry_forward")}
@@ -156,7 +170,7 @@ export function BudgetForm({
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
             <SheetClose asChild>
               <Button variant="outline" type="button">Cancel</Button>
             </SheetClose>

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -25,7 +26,8 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(20); // Limit to latest 20 for better mobile performance
       
       if (error) {
         console.error('Error fetching expenses:', error);
@@ -68,53 +70,52 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {isMobile ? (
-              <>
-                <TableHead className="p-2">Description</TableHead>
-                <TableHead className="p-2 text-right">Amount</TableHead>
-              </>
-            ) : (
-              <>
-                <TableHead>Date</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Amount</TableHead>
-              </>
-            )}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      {isMobile ? (
+        // Mobile card view
+        <div className="space-y-3">
           {expenses.map((transaction) => (
-            <TableRow key={transaction.id}>
-              {isMobile ? (
-                <>
-                  <TableCell className="p-2">
-                    <div className="space-y-1">
-                      <div>{transaction.description}</div>
-                      <div className="flex gap-2 text-xs text-muted-foreground">
-                        <span>{format(new Date(transaction.date), 'MMM dd')}</span>
-                        <span>•</span>
-                        <span>{transaction.category}</span>
-                      </div>
+            <Card key={transaction.id} className="bg-card/50 border-border/50">
+              <CardContent className="p-3">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <div className="font-medium">{transaction.description}</div>
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      <span>{format(new Date(transaction.date), 'MMM dd')}</span>
+                      <span>•</span>
+                      <span>{transaction.category}</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="p-2 text-right">{formatCurrency(Number(transaction.amount))}</TableCell>
-                </>
-              ) : (
-                <>
-                  <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{transaction.category}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
-                </>
-              )}
-            </TableRow>
+                  </div>
+                  <div className="text-right font-semibold">
+                    {formatCurrency(Number(transaction.amount))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </TableBody>
-      </Table>
+        </div>
+      ) : (
+        // Desktop table view
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {expenses.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
+                <TableCell>{transaction.category}</TableCell>
+                <TableCell>{transaction.description}</TableCell>
+                <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

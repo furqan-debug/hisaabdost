@@ -63,4 +63,40 @@
   [data-sidebar="menu-button"] {
     @apply py-3;
   }
+
+  /* Budget specific mobile optimizations */
+  .budget-card {
+    @apply bg-card/80 backdrop-blur-sm border-border/40;
+  }
+  
+  /* Budget tab tab list scrolling */
+  .tabs-list-scroll {
+    @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar;
+  }
+  
+  /* Tab content padding for mobile */
+  .tab-content-mobile {
+    @apply px-0;
+  }
+}
+
+/* Enhanced floating action button */
+.floating-action-button {
+  @apply fixed z-50 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
+}
+
+@media (min-width: 768px) {
+  .floating-action-button {
+    @apply bottom-8;
+  }
+}
+
+/* Remove scrollbar but keep functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }

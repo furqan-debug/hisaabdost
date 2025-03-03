@@ -3,12 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
 }
 
 export function BudgetComparison({ budgets }: BudgetComparisonProps) {
+  const isMobile = useIsMobile();
+  
   // Group budgets by period and calculate totals
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
     if (!acc[budget.period]) {
@@ -22,17 +25,48 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
 
   const data = Object.values(budgetsByPeriod);
 
+  // If no budgets or only one period, show message
+  if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+        <p className="text-muted-foreground mb-2">Not enough data for comparison</p>
+        <p className="text-sm text-muted-foreground">
+          {budgets.length === 0 
+            ? "Add your first budget to see comparisons" 
+            : "Add budgets with different periods (monthly, quarterly, yearly) to see comparisons"}
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Budget Comparison by Period</CardTitle>
+    <Card className="bg-card/50 border-border/50">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="h-[400px]">
+      <CardContent className={isMobile ? "h-[320px] px-0" : "h-[400px]"}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="period" />
-            <YAxis tickFormatter={(value) => formatCurrency(Number(value))} />
+          <BarChart 
+            data={data} 
+            margin={
+              isMobile 
+                ? { top: 20, right: 10, left: 0, bottom: 60 } 
+                : { top: 20, right: 30, left: 20, bottom: 5 }
+            }
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={!isMobile} />
+            <XAxis 
+              dataKey="period" 
+              angle={isMobile ? -45 : 0}
+              textAnchor={isMobile ? "end" : "middle"}
+              height={isMobile ? 60 : 30}
+              tick={{ fontSize: isMobile ? 12 : 14 }}
+            />
+            <YAxis 
+              tickFormatter={(value) => isMobile ? `${value/1000}k` : formatCurrency(Number(value))} 
+              width={isMobile ? 40 : 60}
+              tick={{ fontSize: isMobile ? 12 : 14 }}
+            />
             <Tooltip 
               content={({ active, payload, label }) => {
                 if (!active || !payload || !payload.length) return null;
@@ -52,7 +86,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 );
               }}
             />
-            <Legend />
+            {!isMobile && <Legend />}
             {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
               <Bar 
                 key={category} 

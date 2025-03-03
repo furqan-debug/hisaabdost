@@ -15,6 +15,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -24,6 +26,7 @@ interface CategoryBudgetsProps {
 export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const handleDeleteBudget = async (budgetId: string) => {
     try {
@@ -56,8 +59,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     queryFn: async () => {
       const startDate = startOfMonth(new Date());
       
-      console.log('Fetching expenses from:', startDate.toISOString());
-      
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
@@ -68,7 +69,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
         throw error;
       }
 
-      console.log('Retrieved expenses:', data);
       return data || [];
     },
   });
@@ -91,21 +91,20 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }, 0);
   };
 
+  if (budgets.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+        <p className="text-muted-foreground mb-2">No budget categories found</p>
+        <p className="text-sm text-muted-foreground">Add your first budget to start tracking your spending by category</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Category</TableHead>
-            <TableHead>Period</TableHead>
-            <TableHead>Budgeted</TableHead>
-            <TableHead>Spent</TableHead>
-            <TableHead>Remaining</TableHead>
-            <TableHead>Progress</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      {isMobile ? (
+        // Mobile card view
+        <div className="space-y-4">
           {budgets.map((budget) => {
             const spentAmount = getSpentAmount(budget.category);
             const remainingAmount = Number(budget.amount) - spentAmount;
@@ -114,42 +113,120 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
               : 0;
 
             return (
-              <TableRow key={budget.id}>
-                <TableCell>{budget.category}</TableCell>
-                <TableCell className="capitalize">{budget.period}</TableCell>
-                <TableCell>{formatCurrency(Number(budget.amount))}</TableCell>
-                <TableCell>{formatCurrency(spentAmount)}</TableCell>
-                <TableCell>{formatCurrency(remainingAmount)}</TableCell>
-                <TableCell className="w-[200px]">
-                  <Progress value={progress} className="w-full" />
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEditBudget(budget)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteBudget(budget.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+              <Card key={budget.id} className="bg-card/50 border-border/50">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium">{budget.category}</h3>
+                      <p className="text-xs text-muted-foreground capitalize">{budget.period}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEditBudget(budget)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteBudget(budget.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Budgeted</p>
+                      <p className="font-medium">{formatCurrency(Number(budget.amount))}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Spent</p>
+                      <p className="font-medium">{formatCurrency(spentAmount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Remaining</p>
+                      <p className="font-medium">{formatCurrency(remainingAmount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Progress</p>
+                      <p className="font-medium">{progress.toFixed(0)}%</p>
+                    </div>
+                  </div>
+                  
+                  <Progress value={progress} className="w-full h-2" />
+                </CardContent>
+              </Card>
             );
           })}
-        </TableBody>
-      </Table>
+        </div>
+      ) : (
+        // Desktop table view
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Category</TableHead>
+              <TableHead>Period</TableHead>
+              <TableHead>Budgeted</TableHead>
+              <TableHead>Spent</TableHead>
+              <TableHead>Remaining</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {budgets.map((budget) => {
+              const spentAmount = getSpentAmount(budget.category);
+              const remainingAmount = Number(budget.amount) - spentAmount;
+              const progress = Number(budget.amount) > 0 
+                ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
+                : 0;
+
+              return (
+                <TableRow key={budget.id}>
+                  <TableCell>{budget.category}</TableCell>
+                  <TableCell className="capitalize">{budget.period}</TableCell>
+                  <TableCell>{formatCurrency(Number(budget.amount))}</TableCell>
+                  <TableCell>{formatCurrency(spentAmount)}</TableCell>
+                  <TableCell>{formatCurrency(remainingAmount)}</TableCell>
+                  <TableCell className="w-[200px]">
+                    <Progress value={progress} className="w-full" />
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEditBudget(budget)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteBudget(budget.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
