@@ -93,26 +93,30 @@ export function BudgetForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90%]" : ""}>
+      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90%] rounded-t-2xl" : ""}>
         <SheetHeader>
-          <SheetTitle>{budget ? "Edit" : "New"} Budget</SheetTitle>
+          <SheetTitle>{budget ? "Edit" : "Create"} Budget</SheetTitle>
           <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none" />
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6 budget-form-container">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select
               value={watch("category")}
               onValueChange={(value) => setValue("category", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(CATEGORY_COLORS).map((category) => (
                   <SelectItem key={category} value={category}>
-                    {category}
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full mr-2" 
+                           style={{ backgroundColor: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] }}></div>
+                      {category}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -123,12 +127,13 @@ export function BudgetForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">Budget Amount</Label>
             <Input
               id="amount"
               type="number"
               min="0"
               step="0.01"
+              placeholder="0.00"
               {...register("amount", { valueAsNumber: true })}
               className="text-base"
             />
@@ -138,19 +143,19 @@ export function BudgetForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="period">Period</Label>
+            <Label htmlFor="period">Budget Period</Label>
             <Select
               value={watch("period")}
               onValueChange={(value: "monthly" | "quarterly" | "yearly") =>
                 setValue("period", value)
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
                 <SelectItem value="yearly">Yearly</SelectItem>
               </SelectContent>
             </Select>
@@ -159,8 +164,8 @@ export function BudgetForm({
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="carry_forward" className="flex-1">
+          <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
+            <Label htmlFor="carry_forward" className="flex-1 cursor-pointer">
               Carry Forward Unused Amount
             </Label>
             <Switch
@@ -174,7 +179,7 @@ export function BudgetForm({
             <SheetClose asChild>
               <Button variant="outline" type="button">Cancel</Button>
             </SheetClose>
-            <Button type="submit">Save</Button>
+            <Button type="submit">{budget ? "Update" : "Create"} Budget</Button>
           </div>
         </form>
       </SheetContent>

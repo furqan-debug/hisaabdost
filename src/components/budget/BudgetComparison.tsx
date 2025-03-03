@@ -53,6 +53,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 ? { top: 20, right: 5, left: 0, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
+            barGap={isMobile ? 2 : 8}
+            barSize={isMobile ? 15 : 30}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={!isMobile} />
             <XAxis 
@@ -98,6 +100,20 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
+      
+      {isMobile && (
+        <div className="p-3 pt-0">
+          <h4 className="text-sm font-medium mb-2">Legend:</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+              <div key={category} className="flex items-center">
+                <div className="w-3 h-3 mr-2" style={{ backgroundColor: color }}></div>
+                <span className="text-xs">{category}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

@@ -111,10 +111,14 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
             const progress = Number(budget.amount) > 0 
               ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
               : 0;
+            const isOverBudget = spentAmount > Number(budget.amount);
 
             return (
-              <Card key={budget.id} className="bg-card/50 border-border/50">
-                <CardContent className="p-4 space-y-2">
+              <Card 
+                key={budget.id} 
+                className={`bg-card/50 border-border/50 overflow-hidden ${isOverBudget ? 'border-l-4 border-l-red-500' : ''}`}
+              >
+                <CardContent className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium">{budget.category}</h3>
@@ -142,26 +146,30 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                     </DropdownMenu>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Budgeted</p>
                       <p className="font-medium">{formatCurrency(Number(budget.amount))}</p>
                     </div>
-                    <div>
+                    <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Spent</p>
-                      <p className="font-medium">{formatCurrency(spentAmount)}</p>
+                      <p className={`font-medium ${isOverBudget ? 'text-red-500' : ''}`}>{formatCurrency(spentAmount)}</p>
                     </div>
-                    <div>
+                    <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Remaining</p>
-                      <p className="font-medium">{formatCurrency(remainingAmount)}</p>
+                      <p className={`font-medium ${remainingAmount < 0 ? 'text-red-500' : ''}`}>{formatCurrency(remainingAmount)}</p>
                     </div>
-                    <div>
+                    <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Progress</p>
                       <p className="font-medium">{progress.toFixed(0)}%</p>
                     </div>
                   </div>
                   
-                  <Progress value={progress} className="w-full h-2" />
+                  <Progress 
+                    value={progress} 
+                    className={`w-full h-2 ${isOverBudget ? 'bg-red-200' : ''}`} 
+                    indicatorClassName={isOverBudget ? 'bg-red-500' : undefined}
+                  />
                 </CardContent>
               </Card>
             );
@@ -188,16 +196,25 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
               const progress = Number(budget.amount) > 0 
                 ? Math.min((spentAmount / Number(budget.amount)) * 100, 100)
                 : 0;
+              const isOverBudget = spentAmount > Number(budget.amount);
 
               return (
-                <TableRow key={budget.id}>
+                <TableRow key={budget.id} className={isOverBudget ? 'bg-red-50/10' : undefined}>
                   <TableCell>{budget.category}</TableCell>
                   <TableCell className="capitalize">{budget.period}</TableCell>
                   <TableCell>{formatCurrency(Number(budget.amount))}</TableCell>
-                  <TableCell>{formatCurrency(spentAmount)}</TableCell>
-                  <TableCell>{formatCurrency(remainingAmount)}</TableCell>
+                  <TableCell className={isOverBudget ? 'text-red-500 font-medium' : undefined}>
+                    {formatCurrency(spentAmount)}
+                  </TableCell>
+                  <TableCell className={remainingAmount < 0 ? 'text-red-500 font-medium' : undefined}>
+                    {formatCurrency(remainingAmount)}
+                  </TableCell>
                   <TableCell className="w-[200px]">
-                    <Progress value={progress} className="w-full" />
+                    <Progress 
+                      value={progress} 
+                      className={isOverBudget ? 'bg-red-200' : undefined} 
+                      indicatorClassName={isOverBudget ? 'bg-red-500' : undefined}
+                    />
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

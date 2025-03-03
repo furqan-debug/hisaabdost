@@ -68,30 +68,51 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
     );
   }
 
+  // Find relevant budget for each expense
+  const getBudgetForExpense = (expense: any) => {
+    return budgets.find(budget => budget.category === expense.category) || null;
+  };
+
   return (
     <div className="space-y-4">
       {isMobile ? (
         // Mobile card view
         <div className="space-y-3">
-          {expenses.map((transaction) => (
-            <Card key={transaction.id} className="bg-card/50 border-border/50">
-              <CardContent className="p-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <div className="font-medium">{transaction.description}</div>
-                    <div className="flex gap-2 text-xs text-muted-foreground">
-                      <span>{format(new Date(transaction.date), 'MMM dd')}</span>
-                      <span>•</span>
-                      <span>{transaction.category}</span>
+          {expenses.map((transaction) => {
+            const relatedBudget = getBudgetForExpense(transaction);
+            const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
+            
+            return (
+              <Card key={transaction.id} className="bg-card/50 border-border/50">
+                <CardContent className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="font-medium">{transaction.description}</div>
+                      <div className="flex gap-2 text-xs text-muted-foreground">
+                        <span>{format(new Date(transaction.date), 'MMM dd')}</span>
+                        <span>•</span>
+                        <span className="capitalize">{transaction.category}</span>
+                        {relatedBudget && (
+                          <>
+                            <span>•</span>
+                            <span className="capitalize">{relatedBudget.period}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right font-semibold">
+                      {formatCurrency(Number(transaction.amount))}
+                      {relatedBudget && (
+                        <div className="text-xs text-muted-foreground">
+                          Budget: {formatCurrency(budgetAmount)}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right font-semibold">
-                    {formatCurrency(Number(transaction.amount))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         // Desktop table view
@@ -102,17 +123,35 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
               <TableHead>Category</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Amount</TableHead>
+              <TableHead>Budget</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses.map((transaction) => (
-              <TableRow key={transaction.id}>
-                <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
-                <TableCell>{transaction.category}</TableCell>
-                <TableCell>{transaction.description}</TableCell>
-                <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
-              </TableRow>
-            ))}
+            {expenses.map((transaction) => {
+              const relatedBudget = getBudgetForExpense(transaction);
+              const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
+              
+              return (
+                <TableRow key={transaction.id}>
+                  <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
+                  <TableCell>{transaction.category}</TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
+                  <TableCell>
+                    {relatedBudget ? (
+                      <div className="flex flex-col">
+                        <span>{formatCurrency(budgetAmount)}</span>
+                        <span className="text-xs text-muted-foreground capitalize">
+                          {relatedBudget.period}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">No budget</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

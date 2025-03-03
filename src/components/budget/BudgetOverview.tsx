@@ -79,10 +79,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
           {data.map((item, index) => (
             <div 
               key={index} 
-              className="flex items-center justify-between"
-              style={{ color: item.color }}
+              className="flex items-center justify-between p-2 rounded-md"
+              style={{ backgroundColor: `${item.color}20` }}
             >
-              <span className="font-medium">{item.name}</span>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 rounded-sm" style={{ backgroundColor: item.color }}></div>
+                <span className="font-medium">{item.name}</span>
+              </div>
               <div className="text-right">
                 <span className="text-sm font-semibold">{formatCurrency(item.value)}</span>
                 <span className="text-xs text-muted-foreground ml-2">({item.percentage}%)</span>
