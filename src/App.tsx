@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -16,21 +15,61 @@ import Expenses from "./pages/Expenses";
 import Budget from "./pages/Budget";
 import Analytics from "./pages/Analytics";
 import Goals from "./pages/Goals";
+import { toast } from "sonner";
 
 const queryClient = new QueryClient();
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        navigate("/");
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    const accessToken = hashParams.get("access_token");
+    
+    const handleAuthCallback = async () => {
+      try {
+        if (accessToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get("refresh_token") || "",
+          });
+          
+          if (error) {
+            console.error("Error setting session:", error);
+            toast.error("Authentication failed. Please try again.");
+            navigate("/auth");
+            return;
+          }
+          
+          toast.success("Successfully authenticated!");
+          navigate("/");
+        } else {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            navigate("/");
+          } else {
+            navigate("/auth");
+          }
+        }
+      } catch (error) {
+        console.error("Auth callback error:", error);
+        toast.error("Authentication failed. Please try again.");
+        navigate("/auth");
       }
-    });
-  }, [navigate]);
+    };
 
-  return <div>Loading...</div>;
+    handleAuthCallback();
+  }, [navigate, location]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center animate-pulse">
+        <h2 className="text-2xl font-medium mb-2">Verifying your account...</h2>
+        <p className="text-muted-foreground">Please wait while we complete the authentication process.</p>
+      </div>
+    </div>
+  );
 };
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -58,7 +97,8 @@ const AppWithProviders = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route
+              <Route path="/auth/verify" element={<AuthCallback />} />
+              <Route 
                 path="/"
                 element={
                   <ProtectedRoute>

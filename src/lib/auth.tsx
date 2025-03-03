@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       navigate("/");
     } catch (error: any) {
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Error signing in",
         description: error.message,
@@ -71,13 +72,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      toast({
+      uiToast({
         title: "Redirecting to Google...",
         description: "Please wait while we redirect you to Google for authentication.",
       });
     } catch (error: any) {
       console.error("Google auth error:", error);
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Error signing in with Google",
         description: error.message,
@@ -94,15 +95,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             full_name: fullName,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
-      toast({
-        title: "Success!",
-        description: "Please check your email to verify your account.",
-      });
+      
+      toast.success("Account created! Please check your email to verify your account.");
     } catch (error: any) {
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Error signing up",
         description: error.message,
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       navigate("/auth");
     } catch (error: any) {
-      toast({
+      uiToast({
         variant: "destructive",
         title: "Error signing out",
         description: error.message,
