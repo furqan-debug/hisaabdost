@@ -1,6 +1,7 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Expense {
   amount: number;
@@ -12,6 +13,8 @@ interface ExpensesPieChartProps {
 }
 
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
+  const isMobile = useIsMobile();
+  
   const data = Object.entries(
     expenses.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount);
@@ -24,7 +27,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
       <PieChart>
         <Pie
           data={data}
@@ -32,10 +35,12 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           nameKey="name"
           cx="50%"
           cy="50%"
-          outerRadius={150}
-          innerRadius={75}
+          outerRadius={isMobile ? 100 : 150}
+          innerRadius={isMobile ? 50 : 75}
           paddingAngle={2}
           label={false}
+          startAngle={90}
+          endAngle={-270}
         >
           {data.map((entry) => (
             <Cell key={entry.name} fill={entry.color} />
@@ -55,9 +60,10 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           }}
         />
         <Legend
-          verticalAlign="middle"
-          align="right"
-          layout="vertical"
+          verticalAlign={isMobile ? "bottom" : "middle"}
+          align={isMobile ? "center" : "right"}
+          layout={isMobile ? "horizontal" : "vertical"}
+          wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '10px' } : undefined}
           formatter={(value, entry: any) => (
             <span style={{ color: entry.color }}>
               {value}: {formatCurrency(entry.payload.value)}
