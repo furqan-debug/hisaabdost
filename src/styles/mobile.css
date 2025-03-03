@@ -27,7 +27,7 @@
   
   /* Improve card spacing */
   .card {
-    @apply rounded-xl mx-0 my-3;
+    @apply rounded-xl mx-0 my-2 shadow-sm;
   }
   
   /* Improve spacing for analytics and stats */
@@ -42,7 +42,7 @@
   
   /* Adjust touch targets */
   .touch-target {
-    @apply min-h-10 min-w-10;
+    @apply min-h-12 min-w-12;
   }
   
   /* Table optimizations for mobile */
@@ -66,7 +66,7 @@
 
   /* Budget specific mobile optimizations */
   .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40;
+    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2;
   }
   
   /* Budget tab tab list scrolling */
@@ -77,6 +77,26 @@
   /* Tab content padding for mobile */
   .tab-content-mobile {
     @apply px-0;
+  }
+  
+  /* Fixed budget content height to avoid jumpy layout */
+  .budget-chart-container {
+    @apply h-[300px] w-full;
+  }
+  
+  /* Add padding for mobile budget section */
+  .budget-section {
+    @apply py-2;
+  }
+  
+  /* Progress bar height for budget */
+  .budget-progress-bar {
+    @apply h-2;
+  }
+  
+  /* Adjust stats cards on mobile */
+  .stat-grid {
+    @apply grid-cols-1 gap-3;
   }
 }
 

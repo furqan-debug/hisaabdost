@@ -95,7 +95,7 @@ const Budget = () => {
   const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
-    <div className="space-y-4 md:space-y-6 pb-20 md:pb-8">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8">
       <header className={isMobile ? "px-4 py-2" : "flex justify-between items-center"}>
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold">Budget</h1>
@@ -104,7 +104,7 @@ const Budget = () => {
           </p>
         </div>
         {isMobile ? (
-          <div className="mt-4 flex justify-between items-center gap-2">
+          <div className="mt-3 flex justify-between items-center gap-2">
             <Button
               variant="outline"
               onClick={exportBudgetData}
@@ -146,35 +146,35 @@ const Budget = () => {
         )}
       </header>
 
-      <div className="grid gap-4 md:gap-6 px-4 md:px-0 md:grid-cols-3">
-        <Card className="bg-card/80 backdrop-blur-sm">
-          <CardHeader className="p-4">
+      <div className={`grid gap-3 md:gap-6 px-4 md:px-0 ${isMobile ? 'stat-grid' : 'md:grid-cols-3'}`}>
+        <Card className="budget-card">
+          <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Total Budget</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent className="p-3 pt-0">
             <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card/80 backdrop-blur-sm">
-          <CardHeader className="p-4">
+        <Card className="budget-card">
+          <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Remaining Balance</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent className="p-3 pt-0">
             <div className="text-2xl font-bold">{formatCurrency(remainingBalance)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card/80 backdrop-blur-sm">
-          <CardHeader className="p-4">
+        <Card className="budget-card">
+          <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Budget Usage</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent className="p-3 pt-0">
             <div className="text-2xl font-bold">{usagePercentage.toFixed(1)}%</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="mx-4 md:mx-0 bg-card/80 backdrop-blur-sm">
-        <CardContent className="p-4 md:p-6">
+      <Card className="mx-4 md:mx-0 budget-card">
+        <CardContent className="p-3 md:p-6">
           <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -183,11 +183,11 @@ const Budget = () => {
               <TabsTrigger value="comparison">Comparison</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview">
+            <TabsContent value="overview" className="budget-section">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories">
+            <TabsContent value="categories" className="budget-section">
               <CategoryBudgets 
                 budgets={budgets || []}
                 onEditBudget={(budget) => {
@@ -197,11 +197,11 @@ const Budget = () => {
               />
             </TabsContent>
 
-            <TabsContent value="transactions">
+            <TabsContent value="transactions" className="budget-section">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison">
+            <TabsContent value="comparison" className="budget-section">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </Tabs>

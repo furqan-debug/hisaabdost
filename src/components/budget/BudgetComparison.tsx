@@ -40,17 +40,17 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="bg-card/50 border-border/50">
-      <CardHeader className="p-4">
+    <Card className="budget-card">
+      <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className={isMobile ? "h-[320px] px-0" : "h-[400px]"}>
+      <CardContent className="budget-chart-container p-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 10, left: 0, bottom: 60 } 
+                ? { top: 20, right: 5, left: 0, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
           >
@@ -72,7 +72,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 if (!active || !payload || !payload.length) return null;
                 return (
                   <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <p className="font-semibold mb-1">{label}</p>
+                    <p className="font-semibold mb-1 capitalize">{label}</p>
                     {payload.map((entry) => (
                       <p 
                         key={entry.name} 
