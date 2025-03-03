@@ -66,6 +66,8 @@ export function ExpenseHeader({
               <Download className="h-4 w-4" />
               <span className="sr-only">Export</span>
             </Button>
+            
+            {/* Floating action button for mobile - rendered outside this header */}
           </>
         ) : (
           <>
@@ -86,9 +88,23 @@ export function ExpenseHeader({
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
+            
+            <Button
+              onClick={() => setShowAddExpense(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Expense
+            </Button>
           </>
         )}
       </div>
+      
+      {/* Floating Action Button for mobile */}
+      {isMobile && (
+        <div className="floating-action-button" onClick={() => setShowAddExpense(true)}>
+          <Plus className="h-6 w-6" />
+        </div>
+      )}
     </header>
   );
 }

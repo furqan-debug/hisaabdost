@@ -34,3 +34,14 @@
 [data-sidebar="menu-button"][data-active=true] svg {
   @apply text-primary scale-110;
 }
+
+/* Floating Action Button */
+.floating-action-button {
+  @apply fixed z-50 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
+}
+
+@media (min-width: 768px) {
+  .floating-action-button {
+    @apply bottom-8;
+  }
+}
