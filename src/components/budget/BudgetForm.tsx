@@ -26,7 +26,7 @@ import { Budget } from "@/pages/Budget";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Sparkle } from "lucide-react";
 import { formatCurrency } from "@/utils/chartUtils";
 
 const budgetSchema = z.object({
@@ -114,15 +114,18 @@ export function BudgetForm({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90%] rounded-t-2xl" : ""}>
-        <SheetHeader>
-          <SheetTitle>{budget ? "Edit" : "Create"} Budget</SheetTitle>
+      <SheetContent side={isMobile ? "bottom" : "right"} className={`${isMobile ? 'h-[90%] rounded-t-2xl' : ''} animate-slide-in shadow-lg`}>
+        <SheetHeader className="mb-2">
+          <SheetTitle className="flex items-center gap-2 text-primary">
+            <Sparkle className="h-5 w-5 text-primary animate-pulse-soft" />
+            {budget ? "Edit" : "Create"} Budget
+          </SheetTitle>
           <SheetClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none" />
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6 budget-form-container">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-4 budget-form-container">
           {willExceedIncome && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="animate-bounce-in">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Warning: Your total budget will exceed your monthly income by {formatCurrency(exceedAmount)}
@@ -131,19 +134,19 @@ export function BudgetForm({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category" className="text-sm font-medium">Category</Label>
             <Select
               value={watch("category")}
               onValueChange={(value) => setValue("category", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full border-input/50 hover:border-primary/50 transition-colors">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(CATEGORY_COLORS).map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category} value={category} className="cursor-pointer">
                     <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full mr-2" 
+                      <div className="w-3 h-3 rounded-full mr-2 animate-pulse-soft" 
                            style={{ backgroundColor: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] }}></div>
                       {category}
                     </div>
@@ -152,35 +155,38 @@ export function BudgetForm({
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="text-xs text-red-500 mt-1">{errors.category.message}</p>
+              <p className="text-xs text-red-500 mt-1 animate-fade-in">{errors.category.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Budget Amount</Label>
-            <Input
-              id="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              {...register("amount", { valueAsNumber: true })}
-              className="text-base"
-            />
+            <Label htmlFor="amount" className="text-sm font-medium">Budget Amount</Label>
+            <div className="relative">
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                {...register("amount", { valueAsNumber: true })}
+                className="text-base pl-8 border-input/50 hover:border-primary/50 focus:border-primary/70 transition-colors"
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+            </div>
             {errors.amount && (
-              <p className="text-xs text-red-500 mt-1">{errors.amount.message}</p>
+              <p className="text-xs text-red-500 mt-1 animate-fade-in">{errors.amount.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="period">Budget Period</Label>
+            <Label htmlFor="period" className="text-sm font-medium">Budget Period</Label>
             <Select
               value={watch("period")}
               onValueChange={(value: "monthly" | "quarterly" | "yearly") =>
                 setValue("period", value)
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full border-input/50 hover:border-primary/50 transition-colors">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
@@ -190,28 +196,30 @@ export function BudgetForm({
               </SelectContent>
             </Select>
             {errors.period && (
-              <p className="text-xs text-red-500 mt-1">{errors.period.message}</p>
+              <p className="text-xs text-red-500 mt-1 animate-fade-in">{errors.period.message}</p>
             )}
           </div>
 
-          <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-            <Label htmlFor="carry_forward" className="flex-1 cursor-pointer">
+          <div className="flex items-center justify-between p-3 bg-background/70 backdrop-blur-sm rounded-xl border border-border/30 shadow-sm hover-lift">
+            <Label htmlFor="carry_forward" className="flex-1 cursor-pointer text-sm">
               Carry Forward Unused Amount
             </Label>
             <Switch
               id="carry_forward"
               checked={watch("carry_forward")}
               onCheckedChange={(checked) => setValue("carry_forward", checked)}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
           <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
             <SheetClose asChild>
-              <Button variant="outline" type="button">Cancel</Button>
+              <Button variant="outline" type="button" className="hover-lift">Cancel</Button>
             </SheetClose>
             <Button 
               type="submit"
               disabled={willExceedIncome}
+              className={`hover-lift ${willExceedIncome ? 'opacity-50' : 'animate-pulse-soft'}`}
             >
               {budget ? "Update" : "Create"} Budget
             </Button>

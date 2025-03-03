@@ -21,6 +21,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         purple: "bg-[#9b87f5] text-white hover:bg-[#7E69AB] shadow-md hover:shadow-lg active:scale-[0.98]",
         glass: "bg-background/80 backdrop-blur-md border border-border/30 shadow-sm hover:shadow-md hover:bg-background/90 active:scale-[0.98]",
+        rose: "bg-pink-50 text-pink-700 hover:bg-pink-100 border border-pink-200/50 shadow-sm hover:shadow-md active:scale-[0.98]",
+        lavender: "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/50 shadow-sm hover:shadow-md active:scale-[0.98]",
+        mint: "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200/50 shadow-sm hover:shadow-md active:scale-[0.98]",
+        peach: "bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200/50 shadow-sm hover:shadow-md active:scale-[0.98]",
       },
       size: {
         default: "h-11 px-5 py-2.5",
