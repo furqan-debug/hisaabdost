@@ -74,7 +74,6 @@ const Budget = () => {
         remainingBalance={remainingBalance}
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">

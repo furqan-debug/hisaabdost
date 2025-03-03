@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Input } from "@/components/ui/input";
 import { AlertCircle } from "lucide-react";
 
 interface BudgetSummaryCardsProps {
@@ -11,15 +10,13 @@ interface BudgetSummaryCardsProps {
   remainingBalance: number;
   usagePercentage: number;
   monthlyIncome: number;
-  setMonthlyIncome: (income: number) => void;
 }
 
 export const BudgetSummaryCards = ({ 
   totalBudget, 
   remainingBalance, 
   usagePercentage,
-  monthlyIncome,
-  setMonthlyIncome
+  monthlyIncome
 }: BudgetSummaryCardsProps) => {
   const isMobile = useIsMobile();
   const exceedsBudget = totalBudget > monthlyIncome && monthlyIncome > 0;
@@ -68,18 +65,7 @@ export const BudgetSummaryCards = ({
             <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="relative">
-              <Input
-                type="number"
-                value={monthlyIncome}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
-                  setMonthlyIncome(value ? parseInt(value, 10) : 0);
-                }}
-                className="pl-6 pr-2 h-8 text-sm"
-                min={0}
-              />
-            </div>
+            <div className="text-xl font-bold">{formatCurrency(monthlyIncome)}</div>
           </CardContent>
         </Card>
       </div>
