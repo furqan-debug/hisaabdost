@@ -1,0 +1,39 @@
+
+/* Modern Card Design */
+.modern-card {
+  @apply rounded-xl bg-background/60 backdrop-blur-lg border shadow-sm transition-all duration-300
+         hover:shadow-lg hover:bg-background/80 hover:-translate-y-0.5;
+}
+
+/* Glass Effect */
+.glass {
+  @apply bg-background/60 backdrop-blur-xl border shadow-sm;
+}
+
+/* Interactive Elements */
+.interactive-hover {
+  @apply transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded-full hover:bg-muted-foreground/50 transition-colors;
+}
+
+/* Hide scrollbar for cleaner mobile UI */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,0 +1,66 @@
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  h1 {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  h3 {
+    @apply text-lg font-medium;
+  }
+  input, select, textarea, button {
+    @apply text-base;
+  }
+  .card-header {
+    @apply p-3;
+  }
+  .card-content {
+    @apply p-3;
+  }
+  
+  /* Better mobile alignment */
+  .modern-card {
+    @apply mx-0 my-3;
+  }
+  
+  /* Improve card spacing */
+  .card {
+    @apply rounded-xl mx-0 my-3;
+  }
+  
+  /* Improve spacing for analytics and stats */
+  .stat-card {
+    @apply p-3;
+  }
+  
+  /* Fix centering for mobile elements */
+  .mobile-center {
+    @apply flex justify-center items-center;
+  }
+  
+  /* Adjust touch targets */
+  .touch-target {
+    @apply min-h-10 min-w-10;
+  }
+  
+  /* Table optimizations for mobile */
+  table {
+    @apply w-full table-fixed;
+  }
+  
+  /* Table cell optimizations */
+  td {
+    @apply p-2;
+  }
+
+  /* Sidebar optimizations */
+  [data-sidebar="sidebar"] {
+    @apply backdrop-blur-2xl bg-background/95;
+  }
+  
+  [data-sidebar="menu-button"] {
+    @apply py-3;
+  }
+}
