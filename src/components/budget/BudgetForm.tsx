@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -78,6 +79,11 @@ export function BudgetForm({
   const onSubmit = async (formData: BudgetFormData) => {
     if (!user) return;
     
+    // Prevent adding budget if it would exceed monthly income
+    if (willExceedIncome) {
+      return;
+    }
+    
     try {
       const budgetData = {
         amount: formData.amount,
@@ -119,7 +125,7 @@ export function BudgetForm({
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Warning: This budget will exceed your monthly income by {formatCurrency(exceedAmount)}
+                Warning: Your total budget will exceed your monthly income by {formatCurrency(exceedAmount)}
               </AlertDescription>
             </Alert>
           )}
@@ -203,7 +209,12 @@ export function BudgetForm({
             <SheetClose asChild>
               <Button variant="outline" type="button">Cancel</Button>
             </SheetClose>
-            <Button type="submit">{budget ? "Update" : "Create"} Budget</Button>
+            <Button 
+              type="submit"
+              disabled={willExceedIncome}
+            >
+              {budget ? "Update" : "Create"} Budget
+            </Button>
           </div>
         </form>
       </SheetContent>
