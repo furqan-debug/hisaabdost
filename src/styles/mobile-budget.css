@@ -26,6 +26,14 @@
     width: auto;
   }
   
+  /* Container for scrollable tabs */
+  .scrollable-tabs-container {
+    @apply w-full overflow-x-auto no-scrollbar;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    padding-bottom: 2px; /* Prevents content jump */
+  }
+  
   /* Prevent horizontal overflow issues */
   .budget-container {
     @apply w-full px-0 max-w-full;

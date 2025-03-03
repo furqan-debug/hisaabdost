@@ -17,12 +17,14 @@ export const BudgetTabs = ({ budgets, onEditBudget }: BudgetTabsProps) => {
     <Card className="budget-card overflow-hidden">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
-          <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          </TabsList>
+          <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="comparison">Comparison</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="budget-section overflow-hidden w-full">
             <BudgetOverview budgets={budgets || []} />
