@@ -29,7 +29,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             (percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '') : 
             (percent > 0.03 ? `${name} (${(percent * 100).toFixed(0)}%)` : '')
           }
-          labelLine={(percent) => percent > 0.05 ? true : false}
+          labelLine={false} // Changed from a function to boolean false
         >
           {pieChartData.map((entry) => (
             <Cell key={entry.name} fill={entry.color} stroke="var(--background)" strokeWidth={1} />
