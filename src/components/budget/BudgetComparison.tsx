@@ -40,34 +40,34 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="budget-card overflow-hidden">
+    <Card className="budget-card overflow-hidden w-full">
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
       <CardContent className="budget-chart-container p-0 pb-2">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="99%" height="100%">
           <BarChart 
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 5, left: 0, bottom: 60 } 
+                ? { top: 20, right: 0, left: -15, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
             barGap={isMobile ? 2 : 8}
-            barSize={isMobile ? 15 : 30}
+            barSize={isMobile ? 10 : 30}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={!isMobile} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
               dataKey="period" 
               angle={isMobile ? -45 : 0}
               textAnchor={isMobile ? "end" : "middle"}
               height={isMobile ? 60 : 30}
-              tick={{ fontSize: isMobile ? 12 : 14 }}
+              tick={{ fontSize: isMobile ? 10 : 14 }}
             />
             <YAxis 
-              tickFormatter={(value) => isMobile ? `${value/1000}k` : formatCurrency(Number(value))} 
-              width={isMobile ? 40 : 60}
-              tick={{ fontSize: isMobile ? 12 : 14 }}
+              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value))} 
+              width={isMobile ? 30 : 60}
+              tick={{ fontSize: isMobile ? 10 : 14 }}
             />
             <Tooltip 
               content={({ active, payload, label }) => {
@@ -104,11 +104,11 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       {isMobile && (
         <div className="p-3 pt-0">
           <h4 className="text-sm font-medium mb-2">Legend:</h4>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
               <div key={category} className="flex items-center">
                 <div className="w-3 h-3 mr-2" style={{ backgroundColor: color }}></div>
-                <span className="text-xs">{category}</span>
+                <span className="text-xs truncate">{category}</span>
               </div>
             ))}
           </div>

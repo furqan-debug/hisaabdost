@@ -136,7 +136,7 @@ const Budget = () => {
       </header>
 
       <div className={`grid gap-3 md:gap-6 px-4 md:px-0 ${isMobile ? 'stat-grid' : 'md:grid-cols-3'}`}>
-        <Card className="budget-card">
+        <Card className="budget-card w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Total Budget</CardTitle>
           </CardHeader>
@@ -144,7 +144,7 @@ const Budget = () => {
             <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
           </CardContent>
         </Card>
-        <Card className="budget-card">
+        <Card className="budget-card w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Remaining Balance</CardTitle>
           </CardHeader>
@@ -152,7 +152,7 @@ const Budget = () => {
             <div className="text-2xl font-bold">{formatCurrency(remainingBalance)}</div>
           </CardContent>
         </Card>
-        <Card className="budget-card">
+        <Card className="budget-card w-full">
           <CardHeader className="p-3">
             <CardTitle className="text-base font-medium">Budget Usage</CardTitle>
           </CardHeader>
@@ -162,40 +162,42 @@ const Budget = () => {
         </Card>
       </div>
 
-      <Card className="mx-4 md:mx-0 budget-card">
-        <CardContent className="p-0 md:p-6">
-          <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison">Comparison</TabsTrigger>
-            </TabsList>
+      <div className="mx-4 md:mx-0 w-full mobile-container-fix">
+        <Card className="budget-card w-full">
+          <CardContent className="p-0 md:p-6">
+            <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full">
+              <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="categories">Categories</TabsTrigger>
+                <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                <TabsTrigger value="comparison">Comparison</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="overview" className="budget-section px-3">
-              <BudgetOverview budgets={budgets || []} />
-            </TabsContent>
+              <TabsContent value="overview" className="budget-section">
+                <BudgetOverview budgets={budgets || []} />
+              </TabsContent>
 
-            <TabsContent value="categories" className="budget-section px-3">
-              <CategoryBudgets 
-                budgets={budgets || []}
-                onEditBudget={(budget) => {
-                  setSelectedBudget(budget);
-                  setShowBudgetForm(true);
-                }}
-              />
-            </TabsContent>
+              <TabsContent value="categories" className="budget-section">
+                <CategoryBudgets 
+                  budgets={budgets || []}
+                  onEditBudget={(budget) => {
+                    setSelectedBudget(budget);
+                    setShowBudgetForm(true);
+                  }}
+                />
+              </TabsContent>
 
-            <TabsContent value="transactions" className="budget-section px-3">
-              <BudgetTransactions budgets={budgets || []} />
-            </TabsContent>
+              <TabsContent value="transactions" className="budget-section">
+                <BudgetTransactions budgets={budgets || []} />
+              </TabsContent>
 
-            <TabsContent value="comparison" className="budget-section px-3">
-              <BudgetComparison budgets={budgets || []} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+              <TabsContent value="comparison" className="budget-section">
+                <BudgetComparison budgets={budgets || []} />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
 
       <BudgetForm
         open={showBudgetForm}

@@ -31,8 +31,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="budget-card overflow-hidden">
+    <div className="space-y-4 w-full overflow-hidden">
+      <Card className="budget-card overflow-hidden w-full">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
@@ -75,16 +75,16 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       </Card>
       
       {isMobile && (
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-2 w-full overflow-hidden">
           {data.map((item, index) => (
             <div 
               key={index} 
-              className="flex items-center justify-between p-2 rounded-md"
+              className="flex items-center justify-between p-2 rounded-md w-full"
               style={{ backgroundColor: `${item.color}20` }}
             >
               <div className="flex items-center">
                 <div className="w-3 h-3 mr-2 rounded-sm" style={{ backgroundColor: item.color }}></div>
-                <span className="font-medium">{item.name}</span>
+                <span className="font-medium text-sm truncate max-w-[150px]">{item.name}</span>
               </div>
               <div className="text-right">
                 <span className="text-sm font-semibold">{formatCurrency(item.value)}</span>
