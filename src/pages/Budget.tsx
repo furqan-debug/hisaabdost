@@ -146,7 +146,7 @@ const Budget = () => {
         )}
       </header>
 
-      <div className="grid gap-4 md:gap-6 px-4 md:px-0 grid-cols-1 md:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 px-4 md:px-0 md:grid-cols-3">
         <Card className="bg-card/80 backdrop-blur-sm">
           <CardHeader className="p-4">
             <CardTitle className="text-base font-medium">Total Budget</CardTitle>
@@ -174,20 +174,20 @@ const Budget = () => {
       </div>
 
       <Card className="mx-4 md:mx-0 bg-card/80 backdrop-blur-sm">
-        <CardContent className={isMobile ? "p-3" : "p-4 md:p-6"}>
-          <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full">
-            <TabsList className={isMobile ? "w-full tabs-list-scroll" : "w-full justify-start"}>
+        <CardContent className="p-4 md:p-6">
+          <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+            <TabsList className="w-full justify-start">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="comparison">Comparison</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className={isMobile ? "tab-content-mobile" : ""}>
+            <TabsContent value="overview">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className={isMobile ? "tab-content-mobile" : ""}>
+            <TabsContent value="categories">
               <CategoryBudgets 
                 budgets={budgets || []}
                 onEditBudget={(budget) => {
@@ -197,11 +197,11 @@ const Budget = () => {
               />
             </TabsContent>
 
-            <TabsContent value="transactions" className={isMobile ? "tab-content-mobile" : ""}>
+            <TabsContent value="transactions">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className={isMobile ? "tab-content-mobile" : ""}>
+            <TabsContent value="comparison">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </Tabs>

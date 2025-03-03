@@ -78,20 +78,6 @@
   .tab-content-mobile {
     @apply px-0;
   }
-  
-  /* Fix tab overflow issue on mobile */
-  [role="tablist"] {
-    @apply overflow-x-auto snap-x snap-mandatory no-scrollbar w-full;
-  }
-  
-  [role="tab"] {
-    @apply snap-start min-w-fit whitespace-nowrap;
-  }
-  
-  /* Card adjustments for full width on mobile */
-  .mobile-full-width {
-    @apply -mx-4 px-4 w-[calc(100%+2rem)];
-  }
 }
 
 /* Enhanced floating action button */
