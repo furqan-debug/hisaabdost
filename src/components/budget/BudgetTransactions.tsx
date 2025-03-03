@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
@@ -74,10 +73,10 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   };
 
   return (
-    <div className="space-y-3 w-full overflow-hidden">
+    <div className="space-y-3 w-full overflow-hidden max-w-full">
       {isMobile ? (
         // Mobile card view - simplified for better mobile experience
-        <div className="space-y-2 w-full">
+        <div className="space-y-2 w-full overflow-hidden">
           {expenses.map((transaction) => {
             const relatedBudget = getBudgetForExpense(transaction);
             const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
@@ -85,7 +84,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
             return (
               <Card key={transaction.id} className="overflow-hidden border-border/40 shadow-sm w-full">
                 <CardContent className="p-3">
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start w-full">
                     <div className="space-y-1 overflow-hidden max-w-[60%]">
                       <div className="font-medium truncate">{transaction.description}</div>
                       <div className="flex gap-1 text-xs text-muted-foreground flex-wrap">
@@ -94,7 +93,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                         <span className="capitalize truncate">{transaction.category}</span>
                       </div>
                     </div>
-                    <div className="text-right font-semibold min-w-[80px]">
+                    <div className="text-right font-semibold min-w-[80px] flex-shrink-0">
                       {formatCurrency(Number(transaction.amount))}
                       {relatedBudget && (
                         <div className="text-xs text-muted-foreground">

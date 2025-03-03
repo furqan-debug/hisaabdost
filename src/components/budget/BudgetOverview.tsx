@@ -31,7 +31,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4 w-full overflow-x-hidden max-w-full">
+    <div className="space-y-4 w-full overflow-hidden max-w-full">
       <Card className="budget-card w-full max-w-full">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
@@ -75,18 +75,18 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       </Card>
       
       {isMobile && (
-        <div className="mt-3 space-y-2 w-full max-w-full px-1">
+        <div className="mt-3 space-y-2 w-full max-w-full px-1 overflow-hidden">
           {data.map((item, index) => (
             <div 
               key={index} 
-              className="flex items-center justify-between p-2 rounded-md w-full"
+              className="flex items-center justify-between p-2 rounded-md w-full overflow-hidden"
               style={{ backgroundColor: `${item.color}20` }}
             >
-              <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 rounded-sm" style={{ backgroundColor: item.color }}></div>
+              <div className="flex items-center overflow-hidden">
+                <div className="w-3 h-3 mr-2 rounded-sm flex-shrink-0" style={{ backgroundColor: item.color }}></div>
                 <span className="font-medium text-sm truncate max-w-[120px]">{item.name}</span>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 <span className="text-sm font-semibold">{formatCurrency(item.value)}</span>
                 <span className="text-xs text-muted-foreground ml-2">({item.percentage}%)</span>
               </div>

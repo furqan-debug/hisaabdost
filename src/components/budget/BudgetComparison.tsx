@@ -50,11 +50,13 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 0, left: -15, bottom: 60 } 
+                ? { top: 20, right: 0, left: -20, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
-            barGap={isMobile ? 2 : 8}
-            barSize={isMobile ? 10 : 30}
+            barGap={isMobile ? 1 : 8}
+            barSize={isMobile ? 8 : 30}
+            maxBarSize={isMobile ? 8 : 30}
+            style={{ maxWidth: '100%', overflow: 'hidden' }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
@@ -63,6 +65,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
               textAnchor={isMobile ? "end" : "middle"}
               height={isMobile ? 60 : 30}
               tick={{ fontSize: isMobile ? 10 : 14 }}
+              tickMargin={isMobile ? 5 : 10}
+              scale="band"
             />
             <YAxis 
               tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value))} 
