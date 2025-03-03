@@ -74,33 +74,27 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {isMobile ? (
-        // Mobile card view
-        <div className="space-y-3">
+        // Mobile card view - simplified for better mobile experience
+        <div className="space-y-2">
           {expenses.map((transaction) => {
             const relatedBudget = getBudgetForExpense(transaction);
             const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
             
             return (
-              <Card key={transaction.id} className="bg-card/50 border-border/50">
+              <Card key={transaction.id} className="overflow-hidden border-border/40 shadow-sm">
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <div className="font-medium">{transaction.description}</div>
-                      <div className="flex gap-2 text-xs text-muted-foreground">
+                    <div className="space-y-1 overflow-hidden">
+                      <div className="font-medium truncate">{transaction.description}</div>
+                      <div className="flex gap-2 text-xs text-muted-foreground flex-wrap">
                         <span>{format(new Date(transaction.date), 'MMM dd')}</span>
                         <span>•</span>
                         <span className="capitalize">{transaction.category}</span>
-                        {relatedBudget && (
-                          <>
-                            <span>•</span>
-                            <span className="capitalize">{relatedBudget.period}</span>
-                          </>
-                        )}
                       </div>
                     </div>
-                    <div className="text-right font-semibold">
+                    <div className="text-right font-semibold min-w-[80px]">
                       {formatCurrency(Number(transaction.amount))}
                       {relatedBudget && (
                         <div className="text-xs text-muted-foreground">
