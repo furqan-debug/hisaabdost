@@ -31,22 +31,24 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-card/50 border-border/50">
-        <CardHeader className="p-4">
+      <Card className="bg-card/50 border-border/50 overflow-hidden">
+        <CardHeader className={isMobile ? "p-3" : "p-4"}>
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className={isMobile ? "h-[300px] p-0" : "h-[400px] p-4"}>
+        <CardContent className={isMobile ? "h-[300px] px-0 py-2" : "h-[400px] p-4"}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={isMobile ? { top: 0, right: 0, bottom: 0, left: 0 } : { top: 0, right: 30, bottom: 0, left: 0 }}>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                outerRadius={isMobile ? 100 : 150}
+                innerRadius={isMobile ? 0 : 30}
+                outerRadius={isMobile ? 80 : 140}
+                paddingAngle={2}
                 dataKey="value"
                 label={({ name, value, percent }) => 
                   isMobile 
-                    ? `${name}: ${Math.round(percent * 100)}%`
+                    ? `${Math.round(percent * 100)}%`
                     : `${name}: ${formatCurrency(value)}`
                 }
                 labelLine={!isMobile}

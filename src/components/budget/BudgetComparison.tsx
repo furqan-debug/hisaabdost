@@ -40,33 +40,51 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="bg-card/50 border-border/50">
-      <CardHeader className="p-4">
+    <Card className="bg-card/50 border-border/50 overflow-hidden">
+      <CardHeader className={isMobile ? "p-3" : "p-4"}>
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className={isMobile ? "h-[320px] px-0" : "h-[400px]"}>
+      <CardContent className={isMobile ? "h-[300px] px-0 py-2" : "h-[400px] p-4"}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart 
             data={data} 
             margin={
               isMobile 
-                ? { top: 20, right: 10, left: 0, bottom: 60 } 
+                ? { top: 20, right: 10, left: 10, bottom: 60 } 
                 : { top: 20, right: 30, left: 20, bottom: 5 }
             }
+            layout={isMobile ? "vertical" : "horizontal"}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={!isMobile} />
-            <XAxis 
-              dataKey="period" 
-              angle={isMobile ? -45 : 0}
-              textAnchor={isMobile ? "end" : "middle"}
-              height={isMobile ? 60 : 30}
-              tick={{ fontSize: isMobile ? 12 : 14 }}
-            />
-            <YAxis 
-              tickFormatter={(value) => isMobile ? `${value/1000}k` : formatCurrency(Number(value))} 
-              width={isMobile ? 40 : 60}
-              tick={{ fontSize: isMobile ? 12 : 14 }}
-            />
+            <CartesianGrid strokeDasharray="3 3" vertical={!isMobile} horizontal={isMobile} />
+            {isMobile ? (
+              <>
+                <XAxis 
+                  type="number" 
+                  tickFormatter={(value) => `${value/1000}k`} 
+                  tick={{ fontSize: 12 }}
+                  domain={[0, 'dataMax']}
+                />
+                <YAxis 
+                  type="category" 
+                  dataKey="period" 
+                  tick={{ fontSize: 12 }}
+                  width={70}
+                />
+              </>
+            ) : (
+              <>
+                <XAxis 
+                  dataKey="period" 
+                  height={60}
+                  tick={{ fontSize: 14 }}
+                />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrency(Number(value))} 
+                  width={60}
+                  tick={{ fontSize: 14 }}
+                />
+              </>
+            )}
             <Tooltip 
               content={({ active, payload, label }) => {
                 if (!active || !payload || !payload.length) return null;
@@ -92,7 +110,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 key={category} 
                 dataKey={category} 
                 fill={color}
-                stackId="a"
+                stackId={isMobile ? "a" : undefined}
+                layout={isMobile ? "vertical" : "horizontal"}
               />
             ))}
           </BarChart>
