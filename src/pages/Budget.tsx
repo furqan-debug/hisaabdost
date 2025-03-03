@@ -1,19 +1,14 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BudgetOverview } from "@/components/budget/BudgetOverview";
-import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
-import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
-import { BudgetComparison } from "@/components/budget/BudgetComparison";
-import { BudgetForm } from "@/components/budget/BudgetForm";
-import { Download, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
-import { formatCurrency } from "@/utils/chartUtils";
+import { Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BudgetForm } from "@/components/budget/BudgetForm";
+import { BudgetHeader } from "@/components/budget/BudgetHeader";
+import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
+import { BudgetTabs } from "@/components/budget/BudgetTabs";
+import { useBudgetData } from "@/hooks/useBudgetData";
 
 export interface Budget {
   id: string;
@@ -31,54 +26,27 @@ const Budget = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  
+  const { 
+    budgets, 
+    isLoading, 
+    exportBudgetData,
+    totalBudget,
+    remainingBalance,
+    usagePercentage
+  } = useBudgetData();
 
-  const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Budget[];
-    },
-  });
-
-  const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*');
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const exportBudgetData = () => {
-    if (!budgets) return;
-
-    const csvContent = [
-      ['Category', 'Amount', 'Period', 'Carry Forward', 'Created At'].join(','),
-      ...budgets.map(budget => [
-        budget.category,
-        budget.amount,
-        budget.period,
-        budget.carry_forward,
-        format(new Date(budget.created_at), 'yyyy-MM-dd')
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `budget_data_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    link.click();
+  const handleAddBudget = () => {
+    setSelectedBudget(null);
+    setShowBudgetForm(true);
   };
 
-  if (budgetsLoading || expensesLoading) {
+  const handleEditBudget = (budget: Budget) => {
+    setSelectedBudget(budget);
+    setShowBudgetForm(true);
+  };
+
+  if (isLoading) {
     return <div className="p-4 flex justify-center">
       <div className="animate-pulse text-center">
         <p className="text-muted-foreground">Loading your budget data...</p>
@@ -86,125 +54,24 @@ const Budget = () => {
     </div>;
   }
 
-  const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
-  const remainingBalance = totalBudget - totalSpent;
-  const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-
   return (
     <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
-      <header className={isMobile ? "px-4 py-2" : "flex justify-between items-center"}>
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-bold">Budget</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Manage and track your budget allocations
-          </p>
-        </div>
-        {isMobile ? (
-          <div className="mt-3 flex justify-between items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={exportBudgetData}
-              size="sm"
-              className="flex-1"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button 
-              size="sm" 
-              className="flex-1"
-              onClick={() => {
-                setSelectedBudget(null);
-                setShowBudgetForm(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Budget
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={exportBudgetData}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button onClick={() => {
-              setSelectedBudget(null);
-              setShowBudgetForm(true);
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Budget
-            </Button>
-          </div>
-        )}
-      </header>
+      <BudgetHeader 
+        onAddBudget={handleAddBudget}
+        onExport={exportBudgetData}
+      />
 
-      <div className={`grid gap-3 md:gap-6 px-4 md:px-0 ${isMobile ? 'stat-grid' : 'md:grid-cols-3'}`}>
-        <Card className="budget-card">
-          <CardHeader className="p-3">
-            <CardTitle className="text-base font-medium">Total Budget</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
-          </CardContent>
-        </Card>
-        <Card className="budget-card">
-          <CardHeader className="p-3">
-            <CardTitle className="text-base font-medium">Remaining Balance</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-2xl font-bold">{formatCurrency(remainingBalance)}</div>
-          </CardContent>
-        </Card>
-        <Card className="budget-card">
-          <CardHeader className="p-3">
-            <CardTitle className="text-base font-medium">Budget Usage</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="text-2xl font-bold">{usagePercentage.toFixed(1)}%</div>
-          </CardContent>
-        </Card>
-      </div>
+      <BudgetSummaryCards
+        totalBudget={totalBudget}
+        remainingBalance={remainingBalance}
+        usagePercentage={usagePercentage}
+      />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
-        <Card className="budget-card overflow-hidden">
-          <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
-            <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
-              <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="categories">Categories</TabsTrigger>
-                <TabsTrigger value="transactions">Transactions</TabsTrigger>
-                <TabsTrigger value="comparison">Comparison</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="budget-section overflow-hidden w-full">
-                <BudgetOverview budgets={budgets || []} />
-              </TabsContent>
-
-              <TabsContent value="categories" className="budget-section overflow-hidden w-full">
-                <CategoryBudgets 
-                  budgets={budgets || []}
-                  onEditBudget={(budget) => {
-                    setSelectedBudget(budget);
-                    setShowBudgetForm(true);
-                  }}
-                />
-              </TabsContent>
-
-              <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
-                <BudgetTransactions budgets={budgets || []} />
-              </TabsContent>
-
-              <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
-                <BudgetComparison budgets={budgets || []} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <BudgetTabs 
+          budgets={budgets || []} 
+          onEditBudget={handleEditBudget}
+        />
       </div>
 
       <BudgetForm
@@ -223,10 +90,7 @@ const Budget = () => {
       />
       
       {isMobile && (
-        <div className="floating-action-button" onClick={() => {
-          setSelectedBudget(null);
-          setShowBudgetForm(true);
-        }}>
+        <div className="floating-action-button" onClick={handleAddBudget}>
           <Plus className="h-6 w-6" />
         </div>
       )}
