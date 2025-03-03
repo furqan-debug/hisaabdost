@@ -66,12 +66,13 @@
 
   /* Budget specific mobile optimizations */
   .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl max-w-full overflow-hidden;
+    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl w-full max-w-full overflow-hidden;
   }
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
   .tabs-list-scroll {
-    @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar w-full max-w-[calc(100vw-32px)];
+    @apply flex overflow-x-auto space-x-2 pb-2 no-scrollbar w-full;
+    max-width: calc(100vw - 32px);
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
@@ -85,23 +86,29 @@
   
   /* Prevent horizontal overflow issues */
   .budget-container {
-    @apply w-full overflow-hidden px-0 max-w-full;
+    @apply w-full px-0 max-w-full;
+    overflow-x: hidden !important;
     max-width: 100vw;
   }
   
   /* Tab content padding for mobile */
   .tab-content-mobile {
-    @apply px-0 max-w-full overflow-hidden;
+    @apply px-0 max-w-full;
+    overflow-x: hidden !important;
   }
   
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
-    @apply h-[300px] w-full max-w-full overflow-hidden;
+    height: 300px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
   }
   
   /* Add padding for mobile budget section */
   .budget-section {
-    @apply py-2 px-0 max-w-full overflow-hidden;
+    @apply py-2 px-1 max-w-full;
+    overflow-x: hidden !important;
   }
   
   /* Progress bar height for budget */
@@ -126,8 +133,9 @@
   
   /* Make budget content fit properly on mobile */
   .budget-content {
-    @apply w-full px-3 overflow-hidden max-w-full;
+    @apply w-full px-2 max-w-full;
     max-width: 100%;
+    overflow-x: hidden !important;
   }
   
   /* Category budget cards for better display */
@@ -152,17 +160,28 @@
   
   /* Fix chart overflow issues */
   .recharts-wrapper {
-    @apply max-w-full overflow-visible;
+    @apply max-w-full;
+    overflow: visible !important;
   }
   
   /* Ensure all content stays within container */
   .mobile-container-fix {
-    @apply max-w-[100vw] w-full overflow-hidden px-0;
+    @apply w-full px-0;
+    max-width: 100vw;
+    overflow-x: hidden !important;
   }
   
   /* Force budget tab content to wrap */
   .budget-tab-content-wrap {
-    @apply w-full max-w-full break-words overflow-hidden;
+    @apply w-full max-w-full break-words;
+    overflow-x: hidden !important;
+  }
+
+  /* Budget comparison chart container */
+  .budget-comparison-chart {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 

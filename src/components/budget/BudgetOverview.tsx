@@ -23,7 +23,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   // If no budgets, show message
   if (budgets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>
@@ -31,13 +31,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4 w-full overflow-hidden max-w-full">
-      <Card className="budget-card overflow-hidden w-full max-w-full">
+    <div className="space-y-4 w-full overflow-x-hidden max-w-full">
+      <Card className="budget-card w-full max-w-full">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
-          <ResponsiveContainer width="99%" height="100%">
+        <CardContent className="budget-chart-container p-0 pb-2 max-w-full">
+          <ResponsiveContainer width="99%" height={300}>
             <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={data}
@@ -75,7 +75,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       </Card>
       
       {isMobile && (
-        <div className="mt-3 space-y-2 w-full overflow-hidden max-w-full">
+        <div className="mt-3 space-y-2 w-full max-w-full px-1">
           {data.map((item, index) => (
             <div 
               key={index} 
