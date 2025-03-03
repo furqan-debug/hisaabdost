@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -120,42 +119,36 @@ export const RecentExpensesCard = ({
             }} />
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
+          <div className="-mx-2 sm:mx-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className={isMobile ? "w-[80px]" : ""}>Date</TableHead>
-                  <TableHead className={isMobile ? "w-[80px]" : ""}>Name</TableHead>
-                  {!isMobile && <TableHead>Category</TableHead>}
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[100px]">Date</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right w-[90px]">Amount</TableHead>
                   <TableHead className="text-right w-[60px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expenses.slice(0, 5).map((expense) => (
                   <TableRow key={expense.id}>
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell>
                       {format(new Date(expense.date), 'MMM dd, yyyy')}
                     </TableCell>
                     <TableCell>
-                      <div className="truncate max-w-[120px] md:max-w-none">
-                        {expense.description}
+                      <div className="flex flex-col">
+                        <span className="font-medium truncate">{expense.description}</span>
+                        <span className="text-xs text-muted-foreground truncate">{expense.category}</span>
                       </div>
-                      {isMobile && (
-                        <div className="text-xs text-muted-foreground truncate max-w-[120px]">
-                          {expense.category}
-                        </div>
-                      )}
                     </TableCell>
-                    {!isMobile && <TableCell>{expense.category}</TableCell>}
-                    <TableCell className="text-right whitespace-nowrap">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                     <TableCell className="text-right p-0 pr-2 md:p-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            className="h-8 w-8"
+                            className="h-8 w-8 ml-auto"
                           >
                             <MoreVertical className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
