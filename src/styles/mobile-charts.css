@@ -1,0 +1,10 @@
+
+/* Mobile Chart Styles */
+@media (max-width: 640px) {
+  /* Fix chart overflow issues */
+  .recharts-wrapper {
+    @apply max-w-full;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+}

@@ -1,0 +1,13 @@
+
+/* Mobile Table Styles */
+@media (max-width: 640px) {
+  /* Table optimizations for mobile */
+  table {
+    @apply w-full table-fixed;
+  }
+  
+  /* Table cell optimizations */
+  td {
+    @apply p-2;
+  }
+}

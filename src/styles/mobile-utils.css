@@ -1,0 +1,51 @@
+
+/* Mobile Utility Styles */
+@media (max-width: 640px) {
+  h1 {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  h3 {
+    @apply text-lg font-medium;
+  }
+  input, select, textarea, button {
+    @apply text-base;
+  }
+  
+  /* Fix centering for mobile elements */
+  .mobile-center {
+    @apply flex justify-center items-center;
+  }
+  
+  /* Adjust touch targets */
+  .touch-target {
+    @apply min-h-12 min-w-12;
+  }
+  
+  /* Ensure all content stays within container */
+  .mobile-container-fix {
+    @apply w-full px-0;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    width: 100%;
+  }
+  
+  /* Force budget tab content to wrap */
+  .budget-tab-content-wrap {
+    @apply w-full max-w-full break-words;
+    overflow-x: hidden !important;
+    width: 100%;
+  }
+}
+
+/* Remove scrollbar but keep functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

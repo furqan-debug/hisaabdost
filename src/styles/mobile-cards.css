@@ -1,0 +1,31 @@
+
+/* Mobile Card Styles */
+@media (max-width: 640px) {
+  /* Card header and content padding */
+  .card-header {
+    @apply p-3;
+  }
+  .card-content {
+    @apply p-3;
+  }
+  
+  /* Better mobile alignment */
+  .modern-card {
+    @apply mx-0 my-3;
+  }
+  
+  /* Improve card spacing */
+  .card {
+    @apply rounded-xl mx-0 my-2 shadow-sm;
+  }
+  
+  /* Improve spacing for analytics and stats */
+  .stat-card {
+    @apply p-3;
+  }
+  
+  /* Adjust stats cards on mobile */
+  .stat-grid {
+    @apply grid-cols-1 gap-3 w-full;
+  }
+}

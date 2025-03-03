@@ -1,0 +1,23 @@
+
+/* Mobile Navigation Styles */
+@media (max-width: 640px) {
+  /* Sidebar optimizations */
+  [data-sidebar="sidebar"] {
+    @apply backdrop-blur-2xl bg-background/95;
+  }
+  
+  [data-sidebar="menu-button"] {
+    @apply py-3;
+  }
+}
+
+/* Enhanced floating action button */
+.floating-action-button {
+  @apply fixed z-50 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
+}
+
+@media (min-width: 768px) {
+  .floating-action-button {
+    @apply bottom-8;
+  }
+}

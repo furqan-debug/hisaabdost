@@ -3,7 +3,15 @@
 @import "./styles/animations.css";
 @import "./styles/components.css";
 @import "./styles/navigation.css";
+
+/* Mobile styles - split into component-specific files */
 @import "./styles/mobile.css";
+@import "./styles/mobile-budget.css";
+@import "./styles/mobile-cards.css";
+@import "./styles/mobile-navigation.css";
+@import "./styles/mobile-tables.css";
+@import "./styles/mobile-charts.css";
+@import "./styles/mobile-utils.css";
 
 #root {
   @apply w-full min-h-screen;
