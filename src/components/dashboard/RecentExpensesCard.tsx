@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { SampleDataButton } from "@/components/SampleDataButton";
@@ -13,6 +13,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RecentExpensesCardProps {
   expenses: Expense[];
@@ -32,6 +39,7 @@ export const RecentExpensesCard = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!user) return;
@@ -112,48 +120,72 @@ export const RecentExpensesCard = ({
             }} />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenses.slice(0, 5).map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell>{format(new Date(expense.date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{expense.description}</TableCell>
-                  <TableCell>{expense.category}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setExpenseToEdit(expense);
-                        setShowAddExpense(true);
-                      }}
-                      className="h-8 w-8 p-0 mr-2"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteExpense(expense.id)}
-                      className="h-8 w-8 p-0 text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className={isMobile ? "w-[80px]" : ""}>Date</TableHead>
+                  <TableHead className={isMobile ? "w-[80px]" : ""}>Name</TableHead>
+                  {!isMobile && <TableHead>Category</TableHead>}
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right w-[60px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {expenses.slice(0, 5).map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {format(new Date(expense.date), 'MMM dd, yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="truncate max-w-[120px] md:max-w-none">
+                        {expense.description}
+                      </div>
+                      {isMobile && (
+                        <div className="text-xs text-muted-foreground truncate max-w-[120px]">
+                          {expense.category}
+                        </div>
+                      )}
+                    </TableCell>
+                    {!isMobile && <TableCell>{expense.category}</TableCell>}
+                    <TableCell className="text-right whitespace-nowrap">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right p-0 pr-2 md:p-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="h-8 w-8"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setExpenseToEdit(expense);
+                              setShowAddExpense(true);
+                            }}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>
