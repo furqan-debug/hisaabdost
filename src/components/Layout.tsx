@@ -19,8 +19,8 @@ const Layout = ({ children }: LayoutProps) => {
         {!isMobile && <Sidebar />}
         <div className="flex-1 flex flex-col">
           <Navbar />
-          <main className="flex-1 px-3 pt-3 pb-24 md:px-6 md:pt-6 md:pb-6 overflow-x-hidden animate-fade-in">
-            <div className="max-w-[480px] mx-auto w-full">
+          <main className="flex-1 px-2 pt-2 pb-24 md:px-6 md:pt-6 md:pb-6 overflow-x-hidden animate-fade-in">
+            <div className={`mx-auto w-full ${isMobile ? 'max-w-full' : 'max-w-[480px]'}`}>
               {children}
             </div>
           </main>

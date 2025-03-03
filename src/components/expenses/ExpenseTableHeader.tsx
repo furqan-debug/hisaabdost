@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowDownIcon, ArrowUpIcon, CheckSquare, Square } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
@@ -24,12 +25,66 @@ export function ExpenseTableHeader({
   filteredExpenses,
   toggleSelectAll,
 }: ExpenseTableHeaderProps) {
+  const isMobile = useIsMobile();
+  
   const getSortIcon = (field: SortField) => {
     if (sortConfig.field !== field) return null;
     return sortConfig.order === 'asc' ? 
       <ArrowUpIcon className="h-4 w-4 ml-1" /> : 
       <ArrowDownIcon className="h-4 w-4 ml-1" />;
   };
+
+  if (isMobile) {
+    return (
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[40px] p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSelectAll}
+              className="h-8 w-8 p-0"
+            >
+              {selectedExpenses.size === filteredExpenses.length ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+            </Button>
+          </TableHead>
+          <TableHead className="p-2">
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleSort('description')}
+                className="h-8 text-xs"
+              >
+                Details {getSortIcon('description')}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleSort('date')}
+                className="h-8 text-xs"
+              >
+                Date {getSortIcon('date')}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleSort('amount')}
+                className="h-8 text-xs"
+              >
+                $ {getSortIcon('amount')}
+              </Button>
+            </div>
+          </TableHead>
+          <TableHead className="w-[40px] p-2"></TableHead>
+        </TableRow>
+      </TableHeader>
+    );
+  }
 
   return (
     <TableHeader>

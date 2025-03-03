@@ -106,6 +106,27 @@
     .touch-target {
       @apply min-h-10 min-w-10;
     }
+    
+    /* Table optimizations for mobile */
+    table {
+      @apply w-full table-fixed;
+    }
+    
+    /* Table cell optimizations */
+    td {
+      @apply p-2;
+    }
+  }
+}
+
+/* Hide scrollbar for cleaner mobile UI */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

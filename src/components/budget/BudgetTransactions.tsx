@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -13,6 +14,7 @@ interface BudgetTransactionsProps {
 
 export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   // Fetch real expenses from Supabase
   const { data: expenses = [], isLoading } = useQuery({
@@ -69,19 +71,46 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Amount</TableHead>
+            {isMobile ? (
+              <>
+                <TableHead className="p-2">Description</TableHead>
+                <TableHead className="p-2 text-right">Amount</TableHead>
+              </>
+            ) : (
+              <>
+                <TableHead>Date</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Amount</TableHead>
+              </>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {expenses.map((transaction) => (
             <TableRow key={transaction.id}>
-              <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
-              <TableCell>{transaction.category}</TableCell>
-              <TableCell>{transaction.description}</TableCell>
-              <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
+              {isMobile ? (
+                <>
+                  <TableCell className="p-2">
+                    <div className="space-y-1">
+                      <div>{transaction.description}</div>
+                      <div className="flex gap-2 text-xs text-muted-foreground">
+                        <span>{format(new Date(transaction.date), 'MMM dd')}</span>
+                        <span>•</span>
+                        <span>{transaction.category}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="p-2 text-right">{formatCurrency(Number(transaction.amount))}</TableCell>
+                </>
+              ) : (
+                <>
+                  <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
+                  <TableCell>{transaction.category}</TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
+                </>
+              )}
             </TableRow>
           ))}
         </TableBody>
