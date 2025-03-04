@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface Expense {
   id: string;
@@ -164,6 +164,41 @@ const AddExpenseSheet = ({
     }
   };
 
+  const handleScanComplete = (expenseDetails: { 
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => {
+    // Update form fields with scanned data
+    if (expenseDetails.description) setDescription(expenseDetails.description);
+    if (expenseDetails.amount) setAmount(expenseDetails.amount);
+    if (expenseDetails.date) {
+      // Try to convert date to YYYY-MM-DD format
+      try {
+        const dateParts = expenseDetails.date.split(/[\/\-\.]/);
+        if (dateParts.length === 3) {
+          let year = dateParts[2];
+          // Ensure year is 4 digits
+          if (year.length === 2) {
+            year = `20${year}`;
+          }
+          // Reformat to YYYY-MM-DD
+          const formattedDate = `${year}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+          setDate(formattedDate);
+        }
+      } catch (err) {
+        console.warn("Failed to parse date from receipt", err);
+        // Keep current date if parsing fails
+      }
+    }
+    if (expenseDetails.category) setCategory(expenseDetails.category);
+    if (expenseDetails.paymentMethod) setPaymentMethod(expenseDetails.paymentMethod);
+    
+    toast.success("Receipt data extracted and filled in! Please review before submitting.");
+  };
+
   useEffect(() => {
     return () => {
       if (receiptUrl && receiptUrl.startsWith('blob:')) {
@@ -184,7 +219,9 @@ const AddExpenseSheet = ({
         <SheetHeader>
           <SheetTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</SheetTitle>
           <SheetDescription>
-            {expenseToEdit ? "Edit your expense details below." : "Add your expense details here. Click save when you're done."}
+            {expenseToEdit 
+              ? "Edit your expense details below." 
+              : "Add your expense details here or scan a receipt. Click save when you're done."}
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -195,7 +232,11 @@ const AddExpenseSheet = ({
           <DateField value={date} onChange={setDate} />
           <NotesField value={notes} onChange={setNotes} />
           <RecurringField value={isRecurring} onChange={setIsRecurring} />
-          <ReceiptField receiptUrl={receiptUrl} onFileChange={handleFileChange} />
+          <ReceiptField 
+            receiptUrl={receiptUrl} 
+            onFileChange={handleFileChange} 
+            onScanComplete={handleScanComplete}
+          />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Saving..." : (expenseToEdit ? "Save Changes" : "Add Expense")}
