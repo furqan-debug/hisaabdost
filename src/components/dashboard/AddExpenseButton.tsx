@@ -1,7 +1,8 @@
 
 import React from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
-import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";

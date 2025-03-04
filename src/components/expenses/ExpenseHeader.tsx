@@ -1,7 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
-import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 

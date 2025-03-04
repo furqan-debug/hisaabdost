@@ -1,6 +1,5 @@
-
 import { format } from "date-fns";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 
 export const CATEGORY_COLORS = {
   'Food': '#0088FE',
