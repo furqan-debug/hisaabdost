@@ -57,6 +57,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
     }
     
     try {
+      console.log("Saving expense:", expense);
       const { error } = await supabase.from('expenses').insert([{
         user_id: user.id,
         description: expense.description,
@@ -115,6 +116,13 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
           
           // Save each item as a separate expense
           for (const item of receiptData.items) {
+            // Skip items with empty names or zero amounts
+            if (!item.name || parseFloat(item.amount) <= 0) {
+              console.log("Skipping invalid item:", item);
+              continue;
+            }
+            
+            console.log("Saving item:", item);
             const success = await saveExpenseToDatabase({
               description: item.name,
               amount: parseFloat(item.amount),
@@ -142,7 +150,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
           if (receiptData.items.length > 0) {
             const firstItem = receiptData.items[0];
             onCapture({
-              description: firstItem.name,
+              description: firstItem.name || receiptData.storeName,
               amount: firstItem.amount,
               date: receiptData.date,
               category: firstItem.category || "Food",

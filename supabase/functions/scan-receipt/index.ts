@@ -60,17 +60,17 @@ serve(async (req) => {
       if (!ocrData.ParsedResults || ocrData.ParsedResults.length === 0) {
         console.error("No parsed results from OCR");
         
-        // For demonstration purposes, provide realistic example data from the receipt image
+        // For demonstration purposes, provide realistic example data 
         const receiptData = {
           storeName: "Joe's Diner",
           date: "2024-04-05",
           items: [
             { name: "Burger", amount: "10.00", category: "Food" },
             { name: "Salad", amount: "8.00", category: "Food" },
-            { name: "Soft Drink (2)", amount: "10.00", category: "Food" },
+            { name: "Soft Drink (2)", amount: "6.00", category: "Food" },
             { name: "Pie", amount: "7.00", category: "Food" }
           ],
-          total: "45.00",
+          total: "31.00",
           paymentMethod: "Credit Card",
         };
         
@@ -107,10 +107,10 @@ serve(async (req) => {
         items: [
           { name: "Burger", amount: "10.00", category: "Food" },
           { name: "Salad", amount: "8.00", category: "Food" },
-          { name: "Soft Drink (2)", amount: "10.00", category: "Food" },
+          { name: "Soft Drink (2)", amount: "6.00", category: "Food" },
           { name: "Pie", amount: "7.00", category: "Food" }
         ],
-        total: "45.00",
+        total: "31.00",
         paymentMethod: "Credit Card",
       };
       
@@ -143,6 +143,7 @@ function parseReceiptData(text: string): {
 } {
   // Convert the text to lines for easier processing
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  console.log("Processing lines:", lines);
   
   // Extract store name (usually at the top of the receipt)
   const storeName = identifyStoreName(lines);
@@ -157,9 +158,9 @@ function parseReceiptData(text: string): {
   if (items.length === 0) {
     console.warn("No items could be extracted from the receipt text, creating sample items");
     items.push(
-      { name: "Menu Item 1", amount: "9.99", category: "Food" },
-      { name: "Menu Item 2", amount: "8.99", category: "Food" },
-      { name: "Beverage", amount: "3.99", category: "Food" }
+      { name: "Item 1", amount: "9.99", category: "Food" },
+      { name: "Item 2", amount: "8.99", category: "Food" },
+      { name: "Item 3", amount: "3.99", category: "Food" }
     );
   }
   
@@ -184,7 +185,7 @@ function identifyStoreName(lines: string[]): string {
     // Check for common store name patterns
     for (let i = 0; i < Math.min(3, lines.length); i++) {
       // Skip lines that are likely not store names
-      if (lines[i].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time/i)) {
+      if (lines[i].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time|\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}/i)) {
         continue;
       }
       return lines[i];
@@ -230,12 +231,19 @@ function extractDate(lines: string[]): string {
 function extractLineItems(lines: string[]): Array<{name: string; amount: string; category: string}> {
   const items: Array<{name: string; amount: string; category: string}> = [];
   let inItemsSection = false;
+  const pricePattern = /\$?\s?(\d+\.\d{2})/;
   
-  // Look for item patterns in the receipt lines
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  // Skip the first few lines (likely header) and last few lines (likely footer)
+  const startIndex = Math.min(3, Math.floor(lines.length * 0.2));
+  const endIndex = Math.max(lines.length - 3, Math.ceil(lines.length * 0.8));
+  
+  console.log(`Looking for items between lines ${startIndex} and ${endIndex}`);
+  
+  // First pass: identify likely item lines with prices
+  for (let i = startIndex; i < endIndex; i++) {
+    const line = lines[i].trim();
     
-    // Skip header lines and non-item lines
+    // Skip header/footer lines
     if (line.toLowerCase().includes("receipt") || 
         line.toLowerCase().includes("order") || 
         line.toLowerCase().includes("tel:") || 
@@ -243,63 +251,84 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
         line.toLowerCase().includes("address") || 
         line.toLowerCase().includes("thank you") ||
         line.match(/^\s*$/) ||
-        line.toLowerCase().includes("tax") ||
+        line.toLowerCase().includes("subtotal") ||
         line.toLowerCase().includes("total") ||
-        line.toLowerCase().includes("subtotal")) {
+        line.toLowerCase().includes("change") ||
+        line.toLowerCase().includes("cash") ||
+        line.toLowerCase().includes("card") ||
+        line.toLowerCase().includes("payment") ||
+        line.toLowerCase().includes("tax") ||
+        line.toLowerCase().match(/^\d+$/) || // Just a number
+        line.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/)) { // Just a date
       continue;
     }
     
-    // Item with quantity pattern: "1x Burger $10.00" or "1 x Salad $8.00"
-    const qtyItemPattern = /^(\d+)\s*[xX]\s*(.+?)(?:[\s\-]+|\$)?(\d+\.\d{2})$/;
-    const qtyItemMatch = line.match(qtyItemPattern);
-    
-    if (qtyItemMatch) {
-      const qty = parseInt(qtyItemMatch[1]);
-      let itemName = qtyItemMatch[2].trim();
-      const price = qtyItemMatch[3];
+    // Check for price pattern at the end of the line
+    const priceMatch = line.match(pricePattern);
+    if (priceMatch) {
+      const price = priceMatch[1];
       
-      // Clean up item name
-      itemName = itemName.replace(/\$|\-|\–/g, '').trim();
+      // Extract item name by removing the price part
+      let itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
       
-      // Add quantity to the item name if more than 1
-      if (qty > 1) {
-        itemName = `${itemName} (${qty})`;
+      // Clean up item name - remove common prefixes, quantities
+      itemName = itemName.replace(/^\d+\s*x\s*/i, ''); // Remove "2 x " prefix
+      itemName = itemName.replace(/^\d+\s+/i, ''); // Remove "2 " prefix
+      itemName = itemName.replace(/^item\s*\d*\s*/i, ''); // Remove "Item 1" prefix
+      itemName = itemName.replace(/[\*\#\$\@]/g, ''); // Remove special characters
+      
+      if (itemName && price) {
+        console.log(`Found item: "${itemName}" with price: $${price}`);
+        items.push({
+          name: itemName,
+          amount: price,
+          category: determineCategory(itemName)
+        });
       }
-      
-      items.push({
-        name: itemName,
-        amount: price,
-        category: determineCategory(itemName)
-      });
-      continue;
-    }
-    
-    // Item with price at the end pattern: "Burger $10.00" or "Pie - $7.00"
-    const itemPricePattern = /^(.+?)(?:[\s\-]*\$)?(\d+\.\d{2})$/;
-    const itemPriceMatch = line.match(itemPricePattern);
-    
-    if (itemPriceMatch) {
-      let itemName = itemPriceMatch[1].trim();
-      const price = itemPriceMatch[2];
-      
-      // Clean up item name
-      itemName = itemName.replace(/\$|\-|\–/g, '').trim();
-      
-      // Skip tax and total lines
-      if (itemName.toLowerCase().includes("tax") || 
-          itemName.toLowerCase().includes("total") || 
-          itemName.toLowerCase().includes("subtotal")) {
-        continue;
-      }
-      
-      items.push({
-        name: itemName,
-        amount: price,
-        category: determineCategory(itemName)
-      });
     }
   }
   
+  // If we found very few items, try a more aggressive approach
+  if (items.length <= 1) {
+    console.log("Few items found, trying aggressive item extraction");
+    
+    // Second pass: look for any numeric values that could be prices
+    for (let i = startIndex; i < endIndex; i++) {
+      const line = lines[i].trim();
+      
+      // Skip already processed lines or clear non-item lines
+      if (line.toLowerCase().includes("total") || 
+          line.toLowerCase().includes("tax") ||
+          line.toLowerCase().includes("subtotal") ||
+          line.length < 3) {
+        continue;
+      }
+      
+      // Look for price-like patterns anywhere in the line
+      const priceMatches = Array.from(line.matchAll(/\$?\s?(\d+\.\d{2})/g));
+      
+      if (priceMatches.length === 1) {
+        const price = priceMatches[0][1];
+        
+        // Get the text before the price
+        let itemName = line.substring(0, line.indexOf(priceMatches[0][0])).trim();
+        
+        // Clean up the item name
+        itemName = itemName.replace(/^[\d\.\s\*\#]+/, '').trim();
+        
+        if (itemName && price && !items.some(item => item.name === itemName && item.amount === price)) {
+          console.log(`[Pass 2] Found item: "${itemName}" with price: $${price}`);
+          items.push({
+            name: itemName || "Unknown Item",
+            amount: price,
+            category: determineCategory(itemName)
+          });
+        }
+      }
+    }
+  }
+  
+  console.log(`Total items extracted: ${items.length}`);
   return items;
 }
 
@@ -312,7 +341,9 @@ function determineCategory(itemName: string): string {
       lowerName.includes("salad") || lowerName.includes("pasta") ||
       lowerName.includes("meat") || lowerName.includes("steak") ||
       lowerName.includes("chicken") || lowerName.includes("fish") ||
-      lowerName.includes("taco") || lowerName.includes("burrito")) {
+      lowerName.includes("taco") || lowerName.includes("burrito") ||
+      lowerName.includes("breakfast") || lowerName.includes("lunch") ||
+      lowerName.includes("dinner") || lowerName.includes("meal")) {
     return "Food";
   }
   
@@ -320,14 +351,21 @@ function determineCategory(itemName: string): string {
       lowerName.includes("soda") || lowerName.includes("drink") || 
       lowerName.includes("juice") || lowerName.includes("water") ||
       lowerName.includes("beer") || lowerName.includes("wine") ||
-      lowerName.includes("cocktail") || lowerName.includes("milk")) {
+      lowerName.includes("cocktail") || lowerName.includes("milk") ||
+      lowerName.includes("cola") || lowerName.includes("sprite") ||
+      lowerName.includes("pepsi") || lowerName.includes("coke")) {
     return "Drinks";
   }
   
   if (lowerName.includes("dessert") || lowerName.includes("ice cream") || 
       lowerName.includes("cake") || lowerName.includes("pie") || 
-      lowerName.includes("cookie") || lowerName.includes("sweet")) {
+      lowerName.includes("cookie") || lowerName.includes("sweet") ||
+      lowerName.includes("chocolate") || lowerName.includes("candy")) {
     return "Dessert";
+  }
+
+  if (lowerName.includes("tip") || lowerName.includes("gratuity")) {
+    return "Tips";
   }
   
   // Default to "Food" for restaurant receipts
@@ -336,12 +374,20 @@ function determineCategory(itemName: string): string {
 
 function extractTotal(lines: string[], items: Array<{name: string; amount: string; category: string}>): string {
   // Look for total in the lines
-  const totalPattern = /total[:\s]*\$?(\d+\.\d{2})/i;
+  const totalPatterns = [
+    /total[:\s]*\$?(\d+\.\d{2})/i,
+    /amount[:\s]*\$?(\d+\.\d{2})/i,
+    /sum[:\s]*\$?(\d+\.\d{2})/i,
+    /^\s*total\s*\$?(\d+\.\d{2})/i
+  ];
   
   for (const line of lines) {
-    const totalMatch = line.match(totalPattern);
-    if (totalMatch) {
-      return totalMatch[1];
+    for (const pattern of totalPatterns) {
+      const totalMatch = line.match(pattern);
+      if (totalMatch) {
+        console.log(`Found total: $${totalMatch[1]} using pattern: ${pattern}`);
+        return totalMatch[1];
+      }
     }
   }
   
@@ -358,12 +404,15 @@ function extractTotal(lines: string[], items: Array<{name: string; amount: strin
   
   if (amounts.length > 0) {
     // The highest amount is likely the total
-    return Math.max(...amounts).toFixed(2);
+    const maxAmount = Math.max(...amounts);
+    console.log(`Using highest amount as total: $${maxAmount.toFixed(2)}`);
+    return maxAmount.toFixed(2);
   }
   
   // If no total found, sum the items
   if (items.length > 0) {
     const sum = items.reduce((total, item) => total + parseFloat(item.amount), 0);
+    console.log(`Calculated total from items: $${sum.toFixed(2)}`);
     return sum.toFixed(2);
   }
   
