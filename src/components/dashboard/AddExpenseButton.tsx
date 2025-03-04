@@ -33,7 +33,20 @@ export const AddExpenseButton = ({
     category: string;
     paymentMethod: string;
   }) => {
-    // Open the add expense sheet with pre-filled data
+    // Pre-fill expense data and open the sheet
+    if (expenseDetails) {
+      console.log("Captured expense details:", expenseDetails);
+      const expense: Partial<Expense> = {
+        description: expenseDetails.description || "",
+        amount: parseFloat(expenseDetails.amount) || 0,
+        date: expenseDetails.date || new Date().toISOString().split('T')[0],
+        category: expenseDetails.category || "Other",
+        paymentMethod: expenseDetails.paymentMethod || "Cash",
+      };
+      setExpenseToEdit(expense as Expense);
+    }
+    
+    // Open the add expense sheet
     setShowAddExpense(true);
   };
   

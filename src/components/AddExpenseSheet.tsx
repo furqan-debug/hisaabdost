@@ -67,6 +67,7 @@ const AddExpenseSheet = ({
 
   useEffect(() => {
     if (expenseToEdit) {
+      console.log("Setting expense data from expenseToEdit:", expenseToEdit);
       setAmount(expenseToEdit.amount.toString());
       setDescription(expenseToEdit.description);
       setDate(expenseToEdit.date);
@@ -172,6 +173,8 @@ const AddExpenseSheet = ({
     category: string;
     paymentMethod: string;
   }) => {
+    console.log("Handling scan complete with details:", expenseDetails);
+    
     // Update form fields with scanned data
     if (expenseDetails.description) setDescription(expenseDetails.description);
     if (expenseDetails.amount) setAmount(expenseDetails.amount);

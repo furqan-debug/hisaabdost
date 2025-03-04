@@ -1,2 +1,5 @@
 
+# project_id must remain as the first line
 project_id = "bklfolfivjonzpprytkz"
+name = "scan-receipt"
+entrypoint = "/index.ts"

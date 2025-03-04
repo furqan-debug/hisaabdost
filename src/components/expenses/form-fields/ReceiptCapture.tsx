@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, ScanLine, Plus } from "lucide-react";
+import { Upload, Camera, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -47,26 +47,29 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
 
     setIsScanning(true);
     try {
+      console.log("Processing receipt scan with file:", file.name, file.type);
       const formData = new FormData();
       formData.append('receipt', file);
 
+      // Make sure we're accessing the edge function correctly
       const { data, error } = await supabase.functions.invoke('scan-receipt', {
         body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
       });
 
       if (error) {
+        console.error("Supabase function error:", error);
         throw new Error(error.message || 'Failed to scan receipt');
       }
 
-      if (data.success && data.expenseDetails) {
+      console.log("Receipt scan response:", data);
+      
+      if (data && data.success && data.expenseDetails) {
         toast.success("Receipt details extracted successfully!");
         onCapture(data.expenseDetails);
         setShowDialog(false);
       } else {
-        toast.error(data.error || "Failed to extract information from receipt");
+        console.error("Invalid data format received:", data);
+        toast.error(data?.error || "Failed to extract information from receipt");
       }
     } catch (error) {
       console.error("Receipt scanning error:", error);
