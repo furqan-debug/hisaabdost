@@ -36,11 +36,28 @@ export const AddExpenseButton = ({
     // Pre-fill expense data and open the sheet
     if (expenseDetails) {
       console.log("Captured expense details:", expenseDetails);
+      
+      // Format the date to YYYY-MM-DD if needed
+      let formattedDate = expenseDetails.date || new Date().toISOString().split('T')[0];
+      
+      // Process the capture date if it's not already in YYYY-MM-DD format
+      if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        try {
+          const date = new Date(formattedDate);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.warn("Could not parse date from receipt, using today's date");
+          formattedDate = new Date().toISOString().split('T')[0];
+        }
+      }
+      
       const expense: Partial<Expense> = {
         description: expenseDetails.description || "",
         amount: parseFloat(expenseDetails.amount) || 0,
-        date: expenseDetails.date || new Date().toISOString().split('T')[0],
-        category: expenseDetails.category || "Other",
+        date: formattedDate,
+        category: expenseDetails.category || "Food",
         paymentMethod: expenseDetails.paymentMethod || "Cash",
       };
       setExpenseToEdit(expense as Expense);

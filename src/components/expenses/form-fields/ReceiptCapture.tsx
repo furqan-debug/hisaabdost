@@ -1,10 +1,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, ScanLine } from "lucide-react";
+import { Upload, Camera, ScanLine, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 
 interface ReceiptCaptureProps {
@@ -46,6 +46,8 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
     }
 
     setIsScanning(true);
+    const scanToast = toast.loading("Scanning your receipt...");
+    
     try {
       console.log("Processing receipt scan with file:", file.name, file.type);
       const formData = new FormData();
@@ -64,15 +66,18 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
       console.log("Receipt scan response:", data);
       
       if (data && data.success && data.expenseDetails) {
+        toast.dismiss(scanToast);
         toast.success("Receipt details extracted successfully!");
         onCapture(data.expenseDetails);
         setShowDialog(false);
       } else {
         console.error("Invalid data format received:", data);
+        toast.dismiss(scanToast);
         toast.error(data?.error || "Failed to extract information from receipt");
       }
     } catch (error) {
       console.error("Receipt scanning error:", error);
+      toast.dismiss(scanToast);
       toast.error("Receipt scanning failed. Please try again or enter details manually.");
     } finally {
       setIsScanning(false);
@@ -152,6 +157,9 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogTitle>Scan Receipt</DialogTitle>
+          <DialogDescription>
+            We'll extract the store name, amount, date and other details automatically
+          </DialogDescription>
           
           <div className="flex flex-col items-center space-y-4">
             {previewUrl && (
@@ -178,8 +186,17 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
                 onClick={handleScanReceipt}
                 disabled={isScanning || !file}
               >
-                {isScanning ? 'Scanning...' : 'Extract Data'}
-                <ScanLine className="ml-2 h-4 w-4" />
+                {isScanning ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scanning...
+                  </>
+                ) : (
+                  <>
+                    <ScanLine className="mr-2 h-4 w-4" />
+                    Extract Data
+                  </>
+                )}
               </Button>
             </div>
           </div>
