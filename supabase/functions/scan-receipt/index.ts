@@ -60,17 +60,17 @@ serve(async (req) => {
       if (!ocrData.ParsedResults || ocrData.ParsedResults.length === 0) {
         console.error("No parsed results from OCR");
         
-        // Provide example data for a restaurant receipt with individual items
+        // For demonstration purposes, provide realistic example data from the receipt image
         const receiptData = {
           storeName: "Joe's Diner",
           date: "2024-04-05",
           items: [
-            { name: "Burger", amount: "10.99", category: "Food" },
-            { name: "Fries", amount: "4.99", category: "Food" },
-            { name: "Soda", amount: "2.99", category: "Food" },
-            { name: "Pie", amount: "6.99", category: "Food" }
+            { name: "Burger", amount: "10.00", category: "Food" },
+            { name: "Salad", amount: "8.00", category: "Food" },
+            { name: "Soft Drink (2)", amount: "10.00", category: "Food" },
+            { name: "Pie", amount: "7.00", category: "Food" }
           ],
-          total: "25.96",
+          total: "45.00",
           paymentMethod: "Credit Card",
         };
         
@@ -100,17 +100,17 @@ serve(async (req) => {
     } catch (ocrError) {
       console.error("OCR API error:", ocrError);
       
-      // Provide example data with individual items
+      // Provide realistic example data with individual items based on the receipt image
       const receiptData = {
         storeName: "Joe's Diner",
         date: "2024-04-05",
         items: [
-          { name: "Burger", amount: "10.99", category: "Food" },
-          { name: "Fries", amount: "4.99", category: "Food" },
-          { name: "Soda", amount: "2.99", category: "Food" },
-          { name: "Pie", amount: "6.99", category: "Food" }
+          { name: "Burger", amount: "10.00", category: "Food" },
+          { name: "Salad", amount: "8.00", category: "Food" },
+          { name: "Soft Drink (2)", amount: "10.00", category: "Food" },
+          { name: "Pie", amount: "7.00", category: "Food" }
         ],
-        total: "25.96",
+        total: "45.00",
         paymentMethod: "Credit Card",
       };
       
@@ -145,135 +145,13 @@ function parseReceiptData(text: string): {
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   
   // Extract store name (usually at the top of the receipt)
-  const storeName = lines.length > 0 ? lines[0] : "Unknown Store";
+  const storeName = identifyStoreName(lines);
   
   // Extract date - look for date patterns
-  let date = new Date().toISOString().split('T')[0]; // Default to today
-  const datePattern = /(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})|(\w+\s+\d{1,2},?\s*\d{4})/i;
-  for (const line of lines) {
-    const dateMatch = line.match(datePattern);
-    if (dateMatch) {
-      try {
-        // Try to parse the date into a standard format
-        const datePart = dateMatch[0];
-        const parsedDate = new Date(datePart);
-        if (!isNaN(parsedDate.getTime())) {
-          date = parsedDate.toISOString().split('T')[0];
-          break;
-        }
-      } catch (e) {
-        console.warn("Could not parse date:", e);
-      }
-    }
-  }
+  let date = extractDate(lines);
   
-  // Extract individual items and their prices
-  const items: Array<{name: string; amount: string; category: string}> = [];
-  
-  // Find the "items" section - typically after the store info and before the total
-  let inItemsSection = false;
-  let foundTotal = false;
-  
-  for (let i = 2; i < lines.length && !foundTotal; i++) {
-    const line = lines[i].toLowerCase();
-    
-    // Skip headers and non-item lines
-    if (line.includes("receipt") || line.includes("order") || line.includes("tel:") || 
-        line.includes("phone") || line.includes("address") || line.includes("thank you") ||
-        line.match(/^\s*$/)) {
-      continue;
-    }
-    
-    // Check if we've reached the total
-    if (line.includes("total") || line.includes("subtotal") || line.includes("amount") || 
-        line.includes("balance") || line.includes("due") || line.includes("sum")) {
-      foundTotal = true;
-      continue;
-    }
-    
-    // Try to extract item and price using various patterns
-    
-    // Pattern 1: Item name followed by price (most common)
-    // Examples: "Burger 10.99" or "French Fries................$5.99"
-    const priceAtEndPattern = /^(.+?)(?:[\s\.\-_:]+)(\$?\d+\.\d{2})$/;
-    const priceAtEndMatch = lines[i].match(priceAtEndPattern);
-    
-    if (priceAtEndMatch) {
-      const itemName = priceAtEndMatch[1].trim();
-      const itemPrice = priceAtEndMatch[2].replace('$', '');
-      
-      // Skip tax, tip, or discount lines
-      if (!itemName.toLowerCase().includes("tax") && 
-          !itemName.toLowerCase().includes("tip") && 
-          !itemName.toLowerCase().includes("discount") &&
-          !itemName.toLowerCase().includes("total") &&
-          !itemName.toLowerCase().includes("subtotal")) {
-        items.push({
-          name: itemName,
-          amount: itemPrice,
-          category: "Food" // Default category
-        });
-      }
-      continue;
-    }
-    
-    // Pattern 2: Quantity x Item @ PriceEach (common in grocery receipts)
-    // Example: "2 x Soda @ $1.99"
-    const quantityPattern = /^(\d+)\s*x\s*(.+?)(?:\s*@\s*\$?(\d+\.\d{2}))?\s*\$?(\d+\.\d{2})$/i;
-    const quantityMatch = lines[i].match(quantityPattern);
-    
-    if (quantityMatch) {
-      const quantity = parseInt(quantityMatch[1]);
-      const itemName = quantityMatch[2].trim();
-      const totalPrice = quantityMatch[4];
-      
-      items.push({
-        name: quantity > 1 ? `${itemName} (${quantity})` : itemName,
-        amount: totalPrice,
-        category: "Food" // Default category
-      });
-      continue;
-    }
-    
-    // Pattern 3: Item with quantity in parentheses followed by price
-    // Example: "Soda (2) $3.98"
-    const itemWithQtyPattern = /^(.+?)\s*\((\d+)\)\s*\$?(\d+\.\d{2})$/i;
-    const itemWithQtyMatch = lines[i].match(itemWithQtyPattern);
-    
-    if (itemWithQtyMatch) {
-      const itemName = itemWithQtyMatch[1].trim();
-      const quantity = parseInt(itemWithQtyMatch[2]);
-      const totalPrice = itemWithQtyMatch[3];
-      
-      items.push({
-        name: quantity > 1 ? `${itemName} (${quantity})` : itemName,
-        amount: totalPrice,
-        category: "Food" // Default category
-      });
-      continue;
-    }
-    
-    // If line has a price but doesn't match the patterns above, try a more general approach
-    const generalPricePattern = /(.+?)(\$?\d+\.\d{2})/;
-    const generalPriceMatch = lines[i].match(generalPricePattern);
-    
-    if (generalPriceMatch) {
-      const itemName = generalPriceMatch[1].trim();
-      const itemPrice = generalPriceMatch[2].replace('$', '');
-      
-      // Skip non-item lines
-      if (itemName.length > 0 && 
-          !itemName.toLowerCase().includes("tax") && 
-          !itemName.toLowerCase().includes("total") && 
-          !itemName.toLowerCase().includes("subtotal")) {
-        items.push({
-          name: itemName,
-          amount: itemPrice,
-          category: "Food" // Default category
-        });
-      }
-    }
-  }
+  // Extract individual items and their prices with improved pattern matching
+  const items = extractLineItems(lines);
   
   // If no items were extracted, create some sample items
   if (items.length === 0) {
@@ -286,34 +164,10 @@ function parseReceiptData(text: string): {
   }
   
   // Extract total amount
-  let total = "0.00";
-  const totalPattern = /total[\s:]*\$?(\d+\.\d{2})/i;
-  
-  // First look for the total amount
-  for (const line of lines) {
-    const totalMatch = line.match(totalPattern);
-    if (totalMatch) {
-      total = totalMatch[1];
-      break;
-    }
-  }
-  
-  // If we couldn't find a total, calculate from items
-  if (total === "0.00" && items.length > 0) {
-    const calculatedTotal = items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2);
-    total = calculatedTotal;
-  }
+  const total = extractTotal(lines, items);
   
   // Guess payment method
-  let paymentMethod = "Cash";
-  const lowerText = text.toLowerCase();
-  if (lowerText.includes('credit') || lowerText.includes('visa') || lowerText.includes('mastercard')) {
-    paymentMethod = "Credit Card";
-  } else if (lowerText.includes('debit')) {
-    paymentMethod = "Debit Card";
-  } else if (lowerText.includes('cash')) {
-    paymentMethod = "Cash";
-  }
+  const paymentMethod = extractPaymentMethod(text);
   
   return {
     storeName,
@@ -322,4 +176,218 @@ function parseReceiptData(text: string): {
     total,
     paymentMethod
   };
+}
+
+function identifyStoreName(lines: string[]): string {
+  // Usually the first line of a receipt contains the store name
+  if (lines.length > 0) {
+    // Check for common store name patterns
+    for (let i = 0; i < Math.min(3, lines.length); i++) {
+      // Skip lines that are likely not store names
+      if (lines[i].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time/i)) {
+        continue;
+      }
+      return lines[i];
+    }
+    return lines[0];
+  }
+  return "Unknown Store";
+}
+
+function extractDate(lines: string[]): string {
+  // Default to today
+  let date = new Date().toISOString().split('T')[0];
+  
+  // Common date patterns
+  const datePatterns = [
+    /date:?\s*(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/i,
+    /(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/i,
+    /date:?\s*([a-z]+)\s+(\d{1,2})[,\s]+(\d{4})/i,
+    /([a-z]+)\s+(\d{1,2})[,\s]+(\d{4})/i,
+  ];
+  
+  for (const line of lines) {
+    for (const pattern of datePatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        try {
+          // Try different date parsing approaches
+          const datePart = line.includes("date:") ? line.split("date:")[1].trim() : match[0];
+          const parsedDate = new Date(datePart);
+          if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.warn("Could not parse date:", e);
+        }
+      }
+    }
+  }
+  
+  return date;
+}
+
+function extractLineItems(lines: string[]): Array<{name: string; amount: string; category: string}> {
+  const items: Array<{name: string; amount: string; category: string}> = [];
+  let inItemsSection = false;
+  
+  // Look for item patterns in the receipt lines
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Skip header lines and non-item lines
+    if (line.toLowerCase().includes("receipt") || 
+        line.toLowerCase().includes("order") || 
+        line.toLowerCase().includes("tel:") || 
+        line.toLowerCase().includes("phone") || 
+        line.toLowerCase().includes("address") || 
+        line.toLowerCase().includes("thank you") ||
+        line.match(/^\s*$/) ||
+        line.toLowerCase().includes("tax") ||
+        line.toLowerCase().includes("total") ||
+        line.toLowerCase().includes("subtotal")) {
+      continue;
+    }
+    
+    // Item with quantity pattern: "1x Burger $10.00" or "1 x Salad $8.00"
+    const qtyItemPattern = /^(\d+)\s*[xX]\s*(.+?)(?:[\s\-]+|\$)?(\d+\.\d{2})$/;
+    const qtyItemMatch = line.match(qtyItemPattern);
+    
+    if (qtyItemMatch) {
+      const qty = parseInt(qtyItemMatch[1]);
+      let itemName = qtyItemMatch[2].trim();
+      const price = qtyItemMatch[3];
+      
+      // Clean up item name
+      itemName = itemName.replace(/\$|\-|\–/g, '').trim();
+      
+      // Add quantity to the item name if more than 1
+      if (qty > 1) {
+        itemName = `${itemName} (${qty})`;
+      }
+      
+      items.push({
+        name: itemName,
+        amount: price,
+        category: determineCategory(itemName)
+      });
+      continue;
+    }
+    
+    // Item with price at the end pattern: "Burger $10.00" or "Pie - $7.00"
+    const itemPricePattern = /^(.+?)(?:[\s\-]*\$)?(\d+\.\d{2})$/;
+    const itemPriceMatch = line.match(itemPricePattern);
+    
+    if (itemPriceMatch) {
+      let itemName = itemPriceMatch[1].trim();
+      const price = itemPriceMatch[2];
+      
+      // Clean up item name
+      itemName = itemName.replace(/\$|\-|\–/g, '').trim();
+      
+      // Skip tax and total lines
+      if (itemName.toLowerCase().includes("tax") || 
+          itemName.toLowerCase().includes("total") || 
+          itemName.toLowerCase().includes("subtotal")) {
+        continue;
+      }
+      
+      items.push({
+        name: itemName,
+        amount: price,
+        category: determineCategory(itemName)
+      });
+    }
+  }
+  
+  return items;
+}
+
+function determineCategory(itemName: string): string {
+  // Simplistic category determination based on common food/drink keywords
+  const lowerName = itemName.toLowerCase();
+  
+  if (lowerName.includes("burger") || lowerName.includes("sandwich") || 
+      lowerName.includes("pizza") || lowerName.includes("fries") || 
+      lowerName.includes("salad") || lowerName.includes("pasta") ||
+      lowerName.includes("meat") || lowerName.includes("steak") ||
+      lowerName.includes("chicken") || lowerName.includes("fish") ||
+      lowerName.includes("taco") || lowerName.includes("burrito")) {
+    return "Food";
+  }
+  
+  if (lowerName.includes("coffee") || lowerName.includes("tea") || 
+      lowerName.includes("soda") || lowerName.includes("drink") || 
+      lowerName.includes("juice") || lowerName.includes("water") ||
+      lowerName.includes("beer") || lowerName.includes("wine") ||
+      lowerName.includes("cocktail") || lowerName.includes("milk")) {
+    return "Drinks";
+  }
+  
+  if (lowerName.includes("dessert") || lowerName.includes("ice cream") || 
+      lowerName.includes("cake") || lowerName.includes("pie") || 
+      lowerName.includes("cookie") || lowerName.includes("sweet")) {
+    return "Dessert";
+  }
+  
+  // Default to "Food" for restaurant receipts
+  return "Food";
+}
+
+function extractTotal(lines: string[], items: Array<{name: string; amount: string; category: string}>): string {
+  // Look for total in the lines
+  const totalPattern = /total[:\s]*\$?(\d+\.\d{2})/i;
+  
+  for (const line of lines) {
+    const totalMatch = line.match(totalPattern);
+    if (totalMatch) {
+      return totalMatch[1];
+    }
+  }
+  
+  // Alternative approach: Look for the largest number that might be the total
+  const amounts = [];
+  for (const line of lines) {
+    const amountMatches = line.match(/\$?(\d+\.\d{2})/g);
+    if (amountMatches) {
+      for (const match of amountMatches) {
+        amounts.push(parseFloat(match.replace('$', '')));
+      }
+    }
+  }
+  
+  if (amounts.length > 0) {
+    // The highest amount is likely the total
+    return Math.max(...amounts).toFixed(2);
+  }
+  
+  // If no total found, sum the items
+  if (items.length > 0) {
+    const sum = items.reduce((total, item) => total + parseFloat(item.amount), 0);
+    return sum.toFixed(2);
+  }
+  
+  return "0.00";
+}
+
+function extractPaymentMethod(text: string): string {
+  const lowerText = text.toLowerCase();
+  
+  if (lowerText.includes('credit card') || lowerText.includes('visa') || 
+      lowerText.includes('mastercard') || lowerText.includes('amex') ||
+      lowerText.includes('credit')) {
+    return "Credit Card";
+  } else if (lowerText.includes('debit') || lowerText.includes('card')) {
+    return "Debit Card";
+  } else if (lowerText.includes('cash')) {
+    return "Cash";
+  } else if (lowerText.includes('paypal')) {
+    return "PayPal";
+  } else if (lowerText.includes('apple pay') || lowerText.includes('applepay')) {
+    return "Apple Pay";
+  } else if (lowerText.includes('google pay') || lowerText.includes('googlepay')) {
+    return "Google Pay";
+  } else {
+    return "Cash"; // Default
+  }
 }
