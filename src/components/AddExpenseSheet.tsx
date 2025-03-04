@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -51,7 +52,7 @@ const AddExpenseSheet = ({
   onOpenChange 
 }: AddExpenseSheetProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string>(expenseToEdit?.amount.toString() || "");
   const [description, setDescription] = useState<string>(expenseToEdit?.description || "");
@@ -115,7 +116,7 @@ const AddExpenseSheet = ({
       await queryClient.invalidateQueries({ queryKey: ['expenses'] });
       await queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
-      toast({
+      uiToast({
         title: expenseToEdit ? "Expense Updated" : "Expense Added",
         description: expenseToEdit 
           ? "Your expense has been updated successfully."
@@ -136,7 +137,7 @@ const AddExpenseSheet = ({
 
     } catch (error) {
       console.error('Error saving expense:', error);
-      toast({
+      uiToast({
         title: "Error",
         description: "Failed to save the expense. Please try again.",
         variant: "destructive",
@@ -150,7 +151,7 @@ const AddExpenseSheet = ({
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.match('image.*') && file.type !== 'application/pdf') {
-        alert('Please upload an image or PDF file');
+        toast.error('Please upload an image or PDF file');
         return;
       }
 
