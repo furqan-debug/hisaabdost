@@ -46,10 +46,34 @@ export function ReceiptField({ receiptUrl, onFileChange, onScanComplete }: Recei
         throw new Error(error.message || 'Failed to scan receipt');
       }
 
-      if (data.success && data.expenseDetails) {
+      if (data.success && data.receiptData) {
         toast.success("Receipt scanned successfully!");
         if (onScanComplete) {
-          onScanComplete(data.expenseDetails);
+          // Use the receiptData to populate expense details
+          const receiptData = data.receiptData;
+          
+          if (receiptData.items && receiptData.items.length > 0) {
+            // Use the first item's details
+            const firstItem = receiptData.items[0];
+            onScanComplete({
+              description: firstItem.name || receiptData.storeName,
+              amount: firstItem.amount || receiptData.total,
+              date: receiptData.date,
+              // Always use "Shopping" category for OCR-scanned receipts
+              category: "Shopping",
+              paymentMethod: receiptData.paymentMethod
+            });
+          } else {
+            // Fallback to using overall receipt data
+            onScanComplete({
+              description: receiptData.storeName || "Store Purchase",
+              amount: receiptData.total || "0.00",
+              date: receiptData.date,
+              // Always use "Shopping" category for OCR-scanned receipts
+              category: "Shopping",
+              paymentMethod: receiptData.paymentMethod
+            });
+          }
         }
       } else {
         toast.error(data.error || "Failed to extract information from receipt");

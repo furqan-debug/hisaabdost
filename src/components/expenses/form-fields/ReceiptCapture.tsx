@@ -63,7 +63,8 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
         description: expense.description,
         amount: expense.amount,
         date: expense.date,
-        category: expense.category,
+        // Always use "Shopping" category for OCR-scanned receipts
+        category: "Shopping",
         payment: expense.paymentMethod,
         is_recurring: false
       }]);
@@ -127,7 +128,8 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
               description: item.name,
               amount: parseFloat(item.amount),
               date: receiptData.date,
-              category: item.category || "Food",
+              // Always use "Shopping" category for OCR-scanned receipts 
+              category: "Shopping",
               paymentMethod: receiptData.paymentMethod
             });
             
@@ -153,7 +155,8 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
               description: firstItem.name || receiptData.storeName,
               amount: firstItem.amount,
               date: receiptData.date,
-              category: firstItem.category || "Food",
+              // Always use "Shopping" category for OCR-scanned receipts
+              category: "Shopping",
               paymentMethod: receiptData.paymentMethod
             });
           } else {
@@ -161,7 +164,8 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
               description: receiptData.storeName,
               amount: receiptData.total,
               date: receiptData.date,
-              category: "Food",
+              // Always use "Shopping" category for OCR-scanned receipts
+              category: "Shopping",
               paymentMethod: receiptData.paymentMethod
             });
           }

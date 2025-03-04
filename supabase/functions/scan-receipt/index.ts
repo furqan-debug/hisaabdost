@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -65,10 +64,10 @@ serve(async (req) => {
           storeName: "Joe's Diner",
           date: "2024-04-05",
           items: [
-            { name: "Burger", amount: "10.00", category: "Food" },
-            { name: "Salad", amount: "8.00", category: "Food" },
-            { name: "Soft Drink (2)", amount: "6.00", category: "Food" },
-            { name: "Pie", amount: "7.00", category: "Food" }
+            { name: "Burger", amount: "10.00", category: "Shopping" },
+            { name: "Salad", amount: "8.00", category: "Shopping" },
+            { name: "Soft Drink (2)", amount: "6.00", category: "Shopping" },
+            { name: "Pie", amount: "7.00", category: "Shopping" }
           ],
           total: "31.00",
           paymentMethod: "Credit Card",
@@ -105,10 +104,10 @@ serve(async (req) => {
         storeName: "Joe's Diner",
         date: "2024-04-05",
         items: [
-          { name: "Burger", amount: "10.00", category: "Food" },
-          { name: "Salad", amount: "8.00", category: "Food" },
-          { name: "Soft Drink (2)", amount: "6.00", category: "Food" },
-          { name: "Pie", amount: "7.00", category: "Food" }
+          { name: "Burger", amount: "10.00", category: "Shopping" },
+          { name: "Salad", amount: "8.00", category: "Shopping" },
+          { name: "Soft Drink (2)", amount: "6.00", category: "Shopping" },
+          { name: "Pie", amount: "7.00", category: "Shopping" }
         ],
         total: "31.00",
         paymentMethod: "Credit Card",
@@ -158,9 +157,9 @@ function parseReceiptData(text: string): {
   if (items.length === 0) {
     console.warn("No items could be extracted from the receipt text, creating sample items");
     items.push(
-      { name: "Item 1", amount: "9.99", category: "Food" },
-      { name: "Item 2", amount: "8.99", category: "Food" },
-      { name: "Item 3", amount: "3.99", category: "Food" }
+      { name: "Item 1", amount: "9.99", category: "Shopping" },
+      { name: "Item 2", amount: "8.99", category: "Shopping" },
+      { name: "Item 3", amount: "3.99", category: "Shopping" }
     );
   }
   
@@ -279,10 +278,11 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
       
       if (itemName && price) {
         console.log(`Found item: "${itemName}" with price: $${price}`);
+        // Always set category to "Shopping" for OCR-scanned receipts
         items.push({
           name: itemName,
           amount: price,
-          category: determineCategory(itemName)
+          category: "Shopping"
         });
       }
     }
@@ -321,7 +321,8 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
           items.push({
             name: itemName || "Unknown Item",
             amount: price,
-            category: determineCategory(itemName)
+            // Always set category to "Shopping" for OCR-scanned receipts
+            category: "Shopping"
           });
         }
       }
@@ -333,43 +334,8 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
 }
 
 function determineCategory(itemName: string): string {
-  // Simplistic category determination based on common food/drink keywords
-  const lowerName = itemName.toLowerCase();
-  
-  if (lowerName.includes("burger") || lowerName.includes("sandwich") || 
-      lowerName.includes("pizza") || lowerName.includes("fries") || 
-      lowerName.includes("salad") || lowerName.includes("pasta") ||
-      lowerName.includes("meat") || lowerName.includes("steak") ||
-      lowerName.includes("chicken") || lowerName.includes("fish") ||
-      lowerName.includes("taco") || lowerName.includes("burrito") ||
-      lowerName.includes("breakfast") || lowerName.includes("lunch") ||
-      lowerName.includes("dinner") || lowerName.includes("meal")) {
-    return "Food";
-  }
-  
-  if (lowerName.includes("coffee") || lowerName.includes("tea") || 
-      lowerName.includes("soda") || lowerName.includes("drink") || 
-      lowerName.includes("juice") || lowerName.includes("water") ||
-      lowerName.includes("beer") || lowerName.includes("wine") ||
-      lowerName.includes("cocktail") || lowerName.includes("milk") ||
-      lowerName.includes("cola") || lowerName.includes("sprite") ||
-      lowerName.includes("pepsi") || lowerName.includes("coke")) {
-    return "Drinks";
-  }
-  
-  if (lowerName.includes("dessert") || lowerName.includes("ice cream") || 
-      lowerName.includes("cake") || lowerName.includes("pie") || 
-      lowerName.includes("cookie") || lowerName.includes("sweet") ||
-      lowerName.includes("chocolate") || lowerName.includes("candy")) {
-    return "Dessert";
-  }
-
-  if (lowerName.includes("tip") || lowerName.includes("gratuity")) {
-    return "Tips";
-  }
-  
-  // Default to "Food" for restaurant receipts
-  return "Food";
+  // Override category determination to always return "Shopping"
+  return "Shopping";
 }
 
 function extractTotal(lines: string[], items: Array<{name: string; amount: string; category: string}>): string {

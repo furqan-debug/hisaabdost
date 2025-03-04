@@ -57,7 +57,8 @@ export const AddExpenseButton = ({
         description: expenseDetails.description || "",
         amount: parseFloat(expenseDetails.amount) || 0,
         date: formattedDate,
-        category: expenseDetails.category || "Food",
+        // Always use "Shopping" category for OCR-scanned receipts
+        category: "Shopping",
         paymentMethod: expenseDetails.paymentMethod || "Cash",
       };
       setExpenseToEdit(expense as Expense);
