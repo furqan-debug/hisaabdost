@@ -76,13 +76,13 @@ export const AddExpenseButton = ({
         {isMobile ? (
           <ReceiptCapture 
             onCapture={handleExpenseCapture} 
-            autoSave={true} // Enable automatic saving of all items
+            autoSave={true}
           />
         ) : (
           <div className="space-y-4">
             <ReceiptCapture 
               onCapture={handleExpenseCapture} 
-              autoSave={true} // Enable automatic saving of all items
+              autoSave={true}
             />
             
             <Button 

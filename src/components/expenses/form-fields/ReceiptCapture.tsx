@@ -119,7 +119,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
               description: item.name,
               amount: parseFloat(item.amount),
               date: receiptData.date,
-              category: item.category,
+              category: item.category || "Food",
               paymentMethod: receiptData.paymentMethod
             });
             
