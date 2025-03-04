@@ -17,7 +17,8 @@ interface ReceiptScannerProps {
 export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
 
-  const canScanReceipt = !!receiptUrl && receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
+  // Fixed: Convert the RegExpMatchArray to boolean using !!
+  const canScanReceipt = !!receiptUrl && !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
 
   const handleScanReceipt = async () => {
     const fileInput = document.getElementById('expense-receipt') as HTMLInputElement;

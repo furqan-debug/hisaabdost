@@ -9,9 +9,12 @@ interface ReceiptPreviewProps {
 export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   if (!receiptUrl) return null;
   
+  // Fix: Convert RegExpMatchArray to boolean using !!
+  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
+  
   return (
     <div className="relative group">
-      {receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+      {isImage ? (
         <img
           src={receiptUrl}
           alt="Receipt preview"
