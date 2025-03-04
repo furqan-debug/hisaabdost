@@ -5,6 +5,7 @@ import AddExpenseSheet, { Expense } from "@/components/AddExpenseSheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -25,25 +26,38 @@ export const AddExpenseButton = ({
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
   
+  const handleExpenseCapture = (expenseDetails: {
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => {
+    // Open the add expense sheet with pre-filled data
+    setShowAddExpense(true);
+  };
+  
   return (
     <div className="mt-6">
       <OnboardingTooltip
-        content="Click here to add your first expense"
+        content="Add an expense by uploading a receipt or entering details manually"
         defaultOpen={isNewUser}
       >
         {isMobile ? (
-          <div className="floating-action-button" onClick={() => setShowAddExpense(true)}>
-            <Plus className="h-6 w-6" />
-          </div>
+          <ReceiptCapture onCapture={handleExpenseCapture} />
         ) : (
-          <Button 
-            onClick={() => setShowAddExpense(true)}
-            className="w-full"
-            size="lg"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Expense
-          </Button>
+          <div className="space-y-4">
+            <ReceiptCapture onCapture={handleExpenseCapture} />
+            
+            <Button 
+              onClick={() => setShowAddExpense(true)}
+              className="w-full"
+              size="lg"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Expense Manually
+            </Button>
+          </div>
         )}
       </OnboardingTooltip>
       
@@ -59,4 +73,4 @@ export const AddExpenseButton = ({
       />
     </div>
   );
-};
+}
