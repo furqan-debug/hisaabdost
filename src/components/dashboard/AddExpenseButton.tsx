@@ -74,10 +74,16 @@ export const AddExpenseButton = ({
         defaultOpen={isNewUser}
       >
         {isMobile ? (
-          <ReceiptCapture onCapture={handleExpenseCapture} />
+          <ReceiptCapture 
+            onCapture={handleExpenseCapture} 
+            autoSave={true} // Enable automatic saving of all items
+          />
         ) : (
           <div className="space-y-4">
-            <ReceiptCapture onCapture={handleExpenseCapture} />
+            <ReceiptCapture 
+              onCapture={handleExpenseCapture} 
+              autoSave={true} // Enable automatic saving of all items
+            />
             
             <Button 
               onClick={() => setShowAddExpense(true)}

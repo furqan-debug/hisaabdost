@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReceiptCaptureProps {
-  onCapture: (expenseDetails: {
+  onCapture?: (expenseDetails: {
     description: string;
     amount: string;
     date: string;
@@ -16,9 +18,12 @@ interface ReceiptCaptureProps {
     paymentMethod: string;
   }) => void;
   disabled?: boolean;
+  autoSave?: boolean;
 }
 
-export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCaptureProps) {
+export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }: ReceiptCaptureProps) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isScanning, setIsScanning] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -36,6 +41,38 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
       setShowDialog(true);
+    }
+  };
+
+  const saveExpenseToDatabase = async (expense: {
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => {
+    if (!user) {
+      toast.error("You must be logged in to add expenses");
+      return false;
+    }
+    
+    try {
+      const { error } = await supabase.from('expenses').insert([{
+        user_id: user.id,
+        description: expense.description,
+        amount: expense.amount,
+        date: expense.date,
+        category: expense.category,
+        payment: expense.paymentMethod,
+        is_recurring: false
+      }]);
+      
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving expense:", error);
+      return false;
     }
   };
 
@@ -65,11 +102,64 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
 
       console.log("Receipt scan response:", data);
       
-      if (data && data.success && data.expenseDetails) {
-        toast.dismiss(scanToast);
-        toast.success("Receipt details extracted successfully!");
-        onCapture(data.expenseDetails);
-        setShowDialog(false);
+      if (data && data.success && data.receiptData) {
+        const receiptData = data.receiptData;
+        
+        if (autoSave && user) {
+          // If autoSave is enabled, save all items directly
+          toast.dismiss(scanToast);
+          toast.loading("Adding expenses from receipt...", { id: "adding-expenses" });
+          
+          let savedCount = 0;
+          const itemCount = receiptData.items.length;
+          
+          // Save each item as a separate expense
+          for (const item of receiptData.items) {
+            const success = await saveExpenseToDatabase({
+              description: item.name,
+              amount: parseFloat(item.amount),
+              date: receiptData.date,
+              category: item.category,
+              paymentMethod: receiptData.paymentMethod
+            });
+            
+            if (success) savedCount++;
+          }
+          
+          // Refresh the expenses list
+          queryClient.invalidateQueries({ queryKey: ['expenses'] });
+          
+          toast.dismiss("adding-expenses");
+          if (savedCount > 0) {
+            toast.success(`Added ${savedCount} expense(s) from receipt`);
+          } else {
+            toast.error("Failed to add expenses from receipt");
+          }
+          
+          setShowDialog(false);
+        } else if (onCapture) {
+          // If onCapture is provided, use the first item or default to store data
+          if (receiptData.items.length > 0) {
+            const firstItem = receiptData.items[0];
+            onCapture({
+              description: firstItem.name,
+              amount: firstItem.amount,
+              date: receiptData.date,
+              category: firstItem.category || "Food",
+              paymentMethod: receiptData.paymentMethod
+            });
+          } else {
+            onCapture({
+              description: receiptData.storeName,
+              amount: receiptData.total,
+              date: receiptData.date,
+              category: "Food",
+              paymentMethod: receiptData.paymentMethod
+            });
+          }
+          toast.dismiss(scanToast);
+          toast.success("Receipt details extracted successfully!");
+        }
       } else {
         console.error("Invalid data format received:", data);
         toast.dismiss(scanToast);
@@ -158,7 +248,9 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
         <DialogContent className="sm:max-w-md">
           <DialogTitle>Scan Receipt</DialogTitle>
           <DialogDescription>
-            We'll extract the store name, amount, date and other details automatically
+            {autoSave 
+              ? "We'll extract all items and save them automatically" 
+              : "We'll extract the store name, amount, date and other details"}
           </DialogDescription>
           
           <div className="flex flex-col items-center space-y-4">
@@ -194,7 +286,7 @@ export function ReceiptCapture({ onCapture, disabled = false }: ReceiptCapturePr
                 ) : (
                   <>
                     <ScanLine className="mr-2 h-4 w-4" />
-                    Extract Data
+                    {autoSave ? "Extract & Save All Items" : "Extract Data"}
                   </>
                 )}
               </Button>

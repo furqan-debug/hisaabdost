@@ -69,32 +69,36 @@ serve(async (req) => {
       console.log("Extracted text:", extractedText);
 
       // Enhanced parsing logic for receipt data
-      const expenseDetails = parseReceiptData(extractedText);
-      console.log("Extracted expense details:", expenseDetails);
+      const receiptData = parseReceiptData(extractedText);
+      console.log("Extracted receipt data:", receiptData);
 
       return new Response(
-        JSON.stringify({ success: true, expenseDetails }),
+        JSON.stringify({ success: true, receiptData }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     } catch (ocrError) {
       console.error("OCR API error:", ocrError);
       
-      // Process the receipt image manually using the example from the user
+      // Process the receipt image manually using example data
       // This is a fallback in case the OCR API fails
-      const expenseDetails = {
-        description: "Joe's Diner",
-        amount: "45.00",
+      const receiptData = {
+        storeName: "Joe's Diner",
         date: "2024-04-05",
-        category: "Food",
+        items: [
+          { name: "Burger", amount: "12.99", category: "Food" },
+          { name: "Fries", amount: "4.50", category: "Food" },
+          { name: "Soda", amount: "2.50", category: "Food" }
+        ],
+        total: "20.00",
         paymentMethod: "Credit Card",
       };
       
-      console.log("Returning data for testing:", expenseDetails);
+      console.log("Returning mock data for testing:", receiptData);
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          expenseDetails: expenseDetails,
+          receiptData,
           note: "Using fallback data as OCR service unavailable"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -110,10 +114,10 @@ serve(async (req) => {
 })
 
 function parseReceiptData(text: string): {
-  description: string;
-  amount: string;
+  storeName: string;
   date: string;
-  category: string;
+  items: Array<{name: string; amount: string; category: string}>;
+  total: string;
   paymentMethod: string;
 } {
   // Convert the text to lines for easier processing
@@ -142,9 +146,45 @@ function parseReceiptData(text: string): {
     }
   }
   
+  // Extract individual items and their prices
+  const items: Array<{name: string; amount: string; category: string}> = [];
+  const itemPattern = /^([A-Za-z\s&']+)\s+(\d+\.\d{2})\s*$/;
+  
+  for (let i = 2; i < lines.length - 2; i++) { // Skip header and footer lines
+    const line = lines[i];
+    const itemMatch = line.match(itemPattern);
+    
+    if (itemMatch) {
+      const name = itemMatch[1].trim();
+      const amount = itemMatch[2];
+      
+      // Determine category based on item name
+      let category = "Other";
+      
+      if (name.toLowerCase().includes('burger') || 
+          name.toLowerCase().includes('fries') || 
+          name.toLowerCase().includes('soda') || 
+          name.toLowerCase().includes('drink') || 
+          name.toLowerCase().includes('sandwich')) {
+        category = "Food";
+      }
+      
+      items.push({ name, amount, category });
+    }
+  }
+  
+  // If no items were extracted, create a default item using the store name
+  if (items.length === 0) {
+    items.push({
+      name: "Purchase from " + storeName,
+      amount: "0.00", // This will be replaced by the total
+      category: "Other"
+    });
+  }
+  
   // Extract total amount (usually at the bottom and often has a larger value)
-  let amount = "0.00";
-  const totalPattern = /total|sum|amount|due|balance|^\s*\$?\s*(\d+\.\d{2})\s*$/i;
+  let total = "0.00";
+  const totalPattern = /total|sum|amount|due|balance/i;
   const amountPattern = /\$?\s*(\d+\.\d{2})/;
   
   // First look for a line with "total" or similar keywords
@@ -152,7 +192,12 @@ function parseReceiptData(text: string): {
   if (totalLine) {
     const match = totalLine.match(amountPattern);
     if (match) {
-      amount = match[1];
+      total = match[1];
+      
+      // If we only have one default item, update its amount to the total
+      if (items.length === 1 && items[0].amount === "0.00") {
+        items[0].amount = total;
+      }
     }
   } else {
     // If we couldn't find a total line, look for the last number in the receipt
@@ -160,40 +205,21 @@ function parseReceiptData(text: string): {
     for (let i = lines.length - 1; i >= 0; i--) {
       const match = lines[i].match(amountPattern);
       if (match) {
-        amount = match[1];
+        total = match[1];
+        
+        // If we only have one default item, update its amount to the total
+        if (items.length === 1 && items[0].amount === "0.00") {
+          items[0].amount = total;
+        }
+        
         break;
       }
     }
   }
   
-  // Determine category based on store name or items
-  let category = "Other";
-  const lowerText = text.toLowerCase();
-  
-  if (lowerText.includes('restaurant') || 
-      lowerText.includes('diner') || 
-      lowerText.includes('cafe') || 
-      lowerText.includes('burger') || 
-      lowerText.includes('pizza') ||
-      lowerText.includes('food')) {
-    category = "Food";
-  } else if (lowerText.includes('market') || 
-             lowerText.includes('grocery') || 
-             lowerText.includes('supermarket')) {
-    category = "Groceries";
-  } else if (lowerText.includes('gas') || 
-             lowerText.includes('fuel') || 
-             lowerText.includes('auto') || 
-             lowerText.includes('transport')) {
-    category = "Transportation";
-  } else if (lowerText.includes('clothes') || 
-             lowerText.includes('apparel') || 
-             lowerText.includes('shoes')) {
-    category = "Shopping";
-  }
-  
   // Guess payment method (if any mentioned in receipt)
   let paymentMethod = "Cash";
+  const lowerText = text.toLowerCase();
   if (lowerText.includes('credit') || lowerText.includes('visa') || lowerText.includes('mastercard')) {
     paymentMethod = "Credit Card";
   } else if (lowerText.includes('debit')) {
@@ -203,10 +229,10 @@ function parseReceiptData(text: string): {
   }
   
   return {
-    description: storeName,
-    amount,
+    storeName,
     date,
-    category,
+    items,
+    total,
     paymentMethod
   };
 }
