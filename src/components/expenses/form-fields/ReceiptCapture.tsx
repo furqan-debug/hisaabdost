@@ -31,10 +31,21 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
         return;
       }
       
+      // Check if file size is reasonable (less than 10MB)
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        toast.error('Image is too large. Please use an image smaller than 10MB');
+        return;
+      }
+      
       setFile(selectedFile);
-      const url = URL.createObjectURL(selectedFile);
-      setPreviewUrl(url);
-      setShowDialog(true);
+      try {
+        const url = URL.createObjectURL(selectedFile);
+        setPreviewUrl(url);
+        setShowDialog(true);
+      } catch (error) {
+        toast.error('Failed to preview the image. Please try another image.');
+        console.error("Preview creation error:", error);
+      }
     }
   };
 
@@ -56,6 +67,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
 
   const capturePhoto = () => {
     if (fileInputRef.current) {
+      // Use 'environment' for back camera, 'user' for front camera
       fileInputRef.current.setAttribute('capture', 'environment');
       fileInputRef.current.click();
     }

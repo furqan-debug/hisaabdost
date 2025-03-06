@@ -21,6 +21,14 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   ocrFormData.append('scale', 'true');
   ocrFormData.append('isTable', 'true'); // Better for receipt table structure
   ocrFormData.append('OCREngine', '2'); // More accurate OCR engine
+  
+  // If the image is from a camera capture, it might be larger, so we enable additional options
+  if (receiptImage.name.includes('capture') || receiptImage.name.includes('image')) {
+    ocrFormData.append('filetype', 'jpg');
+    ocrFormData.append('detectOrientation', 'true');
+    ocrFormData.append('scale', 'true');
+    ocrFormData.append('isCreateSearchablePdf', 'false');
+  }
 
   // Log OCR API key status
   console.log(`OCR API key status: ${apiKey ? 'present' : 'missing'}`);
@@ -42,13 +50,18 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       try {
         console.log(`OCR attempt ${attempts + 1} of ${maxAttempts}`);
         
+        // Set a timeout for the fetch operation
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        
         ocrResponse = await fetch('https://api.ocr.space/parse/image', {
           method: 'POST',
           headers: {
             'apikey': apiKey,
           },
           body: ocrFormData,
-        });
+          signal: controller.signal
+        }).finally(() => clearTimeout(timeoutId));
 
         console.log(`OCR API response status: ${ocrResponse.status}`);
         

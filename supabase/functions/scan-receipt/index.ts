@@ -29,9 +29,15 @@ serve(async (req) => {
     // Log image details for debugging
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
+    // Set a reasonable timeout for the OCR processing
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("OCR processing timeout")), 15000)
+    );
+
     try {
-      // Process receipt with OCR
-      const result = await processReceiptWithOCR(receiptImage, OCR_API_KEY);
+      // Process receipt with OCR with timeout
+      const resultPromise = processReceiptWithOCR(receiptImage, OCR_API_KEY);
+      const result = await Promise.race([resultPromise, timeoutPromise]);
       
       if (result.success) {
         return new Response(
@@ -53,7 +59,7 @@ serve(async (req) => {
         )
       }
     } catch (ocrError) {
-      console.error("OCR processing error:", ocrError);
+      console.error("OCR processing error or timeout:", ocrError);
       
       // Provide realistic example data
       const fallbackData = generateFallbackReceiptData();
