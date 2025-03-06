@@ -40,7 +40,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update form data when expenseToEdit changes
   useEffect(() => {
     if (expenseToEdit) {
       console.log("Setting expense data from expenseToEdit:", expenseToEdit);
@@ -58,7 +57,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     }
   }, [expenseToEdit]);
 
-  // Update individual form fields
   const updateField = <K extends keyof ExpenseFormData>(
     field: K,
     value: ExpenseFormData[K]
@@ -69,7 +67,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     }));
   };
 
-  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -88,7 +85,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     }
   };
 
-  // Handle scan completion
   const handleScanComplete = (expenseDetails: { 
     description: string;
     amount: string;
@@ -98,35 +94,47 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
   }) => {
     console.log("Handling scan complete with details:", expenseDetails);
     
-    // Update form fields with scanned data
     if (expenseDetails.description) updateField('description', expenseDetails.description);
     if (expenseDetails.amount) updateField('amount', expenseDetails.amount);
+    
     if (expenseDetails.date) {
-      // Try to convert date to YYYY-MM-DD format
       try {
-        const dateParts = expenseDetails.date.split(/[\/\-\.]/);
-        if (dateParts.length === 3) {
-          let year = dateParts[2];
-          // Ensure year is 4 digits
-          if (year.length === 2) {
-            year = `20${year}`;
+        if (expenseDetails.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          updateField('date', expenseDetails.date);
+        } else {
+          const dateParts = expenseDetails.date.split(/[\/\-\.]/);
+          if (dateParts.length === 3) {
+            let month = parseInt(dateParts[0], 10);
+            let day = parseInt(dateParts[1], 10);
+            let year = parseInt(dateParts[2], 10);
+            
+            if (year < 100) {
+              year = year < 50 ? 2000 + year : 1900 + year;
+            }
+            
+            month = Math.min(Math.max(month, 1), 12);
+            day = Math.min(Math.max(day, 1), 31);
+            
+            const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            updateField('date', formattedDate);
+          } else {
+            const dateObj = new Date(expenseDetails.date);
+            if (!isNaN(dateObj.getTime())) {
+              updateField('date', dateObj.toISOString().split('T')[0]);
+            }
           }
-          // Reformat to YYYY-MM-DD
-          const formattedDate = `${year}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
-          updateField('date', formattedDate);
         }
       } catch (err) {
-        console.warn("Failed to parse date from receipt", err);
-        // Keep current date if parsing fails
+        console.warn("Failed to parse date from receipt:", err);
       }
     }
+    
     if (expenseDetails.category) updateField('category', expenseDetails.category);
     if (expenseDetails.paymentMethod) updateField('paymentMethod', expenseDetails.paymentMethod);
     
     toast.success("Receipt data extracted and filled in! Please review before submitting.");
   };
 
-  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.amount || !formData.description || !formData.date || !formData.category || !user) return;
@@ -161,7 +169,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
 
       if (error) throw error;
 
-      // Invalidate both expenses and budgets queries to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['expenses'] });
       await queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
@@ -172,7 +179,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
           : "Your expense has been added successfully.",
       });
 
-      // Reset form
       setFormData({
         amount: "",
         description: "",
@@ -198,7 +204,6 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     }
   };
 
-  // Clean up URLs when component unmounts
   useEffect(() => {
     return () => {
       if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {

@@ -44,7 +44,7 @@ serve(async (req) => {
           JSON.stringify({ 
             success: true, 
             receiptData: fallbackData,
-            note: "Using fallback data as OCR service unavailable"
+            note: "Using fallback data as OCR service unavailable or failed" 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -59,7 +59,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           receiptData: fallbackData,
-          note: "Using fallback data as OCR service unavailable"
+          note: "Using fallback data as OCR service unavailable or failed"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
