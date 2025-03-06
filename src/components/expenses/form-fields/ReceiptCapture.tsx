@@ -60,6 +60,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
 
   const uploadFile = () => {
     if (fileInputRef.current) {
+      // Remove any capture attribute that might have been set previously
       fileInputRef.current.removeAttribute('capture');
       fileInputRef.current.click();
     }

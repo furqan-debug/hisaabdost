@@ -94,8 +94,13 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
   }) => {
     console.log("Handling scan complete with details:", expenseDetails);
     
-    if (expenseDetails.description) updateField('description', expenseDetails.description);
-    if (expenseDetails.amount) updateField('amount', expenseDetails.amount);
+    if (expenseDetails.description && expenseDetails.description.trim().length > 0) {
+      updateField('description', expenseDetails.description);
+    }
+    
+    if (expenseDetails.amount && !isNaN(parseFloat(expenseDetails.amount)) && parseFloat(expenseDetails.amount) > 0) {
+      updateField('amount', expenseDetails.amount);
+    }
     
     if (expenseDetails.date) {
       try {
@@ -109,23 +114,34 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
             let day = parseInt(dateParts[1], 10);
             let year = parseInt(dateParts[2], 10);
             
+            if (isNaN(month) || isNaN(day) || isNaN(year) || 
+                month < 1 || month > 12 || day < 1 || day > 31) {
+              throw new Error("Invalid date components");
+            }
+            
             if (year < 100) {
               year = year < 50 ? 2000 + year : 1900 + year;
             }
             
-            month = Math.min(Math.max(month, 1), 12);
-            day = Math.min(Math.max(day, 1), 31);
-            
             const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
             updateField('date', formattedDate);
+          } else {
+            throw new Error("Invalid date format");
           }
         } 
         else {
           const dateObj = new Date(expenseDetails.date);
           if (!isNaN(dateObj.getTime())) {
-            updateField('date', dateObj.toISOString().split('T')[0]);
+            const isoDate = dateObj.toISOString().split('T')[0];
+            
+            const year = parseInt(isoDate.split('-')[0], 10);
+            if (year >= 1900 && year <= 2100) {
+              updateField('date', isoDate);
+            } else {
+              throw new Error("Year out of reasonable range");
+            }
           } else {
-            updateField('date', new Date().toISOString().split('T')[0]);
+            throw new Error("Invalid date");
           }
         }
       } catch (err) {
@@ -134,8 +150,13 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
       }
     }
     
-    if (expenseDetails.category) updateField('category', expenseDetails.category);
-    if (expenseDetails.paymentMethod) updateField('paymentMethod', expenseDetails.paymentMethod);
+    if (expenseDetails.category) {
+      updateField('category', expenseDetails.category);
+    }
+    
+    if (expenseDetails.paymentMethod) {
+      updateField('paymentMethod', expenseDetails.paymentMethod);
+    }
     
     toast.success("Receipt data extracted and filled in! Please review before submitting.");
   };

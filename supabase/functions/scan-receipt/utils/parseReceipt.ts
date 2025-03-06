@@ -11,7 +11,7 @@ export function parseReceiptData(text: string): {
 } {
   // Convert the text to lines for easier processing
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-  console.log("Processing lines:", lines);
+  console.log("Processing lines:", lines.slice(0, 10), "... and", lines.length - 10, "more lines");
   
   // Extract store name (usually at the top of the receipt)
   const storeName = identifyStoreName(lines);
@@ -26,9 +26,8 @@ export function parseReceiptData(text: string): {
   if (items.length === 0) {
     console.warn("No items could be extracted from the receipt text, creating sample items");
     items.push(
-      { name: "Item 1", amount: "9.99", category: "Shopping" },
-      { name: "Item 2", amount: "8.99", category: "Shopping" },
-      { name: "Item 3", amount: "3.99", category: "Shopping" }
+      { name: "Unknown Item 1", amount: "0.00", category: "Shopping" },
+      { name: "Unknown Item 2", amount: "0.00", category: "Shopping" }
     );
   }
   
@@ -58,7 +57,7 @@ function identifyStoreName(lines: string[]): string {
         continue;
       }
       
-      // Take the first line that looks like a name
+      // Take the first line that looks like a name (not too short, not too long)
       if (lines[i].length > 2 && lines[i].length < 40) {
         return lines[i];
       }
@@ -93,7 +92,7 @@ function extractPaymentMethod(text: string): string {
   } else if (lowerText.includes('card')) {
     return "Card";
   } else {
-    return "Other";
+    return "Card"; // Default to Card instead of Other
   }
 }
 
@@ -107,7 +106,9 @@ function extractTotal(lines: string[], items: Array<{name: string; amount: strin
     /balance\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
     /^\s*total\s*\$?\s*(\d+\.\d{2})/i,
     /to\s*pay\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
-    /final\s*total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i
+    /final\s*total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
+    /grand\s*total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
+    /total\s*due\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i
   ];
   
   // First look at the bottom third of the receipt where totals are typically found
@@ -200,7 +201,7 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
       // Clean up item name - remove common prefixes, quantities
       itemName = cleanupItemName(itemName);
       
-      if (itemName && price) {
+      if (itemName && price && parseFloat(price) > 0) {
         console.log(`Found item: "${itemName}" with price: $${price}`);
         // Always set category to "Shopping" for OCR-scanned receipts
         items.push({
@@ -218,8 +219,14 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string;
     extractItemsAggressively(lines, startIndex, endIndex, items);
   }
   
-  console.log(`Total items extracted: ${items.length}`);
-  return items;
+  // Filter out any items with zero or negative prices
+  const validItems = items.filter(item => {
+    const price = parseFloat(item.amount);
+    return !isNaN(price) && price > 0 && item.name.length > 1;
+  });
+  
+  console.log(`Found ${validItems.length} valid items out of ${items.length} total items`);
+  return validItems;
 }
 
 // Check if a line should be skipped when searching for items
@@ -256,6 +263,11 @@ function cleanupItemName(itemName: string): string {
   // Trim any remaining whitespace
   cleanName = cleanName.trim();
   
+  // If the name is too short or all numbers, replace with a generic name
+  if (cleanName.length < 2 || /^\d+$/.test(cleanName)) {
+    return "Item";
+  }
+  
   return cleanName;
 }
 
@@ -287,10 +299,19 @@ function extractItemsAggressively(
       // Get the text before the price as the item name
       let itemName = line.substring(0, line.indexOf(priceMatches[0][0])).trim();
       
+      // If no text before price, check if this is a continuation line
+      if (!itemName && i > 0) {
+        const prevLine = lines[i-1].trim();
+        if (!shouldSkipLine(prevLine) && !prevLine.match(/\d+\.\d{2}/)) {
+          itemName = prevLine;
+        }
+      }
+      
       // Clean up the item name
       itemName = cleanupItemName(itemName);
       
-      if (itemName && price && !items.some(item => item.name === itemName && item.amount === price)) {
+      if (itemName && price && parseFloat(price) > 0 && 
+          !items.some(item => item.name === itemName && item.amount === price)) {
         console.log(`[Pass 2] Found item: "${itemName}" with price: $${price}`);
         items.push({
           name: itemName || "Unknown Item",
@@ -309,15 +330,17 @@ function extractItemsAggressively(
         const itemName = cleanupItemName(line);
         const price = nextLinePriceMatch[1];
         
-        console.log(`[Pass 3] Found item spanning two lines: "${itemName}" with price: $${price}`);
-        items.push({
-          name: itemName,
-          amount: price,
-          category: "Shopping"
-        });
-        
-        // Skip the next line since we've used it
-        i++;
+        if (parseFloat(price) > 0) {
+          console.log(`[Pass 3] Found item spanning two lines: "${itemName}" with price: $${price}`);
+          items.push({
+            name: itemName,
+            amount: price,
+            category: "Shopping"
+          });
+          
+          // Skip the next line since we've used it
+          i++;
+        }
       }
     }
   }

@@ -24,8 +24,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   
   // Specific optimizations for camera captures
   if (receiptImage.name.includes('capture') || receiptImage.name.includes('image') || 
-      receiptImage.name.includes('camera') || receiptImage.name.includes('photo')) {
-    ocrFormData.append('filetype', 'jpg');
+      receiptImage.type.includes('image/jpeg') || receiptImage.type.includes('image/png')) {
+    ocrFormData.append('filetype', receiptImage.type.includes('image/jpeg') ? 'jpg' : 'png');
     ocrFormData.append('detectOrientation', 'true');
     ocrFormData.append('scale', 'true');
     ocrFormData.append('isCreateSearchablePdf', 'false');
@@ -127,7 +127,25 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       receiptData.date = new Date().toISOString().split('T')[0];
     }
     
-    console.log("Extracted receipt data:", receiptData);
+    // Make sure we have at least one valid item
+    if (!receiptData.items || receiptData.items.length === 0) {
+      console.log("No valid items found, creating a default item");
+      receiptData.items = [{
+        name: receiptData.storeName || "Store Purchase",
+        amount: receiptData.total || "0.00",
+        category: "Shopping"
+      }];
+    }
+    
+    // If the total is missing, calculate it from items
+    if (!receiptData.total || parseFloat(receiptData.total) <= 0) {
+      const calculatedTotal = receiptData.items.reduce((sum, item) => {
+        return sum + (parseFloat(item.amount) || 0);
+      }, 0);
+      receiptData.total = calculatedTotal.toFixed(2);
+    }
+    
+    console.log("Final extracted receipt data:", receiptData);
 
     return { success: true, receiptData };
   } catch (error) {
@@ -145,9 +163,9 @@ export function generateFallbackReceiptData() {
     storeName: "Receipt Scan",
     date: today,
     items: [
-      { name: "Item 1", amount: "15.99", category: "Shopping" },
-      { name: "Item 2", amount: "9.99", category: "Shopping" },
-      { name: "Item 3", amount: "12.50", category: "Shopping" }
+      { name: "Store Item 1", amount: "15.99", category: "Shopping" },
+      { name: "Store Item 2", amount: "9.99", category: "Shopping" },
+      { name: "Store Item 3", amount: "12.50", category: "Shopping" }
     ],
     total: "38.48",
     paymentMethod: "Card",

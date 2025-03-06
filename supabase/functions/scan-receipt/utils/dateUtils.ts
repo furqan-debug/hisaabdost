@@ -38,8 +38,8 @@ export function extractDate(lines: string[]): string {
                 year += year < 50 ? 2000 : 1900;
               }
               
-              // Validate date components
-              if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+              // Validate components - make sure they're reasonable values
+              if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100) {
                 return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
               }
             }
@@ -50,8 +50,8 @@ export function extractDate(lines: string[]): string {
               let month = parseInt(match[2], 10);
               let day = parseInt(match[3], 10);
               
-              // Validate date components
-              if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+              // Validate date components with reasonable ranges
+              if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100) {
                 return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
               }
             }
@@ -61,7 +61,11 @@ export function extractDate(lines: string[]): string {
           const datePart = line.includes("date:") ? line.split("date:")[1].trim() : match[0];
           const parsedDate = new Date(datePart);
           if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toISOString().split('T')[0];
+            // Verify this isn't an unreasonable date (not too far in the past or future)
+            const year = parsedDate.getFullYear();
+            if (year >= 1900 && year <= 2100) {
+              return parsedDate.toISOString().split('T')[0];
+            }
           }
         } catch (e) {
           console.warn("Could not parse date:", e);
@@ -90,7 +94,8 @@ export function extractDate(lines: string[]): string {
                     year += year < 50 ? 2000 : 1900;
                   }
                   
-                  if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                  // Additional validation
+                  if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100) {
                     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                   }
                 }
@@ -104,34 +109,7 @@ export function extractDate(lines: string[]): string {
     }
   }
   
-  // Third attempt - look for keywords that might indicate a date
-  const dateKeywords = ['date', 'purchase', 'transaction', 'receipt'];
-  for (let i = 0; i < lines.length; i++) {
-    if (dateKeywords.some(keyword => lines[i].toLowerCase().includes(keyword))) {
-      // Check surrounding lines for numbers that might be dates
-      for (let j = Math.max(0, i-2); j <= Math.min(i+2, lines.length-1); j++) {
-        // Simple date pattern check (any numbers that look like dates)
-        const simpleDateMatch = lines[j].match(/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})\b/);
-        if (simpleDateMatch) {
-          try {
-            let month = parseInt(simpleDateMatch[1], 10);
-            let day = parseInt(simpleDateMatch[2], 10);
-            let year = parseInt(simpleDateMatch[3], 10);
-            
-            if (year < 100) {
-              year += year < 50 ? 2000 : 1900;
-            }
-            
-            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-              return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            }
-          } catch (e) {
-            console.warn("Third attempt to parse date failed:", e);
-          }
-        }
-      }
-    }
-  }
-  
+  // If we couldn't extract a date, return today's date
+  console.log("Could not extract date from receipt, using today's date");
   return today;
 }
