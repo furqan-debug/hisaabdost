@@ -31,9 +31,9 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
         return;
       }
       
-      // Check if file size is reasonable (less than 10MB)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error('Image is too large. Please use an image smaller than 10MB');
+      // Check if file size is reasonable (less than 5MB for better performance)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast.error('Image is too large. Please use an image smaller than 5MB for faster processing');
         return;
       }
       
@@ -74,7 +74,7 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
   };
 
   return (
-    <>
+    <div className="receipt-capture-container">
       <ReceiptFileInput 
         onChange={handleFileChange} 
         inputRef={fileInputRef} 
@@ -95,6 +95,6 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
         onCapture={onCapture}
         autoSave={autoSave}
       />
-    </>
+    </div>
   );
 }

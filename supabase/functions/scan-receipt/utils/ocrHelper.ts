@@ -22,12 +22,17 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   ocrFormData.append('isTable', 'true'); // Better for receipt table structure
   ocrFormData.append('OCREngine', '2'); // More accurate OCR engine
   
-  // If the image is from a camera capture, it might be larger, so we enable additional options
-  if (receiptImage.name.includes('capture') || receiptImage.name.includes('image')) {
+  // Specific optimizations for camera captures
+  if (receiptImage.name.includes('capture') || receiptImage.name.includes('image') || 
+      receiptImage.name.includes('camera') || receiptImage.name.includes('photo')) {
     ocrFormData.append('filetype', 'jpg');
     ocrFormData.append('detectOrientation', 'true');
     ocrFormData.append('scale', 'true');
     ocrFormData.append('isCreateSearchablePdf', 'false');
+    
+    // Add more specific optimizations for mobile captures
+    ocrFormData.append('isTable', 'false'); // Mobile captures don't do well with table detection
+    ocrFormData.append('detectOrientation', 'true'); // Critical for mobile captures
   }
 
   // Log OCR API key status
@@ -42,7 +47,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
 
     // Send image to OCR API with improved retry logic
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 2; // Reduced attempts for faster response
     let ocrResponse;
     let ocrData;
 
@@ -86,8 +91,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
           break;
         }
         
-        // Wait a bit before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+        // Wait a bit before retrying (shorter wait for better UX)
+        await new Promise(resolve => setTimeout(resolve, 500));
         attempts++;
       }
     }
@@ -115,6 +120,11 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     // Ensure the date is included
     if (extractedDate && (!receiptData.date || receiptData.date === "Invalid Date")) {
       receiptData.date = extractedDate;
+    }
+    
+    // If we still don't have a valid date, use today's date
+    if (!receiptData.date || receiptData.date === "Invalid Date") {
+      receiptData.date = new Date().toISOString().split('T')[0];
     }
     
     console.log("Extracted receipt data:", receiptData);

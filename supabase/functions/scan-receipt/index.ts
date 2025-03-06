@@ -31,10 +31,25 @@ serve(async (req) => {
 
     // Set a reasonable timeout for the OCR processing
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("OCR processing timeout")), 15000)
+      setTimeout(() => reject(new Error("OCR processing timeout")), 18000)
     );
 
     try {
+      // Early fallback for very large images to improve response time
+      if (receiptImage.size > 8 * 1024 * 1024) {
+        console.log("Image too large, using fallback data");
+        const fallbackData = generateFallbackReceiptData();
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            receiptData: fallbackData,
+            note: "Using fallback data as image is too large" 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       // Process receipt with OCR with timeout
       const resultPromise = processReceiptWithOCR(receiptImage, OCR_API_KEY);
       const result = await Promise.race([resultPromise, timeoutPromise]);
@@ -45,7 +60,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       } else {
-        // If OCR fails, provide example data
+        // If OCR fails, provide fallback data
         console.log("OCR failed, returning fallback data");
         const fallbackData = generateFallbackReceiptData();
         
@@ -61,7 +76,7 @@ serve(async (req) => {
     } catch (ocrError) {
       console.error("OCR processing error or timeout:", ocrError);
       
-      // Provide realistic example data
+      // Provide realistic fallback data
       const fallbackData = generateFallbackReceiptData();
       
       return new Response(
