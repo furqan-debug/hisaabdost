@@ -26,6 +26,9 @@ serve(async (req) => {
       )
     }
 
+    // Log image details for debugging
+    console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
+
     try {
       // Process receipt with OCR
       const result = await processReceiptWithOCR(receiptImage, OCR_API_KEY);

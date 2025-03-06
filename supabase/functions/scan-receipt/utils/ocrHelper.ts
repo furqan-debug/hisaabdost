@@ -1,5 +1,6 @@
 
 import { parseReceiptData } from "./parseReceipt.ts";
+import { extractDate } from "./dateUtils.ts";
 
 // Default CORS headers for edge function
 export const corsHeaders = {
@@ -31,14 +32,16 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       return { success: false, error: "OCR API key not configured" };
     }
 
-    // Send image to OCR API with retry logic
+    // Send image to OCR API with improved retry logic
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
     let ocrResponse;
     let ocrData;
 
     while (attempts < maxAttempts) {
       try {
+        console.log(`OCR attempt ${attempts + 1} of ${maxAttempts}`);
+        
         ocrResponse = await fetch('https://api.ocr.space/parse/image', {
           method: 'POST',
           headers: {
@@ -48,18 +51,30 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
         });
 
         console.log(`OCR API response status: ${ocrResponse.status}`);
-        ocrData = await ocrResponse.json();
         
-        // Check if we got a successful response
-        if (ocrResponse.status === 200 && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
-          break; // Success, exit retry loop
+        if (!ocrResponse.ok) {
+          throw new Error(`OCR API returned status ${ocrResponse.status}`);
         }
         
-        // If unsuccessful, increment attempt counter and retry
-        attempts++;
-        console.warn(`OCR attempt ${attempts} failed, ${maxAttempts - attempts} attempts remaining`);
+        ocrData = await ocrResponse.json();
+        
+        // Check if we got a successful response with parsed results
+        if (ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
+          break; // Success, exit retry loop
+        } else {
+          throw new Error("No parsed results in OCR response");
+        }
       } catch (error) {
-        console.error(`OCR attempt ${attempts} error:`, error);
+        console.error(`OCR attempt ${attempts + 1} error:`, error);
+        
+        // If we've reached max attempts, exit the loop
+        if (attempts + 1 >= maxAttempts) {
+          console.error("Max OCR attempts reached, giving up");
+          break;
+        }
+        
+        // Wait a bit before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
         attempts++;
       }
     }
@@ -74,8 +89,21 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     const extractedText = ocrData.ParsedResults[0].ParsedText;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + (extractedText.length > 200 ? "..." : ""));
 
+    // Split into lines for better processing
+    const textLines = extractedText.split('\n').filter(line => line.trim().length > 0);
+    
+    // Extract date specifically using our enhanced date extractor
+    const extractedDate = extractDate(textLines);
+    console.log("Extracted date:", extractedDate);
+
     // Parse receipt data from extracted text
     const receiptData = parseReceiptData(extractedText);
+    
+    // Ensure the date is included
+    if (extractedDate && (!receiptData.date || receiptData.date === "Invalid Date")) {
+      receiptData.date = extractedDate;
+    }
+    
     console.log("Extracted receipt data:", receiptData);
 
     return { success: true, receiptData };

@@ -101,7 +101,8 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
       try {
         if (expenseDetails.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
           updateField('date', expenseDetails.date);
-        } else {
+        } 
+        else if (expenseDetails.date.match(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/)) {
           const dateParts = expenseDetails.date.split(/[\/\-\.]/);
           if (dateParts.length === 3) {
             let month = parseInt(dateParts[0], 10);
@@ -117,15 +118,19 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
             
             const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
             updateField('date', formattedDate);
+          }
+        } 
+        else {
+          const dateObj = new Date(expenseDetails.date);
+          if (!isNaN(dateObj.getTime())) {
+            updateField('date', dateObj.toISOString().split('T')[0]);
           } else {
-            const dateObj = new Date(expenseDetails.date);
-            if (!isNaN(dateObj.getTime())) {
-              updateField('date', dateObj.toISOString().split('T')[0]);
-            }
+            updateField('date', new Date().toISOString().split('T')[0]);
           }
         }
       } catch (err) {
         console.warn("Failed to parse date from receipt:", err);
+        updateField('date', new Date().toISOString().split('T')[0]);
       }
     }
     

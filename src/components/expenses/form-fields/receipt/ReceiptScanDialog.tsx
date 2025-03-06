@@ -100,6 +100,11 @@ export function ReceiptScanDialog({
       if (data && data.success && data.receiptData) {
         const receiptData = data.receiptData;
         
+        // Ensure we have a valid date
+        if (!receiptData.date || receiptData.date === "Invalid Date") {
+          receiptData.date = new Date().toISOString().split('T')[0];
+        }
+        
         if (autoSave && user) {
           // If autoSave is enabled, save all items directly
           toast.dismiss(scanToast);
@@ -142,24 +147,22 @@ export function ReceiptScanDialog({
           setOpen(false);
         } else if (onCapture) {
           // If onCapture is provided, use the first item or default to store data
-          if (receiptData.items.length > 0) {
+          if (receiptData.items && receiptData.items.length > 0) {
             const firstItem = receiptData.items[0];
             onCapture({
-              description: firstItem.name || receiptData.storeName,
-              amount: firstItem.amount,
-              date: receiptData.date,
-              // Always use "Shopping" category for OCR-scanned receipts
+              description: firstItem.name || receiptData.storeName || "Store purchase",
+              amount: firstItem.amount || receiptData.total || "0.00",
+              date: receiptData.date || new Date().toISOString().split('T')[0],
               category: "Shopping",
-              paymentMethod: receiptData.paymentMethod
+              paymentMethod: receiptData.paymentMethod || "Cash"
             });
           } else {
             onCapture({
-              description: receiptData.storeName,
-              amount: receiptData.total,
-              date: receiptData.date,
-              // Always use "Shopping" category for OCR-scanned receipts
+              description: receiptData.storeName || "Store purchase",
+              amount: receiptData.total || "0.00",
+              date: receiptData.date || new Date().toISOString().split('T')[0],
               category: "Shopping",
-              paymentMethod: receiptData.paymentMethod
+              paymentMethod: receiptData.paymentMethod || "Cash"
             });
           }
           toast.dismiss(scanToast);

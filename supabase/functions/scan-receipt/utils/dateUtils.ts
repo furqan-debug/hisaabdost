@@ -14,6 +14,8 @@ export function extractDate(lines: string[]): string {
     /date:?\s*([a-z]+)\s+(\d{1,2})[,\s]+(\d{4})/i,
     // General date format with month name
     /([a-z]+)\s+(\d{1,2})[,\s]+(\d{4})/i,
+    // Date string with yyyy-mm-dd format
+    /(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/i,
   ];
   
   // First attempt - look for specific date formats
@@ -24,7 +26,7 @@ export function extractDate(lines: string[]): string {
         try {
           // If we find a clear date pattern
           if (match.length >= 4) {
-            // For numeric dates (MM/DD/YYYY)
+            // For MM/DD/YYYY format (most common in US receipts)
             if (match[0].match(/\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/)) {
               // Extract components
               let month = parseInt(match[1], 10);
@@ -33,8 +35,20 @@ export function extractDate(lines: string[]): string {
               
               // Handle 2-digit years
               if (year < 100) {
-                year += 2000;
+                year += year < 50 ? 2000 : 1900;
               }
+              
+              // Validate date components
+              if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+              }
+            }
+            
+            // For YYYY-MM-DD format
+            if (match[0].match(/\d{4}[\/\.\-]\d{1,2}[\/\.\-]\d{1,2}/)) {
+              let year = parseInt(match[1], 10);
+              let month = parseInt(match[2], 10);
+              let day = parseInt(match[3], 10);
               
               // Validate date components
               if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
@@ -73,7 +87,7 @@ export function extractDate(lines: string[]): string {
                   let year = parseInt(match[3], 10);
                   
                   if (year < 100) {
-                    year += 2000;
+                    year += year < 50 ? 2000 : 1900;
                   }
                   
                   if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
@@ -84,6 +98,35 @@ export function extractDate(lines: string[]): string {
                 console.warn("Second attempt to parse date failed:", e);
               }
             }
+          }
+        }
+      }
+    }
+  }
+  
+  // Third attempt - look for keywords that might indicate a date
+  const dateKeywords = ['date', 'purchase', 'transaction', 'receipt'];
+  for (let i = 0; i < lines.length; i++) {
+    if (dateKeywords.some(keyword => lines[i].toLowerCase().includes(keyword))) {
+      // Check surrounding lines for numbers that might be dates
+      for (let j = Math.max(0, i-2); j <= Math.min(i+2, lines.length-1); j++) {
+        // Simple date pattern check (any numbers that look like dates)
+        const simpleDateMatch = lines[j].match(/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})\b/);
+        if (simpleDateMatch) {
+          try {
+            let month = parseInt(simpleDateMatch[1], 10);
+            let day = parseInt(simpleDateMatch[2], 10);
+            let year = parseInt(simpleDateMatch[3], 10);
+            
+            if (year < 100) {
+              year += year < 50 ? 2000 : 1900;
+            }
+            
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+              return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            }
+          } catch (e) {
+            console.warn("Third attempt to parse date failed:", e);
           }
         }
       }
