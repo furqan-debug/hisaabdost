@@ -1,30 +1,33 @@
 
-import { ReactNode } from "react";
-import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";
-import { BottomNavigation } from "./BottomNavigation";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React from 'react';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import Navbar from './Navbar';
+import Sidebar from './Sidebar';
+import { BottomNavigation } from './BottomNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
-  children: ReactNode;
-  selectedMonth: Date;
-  setSelectedMonth: (date: Date) => void;
+  children: React.ReactNode;
 }
 
-const Layout = ({ children, selectedMonth, setSelectedMonth }: LayoutProps) => {
+const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} />
-      <div className="flex flex-1">
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen flex w-full bg-background">
         {!isMobile && <Sidebar />}
-        <main className="flex-1 px-4 py-4 max-w-[480px] mx-auto w-full">
-          {children}
-        </main>
+        <div className="flex-1 flex flex-col">
+          <Navbar />
+          <main className="flex-1 px-2 pt-2 pb-24 md:px-6 md:pt-6 md:pb-6 overflow-x-hidden animate-fade-in">
+            <div className={`mx-auto w-full ${isMobile ? 'max-w-full' : 'max-w-[480px]'}`}>
+              {children}
+            </div>
+          </main>
+          {isMobile && <BottomNavigation />}
+        </div>
       </div>
-      {isMobile && <BottomNavigation />}
-    </div>
+    </SidebarProvider>
   );
 };
 
