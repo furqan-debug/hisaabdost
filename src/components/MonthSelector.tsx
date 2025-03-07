@@ -55,14 +55,14 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
     >
       <SelectTrigger 
         className={cn(
-          "w-full h-9 px-3 gap-2 transition-all duration-300",
+          "w-full h-9 px-2 gap-1 py-1 transition-all duration-300",
           "bg-accent/20 hover:bg-accent/30 focus:ring-1 border-border/40 hover:border-border/70",
           className
         )}
       >
         <Calendar className="h-4 w-4 text-primary" />
         <SelectValue placeholder={format(selectedMonth, 'MMMM yyyy')}>
-          {format(selectedMonth, 'MMMM yyyy')}
+          {format(selectedMonth, 'MMM yyyy')}
         </SelectValue>
       </SelectTrigger>
       <SelectContent

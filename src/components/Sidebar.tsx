@@ -43,7 +43,7 @@ const Sidebar = () => {
           </span>
         </div>
         
-        {/* Month selector in sidebar */}
+        {/* Month selector in sidebar for desktop */}
         <div className="px-3 mb-4">
           <MonthSelector
             selectedMonth={selectedMonth}
