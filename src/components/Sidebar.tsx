@@ -18,6 +18,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
+import { MonthSelector } from "./MonthSelector";
+import { useMonthContext } from "@/hooks/use-month-context";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
@@ -29,6 +31,7 @@ const menuItems = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const { selectedMonth, setSelectedMonth } = useMonthContext();
 
   return (
     <SidebarComponent>
@@ -39,6 +42,15 @@ const Sidebar = () => {
             Expense AI
           </span>
         </div>
+        
+        {/* Month selector in sidebar */}
+        <div className="px-3 mb-4">
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+        </div>
+        
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>

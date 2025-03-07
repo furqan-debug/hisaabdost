@@ -13,13 +13,10 @@ import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MonthSelector } from "./MonthSelector";
-import { useMonthContext } from "@/hooks/use-month-context";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
-  const { selectedMonth, setSelectedMonth } = useMonthContext();
 
   return (
     <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
@@ -40,11 +37,6 @@ const Navbar = () => {
         <h2 className="text-xl font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
           Expense AI
         </h2>
-        
-        <MonthSelector 
-          selectedMonth={selectedMonth}
-          onChange={setSelectedMonth}
-        />
         
         <ThemeToggle />
         
