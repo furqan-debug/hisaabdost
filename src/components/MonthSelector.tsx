@@ -84,7 +84,7 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
                   value={month.toISOString()}
                   className={cn(
                     "cursor-pointer transition-colors duration-150 hover:bg-accent rounded-sm px-3",
-                    isSelected && "bg-accent/40 font-medium text-accent-foreground"
+                    isSelected && "bg-primary/10 text-primary font-bold border-l-2 border-primary pl-2"
                   )}
                 >
                   {format(month, 'MMMM')}
