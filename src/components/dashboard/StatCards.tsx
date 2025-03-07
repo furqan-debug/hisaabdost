@@ -13,7 +13,7 @@ interface StatCardsProps {
   monthlyIncome: number;
   setMonthlyIncome: (value: number) => void;
   savingsRate: number;
-  formatPercentage: (value: number) => void;
+  formatPercentage: (value: number) => string;
   isNewUser: boolean;
   isPastMonth?: boolean;
   selectedMonth?: string;
