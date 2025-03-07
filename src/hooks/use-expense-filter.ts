@@ -1,7 +1,6 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Expense } from "@/components/AddExpenseSheet";
-import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
@@ -13,24 +12,13 @@ export function useExpenseFilter(expenses: Expense[]) {
     field: SortField;
     order: SortOrder;
   }>({ field: 'date', order: 'desc' });
-  
-  // Set default date range to current month
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState<{
     start: string;
     end: string;
   }>({
-    start: format(startOfMonth(selectedDate), 'yyyy-MM-dd'),
-    end: format(endOfMonth(selectedDate), 'yyyy-MM-dd'),
+    start: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0],
   });
-
-  // Update date range when selected date changes
-  useEffect(() => {
-    setDateRange({
-      start: format(startOfMonth(selectedDate), 'yyyy-MM-dd'),
-      end: format(endOfMonth(selectedDate), 'yyyy-MM-dd'),
-    });
-  }, [selectedDate]);
 
   const handleSort = (field: SortField) => {
     setSortConfig({
@@ -85,8 +73,6 @@ export function useExpenseFilter(expenses: Expense[]) {
     handleSort,
     dateRange,
     setDateRange,
-    selectedDate,
-    setSelectedDate,
     filteredExpenses,
     totalFilteredAmount
   };

@@ -13,8 +13,6 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { MonthSelector } from "@/components/dashboard/MonthSelector";
-import { format, startOfMonth, endOfMonth } from "date-fns";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -29,22 +27,15 @@ const Dashboard = () => {
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Date selection for month filtering
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const startDate = format(startOfMonth(selectedDate), 'yyyy-MM-dd');
-  const endDate = format(endOfMonth(selectedDate), 'yyyy-MM-dd');
-  
   // Fetch expenses from Supabase using React Query
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ['expenses', startDate, endDate],
+    queryKey: ['expenses'],
     queryFn: async () => {
       if (!user) return [];
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .gte('date', startDate)
-        .lte('date', endDate)
         .order('date', { ascending: false });
       
       if (error) {
@@ -92,14 +83,10 @@ const Dashboard = () => {
   }, [monthlyIncome]);
 
   const isNewUser = expenses.length === 0;
-  const isCurrentMonth = format(selectedDate, 'yyyy-MM') === format(new Date(), 'yyyy-MM');
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <DashboardHeader isNewUser={isNewUser} />
-        <MonthSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-      </div>
+      <DashboardHeader isNewUser={isNewUser} />
       
       <StatCards 
         totalBalance={totalBalance}
@@ -109,8 +96,6 @@ const Dashboard = () => {
         savingsRate={savingsRate}
         formatPercentage={formatPercentage}
         isNewUser={isNewUser}
-        isPastMonth={!isCurrentMonth}
-        selectedMonth={format(selectedDate, 'MMMM yyyy')}
       />
 
       <AddExpenseButton 
@@ -128,7 +113,6 @@ const Dashboard = () => {
         isLoading={isLoading}
         setExpenseToEdit={setExpenseToEdit}
         setShowAddExpense={setShowAddExpense}
-        selectedMonth={format(selectedDate, 'MMMM yyyy')}
       />
 
       <ExpenseAnalyticsCard 
