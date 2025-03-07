@@ -1,14 +1,12 @@
 
-import { Button } from "@/components/ui/button";
-import { DescriptionField } from "./form-fields/DescriptionField";
-import { AmountField } from "./form-fields/AmountField";
-import { CategoryField } from "./form-fields/CategoryField";
-import { PaymentMethodField } from "./form-fields/PaymentMethodField";
-import { DateField } from "./form-fields/DateField";
-import { NotesField } from "./form-fields/NotesField";
-import { RecurringField } from "./form-fields/RecurringField";
-import { ReceiptField } from "./form-fields/ReceiptField";
+import { FormSection } from "./form-sections/FormSection";
+import { FormActions } from "./form-sections/FormActions";
+import { BasicInfoSection } from "./form-sections/BasicInfoSection";
+import { CategorySection } from "./form-sections/CategorySection";
+import { DetailsSection } from "./form-sections/DetailsSection";
+import { ReceiptSection } from "./form-sections/ReceiptSection";
 import { ExpenseFormData } from "@/hooks/useExpenseForm";
+import { ScanResult } from "@/hooks/expense-form/types";
 
 interface ExpenseFormProps {
   formData: ExpenseFormData;
@@ -17,13 +15,7 @@ interface ExpenseFormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onFieldChange: <K extends keyof ExpenseFormData>(field: K, value: ExpenseFormData[K]) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onScanComplete: (expenseDetails: { 
-    description: string;
-    amount: string;
-    date: string;
-    category: string;
-    paymentMethod: string;
-  }) => void;
+  onScanComplete: (expenseDetails: ScanResult) => void;
 }
 
 export function ExpenseForm({
@@ -37,50 +29,39 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
-      <DescriptionField 
-        value={formData.description} 
-        onChange={(value) => onFieldChange('description', value)} 
-      />
+      <FormSection>
+        <BasicInfoSection 
+          formData={formData} 
+          onFieldChange={onFieldChange} 
+        />
+      </FormSection>
       
-      <AmountField 
-        value={formData.amount} 
-        onChange={(value) => onFieldChange('amount', value)} 
-      />
+      <FormSection>
+        <CategorySection 
+          formData={formData} 
+          onFieldChange={onFieldChange} 
+        />
+      </FormSection>
       
-      <CategoryField 
-        value={formData.category} 
-        onChange={(value) => onFieldChange('category', value)} 
-      />
+      <FormSection>
+        <DetailsSection 
+          formData={formData} 
+          onFieldChange={onFieldChange} 
+        />
+      </FormSection>
       
-      <PaymentMethodField 
-        value={formData.paymentMethod} 
-        onChange={(value) => onFieldChange('paymentMethod', value)} 
-      />
-      
-      <DateField 
-        value={formData.date} 
-        onChange={(value) => onFieldChange('date', value)} 
-      />
-      
-      <NotesField 
-        value={formData.notes} 
-        onChange={(value) => onFieldChange('notes', value)} 
-      />
-      
-      <RecurringField 
-        value={formData.isRecurring} 
-        onChange={(value) => onFieldChange('isRecurring', value)} 
-      />
-      
-      <ReceiptField 
-        receiptUrl={formData.receiptUrl} 
-        onFileChange={onFileChange} 
-        onScanComplete={onScanComplete}
-      />
+      <FormSection>
+        <ReceiptSection 
+          receiptUrl={formData.receiptUrl} 
+          onFileChange={onFileChange} 
+          onScanComplete={onScanComplete}
+        />
+      </FormSection>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Saving..." : (isEditing ? "Save Changes" : "Add Expense")}
-      </Button>
+      <FormActions 
+        isSubmitting={isSubmitting} 
+        isEditing={isEditing} 
+      />
     </form>
   );
 }
