@@ -6,15 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
+import { startOfMonth, endOfMonth, format } from "date-fns";
+import { useExpenseFilter } from "@/hooks/use-expense-filter";
 
-// Import the new component files
+// Import the components
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
 
-const Dashboard = () => {
+interface DashboardProps {
+  selectedMonth: Date;
+}
+
+const Dashboard = ({ selectedMonth }: DashboardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,14 +69,17 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  // Calculate insights based on expenses
-  const insights = useAnalyticsInsights(expenses);
+  // Use the expense filter hook to filter expenses by the selected month
+  const { filteredExpenses } = useExpenseFilter(expenses, selectedMonth);
+
+  // Calculate insights based on filtered expenses
+  const insights = useAnalyticsInsights(filteredExpenses);
   
-  const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+  const monthlyExpenses = filteredExpenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 0,
@@ -83,10 +92,14 @@ const Dashboard = () => {
   }, [monthlyIncome]);
 
   const isNewUser = expenses.length === 0;
+  const currentMonthLabel = format(selectedMonth, "MMMM yyyy");
 
   return (
     <div className="space-y-6">
-      <DashboardHeader isNewUser={isNewUser} />
+      <DashboardHeader 
+        isNewUser={isNewUser} 
+        currentMonth={currentMonthLabel}
+      />
       
       <StatCards 
         totalBalance={totalBalance}
@@ -108,15 +121,16 @@ const Dashboard = () => {
       />
 
       <RecentExpensesCard 
-        expenses={expenses}
+        expenses={filteredExpenses}
         isNewUser={isNewUser}
         isLoading={isLoading}
         setExpenseToEdit={setExpenseToEdit}
         setShowAddExpense={setShowAddExpense}
+        currentMonth={currentMonthLabel}
       />
 
       <ExpenseAnalyticsCard 
-        expenses={expenses}
+        expenses={filteredExpenses}
         isLoading={isLoading}
         chartType={chartType}
         setChartType={setChartType}

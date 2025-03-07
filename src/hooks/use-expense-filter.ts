@@ -1,11 +1,12 @@
 
 import { useState, useMemo } from "react";
 import { Expense } from "@/components/AddExpenseSheet";
+import { startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
 
-export function useExpenseFilter(expenses: Expense[]) {
+export function useExpenseFilter(expenses: Expense[], selectedMonth?: Date) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortConfig, setSortConfig] = useState<{
@@ -31,11 +32,31 @@ export function useExpenseFilter(expenses: Expense[]) {
   };
 
   const filteredExpenses = useMemo(() => {
-    return expenses
+    let filtered = expenses;
+    
+    // Filter by selected month if provided
+    if (selectedMonth) {
+      const startDate = startOfMonth(selectedMonth);
+      const endDate = endOfMonth(selectedMonth);
+      
+      filtered = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return isWithinInterval(expenseDate, { start: startDate, end: endDate });
+      });
+    }
+    
+    // Apply other filters
+    return filtered
       .filter(expense => {
         const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             expense.category.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
+        
+        // Only apply date range filter if no selectedMonth is provided
+        if (selectedMonth) {
+          return matchesSearch && matchesCategory;
+        }
+        
         const expenseDate = new Date(expense.date);
         const isInDateRange = expenseDate >= new Date(dateRange.start) && 
                              expenseDate <= new Date(dateRange.end);
@@ -58,7 +79,7 @@ export function useExpenseFilter(expenses: Expense[]) {
             return 0;
         }
       });
-  }, [expenses, searchTerm, categoryFilter, dateRange, sortConfig]);
+  }, [expenses, searchTerm, categoryFilter, dateRange, sortConfig, selectedMonth]);
 
   const totalFilteredAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);

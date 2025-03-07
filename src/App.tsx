@@ -1,109 +1,67 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+import Layout from "@/components/Layout";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Expenses from "@/pages/Expenses";
+import Budget from "@/pages/Budget";
+import Analytics from "@/pages/Analytics";
+import Goals from "@/pages/Goals";
+import Index from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+
 import { AuthProvider, useAuth } from "@/lib/auth";
-import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { ThemeProvider } from "next-themes";
-import Expenses from "./pages/Expenses";
-import Budget from "./pages/Budget";
-import Analytics from "./pages/Analytics";
-import Goals from "./pages/Goals";
-import { toast } from "sonner";
+import "@/styles/mobile.css";
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const AuthCallback = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
 
-  useEffect(() => {
-    const hashParams = new URLSearchParams(location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
-    
-    const handleAuthCallback = async () => {
-      try {
-        if (accessToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get("refresh_token") || "",
-          });
-          
-          if (error) {
-            console.error("Error setting session:", error);
-            toast.error("Authentication failed. Please try again.");
-            navigate("/auth");
-            return;
-          }
-          
-          toast.success("Successfully authenticated!");
-          navigate("/");
-        } else {
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            navigate("/");
-          } else {
-            navigate("/auth");
-          }
-        }
-      } catch (error) {
-        console.error("Auth callback error:", error);
-        toast.error("Authentication failed. Please try again.");
-        navigate("/auth");
-      }
-    };
-
-    handleAuthCallback();
-  }, [navigate, location]);
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center animate-pulse">
-        <h2 className="text-2xl font-medium mb-2">Verifying your account...</h2>
-        <p className="text-muted-foreground">Please wait while we complete the authentication process.</p>
-      </div>
-    </div>
-  );
-};
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  return children;
-};
+  return <>{children}</>;
+}
 
-const AppWithProviders = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+function App() {
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+
+  return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="expense-ai-theme">
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+          <Router>
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/auth/verify" element={<AuthCallback />} />
-              <Route 
-                path="/"
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Layout>
-                      <Dashboard />
+                    <Layout 
+                      selectedMonth={selectedMonth} 
+                      setSelectedMonth={setSelectedMonth}
+                    >
+                      <Dashboard selectedMonth={selectedMonth} />
                     </Layout>
                   </ProtectedRoute>
                 }
@@ -112,7 +70,10 @@ const AppWithProviders = () => (
                 path="/expenses"
                 element={
                   <ProtectedRoute>
-                    <Layout>
+                    <Layout 
+                      selectedMonth={selectedMonth} 
+                      setSelectedMonth={setSelectedMonth}
+                    >
                       <Expenses />
                     </Layout>
                   </ProtectedRoute>
@@ -122,7 +83,10 @@ const AppWithProviders = () => (
                 path="/budget"
                 element={
                   <ProtectedRoute>
-                    <Layout>
+                    <Layout 
+                      selectedMonth={selectedMonth} 
+                      setSelectedMonth={setSelectedMonth}
+                    >
                       <Budget />
                     </Layout>
                   </ProtectedRoute>
@@ -132,7 +96,10 @@ const AppWithProviders = () => (
                 path="/analytics"
                 element={
                   <ProtectedRoute>
-                    <Layout>
+                    <Layout 
+                      selectedMonth={selectedMonth} 
+                      setSelectedMonth={setSelectedMonth}
+                    >
                       <Analytics />
                     </Layout>
                   </ProtectedRoute>
@@ -142,7 +109,10 @@ const AppWithProviders = () => (
                 path="/goals"
                 element={
                   <ProtectedRoute>
-                    <Layout>
+                    <Layout 
+                      selectedMonth={selectedMonth} 
+                      setSelectedMonth={setSelectedMonth}
+                    >
                       <Goals />
                     </Layout>
                   </ProtectedRoute>
@@ -150,11 +120,12 @@ const AppWithProviders = () => (
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
+          </Router>
+          <Toaster />
         </AuthProvider>
-      </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
-  </ThemeProvider>
-);
+  );
+}
 
-export default AppWithProviders;
+export default App;

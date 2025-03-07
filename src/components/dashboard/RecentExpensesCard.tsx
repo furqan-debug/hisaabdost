@@ -1,24 +1,8 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
-import { EmptyState } from "@/components/EmptyState";
-import { SampleDataButton } from "@/components/SampleDataButton";
-import { formatCurrency } from "@/utils/chartUtils";
-import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface RecentExpensesCardProps {
   expenses: Expense[];
@@ -26,6 +10,7 @@ interface RecentExpensesCardProps {
   isLoading: boolean;
   setExpenseToEdit: (expense: Expense) => void;
   setShowAddExpense: (show: boolean) => void;
+  currentMonth?: string;
 }
 
 export const RecentExpensesCard = ({
@@ -34,153 +19,97 @@ export const RecentExpensesCard = ({
   isLoading,
   setExpenseToEdit,
   setShowAddExpense,
+  currentMonth,
 }: RecentExpensesCardProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-
-  const handleDeleteExpense = async (expenseId: string) => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', expenseId);
-      
-      if (error) throw error;
-      
-      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      
-      toast({
-        title: "Expense Deleted",
-        description: "Expense has been deleted successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the expense. Please try again.",
-        variant: "destructive",
-      });
-    }
+  
+  // Format date to show only day and month (e.g., "May 1")
+  const formatExpenseDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    }).format(date);
   };
+
+  // Format currency with $ and 2 decimal places
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const handleExpenseClick = (expense: Expense) => {
+    setExpenseToEdit(expense);
+    setShowAddExpense(true);
+  };
+
+  const recentExpenses = expenses.slice(0, 5);
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Recent Expenses</CardTitle>
+      <CardHeader className={isMobile ? 'p-4 pb-2' : ''}>
+        <CardTitle className={isMobile ? 'text-lg' : ''}>
+          Recent Expenses {currentMonth ? `(${currentMonth})` : ''}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isMobile ? 'p-4 pt-0' : ''}>
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading expenses...</p>
           </div>
-        ) : isNewUser ? (
-          <div className="space-y-4">
-            <EmptyState
-              title="No expenses yet"
-              description="Start tracking your spending by adding your first expense."
-              onAction={() => setShowAddExpense(true)}
-            />
-            <SampleDataButton onApply={async (sampleExpenses) => {
-              if (!user) return;
-              
-              try {
-                const formattedExpenses = sampleExpenses.map(exp => ({
-                  user_id: user.id,
-                  amount: exp.amount,
-                  description: exp.description,
-                  date: exp.date,
-                  category: exp.category,
-                }));
-                
-                const { error } = await supabase
-                  .from('expenses')
-                  .insert(formattedExpenses);
-                
-                if (error) throw error;
-                
-                await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-                
-                toast({
-                  title: "Sample Data Added",
-                  description: "Sample expenses have been added successfully.",
-                });
-              } catch (error) {
-                console.error('Error adding sample data:', error);
-                toast({
-                  title: "Error",
-                  description: "Failed to add sample data. Please try again.",
-                  variant: "destructive",
-                });
-              }
-            }} />
+        ) : isNewUser || expenses.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+            {isNewUser ? "Add your first expense to get started" : "No expenses found for this period"}
           </div>
         ) : (
-          <div className="-mx-2 sm:mx-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Date</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="text-right w-[90px]">Amount</TableHead>
-                  <TableHead className="text-right w-[60px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.slice(0, 5).map((expense) => (
-                  <TableRow key={expense.id}>
-                    <TableCell>
-                      {format(new Date(expense.date), 'MMM dd, yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium truncate">{expense.description}</span>
-                        <span className="text-xs text-muted-foreground truncate">{expense.category}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
-                    <TableCell className="text-right p-0 pr-2 md:p-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="h-8 w-8 ml-auto"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setExpenseToEdit(expense);
-                              setShowAddExpense(true);
-                            }}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteExpense(expense.id)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ul className="space-y-2">
+            {recentExpenses.map((expense) => (
+              <li 
+                key={expense.id}
+                onClick={() => handleExpenseClick(expense)}
+                className="flex justify-between border-b pb-2 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${getCategoryColor(expense.category)}`}></div>
+                  <span>{expense.description}</span>
+                </div>
+                <div className="flex flex-col items-end text-right">
+                  <span className={expense.amount > 100 ? 'text-expense-high' : expense.amount > 50 ? 'text-expense-medium' : 'text-expense-low'}>
+                    {formatCurrency(expense.amount)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatExpenseDate(expense.date)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </CardContent>
     </Card>
   );
 };
+
+// Helper function to get color based on category
+function getCategoryColor(category: string) {
+  switch (category.toLowerCase()) {
+    case 'food':
+      return 'bg-blue-500';
+    case 'transportation':
+      return 'bg-green-500';
+    case 'housing':
+      return 'bg-red-500';
+    case 'utilities':
+      return 'bg-yellow-500';
+    case 'entertainment':
+      return 'bg-purple-500';
+    case 'healthcare':
+      return 'bg-pink-500';
+    default:
+      return 'bg-gray-500';
+  }
+}

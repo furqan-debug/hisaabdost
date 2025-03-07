@@ -4,9 +4,10 @@ import { useAuth } from "@/lib/auth";
 
 interface DashboardHeaderProps {
   isNewUser: boolean;
+  currentMonth?: string;
 }
 
-export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ isNewUser, currentMonth }: DashboardHeaderProps) => {
   const { user } = useAuth();
   
   return (
@@ -17,7 +18,9 @@ export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
       <p className="text-muted-foreground">
         {isNewUser 
           ? "Let's start tracking your expenses. Add your first expense to get started!"
-          : "Here's an overview of your expenses"}
+          : currentMonth 
+            ? `Here's an overview of your expenses for ${currentMonth}`
+            : "Here's an overview of your expenses"}
       </p>
     </header>
   );
