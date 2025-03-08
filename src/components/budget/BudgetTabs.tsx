@@ -10,13 +10,23 @@ import { Budget } from "@/pages/Budget";
 interface BudgetTabsProps {
   budgets: Budget[];
   onEditBudget: (budget: Budget) => void;
+  activeTab: string;
+  onTabChange: (value: string) => void;
 }
 
-export const BudgetTabs = ({ budgets, onEditBudget }: BudgetTabsProps) => {
+export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: BudgetTabsProps) => {
+  const handleValueChange = (value: string) => {
+    onTabChange(value);
+  };
+
   return (
     <Card className="budget-card overflow-hidden">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
-        <Tabs defaultValue="overview" className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={handleValueChange} 
+          className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
+        >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>

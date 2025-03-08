@@ -28,16 +28,31 @@ const Budget = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+  const currentMonthData = getCurrentMonthData();
   
   const { 
     budgets, 
     isLoading, 
     exportBudgetData,
     totalBudget,
+    totalSpent,
     remainingBalance,
     usagePercentage,
     monthlyIncome
   } = useBudgetData();
+
+  // Save budget data to month context when it changes
+  useEffect(() => {
+    if (!isLoading) {
+      updateMonthData(currentMonthKey, {
+        totalBudget,
+        remainingBudget: remainingBalance,
+        budgetUsagePercentage: usagePercentage,
+      });
+    }
+  }, [totalBudget, remainingBalance, usagePercentage, currentMonthKey, updateMonthData, isLoading]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -48,6 +63,16 @@ const Budget = () => {
     setSelectedBudget(budget);
     setShowBudgetForm(true);
   };
+
+  // Handle tab change
+  const handleTabChange = (tabValue: string) => {
+    updateMonthData(currentMonthKey, {
+      activeTab: tabValue
+    });
+  };
+
+  // Get active tab from month data
+  const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
     return <div className="p-4 flex justify-center">
@@ -76,6 +101,8 @@ const Budget = () => {
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
         />
       </div>
 

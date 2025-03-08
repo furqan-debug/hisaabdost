@@ -2,15 +2,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 
 export function useBudgetData() {
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const currentMonthData = getCurrentMonthData();
+  const monthKey = format(selectedMonth, 'yyyy-MM');
 
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', format(selectedMonth, 'yyyy-MM')],
+    queryKey: ['budgets', monthKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('budgets')
@@ -23,11 +24,16 @@ export function useBudgetData() {
   });
 
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
+    queryKey: ['expenses', monthKey],
     queryFn: async () => {
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
+      
       const { data, error } = await supabase
         .from('expenses')
-        .select('*');
+        .select('*')
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0]);
 
       if (error) throw error;
       return data;
@@ -51,7 +57,7 @@ export function useBudgetData() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `budget_data_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.download = `budget_data_${format(selectedMonth, 'yyyy-MM')}.csv`;
     link.click();
   };
 

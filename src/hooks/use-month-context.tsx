@@ -7,6 +7,12 @@ interface MonthData {
   monthlyExpenses: number;
   totalBalance: number;
   savingsRate: number;
+  // Budget-related data
+  totalBudget: number;
+  remainingBudget: number;
+  budgetUsagePercentage: number;
+  // Tab states
+  activeTab: string;
   // Add other financial data here as needed
 }
 
@@ -24,6 +30,10 @@ const DEFAULT_MONTH_DATA: MonthData = {
   monthlyExpenses: 0,
   totalBalance: 0,
   savingsRate: 0,
+  totalBudget: 0,
+  remainingBudget: 0,
+  budgetUsagePercentage: 0,
+  activeTab: 'overview',
 };
 
 const MonthContext = createContext<MonthContextType | undefined>(undefined);
