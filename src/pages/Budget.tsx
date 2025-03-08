@@ -9,6 +9,8 @@ import { BudgetHeader } from "@/components/budget/BudgetHeader";
 import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
+import { useMonthContext } from "@/hooks/use-month-context";
+import { format } from "date-fns";
 
 export interface Budget {
   id: string;
@@ -23,10 +25,6 @@ export interface Budget {
 const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
-    const saved = localStorage.getItem('monthlyIncome');
-    return saved ? Number(saved) : 0;
-  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -37,12 +35,9 @@ const Budget = () => {
     exportBudgetData,
     totalBudget,
     remainingBalance,
-    usagePercentage
+    usagePercentage,
+    monthlyIncome
   } = useBudgetData();
-
-  useEffect(() => {
-    localStorage.setItem('monthlyIncome', monthlyIncome.toString());
-  }, [monthlyIncome]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -74,6 +69,7 @@ const Budget = () => {
         remainingBalance={remainingBalance}
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
+        isLoading={isLoading}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">

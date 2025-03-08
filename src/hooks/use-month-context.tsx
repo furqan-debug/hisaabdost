@@ -7,6 +7,7 @@ interface MonthData {
   monthlyExpenses: number;
   totalBalance: number;
   savingsRate: number;
+  // Add other financial data here as needed
 }
 
 interface MonthContextType {
@@ -50,6 +51,22 @@ export function MonthProvider({ children }: { children: ReactNode }) {
     
     loadData();
   }, []);
+
+  // Whenever selectedMonth changes, ensure we have a default entry for it
+  useEffect(() => {
+    const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+    
+    if (!monthsData[currentMonthKey]) {
+      setMonthsData(prev => {
+        const updated = { 
+          ...prev, 
+          [currentMonthKey]: { ...DEFAULT_MONTH_DATA }
+        };
+        localStorage.setItem('monthsData', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  }, [selectedMonth, monthsData]);
 
   // Format current month as a key (e.g., "2023-01")
   const getCurrentMonthKey = () => format(selectedMonth, 'yyyy-MM');

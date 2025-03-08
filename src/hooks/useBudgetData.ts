@@ -6,11 +6,11 @@ import { format } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 
 export function useBudgetData() {
-  const { getCurrentMonthData, isLoading: isMonthDataLoading } = useMonthContext();
+  const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const currentMonthData = getCurrentMonthData();
 
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets'],
+    queryKey: ['budgets', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('budgets')
@@ -23,7 +23,7 @@ export function useBudgetData() {
   });
 
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('expenses')
@@ -55,7 +55,7 @@ export function useBudgetData() {
     link.click();
   };
 
-  // Calculate summary data
+  // Calculate summary data using the current month's data
   const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
   const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
   const remainingBalance = totalBudget - totalSpent;
