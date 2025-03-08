@@ -13,18 +13,19 @@ import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { exportExpensesToCSV } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
-  const { selectedMonth } = useMonthContext();
+  const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   // Fetch expenses from Supabase using React Query, filtered by selected month
-  const { data: expenses = [], isLoading } = useQuery({
+  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
@@ -109,6 +110,18 @@ const Expenses = () => {
   const exportToCSV = () => {
     exportExpensesToCSV(filteredExpenses);
   };
+
+  const isLoading = isMonthDataLoading || isExpensesLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

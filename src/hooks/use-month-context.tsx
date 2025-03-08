@@ -15,6 +15,7 @@ interface MonthContextType {
   monthsData: Record<string, MonthData>;
   updateMonthData: (monthKey: string, data: Partial<MonthData>) => void;
   getCurrentMonthData: () => MonthData;
+  isLoading: boolean;
 }
 
 const DEFAULT_MONTH_DATA: MonthData = {
@@ -28,10 +29,27 @@ const MonthContext = createContext<MonthContextType | undefined>(undefined);
 
 export function MonthProvider({ children }: { children: ReactNode }) {
   const [selectedMonth, setSelectedMonth] = useState(startOfMonth(new Date()));
-  const [monthsData, setMonthsData] = useState<Record<string, MonthData>>(() => {
-    const savedData = localStorage.getItem('monthsData');
-    return savedData ? JSON.parse(savedData) : {};
-  });
+  const [monthsData, setMonthsData] = useState<Record<string, MonthData>>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load stored data from localStorage on initial render
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const savedData = localStorage.getItem('monthsData');
+        if (savedData) {
+          setMonthsData(JSON.parse(savedData));
+        }
+      } catch (error) {
+        console.error('Error loading month data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   // Format current month as a key (e.g., "2023-01")
   const getCurrentMonthKey = () => format(selectedMonth, 'yyyy-MM');
@@ -55,21 +73,14 @@ export function MonthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Load stored data from localStorage on initial render
-  useEffect(() => {
-    const savedData = localStorage.getItem('monthsData');
-    if (savedData) {
-      setMonthsData(JSON.parse(savedData));
-    }
-  }, []);
-
   return (
     <MonthContext.Provider value={{ 
       selectedMonth, 
       setSelectedMonth, 
       monthsData, 
       updateMonthData, 
-      getCurrentMonthData
+      getCurrentMonthData,
+      isLoading
     }}>
       {children}
     </MonthContext.Provider>

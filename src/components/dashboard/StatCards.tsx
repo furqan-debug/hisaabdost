@@ -8,6 +8,7 @@ import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -17,6 +18,7 @@ interface StatCardsProps {
   savingsRate: number;
   formatPercentage: (value: number) => string;
   isNewUser: boolean;
+  isLoading?: boolean;
 }
 
 export const StatCards = ({
@@ -27,25 +29,38 @@ export const StatCards = ({
   savingsRate,
   formatPercentage,
   isNewUser,
+  isLoading = false,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
-  const { selectedMonth, updateMonthData, getCurrentMonthData } = useMonthContext();
+  const { selectedMonth, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   
   // Update month data when values change
   useEffect(() => {
-    updateMonthData(currentMonthKey, {
-      monthlyIncome,
-      monthlyExpenses,
-      totalBalance,
-      savingsRate
-    });
-  }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData]);
+    if (!isLoading) {
+      updateMonthData(currentMonthKey, {
+        monthlyIncome,
+        monthlyExpenses,
+        totalBalance,
+        savingsRate
+      });
+    }
+  }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
 
   // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
     setMonthlyIncome(value);
   };
+
+  if (isLoading) {
+    return (
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-[100px]" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
@@ -92,7 +107,7 @@ export const StatCards = ({
           <div className="relative">
             <Input
               type="number"
-              value={monthlyIncome}
+              value={monthlyIncome || 0}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
                 handleIncomeChange(value ? parseInt(value, 10) : 0);

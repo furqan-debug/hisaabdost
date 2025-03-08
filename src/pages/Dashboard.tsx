@@ -8,6 +8,7 @@ import { Expense } from "@/components/expenses/types";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -20,22 +21,27 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
-    return currentMonthData.monthlyIncome || 0;
-  });
-  
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
+  // Update local income state when selected month changes
+  useEffect(() => {
+    if (!isMonthDataLoading) {
+      const data = getCurrentMonthData();
+      setMonthlyIncome(data.monthlyIncome || 0);
+    }
+  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
+  
   // Fetch expenses from Supabase using React Query, filtered by selected month
-  const { data: expenses = [], isLoading } = useQuery({
+  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
@@ -83,21 +89,17 @@ const Dashboard = () => {
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Update month data when income changes
+  // Update month data when income or expenses change
   useEffect(() => {
-    updateMonthData(currentMonthKey, {
-      monthlyIncome,
-      monthlyExpenses,
-      totalBalance,
-      savingsRate
-    });
-  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData]);
-
-  // Update local state when month changes
-  useEffect(() => {
-    const data = getCurrentMonthData();
-    setMonthlyIncome(data.monthlyIncome || 0);
-  }, [selectedMonth, getCurrentMonthData]);
+    if (!isMonthDataLoading) {
+      updateMonthData(currentMonthKey, {
+        monthlyIncome,
+        monthlyExpenses,
+        totalBalance,
+        savingsRate
+      });
+    }
+  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -108,6 +110,25 @@ const Dashboard = () => {
   };
 
   const isNewUser = expenses.length === 0;
+  const isLoading = isMonthDataLoading || isExpensesLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-14">
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-36" />
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -121,6 +142,7 @@ const Dashboard = () => {
         savingsRate={savingsRate}
         formatPercentage={formatPercentage}
         isNewUser={isNewUser}
+        isLoading={isLoading}
       />
 
       <AddExpenseButton 
@@ -135,14 +157,14 @@ const Dashboard = () => {
       <RecentExpensesCard 
         expenses={expenses}
         isNewUser={isNewUser}
-        isLoading={isLoading}
+        isLoading={isExpensesLoading}
         setExpenseToEdit={setExpenseToEdit}
         setShowAddExpense={setShowAddExpense}
       />
 
       <ExpenseAnalyticsCard 
         expenses={expenses}
-        isLoading={isLoading}
+        isLoading={isExpensesLoading}
         chartType={chartType}
         setChartType={setChartType}
       />

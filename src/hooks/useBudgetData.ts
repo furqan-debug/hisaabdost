@@ -3,8 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
 import { format } from "date-fns";
+import { useMonthContext } from "@/hooks/use-month-context";
 
 export function useBudgetData() {
+  const { getCurrentMonthData, isLoading: isMonthDataLoading } = useMonthContext();
+  const currentMonthData = getCurrentMonthData();
+
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
@@ -56,15 +60,17 @@ export function useBudgetData() {
   const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
   const remainingBalance = totalBudget - totalSpent;
   const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const monthlyIncome = currentMonthData.monthlyIncome || 0;
 
   return {
     budgets,
     expenses,
-    isLoading: budgetsLoading || expensesLoading,
+    isLoading: budgetsLoading || expensesLoading || isMonthDataLoading,
     exportBudgetData,
     totalBudget,
     totalSpent,
     remainingBalance,
     usagePercentage,
+    monthlyIncome,
   };
 }

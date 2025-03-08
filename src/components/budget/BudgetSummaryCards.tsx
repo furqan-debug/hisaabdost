@@ -4,22 +4,38 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface BudgetSummaryCardsProps {
   totalBudget: number;
   remainingBalance: number;
   usagePercentage: number;
   monthlyIncome: number;
+  isLoading?: boolean;
 }
 
 export const BudgetSummaryCards = ({ 
   totalBudget, 
   remainingBalance, 
   usagePercentage,
-  monthlyIncome
+  monthlyIncome,
+  isLoading = false
 }: BudgetSummaryCardsProps) => {
   const isMobile = useIsMobile();
   const exceedsBudget = totalBudget > monthlyIncome && monthlyIncome > 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <div className={`grid gap-3 md:gap-6 px-4 md:px-0 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-4'}`}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[80px]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
