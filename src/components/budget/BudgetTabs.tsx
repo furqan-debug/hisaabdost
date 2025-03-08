@@ -6,6 +6,7 @@ import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
 import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
 import { BudgetComparison } from "@/components/budget/BudgetComparison";
 import { Budget } from "@/pages/Budget";
+import { useEffect, useState } from "react";
 
 interface BudgetTabsProps {
   budgets: Budget[];
@@ -15,15 +16,26 @@ interface BudgetTabsProps {
 }
 
 export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: BudgetTabsProps) => {
+  // Local state to prevent tab flickering
+  const [stableActiveTab, setStableActiveTab] = useState(activeTab);
+  
+  // Update local tab state when prop changes, but only if it's different
+  useEffect(() => {
+    if (activeTab !== stableActiveTab) {
+      setStableActiveTab(activeTab);
+    }
+  }, [activeTab]);
+  
   const handleValueChange = (value: string) => {
-    onTabChange(value);
+    setStableActiveTab(value); // Update local state immediately
+    onTabChange(value); // Notify parent about the change
   };
 
   return (
     <Card className="budget-card overflow-hidden">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs 
-          value={activeTab} 
+          value={stableActiveTab} 
           onValueChange={handleValueChange} 
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
         >

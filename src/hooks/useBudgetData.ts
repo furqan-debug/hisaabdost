@@ -4,12 +4,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
+import { useState, useEffect, useRef } from "react";
 
 export function useBudgetData() {
-  const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading } = useMonthContext();
+  const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
+  
+  // Refs to store previous values to prevent unnecessary updates
+  const prevValuesRef = useRef({
+    totalBudget: 0,
+    totalSpent: 0,
+    remainingBalance: 0,
+    usagePercentage: 0
+  });
 
+  // Local state to prevent glitching during calculation
+  const [stableValues, setStableValues] = useState({
+    totalBudget: currentMonthData.totalBudget || 0,
+    totalSpent: currentMonthData.monthlyExpenses || 0,
+    remainingBalance: currentMonthData.remainingBudget || 0,
+    usagePercentage: currentMonthData.budgetUsagePercentage || 0,
+    monthlyIncome: currentMonthData.monthlyIncome || 0
+  });
+
+  // Update debounce timer ref
+  const updateTimerRef = useRef<number | null>(null);
+  
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets', monthKey],
     queryFn: async () => {
@@ -61,22 +82,72 @@ export function useBudgetData() {
     link.click();
   };
 
-  // Calculate summary data using the current month's data
-  const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-  const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
-  const remainingBalance = totalBudget - totalSpent;
-  const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-  const monthlyIncome = currentMonthData.monthlyIncome || 0;
+  // Calculate and debounce summary data updates
+  useEffect(() => {
+    if (isLoading || !budgets || !expenses) return;
+    
+    // Calculate new values
+    const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
+    const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+    const remainingBalance = totalBudget - totalSpent;
+    const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+    const monthlyIncome = currentMonthData.monthlyIncome || 0;
+    
+    // Check if values have meaningfully changed (prevent tiny floating point differences)
+    const hasChanged = 
+      Math.abs(totalBudget - prevValuesRef.current.totalBudget) > 0.01 ||
+      Math.abs(totalSpent - prevValuesRef.current.totalSpent) > 0.01 ||
+      Math.abs(remainingBalance - prevValuesRef.current.remainingBalance) > 0.01 ||
+      Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01;
+    
+    if (!hasChanged) return;
+    
+    // Store new values in ref
+    prevValuesRef.current = {
+      totalBudget,
+      totalSpent,
+      remainingBalance,
+      usagePercentage
+    };
+    
+    // Clear any existing timeout
+    if (updateTimerRef.current) {
+      window.clearTimeout(updateTimerRef.current);
+    }
+    
+    // Debounce the state update (wait 200ms before applying)
+    updateTimerRef.current = window.setTimeout(() => {
+      setStableValues({
+        totalBudget,
+        totalSpent,
+        remainingBalance,
+        usagePercentage,
+        monthlyIncome
+      });
+      
+      // Update monthly context with stable values
+      updateMonthData(monthKey, {
+        totalBudget,
+        remainingBudget: remainingBalance,
+        budgetUsagePercentage: usagePercentage,
+      });
+    }, 200);
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (updateTimerRef.current) {
+        window.clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, [budgets, expenses, currentMonthData, monthKey, updateMonthData, isLoading]);
+
+  const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading;
 
   return {
     budgets,
     expenses,
-    isLoading: budgetsLoading || expensesLoading || isMonthDataLoading,
+    isLoading,
     exportBudgetData,
-    totalBudget,
-    totalSpent,
-    remainingBalance,
-    usagePercentage,
-    monthlyIncome,
+    ...stableValues
   };
 }
