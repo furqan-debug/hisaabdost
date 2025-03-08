@@ -4,31 +4,39 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
 import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
 import { ExpenseHeader } from "@/components/expenses/ExpenseHeader";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { exportExpensesToCSV } from "@/utils/exportUtils";
+import { useMonthContext } from "@/hooks/use-month-context";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
+  const { selectedMonth } = useMonthContext();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Fetch expenses from Supabase using React Query
+  // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
+      
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {

@@ -1,8 +1,8 @@
 
 import { useState, useMemo } from "react";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useMonthContext } from "./use-month-context";
-import { startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
@@ -19,8 +19,8 @@ export function useExpenseFilter(expenses: Expense[]) {
     start: string;
     end: string;
   }>({
-    start: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0],
+    start: '',
+    end: '',
   });
 
   const handleSort = (field: SortField) => {
@@ -49,13 +49,15 @@ export function useExpenseFilter(expenses: Expense[]) {
           end: monthEnd
         });
         
-        const isInCustomDateRange = expenseDate >= new Date(dateRange.start) && 
-                                   expenseDate <= new Date(dateRange.end);
-        
         // Use custom date range if set, otherwise use selected month
-        const isInDateRange = (dateRange.start && dateRange.end) ? isInCustomDateRange : isInSelectedMonth;
+        const isInCustomDateRange = dateRange.start && dateRange.end ? 
+          (expenseDate >= new Date(dateRange.start) && expenseDate <= new Date(dateRange.end)) : 
+          true;
         
-        return matchesSearch && matchesCategory && isInDateRange;
+        const matchesTimeframe = dateRange.start && dateRange.end ? 
+          isInCustomDateRange : isInSelectedMonth;
+        
+        return matchesSearch && matchesCategory && matchesTimeframe;
       })
       .sort((a, b) => {
         const order = sortConfig.order === 'asc' ? 1 : -1;
@@ -78,6 +80,15 @@ export function useExpenseFilter(expenses: Expense[]) {
   const totalFilteredAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   }, [filteredExpenses]);
+
+  // Automatically clear custom date range when month changes
+  // to default to the month-based filtering
+  useMemo(() => {
+    setDateRange({
+      start: '',
+      end: ''
+    });
+  }, [selectedMonth]);
 
   return {
     searchTerm,

@@ -33,6 +33,10 @@ const Sidebar = () => {
   const location = useLocation();
   const { selectedMonth, setSelectedMonth } = useMonthContext();
 
+  const handleMonthChange = (date: Date) => {
+    setSelectedMonth(date);
+  };
+
   return (
     <SidebarComponent>
       <SidebarContent>
@@ -47,7 +51,7 @@ const Sidebar = () => {
         <div className="px-3 mb-4">
           <MonthSelector
             selectedMonth={selectedMonth}
-            onChange={setSelectedMonth}
+            onChange={handleMonthChange}
           />
         </div>
         

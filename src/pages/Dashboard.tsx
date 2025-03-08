@@ -4,10 +4,12 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { useMonthContext } from "@/hooks/use-month-context";
 
-// Import the new component files
+// Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
@@ -18,24 +20,34 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  
+  // Get current month's data from context
+  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+  const currentMonthData = getCurrentMonthData();
   
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
-    const saved = localStorage.getItem('monthlyIncome');
-    return saved ? Number(saved) : 0;
+    return currentMonthData.monthlyIncome || 0;
   });
+  
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Fetch expenses from Supabase using React Query
+  // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
+      
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
@@ -66,9 +78,26 @@ const Dashboard = () => {
   // Calculate insights based on expenses
   const insights = useAnalyticsInsights(expenses);
   
+  // Calculate financial metrics for the current month
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+
+  // Update month data when income changes
+  useEffect(() => {
+    updateMonthData(currentMonthKey, {
+      monthlyIncome,
+      monthlyExpenses,
+      totalBalance,
+      savingsRate
+    });
+  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData]);
+
+  // Update local state when month changes
+  useEffect(() => {
+    const data = getCurrentMonthData();
+    setMonthlyIncome(data.monthlyIncome || 0);
+  }, [selectedMonth, getCurrentMonthData]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -77,10 +106,6 @@ const Dashboard = () => {
       maximumFractionDigits: 0,
     }).format(value / 100);
   };
-
-  useEffect(() => {
-    localStorage.setItem('monthlyIncome', monthlyIncome.toString());
-  }, [monthlyIncome]);
 
   const isNewUser = expenses.length === 0;
 
@@ -104,7 +129,7 @@ const Dashboard = () => {
         showAddExpense={showAddExpense}
         setExpenseToEdit={setExpenseToEdit}
         setShowAddExpense={setShowAddExpense}
-        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses'] })}
+        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] })}
       />
 
       <RecentExpensesCard 

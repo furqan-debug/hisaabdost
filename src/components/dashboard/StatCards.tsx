@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMonthContext } from "@/hooks/use-month-context";
+import { format } from "date-fns";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -27,6 +29,23 @@ export const StatCards = ({
   isNewUser,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
+  const { selectedMonth, updateMonthData, getCurrentMonthData } = useMonthContext();
+  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+  
+  // Update month data when values change
+  useEffect(() => {
+    updateMonthData(currentMonthKey, {
+      monthlyIncome,
+      monthlyExpenses,
+      totalBalance,
+      savingsRate
+    });
+  }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData]);
+
+  // Handle income change with month-specific persistence
+  const handleIncomeChange = (value: number) => {
+    setMonthlyIncome(value);
+  };
 
   return (
     <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
@@ -76,7 +95,7 @@ export const StatCards = ({
               value={monthlyIncome}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                setMonthlyIncome(value ? parseInt(value, 10) : 0);
+                handleIncomeChange(value ? parseInt(value, 10) : 0);
               }}
               className={`pl-6 pr-2 h-9 text-${isMobile ? 'sm' : 'base'}`}
               min={0}
