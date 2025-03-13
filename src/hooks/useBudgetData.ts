@@ -61,6 +61,9 @@ export function useBudgetData() {
     },
   });
 
+  // Define isLoading variable before it's used
+  const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading;
+
   const exportBudgetData = () => {
     if (!budgets) return;
 
@@ -140,8 +143,6 @@ export function useBudgetData() {
       }
     };
   }, [budgets, expenses, currentMonthData, monthKey, updateMonthData, isLoading]);
-
-  const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading;
 
   return {
     budgets,
