@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
@@ -44,19 +43,15 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-4 animate-fade-in">
-        <div className="w-full space-y-2">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="skeleton-pulse h-16 w-full rounded-md" />
-          ))}
-        </div>
+      <div className="flex justify-center p-4">
+        <p className="text-muted-foreground">Loading transactions...</p>
       </div>
     );
   }
 
   if (!hasBudgets) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center animate-fade-in">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">No budget categories have been set up yet.</p>
         <p className="text-sm text-muted-foreground">Create a budget first to see your transactions against your budget.</p>
       </div>
@@ -65,7 +60,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (expenses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center animate-fade-in">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">No transactions found.</p>
         <p className="text-sm text-muted-foreground">Add some expenses to see them here.</p>
       </div>
@@ -78,7 +73,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   };
 
   return (
-    <div className="space-y-3 w-full overflow-hidden max-w-full animate-fade-in">
+    <div className="space-y-3 w-full overflow-hidden max-w-full">
       {isMobile ? (
         // Mobile card view - simplified for better mobile experience
         <div className="space-y-2 w-full overflow-hidden">
@@ -87,7 +82,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
             const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
             
             return (
-              <Card key={transaction.id} className="modern-card overflow-hidden border-border/40 shadow-sm w-full">
+              <Card key={transaction.id} className="overflow-hidden border-border/40 shadow-sm w-full">
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start w-full">
                     <div className="space-y-1 overflow-hidden max-w-[60%]">
@@ -95,7 +90,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                       <div className="flex gap-1 text-xs text-muted-foreground flex-wrap">
                         <span className="truncate">{format(new Date(transaction.date), 'MMM dd')}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span className="capitalize truncate category-pill">{transaction.category}</span>
+                        <span className="capitalize truncate">{transaction.category}</span>
                       </div>
                     </div>
                     <div className="text-right font-semibold min-w-[80px] flex-shrink-0">
@@ -130,11 +125,9 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
               const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
               
               return (
-                <TableRow key={transaction.id} className="hover:bg-muted/10 transition-colors">
+                <TableRow key={transaction.id}>
                   <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>
-                    <span className="category-pill">{transaction.category}</span>
-                  </TableCell>
+                  <TableCell>{transaction.category}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
                   <TableCell>

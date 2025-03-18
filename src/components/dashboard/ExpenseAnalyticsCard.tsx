@@ -37,15 +37,15 @@ export const ExpenseAnalyticsCard = ({
   };
 
   return (
-    <Card className="mt-6 modern-card animate-fade-in">
+    <Card className="mt-6">
       <CardHeader className="flex flex-col space-y-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className={isMobile ? 'text-lg gradient-text' : 'gradient-text'}>Expense Analytics</CardTitle>
+          <CardTitle className={isMobile ? 'text-lg' : ''}>Expense Analytics</CardTitle>
           <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
-            <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'} frosted-card`}>
+            <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
               <SelectValue placeholder="Select chart type" />
             </SelectTrigger>
-            <SelectContent className="frosted-card animate-scale-in">
+            <SelectContent>
               <SelectItem value="pie">Pie Chart</SelectItem>
               <SelectItem value="bar">Bar Chart</SelectItem>
               <SelectItem value="line">Line Chart</SelectItem>
@@ -56,14 +56,14 @@ export const ExpenseAnalyticsCard = ({
       <CardContent className="px-2 sm:px-4">
         {isLoading ? (
           <div className="flex justify-center p-6">
-            <div className="skeleton-pulse h-48 w-full rounded-xl" />
+            <p className="text-muted-foreground">Loading analytics...</p>
           </div>
         ) : expenses.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 border border-dashed border-border/40 rounded-xl">
+          <div className="text-center text-muted-foreground py-8">
             Add some expenses to see analytics
           </div>
         ) : (
-          <div className="w-full overflow-hidden rounded-xl p-2">
+          <div className="w-full overflow-hidden">
             {renderChart()}
           </div>
         )}

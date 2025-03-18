@@ -114,24 +114,24 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6">
         <div className="h-14">
-          <Skeleton className="h-8 w-1/3 skeleton-pulse" />
-          <Skeleton className="h-4 w-1/2 mt-2 skeleton-pulse" />
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 skeleton-pulse" />
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
-        <Skeleton className="h-36 skeleton-pulse" />
-        <Skeleton className="h-64 skeleton-pulse" />
+        <Skeleton className="h-36" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <DashboardHeader isNewUser={isNewUser} />
       
       <StatCards 

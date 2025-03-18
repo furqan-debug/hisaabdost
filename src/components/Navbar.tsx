@@ -29,7 +29,7 @@ const Navbar = () => {
             <Button 
               variant="ghost" 
               size="icon-sm" 
-              className="rounded-full hover:bg-muted transition-all duration-300 active-scale focus-ring"
+              className="rounded-full hover:bg-muted transition-all duration-300"
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
@@ -37,7 +37,7 @@ const Navbar = () => {
           </SidebarTrigger>
         )}
         
-        <h2 className="text-xl font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis gradient-text">
+        <h2 className="text-xl font-semibold flex-1 whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
           Expense AI
         </h2>
         
@@ -47,7 +47,7 @@ const Navbar = () => {
             <MonthSelector
               selectedMonth={selectedMonth}
               onChange={setSelectedMonth}
-              className="h-8 w-auto min-w-[110px] frosted-card"
+              className="h-8 w-auto min-w-[110px]"
             />
           </div>
         )}
@@ -59,13 +59,13 @@ const Navbar = () => {
             <Button 
               variant="glass" 
               size="icon-sm" 
-              className="rounded-full transition-all duration-300 active-scale frosted-card"
+              className="rounded-full transition-all duration-300"
             >
               <User className="h-5 w-5" />
               <span className="sr-only">User menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 animate-scale-in frosted-card">
+          <DropdownMenuContent align="end" className="w-56 animate-scale-in">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user?.email}</p>
@@ -77,7 +77,7 @@ const Navbar = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => signOut()}
-              className="text-destructive focus:text-destructive active-scale"
+              className="text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
