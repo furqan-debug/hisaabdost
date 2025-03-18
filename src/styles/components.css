@@ -1,14 +1,13 @@
 
-
 /* Modern Card Design */
 .modern-card {
-  @apply rounded-xl bg-background/60 backdrop-blur-lg border shadow-sm transition-all duration-300
+  @apply rounded-xl bg-background/60 backdrop-blur-lg border border-border/30 shadow-sm transition-all duration-300
          hover:shadow-lg hover:bg-background/80 hover:-translate-y-0.5;
 }
 
 /* Glass Effect */
 .glass {
-  @apply bg-background/60 backdrop-blur-xl border shadow-sm;
+  @apply bg-background/60 backdrop-blur-xl border border-border/30 shadow-sm;
 }
 
 /* Interactive Elements */
@@ -61,22 +60,22 @@
 
 /* Cool badge styles */
 .status-badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all;
 }
 .status-badge-success {
-  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+  @apply bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300;
 }
 .status-badge-warning {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/70 dark:text-yellow-300;
 }
 .status-badge-error {
-  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+  @apply bg-red-100 text-red-800 dark:bg-red-900/70 dark:text-red-300;
 }
 
 /* Floating Action Button for mobile */
 .floating-action-button {
   @apply fixed bottom-20 right-4 z-50 rounded-full bg-primary text-primary-foreground p-4 shadow-lg
-         flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95;
+         flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 animate-fade-in;
 }
 
 /* Page transitions */
@@ -107,3 +106,80 @@
   @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6;
 }
 
+/* Loading skeleton pulse animation */
+.skeleton-pulse {
+  @apply animate-pulse bg-muted/50 rounded-md;
+}
+
+/* Frosted glass card */
+.frosted-card {
+  @apply bg-background/70 backdrop-blur-xl border border-border/40 shadow-sm;
+}
+
+/* Improved button styles */
+.btn-gradient {
+  @apply bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70 transition-all duration-300;
+}
+
+/* Enhanced active states for better accessibility */
+.active-scale {
+  @apply active:scale-95 transition-transform;
+}
+
+/* Consistent focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+}
+
+/* Consistent form element styles */
+.form-input {
+  @apply rounded-lg border border-border bg-background/70 px-3 py-2 text-sm ring-offset-background transition-all
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+/* Data visualization colors */
+.chart-colors {
+  --chart-color-1: #8b5cf6;
+  --chart-color-2: #ec4899;
+  --chart-color-3: #f97316;
+  --chart-color-4: #06b6d4;
+  --chart-color-5: #10b981;
+  --chart-color-6: #eab308;
+  --chart-color-7: #ef4444;
+  --chart-color-8: #6366f1;
+}
+
+/* Improved mobile navigation */
+.mobile-nav-item {
+  @apply flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-lg transition-all duration-200
+         hover:bg-background active:bg-muted;
+}
+
+/* Notification dot */
+.notification-dot {
+  @apply absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500;
+}
+
+/* Category pills */
+.category-pill {
+  @apply rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors;
+}
+
+/* Expense status indicators */
+.expense-low {
+  @apply text-green-500;
+}
+.expense-medium {
+  @apply text-yellow-500;
+}
+.expense-high {
+  @apply text-red-500;
+}
+
+/* Progress bars */
+.progress-bar-container {
+  @apply w-full h-2 bg-muted/50 rounded-full overflow-hidden;
+}
+.progress-bar {
+  @apply h-full transition-all duration-500 ease-in-out;
+}

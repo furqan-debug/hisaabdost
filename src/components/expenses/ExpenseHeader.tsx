@@ -30,9 +30,9 @@ export function ExpenseHeader({
   const isMobile = useIsMobile();
 
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold">Expenses</h1>
+        <h1 className="text-2xl font-bold gradient-text">Expenses</h1>
         <p className="text-sm text-muted-foreground">
           Manage and analyze your expenses
         </p>
@@ -53,7 +53,7 @@ export function ExpenseHeader({
                 variant="destructive"
                 onClick={onDeleteSelected}
                 size="sm"
-                className="whitespace-nowrap"
+                className="whitespace-nowrap active-scale focus-ring"
               >
                 Delete ({selectedExpenses.size})
               </Button>
@@ -63,6 +63,7 @@ export function ExpenseHeader({
               variant="outline"
               size="icon-sm"
               onClick={exportToCSV}
+              className="frosted-card active-scale focus-ring"
             >
               <Download className="h-4 w-4" />
               <span className="sr-only">Export</span>
@@ -76,7 +77,7 @@ export function ExpenseHeader({
               <Button 
                 variant="destructive"
                 onClick={onDeleteSelected}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap active-scale focus-ring"
               >
                 Delete Selected ({selectedExpenses.size})
               </Button>
@@ -85,6 +86,7 @@ export function ExpenseHeader({
             <Button
               variant="outline"
               onClick={exportToCSV}
+              className="frosted-card active-scale focus-ring"
             >
               <Download className="h-4 w-4 mr-2" />
               Export
@@ -92,6 +94,7 @@ export function ExpenseHeader({
             
             <Button
               onClick={() => setShowAddExpense(true)}
+              className="shadow-md hover:shadow-lg transition-all duration-200 active-scale focus-ring"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Expense

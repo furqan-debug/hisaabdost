@@ -54,21 +54,21 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} animate-fade-in`}>
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-[100px]" />
+          <Skeleton key={i} className="h-[100px] skeleton-pulse" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+    <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} animate-fade-in`}>
       <OnboardingTooltip
         content="Track your remaining balance after expenses"
         defaultOpen={isNewUser}
       >
-        <Card className="transition-all duration-300 hover:shadow-md">
+        <Card className="modern-card">
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
             <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Total Balance</CardTitle>
             <Wallet className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
@@ -84,7 +84,7 @@ export const StatCards = ({
         </Card>
       </OnboardingTooltip>
       
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className="modern-card">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Expenses</CardTitle>
           <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
@@ -98,7 +98,7 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className="modern-card">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Income</CardTitle>
           <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
@@ -112,7 +112,7 @@ export const StatCards = ({
                 const value = e.target.value.replace(/[^0-9]/g, '');
                 handleIncomeChange(value ? parseInt(value, 10) : 0);
               }}
-              className={`pl-6 pr-2 h-9 text-${isMobile ? 'sm' : 'base'}`}
+              className={`pl-6 pr-2 h-9 text-${isMobile ? 'sm' : 'base'} form-input`}
               min={0}
             />
           </div>
@@ -123,7 +123,7 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className="modern-card">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Savings Rate</CardTitle>
           <ArrowUpRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />

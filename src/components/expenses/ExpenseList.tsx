@@ -49,11 +49,11 @@ export function ExpenseList({
   totalFilteredAmount
 }: ExpenseListProps) {
   return (
-    <Card>
+    <Card className="modern-card animate-fade-in">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Expense List</CardTitle>
-          <p className="text-sm font-medium">
+          <p className="text-sm font-medium bg-primary/10 rounded-full px-3 py-1">
             Total: {formatCurrency(totalFilteredAmount)}
           </p>
         </div>
@@ -69,7 +69,7 @@ export function ExpenseList({
             setDateRange={setDateRange}
           />
 
-          <div className="rounded-lg border border-border/40 overflow-hidden">
+          <div className="rounded-lg border border-border/40 overflow-hidden frosted-card">
             <Table>
               <ExpenseTableHeader
                 sortConfig={sortConfig}
@@ -83,6 +83,7 @@ export function ExpenseList({
                   <tr>
                     <td colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
+                        <div className="skeleton-pulse h-6 w-32 mb-2" />
                         <p className="text-muted-foreground">Loading expenses...</p>
                       </div>
                     </td>
@@ -93,9 +94,9 @@ export function ExpenseList({
                       <div className="flex flex-col items-center gap-2">
                         <p className="text-muted-foreground">No expenses found</p>
                         <Button 
-                          variant="purple" 
+                          variant="default" 
                           onClick={onAddExpense}
-                          className="mt-2"
+                          className="mt-2 active-scale focus-ring"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Add expense

@@ -32,7 +32,7 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
   };
 
   return (
-    <Card className="budget-card overflow-hidden border-none shadow-md bg-background/60 backdrop-blur-sm">
+    <Card className="modern-card overflow-hidden border-none shadow-md bg-background/60 backdrop-blur-sm">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs 
           value={stableActiveTab} 
@@ -40,7 +40,7 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-xl max-w-full overflow-x-auto bg-muted/60">
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-xl max-w-full overflow-x-auto bg-muted/30 border-b border-border/10 md:border-0">
               <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
               <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Categories</TabsTrigger>
               <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Transactions</TabsTrigger>

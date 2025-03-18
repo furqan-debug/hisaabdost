@@ -28,7 +28,7 @@ export function ExpenseForm({
   onScanComplete
 }: ExpenseFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-4 mt-4">
+    <form onSubmit={onSubmit} className="space-y-6 mt-4 animate-fade-in">
       <FormSection>
         <BasicInfoSection 
           formData={formData} 

@@ -4,7 +4,7 @@ import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Receipt, Upload } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
 
@@ -70,31 +70,69 @@ export const AddExpenseButton = ({
   };
   
   return (
-    <div className="mt-6">
+    <div className="mt-6 animate-fade-in">
       <OnboardingTooltip
         content="Add an expense by uploading a receipt or entering details manually"
         defaultOpen={isNewUser}
       >
         {isMobile ? (
-          <ReceiptCapture 
-            onCapture={handleExpenseCapture}
-            autoSave={true}
-          />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddExpense(true)}
+                className="w-full frosted-card active-scale h-16 flex flex-col"
+                size="lg"
+              >
+                <Plus className="h-5 w-5 mb-1" />
+                <span className="text-xs">Add Manually</span>
+              </Button>
+              
+              <ReceiptCapture 
+                onCapture={handleExpenseCapture}
+                autoSave={true}
+                className="w-full h-16 frosted-card active-scale"
+                buttonProps={{
+                  className: "h-full w-full",
+                  children: (
+                    <div className="flex flex-col items-center">
+                      <Receipt className="h-5 w-5 mb-1" />
+                      <span className="text-xs">Scan Receipt</span>
+                    </div>
+                  )
+                }}
+              />
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
-            <ReceiptCapture 
-              onCapture={handleExpenseCapture}
-              autoSave={true}
-            />
-            
-            <Button 
-              onClick={() => setShowAddExpense(true)}
-              className="w-full"
-              size="lg"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense Manually
-            </Button>
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                onClick={() => setShowAddExpense(true)}
+                className="w-full frosted-card active-scale focus-ring"
+                size="lg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense Manually
+              </Button>
+              
+              <ReceiptCapture 
+                onCapture={handleExpenseCapture}
+                autoSave={true}
+                className="w-full"
+                buttonProps={{
+                  className: "w-full frosted-card active-scale h-10",
+                  size: "lg",
+                  variant: "outline",
+                  children: (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Receipt
+                    </>
+                  )
+                }}
+              />
+            </div>
           </div>
         )}
       </OnboardingTooltip>
