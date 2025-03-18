@@ -15,9 +15,22 @@ interface ReceiptCaptureProps {
   }) => void;
   disabled?: boolean;
   autoSave?: boolean;
+  className?: string;
+  buttonProps?: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    className?: string;
+    children?: React.ReactNode;
+    variant?: string;
+    size?: string;
+  };
 }
 
-export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }: ReceiptCaptureProps) {
+export function ReceiptCapture({ 
+  onCapture, 
+  disabled = false, 
+  autoSave = false,
+  className,
+  buttonProps
+}: ReceiptCaptureProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -75,17 +88,26 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
   };
 
   return (
-    <div className="receipt-capture-container">
+    <div className={className}>
       <ReceiptFileInput 
         onChange={handleFileChange} 
         inputRef={fileInputRef} 
       />
       
-      <ReceiptUploadOptions
-        onUpload={uploadFile}
-        onCapture={capturePhoto}
-        disabled={disabled}
-      />
+      {buttonProps ? (
+        <button
+          type="button" 
+          onClick={uploadFile}
+          disabled={disabled}
+          {...buttonProps}
+        />
+      ) : (
+        <ReceiptUploadOptions
+          onUpload={uploadFile}
+          onCapture={capturePhoto}
+          disabled={disabled}
+        />
+      )}
 
       <ReceiptScanDialog
         file={file}
