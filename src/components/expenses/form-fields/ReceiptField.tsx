@@ -51,7 +51,6 @@ export function ReceiptField({ receiptUrl, onFileChange, onScanComplete }: Recei
           accept="image/*,.pdf"
           onChange={onFileChange}
           className="hidden"
-          capture="environment"
         />
         
         <ReceiptActions
@@ -61,6 +60,7 @@ export function ReceiptField({ receiptUrl, onFileChange, onScanComplete }: Recei
           canScan={canScanReceipt}
           isScanning={isScanning}
           receiptUrl={receiptUrl}
+          showSeparateButtons={true}
         />
       </div>
     </div>

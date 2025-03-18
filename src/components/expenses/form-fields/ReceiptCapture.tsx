@@ -18,6 +18,7 @@ interface ReceiptCaptureProps {
   autoSave?: boolean;
   className?: string;
   children?: ReactNode;
+  showIcons?: boolean;
 }
 
 export function ReceiptCapture({ 
@@ -25,7 +26,8 @@ export function ReceiptCapture({
   disabled = false, 
   autoSave = false, 
   className,
-  children 
+  children,
+  showIcons = true
 }: ReceiptCaptureProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -105,6 +107,7 @@ export function ReceiptCapture({
           onUpload={uploadFile}
           onCapture={capturePhoto}
           disabled={disabled}
+          showIcons={showIcons}
         />
       )}
 
