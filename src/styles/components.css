@@ -1,4 +1,5 @@
 
+
 /* Modern Card Design */
 .modern-card {
   @apply rounded-xl bg-background/60 backdrop-blur-lg border shadow-sm transition-all duration-300
@@ -22,7 +23,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background/50;
+  @apply bg-background/50 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -37,3 +38,72 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Card hover effects */
+.hover-card {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent;
+}
+
+/* Button hover effects */
+.button-hover {
+  @apply transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0.5;
+}
+
+/* Subtle background pattern */
+.bg-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.05' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Cool badge styles */
+.status-badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+.status-badge-success {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+}
+.status-badge-warning {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+}
+.status-badge-error {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+}
+
+/* Floating Action Button for mobile */
+.floating-action-button {
+  @apply fixed bottom-20 right-4 z-50 rounded-full bg-primary text-primary-foreground p-4 shadow-lg
+         flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95;
+}
+
+/* Page transitions */
+.page-transition-enter {
+  @apply opacity-0;
+}
+.page-transition-enter-active {
+  @apply opacity-100 transition-opacity duration-300;
+}
+.page-transition-exit {
+  @apply opacity-100;
+}
+.page-transition-exit-active {
+  @apply opacity-0 transition-opacity duration-300;
+}
+
+/* Card grid layouts */
+.card-grid {
+  @apply grid gap-4 md:gap-6;
+}
+.card-grid-2 {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6;
+}
+.card-grid-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6;
+}
+.card-grid-4 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6;
+}
+
