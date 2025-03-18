@@ -17,12 +17,12 @@
 
 /* Modern Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-background/50;
+  @apply bg-background/50 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -36,4 +36,119 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Mobile Touch Target */
+.touch-target {
+  @apply min-h-10 min-w-10 relative;
+}
+
+/* Improved Card Shadows */
+.card-shadow {
+  @apply shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)];
+}
+
+/* Card hover effect */
+.card-hover {
+  @apply hover:shadow-md transition-shadow duration-300;
+}
+
+/* Better Mobile Inputs */
+.mobile-input {
+  @apply py-2.5 px-4 rounded-xl;
+}
+
+/* Elastic animation for buttons */
+.elastic-hover {
+  @apply transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98];
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
+}
+
+/* Improved focus styles */
+.improved-focus {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+}
+
+/* Better mobile buttons */
+.mobile-button {
+  @apply h-11 min-w-[44px] rounded-xl shadow-sm;
+}
+
+/* Bottom sheet designs */
+.bottom-sheet {
+  @apply rounded-t-xl border-t shadow-lg;
+}
+
+/* Pressed effect for interactive elements */
+.pressed-effect {
+  @apply active:opacity-80 transition-opacity duration-100;
+}
+
+/* Border glow effect */
+.border-glow {
+  @apply border border-primary/30 focus:border-primary/70 focus:ring-1 focus:ring-primary/50 transition-all duration-200;
+}
+
+/* Floating elements */
+.floating {
+  @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
+}
+
+/* Subtle gradient backgrounds */
+.subtle-gradient {
+  @apply bg-gradient-to-br from-background to-muted/30;
+}
+
+/* Icon animation */
+.icon-pulse {
+  animation: icon-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Skeleton loading animation */
+.skeleton {
+  @apply bg-muted/40 animate-pulse rounded;
+}
+
+/* Badge styles */
+.status-badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+/* Active tab indicator animation */
+.tab-indicator {
+  animation: grow-in 0.3s ease-out forwards;
+}
+
+@keyframes grow-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Mobile optimized dropdown */
+.mobile-dropdown {
+  @apply absolute z-50 mt-1 max-h-[200px] w-full overflow-auto rounded-md bg-background shadow-md;
+}
+
+/* Optimized touch feedback */
+.touch-feedback {
+  @apply active:bg-primary/10 transition-colors duration-150;
 }

@@ -9,6 +9,43 @@
   [data-sidebar="menu-button"] {
     @apply py-3;
   }
+  
+  /* Improved mobile menu transitions */
+  .mobile-menu-enter {
+    @apply transform translate-x-full;
+  }
+  
+  .mobile-menu-enter-active {
+    @apply transform translate-x-0 transition-transform duration-300 ease-out;
+  }
+  
+  .mobile-menu-exit {
+    @apply transform translate-x-0;
+  }
+  
+  .mobile-menu-exit-active {
+    @apply transform translate-x-full transition-transform duration-300 ease-in;
+  }
+  
+  /* Prevent scrolling when menu is open */
+  .menu-open {
+    overflow: hidden !important;
+  }
+  
+  /* Depth for navigation elements */
+  .depth-element {
+    @apply relative z-10;
+  }
+  
+  /* Navigation back button */
+  .nav-back-button {
+    @apply text-sm font-medium text-muted-foreground flex items-center gap-1;
+  }
+  
+  /* Navigation panel */
+  .nav-panel {
+    @apply fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col;
+  }
 }
 
 /* Enhanced floating action button */
@@ -50,13 +87,56 @@
   }
 }
 
-/* Minimalist black menu style */
-@media (max-width: 640px) {
-  .bottom-navigation-container {
-    @apply bg-black/95;
-  }
-  
-  .menu-item:hover .menu-icon {
-    @apply transform scale-110 transition-all duration-200;
-  }
+/* Nested navigation indicator */
+.nested-nav-indicator {
+  @apply w-1.5 h-1.5 rounded-full bg-muted-foreground/50;
+}
+
+/* Active navigation states */
+.nav-active {
+  @apply relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 
+         before:h-4/5 before:w-1 before:bg-primary before:rounded-r-md;
+}
+
+/* Mobile navbar animations */
+.navbar-scroll-hidden {
+  @apply -translate-y-full;
+}
+
+.navbar-scroll-visible {
+  @apply translate-y-0;
+}
+
+/* Bottom navigation bar shadow effect */
+.bottom-nav-shadow {
+  @apply shadow-[0_-1px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_10px_rgba(0,0,0,0.25)];
+}
+
+/* Mobile tabs design */
+.mobile-tabs {
+  @apply flex w-full overflow-x-auto gap-1 no-scrollbar p-1 bg-muted/50 rounded-lg;
+}
+
+.mobile-tab {
+  @apply flex-shrink-0 whitespace-nowrap py-1.5 px-3 text-sm font-medium rounded-md
+         data-[state=active]:bg-background data-[state=active]:text-foreground
+         data-[state=active]:shadow-sm;
+}
+
+/* Swipeable navigation areas */
+.swipe-area {
+  @apply touch-pan-y;
+}
+
+/* Mobile drawer-style menu */
+.mobile-drawer {
+  @apply fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-xl shadow-2xl transform transition-transform duration-300;
+}
+
+.mobile-drawer-open {
+  @apply translate-y-0;
+}
+
+.mobile-drawer-closed {
+  @apply translate-y-full;
 }

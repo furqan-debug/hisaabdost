@@ -4,9 +4,10 @@ import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Receipt, Upload } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
+import { cn } from "@/lib/utils";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -76,25 +77,62 @@ export const AddExpenseButton = ({
         defaultOpen={isNewUser}
       >
         {isMobile ? (
-          <ReceiptCapture 
-            onCapture={handleExpenseCapture}
-            autoSave={true}
-          />
+          <div className="bg-card rounded-xl border shadow-sm p-4">
+            <h3 className="text-base font-medium mb-3">Add New Expense</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddExpense(true)}
+                className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+              >
+                <Plus className="h-5 w-5 text-primary" />
+                <span className="text-xs font-medium">Manual Entry</span>
+              </Button>
+              
+              <ReceiptCapture 
+                onCapture={handleExpenseCapture}
+                className={cn(
+                  "h-20 flex flex-col items-center justify-center rounded-xl border border-dashed",
+                  "space-y-1 hover:bg-accent/30 cursor-pointer"
+                )}
+                autoSave={true}
+              >
+                <div className="flex flex-col items-center justify-center h-full w-full">
+                  <Receipt className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-medium mt-1">Scan Receipt</span>
+                </div>
+              </ReceiptCapture>
+            </div>
+          </div>
         ) : (
           <div className="space-y-4">
-            <ReceiptCapture 
-              onCapture={handleExpenseCapture}
-              autoSave={true}
-            />
-            
-            <Button 
-              onClick={() => setShowAddExpense(true)}
-              className="w-full"
-              size="lg"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense Manually
-            </Button>
+            <div className="bg-card rounded-xl border shadow-sm p-4">
+              <h3 className="text-base font-medium mb-3">Add New Expense</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  onClick={() => setShowAddExpense(true)}
+                  className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+                  variant="outline"
+                >
+                  <Plus className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-medium">Manual Entry</span>
+                </Button>
+                
+                <ReceiptCapture 
+                  onCapture={handleExpenseCapture}
+                  className={cn(
+                    "h-20 flex flex-col items-center justify-center rounded-xl border border-dashed", 
+                    "space-y-1 hover:bg-accent/30 cursor-pointer"
+                  )}
+                  autoSave={true}
+                >
+                  <div className="flex flex-col items-center justify-center h-full w-full">
+                    <Receipt className="h-5 w-5 text-primary" />
+                    <span className="text-xs font-medium mt-1">Scan Receipt</span>
+                  </div>
+                </ReceiptCapture>
+              </div>
+            </div>
           </div>
         )}
       </OnboardingTooltip>

@@ -12,11 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
   const { setTheme, theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [colorMode, setColorMode] = useState<"default" | "pink">("default");
+  const [colorMode, setColorMode] = useState<"default" | "pink" | "blue">("default");
+  const [isOpen, setIsOpen] = useState(false);
 
   // After mounting, we can access the DOM
   useEffect(() => {
@@ -24,6 +26,8 @@ export function ThemeToggle() {
     // Set initial color mode based on document class
     if (document.documentElement.classList.contains("pink")) {
       setColorMode("pink");
+    } else if (document.documentElement.classList.contains("blue")) {
+      setColorMode("blue");
     } else {
       setColorMode("default");
     }
@@ -35,13 +39,15 @@ export function ThemeToggle() {
   };
 
   // Handle color scheme changes
-  const handleColorChange = (newColor: "default" | "pink") => {
-    // Remove existing color class
-    document.documentElement.classList.remove("pink");
+  const handleColorChange = (newColor: "default" | "pink" | "blue") => {
+    // Remove existing color classes
+    document.documentElement.classList.remove("pink", "blue");
     
     // Add new color class if needed
     if (newColor === "pink") {
       document.documentElement.classList.add("pink");
+    } else if (newColor === "blue") {
+      document.documentElement.classList.add("blue");
     }
     
     setColorMode(newColor);
@@ -51,15 +57,18 @@ export function ThemeToggle() {
   if (!mounted) return null;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="w-10 h-10">
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full">
+          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-56 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+      >
         <DropdownMenuLabel>Appearance</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
@@ -69,17 +78,23 @@ export function ThemeToggle() {
           </DropdownMenuLabel>
           <DropdownMenuItem 
             onClick={() => handleThemeChange("light")}
-            className={resolvedTheme === "light" ? "bg-accent" : ""}
+            className={cn(resolvedTheme === "light" ? "bg-accent" : "")}
           >
+            <Sun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => handleThemeChange("dark")}
-            className={resolvedTheme === "dark" ? "bg-accent" : ""}
+            className={cn(resolvedTheme === "dark" ? "bg-accent" : "")}
           >
+            <Moon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleThemeChange("system")}>
+            <span className="mr-2 flex h-4 w-4 items-center justify-center">
+              <Sun className="h-3 w-3 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-3 w-3 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </span>
             System
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -92,17 +107,24 @@ export function ThemeToggle() {
           </DropdownMenuLabel>
           <DropdownMenuItem 
             onClick={() => handleColorChange("default")}
-            className={colorMode === "default" ? "bg-accent" : ""}
+            className={cn(colorMode === "default" ? "bg-accent" : "")}
           >
             <div className="w-4 h-4 rounded-full bg-[hsl(142,76%,36%)] mr-2" />
             Green (Default)
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => handleColorChange("pink")}
-            className={colorMode === "pink" ? "bg-accent" : ""}
+            className={cn(colorMode === "pink" ? "bg-accent" : "")}
           >
             <div className="w-4 h-4 rounded-full bg-[hsl(328,73%,69%)] mr-2" />
             Pink
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => handleColorChange("blue")}
+            className={cn(colorMode === "blue" ? "bg-accent" : "")}
+          >
+            <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
+            Blue
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

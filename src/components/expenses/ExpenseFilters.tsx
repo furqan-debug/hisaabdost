@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/select";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Filter } from "lucide-react";
+import { useState } from "react";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -31,53 +34,101 @@ export function ExpenseFilters({
   setDateRange,
 }: ExpenseFiltersProps) {
   const isMobile = useIsMobile();
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
-    <div className={`flex flex-col gap-4 ${isMobile ? 'space-y-2' : 'md:flex-row md:items-center md:justify-between'}`}>
-      <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-1 gap-2'}`}>
+    <div className="space-y-3">
+      {/* Search input always visible */}
+      <div className="relative">
         <Input
           placeholder="Search expenses..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={`${isMobile ? 'w-full' : 'max-w-xs'}`}
+          className="w-full pr-8 rounded-lg"
         />
-        <Select
-          value={categoryFilter}
-          onValueChange={setCategoryFilter}
-        >
-          <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {Object.keys(CATEGORY_COLORS).map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isMobile && (
+          <button 
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          >
+            <Filter size={18} className={cn(showAdvancedFilters ? "text-primary" : "")} />
+          </button>
+        )}
       </div>
-      <div className={`flex ${isMobile ? 'justify-between' : 'gap-2'}`}>
-        <Input
-          type="date"
-          value={dateRange.start}
-          onChange={(e) => setDateRange({
-            ...dateRange,
-            start: e.target.value
-          })}
-          className={`${isMobile ? 'w-[48%]' : 'w-auto'}`}
-        />
-        <Input
-          type="date"
-          value={dateRange.end}
-          onChange={(e) => setDateRange({
-            ...dateRange,
-            end: e.target.value
-          })}
-          className={`${isMobile ? 'w-[48%]' : 'w-auto'}`}
-        />
-      </div>
+      
+      {/* Advanced filters for desktop or when expanded on mobile */}
+      {(!isMobile || showAdvancedFilters) && (
+        <div className={cn(
+          "space-y-3 animated-fade-in",
+          isMobile ? "p-2 bg-muted/30 rounded-lg border border-border/40" : ""
+        )}>
+          <div className={cn(
+            isMobile ? "flex-col space-y-2" : "sm:flex-row sm:items-center sm:justify-between gap-2",
+            "flex"
+          )}>
+            <Select
+              value={categoryFilter}
+              onValueChange={setCategoryFilter}
+            >
+              <SelectTrigger className={cn(
+                "rounded-lg",
+                isMobile ? "w-full" : "w-[180px]"
+              )}>
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.keys(CATEGORY_COLORS).map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <div className={cn(
+              "flex gap-2",
+              isMobile ? "justify-between" : ""
+            )}>
+              <Input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({
+                  ...dateRange,
+                  start: e.target.value
+                })}
+                className={cn(
+                  "rounded-lg",
+                  isMobile ? "w-[48%]" : "w-auto"
+                )}
+              />
+              <Input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({
+                  ...dateRange,
+                  end: e.target.value
+                })}
+                className={cn(
+                  "rounded-lg",
+                  isMobile ? "w-[48%]" : "w-auto"
+                )}
+              />
+            </div>
+          </div>
+          
+          {isMobile && (
+            <div className="text-right">
+              <button 
+                className="text-xs text-primary flex items-center gap-1 ml-auto"
+                onClick={() => setShowAdvancedFilters(false)}
+              >
+                Hide filters <ChevronDown size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
