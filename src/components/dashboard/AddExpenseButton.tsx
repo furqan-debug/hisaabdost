@@ -4,7 +4,7 @@ import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
-import { Plus, Receipt, Upload } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
 import { cn } from "@/lib/utils";

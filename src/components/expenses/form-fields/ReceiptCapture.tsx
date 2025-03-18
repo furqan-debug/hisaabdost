@@ -1,9 +1,10 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, ReactNode } from "react";
 import { toast } from "sonner";
 import { ReceiptUploadOptions } from "./receipt/ReceiptUploadOptions";
 import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
+import { cn } from "@/lib/utils";
 
 interface ReceiptCaptureProps {
   onCapture?: (expenseDetails: {
@@ -15,9 +16,17 @@ interface ReceiptCaptureProps {
   }) => void;
   disabled?: boolean;
   autoSave?: boolean;
+  className?: string;
+  children?: ReactNode;
 }
 
-export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }: ReceiptCaptureProps) {
+export function ReceiptCapture({ 
+  onCapture, 
+  disabled = false, 
+  autoSave = false, 
+  className,
+  children 
+}: ReceiptCaptureProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -75,17 +84,29 @@ export function ReceiptCapture({ onCapture, disabled = false, autoSave = false }
   };
 
   return (
-    <div className="receipt-capture-container">
+    <div 
+      className={cn("receipt-capture-container", className)}
+      onClick={children ? undefined : capturePhoto}
+    >
       <ReceiptFileInput 
         onChange={handleFileChange} 
         inputRef={fileInputRef} 
       />
       
-      <ReceiptUploadOptions
-        onUpload={uploadFile}
-        onCapture={capturePhoto}
-        disabled={disabled}
-      />
+      {children ? (
+        <div onClick={(e) => {
+          e.stopPropagation();
+          capturePhoto();
+        }}>
+          {children}
+        </div>
+      ) : (
+        <ReceiptUploadOptions
+          onUpload={uploadFile}
+          onCapture={capturePhoto}
+          disabled={disabled}
+        />
+      )}
 
       <ReceiptScanDialog
         file={file}
