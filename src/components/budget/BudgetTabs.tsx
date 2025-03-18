@@ -32,7 +32,7 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
   };
 
   return (
-    <Card className="budget-card overflow-hidden border-none shadow-md bg-background/60 backdrop-blur-sm">
+    <Card className="budget-card overflow-hidden">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs 
           value={stableActiveTab} 
@@ -40,30 +40,30 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-xl max-w-full overflow-x-auto bg-muted/60">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
-              <TabsTrigger value="categories" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Categories</TabsTrigger>
-              <TabsTrigger value="transactions" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary-foreground">Comparison</TabsTrigger>
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="comparison">Comparison</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="budget-section overflow-hidden w-full animate-fade-in">
+          <TabsContent value="overview" className="budget-section overflow-hidden w-full">
             <BudgetOverview budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="categories" className="budget-section overflow-hidden w-full animate-fade-in">
+          <TabsContent value="categories" className="budget-section overflow-hidden w-full">
             <CategoryBudgets 
               budgets={budgets || []}
               onEditBudget={onEditBudget}
             />
           </TabsContent>
 
-          <TabsContent value="transactions" className="budget-section overflow-hidden w-full animate-fade-in">
+          <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
             <BudgetTransactions budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="comparison" className="budget-section overflow-hidden w-full animate-fade-in">
+          <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
             <BudgetComparison budgets={budgets || []} />
           </TabsContent>
         </Tabs>
