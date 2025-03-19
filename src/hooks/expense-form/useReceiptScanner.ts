@@ -33,6 +33,9 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
     
     if (expenseDetails.category) {
       updateField('category', expenseDetails.category);
+    } else {
+      // Default to Shopping for receipts
+      updateField('category', 'Shopping');
     }
     
     if (expenseDetails.paymentMethod) {

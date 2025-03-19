@@ -55,13 +55,15 @@ const Index = () => {
             <p className="text-xl text-muted-foreground mb-8">
               Take control of your finances with AI-powered insights, easy tracking, and beautiful visualizations.
             </p>
-            <Button 
-              size="lg" 
-              className="animate-pulse"
-              onClick={() => navigate('/signup')}
-            >
-              Get Started for Free
-            </Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button 
+                size="lg" 
+                className="animate-pulse"
+                onClick={() => navigate('/signup')}
+              >
+                Get Started for Free
+              </Button>
+            </div>
           </div>
         </section>
 

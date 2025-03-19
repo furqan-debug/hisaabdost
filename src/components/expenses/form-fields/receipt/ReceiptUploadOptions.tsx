@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Upload, Camera } from "lucide-react";
-import { Card } from "@/components/ui/card";
 
 interface ReceiptUploadOptionsProps {
   onUpload: () => void;

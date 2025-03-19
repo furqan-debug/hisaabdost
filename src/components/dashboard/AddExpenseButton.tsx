@@ -78,7 +78,7 @@ export const AddExpenseButton = ({
       >
         <div className="bg-card rounded-xl border shadow-sm p-4">
           <h3 className="text-base font-medium mb-3">Add New Expense</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Button
               variant="outline"
               onClick={() => setShowAddExpense(true)}
@@ -88,12 +88,94 @@ export const AddExpenseButton = ({
               <span className="text-xs font-medium">Manual Entry</span>
             </Button>
             
-            <div className="grid grid-cols-1 gap-2">
-              <ReceiptCapture 
-                onCapture={handleExpenseCapture}
-                autoSave={true}
-              />
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    // Handle the file upload for receipt scanning
+                    const formData = new FormData();
+                    formData.append('receipt', file);
+                    
+                    // Use your receipt scanning function here
+                    // This is just a placeholder, replace with your actual scanning logic
+                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`, {
+                      method: 'POST',
+                      body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.success && data.receiptData) {
+                        handleExpenseCapture({
+                          description: data.receiptData.storeName || "",
+                          amount: data.receiptData.total || "0",
+                          date: data.receiptData.date || "",
+                          category: "Shopping",
+                          paymentMethod: data.receiptData.paymentMethod || "Cash",
+                        });
+                      }
+                    })
+                    .catch(error => {
+                      console.error("Error scanning receipt:", error);
+                    });
+                  }
+                };
+                fileInput.click();
+              }}
+              className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+            >
+              <Upload className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Upload Receipt</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Trigger camera capture for receipt scanning
+                const captureInput = document.createElement('input');
+                captureInput.type = 'file';
+                captureInput.accept = 'image/*';
+                captureInput.capture = 'environment';
+                captureInput.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    // Handle the captured photo for receipt scanning
+                    const formData = new FormData();
+                    formData.append('receipt', file);
+                    
+                    // Use your receipt scanning function here
+                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`, {
+                      method: 'POST',
+                      body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.success && data.receiptData) {
+                        handleExpenseCapture({
+                          description: data.receiptData.storeName || "",
+                          amount: data.receiptData.total || "0",
+                          date: data.receiptData.date || "",
+                          category: "Shopping",
+                          paymentMethod: data.receiptData.paymentMethod || "Cash",
+                        });
+                      }
+                    })
+                    .catch(error => {
+                      console.error("Error scanning receipt:", error);
+                    });
+                  }
+                };
+                captureInput.click();
+              }}
+              className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+            >
+              <Camera className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Take Photo</span>
+            </Button>
           </div>
         </div>
       </OnboardingTooltip>

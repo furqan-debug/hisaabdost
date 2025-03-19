@@ -9,7 +9,7 @@ interface FormActionsProps {
 export function FormActions({ isSubmitting, isEditing }: FormActionsProps) {
   return (
     <Button type="submit" className="w-full" disabled={isSubmitting}>
-      {isSubmitting ? "Saving..." : (isEditing ? "Save Changes" : "Add Expense")}
+      {isSubmitting ? "Saving..." : (isEditing ? "Save Changes" : "Save Expense")}
     </Button>
   );
 }

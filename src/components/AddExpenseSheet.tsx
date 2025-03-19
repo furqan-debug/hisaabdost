@@ -6,9 +6,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus } from "lucide-react";
 import { ExpenseForm } from "./expenses/ExpenseForm";
 import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
@@ -42,19 +40,13 @@ const AddExpenseSheet = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="w-full">
-          <Plus className="mr-2 h-4 w-4" />
-          {expenseToEdit ? "Edit Expense" : "Add Expense"}
-        </Button>
-      </SheetTrigger>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</SheetTitle>
           <SheetDescription>
             {expenseToEdit 
               ? "Edit your expense details below." 
-              : "Add your expense details here or scan a receipt. Click save when you're done."}
+              : "Review and complete your expense details below. Click save when you're done."}
           </SheetDescription>
         </SheetHeader>
         
