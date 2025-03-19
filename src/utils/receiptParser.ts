@@ -4,13 +4,13 @@
  */
 
 /**
- * Extracts merchant name, total amount, and date from receipt text
+ * Extracts merchant name, items with prices, and date from receipt text
  * @param text - The OCR text extracted from a receipt
- * @returns Object containing merchant, amount, and date
+ * @returns Object containing merchant, items array, and date
  */
 export function parseReceiptText(text: string): { 
   merchant: string; 
-  amount: string; 
+  items: Array<{name: string; amount: string}>;
   date: string;
 } {
   // Split into lines for easier processing
@@ -19,15 +19,15 @@ export function parseReceiptText(text: string): {
   // Extract merchant name (usually at the top of the receipt)
   const merchant = extractMerchant(lines);
   
-  // Extract total amount
-  const amount = extractAmount(text, lines);
+  // Extract line items with their prices
+  const items = extractLineItems(lines);
   
   // Extract date
   const date = extractDate(text, lines);
   
   return {
     merchant,
-    amount,
+    items,
     date
   };
 }
@@ -57,7 +57,111 @@ function extractMerchant(lines: string[]): string {
 }
 
 /**
- * Extracts the total amount from receipt text
+ * Extracts individual line items with their prices
+ */
+function extractLineItems(lines: string[]): Array<{name: string; amount: string}> {
+  const items: Array<{name: string; amount: string}> = [];
+  
+  // Focus on the middle portion of the receipt where items usually are
+  // Skip first few lines (header) and last few lines (totals, footer)
+  const startIndex = Math.min(5, Math.floor(lines.length * 0.15));
+  const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
+  
+  // Common patterns to identify non-item lines
+  const nonItemPatterns = [
+    /subtotal|tax|total|balance|due|change|cash|card|payment|credit|debit|master|visa|transaction|receipt|thank|you/i,
+    /\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}/,  // Date patterns
+    /^\s*\d+\s*$/,  // Just a number
+    /^\s*\*+\s*$/,  // Just asterisks
+    /^\s*\-+\s*$/   // Just dashes
+  ];
+  
+  for (let i = startIndex; i < endIndex; i++) {
+    const line = lines[i].trim();
+    
+    // Skip lines that match non-item patterns
+    if (nonItemPatterns.some(pattern => line.match(pattern))) {
+      continue;
+    }
+    
+    // Look for price pattern at the end of the line (e.g., $10.99, 10.99)
+    const priceMatch = line.match(/(?:^|\s)(\$?\s*\d+\.\d{2})\s*$/);
+    if (priceMatch) {
+      // Extract the price and cleanup
+      let price = priceMatch[1].replace('$', '').trim();
+      
+      // Extract the item name by removing the price part
+      let itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
+      
+      // Clean up item name by removing quantity indicators and SKU codes
+      itemName = itemName.replace(/^\d+\s*[xX]\s*/, '');  // Remove "2 x " prefix
+      itemName = itemName.replace(/^\d+\s+/, '');  // Remove "2 " prefix
+      itemName = itemName.replace(/\s+\d+$/, '');  // Remove trailing numbers
+      itemName = itemName.replace(/\s{2,}/g, ' ');  // Remove multiple spaces
+      
+      // Skip if item name is too short or the price is zero
+      if (itemName.length >= 2 && parseFloat(price) > 0) {
+        items.push({
+          name: itemName,
+          amount: price
+        });
+      }
+    }
+    
+    // Check for cases where the item name and price are on separate lines
+    else if (i + 1 < endIndex) {
+      const nextLine = lines[i + 1].trim();
+      const nextLinePriceMatch = nextLine.match(/^\s*\$?\s*(\d+\.\d{2})\s*$/);
+      
+      if (nextLinePriceMatch && line.length > 2 && 
+          !nonItemPatterns.some(pattern => line.match(pattern))) {
+        items.push({
+          name: line,
+          amount: nextLinePriceMatch[1].replace('$', '').trim()
+        });
+        i++; // Skip the next line since we've processed it
+      }
+    }
+  }
+  
+  // If we didn't find any items, try a more aggressive approach
+  if (items.length === 0) {
+    for (let i = startIndex; i < endIndex; i++) {
+      const line = lines[i].trim();
+      const priceMatches = Array.from(line.matchAll(/\$?\s*(\d+\.\d{2})/g));
+      
+      if (priceMatches.length === 1) {
+        const price = priceMatches[0][1];
+        let itemName = line.replace(priceMatches[0][0], '').trim();
+        
+        if (itemName.length >= 2 && parseFloat(price) > 0 && 
+            !nonItemPatterns.some(pattern => itemName.match(pattern))) {
+          items.push({
+            name: itemName,
+            amount: price
+          });
+        }
+      }
+    }
+  }
+  
+  // If we still found no items, create at least one item based on the total
+  if (items.length === 0) {
+    // Look for total amount
+    const totalAmount = extractAmount(text, lines);
+    if (totalAmount !== "0.00") {
+      items.push({
+        name: "Store Purchase",
+        amount: totalAmount
+      });
+    }
+  }
+  
+  return items;
+}
+
+/**
+ * Extracts the total amount from receipt text (used as fallback)
  */
 function extractAmount(text: string, lines: string[]): string {
   // Look for total patterns with common keywords

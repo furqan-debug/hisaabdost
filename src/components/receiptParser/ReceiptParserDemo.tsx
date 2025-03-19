@@ -9,7 +9,7 @@ export function ReceiptParserDemo() {
   const [ocrText, setOcrText] = useState("");
   const [parsedResult, setParsedResult] = useState<{ 
     merchant: string; 
-    amount: string; 
+    items: Array<{name: string; amount: string}>;
     date: string;
   } | null>(null);
 
@@ -59,14 +59,29 @@ export function ReceiptParserDemo() {
           {parsedResult && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Parsed Result</h3>
-              <pre className="bg-muted p-4 rounded-md overflow-x-auto font-mono">
-                {JSON.stringify(parsedResult, null, 2)}
-              </pre>
+              <div className="bg-muted p-4 rounded-md overflow-x-auto">
+                <div className="mb-2">
+                  <span className="font-semibold">Store:</span> {parsedResult.merchant}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Date:</span> {parsedResult.date}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Items:</span>
+                </div>
+                <ul className="list-disc pl-5 space-y-1">
+                  {parsedResult.items.map((item, index) => (
+                    <li key={index}>
+                      {item.name} - ${item.amount}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           )}
         </CardContent>
         <CardFooter className="text-sm text-muted-foreground">
-          Extract merchant name, total amount, and date from receipt OCR text.
+          Extract store name, items with prices, and date from receipt OCR text.
         </CardFooter>
       </Card>
     </div>
