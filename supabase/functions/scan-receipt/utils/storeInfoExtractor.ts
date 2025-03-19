@@ -5,30 +5,54 @@
 export function identifyStoreName(lines: string[]): string {
   // Usually the first few lines of a receipt contain the store name
   if (lines.length > 0) {
-    // Check if the first line contains "Restaurant" or has a simple name format
-    if (lines[0].includes("Restaurant") || 
-        (lines[0].length > 2 && lines[0].length < 40 && !lines[0].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time/i))) {
+    // Special case for restaurant receipts - often have logo/name at the very top
+    if (lines[0].length > 2 && lines[0].length < 40 && 
+        !lines[0].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time|\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}|\d+\.\d{2}|\$\d+\.\d{2}/i)) {
       return lines[0].trim();
     }
     
-    // Check for common restaurant/store name patterns in first few lines
+    // Check more aggressively for restaurant names in the first 5 lines
+    // Restaurant receipts often have the restaurant name, followed by address, then phone numbers
     for (let i = 0; i < Math.min(5, lines.length); i++) {
       // Skip lines that are likely not store names
       if (lines[i].match(/receipt|invoice|tel:|www\.|http|thank|order|\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\-\d{1,2}\-\d{2,4}|\d+\.\d{2}|\$\d+\.\d{2}/i)) {
         continue;
       }
       
+      // Look for lines that are likely to be restaurant names
+      // They're usually capitalized, not too long, and don't contain too many numbers
+      const line = lines[i].trim();
+      if (line.length > 2 && line.length < 40 && !line.match(/^\d/) && line.toUpperCase() === line) {
+        return line;
+      }
+      
       // Take the first line that looks like a name (not too short, not too long)
-      if (lines[i].length > 2 && lines[i].length < 40) {
+      if (line.length > 2 && line.length < 40 && !line.match(/^\d+$/)) {
+        return line;
+      }
+    }
+    
+    // Look for restaurant-specific identifiers
+    for (let i = 0; i < Math.min(10, lines.length); i++) {
+      const lowerLine = lines[i].toLowerCase();
+      if (lowerLine.includes("restaurant") || 
+          lowerLine.includes("cafe") || 
+          lowerLine.includes("bar") || 
+          lowerLine.includes("grill") ||
+          lowerLine.includes("bistro") ||
+          lowerLine.includes("kitchen")) {
         return lines[i].trim();
       }
     }
     
-    // If we couldn't find a good name, default to first line or "Restaurant"
-    if (lines[0] && lines[0].trim().length > 0) {
-      return lines[0].trim();
+    // If we couldn't find a good name, default to first non-numeric line or "Restaurant"
+    for (let i = 0; i < Math.min(3, lines.length); i++) {
+      if (lines[i] && lines[i].trim().length > 0 && !lines[i].match(/^\d+$/)) {
+        return lines[i].trim();
+      }
     }
-    return "Restaurant";
+    
+    return lines[0] ? lines[0].trim() : "Restaurant";
   }
   return "Restaurant";
 }
@@ -37,6 +61,12 @@ export function identifyStoreName(lines: string[]): string {
 export function extractPaymentMethod(text: string): string {
   const lowerText = text.toLowerCase();
   
+  // Restaurant-specific payment methods
+  if (lowerText.includes('table service') || lowerText.includes('table charge')) {
+    return "Card";
+  }
+  
+  // Regular payment methods
   if (lowerText.includes('credit card') || lowerText.includes('visa') || 
       lowerText.includes('mastercard') || lowerText.includes('amex') ||
       lowerText.includes('credit') || lowerText.includes('mastercard')) {

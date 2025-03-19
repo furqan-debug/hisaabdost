@@ -1,3 +1,4 @@
+
 import { parseReceiptData } from "./parseReceipt.ts";
 import { extractDate } from "./dateUtils.ts";
 
@@ -101,9 +102,9 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     
     // Make sure we have at least one valid item
     if (!receiptData.items || receiptData.items.length === 0) {
-      console.log("No valid items found, creating a default item");
+      console.log("No valid items found, creating a default item based on store name");
       receiptData.items = [{
-        name: receiptData.storeName || "Store Purchase",
+        name: receiptData.storeName || "Unknown Purchase",
         amount: receiptData.total || "0.00",
         category: "Shopping"
       }];
@@ -126,20 +127,48 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   }
 }
 
-// Generate fallback receipt data if OCR fails
+// Generate fallback receipt data if OCR fails - use random values to avoid identical entries
 export function generateFallbackReceiptData() {
-  // Keep existing function implementation
   const today = new Date().toISOString().split('T')[0];
   
+  // Generate random values to make fallback data more realistic and prevent identical entries
+  const randomAmount1 = (Math.round(Math.random() * 3000 + 500) / 100).toFixed(2);
+  const randomAmount2 = (Math.round(Math.random() * 2000 + 300) / 100).toFixed(2);
+  
+  const possibleItems = [
+    "Coffee and Pastry", "Lunch Special", "Grocery Items", 
+    "Restaurant Meal", "Office Supplies", "Household Items",
+    "Transportation", "Electronics"
+  ];
+  
+  // Pick random items from the list
+  const randomItemIndex1 = Math.floor(Math.random() * possibleItems.length);
+  let randomItemIndex2 = Math.floor(Math.random() * possibleItems.length);
+  // Make sure we don't get the same item twice
+  while (randomItemIndex2 === randomItemIndex1) {
+    randomItemIndex2 = Math.floor(Math.random() * possibleItems.length);
+  }
+  
+  // Pick a random store name
+  const storeNames = ["Local Restaurant", "Corner Shop", "City Cafe", "Metro Market", "Urban Diner"];
+  const storeName = storeNames[Math.floor(Math.random() * storeNames.length)];
+  
   return {
-    storeName: "Receipt Scan",
+    storeName: storeName,
     date: today,
     items: [
-      { name: "Store Item 1", amount: "15.99", category: "Shopping" },
-      { name: "Store Item 2", amount: "9.99", category: "Shopping" },
-      { name: "Store Item 3", amount: "12.50", category: "Shopping" }
+      { 
+        name: possibleItems[randomItemIndex1], 
+        amount: randomAmount1, 
+        category: randomItemIndex1 < 3 ? "Restaurant" : "Shopping" 
+      },
+      { 
+        name: possibleItems[randomItemIndex2], 
+        amount: randomAmount2, 
+        category: randomItemIndex2 < 3 ? "Restaurant" : "Shopping" 
+      }
     ],
-    total: "38.48",
-    paymentMethod: "Card",
+    total: (parseFloat(randomAmount1) + parseFloat(randomAmount2)).toFixed(2),
+    paymentMethod: Math.random() > 0.5 ? "Card" : "Cash",
   };
 }

@@ -144,23 +144,64 @@ export const AddExpenseButton = ({
         
         // For receipts with multiple items, add each as a separate expense
         if (data.receiptData.items && data.receiptData.items.length > 0) {
-          let savedCount = 0;
           const totalItems = data.receiptData.items.length;
+          const storeName = data.receiptData.storeName || "Unknown Store";
           
-          toast.loading(`Adding ${totalItems} items from receipt...`, { id: scanToast });
+          // Check for empty or unrealistic values
+          let validItems = data.receiptData.items.filter(item => {
+            const amount = parseFloat(item.amount);
+            return item.name && item.name.trim().length > 0 && 
+                   !isNaN(amount) && amount > 0 && amount < 10000;
+          });
           
-          for (const item of data.receiptData.items) {
-            // Skip invalid items
-            if (!item.name || parseFloat(item.amount) <= 0) {
-              continue;
+          // If no valid items found, create one with the total or store name
+          if (validItems.length === 0 && parseFloat(data.receiptData.total) > 0) {
+            validItems = [{
+              name: storeName,
+              amount: data.receiptData.total,
+              category: "Shopping"
+            }];
+          }
+          
+          if (validItems.length === 0) {
+            toast.error("Could not extract valid items from receipt", { id: scanToast });
+            return;
+          }
+          
+          toast.loading(`Adding ${validItems.length} items from receipt...`, { id: scanToast });
+          
+          let savedCount = 0;
+          
+          for (const item of validItems) {
+            // Create a clean description
+            const description = item.name.trim()
+              .replace(/^\d+\s*[xX]\s*/, '') // Remove "2 x " prefix
+              .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '') // Remove special chars at beginning and end
+              .trim();
+              
+            if (!description || description.length < 2) continue;
+              
+            // Determine category based on item name or receipt context
+            let category = item.category || "Shopping";
+            const lowerName = description.toLowerCase();
+            
+            if (lowerName.includes("food") || 
+                lowerName.includes("meal") || 
+                lowerName.includes("drink") || 
+                lowerName.includes("coffee") ||
+                lowerName.includes("salad") ||
+                lowerName.includes("burger") ||
+                lowerName.includes("soup") ||
+                lowerName.includes("sandwich")) {
+              category = "Restaurant";
             }
             
             // Save each item as a separate expense
             const success = await saveExpenseToDatabase({
-              description: item.name || "Store Item",
-              amount: parseFloat(item.amount) || 0,
+              description: description,
+              amount: parseFloat(item.amount),
               date: data.receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
+              category: category,
               paymentMethod: data.receiptData.paymentMethod || "Card"
             });
             
@@ -169,23 +210,29 @@ export const AddExpenseButton = ({
           
           toast.dismiss(scanToast);
           if (savedCount > 0) {
-            toast.success(`Added ${savedCount} of ${totalItems} items from receipt!`);
+            toast.success(`Added ${savedCount} expense${savedCount > 1 ? 's' : ''} from receipt!`);
           } else {
             toast.error("Failed to add items from receipt.");
           }
         } else {
           // Add the receipt as a single expense using store name and total
-          const success = await saveExpenseToDatabase({
-            description: data.receiptData.storeName || "Store Purchase",
-            amount: parseFloat(data.receiptData.total) || 0,
-            date: data.receiptData.date || new Date().toISOString().split('T')[0],
-            category: "Shopping",
-            paymentMethod: data.receiptData.paymentMethod || "Card"
-          });
-          
-          toast.dismiss(scanToast);
-          if (success) {
-            toast.success("Expense added from receipt!");
+          const amount = parseFloat(data.receiptData.total);
+          if (!isNaN(amount) && amount > 0) {
+            const success = await saveExpenseToDatabase({
+              description: data.receiptData.storeName || "Store Purchase",
+              amount: amount,
+              date: data.receiptData.date || new Date().toISOString().split('T')[0],
+              category: "Shopping",
+              paymentMethod: data.receiptData.paymentMethod || "Card"
+            });
+            
+            toast.dismiss(scanToast);
+            if (success) {
+              toast.success("Expense added from receipt!");
+            }
+          } else {
+            toast.dismiss(scanToast);
+            toast.error("Could not determine expense amount from receipt.");
           }
         }
         
@@ -196,6 +243,7 @@ export const AddExpenseButton = ({
       }
     } catch (error) {
       console.error("Error processing receipt:", error);
+      toast.dismiss(scanToast);
       toast.error("Failed to process receipt. Please try again.", { id: scanToast });
     }
   };
