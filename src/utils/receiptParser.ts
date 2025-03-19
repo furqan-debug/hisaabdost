@@ -20,7 +20,7 @@ export function parseReceiptText(text: string): {
   const merchant = extractMerchant(lines);
   
   // Extract line items with their prices
-  const items = extractLineItems(lines);
+  const items = extractLineItems(lines, text);
   
   // Extract date
   const date = extractDate(text, lines);
@@ -59,7 +59,7 @@ function extractMerchant(lines: string[]): string {
 /**
  * Extracts individual line items with their prices
  */
-function extractLineItems(lines: string[]): Array<{name: string; amount: string}> {
+function extractLineItems(lines: string[], fullText: string): Array<{name: string; amount: string}> {
   const items: Array<{name: string; amount: string}> = [];
   
   // Focus on the middle portion of the receipt where items usually are
@@ -148,7 +148,7 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string}
   // If we still found no items, create at least one item based on the total
   if (items.length === 0) {
     // Look for total amount
-    const totalAmount = extractAmount(lines, text);
+    const totalAmount = extractAmount(lines, fullText);
     if (totalAmount !== "0.00") {
       items.push({
         name: "Store Purchase",
