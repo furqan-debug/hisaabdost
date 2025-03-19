@@ -17,13 +17,18 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
       updateField('description', expenseDetails.description);
     }
     
-    if (expenseDetails.amount && !isNaN(parseFloat(expenseDetails.amount)) && parseFloat(expenseDetails.amount) > 0) {
-      updateField('amount', expenseDetails.amount);
+    if (expenseDetails.amount && !isNaN(parseFloat(expenseDetails.amount))) {
+      const amount = parseFloat(expenseDetails.amount);
+      if (amount > 0) {
+        updateField('amount', expenseDetails.amount);
+      }
     }
     
     if (expenseDetails.date) {
       const formattedDate = parseReceiptDate(expenseDetails.date);
-      updateField('date', formattedDate);
+      if (formattedDate) {
+        updateField('date', formattedDate);
+      }
     }
     
     if (expenseDetails.category) {

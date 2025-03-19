@@ -86,20 +86,14 @@ export function ReceiptCapture({
   };
 
   return (
-    <div 
-      className={cn("receipt-capture-container", className)}
-      onClick={children ? undefined : capturePhoto}
-    >
+    <div className={cn("receipt-capture-container", className)}>
       <ReceiptFileInput 
         onChange={handleFileChange} 
         inputRef={fileInputRef} 
       />
       
       {children ? (
-        <div onClick={(e) => {
-          e.stopPropagation();
-          capturePhoto();
-        }}>
+        <div>
           {children}
         </div>
       ) : (

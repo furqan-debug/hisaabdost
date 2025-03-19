@@ -17,42 +17,38 @@ export function ReceiptUploadOptions({
   showIcons = true 
 }: ReceiptUploadOptionsProps) {
   return (
-    <Card className="p-4 bg-background border-dashed border-2 hover:border-primary/50 transition-all cursor-pointer">
-      <div className="flex flex-col items-center gap-3 py-2">
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onUpload();
-            }}
-            disabled={disabled}
-            className="w-full"
-          >
-            {showIcons && <Upload className="mr-2 h-4 w-4" />}
-            Upload Receipt
-          </Button>
-          
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onCapture();
-            }}
-            disabled={disabled}
-            className="w-full"
-          >
-            {showIcons && <Camera className="mr-2 h-4 w-4" />}
-            Take Photo
-          </Button>
-        </div>
-        
-        <div className="text-center text-xs text-muted-foreground">
-          Upload a receipt image or take a photo to automatically extract expense details
-        </div>
+    <div className="space-y-2">
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpload();
+        }}
+        disabled={disabled}
+        className="w-full flex items-center justify-center px-3 py-2"
+      >
+        {showIcons && <Upload className="mr-2 h-4 w-4" />}
+        Upload Receipt
+      </Button>
+      
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={(e) => {
+          e.stopPropagation();
+          onCapture();
+        }}
+        disabled={disabled}
+        className="w-full flex items-center justify-center px-3 py-2"
+      >
+        {showIcons && <Camera className="mr-2 h-4 w-4" />}
+        Take Photo
+      </Button>
+      
+      <div className="text-xs text-muted-foreground text-center mt-1">
+        Upload a receipt image or take a photo to extract expense details
       </div>
-    </Card>
+    </div>
   );
 }

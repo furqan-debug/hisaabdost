@@ -1,9 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { Download, Plus } from "lucide-react";
+import { Download } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
-import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +48,7 @@ export function ExpenseHeader({
         isMobile ? "justify-between w-full" : "w-auto justify-end"
       )}>
         <AddExpenseSheet 
-          onAddExpense={() => {}} // This is now handled internally in the component
+          onAddExpense={onAddExpense}
           expenseToEdit={expenseToEdit}
           onClose={onExpenseEditClose}
           open={showAddExpense || expenseToEdit !== undefined}
@@ -99,27 +98,17 @@ export function ExpenseHeader({
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            
-            <Button
-              onClick={() => setShowAddExpense(true)}
-              className="rounded-lg"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense
-            </Button>
           </>
         )}
       </div>
       
-      {/* Floating Action Button for mobile */}
-      {isMobile && (
-        <div 
-          className="floating-action-button"
-          onClick={() => setShowAddExpense(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </div>
-      )}
+      <AddExpenseSheet 
+        onAddExpense={onAddExpense}
+        expenseToEdit={expenseToEdit}
+        onClose={onExpenseEditClose}
+        open={showAddExpense || expenseToEdit !== undefined}
+        onOpenChange={setShowAddExpense}
+      />
     </header>
   );
 }

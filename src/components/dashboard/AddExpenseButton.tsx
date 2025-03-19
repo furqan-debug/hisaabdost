@@ -70,107 +70,32 @@ export const AddExpenseButton = ({
     setShowAddExpense(true);
   };
   
-  // Button for receipt upload
-  const handleUploadReceipt = () => {
-    // This will be handled by the ReceiptCapture component
-    // We just need an empty handler to pass to the component
-  };
-  
-  // Button for photo capture 
-  const handleTakePhoto = () => {
-    // This will be handled by the ReceiptCapture component
-    // We just need an empty handler to pass to the component
-  };
-  
   return (
     <div className="mt-6">
       <OnboardingTooltip
         content="Add an expense by uploading a receipt or entering details manually"
         defaultOpen={isNewUser}
       >
-        {isMobile ? (
-          <div className="bg-card rounded-xl border shadow-sm p-4">
-            <h3 className="text-base font-medium mb-3">Add New Expense</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddExpense(true)}
-                className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
-              >
-                <Plus className="h-5 w-5 text-primary" />
-                <span className="text-xs font-medium">Manual Entry</span>
-              </Button>
-              
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleUploadReceipt}
-                  className="h-9 rounded-xl border-dashed hover:bg-accent/30 flex items-center justify-center"
-                >
-                  <Upload className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-xs font-medium">Upload Receipt</span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleTakePhoto}
-                  className="h-9 rounded-xl border-dashed hover:bg-accent/30 flex items-center justify-center"
-                >
-                  <Camera className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-xs font-medium">Take Photo</span>
-                </Button>
-                
-                <ReceiptCapture 
-                  onCapture={handleExpenseCapture}
-                  className="hidden"
-                  autoSave={true}
-                />
-              </div>
+        <div className="bg-card rounded-xl border shadow-sm p-4">
+          <h3 className="text-base font-medium mb-3">Add New Expense</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddExpense(true)}
+              className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+            >
+              <Plus className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Manual Entry</span>
+            </Button>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <ReceiptCapture 
+                onCapture={handleExpenseCapture}
+                autoSave={true}
+              />
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-card rounded-xl border shadow-sm p-4">
-              <h3 className="text-base font-medium mb-3">Add New Expense</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  onClick={() => setShowAddExpense(true)}
-                  className="h-20 flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
-                  variant="outline"
-                >
-                  <Plus className="h-5 w-5 text-primary" />
-                  <span className="text-xs font-medium">Manual Entry</span>
-                </Button>
-                
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleUploadReceipt}
-                    className="h-9 rounded-xl border-dashed hover:bg-accent/30 flex items-center justify-center"
-                  >
-                    <Upload className="h-4 w-4 text-primary mr-2" />
-                    <span className="text-xs font-medium">Upload Receipt</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={handleTakePhoto}
-                    className="h-9 rounded-xl border-dashed hover:bg-accent/30 flex items-center justify-center"
-                  >
-                    <Camera className="h-4 w-4 text-primary mr-2" />
-                    <span className="text-xs font-medium">Take Photo</span>
-                  </Button>
-                  
-                  <ReceiptCapture 
-                    onCapture={handleExpenseCapture}
-                    className="hidden"
-                    autoSave={true}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </OnboardingTooltip>
       
       <AddExpenseSheet 
