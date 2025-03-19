@@ -1,4 +1,3 @@
-
 import { parseReceiptData } from "./parseReceipt.ts";
 import { extractDate } from "./dateUtils.ts";
 
@@ -8,114 +7,87 @@ export const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process receipt with OCR
+// Process receipt with Google Cloud Vision API
 export async function processReceiptWithOCR(receiptImage: File, apiKey: string | null) {
-  console.log(`Processing receipt: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
+  console.log(`Processing receipt with Google Vision: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
-  // Create form data for OCR API
-  const ocrFormData = new FormData();
-  ocrFormData.append('language', 'eng');
-  ocrFormData.append('isOverlayRequired', 'false');
-  ocrFormData.append('file', receiptImage);
-  ocrFormData.append('detectOrientation', 'true');
-  ocrFormData.append('scale', 'true');
-  ocrFormData.append('isTable', 'true'); // Better for receipt table structure
-  ocrFormData.append('OCREngine', '2'); // More accurate OCR engine
-  
-  // Specific optimizations for camera captures
-  if (receiptImage.name.includes('capture') || receiptImage.name.includes('image') || 
-      receiptImage.type.includes('image/jpeg') || receiptImage.type.includes('image/png')) {
-    ocrFormData.append('filetype', receiptImage.type.includes('image/jpeg') ? 'jpg' : 'png');
-    ocrFormData.append('detectOrientation', 'true');
-    ocrFormData.append('scale', 'true');
-    ocrFormData.append('isCreateSearchablePdf', 'false');
-    
-    // Add more specific optimizations for mobile captures
-    ocrFormData.append('isTable', 'false'); // Mobile captures don't do well with table detection
-    ocrFormData.append('detectOrientation', 'true'); // Critical for mobile captures
+  // Check if we have an API key before proceeding
+  if (!apiKey) {
+    console.warn("No Google Vision API key provided, using fallback data");
+    return { success: false, error: "Google Vision API key not configured" };
   }
 
-  // Log OCR API key status
-  console.log(`OCR API key status: ${apiKey ? 'present' : 'missing'}`);
-
   try {
-    // Check if we have an API key before proceeding
-    if (!apiKey) {
-      console.warn("No OCR API key provided, using fallback data");
-      return { success: false, error: "OCR API key not configured" };
-    }
-
-    // Send image to OCR API with improved retry logic
-    let attempts = 0;
-    const maxAttempts = 2; // Reduced attempts for faster response
-    let ocrResponse;
-    let ocrData;
-
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`OCR attempt ${attempts + 1} of ${maxAttempts}`);
-        
-        // Set a timeout for the fetch operation
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        
-        ocrResponse = await fetch('https://api.ocr.space/parse/image', {
-          method: 'POST',
-          headers: {
-            'apikey': apiKey,
+    // Convert image to base64
+    const arrayBuffer = await receiptImage.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const base64Image = btoa(String.fromCharCode.apply(null, [...uint8Array]));
+    
+    // Prepare request for Google Cloud Vision API
+    const requestBody = {
+      requests: [
+        {
+          image: {
+            content: base64Image
           },
-          body: ocrFormData,
-          signal: controller.signal
-        }).finally(() => clearTimeout(timeoutId));
+          features: [
+            {
+              type: "TEXT_DETECTION"
+            }
+          ],
+          imageContext: {
+            languageHints: ["en"]
+          }
+        }
+      ]
+    };
 
-        console.log(`OCR API response status: ${ocrResponse.status}`);
-        
-        if (!ocrResponse.ok) {
-          throw new Error(`OCR API returned status ${ocrResponse.status}`);
-        }
-        
-        ocrData = await ocrResponse.json();
-        
-        // Check if we got a successful response with parsed results
-        if (ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
-          break; // Success, exit retry loop
-        } else {
-          throw new Error("No parsed results in OCR response");
-        }
-      } catch (error) {
-        console.error(`OCR attempt ${attempts + 1} error:`, error);
-        
-        // If we've reached max attempts, exit the loop
-        if (attempts + 1 >= maxAttempts) {
-          console.error("Max OCR attempts reached, giving up");
-          break;
-        }
-        
-        // Wait a bit before retrying (shorter wait for better UX)
-        await new Promise(resolve => setTimeout(resolve, 500));
-        attempts++;
+    console.log("Sending request to Google Vision API");
+    
+    // Set a timeout for the fetch operation
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    // Send request to Google Cloud Vision API
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       }
-    }
+    ).finally(() => clearTimeout(timeoutId));
 
-    // If we have no data after all attempts, return error
-    if (!ocrData || !ocrData.ParsedResults || ocrData.ParsedResults.length === 0) {
-      console.error("No parsed results from OCR after multiple attempts");
+    console.log(`Google Vision API response status: ${response.status}`);
+    
+    if (!response.ok) {
+      throw new Error(`Google Vision API returned status ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    
+    // Check if we got a successful response with text annotations
+    if (!responseData.responses || 
+        !responseData.responses[0] || 
+        !responseData.responses[0].textAnnotations || 
+        responseData.responses[0].textAnnotations.length === 0) {
+      console.error("No text annotations in Google Vision response");
       return { success: false, error: "Failed to extract text from image" };
     }
 
-    // Log a sample of the extracted text for debugging
-    const extractedText = ocrData.ParsedResults[0].ParsedText;
+    // Extract the full text from the first annotation
+    const extractedText = responseData.responses[0].textAnnotations[0].description;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + (extractedText.length > 200 ? "..." : ""));
-
-    // Split into lines for better processing
-    const textLines = extractedText.split('\n').filter(line => line.trim().length > 0);
-    
-    // Extract date specifically using our enhanced date extractor
-    const extractedDate = extractDate(textLines);
-    console.log("Extracted date:", extractedDate);
 
     // Parse receipt data from extracted text
     const receiptData = parseReceiptData(extractedText);
+    
+    // Extract date specifically
+    const textLines = extractedText.split('\n').filter(line => line.trim().length > 0);
+    const extractedDate = extractDate(textLines);
     
     // Ensure the date is included
     if (extractedDate && (!receiptData.date || receiptData.date === "Invalid Date")) {
@@ -149,14 +121,14 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
 
     return { success: true, receiptData };
   } catch (error) {
-    console.error("OCR API error:", error);
-    return { success: false, error: error.message || "OCR processing failed" };
+    console.error("Google Vision API error:", error);
+    return { success: false, error: error.message || "Vision API processing failed" };
   }
 }
 
 // Generate fallback receipt data if OCR fails
 export function generateFallbackReceiptData() {
-  // Use today's date for the fallback data
+  // Keep existing function implementation
   const today = new Date().toISOString().split('T')[0];
   
   return {

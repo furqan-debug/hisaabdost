@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, processReceiptWithOCR, generateFallbackReceiptData } from "./utils/ocrHelper.ts"
 
-// Get OCR API key from environment variable
-const OCR_API_KEY = Deno.env.get('OCR_SPACE_API_KEY')
+// Get Google Vision API key from environment variable
+const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY')
 
 serve(async (req) => {
   console.log("Receipt scan function called");
@@ -50,8 +50,8 @@ serve(async (req) => {
         )
       }
 
-      // Process receipt with OCR with timeout
-      const resultPromise = processReceiptWithOCR(receiptImage, OCR_API_KEY);
+      // Process receipt with Google Vision API with timeout
+      const resultPromise = processReceiptWithOCR(receiptImage, VISION_API_KEY);
       const result = await Promise.race([resultPromise, timeoutPromise]);
       
       if (result.success) {
@@ -60,21 +60,21 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       } else {
-        // If OCR fails, provide fallback data
-        console.log("OCR failed, returning fallback data");
+        // If Google Vision fails, provide fallback data
+        console.log("Google Vision API failed, returning fallback data");
         const fallbackData = generateFallbackReceiptData();
         
         return new Response(
           JSON.stringify({ 
             success: true, 
             receiptData: fallbackData,
-            note: "Using fallback data as OCR service unavailable or failed" 
+            note: "Using fallback data as Vision service unavailable or failed" 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
     } catch (ocrError) {
-      console.error("OCR processing error or timeout:", ocrError);
+      console.error("Vision API processing error or timeout:", ocrError);
       
       // Provide realistic fallback data
       const fallbackData = generateFallbackReceiptData();
@@ -83,7 +83,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           receiptData: fallbackData,
-          note: "Using fallback data as OCR service unavailable or failed"
+          note: "Using fallback data as Vision service unavailable or failed"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

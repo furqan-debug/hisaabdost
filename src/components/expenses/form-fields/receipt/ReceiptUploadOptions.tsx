@@ -48,7 +48,7 @@ export function ReceiptUploadOptions({
       </div>
       
       <div className="text-xs text-muted-foreground text-center mt-1">
-        Uploaded receipts are automatically scanned and added to your expenses
+        Uploaded receipts are automatically scanned using Google Vision AI
       </div>
     </div>
   );
