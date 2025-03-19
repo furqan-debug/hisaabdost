@@ -51,37 +51,52 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         toast.success("Receipt scanned successfully!");
         
         if (onScanComplete) {
-          // Use the first item or aggregate data if there are multiple items
           const receiptData = data.receiptData;
           
-          if (receiptData.items && receiptData.items.length > 0) {
-            // For single-item receipts, use that item
-            // For multi-item receipts, we'll use the store name as the description
-            const description = receiptData.items.length === 1 
-              ? receiptData.items[0].name 
-              : receiptData.storeName || "Store Purchase";
-              
-            const amount = receiptData.items.length === 1 
-              ? receiptData.items[0].amount 
-              : receiptData.total;
-              
-            onScanComplete({
-              description: description,
-              amount: amount || receiptData.total || "0.00",
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
-          } else {
-            // Fallback to using overall receipt data
-            onScanComplete({
-              description: receiptData.storeName || "Store Purchase",
-              amount: receiptData.total || "0.00",
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
+          // For single-item receipts, use that item description
+          // For multi-item receipts, use the store name as the description
+          let description = "Store Purchase";
+          let amount = "0.00";
+          
+          if (receiptData.storeName && receiptData.storeName.trim().length > 2) {
+            description = receiptData.storeName.trim();
           }
+          
+          if (receiptData.items && receiptData.items.length > 0) {
+            if (receiptData.items.length === 1) {
+              // Single item receipt - use the item name
+              description = receiptData.items[0].name || description;
+              amount = receiptData.items[0].amount || amount;
+            } else {
+              // Multi-item receipt - use store name and total
+              amount = receiptData.total || 
+                       receiptData.items.reduce((sum, item) => 
+                         sum + parseFloat(item.amount || "0"), 0).toFixed(2);
+            }
+          } else {
+            // Fallback to using the total
+            amount = receiptData.total || amount;
+          }
+          
+          // Clean up description
+          description = description
+            .replace(/[^\w\s\-',.&]/g, '')  // Remove special chars
+            .replace(/\s{2,}/g, ' ')        // Replace multiple spaces
+            .trim();
+          
+          // Make sure we have a reasonable amount
+          const parsedAmount = parseFloat(amount);
+          if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            amount = "0.00";
+          }
+              
+          onScanComplete({
+            description: description,
+            amount: amount,
+            date: receiptData.date || new Date().toISOString().split('T')[0],
+            category: "Shopping",
+            paymentMethod: receiptData.paymentMethod || "Card"
+          });
         }
       } else {
         toast.dismiss(scanToast);
