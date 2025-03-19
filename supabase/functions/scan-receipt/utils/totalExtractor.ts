@@ -16,12 +16,24 @@ export function extractTotal(
     /to\s*pay\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
     /final\s*total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
     /grand\s*total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
-    /total\s*due\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i
+    /total\s*due\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
+    /amount\s*due\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i
   ];
   
-  // First look at the bottom third of the receipt where totals are typically found
+  // First look at the bottom portion of the receipt where totals are typically found
   const startIndex = Math.floor(lines.length * 0.6);
   for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    
+    // Skip lines that don't contain total-related words
+    if (!line.includes("total") && 
+        !line.includes("amount") && 
+        !line.includes("sum") && 
+        !line.includes("due") && 
+        !line.includes("balance")) {
+      continue;
+    }
+    
     for (const pattern of totalPatterns) {
       const totalMatch = lines[i].match(pattern);
       if (totalMatch) {
@@ -29,51 +41,50 @@ export function extractTotal(
         return totalMatch[1];
       }
     }
-    
-    // Also look for lines with just a dollar amount near the bottom
-    if (i > lines.length * 0.8) {
-      const amountMatch = lines[i].match(/^\s*\$?\s*(\d+\.\d{2})\s*$/);
+  }
+  
+  // Second pass: look for any dollar amount on a line containing 'total'
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    if (line.includes("total") || line.includes("amount due")) {
+      const amountMatch = lines[i].match(/\$?\s*(\d+\.\d{2})/);
       if (amountMatch) {
+        console.log(`Found total from 'total' line: $${amountMatch[1]}`);
+        return amountMatch[1];
+      }
+    }
+  }
+  
+  // Third pass: look for standalone dollar amounts near the bottom
+  for (let i = Math.floor(lines.length * 0.8); i < lines.length; i++) {
+    const amountMatch = lines[i].match(/^\s*\$?\s*(\d+\.\d{2})\s*$/);
+    if (amountMatch && parseFloat(amountMatch[1]) > 0) {
+      // Check if this amount is significantly larger than any item price
+      // (could indicate it's the total)
+      const amount = parseFloat(amountMatch[1]);
+      const maxItemPrice = Math.max(...items.map(item => parseFloat(item.amount) || 0));
+      
+      if (amount > maxItemPrice || amount >= sumItemPrices(items) * 0.9) {
         console.log(`Found potential total from standalone amount: $${amountMatch[1]}`);
         return amountMatch[1];
       }
     }
   }
   
-  // Alternative approach: Look for the largest number that might be the total
-  const amounts = [];
-  for (const line of lines) {
-    const amountMatches = line.match(/\$?\s*(\d+\.\d{2})/g);
-    if (amountMatches) {
-      for (const match of amountMatches) {
-        const amount = parseFloat(match.replace(/[^\d\.]/g, ''));
-        if (!isNaN(amount)) {
-          amounts.push(amount);
-        }
-      }
-    }
-  }
-  
-  if (amounts.length > 0) {
-    // The highest amount is likely the total
-    const maxAmount = Math.max(...amounts);
-    console.log(`Using highest amount as total: $${maxAmount.toFixed(2)}`);
-    return maxAmount.toFixed(2);
-  }
-  
-  // If no total found, sum the items
-  if (items.length > 0) {
-    try {
-      const sum = items.reduce((total, item) => {
-        const amount = parseFloat(item.amount.replace(/[^\d\.]/g, ''));
-        return total + (isNaN(amount) ? 0 : amount);
-      }, 0);
-      console.log(`Calculated total from items: $${sum.toFixed(2)}`);
-      return sum.toFixed(2);
-    } catch (err) {
-      console.error("Error calculating sum from items:", err);
-    }
+  // Calculate sum of items as fallback
+  const sum = sumItemPrices(items);
+  if (sum > 0) {
+    console.log(`Calculated total from items: $${sum.toFixed(2)}`);
+    return sum.toFixed(2);
   }
   
   return "0.00";
+}
+
+// Sum the prices of all items
+function sumItemPrices(items: Array<{name: string; amount: string; category: string}>): number {
+  return items.reduce((total, item) => {
+    const amount = parseFloat(item.amount);
+    return total + (isNaN(amount) ? 0 : amount);
+  }, 0);
 }

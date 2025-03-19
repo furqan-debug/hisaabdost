@@ -51,17 +51,24 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         toast.success("Receipt scanned successfully!");
         
         if (onScanComplete) {
-          // Use the receiptData to populate expense details
+          // Use the first item or aggregate data if there are multiple items
           const receiptData = data.receiptData;
           
           if (receiptData.items && receiptData.items.length > 0) {
-            // Use the first item's details
-            const firstItem = receiptData.items[0];
+            // For single-item receipts, use that item
+            // For multi-item receipts, we'll use the store name as the description
+            const description = receiptData.items.length === 1 
+              ? receiptData.items[0].name 
+              : receiptData.storeName || "Store Purchase";
+              
+            const amount = receiptData.items.length === 1 
+              ? receiptData.items[0].amount 
+              : receiptData.total;
+              
             onScanComplete({
-              description: firstItem.name || receiptData.storeName || "Store Purchase",
-              amount: firstItem.amount || receiptData.total || "0.00",
+              description: description,
+              amount: amount || receiptData.total || "0.00",
               date: receiptData.date || new Date().toISOString().split('T')[0],
-              // Always use "Shopping" category for OCR-scanned receipts
               category: "Shopping",
               paymentMethod: receiptData.paymentMethod || "Card"
             });
@@ -71,7 +78,6 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
               description: receiptData.storeName || "Store Purchase",
               amount: receiptData.total || "0.00",
               date: receiptData.date || new Date().toISOString().split('T')[0],
-              // Always use "Shopping" category for OCR-scanned receipts
               category: "Shopping",
               paymentMethod: receiptData.paymentMethod || "Card"
             });

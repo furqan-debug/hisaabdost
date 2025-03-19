@@ -48,7 +48,7 @@ export function ReceiptUploadOptions({
       </div>
       
       <div className="text-xs text-muted-foreground text-center mt-1">
-        Scanned receipts are automatically added to your expenses
+        Uploaded receipts are automatically scanned and added to your expenses
       </div>
     </div>
   );

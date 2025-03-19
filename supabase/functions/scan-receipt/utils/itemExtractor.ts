@@ -1,14 +1,14 @@
-
 // Functions for extracting line items from receipt text
 
 // Extract individual line items from receipt text
 export function extractLineItems(lines: string[]): Array<{name: string; amount: string; category: string}> {
   const items: Array<{name: string; amount: string; category: string}> = [];
-  const pricePattern = /\$?\s?(\d+\.\d{2})\s*$/;
+  // More precise price pattern that handles different formats
+  const pricePattern = /\$?\s*(\d+\.\d{2})\s*$/;
   
   // Skip the first few lines (likely header) and last few lines (likely footer)
-  const startIndex = Math.min(5, Math.floor(lines.length * 0.2));
-  const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.75));
+  const startIndex = Math.min(5, Math.floor(lines.length * 0.15));
+  const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
   
   console.log(`Looking for items between lines ${startIndex} and ${endIndex}`);
   
@@ -34,7 +34,6 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
       
       if (itemName && price && parseFloat(price) > 0) {
         console.log(`Found item: "${itemName}" with price: $${price}`);
-        // Always set category to "Shopping" for OCR-scanned receipts
         items.push({
           name: itemName,
           amount: price,
@@ -50,10 +49,14 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
     extractItemsAggressively(lines, startIndex, endIndex, items);
   }
   
-  // Filter out any items with zero or negative prices
+  // Filter out any items with zero or negative prices, or non-descriptive names
   const validItems = items.filter(item => {
     const price = parseFloat(item.amount);
-    return !isNaN(price) && price > 0 && item.name.length > 1;
+    return !isNaN(price) && 
+           price > 0 && 
+           item.name.length > 1 && 
+           !item.name.match(/^\d+$/) && // Not just digits
+           !isCommonNonItemText(item.name);
   });
   
   console.log(`Found ${validItems.length} valid items out of ${items.length} total items`);
@@ -62,44 +65,72 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
 
 // Check if a line should be skipped when searching for items
 export function shouldSkipLine(line: string): boolean {
-  return line.toLowerCase().includes("receipt") || 
-    line.toLowerCase().includes("order") || 
-    line.toLowerCase().includes("tel:") || 
-    line.toLowerCase().includes("phone") || 
-    line.toLowerCase().includes("address") || 
-    line.toLowerCase().includes("thank you") ||
-    line.match(/^\s*$/) ||
-    line.toLowerCase().includes("subtotal") ||
-    line.toLowerCase().includes("total") ||
-    line.toLowerCase().includes("change") ||
-    line.toLowerCase().includes("cash") ||
-    line.toLowerCase().includes("card") ||
-    line.toLowerCase().includes("payment") ||
-    line.toLowerCase().includes("tax") ||
-    line.toLowerCase().match(/^\d+$/) || // Just a number
-    line.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/); // Just a date
+  const lowerLine = line.toLowerCase();
+  return lowerLine.includes("receipt") || 
+    lowerLine.includes("order") || 
+    lowerLine.includes("tel:") || 
+    lowerLine.includes("phone") || 
+    lowerLine.includes("address") || 
+    lowerLine.includes("thank you") ||
+    lowerLine.includes("subtotal") ||
+    lowerLine.includes("total") ||
+    lowerLine.includes("change") ||
+    lowerLine.includes("cash") ||
+    lowerLine.includes("card") ||
+    lowerLine.includes("payment") ||
+    lowerLine.includes("tax") ||
+    lowerLine.includes("date") ||
+    lowerLine.includes("store") ||
+    lowerLine.includes("coupon") ||
+    lowerLine.includes("discount") ||
+    lowerLine.match(/^\d+$/) || // Just a number
+    lowerLine.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/); // Just a date
 }
 
 // Clean up an item name by removing common prefixes and special characters
 export function cleanupItemName(itemName: string): string {
   let cleanName = itemName;
+  // Remove quantity indicators
   cleanName = cleanName.replace(/^\d+\s*x\s*/i, ''); // Remove "2 x " prefix
   cleanName = cleanName.replace(/^\d+\s+/i, ''); // Remove "2 " prefix
   cleanName = cleanName.replace(/^item\s*\d*\s*/i, ''); // Remove "Item 1" prefix
-  cleanName = cleanName.replace(/[\*\#\$\@]/g, ''); // Remove special characters
+  
+  // Remove special characters but keep apostrophes and hyphens
+  cleanName = cleanName.replace(/[\*\#\$\@\%\(\)]/g, '');
   
   // Remove common SKU/product code patterns
   cleanName = cleanName.replace(/\b[A-Z0-9]{5,10}\b/g, '');
   
-  // Trim any remaining whitespace
-  cleanName = cleanName.trim();
+  // Remove multiple spaces and trim
+  cleanName = cleanName.replace(/\s+/g, ' ').trim();
   
   // If the name is too short or all numbers, replace with a generic name
   if (cleanName.length < 2 || /^\d+$/.test(cleanName)) {
-    return "Item";
+    return "Store Item";
   }
   
+  // Capitalize first letter of each word
+  cleanName = cleanName.replace(/\w\S*/g, (txt) => {
+    return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
+  });
+  
   return cleanName;
+}
+
+// Check if text is commonly found in receipts but isn't an actual item
+function isCommonNonItemText(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return lowerText.includes("total") || 
+         lowerText.includes("subtotal") || 
+         lowerText.includes("tax") || 
+         lowerText.includes("change") || 
+         lowerText.includes("balance") || 
+         lowerText.includes("cash") || 
+         lowerText.includes("card") || 
+         lowerText === "item" || 
+         lowerText === "qty" || 
+         lowerText === "amount" || 
+         lowerText === "price";
 }
 
 // Try a more aggressive approach to extract items from receipt text
@@ -109,20 +140,17 @@ export function extractItemsAggressively(
   endIndex: number, 
   items: Array<{name: string; amount: string; category: string}>
 ): void {
-  // Second pass: look for any numeric values that could be prices
+  // Look for any numeric values that could be prices
   for (let i = startIndex; i < endIndex; i++) {
     const line = lines[i].trim();
     
     // Skip already processed lines or clear non-item lines
-    if (line.toLowerCase().includes("total") || 
-        line.toLowerCase().includes("tax") ||
-        line.toLowerCase().includes("subtotal") ||
-        line.length < 3) {
+    if (shouldSkipLine(line)) {
       continue;
     }
     
     // Look for price-like patterns anywhere in the line
-    const priceMatches = Array.from(line.matchAll(/\$?\s?(\d+\.\d{2})/g));
+    const priceMatches = Array.from(line.matchAll(/\$?\s*(\d+\.\d{2})/g));
     
     if (priceMatches.length === 1) {
       const price = priceMatches[0][1];
@@ -142,12 +170,12 @@ export function extractItemsAggressively(
       itemName = cleanupItemName(itemName);
       
       if (itemName && price && parseFloat(price) > 0 && 
-          !items.some(item => item.name === itemName && item.amount === price)) {
+          !items.some(item => item.name === itemName && item.amount === price) &&
+          !isCommonNonItemText(itemName)) {
         console.log(`[Pass 2] Found item: "${itemName}" with price: $${price}`);
         items.push({
-          name: itemName || "Unknown Item",
+          name: itemName,
           amount: price,
-          // Always set category to "Shopping" for OCR-scanned receipts
           category: "Shopping"
         });
       }
@@ -161,7 +189,7 @@ export function extractItemsAggressively(
         const itemName = cleanupItemName(line);
         const price = nextLinePriceMatch[1];
         
-        if (parseFloat(price) > 0) {
+        if (parseFloat(price) > 0 && !isCommonNonItemText(itemName)) {
           console.log(`[Pass 3] Found item spanning two lines: "${itemName}" with price: $${price}`);
           items.push({
             name: itemName,
