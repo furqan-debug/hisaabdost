@@ -13,6 +13,31 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
   const handleScanComplete = (expenseDetails: ScanResult) => {
     console.log("Handling scan complete with details:", expenseDetails);
     
+    // Determine the best category based on the scan context
+    let category = expenseDetails.category || "Shopping";
+    
+    // If the description contains restaurant-related words, use Restaurant category
+    if (expenseDetails.description) {
+      const lowerDesc = expenseDetails.description.toLowerCase();
+      if (lowerDesc.includes("restaurant") || 
+          lowerDesc.includes("dining") || 
+          lowerDesc.includes("cafe") || 
+          lowerDesc.includes("bar") ||
+          lowerDesc.includes("grill")) {
+        category = "Restaurant";
+      }
+    }
+    
+    // Handle category assignment for menu items
+    if (expenseDetails.category === "Food" || 
+        expenseDetails.category === "Drinks" || 
+        expenseDetails.category === "Restaurant") {
+      category = "Restaurant";
+    }
+    
+    // Update category first so other fields have context
+    updateField('category', category);
+    
     // Carefully validate and update each field if present
     if (expenseDetails.description && expenseDetails.description.trim().length > 2) {
       // Trim whitespace and make sure description is presentable
@@ -39,10 +64,10 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
         // Validate this is a reasonable date (not in future, not too far in past)
         const dateObj = new Date(formattedDate);
         const today = new Date();
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        const tenYearsAgo = new Date();
+        tenYearsAgo.setFullYear(today.getFullYear() - 10);
         
-        if (dateObj <= today && dateObj >= oneYearAgo) {
+        if (dateObj <= today && dateObj >= tenYearsAgo) {
           updateField('date', formattedDate);
         } else {
           console.warn("Rejected invalid date:", formattedDate);
@@ -52,15 +77,15 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
       }
     }
     
-    if (expenseDetails.category && expenseDetails.category.trim().length > 0) {
-      updateField('category', expenseDetails.category);
-    } else {
-      // Default to Shopping for receipts
-      updateField('category', 'Shopping');
-    }
-    
+    // For payment method, respect what's provided, with fallbacks based on context
     if (expenseDetails.paymentMethod && expenseDetails.paymentMethod.trim().length > 0) {
       updateField('paymentMethod', expenseDetails.paymentMethod);
+    } else if (category === "Restaurant") {
+      // Default to Card for restaurant receipts
+      updateField('paymentMethod', "Card");
+    } else {
+      // Default to Card for other receipts
+      updateField('paymentMethod', "Card");
     }
     
     toast.success("Receipt data extracted and filled in! Please review before submitting.");
