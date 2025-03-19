@@ -1,15 +1,15 @@
 
 import React from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
-import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Camera } from "lucide-react";
+import { Upload, Camera, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -29,6 +29,7 @@ export const AddExpenseButton = ({
   onAddExpense,
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const handleExpenseCapture = (expenseDetails: {
     description: string;
@@ -61,8 +62,7 @@ export const AddExpenseButton = ({
         description: expenseDetails.description || "",
         amount: parseFloat(expenseDetails.amount) || 0,
         date: formattedDate,
-        // Always use "Shopping" category for OCR-scanned receipts
-        category: "Shopping",
+        category: expenseDetails.category || "Shopping",
         paymentMethod: expenseDetails.paymentMethod || "Cash",
       };
       setExpenseToEdit(expense as Expense);
@@ -72,10 +72,59 @@ export const AddExpenseButton = ({
     setShowAddExpense(true);
   };
 
+  // Save expense directly to database
+  const saveExpenseToDatabase = async (expense: {
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => {
+    const saveToast = toast.loading("Adding expense to your list...");
+    
+    try {
+      console.log("Saving expense:", expense);
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData || !userData.user) {
+        toast.error("You must be logged in to add expenses");
+        toast.dismiss(saveToast);
+        return false;
+      }
+      
+      const { error } = await supabase.from('expenses').insert([{
+        user_id: userData.user.id,
+        description: expense.description || "Store Purchase",
+        amount: expense.amount || 0,
+        date: expense.date || new Date().toISOString().split('T')[0],
+        category: expense.category || "Shopping",
+        payment: expense.paymentMethod || "Card",
+        is_recurring: false,
+        notes: ""
+      }]);
+      
+      if (error) throw error;
+      
+      // Success
+      toast.dismiss(saveToast);
+      toast.success("Expense added successfully!");
+      
+      // Refresh expenses list
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving expense:", error);
+      toast.dismiss(saveToast);
+      toast.error("Failed to add expense. Please try again.");
+      return false;
+    }
+  };
+
+  // Process receipt scan with direct database save
   const processReceiptScan = async (file: File) => {
     if (!file) return;
 
-    toast.loading("Scanning receipt...", { id: "scanning-receipt" });
+    const scanToast = toast.loading("Scanning and processing receipt...");
     try {
       const formData = new FormData();
       formData.append('receipt', file);
@@ -86,25 +135,68 @@ export const AddExpenseButton = ({
       
       if (error) {
         console.error("Error scanning receipt:", error);
-        toast.error("Failed to scan receipt. Please try again.", { id: "scanning-receipt" });
+        toast.error("Failed to scan receipt. Please try again.", { id: scanToast });
         return;
       }
       
       if (data && data.success && data.receiptData) {
-        toast.success("Receipt scanned successfully!", { id: "scanning-receipt" });
-        handleExpenseCapture({
-          description: data.receiptData.storeName || "Store purchase",
-          amount: data.receiptData.total || "0.00",
-          date: data.receiptData.date || new Date().toISOString().split('T')[0],
-          category: "Shopping",
-          paymentMethod: data.receiptData.paymentMethod || "Card",
-        });
+        toast.success("Receipt scanned successfully!", { id: scanToast });
+        
+        // For receipts with multiple items, add each as a separate expense
+        if (data.receiptData.items && data.receiptData.items.length > 0) {
+          let savedCount = 0;
+          const totalItems = data.receiptData.items.length;
+          
+          toast.loading(`Adding ${totalItems} items from receipt...`, { id: scanToast });
+          
+          for (const item of data.receiptData.items) {
+            // Skip invalid items
+            if (!item.name || parseFloat(item.amount) <= 0) {
+              continue;
+            }
+            
+            // Save each item as a separate expense
+            const success = await saveExpenseToDatabase({
+              description: item.name || "Store Item",
+              amount: parseFloat(item.amount) || 0,
+              date: data.receiptData.date || new Date().toISOString().split('T')[0],
+              category: "Shopping",
+              paymentMethod: data.receiptData.paymentMethod || "Card"
+            });
+            
+            if (success) savedCount++;
+          }
+          
+          toast.dismiss(scanToast);
+          if (savedCount > 0) {
+            toast.success(`Added ${savedCount} of ${totalItems} items from receipt!`);
+          } else {
+            toast.error("Failed to add items from receipt.");
+          }
+        } else {
+          // Add the receipt as a single expense using store name and total
+          const success = await saveExpenseToDatabase({
+            description: data.receiptData.storeName || "Store Purchase",
+            amount: parseFloat(data.receiptData.total) || 0,
+            date: data.receiptData.date || new Date().toISOString().split('T')[0],
+            category: "Shopping",
+            paymentMethod: data.receiptData.paymentMethod || "Card"
+          });
+          
+          toast.dismiss(scanToast);
+          if (success) {
+            toast.success("Expense added from receipt!");
+          }
+        }
+        
+        // Refresh the expenses list
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
       } else {
-        toast.error("Could not extract data from receipt. Please try a clearer image.", { id: "scanning-receipt" });
+        toast.error("Could not extract data from receipt. Please try a clearer image.", { id: scanToast });
       }
     } catch (error) {
       console.error("Error processing receipt:", error);
-      toast.error("Failed to process receipt. Please try again.", { id: "scanning-receipt" });
+      toast.error("Failed to process receipt. Please try again.", { id: scanToast });
     }
   };
   
