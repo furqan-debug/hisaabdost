@@ -8,6 +8,8 @@ import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptCapture } from "@/components/expenses/form-fields/ReceiptCapture";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -69,6 +71,42 @@ export const AddExpenseButton = ({
     // Open the add expense sheet
     setShowAddExpense(true);
   };
+
+  const processReceiptScan = async (file: File) => {
+    if (!file) return;
+
+    toast.loading("Scanning receipt...", { id: "scanning-receipt" });
+    try {
+      const formData = new FormData();
+      formData.append('receipt', file);
+      
+      const { data, error } = await supabase.functions.invoke('scan-receipt', {
+        body: formData,
+      });
+      
+      if (error) {
+        console.error("Error scanning receipt:", error);
+        toast.error("Failed to scan receipt. Please try again.", { id: "scanning-receipt" });
+        return;
+      }
+      
+      if (data && data.success && data.receiptData) {
+        toast.success("Receipt scanned successfully!", { id: "scanning-receipt" });
+        handleExpenseCapture({
+          description: data.receiptData.storeName || "Store purchase",
+          amount: data.receiptData.total || "0.00",
+          date: data.receiptData.date || new Date().toISOString().split('T')[0],
+          category: "Shopping",
+          paymentMethod: data.receiptData.paymentMethod || "Card",
+        });
+      } else {
+        toast.error("Could not extract data from receipt. Please try a clearer image.", { id: "scanning-receipt" });
+      }
+    } catch (error) {
+      console.error("Error processing receipt:", error);
+      toast.error("Failed to process receipt. Please try again.", { id: "scanning-receipt" });
+    }
+  };
   
   return (
     <div className="mt-6">
@@ -97,31 +135,7 @@ export const AddExpenseButton = ({
                 fileInput.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
-                    // Handle the file upload for receipt scanning
-                    const formData = new FormData();
-                    formData.append('receipt', file);
-                    
-                    // Use your receipt scanning function here
-                    // This is just a placeholder, replace with your actual scanning logic
-                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`, {
-                      method: 'POST',
-                      body: formData,
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                      if (data.success && data.receiptData) {
-                        handleExpenseCapture({
-                          description: data.receiptData.storeName || "",
-                          amount: data.receiptData.total || "0",
-                          date: data.receiptData.date || "",
-                          category: "Shopping",
-                          paymentMethod: data.receiptData.paymentMethod || "Cash",
-                        });
-                      }
-                    })
-                    .catch(error => {
-                      console.error("Error scanning receipt:", error);
-                    });
+                    processReceiptScan(file);
                   }
                 };
                 fileInput.click();
@@ -135,7 +149,6 @@ export const AddExpenseButton = ({
             <Button
               variant="outline"
               onClick={() => {
-                // Trigger camera capture for receipt scanning
                 const captureInput = document.createElement('input');
                 captureInput.type = 'file';
                 captureInput.accept = 'image/*';
@@ -143,30 +156,7 @@ export const AddExpenseButton = ({
                 captureInput.onchange = (e) => {
                   const file = (e.target as HTMLInputElement).files?.[0];
                   if (file) {
-                    // Handle the captured photo for receipt scanning
-                    const formData = new FormData();
-                    formData.append('receipt', file);
-                    
-                    // Use your receipt scanning function here
-                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-receipt`, {
-                      method: 'POST',
-                      body: formData,
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                      if (data.success && data.receiptData) {
-                        handleExpenseCapture({
-                          description: data.receiptData.storeName || "",
-                          amount: data.receiptData.total || "0",
-                          date: data.receiptData.date || "",
-                          category: "Shopping",
-                          paymentMethod: data.receiptData.paymentMethod || "Cash",
-                        });
-                      }
-                    })
-                    .catch(error => {
-                      console.error("Error scanning receipt:", error);
-                    });
+                    processReceiptScan(file);
                   }
                 };
                 captureInput.click();
