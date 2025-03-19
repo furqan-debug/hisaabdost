@@ -148,7 +148,7 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string}
   // If we still found no items, create at least one item based on the total
   if (items.length === 0) {
     // Look for total amount
-    const totalAmount = extractAmount(text, lines);
+    const totalAmount = extractAmount(lines, text);
     if (totalAmount !== "0.00") {
       items.push({
         name: "Store Purchase",
@@ -163,7 +163,7 @@ function extractLineItems(lines: string[]): Array<{name: string; amount: string}
 /**
  * Extracts the total amount from receipt text (used as fallback)
  */
-function extractAmount(text: string, lines: string[]): string {
+function extractAmount(lines: string[], fullText: string): string {
   // Look for total patterns with common keywords
   const totalPatterns = [
     /total\s*[:\.\s]*\$?\s*(\d+\.\d{2})/i,
@@ -213,7 +213,7 @@ function extractAmount(text: string, lines: string[]): string {
   
   // Last resort: check the whole text for any pattern with "total"
   for (const pattern of totalPatterns) {
-    const match = text.match(pattern);
+    const match = fullText.match(pattern);
     if (match && match[1]) {
       return match[1];
     }
