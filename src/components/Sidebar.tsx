@@ -12,10 +12,9 @@ import {
 import {
   BarChart2,
   Home,
-  PiggyBank,
+  Wallet,
   Receipt,
   Target,
-  Wallet,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { MonthSelector } from "./MonthSelector";
@@ -24,7 +23,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Receipt, label: "Expenses", path: "/expenses" },
-  { icon: PiggyBank, label: "Budget", path: "/budget" },
+  { icon: Wallet, label: "Budget", path: "/budget" },
   { icon: BarChart2, label: "Analytics", path: "/analytics" },
   { icon: Target, label: "Goals", path: "/goals" },
 ];

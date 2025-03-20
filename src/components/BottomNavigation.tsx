@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, PiggyBank, BarChart2, Target } from "lucide-react";
+import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Receipt, label: "Expenses", path: "/expenses" },
-  { icon: PiggyBank, label: "Budget", path: "/budget" },
+  { icon: Wallet, label: "Budget", path: "/budget" },
   { icon: BarChart2, label: "Analytics", path: "/analytics" },
   { icon: Target, label: "Goals", path: "/goals" },
 ];
