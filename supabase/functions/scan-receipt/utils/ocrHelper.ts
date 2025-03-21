@@ -8,7 +8,7 @@ export const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process receipt with Google Cloud Vision API
+// Process receipt with Google Cloud Vision API - simplified
 export async function processReceiptWithOCR(receiptImage: File, apiKey: string | null) {
   console.log(`Processing receipt with Google Vision: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
@@ -86,36 +86,29 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     // Parse receipt data from extracted text
     const receiptData = parseReceiptData(extractedText);
     
-    // Extract date specifically
-    const textLines = extractedText.split('\n').filter(line => line.trim().length > 0);
-    const extractedDate = extractDate(textLines);
-    
-    // Ensure the date is included
-    if (extractedDate && (!receiptData.date || receiptData.date === "Invalid Date")) {
-      receiptData.date = extractedDate;
-    }
-    
-    // If we still don't have a valid date, use today's date
+    // Ensure we have a valid date
     if (!receiptData.date || receiptData.date === "Invalid Date") {
       receiptData.date = new Date().toISOString().split('T')[0];
     }
     
-    // Make sure we have at least one valid item
+    // Ensure we have at least one valid item
     if (!receiptData.items || receiptData.items.length === 0) {
       console.log("No valid items found, creating a default item based on store name");
       receiptData.items = [{
-        name: receiptData.storeName || "Unknown Purchase",
+        name: receiptData.storeName || "Store Purchase",
         amount: receiptData.total || "0.00",
         category: "Shopping"
       }];
     }
     
-    // If the total is missing, calculate it from items
+    // Ensure we have a valid total
     if (!receiptData.total || parseFloat(receiptData.total) <= 0) {
-      const calculatedTotal = receiptData.items.reduce((sum, item) => {
-        return sum + (parseFloat(item.amount) || 0);
-      }, 0);
-      receiptData.total = calculatedTotal.toFixed(2);
+      // Use the first item's amount if we have no total
+      if (receiptData.items.length > 0) {
+        receiptData.total = receiptData.items[0].amount;
+      } else {
+        receiptData.total = "0.00";
+      }
     }
     
     console.log("Final extracted receipt data:", receiptData);
@@ -127,48 +120,25 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   }
 }
 
-// Generate fallback receipt data if OCR fails - use random values to avoid identical entries
+// Generate fallback receipt data - simplified
 export function generateFallbackReceiptData() {
   const today = new Date().toISOString().split('T')[0];
   
-  // Generate random values to make fallback data more realistic and prevent identical entries
-  const randomAmount1 = (Math.round(Math.random() * 3000 + 500) / 100).toFixed(2);
-  const randomAmount2 = (Math.round(Math.random() * 2000 + 300) / 100).toFixed(2);
+  // Generate random amount
+  const randomAmount = (Math.round(Math.random() * 5000 + 500) / 100).toFixed(2);
   
-  const possibleItems = [
-    "Coffee and Pastry", "Lunch Special", "Grocery Items", 
-    "Restaurant Meal", "Office Supplies", "Household Items",
-    "Transportation", "Electronics"
-  ];
-  
-  // Pick random items from the list
-  const randomItemIndex1 = Math.floor(Math.random() * possibleItems.length);
-  let randomItemIndex2 = Math.floor(Math.random() * possibleItems.length);
-  // Make sure we don't get the same item twice
-  while (randomItemIndex2 === randomItemIndex1) {
-    randomItemIndex2 = Math.floor(Math.random() * possibleItems.length);
-  }
-  
-  // Pick a random store name
-  const storeNames = ["Local Restaurant", "Corner Shop", "City Cafe", "Metro Market", "Urban Diner"];
-  const storeName = storeNames[Math.floor(Math.random() * storeNames.length)];
-  
+  // Use a fixed item for fallback to avoid confusion
   return {
-    storeName: storeName,
+    storeName: "Store",
     date: today,
     items: [
       { 
-        name: possibleItems[randomItemIndex1], 
-        amount: randomAmount1, 
-        category: randomItemIndex1 < 3 ? "Restaurant" : "Shopping" 
-      },
-      { 
-        name: possibleItems[randomItemIndex2], 
-        amount: randomAmount2, 
-        category: randomItemIndex2 < 3 ? "Restaurant" : "Shopping" 
+        name: "Purchase", 
+        amount: randomAmount, 
+        category: "Shopping" 
       }
     ],
-    total: (parseFloat(randomAmount1) + parseFloat(randomAmount2)).toFixed(2),
-    paymentMethod: Math.random() > 0.5 ? "Card" : "Cash",
+    total: randomAmount,
+    paymentMethod: "Card",
   };
 }

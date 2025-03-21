@@ -35,11 +35,8 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
       });
 
       if (error) {
-        console.error("Supabase function error:", error);
         throw new Error(error.message || 'Failed to scan receipt');
       }
-
-      console.log("Receipt scan response:", data);
       
       if (data && data.success && data.receiptData) {
         toast.dismiss(scanToast);
@@ -48,37 +45,25 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         if (onScanComplete) {
           const receiptData = data.receiptData;
           
-          // Extract the most likely store item
-          let description = "";
-          let amount = "0.00";
-          
-          // Use the first item as the expense item
-          if (receiptData.items && receiptData.items.length > 0) {
-            const item = receiptData.items[0];
-            description = item.name || "";
-            amount = item.amount || "0.00";
-          }
-          
-          // If no valid items, use store name with total
-          if (!description || parseFloat(amount) <= 0) {
-            description = receiptData.storeName || "Store Purchase";
-            amount = receiptData.total || "0.00";
-          }
-          
-          // Ensure amount is a valid number
-          try {
-            amount = parseFloat(amount).toFixed(2);
-          } catch (e) {
-            amount = "0.00";
-          }
-              
-          onScanComplete({
-            description: description,
-            amount: amount,
+          // Simplified extraction logic to ensure we get valid data
+          const extractedData: ScanResult = {
+            description: receiptData.storeName || "Store Purchase",
+            amount: receiptData.total || "0.00",
             date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: "Shopping", // Default for most receipts
+            category: "Shopping", // Default to Shopping as a safe category
             paymentMethod: receiptData.paymentMethod || "Card"
-          });
+          };
+          
+          // If there are valid items, use the first one
+          if (receiptData.items && receiptData.items.length > 0) {
+            const firstItem = receiptData.items[0];
+            if (firstItem.name && firstItem.amount) {
+              extractedData.description = firstItem.name;
+              extractedData.amount = firstItem.amount;
+            }
+          }
+          
+          onScanComplete(extractedData);
         }
       } else {
         toast.dismiss(scanToast);

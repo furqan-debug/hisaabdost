@@ -26,33 +26,37 @@ serve(async (req) => {
       )
     }
 
-    // Log image details for debugging
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
-    // Set a reasonable timeout for the OCR processing
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("OCR processing timeout")), 18000)
-    );
+    // Simple check for very large images
+    if (receiptImage.size > 8 * 1024 * 1024) {
+      console.log("Image too large, using fallback data");
+      const fallbackData = generateFallbackReceiptData();
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          receiptData: fallbackData,
+          note: "Using fallback data as image is too large" 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
+    // Set a timeout - don't hang the function for too long
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
+    
     try {
-      // Early fallback for very large images to improve response time
-      if (receiptImage.size > 8 * 1024 * 1024) {
-        console.log("Image too large, using fallback data");
-        const fallbackData = generateFallbackReceiptData();
-        
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            receiptData: fallbackData,
-            note: "Using fallback data as image is too large" 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      // Process receipt with Google Vision API
+      const result = await Promise.race([
+        processReceiptWithOCR(receiptImage, VISION_API_KEY),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("OCR processing timeout")), 15000)
         )
-      }
-
-      // Process receipt with Google Vision API with timeout
-      const resultPromise = processReceiptWithOCR(receiptImage, VISION_API_KEY);
-      const result = await Promise.race([resultPromise, timeoutPromise]);
+      ]);
+      
+      clearTimeout(timeoutId);
       
       if (result.success) {
         return new Response(
@@ -76,7 +80,7 @@ serve(async (req) => {
     } catch (ocrError) {
       console.error("Vision API processing error or timeout:", ocrError);
       
-      // Provide realistic fallback data
+      // Provide fallback data
       const fallbackData = generateFallbackReceiptData();
       
       return new Response(
