@@ -110,8 +110,10 @@ export function useReceiptScanner({
         }
       } else if (data && !data.success) {
         toast.dismiss(scanToast);
-        console.error("Receipt scan error:", data.error);
-        toast.error(data.error || "Failed to extract information from receipt");
+        console.error("Receipt scan error:", data.error, data.details);
+        const errorMessage = data.error || "Failed to extract information from receipt";
+        const detailsMessage = data.details ? `\n${data.details}` : "";
+        toast.error(errorMessage + detailsMessage);
       } else {
         toast.dismiss(scanToast);
         toast.error("Receipt scanning failed. Please try uploading a clearer image.");

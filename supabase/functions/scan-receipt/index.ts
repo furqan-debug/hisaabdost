@@ -28,18 +28,15 @@ serve(async (req) => {
 
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
-    // If no Vision API key is configured, use fallback data
+    // Check if Vision API key is configured
     if (!VISION_API_KEY) {
-      console.log("No Google Vision API key configured, using fallback data");
-      const fallbackData = generateFallbackReceiptData();
-      
+      console.error("No Google Vision API key configured");
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          receiptData: fallbackData,
-          note: "Using fallback data as no Google Vision API key is configured" 
+          success: false, 
+          error: "Google Vision API key is not configured. Please set the GOOGLE_VISION_API_KEY environment variable." 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
     
@@ -53,12 +50,13 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       } else {
-        console.log("Google Vision API processing failed:", result.error);
-        // Return the error
+        console.error("Google Vision API processing failed:", result.error);
+        // Return the error with more specific details
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: result.error || "Failed to extract data from receipt" 
+            error: result.error || "Failed to extract data from receipt",
+            details: "The Google Vision API was unable to process your receipt image."
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -66,11 +64,25 @@ serve(async (req) => {
     } catch (ocrError) {
       console.error("Vision API processing error:", ocrError);
       
-      // Return an error instead of fallback data
+      // Check for authentication errors specifically
+      const errorMessage = ocrError.message || "Unknown error";
+      if (errorMessage.includes("403") || errorMessage.includes("401") || 
+          errorMessage.includes("authentication") || errorMessage.includes("forbidden")) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Google Vision API authentication failed. Please check your API key and permissions.",
+            details: errorMessage
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        )
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Receipt scanning failed: " + (ocrError.message || "processing error"),
+          error: "Receipt scanning failed: " + errorMessage,
+          details: "There was an error processing your receipt with the OCR service."
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -78,7 +90,11 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error processing receipt:", error);
     return new Response(
-      JSON.stringify({ success: false, error: 'Failed to process receipt', details: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: 'Failed to process receipt', 
+        details: error.message || "Unknown error" 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }

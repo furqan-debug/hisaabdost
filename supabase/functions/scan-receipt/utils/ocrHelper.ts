@@ -13,10 +13,10 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
 
   // Check if we have an API key
   if (!apiKey) {
-    console.warn("No Google Vision API key provided, using fallback data");
+    console.warn("No Google Vision API key provided");
     return { 
       success: false, 
-      error: "No Google Vision API key configured"
+      error: "Google Vision API key is not configured"
     };
   }
 
@@ -62,23 +62,36 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
 
     console.log(`Google Vision API response status: ${response.status}`);
     
+    // Handle API response errors
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`Google Vision API error: ${response.status} ${response.statusText}`);
-      // If we got a 403, the API key might be invalid
+      console.error('Error details:', errorText);
+      
       if (response.status === 403) {
-        console.error("Authentication failed - check Google Vision API key");
         return { 
           success: false, 
-          error: "Google Vision API authentication failed"
+          error: "Google Vision API authentication failed. Your API key may be invalid or doesn't have permission for the Vision API."
         };
       }
+      
+      if (response.status === 429) {
+        return { 
+          success: false, 
+          error: "Google Vision API rate limit exceeded. Please try again later."
+        };
+      }
+      
       return { 
         success: false, 
-        error: `Google Vision API returned status ${response.status}`
+        error: `Google Vision API returned status ${response.status}: ${response.statusText}`
       };
     }
     
     const responseData = await response.json();
+    
+    // Log the entire response for debugging
+    console.log("Google Vision API response:", JSON.stringify(responseData).substring(0, 200) + "...");
     
     // Check if we got a successful response with text annotations
     if (!responseData.responses || 
@@ -88,7 +101,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       console.error("No text annotations in Google Vision response");
       return { 
         success: false, 
-        error: "No text could be extracted from the image"
+        error: "No text could be extracted from the image. Please ensure your receipt is clearly visible and try again."
       };
     }
 
@@ -100,7 +113,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       console.error("Extracted text is too short or empty");
       return {
         success: false,
-        error: "The extracted text from the receipt is too short or empty"
+        error: "The extracted text from the receipt is too short or empty. Please try uploading a clearer image."
       };
     }
 
@@ -113,11 +126,11 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
         console.error("No items found in parsed receipt data");
         return {
           success: false,
-          error: "Could not identify any items on the receipt"
+          error: "Could not identify any items on the receipt. Please try uploading a clearer image."
         };
       }
       
-      console.log("Final extracted receipt data:", receiptData);
+      console.log("Final extracted receipt data:", JSON.stringify(receiptData).substring(0, 200) + "...");
       return { success: true, receiptData };
     } catch (parseError) {
       console.error("Error parsing receipt data:", parseError);
