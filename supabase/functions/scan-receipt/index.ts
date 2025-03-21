@@ -28,22 +28,7 @@ serve(async (req) => {
 
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`);
 
-    // Simple check for very large images
-    if (receiptImage.size > 8 * 1024 * 1024) {
-      console.log("Image too large, using fallback data");
-      const fallbackData = generateFallbackReceiptData();
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          receiptData: fallbackData,
-          note: "Using fallback data as image is too large" 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // If no Vision API key is configured, use fallback data immediately
+    // If no Vision API key is configured, use fallback data
     if (!VISION_API_KEY) {
       console.log("No Google Vision API key configured, using fallback data");
       const fallbackData = generateFallbackReceiptData();
@@ -57,21 +42,10 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    // Set a timeout - don't hang the function for too long
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 18000);
     
+    // Process receipt with Google Vision API
     try {
-      // Process receipt with Google Vision API
-      const result = await Promise.race([
-        processReceiptWithOCR(receiptImage, VISION_API_KEY),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("OCR processing timeout")), 15000)
-        )
-      ]);
-      
-      clearTimeout(timeoutId);
+      const result = await processReceiptWithOCR(receiptImage, VISION_API_KEY);
       
       if (result.success) {
         return new Response(
@@ -79,7 +53,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       } else {
-        console.log("Google Vision API failed:", result.error);
+        console.log("Google Vision API processing failed:", result.error);
         // Return the error
         return new Response(
           JSON.stringify({ 
@@ -90,13 +64,13 @@ serve(async (req) => {
         )
       }
     } catch (ocrError) {
-      console.error("Vision API processing error or timeout:", ocrError);
+      console.error("Vision API processing error:", ocrError);
       
       // Return an error instead of fallback data
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Receipt scanning failed: " + (ocrError.message || "timeout"),
+          error: "Receipt scanning failed: " + (ocrError.message || "processing error"),
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

@@ -34,6 +34,22 @@ export function useReceiptScanner({
       const file = fileInput.files[0];
       console.log(`Scanning receipt: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
       
+      // Check if file is too large
+      if (file.size > 8 * 1024 * 1024) {
+        toast.dismiss(scanToast);
+        toast.error("Receipt image is too large. Please use an image smaller than 8MB.");
+        setIsScanning(false);
+        return;
+      }
+      
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        toast.dismiss(scanToast);
+        toast.error("Please upload an image file (JPG, PNG, etc.)");
+        setIsScanning(false);
+        return;
+      }
+      
       const formData = new FormData();
       formData.append('receipt', file);
 
@@ -42,9 +58,14 @@ export function useReceiptScanner({
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to scan receipt');
+        console.error("Supabase function error:", error);
+        toast.dismiss(scanToast);
+        toast.error(`Scanning error: ${error.message || "Failed to scan receipt"}`);
+        setIsScanning(false);
+        return;
       }
       
+      // Check for success status in data
       if (data && data.success && data.receiptData) {
         toast.dismiss(scanToast);
         toast.success("Receipt scanned successfully!");
@@ -123,8 +144,7 @@ export function useReceiptScanner({
     // Grocery related
     if (lowerText.includes('supermarket') || 
         lowerText.includes('grocery') || 
-        lowerText.includes('food') ||
-        lowerText.includes('market')) {
+        lowerText.includes('food store')) {
       return "Groceries";
     }
     

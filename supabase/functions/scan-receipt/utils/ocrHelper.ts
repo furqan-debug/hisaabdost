@@ -1,6 +1,5 @@
 
 import { parseReceiptData } from "./parseReceipt.ts";
-import { extractDate } from "./dateUtils.ts";
 
 // Default CORS headers for edge function
 export const corsHeaders = {
@@ -49,10 +48,6 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
 
     console.log("Sending request to Google Vision API");
     
-    // Set a timeout for the fetch operation
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    
     // Send request to Google Cloud Vision API
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
@@ -61,10 +56,9 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
+        body: JSON.stringify(requestBody)
       }
-    ).finally(() => clearTimeout(timeoutId));
+    );
 
     console.log(`Google Vision API response status: ${response.status}`);
     
@@ -78,7 +72,10 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
           error: "Google Vision API authentication failed"
         };
       }
-      throw new Error(`Google Vision API returned status ${response.status}`);
+      return { 
+        success: false, 
+        error: `Google Vision API returned status ${response.status}`
+      };
     }
     
     const responseData = await response.json();
@@ -99,57 +96,36 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     const extractedText = responseData.responses[0].textAnnotations[0].description;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + (extractedText.length > 200 ? "..." : ""));
 
-    // Parse receipt data from extracted text
-    const receiptData = parseReceiptData(extractedText);
-    
-    // Ensure we have a valid date
-    if (!receiptData.date || receiptData.date === "Invalid Date") {
-      receiptData.date = new Date().toISOString().split('T')[0];
-    }
-    
-    // Ensure we have a valid total
-    if (!receiptData.total || parseFloat(receiptData.total) <= 0) {
-      // Calculate total from items if available
-      if (receiptData.items && receiptData.items.length > 0) {
-        const calculatedTotal = receiptData.items.reduce((sum, item) => {
-          const amount = parseFloat(item.amount);
-          return isNaN(amount) ? sum : sum + amount;
-        }, 0).toFixed(2);
-        
-        receiptData.total = calculatedTotal;
-      } else {
-        receiptData.total = "0.00";
-      }
-    }
-    
-    // Validate and clean up items
-    if (receiptData.items && receiptData.items.length > 0) {
-      // Filter out any items with invalid amounts
-      receiptData.items = receiptData.items.filter(item => {
-        const amount = parseFloat(item.amount);
-        return !isNaN(amount) && amount > 0 && item.name.length > 1;
-      });
-      
-      // Clean up item names and capitalize first letters
-      receiptData.items = receiptData.items.map(item => ({
-        ...item,
-        name: item.name.charAt(0).toUpperCase() + item.name.slice(1)
-      }));
-    }
-    
-    console.log("Final extracted receipt data:", receiptData);
-    
-    // If no items were found but we have a total, create a default item
-    if ((!receiptData.items || receiptData.items.length === 0) && parseFloat(receiptData.total) > 0) {
-      const storeType = determineStoreType(receiptData.storeName);
-      receiptData.items = [{
-        name: `Purchase from ${receiptData.storeName || 'store'}`,
-        amount: receiptData.total,
-        category: storeType
-      }];
+    if (!extractedText || extractedText.trim().length < 10) {
+      console.error("Extracted text is too short or empty");
+      return {
+        success: false,
+        error: "The extracted text from the receipt is too short or empty"
+      };
     }
 
-    return { success: true, receiptData };
+    // Parse receipt data from extracted text
+    try {
+      const receiptData = parseReceiptData(extractedText);
+      
+      // Basic validation - make sure we have some items
+      if (!receiptData.items || receiptData.items.length === 0) {
+        console.error("No items found in parsed receipt data");
+        return {
+          success: false,
+          error: "Could not identify any items on the receipt"
+        };
+      }
+      
+      console.log("Final extracted receipt data:", receiptData);
+      return { success: true, receiptData };
+    } catch (parseError) {
+      console.error("Error parsing receipt data:", parseError);
+      return {
+        success: false,
+        error: "Failed to parse receipt data: " + (parseError.message || "Unknown error")
+      };
+    }
   } catch (error) {
     console.error("Google Vision API error:", error);
     return { 
@@ -157,45 +133,6 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       error: error.message || "Vision API processing failed" 
     };
   }
-}
-
-// Determine the type of store from the store name
-function determineStoreType(storeName: string): string {
-  if (!storeName) return "Other";
-  
-  const lowerName = storeName.toLowerCase();
-  
-  // Check for gas stations
-  if (lowerName.includes('shell') || 
-      lowerName.includes('gas') || 
-      lowerName.includes('fuel') || 
-      lowerName.includes('petrol') ||
-      lowerName.includes('exxon') ||
-      lowerName.includes('mobil') ||
-      lowerName.includes('bp') ||
-      lowerName.includes('chevron')) {
-    return "Transportation";
-  }
-  
-  // Check for supermarkets/grocery stores
-  if (lowerName.includes('supermarket') || 
-      lowerName.includes('grocery') || 
-      lowerName.includes('food') || 
-      lowerName.includes('market') || 
-      lowerName.includes('mart')) {
-    return "Groceries";
-  }
-  
-  // Check for restaurants
-  if (lowerName.includes('restaurant') || 
-      lowerName.includes('cafe') || 
-      lowerName.includes('bar') || 
-      lowerName.includes('grill') || 
-      lowerName.includes('diner')) {
-    return "Restaurant";
-  }
-  
-  return "Shopping";
 }
 
 // Generate fallback receipt data with sample items
