@@ -67,8 +67,18 @@ export function useReceiptScanner({
       
       // Check for success status in data
       if (data && data.success && data.receiptData) {
-        toast.dismiss(scanToast);
-        toast.success("Receipt scanned successfully!");
+        const isFromFallback = data.isFromFallback || false;
+        
+        if (isFromFallback) {
+          toast.dismiss(scanToast);
+          toast.warning(
+            "OCR service unavailable: Using sample data. " + 
+            (data.error ? `(${data.error})` : "")
+          );
+        } else {
+          toast.dismiss(scanToast);
+          toast.success("Receipt scanned successfully!");
+        }
         
         const receiptData = data.receiptData;
         console.log("Extracted receipt data:", receiptData);
@@ -91,7 +101,7 @@ export function useReceiptScanner({
               paymentMethod: receiptData.paymentMethod || "Card"
             });
           }
-        } else {
+        } else if (!isFromFallback) {
           toast.error("No items found on this receipt");
         }
         
