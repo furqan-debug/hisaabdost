@@ -31,6 +31,7 @@ export const AddExpenseButton = ({
   const queryClient = useQueryClient();
   
   const handleExpenseCapture = (expenseDetails: {
+    storeName?: string;
     description: string;
     amount: string;
     date: string;
@@ -55,9 +56,15 @@ export const AddExpenseButton = ({
         }
       }
       
-      let description = expenseDetails.description?.trim() || "";
+      let description = "";
+      if (expenseDetails.storeName && expenseDetails.storeName.trim().length > 2) {
+        description = `Purchase from ${expenseDetails.storeName.trim()}`;
+      } else {
+        description = expenseDetails.description?.trim() || "";
+      }
+      
       if (description.length < 2) {
-        description = "Purchase Item";
+        description = "Grocery Purchase";
       }
       
       let amount = 0;
@@ -71,6 +78,19 @@ export const AddExpenseButton = ({
       }
       
       let category = expenseDetails.category || "Shopping";
+      if (expenseDetails.storeName) {
+        const storeName = expenseDetails.storeName.toLowerCase();
+        if (storeName.includes('supermarket') || 
+            storeName.includes('grocery') || 
+            storeName.includes('food store')) {
+          category = "Groceries";
+        } else if (storeName.includes('restaurant') || 
+                   storeName.includes('cafe') || 
+                   storeName.includes('diner')) {
+          category = "Restaurant";
+        }
+      }
+      
       const validCategories = [
         'Groceries', 'Restaurant', 'Shopping', 
         'Transportation', 'Entertainment', 'Utilities', 
@@ -161,83 +181,44 @@ export const AddExpenseButton = ({
         toast.success("Receipt scanned successfully!", { id: scanToast });
         
         const receiptData = data.receiptData;
+        console.log("Receipt data:", receiptData);
         
-        if (receiptData.items && receiptData.items.length > 0) {
-          let validItems = receiptData.items.filter(item => {
-            const amount = parseFloat(item.amount);
-            return item.name && 
-                  item.name.trim().length > 1 && 
-                  !isNaN(amount) && 
-                  amount > 0;
+        let description = "Grocery Purchase";
+        if (receiptData.storeName && receiptData.storeName.trim().length > 0) {
+          description = `Purchase from ${receiptData.storeName.trim()}`;
+        }
+        
+        let category = "Shopping";
+        if (receiptData.storeName) {
+          const storeName = receiptData.storeName.toLowerCase();
+          if (storeName.includes('supermarket') || 
+              storeName.includes('grocery') || 
+              storeName.includes('food')) {
+            category = "Groceries";
+          } else if (storeName.includes('restaurant') || 
+                    storeName.includes('cafe')) {
+            category = "Restaurant";
+          }
+        }
+        
+        const total = parseFloat(receiptData.total);
+        if (!isNaN(total) && total > 0) {
+          const success = await saveExpenseToDatabase({
+            description: description,
+            amount: total,
+            date: receiptData.date || new Date().toISOString().split('T')[0],
+            category: category,
+            paymentMethod: receiptData.paymentMethod || "Card"
           });
           
-          if (validItems.length === 0) {
-            const success = await saveExpenseToDatabase({
-              description: receiptData.storeName || "Store Purchase",
-              amount: parseFloat(receiptData.total) || 0,
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
-            
-            toast.dismiss(scanToast);
-            if (success) {
-              toast.success("Expense added from receipt!");
-              onAddExpense();
-            }
-            return;
-          }
-          
-          toast.loading(`Adding ${validItems.length} items from receipt...`, { id: scanToast });
-          
-          let savedCount = 0;
-          
-          for (const item of validItems) {
-            const description = item.name.trim();
-            if (!description || description.length < 2) continue;
-              
-            const amount = parseFloat(item.amount);
-            if (isNaN(amount) || amount <= 0) continue;
-              
-            const success = await saveExpenseToDatabase({
-              description: description,
-              amount: amount,
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              category: item.category || "Shopping", 
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
-            
-            if (success) savedCount++;
-          }
-          
           toast.dismiss(scanToast);
-          if (savedCount > 0) {
-            toast.success(`Added ${savedCount} items from receipt!`);
+          if (success) {
+            toast.success("Expense added from receipt!");
             onAddExpense();
-          } else {
-            toast.error("Failed to add items from receipt.");
           }
-        } 
-        else {
-          const amount = parseFloat(receiptData.total);
-          if (!isNaN(amount) && amount > 0) {
-            const success = await saveExpenseToDatabase({
-              description: receiptData.storeName || "Store Purchase",
-              amount: amount,
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
-            
-            toast.dismiss(scanToast);
-            if (success) {
-              toast.success("Expense added from receipt!");
-              onAddExpense();
-            }
-          } else {
-            toast.dismiss(scanToast);
-            toast.error("Could not determine expense amount from receipt.");
-          }
+        } else {
+          toast.dismiss(scanToast);
+          toast.error("Could not determine expense amount from receipt.");
         }
       } else {
         toast.error("Could not extract data from receipt.");

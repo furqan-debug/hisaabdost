@@ -12,7 +12,7 @@ export function useReceiptDateParser() {
         return dateString;
       }
       
-      // Try to handle common date formats like MM/DD/YYYY or DD/MM/YYYY
+      // Try to handle common date formats like MM/DD/YYYY, DD/MM/YYYY, MM-DD-YYYY
       if (dateString.match(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/)) {
         const parts = dateString.split(/[\/\-\.]/);
         
@@ -21,13 +21,19 @@ export function useReceiptDateParser() {
         let day = parseInt(parts[1], 10);
         let year = parseInt(parts[2], 10);
         
-        // Basic validation
-        if (month < 1 || month > 12) return new Date().toISOString().split('T')[0];
-        if (day < 1 || day > 31) return new Date().toISOString().split('T')[0];
-        
         // Handle 2-digit years
         if (year < 100) {
           year = year < 50 ? 2000 + year : 1900 + year;
+        }
+        
+        // Basic validation
+        if (month < 1 || month > 12) {
+          console.log("Invalid month in date, using today's date");
+          return new Date().toISOString().split('T')[0];
+        }
+        if (day < 1 || day > 31) {
+          console.log("Invalid day in date, using today's date");
+          return new Date().toISOString().split('T')[0];
         }
         
         return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -40,6 +46,7 @@ export function useReceiptDateParser() {
       }
       
       // If all parsing fails, return today's date
+      console.log("Could not parse date, using today's date");
       return new Date().toISOString().split('T')[0];
     } catch (error) {
       console.warn('Failed to parse receipt date:', error);

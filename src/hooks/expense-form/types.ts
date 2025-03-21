@@ -19,6 +19,7 @@ export interface UseExpenseFormProps {
 }
 
 export interface ScanResult {
+  storeName?: string;
   description: string;
   amount: string;
   date: string;

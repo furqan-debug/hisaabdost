@@ -45,23 +45,20 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         if (onScanComplete) {
           const receiptData = data.receiptData;
           
-          // Simplified extraction logic to ensure we get valid data
+          // Create a complete data object with all available information
           const extractedData: ScanResult = {
-            description: receiptData.storeName || "Store Purchase",
+            storeName: receiptData.storeName || "",
+            description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Grocery Purchase",
             amount: receiptData.total || "0.00",
             date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: "Shopping", // Default to Shopping as a safe category
+            category: receiptData.storeName?.toLowerCase().includes('supermarket') ? 
+                      "Groceries" : receiptData.storeName?.toLowerCase().includes('restaurant') ? 
+                      "Restaurant" : "Shopping",
             paymentMethod: receiptData.paymentMethod || "Card"
           };
           
-          // If there are valid items, use the first one
-          if (receiptData.items && receiptData.items.length > 0) {
-            const firstItem = receiptData.items[0];
-            if (firstItem.name && firstItem.amount) {
-              extractedData.description = firstItem.name;
-              extractedData.amount = firstItem.amount;
-            }
-          }
+          // Log the extracted data for debugging
+          console.log("Extracted receipt data:", extractedData);
           
           onScanComplete(extractedData);
         }
