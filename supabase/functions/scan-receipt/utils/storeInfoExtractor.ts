@@ -12,17 +12,14 @@ export function identifyStoreName(lines: string[]): string {
     }
     
     // Check more aggressively for restaurant names in the first 5 lines
-    // Restaurant receipts often have the restaurant name, followed by address, then phone numbers
     for (let i = 0; i < Math.min(5, lines.length); i++) {
       // Skip lines that are likely not store names
       if (lines[i].match(/receipt|invoice|tel:|www\.|http|thank|order|\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\-\d{1,2}\-\d{2,4}|\d+\.\d{2}|\$\d+\.\d{2}/i)) {
         continue;
       }
       
-      // Look for lines that are likely to be restaurant names
-      // They're usually capitalized, not too long, and don't contain too many numbers
       const line = lines[i].trim();
-      if (line.length > 2 && line.length < 40 && !line.match(/^\d/) && line.toUpperCase() === line) {
+      if (line.length > 2 && line.length < 40 && !line.match(/^\d/) && line === line.toUpperCase()) {
         return line;
       }
       
@@ -45,16 +42,17 @@ export function identifyStoreName(lines: string[]): string {
       }
     }
     
-    // If we couldn't find a good name, default to first non-numeric line or "Restaurant"
+    // If we couldn't find a good name, default to first non-numeric line
     for (let i = 0; i < Math.min(3, lines.length); i++) {
       if (lines[i] && lines[i].trim().length > 0 && !lines[i].match(/^\d+$/)) {
         return lines[i].trim();
       }
     }
     
-    return lines[0] ? lines[0].trim() : "Restaurant";
+    // As a last resort, return "Unknown Merchant"
+    return "Unknown Merchant";
   }
-  return "Restaurant";
+  return "Unknown Merchant";
 }
 
 // Extract the payment method from receipt text

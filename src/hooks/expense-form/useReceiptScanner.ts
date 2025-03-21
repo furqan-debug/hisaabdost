@@ -11,84 +11,55 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
   const { parseReceiptDate } = useReceiptDateParser();
 
   const handleScanComplete = (expenseDetails: ScanResult) => {
-    console.log("Handling scan complete with details:", expenseDetails);
+    console.log("Receipt scan completed with details:", expenseDetails);
     
-    // Determine the best category based on the scan context
-    let category = expenseDetails.category || "Shopping";
-    
-    // If the description contains restaurant-related words, use Restaurant category
-    if (expenseDetails.description) {
-      const lowerDesc = expenseDetails.description.toLowerCase();
-      if (lowerDesc.includes("restaurant") || 
-          lowerDesc.includes("dining") || 
-          lowerDesc.includes("cafe") || 
-          lowerDesc.includes("bar") ||
-          lowerDesc.includes("grill")) {
-        category = "Restaurant";
+    // Handle date first to ensure it's in the right format
+    if (expenseDetails.date) {
+      const formattedDate = parseReceiptDate(expenseDetails.date);
+      if (formattedDate) {
+        updateField('date', formattedDate);
+      } else {
+        // Default to today if parsing fails
+        updateField('date', new Date().toISOString().split('T')[0]);
       }
     }
     
-    // Handle category assignment for menu items
-    if (expenseDetails.category === "Food" || 
-        expenseDetails.category === "Drinks" || 
-        expenseDetails.category === "Restaurant") {
-      category = "Restaurant";
-    }
-    
-    // Update category first so other fields have context
-    updateField('category', category);
-    
-    // Carefully validate and update each field if present
+    // Handle description (store or item name)
     if (expenseDetails.description && expenseDetails.description.trim().length > 2) {
-      // Trim whitespace and make sure description is presentable
-      const cleanDescription = expenseDetails.description.trim()
-        .replace(/\s{2,}/g, ' ') // Replace multiple spaces with a single space
-        .replace(/[^\w\s\-',.&]/g, ''); // Remove special chars except basic punctuation
-      
-      if (cleanDescription.length > 2) {
-        updateField('description', cleanDescription);
-      }
+      updateField('description', expenseDetails.description.trim());
     }
     
+    // Handle amount
     if (expenseDetails.amount && !isNaN(parseFloat(expenseDetails.amount))) {
       const amount = parseFloat(expenseDetails.amount);
-      // Only use positive, non-zero amounts
-      if (amount > 0 && amount < 100000) { // Also guard against unreasonably large amounts
+      if (amount > 0) {
         updateField('amount', expenseDetails.amount);
       }
     }
     
-    if (expenseDetails.date) {
-      const formattedDate = parseReceiptDate(expenseDetails.date);
-      if (formattedDate) {
-        // Validate this is a reasonable date (not in future, not too far in past)
-        const dateObj = new Date(formattedDate);
-        const today = new Date();
-        const tenYearsAgo = new Date();
-        tenYearsAgo.setFullYear(today.getFullYear() - 10);
-        
-        if (dateObj <= today && dateObj >= tenYearsAgo) {
-          updateField('date', formattedDate);
-        } else {
-          console.warn("Rejected invalid date:", formattedDate);
-          // Use today's date as fallback
-          updateField('date', new Date().toISOString().split('T')[0]);
-        }
+    // Handle category based on the context
+    if (expenseDetails.category) {
+      let category = expenseDetails.category;
+      
+      // Map categories to our application's categories
+      if (category === "Food" || category === "Drinks" || category === "Restaurant") {
+        category = "Restaurant";
+      } else if (category === "Shopping") {
+        category = "Shopping";
       }
+      
+      updateField('category', category);
     }
     
-    // For payment method, respect what's provided, with fallbacks based on context
+    // Handle payment method
     if (expenseDetails.paymentMethod && expenseDetails.paymentMethod.trim().length > 0) {
       updateField('paymentMethod', expenseDetails.paymentMethod);
-    } else if (category === "Restaurant") {
-      // Default to Card for restaurant receipts
-      updateField('paymentMethod', "Card");
     } else {
-      // Default to Card for other receipts
+      // Default to Card
       updateField('paymentMethod', "Card");
     }
     
-    toast.success("Receipt data extracted and filled in! Please review before submitting.");
+    toast.success("Receipt data extracted successfully! Please review before submitting.");
   };
 
   return { handleScanComplete };
