@@ -1,9 +1,9 @@
 
-import { itemExtractionPatterns, findItemsSectionStart, findItemsSectionEnd } from "./items/itemPatterns";
-import { cleanupItemName } from "./items/itemCleanup";
-import { shouldSkipLine, isNonItemText, deduplicateItems } from "./items/itemHelpers";
-import { guessCategoryFromItemName } from "./items/itemCategories";
-import { fallbackItemExtraction } from "./items/fallbackExtractor";
+import { itemExtractionPatterns, findItemsSectionStart, findItemsSectionEnd } from "./items/itemPatterns.ts";
+import { cleanupItemName } from "./items/itemCleanup.ts";
+import { shouldSkipLine, isNonItemText, deduplicateItems } from "./items/itemHelpers.ts";
+import { guessCategoryFromItemName } from "./items/itemCategories.ts";
+import { fallbackItemExtraction } from "./items/fallbackExtractor.ts";
 
 // Extract individual line items from receipt text
 export function extractLineItems(lines: string[]): Array<{name: string; amount: string; category: string}> {

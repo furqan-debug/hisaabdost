@@ -1,8 +1,8 @@
 
-import { cleanupItemName } from "./itemCleanup";
-import { isNonItemText, shouldSkipLine } from "./itemHelpers";
-import { guessCategoryFromItemName } from "./itemCategories";
-import { deduplicateItems } from "./itemHelpers";
+import { cleanupItemName } from "./itemCleanup.ts";
+import { isNonItemText, shouldSkipLine } from "./itemHelpers.ts";
+import { guessCategoryFromItemName } from "./itemCategories.ts";
+import { deduplicateItems } from "./itemHelpers.ts";
 
 // Fallback extraction method if the direct pattern matching fails
 export function fallbackItemExtraction(lines: string[]): Array<{name: string; amount: string; category: string}> {
