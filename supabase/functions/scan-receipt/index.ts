@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, processReceiptWithOCR, generateFallbackReceiptData } from "./utils/ocrHelper.ts"
 
@@ -42,6 +43,21 @@ serve(async (req) => {
       )
     }
 
+    // If no Vision API key is configured, use fallback data immediately
+    if (!VISION_API_KEY) {
+      console.log("No Google Vision API key configured, using fallback data");
+      const fallbackData = generateFallbackReceiptData();
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          receiptData: fallbackData,
+          note: "Using fallback data as no Google Vision API key is configured" 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Set a timeout - don't hang the function for too long
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 18000);
@@ -64,20 +80,7 @@ serve(async (req) => {
         )
       } else {
         console.log("Google Vision API failed:", result.error);
-        // Only use fallback data if there's no Vision API key configured
-        if (!VISION_API_KEY) {
-          const fallbackData = generateFallbackReceiptData();
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              receiptData: fallbackData,
-              note: "Using fallback data as no Vision API key is configured" 
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-        
-        // Otherwise return the error
+        // Return the error
         return new Response(
           JSON.stringify({ 
             success: false, 

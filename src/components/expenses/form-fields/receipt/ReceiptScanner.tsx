@@ -32,6 +32,8 @@ export function useReceiptScanner({
     
     try {
       const file = fileInput.files[0];
+      console.log(`Scanning receipt: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+      
       const formData = new FormData();
       formData.append('receipt', file);
 
@@ -87,6 +89,7 @@ export function useReceiptScanner({
         }
       } else if (data && !data.success) {
         toast.dismiss(scanToast);
+        console.error("Receipt scan error:", data.error);
         toast.error(data.error || "Failed to extract information from receipt");
       } else {
         toast.dismiss(scanToast);
