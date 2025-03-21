@@ -1,17 +1,19 @@
 
-import { ScanResult } from "@/hooks/expense-form/types";
+import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
 import { ReceiptField } from "../form-fields/ReceiptField";
 
 interface ReceiptSectionProps {
   receiptUrl: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onScanComplete: (expenseDetails: ScanResult) => void;
+  onItemsExtracted?: (receiptData: ReceiptScanResult) => void;
 }
 
 export function ReceiptSection({ 
   receiptUrl, 
   onFileChange, 
-  onScanComplete 
+  onScanComplete,
+  onItemsExtracted
 }: ReceiptSectionProps) {
   return (
     <div>
@@ -23,6 +25,7 @@ export function ReceiptSection({
         receiptUrl={receiptUrl} 
         onFileChange={onFileChange} 
         onScanComplete={onScanComplete}
+        onItemsExtracted={onItemsExtracted}
       />
     </div>
   );

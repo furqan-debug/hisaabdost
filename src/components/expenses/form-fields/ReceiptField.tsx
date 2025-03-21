@@ -4,23 +4,25 @@ import { Input } from "@/components/ui/input";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useReceiptScanner } from "./receipt/ReceiptScanner";
+import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onScanComplete?: (expenseDetails: {
-    description: string;
-    amount: string;
-    date: string;
-    category: string;
-    paymentMethod: string;
-  }) => void;
+  onScanComplete?: (expenseDetails: ScanResult) => void;
+  onItemsExtracted?: (receiptData: ReceiptScanResult) => void;
 }
 
-export function ReceiptField({ receiptUrl, onFileChange, onScanComplete }: ReceiptFieldProps) {
+export function ReceiptField({ 
+  receiptUrl, 
+  onFileChange, 
+  onScanComplete,
+  onItemsExtracted 
+}: ReceiptFieldProps) {
   const { isScanning, canScanReceipt, handleScanReceipt } = useReceiptScanner({
     receiptUrl,
-    onScanComplete
+    onScanComplete,
+    onItemsExtracted
   });
 
   const handleUpload = () => {

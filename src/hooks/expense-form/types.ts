@@ -26,3 +26,17 @@ export interface ScanResult {
   category: string;
   paymentMethod: string;
 }
+
+export interface ReceiptItem {
+  name: string;
+  amount: string;
+  category?: string;
+}
+
+export interface ReceiptScanResult {
+  storeName: string;
+  date: string;
+  items: ReceiptItem[];
+  total: string;
+  paymentMethod: string;
+}

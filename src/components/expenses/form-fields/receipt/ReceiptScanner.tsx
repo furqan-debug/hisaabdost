@@ -2,14 +2,19 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ScanResult } from "@/hooks/expense-form/types";
+import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
 
 interface ReceiptScannerProps {
   receiptUrl: string;
   onScanComplete?: (expenseDetails: ScanResult) => void;
+  onItemsExtracted?: (receiptData: ReceiptScanResult) => void;
 }
 
-export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScannerProps) {
+export function useReceiptScanner({ 
+  receiptUrl, 
+  onScanComplete,
+  onItemsExtracted 
+}: ReceiptScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
 
   // Check if we have a receipt image to scan
@@ -42,10 +47,31 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         toast.dismiss(scanToast);
         toast.success("Receipt scanned successfully!");
         
-        if (onScanComplete) {
-          const receiptData = data.receiptData;
+        const receiptData = data.receiptData;
+        console.log("Extracted receipt data:", receiptData);
+        
+        // Check if we have individual items
+        if (receiptData.items && receiptData.items.length > 0) {
+          console.log(`Found ${receiptData.items.length} individual items on receipt`);
           
-          // Create a complete data object with all available information
+          if (onItemsExtracted) {
+            // Pass the entire receipt data with items to the handler
+            onItemsExtracted({
+              storeName: receiptData.storeName || "Store",
+              date: receiptData.date || new Date().toISOString().split('T')[0],
+              items: receiptData.items.map(item => ({
+                name: item.name,
+                amount: item.amount,
+                category: guessCategoryFromItemName(item.name)
+              })),
+              total: receiptData.total || "0.00",
+              paymentMethod: receiptData.paymentMethod || "Card"
+            });
+          }
+        }
+        
+        // Still support the original single-item flow for backward compatibility
+        if (onScanComplete) {
           const extractedData: ScanResult = {
             storeName: receiptData.storeName || "",
             description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Grocery Purchase",
@@ -56,9 +82,6 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
                       "Restaurant" : "Shopping",
             paymentMethod: receiptData.paymentMethod || "Card"
           };
-          
-          // Log the extracted data for debugging
-          console.log("Extracted receipt data:", extractedData);
           
           onScanComplete(extractedData);
         }
@@ -74,6 +97,39 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
       setIsScanning(false);
     }
   };
+
+  // Helper function to guess category based on item name
+  function guessCategoryFromItemName(itemName: string): string {
+    const lowerName = itemName.toLowerCase();
+    
+    // Food items
+    if (lowerName.includes('milk') || 
+        lowerName.includes('eggs') || 
+        lowerName.includes('cheese') ||
+        lowerName.includes('yogurt') ||
+        lowerName.includes('bread') ||
+        lowerName.includes('fruit') ||
+        lowerName.includes('vegetable') ||
+        lowerName.includes('meat') ||
+        lowerName.includes('chicken') ||
+        lowerName.includes('fish') ||
+        lowerName.includes('tuna') ||
+        lowerName.includes('tomato')) {
+      return "Groceries";
+    }
+    
+    // Household items
+    if (lowerName.includes('paper') || 
+        lowerName.includes('wipes') || 
+        lowerName.includes('cleaner') ||
+        lowerName.includes('detergent') ||
+        lowerName.includes('soap')) {
+      return "Household";
+    }
+    
+    // Default to Groceries for a supermarket receipt
+    return "Groceries";
+  }
 
   return {
     isScanning,

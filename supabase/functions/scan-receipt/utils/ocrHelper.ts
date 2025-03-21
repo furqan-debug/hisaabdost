@@ -91,21 +91,16 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       receiptData.date = new Date().toISOString().split('T')[0];
     }
     
-    // Ensure we have at least one valid item
-    if (!receiptData.items || receiptData.items.length === 0) {
-      console.log("No valid items found, creating a default item based on store name");
-      receiptData.items = [{
-        name: receiptData.storeName || "Store Purchase",
-        amount: receiptData.total || "0.00",
-        category: "Shopping"
-      }];
-    }
-    
     // Ensure we have a valid total
     if (!receiptData.total || parseFloat(receiptData.total) <= 0) {
-      // Use the first item's amount if we have no total
-      if (receiptData.items.length > 0) {
-        receiptData.total = receiptData.items[0].amount;
+      // Calculate total from items if available
+      if (receiptData.items && receiptData.items.length > 0) {
+        const calculatedTotal = receiptData.items.reduce((sum, item) => {
+          const amount = parseFloat(item.amount);
+          return isNaN(amount) ? sum : sum + amount;
+        }, 0).toFixed(2);
+        
+        receiptData.total = calculatedTotal;
       } else {
         receiptData.total = "0.00";
       }
@@ -120,25 +115,21 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   }
 }
 
-// Generate fallback receipt data - simplified
+// Generate fallback receipt data with sample items
 export function generateFallbackReceiptData() {
   const today = new Date().toISOString().split('T')[0];
   
-  // Generate random amount
-  const randomAmount = (Math.round(Math.random() * 5000 + 500) / 100).toFixed(2);
-  
-  // Use a fixed item for fallback to avoid confusion
   return {
-    storeName: "Store",
+    storeName: "Supermarket",
     date: today,
     items: [
-      { 
-        name: "Purchase", 
-        amount: randomAmount, 
-        category: "Shopping" 
-      }
+      { name: "Milk", amount: "1.99", category: "Groceries" },
+      { name: "Bread", amount: "2.49", category: "Groceries" },
+      { name: "Eggs", amount: "3.99", category: "Groceries" },
+      { name: "Cheese", amount: "4.59", category: "Groceries" },
+      { name: "Apples", amount: "3.29", category: "Groceries" }
     ],
-    total: randomAmount,
+    total: "16.35",
     paymentMethod: "Card",
   };
 }

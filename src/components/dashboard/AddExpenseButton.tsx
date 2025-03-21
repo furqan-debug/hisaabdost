@@ -1,3 +1,4 @@
+
 import React from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { ReceiptScanResult } from "@/hooks/expense-form/types";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -113,6 +115,98 @@ export const AddExpenseButton = ({
     }
   };
 
+  const handleReceiptItemsExtracted = async (receiptData: ReceiptScanResult) => {
+    if (!receiptData.items || receiptData.items.length === 0) {
+      toast.error("No items found on the receipt");
+      return;
+    }
+
+    const addItemsToast = toast.loading(`Adding ${receiptData.items.length} items from receipt...`);
+    let successCount = 0;
+    let errorCount = 0;
+    
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData || !userData.user) {
+        toast.dismiss(addItemsToast);
+        toast.error("You must be logged in to add expenses");
+        return;
+      }
+      
+      // Use formatted date for all items
+      let receiptDate = receiptData.date;
+      if (!receiptDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        try {
+          const date = new Date(receiptDate);
+          if (!isNaN(date.getTime())) {
+            receiptDate = date.toISOString().split('T')[0];
+          } else {
+            receiptDate = new Date().toISOString().split('T')[0];
+          }
+        } catch {
+          receiptDate = new Date().toISOString().split('T')[0];
+        }
+      }
+      
+      // Add each item as a separate expense
+      for (const item of receiptData.items) {
+        if (!item.name || item.name.trim() === "" || !item.amount) {
+          errorCount++;
+          continue;
+        }
+        
+        const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
+        if (isNaN(amount) || amount <= 0) {
+          errorCount++;
+          continue;
+        }
+        
+        // Create a meaningful description
+        const description = item.name.trim();
+        
+        // Determine category - use the provided category or guess based on item name
+        const category = item.category || "Groceries";
+        
+        // Insert the expense into the database
+        const { error } = await supabase.from('expenses').insert([{
+          user_id: userData.user.id,
+          description: description,
+          amount: amount,
+          date: receiptDate,
+          category: category,
+          payment: receiptData.paymentMethod || "Card",
+          is_recurring: false,
+          notes: `From ${receiptData.storeName || "Store"} receipt`
+        }]);
+        
+        if (error) {
+          console.error("Error adding item:", error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      }
+      
+      // Update the UI based on results
+      toast.dismiss(addItemsToast);
+      
+      if (successCount > 0) {
+        toast.success(`Successfully added ${successCount} items from your receipt!`);
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        onAddExpense();
+      }
+      
+      if (errorCount > 0) {
+        toast.error(`Failed to add ${errorCount} items from the receipt.`);
+      }
+      
+    } catch (error) {
+      console.error("Error processing receipt items:", error);
+      toast.dismiss(addItemsToast);
+      toast.error("Failed to add receipt items. Please try again.");
+    }
+  };
+
   const saveExpenseToDatabase = async (expense: {
     description: string;
     amount: number;
@@ -183,6 +277,24 @@ export const AddExpenseButton = ({
         const receiptData = data.receiptData;
         console.log("Receipt data:", receiptData);
         
+        // Check if we have individual items
+        if (receiptData.items && receiptData.items.length > 0) {
+          // Process and add individual items
+          await handleReceiptItemsExtracted({
+            storeName: receiptData.storeName || "Store",
+            date: receiptData.date || new Date().toISOString().split('T')[0],
+            items: receiptData.items.map(item => ({
+              name: item.name,
+              amount: item.amount,
+              category: "Groceries" // Default category for receipt items
+            })),
+            total: receiptData.total || "0.00",
+            paymentMethod: receiptData.paymentMethod || "Card"
+          });
+          return;
+        }
+        
+        // Fallback to the original flow if no items were found
         let description = "Grocery Purchase";
         if (receiptData.storeName && receiptData.storeName.trim().length > 0) {
           description = `Purchase from ${receiptData.storeName.trim()}`;
