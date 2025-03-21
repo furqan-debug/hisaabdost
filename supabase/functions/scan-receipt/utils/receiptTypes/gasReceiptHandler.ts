@@ -1,7 +1,7 @@
 
 // Functions specialized for gas receipt processing
 
-import { shouldSkipLine } from "../items/itemHelpers";
+import { shouldSkipLine } from "../items/itemHelpers.ts";
 
 /**
  * Extract items from a gas receipt
