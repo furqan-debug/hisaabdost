@@ -62,7 +62,7 @@ export function useReceiptScanner({
               items: receiptData.items.map(item => ({
                 name: item.name,
                 amount: item.amount,
-                category: guessCategoryFromItemName(item.name)
+                category: item.category || "Groceries"
               })),
               total: receiptData.total || "0.00",
               paymentMethod: receiptData.paymentMethod || "Card"
@@ -77,9 +77,7 @@ export function useReceiptScanner({
             description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Grocery Purchase",
             amount: receiptData.total || "0.00",
             date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: receiptData.storeName?.toLowerCase().includes('supermarket') ? 
-                      "Groceries" : receiptData.storeName?.toLowerCase().includes('restaurant') ? 
-                      "Restaurant" : "Shopping",
+            category: guessStoreCategory(receiptData.storeName || ""),
             paymentMethod: receiptData.paymentMethod || "Card"
           };
           
@@ -98,37 +96,24 @@ export function useReceiptScanner({
     }
   };
 
-  // Helper function to guess category based on item name
-  function guessCategoryFromItemName(itemName: string): string {
-    const lowerName = itemName.toLowerCase();
+  // Helper function to guess category based on store name
+  function guessStoreCategory(storeName: string): string {
+    const lowerName = storeName.toLowerCase();
     
-    // Food items
-    if (lowerName.includes('milk') || 
-        lowerName.includes('eggs') || 
-        lowerName.includes('cheese') ||
-        lowerName.includes('yogurt') ||
-        lowerName.includes('bread') ||
-        lowerName.includes('fruit') ||
-        lowerName.includes('vegetable') ||
-        lowerName.includes('meat') ||
-        lowerName.includes('chicken') ||
-        lowerName.includes('fish') ||
-        lowerName.includes('tuna') ||
-        lowerName.includes('tomato')) {
+    if (lowerName.includes('supermarket') || 
+        lowerName.includes('grocery') || 
+        lowerName.includes('food') ||
+        lowerName.includes('market')) {
       return "Groceries";
     }
     
-    // Household items
-    if (lowerName.includes('paper') || 
-        lowerName.includes('wipes') || 
-        lowerName.includes('cleaner') ||
-        lowerName.includes('detergent') ||
-        lowerName.includes('soap')) {
-      return "Household";
+    if (lowerName.includes('restaurant') || 
+        lowerName.includes('cafe') || 
+        lowerName.includes('bar')) {
+      return "Restaurant";
     }
     
-    // Default to Groceries for a supermarket receipt
-    return "Groceries";
+    return "Shopping";
   }
 
   return {

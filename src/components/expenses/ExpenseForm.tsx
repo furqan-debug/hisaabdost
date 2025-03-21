@@ -6,7 +6,7 @@ import { CategorySection } from "./form-sections/CategorySection";
 import { DetailsSection } from "./form-sections/DetailsSection";
 import { ReceiptSection } from "./form-sections/ReceiptSection";
 import { ExpenseFormData } from "@/hooks/useExpenseForm";
-import { ScanResult } from "@/hooks/expense-form/types";
+import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
 
 interface ExpenseFormProps {
   formData: ExpenseFormData;
@@ -16,6 +16,7 @@ interface ExpenseFormProps {
   onFieldChange: <K extends keyof ExpenseFormData>(field: K, value: ExpenseFormData[K]) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onScanComplete: (expenseDetails: ScanResult) => void;
+  onItemsExtracted?: (receiptData: ReceiptScanResult) => void;
 }
 
 export function ExpenseForm({
@@ -25,7 +26,8 @@ export function ExpenseForm({
   onSubmit,
   onFieldChange,
   onFileChange,
-  onScanComplete
+  onScanComplete,
+  onItemsExtracted
 }: ExpenseFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
@@ -55,6 +57,7 @@ export function ExpenseForm({
           receiptUrl={formData.receiptUrl} 
           onFileChange={onFileChange} 
           onScanComplete={onScanComplete}
+          onItemsExtracted={onItemsExtracted}
         />
       </FormSection>
 

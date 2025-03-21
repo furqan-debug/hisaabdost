@@ -18,18 +18,6 @@ interface UseScanReceiptProps {
   setOpen: (open: boolean) => void;
 }
 
-interface ScanResult {
-  success: boolean;
-  receiptData?: {
-    storeName: string;
-    date: string;
-    items: Array<{name: string; amount: string; category: string}>;
-    total: string;
-    paymentMethod: string;
-  };
-  error?: string;
-}
-
 export function useScanReceipt({
   file,
   onCleanup,
@@ -79,7 +67,7 @@ export function useScanReceipt({
         description: expense.description,
         amount: expense.amount,
         date: expense.date,
-        category: "Shopping",
+        category: expense.category,
         payment: expense.paymentMethod,
         is_recurring: false
       }]);
@@ -242,50 +230,49 @@ export function useScanReceipt({
         
         if (data && data.success && data.receiptData) {
           const receiptData = data.receiptData;
+          console.log("Receipt data:", receiptData);
           
           // Ensure we have a valid date
           if (!receiptData.date || receiptData.date === "Invalid Date") {
             receiptData.date = new Date().toISOString().split('T')[0];
           }
           
-          if (autoSave) {
+          if (autoSave && receiptData.items && receiptData.items.length > 0) {
             // If autoSave is enabled, save all items directly
             toast.dismiss(scanToast);
             toast.loading("Adding expenses from receipt...", { id: "adding-expenses" });
             
             let savedCount = 0;
             
+            // Get the current user
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData || !userData.user) {
+              toast.error("You must be logged in to add expenses");
+              return;
+            }
+            
             // Save each item as a separate expense
-            if (receiptData.items && receiptData.items.length > 0) {
-              for (const item of receiptData.items) {
-                // Skip items with empty names or zero amounts
-                if (!item.name || parseFloat(item.amount) <= 0) {
-                  console.log("Skipping invalid item:", item);
-                  continue;
-                }
-                
-                console.log("Saving item:", item);
-                const success = await saveExpenseToDatabase({
-                  description: item.name,
-                  amount: parseFloat(item.amount),
-                  date: receiptData.date,
-                  category: "Shopping",
-                  paymentMethod: receiptData.paymentMethod || "Card"
-                });
-                
-                if (success) savedCount++;
+            for (const item of receiptData.items) {
+              // Skip items with empty names or zero amounts
+              if (!item.name || parseFloat(item.amount) <= 0) {
+                console.log("Skipping invalid item:", item);
+                continue;
               }
-            } else {
-              // If no items, save with store name and total
-              const success = await saveExpenseToDatabase({
-                description: receiptData.storeName || "Store purchase",
-                amount: parseFloat(receiptData.total) || 0,
-                date: receiptData.date,
-                category: "Shopping",
-                paymentMethod: receiptData.paymentMethod || "Card"
-              });
               
-              if (success) savedCount++;
+              console.log("Saving item:", item);
+              const { error } = await supabase.from('expenses').insert([{
+                user_id: userData.user.id,
+                description: item.name,
+                amount: parseFloat(item.amount),
+                date: receiptData.date,
+                category: item.category || "Groceries",
+                payment: receiptData.paymentMethod || "Card",
+                is_recurring: false,
+                notes: `From ${receiptData.storeName} receipt`
+              }]);
+              
+              if (!error) savedCount++;
+              else console.error("Error saving item:", error);
             }
             
             // Refresh the expenses list
@@ -293,32 +280,35 @@ export function useScanReceipt({
             
             toast.dismiss("adding-expenses");
             if (savedCount > 0) {
-              toast.success(`Added ${savedCount} expense(s) from receipt`);
+              toast.success(`Added ${savedCount} expense items from receipt`);
             } else {
               toast.error("Failed to add expenses from receipt");
             }
             
             setOpen(false);
+          } else if (onCapture && receiptData.items && receiptData.items.length > 0) {
+            // If onCapture is provided, use the first item
+            const firstItem = receiptData.items[0];
+            onCapture({
+              description: firstItem.name,
+              amount: firstItem.amount,
+              date: receiptData.date,
+              category: firstItem.category || "Groceries",
+              paymentMethod: receiptData.paymentMethod || "Card"
+            });
+            
+            toast.dismiss(scanToast);
+            toast.success("Receipt details extracted. Found " + receiptData.items.length + " items!");
           } else if (onCapture) {
-            // If onCapture is provided, use the first item or default to store data
-            if (receiptData.items && receiptData.items.length > 0) {
-              const firstItem = receiptData.items[0];
-              onCapture({
-                description: firstItem.name || receiptData.storeName || "Store purchase",
-                amount: firstItem.amount || receiptData.total || "0.00",
-                date: receiptData.date || new Date().toISOString().split('T')[0],
-                category: "Shopping",
-                paymentMethod: receiptData.paymentMethod || "Card"
-              });
-            } else {
-              onCapture({
-                description: receiptData.storeName || "Store purchase",
-                amount: receiptData.total || "0.00",
-                date: receiptData.date || new Date().toISOString().split('T')[0],
-                category: "Shopping",
-                paymentMethod: receiptData.paymentMethod || "Card"
-              });
-            }
+            // Fallback to single item if no items found
+            onCapture({
+              description: receiptData.storeName || "Store purchase",
+              amount: receiptData.total || "0.00",
+              date: receiptData.date,
+              category: "Shopping",
+              paymentMethod: receiptData.paymentMethod || "Card"
+            });
+            
             toast.dismiss(scanToast);
             toast.success("Receipt details extracted successfully!");
           }
@@ -327,7 +317,7 @@ export function useScanReceipt({
           toast.dismiss(scanToast);
           toast.error(data?.error || "Failed to extract information from receipt");
         }
-      } catch (error) {
+      } catch (error: any) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
           setScanTimedOut(true);

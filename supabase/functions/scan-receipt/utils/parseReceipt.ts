@@ -36,7 +36,7 @@ export function parseReceiptData(text: string): {
   const date = extractDate(lines);
   console.log("Extracted date:", date);
   
-  // Extract individual items with their prices
+  // Extract individual items with their prices - this is the critical part for our fix
   const items = extractLineItems(lines);
   console.log(`Extracted ${items.length} items from receipt`);
   
@@ -46,29 +46,55 @@ export function parseReceiptData(text: string): {
     return !isNaN(amount) && amount > 0 && item.name.length > 1;
   });
   
-  // Extract total amount - specifically look for "TOTAL" followed by an amount
+  // Extract total amount by looking for "TOTAL" followed by an amount
   let total = "0.00";
-  // First try to find a line with "TOTAL" and an amount
+  
+  // Look for explicit TOTAL line
   for (let i = Math.floor(lines.length * 0.5); i < lines.length; i++) {
-    const line = lines[i].toLowerCase();
-    if (line.includes("total")) {
-      const matches = line.match(/\$?(\d+\.\d{2})/);
+    const line = lines[i];
+    if (line.toUpperCase().includes("TOTAL")) {
+      // Try to extract amount using regex
+      const matches = line.match(/.*?(\d+\.\d{2})$/);
       if (matches && matches[1]) {
         total = matches[1];
-        console.log("Extracted total from 'total' line:", total);
+        console.log("Extracted total from 'TOTAL' line:", total);
         break;
       }
     }
   }
   
-  // If that didn't work, use the total extractor
+  // If we couldn't find an explicit total, try to find a standalone price near the end
+  if (total === "0.00") {
+    for (let i = lines.length - 1; i >= Math.floor(lines.length * 0.7); i--) {
+      const line = lines[i].trim();
+      // Look for a line that only contains a price
+      const totalMatch = line.match(/^\$?\s*(\d+\.\d{2})$/);
+      if (totalMatch) {
+        total = totalMatch[1];
+        console.log("Extracted total from standalone price near end:", total);
+        break;
+      }
+    }
+  }
+  
+  // If we still don't have a total, use the utility function
   if (total === "0.00") {
     total = extractTotal(lines, validItems);
+    console.log("Extracted total using fallback method:", total);
+  }
+  
+  // Calculate total from items if we still don't have it
+  if (total === "0.00" && validItems.length > 0) {
+    const calculatedTotal = validItems
+      .reduce((sum, item) => sum + parseFloat(item.amount), 0)
+      .toFixed(2);
+    total = calculatedTotal;
+    console.log("Calculated total from items:", total);
   }
   
   console.log("Final extracted total:", total);
   
-  // Determine payment method
+  // Determine payment method from receipt text
   const paymentMethod = determinePaymentMethod(text);
   console.log("Determined payment method:", paymentMethod);
   
@@ -81,7 +107,7 @@ export function parseReceiptData(text: string): {
   };
 }
 
-// Determine payment method from receipt text - simplified version
+// Determine payment method from receipt text
 function determinePaymentMethod(text: string): string {
   const lowerText = text.toLowerCase();
   

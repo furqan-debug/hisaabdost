@@ -33,7 +33,9 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
           },
           features: [
             {
-              type: "TEXT_DETECTION"
+              type: "TEXT_DETECTION",
+              // Set maxResults higher to capture more text
+              maxResults: 100
             }
           ],
           imageContext: {
@@ -47,7 +49,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     
     // Set a timeout for the fetch operation
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     // Send request to Google Cloud Vision API
     const response = await fetch(
@@ -104,6 +106,21 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       } else {
         receiptData.total = "0.00";
       }
+    }
+    
+    // Validate and clean up items
+    if (receiptData.items && receiptData.items.length > 0) {
+      // Filter out any items with invalid amounts
+      receiptData.items = receiptData.items.filter(item => {
+        const amount = parseFloat(item.amount);
+        return !isNaN(amount) && amount > 0 && item.name.length > 2;
+      });
+      
+      // Clean up item names and capitalize first letters
+      receiptData.items = receiptData.items.map(item => ({
+        ...item,
+        name: item.name.charAt(0).toUpperCase() + item.name.slice(1).toLowerCase()
+      }));
     }
     
     console.log("Final extracted receipt data:", receiptData);

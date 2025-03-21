@@ -6,6 +6,66 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
   const items: Array<{name: string; amount: string; category: string}> = [];
   console.log("Starting item extraction from", lines.length, "lines");
   
+  // Look for patterns that indicate item rows with prices
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip very short lines or section headers
+    if (line.length < 3 || shouldSkipLine(line)) continue;
+    
+    // Pattern: Look for text followed by a price (e.g., "Milk 1.80" or "Large Eggs 6.17")
+    // This is the most common receipt format
+    const pricePattern = /^(.+?)\s+(\d+\.\d{2})$/;
+    const match = line.match(pricePattern);
+    
+    if (match) {
+      const name = cleanupItemName(match[1]);
+      const price = match[2];
+      
+      // Simple validation
+      if (name.length >= 2 && !isNonItemText(name) && parseFloat(price) > 0) {
+        items.push({
+          name: name,
+          amount: price,
+          category: guessCategoryFromItemName(name)
+        });
+        continue;
+      }
+    }
+    
+    // Alternative pattern: Look for any line with a price at the end
+    // This catches items with more complex formats
+    const altMatch = line.match(/(.+?)\s+(\d+\.\d{2})$/);
+    if (altMatch) {
+      const name = cleanupItemName(altMatch[1]);
+      const price = altMatch[2];
+      
+      if (name.length >= 2 && !isNonItemText(name) && parseFloat(price) > 0) {
+        items.push({
+          name: name,
+          amount: price,
+          category: guessCategoryFromItemName(name)
+        });
+      }
+    }
+  }
+  
+  // If we found no items with the direct pattern, try a more flexible approach
+  if (items.length === 0) {
+    // Fall back to the original extraction logic
+    return fallbackItemExtraction(lines);
+  }
+  
+  console.log(`Extracted ${items.length} items from receipt`);
+  
+  // Return deduped items sorted by price (largest first)
+  return deduplicateItems(items);
+}
+
+// Fallback extraction method if the direct pattern matching fails
+function fallbackItemExtraction(lines: string[]): Array<{name: string; amount: string; category: string}> {
+  const items: Array<{name: string; amount: string; category: string}> = [];
+  
   // Find the range where items are typically listed
   let startLine = 0;
   let endLine = lines.length;
@@ -35,17 +95,6 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
       break;
     }
   }
-  
-  // If we couldn't determine the start/end, use reasonable defaults
-  if (startLine === 0) {
-    startLine = Math.min(10, Math.floor(lines.length * 0.2));
-  }
-  
-  if (endLine === lines.length) {
-    endLine = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
-  }
-  
-  console.log(`Processing lines from ${startLine} to ${endLine} for items`);
   
   // Process the middle portion where items are usually listed
   for (let i = startLine; i < endLine; i++) {
@@ -83,71 +132,6 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
     }
   }
   
-  // If we found no items with the specific pattern, try a more general approach
-  if (items.length === 0) {
-    for (let i = startLine; i < endLine; i++) {
-      const line = lines[i].trim();
-      
-      // Skip non-item lines
-      if (shouldSkipLine(line) || line.length < 3) {
-        continue;
-      }
-      
-      // Look for any price pattern
-      const priceMatches = line.match(/\$?(\d+\.\d{2})/g);
-      if (priceMatches && priceMatches.length > 0) {
-        // Get the last price in the line (usually the item price)
-        const price = priceMatches[priceMatches.length - 1].replace('$', '');
-        const priceValue = parseFloat(price);
-        
-        // Only consider reasonable prices
-        if (priceValue >= 0.10 && priceValue <= 500.00) {
-          // Get text before the price as the item name
-          let itemName = line.substring(0, line.lastIndexOf(price)).trim();
-          
-          // Clean up the item name
-          itemName = cleanupItemName(itemName);
-          
-          if (itemName.length >= 2 && !isNonItemText(itemName)) {
-            items.push({
-              name: itemName,
-              amount: price,
-              category: guessCategoryFromItemName(itemName)
-            });
-          }
-        }
-      }
-    }
-  }
-  
-  // If we still have no items, look for patterns with numbers and text on the same line
-  if (items.length === 0) {
-    for (let i = startLine; i < endLine; i++) {
-      const line = lines[i].trim();
-      
-      // Skip irrelevant lines
-      if (shouldSkipLine(line) || line.length < 3) {
-        continue;
-      }
-      
-      // Try to match item name followed by price
-      const itemPriceMatch = line.match(/^(.+?)\s+(\d+\.\d{2})$/);
-      if (itemPriceMatch) {
-        const itemName = cleanupItemName(itemPriceMatch[1]);
-        const price = itemPriceMatch[2];
-        
-        if (itemName.length >= 2 && !isNonItemText(itemName)) {
-          items.push({
-            name: itemName,
-            amount: price,
-            category: guessCategoryFromItemName(itemName)
-          });
-        }
-      }
-    }
-  }
-  
-  // Return deduped items sorted by price (largest first)
   return deduplicateItems(items);
 }
 
@@ -199,11 +183,6 @@ function cleanupItemName(itemName: string): string {
   // Remove multiple spaces
   cleanName = cleanName.replace(/\s+/g, ' ').trim();
   
-  // Make first letter uppercase
-  if (cleanName.length > 0) {
-    cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-  }
-  
   return cleanName;
 }
 
@@ -235,8 +214,8 @@ function guessCategoryFromItemName(itemName: string): string {
       lowerName.includes('chicken') ||
       lowerName.includes('fish') ||
       lowerName.includes('tuna') ||
-      lowerName.includes('tomato') ||
-      lowerName.includes('banana')) {
+      lowerName.includes('banana') ||
+      lowerName.includes('tomato')) {
     return "Groceries";
   }
   
@@ -245,7 +224,9 @@ function guessCategoryFromItemName(itemName: string): string {
       lowerName.includes('wipe') || 
       lowerName.includes('clean') ||
       lowerName.includes('detergent') ||
-      lowerName.includes('soap')) {
+      lowerName.includes('soap') ||
+      lowerName.includes('toilet') ||
+      lowerName.includes('baby')) {
     return "Household";
   }
   
