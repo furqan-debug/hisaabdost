@@ -1,89 +1,175 @@
 
-// Functions for extracting store name and payment method from receipt text
+// Functions for extracting store/merchant information from receipt text
 
-// Extract the store name from receipt text
+// Identify store name from receipt text
 export function identifyStoreName(lines: string[]): string {
-  // Usually the first few lines of a receipt contain the store name
-  if (lines.length > 0) {
-    // Try to find SUPERMARKET or other store indicators in the first few lines
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
-      const upperLine = lines[i].toUpperCase();
-      
-      // Look for obvious store names in all caps
-      if (upperLine.includes("SUPERMARKET") || 
-          upperLine.includes("GROCERY") || 
-          upperLine.includes("MARKET") || 
-          upperLine.includes("STORE") ||
-          upperLine.includes("SHOP")) {
-        return lines[i].trim();
-      }
-      
-      // Check for standalone all caps words that could be a store name
-      if (upperLine === upperLine.toUpperCase() && 
-          upperLine.length > 3 && 
-          upperLine.length < 25 &&
-          !upperLine.match(/RECEIPT|INVOICE|#\d+|STORE #|TOTAL/)) {
-        return upperLine;
-      }
+  // Store names are usually at the top of the receipt
+  const MAX_HEADER_LINES = 10;
+  
+  // Skip very first line if it's too short 
+  // (often just has transaction info or star lines)
+  const startIndex = lines[0] && lines[0].length < 3 ? 1 : 0;
+  
+  // First, look for lines without numbers and special characters
+  // These are most likely to be store names
+  for (let i = startIndex; i < Math.min(MAX_HEADER_LINES, lines.length); i++) {
+    // Skip short lines or obvious non-store-name lines
+    if (lines[i].length < 3 || shouldSkipLine(lines[i])) {
+      continue;
     }
     
-    // If we found nothing specific, use the very first line as it's often the store name
-    if (lines[0].length > 2 && 
-        !lines[0].match(/receipt|invoice|tel:|www\.|http|thank|order|date|time/i)) {
-      return lines[0].trim();
+    // Clean up and check if this is likely a store name
+    const cleanLine = cleanupStoreName(lines[i]);
+    if (isLikelyStoreName(cleanLine) && !isProbablyNotStoreName(cleanLine)) {
+      return cleanLine;
     }
-    
-    // Look for store pattern with "#" or "Store #"
-    for (let i = 0; i < Math.min(10, lines.length); i++) {
-      if (lines[i].match(/store\s+#\d+/i)) {
-        // Try to find the store name in the previous line
-        if (i > 0 && lines[i-1].length > 2) {
-          return lines[i-1].trim();
-        }
-        // If not found in previous line, return this line
-        return lines[i].replace(/store\s+#\d+/i, 'Store').trim();
-      }
-    }
-    
-    // As a last resort, return "Supermarket" if we see indications it's a grocery receipt
-    for (let i = 0; i < Math.min(20, lines.length); i++) {
-      const lowerLine = lines[i].toLowerCase();
-      if (lowerLine.includes("grocery") || 
-          lowerLine.includes("produce") || 
-          lowerLine.includes("dairy") || 
-          lowerLine.includes("meat") || 
-          lowerLine.includes("bakery")) {
-        return "Supermarket";
-      }
-    }
-    
-    // Absolute last resort
-    return "Supermarket";
   }
-  return "Supermarket";
+  
+  // Second pass: Look specifically for store in all caps (common format)
+  for (let i = startIndex; i < Math.min(MAX_HEADER_LINES, lines.length); i++) {
+    const line = lines[i];
+    if (line.length >= 3 && 
+        line.length < 30 && 
+        line === line.toUpperCase() && 
+        !shouldSkipLine(line)) {
+      return cleanupStoreName(line);
+    }
+  }
+  
+  // Third pass: Just take any reasonable line at the top
+  for (let i = startIndex; i < Math.min(MAX_HEADER_LINES, lines.length); i++) {
+    if (lines[i].length >= 3 && 
+        lines[i].length < 40 && 
+        !shouldSkipLine(lines[i]) &&
+        !isProbablyNotStoreName(lines[i])) {
+      return cleanupStoreName(lines[i]);
+    }
+  }
+  
+  // Fallback to a generic name if we can't identify a store name
+  return "Store Receipt";
 }
 
-// Extract the payment method from receipt text
+// Check if a line should be skipped when looking for store names
+function shouldSkipLine(line: string): boolean {
+  const lowerLine = line.toLowerCase();
+  
+  // Skip lines with common non-store-name patterns
+  return lowerLine.includes("receipt") ||
+         lowerLine.includes("invoice") ||
+         lowerLine.includes("tel:") ||
+         lowerLine.includes("telephone") ||
+         lowerLine.includes("phone") ||
+         lowerLine.includes("fax") ||
+         lowerLine.includes("www.") ||
+         lowerLine.includes("http") ||
+         lowerLine.includes(".com") ||
+         lowerLine.includes("welcome") ||
+         lowerLine.includes("thank you") ||
+         lowerLine.includes("date") ||
+         lowerLine.includes("time") ||
+         lowerLine.includes("order") ||
+         lowerLine.includes("cashier") ||
+         lowerLine.includes("customer") ||
+         lowerLine.includes("transaction") ||
+         lowerLine.includes("terminal") ||
+         lowerLine.includes("merchant");
+}
+
+// Check if this is likely to be a store name
+function isLikelyStoreName(name: string): boolean {
+  // Store names are typically not too long, not too short
+  if (name.length < 3 || name.length > 40) {
+    return false;
+  }
+  
+  // Store names usually don't contain too many numbers
+  const numberCount = (name.match(/\d/g) || []).length;
+  if (numberCount > 4) {
+    return false;
+  }
+  
+  // Store names usually don't have too many special characters
+  const specialCharCount = (name.match(/[^\w\s]/g) || []).length;
+  if (specialCharCount > 3) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Clean up the store name
+function cleanupStoreName(name: string): string {
+  let cleanName = name.trim();
+  
+  // Remove extra whitespace
+  cleanName = cleanName.replace(/\s+/g, ' ');
+  
+  // Remove common prefixes like "Welcome to"
+  cleanName = cleanName.replace(/^welcome\s+to\s+/i, '');
+  
+  // Remove trailing store numbers like "#123"
+  cleanName = cleanName.replace(/\s+#\d+$/, '');
+  
+  // Remove leading store types like "SUPERMARKET:"
+  cleanName = cleanName.replace(/^(store|supermarket|grocery|restaurant|shop|market):\s*/i, '');
+  
+  // Capitalize properly (not ALL CAPS)
+  if (cleanName === cleanName.toUpperCase()) {
+    cleanName = cleanName.charAt(0).toUpperCase() + 
+                cleanName.slice(1).toLowerCase();
+  }
+  
+  return cleanName;
+}
+
+// Extract payment method from receipt text
 export function extractPaymentMethod(text: string): string {
+  // Convert text to lowercase for easier matching
   const lowerText = text.toLowerCase();
   
-  // Supermarket-specific payment methods
-  if (lowerText.includes('debit card') || lowerText.includes('debit')) {
-    return "Debit Card";
-  } else if (lowerText.includes('credit card') || 
-             lowerText.includes('visa') || 
-             lowerText.includes('mastercard') || 
-             lowerText.includes('amex')) {
-    return "Credit Card";
-  } else if (lowerText.includes('cash')) {
-    return "Cash";
-  } else if (lowerText.includes('apple pay') || lowerText.includes('applepay')) {
-    return "Apple Pay";
-  } else if (lowerText.includes('google pay') || lowerText.includes('googlepay')) {
-    return "Google Pay";
-  } else if (lowerText.includes('card')) {
+  // Check for common payment methods
+  if (lowerText.includes("credit card") || 
+      lowerText.includes("credit") ||
+      lowerText.includes("visa") || 
+      lowerText.includes("mastercard") || 
+      lowerText.includes("master card") ||
+      lowerText.includes("amex") ||
+      lowerText.includes("american express")) {
     return "Card";
-  } else {
-    return "Card"; // Default to Card
   }
+  
+  if (lowerText.includes("debit card") || 
+      lowerText.includes("debit")) {
+    return "Card";
+  }
+  
+  if (lowerText.includes("cash")) {
+    return "Cash";
+  }
+  
+  if (lowerText.includes("apple pay") ||
+      lowerText.includes("google pay") ||
+      lowerText.includes("samsung pay") ||
+      lowerText.includes("mobile payment")) {
+    return "Mobile Payment";
+  }
+  
+  // Default to Card as most common payment method
+  return "Card";
+}
+
+// Check if this text is definitely not a store name
+function isProbablyNotStoreName(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  
+  // Check for patterns that suggest this isn't a store name
+  return lowerText.includes("total") ||
+         lowerText.includes("subtotal") ||
+         lowerText.includes("tax") ||
+         lowerText.includes("qty") ||
+         lowerText.includes("price") ||
+         lowerText.includes("amount") ||
+         lowerText.match(/^\d+$/) !== null ||  // Just numbers
+         lowerText.match(/^[\*\-=_]{3,}$/) !== null;  // Just separator chars
 }

@@ -48,29 +48,27 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
         if (onScanComplete) {
           const receiptData = data.receiptData;
           
-          // For single-item receipts, use that item description
-          // For multi-item receipts, use the store name as the description
-          let description = receiptData.storeName || "Store Purchase";
+          // Extract the most likely store item
+          let description = "";
           let amount = "0.00";
           
-          // Extract total amount
-          if (receiptData.total && parseFloat(receiptData.total) > 0) {
-            amount = receiptData.total;
-          } else if (receiptData.items && receiptData.items.length > 0) {
-            // Sum all items if no total found
-            amount = receiptData.items.reduce((sum, item) => 
-              sum + parseFloat(item.amount || "0"), 0).toFixed(2);
+          // Use the first item as the expense item
+          if (receiptData.items && receiptData.items.length > 0) {
+            const item = receiptData.items[0];
+            description = item.name || "";
+            amount = item.amount || "0.00";
           }
           
-          // Clean up description
-          description = description
-            .replace(/[^\w\s\-',.&]/g, '')  // Remove special chars
-            .replace(/\s{2,}/g, ' ')        // Replace multiple spaces
-            .trim();
+          // If no valid items, use store name with total
+          if (!description || parseFloat(amount) <= 0) {
+            description = receiptData.storeName || "Store Purchase";
+            amount = receiptData.total || "0.00";
+          }
           
-          // Make sure we have a reasonable amount
-          const parsedAmount = parseFloat(amount);
-          if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          // Ensure amount is a valid number
+          try {
+            amount = parseFloat(amount).toFixed(2);
+          } catch (e) {
             amount = "0.00";
           }
               
@@ -78,7 +76,7 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
             description: description,
             amount: amount,
             date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: "Groceries", // Default for supermarket receipts
+            category: "Shopping", // Default for most receipts
             paymentMethod: receiptData.paymentMethod || "Card"
           });
         }

@@ -5,95 +5,118 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
   const items: Array<{name: string; amount: string; category: string}> = [];
   console.log("Starting item extraction from", lines.length, "lines");
   
-  // Simple item pattern for grocery/supermarket receipts
-  // Format like "Item Name          12.34" or "Item Name     $12.34"
-  const itemPattern = /^([A-Za-z\s\&\-\']+\w)[\s\.]+(\d+\.\d{2})$/;
-  const itemPricePattern = /^([A-Za-z\s\&\-\']+\w)[\s\.]+\$?(\d+\.\d{2})$/;
+  // Skip receipt header (typically first 5-10 lines)
+  const startLine = Math.min(10, Math.floor(lines.length * 0.2));
   
-  // More specific pattern for items with weight/quantity indicators
-  // Format like "Item Name 1lb       12.34" or "Item 12pk       $12.34"
-  const itemWithUnitPattern = /^([A-Za-z\s\&\-\']+\w)\s+(\d+(?:lb|pk|oz|kg|g))[\s\.]+\$?(\d+\.\d{2})$/;
+  // Skip receipt footer (typically last 5-10 lines)
+  const endLine = Math.max(lines.length - 10, Math.ceil(lines.length * 0.8));
   
-  // Process each line looking for patterns
-  for (let i = 0; i < lines.length; i++) {
+  // Process the middle portion where items are usually listed
+  for (let i = startLine; i < endLine; i++) {
     const line = lines[i].trim();
-    if (line.length === 0) continue;
-    
-    console.log(`Checking line: "${line}"`);
+    if (line.length < 3) continue;  // Skip very short lines
     
     // Skip lines that are clearly headers, footers, or metadata
     if (shouldSkipLine(line)) {
-      console.log(`Skipping line: "${line}"`);
       continue;
     }
     
-    // Check for item with unit pattern first (more specific)
-    const unitMatch = line.match(itemWithUnitPattern);
-    if (unitMatch) {
-      const itemName = unitMatch[1].trim() + " " + unitMatch[2].trim();
-      const price = unitMatch[3];
-      console.log(`Found item with unit: "${itemName}" for $${price}`);
-      
-      items.push({
-        name: cleanupItemName(itemName),
-        amount: price,
-        category: guessCategory(itemName)
-      });
-      continue;
-    }
+    // Check for item with price pattern
+    // Looking for patterns like:
+    // 1. "Item name   12.34"
+    // 2. "Item name   $12.34"
+    // 3. "Item name......12.34"
+    // 4. "Item name 1pc  12.34"
     
-    // Check for standard item pattern
-    const match = line.match(itemPattern) || line.match(itemPricePattern);
-    if (match) {
-      const itemName = match[1].trim();
-      const price = match[2];
-      console.log(`Found standard item: "${itemName}" for $${price}`);
+    // First try to find price at the end
+    const priceMatch = line.match(/[\s\.]+\$?(\d+\.\d{2})$/);
+    if (priceMatch) {
+      const price = priceMatch[1];
+      const priceValue = parseFloat(price);
       
-      items.push({
-        name: cleanupItemName(itemName),
-        amount: price,
-        category: guessCategory(itemName)
-      });
-      continue;
-    }
-    
-    // Try to match more complex patterns with split lines or formatting
-    const priceAtEndMatch = line.match(/^(.+?)\s+(\d+\.\d{2})$/);
-    if (priceAtEndMatch && !line.match(/total|subtotal|tax|balance|due/i)) {
-      const itemName = priceAtEndMatch[1].trim();
-      const price = priceAtEndMatch[2];
-      
-      // Skip short or non-descriptive names
-      if (itemName.length > 3 && !isNumeric(itemName)) {
-        console.log(`Found complex item: "${itemName}" for $${price}`);
-        items.push({
-          name: cleanupItemName(itemName),
-          amount: price,
-          category: guessCategory(itemName)
-        });
+      // Only consider reasonable prices (between 0.10 and 1000.00)
+      if (priceValue >= 0.10 && priceValue <= 1000.00) {
+        // Extract item name by removing the price part
+        const itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
+        
+        // Only add items with reasonable names (not too short)
+        if (itemName.length >= 2 && !isNonItemText(itemName)) {
+          items.push({
+            name: cleanupItemName(itemName),
+            amount: price,
+            category: guessCategory(itemName)
+          });
+        }
       }
     }
   }
   
-  console.log(`Extracted ${items.length} items from receipt`);
-  
   // If we found no items, try a more aggressive approach
   if (items.length === 0) {
-    console.log("No items found with standard patterns, trying backup extraction");
-    extractItemsAggressively(lines, 0, lines.length, items);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip non-item lines
+      if (shouldSkipLine(line) || line.length < 3) {
+        continue;
+      }
+      
+      // Look for any price-like pattern
+      const priceMatches = line.match(/\$?(\d+\.\d{2})/g);
+      if (priceMatches && priceMatches.length > 0) {
+        // Get the last price in the line (usually the item price)
+        const priceStr = priceMatches[priceMatches.length - 1];
+        const price = priceStr.replace('$', '');
+        const priceValue = parseFloat(price);
+        
+        // Only consider reasonable prices (between 0.10 and 1000.00)
+        if (priceValue >= 0.10 && priceValue <= 1000.00) {
+          // Get text before the price as the item name
+          let itemName = line.substring(0, line.lastIndexOf(priceStr)).trim();
+          
+          // Remove additional price patterns that might be quantity or weight indicators
+          itemName = itemName.replace(/\$?(\d+\.\d{2})/g, '').trim();
+          
+          // Clean up common prefixes like item numbers
+          itemName = itemName.replace(/^[\d\.]+\s+/, '').trim();
+          
+          if (itemName.length >= 2 && !isNonItemText(itemName)) {
+            items.push({
+              name: cleanupItemName(itemName),
+              amount: price,
+              category: guessCategory(itemName)
+            });
+          }
+        }
+      }
+    }
   }
   
-  return items;
+  // Deduplicate items - keep items with unique names
+  const uniqueItems = new Map<string, {name: string; amount: string; category: string}>();
+  
+  items.forEach(item => {
+    const key = item.name.toLowerCase();
+    
+    // If this item doesn't exist yet or has a higher price than existing one
+    if (!uniqueItems.has(key) || parseFloat(uniqueItems.get(key)!.amount) < parseFloat(item.amount)) {
+      uniqueItems.set(key, item);
+    }
+  });
+  
+  // Return as array sorted by highest amount first
+  return Array.from(uniqueItems.values())
+    .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
 }
 
 // Check if a line should be skipped when searching for items
-export function shouldSkipLine(line: string): boolean {
+function shouldSkipLine(line: string): boolean {
   const lowerLine = line.toLowerCase();
   
   // Skip common receipt headers and metadata
-  if (lowerLine.includes("store #") || 
-      lowerLine.includes("receipt") ||
-      lowerLine.includes("order") || 
+  if (lowerLine.includes("receipt") ||
+      lowerLine.includes("invoice") ||
+      lowerLine.includes("store #") || 
       lowerLine.includes("tel:") || 
       lowerLine.includes("phone") || 
       lowerLine.includes("address") || 
@@ -106,15 +129,16 @@ export function shouldSkipLine(line: string): boolean {
       lowerLine.includes("payment") ||
       lowerLine.includes("tax") ||
       lowerLine.includes("date") ||
-      lowerLine.includes("store") ||
-      lowerLine.includes("coupon") ||
+      lowerLine.includes("time") ||
+      lowerLine.includes("order") ||
+      lowerLine.includes("cashier") ||
+      lowerLine.includes("customer") ||
       lowerLine.includes("discount") ||
+      lowerLine.includes("coupon") ||
       lowerLine.match(/^\d+$/) || // Just a number
       lowerLine.match(/^\=+$/) || // Just equals signs
       lowerLine.match(/^\-+$/) || // Just hyphens
-      lowerLine.match(/^\*+$/) || // Just asterisks
-      lowerLine.match(/^[\=\-\*]+$/) || // Just separator characters
-      lowerLine.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/)) { // Just a date
+      lowerLine.match(/^\*+$/)) { // Just asterisks
     return true;
   }
   
@@ -122,167 +146,105 @@ export function shouldSkipLine(line: string): boolean {
 }
 
 // Clean up an item name by removing common prefixes and special characters
-export function cleanupItemName(itemName: string): string {
+function cleanupItemName(itemName: string): string {
   let cleanName = itemName;
   
-  // Remove special characters but keep apostrophes and hyphens
-  cleanName = cleanName.replace(/[\*\#\$\@\%\(\)]/g, '');
+  // Remove quantity/weight indicators
+  cleanName = cleanName.replace(/^\d+\s*[x×]\s*/, '');  // Remove "2 x " prefix
+  cleanName = cleanName.replace(/\d+\s*[x×]\s*/, ' ');  // Remove "2 x " anywhere
+  cleanName = cleanName.replace(/\d+\s*(lb|kg|g|oz)\b/gi, ''); // Remove weight
   
-  // Remove common SKU/product code patterns
-  cleanName = cleanName.replace(/\b[A-Z0-9]{5,10}\b/g, '');
+  // Remove item codes and numeric prefixes
+  cleanName = cleanName.replace(/^#\s*\d+\s*/, '');  // Item numbers
+  cleanName = cleanName.replace(/^[A-Z]+\d+\s+/, ''); // Item codes like SKU123
+  
+  // Remove special characters but keep apostrophes and hyphens
+  cleanName = cleanName.replace(/[*#$@%()]/g, '');
   
   // Remove multiple spaces and trim
   cleanName = cleanName.replace(/\s+/g, ' ').trim();
   
-  // If the name is too short or all numbers, replace with a generic name
-  if (cleanName.length < 2 || /^\d+$/.test(cleanName)) {
-    return "Store Item";
-  }
-  
-  // Ensure proper capitalization (first letter of each word)
-  cleanName = cleanName.replace(/\w\S*/g, (txt) => {
-    // If the word is all uppercase, keep it that way
-    if (txt === txt.toUpperCase()) {
-      return txt;
-    }
-    // Otherwise capitalize first letter, lowercase the rest
+  // Proper case the name (uppercase first letter of each word)
+  cleanName = cleanName.replace(/\w\S*/g, txt => {
     return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
   });
   
   return cleanName;
 }
 
-// Try a more aggressive approach to extract items from receipt text
-export function extractItemsAggressively(
-  lines: string[], 
-  startIndex: number, 
-  endIndex: number, 
-  items: Array<{name: string; amount: string; category: string}>
-): void {
-  // For supermarket receipts, try to match the pattern where items and prices are aligned
-  console.log("Using aggressive item extraction");
-  
-  // Start at a reasonable point (skip the header)
-  const startLine = Math.max(5, startIndex);
-  const endLine = Math.min(endIndex, lines.length - 5);
-  
-  for (let i = startLine; i < endLine; i++) {
-    const line = lines[i].trim();
-    
-    // Skip already processed lines or clear non-item lines
-    if (shouldSkipLine(line) || line.length < 5) {
-      continue;
-    }
-    
-    // Look for price-like patterns at the end of the line
-    const priceMatch = line.match(/\s+(\d+\.\d{2})$/);
-    if (priceMatch) {
-      const price = priceMatch[1];
-      
-      // Get the text before the price as the item name
-      let itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
-      
-      // Clean up the item name
-      itemName = cleanupItemName(itemName);
-      
-      if (itemName && price && 
-          parseFloat(price) > 0 && 
-          !isCommonNonItemText(itemName) && 
-          itemName.length > 2) {
-        console.log(`[Aggressive] Found item: "${itemName}" with price: $${price}`);
-        items.push({
-          name: itemName,
-          amount: price,
-          category: guessCategory(itemName)
-        });
-      }
-    }
-  }
-}
-
 // Guess category based on item name
 function guessCategory(itemName: string): string {
   const lowerName = itemName.toLowerCase();
   
-  // Grocery categories
-  if (lowerName.includes("eggs") || 
-      lowerName.includes("milk") || 
+  // Food categories
+  if (lowerName.includes("milk") || 
+      lowerName.includes("bread") || 
       lowerName.includes("cheese") || 
       lowerName.includes("yogurt") || 
-      lowerName.includes("butter") || 
-      lowerName.includes("cream")) {
+      lowerName.includes("egg") || 
+      lowerName.includes("cereal") ||
+      lowerName.includes("juice")) {
     return "Groceries";
   }
   
-  // Produce/vegetables/fruits
-  if (lowerName.includes("tomato") || 
+  // Produce
+  if (lowerName.includes("apple") || 
       lowerName.includes("banana") || 
-      lowerName.includes("apple") || 
+      lowerName.includes("orange") || 
+      lowerName.includes("tomato") || 
       lowerName.includes("lettuce") || 
-      lowerName.includes("potato") || 
-      lowerName.includes("onion") || 
-      lowerName.includes("pepper") ||
-      lowerName.includes("aubergine") ||
-      lowerName.includes("fruit") ||
-      lowerName.includes("vegetable")) {
+      lowerName.includes("vegetable") ||
+      lowerName.includes("fruit")) {
     return "Groceries";
   }
   
-  // Meat and protein
+  // Meat
   if (lowerName.includes("chicken") || 
       lowerName.includes("beef") || 
       lowerName.includes("pork") || 
-      lowerName.includes("fish") || 
-      lowerName.includes("tuna") || 
       lowerName.includes("meat") || 
-      lowerName.includes("steak") ||
-      lowerName.includes("breast")) {
+      lowerName.includes("fish") || 
+      lowerName.includes("seafood")) {
     return "Groceries";
   }
   
-  // Snacks and treats
-  if (lowerName.includes("cookie") || 
-      lowerName.includes("cracker") || 
-      lowerName.includes("chip") || 
-      lowerName.includes("chocolate") || 
-      lowerName.includes("candy") || 
-      lowerName.includes("snack")) {
-    return "Groceries";
+  // Restaurant items
+  if (lowerName.includes("burger") || 
+      lowerName.includes("pizza") || 
+      lowerName.includes("sandwich") || 
+      lowerName.includes("meal") || 
+      lowerName.includes("fries") || 
+      lowerName.includes("coffee") ||
+      lowerName.includes("drink") ||
+      lowerName.includes("soda")) {
+    return "Restaurant";
   }
   
   // Household items
-  if (lowerName.includes("paper") || 
+  if (lowerName.includes("soap") || 
+      lowerName.includes("paper") || 
+      lowerName.includes("cleaner") || 
+      lowerName.includes("detergent") || 
       lowerName.includes("toilet") || 
-      lowerName.includes("wipe") || 
-      lowerName.includes("napkin") || 
-      lowerName.includes("towel") || 
-      lowerName.includes("soap") || 
-      lowerName.includes("detergent") ||
-      lowerName.includes("clean")) {
+      lowerName.includes("tissue")) {
     return "Household";
   }
   
-  // Default to groceries for supermarket receipts
-  return "Groceries";
-}
-
-// Helper function to check if a string is numeric
-function isNumeric(str: string): boolean {
-  return /^\d+$/.test(str);
+  // Default to Shopping for most other items
+  return "Shopping";
 }
 
 // Check if text is commonly found in receipts but isn't an actual item
-function isCommonNonItemText(text: string): boolean {
+function isNonItemText(text: string): boolean {
   const lowerText = text.toLowerCase();
   return lowerText.includes("total") || 
          lowerText.includes("subtotal") || 
          lowerText.includes("tax") || 
          lowerText.includes("change") || 
          lowerText.includes("balance") || 
-         lowerText.includes("cash") || 
-         lowerText.includes("card") || 
          lowerText === "item" || 
-         lowerText === "qty" || 
+         lowerText === "price" || 
          lowerText === "amount" || 
-         lowerText === "price";
+         lowerText === "qty" || 
+         lowerText === "quantity";
 }

@@ -41,12 +41,13 @@ export const AddExpenseButton = ({
       console.log("Captured expense details:", expenseDetails);
       
       let formattedDate = expenseDetails.date || new Date().toISOString().split('T')[0];
-      
       if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         try {
           const date = new Date(formattedDate);
           if (!isNaN(date.getTime())) {
             formattedDate = date.toISOString().split('T')[0];
+          } else {
+            formattedDate = new Date().toISOString().split('T')[0];
           }
         } catch (e) {
           console.warn("Could not parse date from receipt, using today's date");
@@ -54,17 +55,42 @@ export const AddExpenseButton = ({
         }
       }
       
+      let description = expenseDetails.description?.trim() || "";
+      if (description.length < 2) {
+        description = "Purchase Item";
+      }
+      
+      let amount = 0;
+      try {
+        amount = parseFloat(expenseDetails.amount);
+        if (isNaN(amount) || amount <= 0) {
+          amount = 0;
+        }
+      } catch {
+        amount = 0;
+      }
+      
+      let category = expenseDetails.category || "Shopping";
+      const validCategories = [
+        'Groceries', 'Restaurant', 'Shopping', 
+        'Transportation', 'Entertainment', 'Utilities', 
+        'Healthcare', 'Household', 'Education', 'Other'
+      ];
+      if (!validCategories.includes(category)) {
+        category = "Shopping";
+      }
+      
       const expense: Partial<Expense> = {
-        description: expenseDetails.description || "",
-        amount: parseFloat(expenseDetails.amount) || 0,
+        description: description,
+        amount: amount,
         date: formattedDate,
-        category: expenseDetails.category || "Shopping",
-        paymentMethod: expenseDetails.paymentMethod || "Cash",
+        category: category,
+        paymentMethod: expenseDetails.paymentMethod || "Card",
       };
+      
       setExpenseToEdit(expense as Expense);
+      setShowAddExpense(true);
     }
-    
-    setShowAddExpense(true);
   };
 
   const saveExpenseToDatabase = async (expense: {
@@ -90,7 +116,7 @@ export const AddExpenseButton = ({
         description: expense.description || "Unknown Item",
         amount: expense.amount || 0,
         date: expense.date || new Date().toISOString().split('T')[0],
-        category: expense.category || "Groceries",
+        category: expense.category || "Shopping",
         payment: expense.paymentMethod || "Card",
         is_recurring: false,
         notes: ""
@@ -126,17 +152,18 @@ export const AddExpenseButton = ({
       
       if (error) {
         console.error("Error scanning receipt:", error);
-        toast.error("Failed to scan receipt. Please try again.", { id: scanToast });
+        toast.error("Failed to scan receipt. Please try again.");
+        toast.dismiss(scanToast);
         return;
       }
       
       if (data && data.success && data.receiptData) {
         toast.success("Receipt scanned successfully!", { id: scanToast });
         
-        if (data.receiptData.items && data.receiptData.items.length > 0) {
-          const storeName = data.receiptData.storeName || "Supermarket";
-          
-          let validItems = data.receiptData.items.filter(item => {
+        const receiptData = data.receiptData;
+        
+        if (receiptData.items && receiptData.items.length > 0) {
+          let validItems = receiptData.items.filter(item => {
             const amount = parseFloat(item.amount);
             return item.name && 
                   item.name.trim().length > 1 && 
@@ -145,7 +172,19 @@ export const AddExpenseButton = ({
           });
           
           if (validItems.length === 0) {
-            toast.error("Could not extract valid items from receipt", { id: scanToast });
+            const success = await saveExpenseToDatabase({
+              description: receiptData.storeName || "Store Purchase",
+              amount: parseFloat(receiptData.total) || 0,
+              date: receiptData.date || new Date().toISOString().split('T')[0],
+              category: "Shopping",
+              paymentMethod: receiptData.paymentMethod || "Card"
+            });
+            
+            toast.dismiss(scanToast);
+            if (success) {
+              toast.success("Expense added from receipt!");
+              onAddExpense();
+            }
             return;
           }
           
@@ -155,15 +194,17 @@ export const AddExpenseButton = ({
           
           for (const item of validItems) {
             const description = item.name.trim();
-              
             if (!description || description.length < 2) continue;
+              
+            const amount = parseFloat(item.amount);
+            if (isNaN(amount) || amount <= 0) continue;
               
             const success = await saveExpenseToDatabase({
               description: description,
-              amount: parseFloat(item.amount),
-              date: data.receiptData.date || new Date().toISOString().split('T')[0],
-              category: item.category || "Groceries",
-              paymentMethod: data.receiptData.paymentMethod || "Card"
+              amount: amount,
+              date: receiptData.date || new Date().toISOString().split('T')[0],
+              category: item.category || "Shopping", 
+              paymentMethod: receiptData.paymentMethod || "Card"
             });
             
             if (success) savedCount++;
@@ -176,15 +217,16 @@ export const AddExpenseButton = ({
           } else {
             toast.error("Failed to add items from receipt.");
           }
-        } else {
-          const amount = parseFloat(data.receiptData.total);
+        } 
+        else {
+          const amount = parseFloat(receiptData.total);
           if (!isNaN(amount) && amount > 0) {
             const success = await saveExpenseToDatabase({
-              description: data.receiptData.storeName || "Supermarket Purchase",
+              description: receiptData.storeName || "Store Purchase",
               amount: amount,
-              date: data.receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Groceries",
-              paymentMethod: data.receiptData.paymentMethod || "Card"
+              date: receiptData.date || new Date().toISOString().split('T')[0],
+              category: "Shopping",
+              paymentMethod: receiptData.paymentMethod || "Card"
             });
             
             toast.dismiss(scanToast);
@@ -198,12 +240,13 @@ export const AddExpenseButton = ({
           }
         }
       } else {
-        toast.error("Could not extract data from receipt.", { id: scanToast });
+        toast.error("Could not extract data from receipt.");
+        toast.dismiss(scanToast);
       }
     } catch (error) {
       console.error("Error processing receipt:", error);
       toast.dismiss(scanToast);
-      toast.error("Failed to process receipt. Please try again.", { id: scanToast });
+      toast.error("Failed to process receipt. Please try again.");
     }
   };
   
@@ -281,4 +324,4 @@ export const AddExpenseButton = ({
       />
     </div>
   );
-}
+};
