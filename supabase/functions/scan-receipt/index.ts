@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, processReceiptWithOCR, generateFallbackReceiptData } from "./utils/ocrHelper.ts"
 
@@ -64,15 +63,25 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       } else {
-        // If Google Vision fails, provide fallback data
-        console.log("Google Vision API failed, returning fallback data");
-        const fallbackData = generateFallbackReceiptData();
+        console.log("Google Vision API failed:", result.error);
+        // Only use fallback data if there's no Vision API key configured
+        if (!VISION_API_KEY) {
+          const fallbackData = generateFallbackReceiptData();
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              receiptData: fallbackData,
+              note: "Using fallback data as no Vision API key is configured" 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
         
+        // Otherwise return the error
         return new Response(
           JSON.stringify({ 
-            success: true, 
-            receiptData: fallbackData,
-            note: "Using fallback data as Vision service unavailable or failed" 
+            success: false, 
+            error: result.error || "Failed to extract data from receipt" 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
@@ -80,14 +89,11 @@ serve(async (req) => {
     } catch (ocrError) {
       console.error("Vision API processing error or timeout:", ocrError);
       
-      // Provide fallback data
-      const fallbackData = generateFallbackReceiptData();
-      
+      // Return an error instead of fallback data
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          receiptData: fallbackData,
-          note: "Using fallback data as Vision service unavailable or failed"
+          success: false, 
+          error: "Receipt scanning failed: " + (ocrError.message || "timeout"),
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

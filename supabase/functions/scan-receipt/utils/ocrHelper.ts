@@ -16,8 +16,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
   if (!apiKey) {
     console.warn("No Google Vision API key provided, using fallback data");
     return { 
-      success: true, 
-      receiptData: generateFallbackReceiptData(),
+      success: false, 
       error: "No Google Vision API key configured"
     };
   }
