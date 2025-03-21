@@ -17,7 +17,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     console.warn("No Google Vision API key provided, using fallback data");
     return { 
       success: true, 
-      receiptData: generateFallbackReceiptData() 
+      receiptData: generateFallbackReceiptData(),
+      error: "No Google Vision API key configured"
     };
   }
 
@@ -74,8 +75,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       if (response.status === 403) {
         console.error("Authentication failed - check Google Vision API key");
         return { 
-          success: true, 
-          receiptData: generateFallbackReceiptData() 
+          success: false, 
+          error: "Google Vision API authentication failed"
         };
       }
       throw new Error(`Google Vision API returned status ${response.status}`);
@@ -90,8 +91,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
         responseData.responses[0].textAnnotations.length === 0) {
       console.error("No text annotations in Google Vision response");
       return { 
-        success: true, 
-        receiptData: generateFallbackReceiptData() 
+        success: false, 
+        error: "No text could be extracted from the image"
       };
     }
 
@@ -127,7 +128,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
       // Filter out any items with invalid amounts
       receiptData.items = receiptData.items.filter(item => {
         const amount = parseFloat(item.amount);
-        return !isNaN(amount) && amount > 0 && item.name.length > 2;
+        return !isNaN(amount) && amount > 0 && item.name.length > 1;
       });
       
       // Clean up item names and capitalize first letters
@@ -138,16 +139,64 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string |
     }
     
     console.log("Final extracted receipt data:", receiptData);
+    
+    // If no items were found but we have a total, create a default item
+    if ((!receiptData.items || receiptData.items.length === 0) && parseFloat(receiptData.total) > 0) {
+      const storeType = determineStoreType(receiptData.storeName);
+      receiptData.items = [{
+        name: `Purchase from ${receiptData.storeName || 'store'}`,
+        amount: receiptData.total,
+        category: storeType
+      }];
+    }
 
     return { success: true, receiptData };
   } catch (error) {
     console.error("Google Vision API error:", error);
     return { 
-      success: true, 
-      receiptData: generateFallbackReceiptData(),
+      success: false, 
       error: error.message || "Vision API processing failed" 
     };
   }
+}
+
+// Determine the type of store from the store name
+function determineStoreType(storeName: string): string {
+  if (!storeName) return "Other";
+  
+  const lowerName = storeName.toLowerCase();
+  
+  // Check for gas stations
+  if (lowerName.includes('shell') || 
+      lowerName.includes('gas') || 
+      lowerName.includes('fuel') || 
+      lowerName.includes('petrol') ||
+      lowerName.includes('exxon') ||
+      lowerName.includes('mobil') ||
+      lowerName.includes('bp') ||
+      lowerName.includes('chevron')) {
+    return "Transportation";
+  }
+  
+  // Check for supermarkets/grocery stores
+  if (lowerName.includes('supermarket') || 
+      lowerName.includes('grocery') || 
+      lowerName.includes('food') || 
+      lowerName.includes('market') || 
+      lowerName.includes('mart')) {
+    return "Groceries";
+  }
+  
+  // Check for restaurants
+  if (lowerName.includes('restaurant') || 
+      lowerName.includes('cafe') || 
+      lowerName.includes('bar') || 
+      lowerName.includes('grill') || 
+      lowerName.includes('diner')) {
+    return "Restaurant";
+  }
+  
+  return "Shopping";
 }
 
 // Generate fallback receipt data with sample items

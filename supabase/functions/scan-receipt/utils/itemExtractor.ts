@@ -21,7 +21,10 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
     /^(.+?)(?:\s+#\d+)?\s+(\d+\.\d{2})$/,
     
     // More flexible pattern for capturing items with price at the end
-    /(.+?)\s+\$?(\d+\.\d{2})$/
+    /(.+?)\s+\$?(\d+\.\d{2})$/,
+    
+    // Pattern for items with a "$" prefix
+    /(.+?)\s+\$(\d+\.\d{2})$/
   ];
   
   // Filter out receipt header and footer sections
@@ -213,7 +216,14 @@ function shouldSkipLine(line: string): boolean {
       lowerLine.includes("payment") ||
       lowerLine.includes("tax") ||
       lowerLine.includes("date") ||
-      lowerLine.includes("time")) {
+      lowerLine.includes("time") ||
+      lowerLine.includes("welcome") ||
+      lowerLine.includes("customer") ||
+      lowerLine.includes("copy") ||
+      lowerLine.includes("store:") ||
+      lowerLine.includes("tran:") ||
+      lowerLine.includes("phone") ||
+      lowerLine.includes("transaction")) {
     return true;
   }
   
@@ -266,12 +276,30 @@ function isNonItemText(text: string): boolean {
          lowerText === 'item' || 
          lowerText.includes('description') ||
          lowerText.includes('quantity') ||
-         lowerText.length < 2;
+         lowerText.length < 2 ||
+         lowerText.includes('date') ||
+         lowerText.includes('time') ||
+         lowerText.includes('receipt') ||
+         lowerText.includes('store') ||
+         lowerText.includes('customer') ||
+         lowerText.includes('copy') ||
+         lowerText.includes('thank you');
 }
 
 // Guess the category based on the item name
 function guessCategoryFromItemName(itemName: string): string {
   const lowerName = itemName.toLowerCase();
+  
+  // Gas and transportation
+  if (lowerName.includes('gas') ||
+      lowerName.includes('fuel') ||
+      lowerName.includes('diesel') ||
+      lowerName.includes('unleaded') ||
+      lowerName.includes('premium') ||
+      lowerName.includes('litre') ||
+      lowerName.includes('gallon')) {
+    return "Transportation";
+  }
   
   // Food items
   if (lowerName.includes('milk') || 
@@ -301,8 +329,8 @@ function guessCategoryFromItemName(itemName: string): string {
     return "Household";
   }
   
-  // Default to Groceries for a supermarket receipt
-  return "Groceries";
+  // Default to Shopping
+  return "Shopping";
 }
 
 // Deduplicate items

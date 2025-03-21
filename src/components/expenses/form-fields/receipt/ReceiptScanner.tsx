@@ -62,19 +62,21 @@ export function useReceiptScanner({
               items: receiptData.items.map(item => ({
                 name: item.name,
                 amount: item.amount,
-                category: item.category || "Groceries"
+                category: item.category || guessStoreCategory(item.name)
               })),
               total: receiptData.total || "0.00",
               paymentMethod: receiptData.paymentMethod || "Card"
             });
           }
+        } else {
+          toast.error("No items found on this receipt");
         }
         
         // Still support the original single-item flow for backward compatibility
         if (onScanComplete) {
           const extractedData: ScanResult = {
             storeName: receiptData.storeName || "",
-            description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Grocery Purchase",
+            description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Purchase",
             amount: receiptData.total || "0.00",
             date: receiptData.date || new Date().toISOString().split('T')[0],
             category: guessStoreCategory(receiptData.storeName || ""),
@@ -83,9 +85,12 @@ export function useReceiptScanner({
           
           onScanComplete(extractedData);
         }
+      } else if (data && !data.success) {
+        toast.dismiss(scanToast);
+        toast.error(data.error || "Failed to extract information from receipt");
       } else {
         toast.dismiss(scanToast);
-        toast.error(data?.error || "Failed to extract information from receipt");
+        toast.error("Receipt scanning failed. Please try uploading a clearer image.");
       }
     } catch (error) {
       console.error("Receipt scanning error:", error);
@@ -96,20 +101,34 @@ export function useReceiptScanner({
     }
   };
 
-  // Helper function to guess category based on store name
-  function guessStoreCategory(storeName: string): string {
-    const lowerName = storeName.toLowerCase();
+  // Helper function to guess category based on store name or item name
+  function guessStoreCategory(text: string): string {
+    const lowerText = text.toLowerCase();
     
-    if (lowerName.includes('supermarket') || 
-        lowerName.includes('grocery') || 
-        lowerName.includes('food') ||
-        lowerName.includes('market')) {
+    // Gas station related
+    if (lowerText.includes('gas') || 
+        lowerText.includes('shell') || 
+        lowerText.includes('fuel') ||
+        lowerText.includes('petrol') ||
+        lowerText.includes('exxon') ||
+        lowerText.includes('mobil') ||
+        lowerText.includes('bp') ||
+        lowerText.includes('chevron')) {
+      return "Transportation";
+    }
+    
+    // Grocery related
+    if (lowerText.includes('supermarket') || 
+        lowerText.includes('grocery') || 
+        lowerText.includes('food') ||
+        lowerText.includes('market')) {
       return "Groceries";
     }
     
-    if (lowerName.includes('restaurant') || 
-        lowerName.includes('cafe') || 
-        lowerName.includes('bar')) {
+    // Restaurant related
+    if (lowerText.includes('restaurant') || 
+        lowerText.includes('cafe') || 
+        lowerText.includes('bar')) {
       return "Restaurant";
     }
     
