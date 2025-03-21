@@ -2,22 +2,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ScanResult } from "@/hooks/expense-form/types";
 
 interface ReceiptScannerProps {
   receiptUrl: string;
-  onScanComplete?: (expenseDetails: {
-    description: string;
-    amount: string;
-    date: string;
-    category: string;
-    paymentMethod: string;
-  }) => void;
+  onScanComplete?: (expenseDetails: ScanResult) => void;
 }
 
 export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
 
-  // Fixed: Convert the RegExpMatchArray to boolean using !!
+  // Check if we have a receipt image to scan
   const canScanReceipt = !!receiptUrl && !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
 
   const handleScanReceipt = async () => {
@@ -55,27 +50,16 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
           
           // For single-item receipts, use that item description
           // For multi-item receipts, use the store name as the description
-          let description = "Store Purchase";
+          let description = receiptData.storeName || "Store Purchase";
           let amount = "0.00";
           
-          if (receiptData.storeName && receiptData.storeName.trim().length > 2) {
-            description = receiptData.storeName.trim();
-          }
-          
-          if (receiptData.items && receiptData.items.length > 0) {
-            if (receiptData.items.length === 1) {
-              // Single item receipt - use the item name
-              description = receiptData.items[0].name || description;
-              amount = receiptData.items[0].amount || amount;
-            } else {
-              // Multi-item receipt - use store name and total
-              amount = receiptData.total || 
-                       receiptData.items.reduce((sum, item) => 
-                         sum + parseFloat(item.amount || "0"), 0).toFixed(2);
-            }
-          } else {
-            // Fallback to using the total
-            amount = receiptData.total || amount;
+          // Extract total amount
+          if (receiptData.total && parseFloat(receiptData.total) > 0) {
+            amount = receiptData.total;
+          } else if (receiptData.items && receiptData.items.length > 0) {
+            // Sum all items if no total found
+            amount = receiptData.items.reduce((sum, item) => 
+              sum + parseFloat(item.amount || "0"), 0).toFixed(2);
           }
           
           // Clean up description
@@ -94,7 +78,7 @@ export function useReceiptScanner({ receiptUrl, onScanComplete }: ReceiptScanner
             description: description,
             amount: amount,
             date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: "Shopping",
+            category: "Groceries", // Default for supermarket receipts
             paymentMethod: receiptData.paymentMethod || "Card"
           });
         }

@@ -44,6 +44,10 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
       // Map categories to our application's categories
       if (category === "Food" || category === "Drinks" || category === "Restaurant") {
         category = "Restaurant";
+      } else if (category === "Groceries" || category === "Produce") {
+        category = "Groceries";
+      } else if (category === "Household") {
+        category = "Household";
       } else if (category === "Shopping") {
         category = "Shopping";
       }
@@ -53,7 +57,14 @@ export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
     
     // Handle payment method
     if (expenseDetails.paymentMethod && expenseDetails.paymentMethod.trim().length > 0) {
-      updateField('paymentMethod', expenseDetails.paymentMethod);
+      // Map payment methods to our application's payment methods
+      let paymentMethod = expenseDetails.paymentMethod;
+      
+      if (paymentMethod === "Credit Card" || paymentMethod === "Debit Card") {
+        paymentMethod = "Card";
+      }
+      
+      updateField('paymentMethod', paymentMethod);
     } else {
       // Default to Card
       updateField('paymentMethod', "Card");

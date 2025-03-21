@@ -37,14 +37,11 @@ export const AddExpenseButton = ({
     category: string;
     paymentMethod: string;
   }) => {
-    // Pre-fill expense data and open the sheet
     if (expenseDetails) {
       console.log("Captured expense details:", expenseDetails);
       
-      // Format the date to YYYY-MM-DD if needed
       let formattedDate = expenseDetails.date || new Date().toISOString().split('T')[0];
       
-      // Process the capture date if it's not already in YYYY-MM-DD format
       if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         try {
           const date = new Date(formattedDate);
@@ -67,11 +64,9 @@ export const AddExpenseButton = ({
       setExpenseToEdit(expense as Expense);
     }
     
-    // Open the add expense sheet
     setShowAddExpense(true);
   };
 
-  // Save expense directly to database
   const saveExpenseToDatabase = async (expense: {
     description: string;
     amount: number;
@@ -95,7 +90,7 @@ export const AddExpenseButton = ({
         description: expense.description || "Unknown Item",
         amount: expense.amount || 0,
         date: expense.date || new Date().toISOString().split('T')[0],
-        category: expense.category || "Shopping",
+        category: expense.category || "Groceries",
         payment: expense.paymentMethod || "Card",
         is_recurring: false,
         notes: ""
@@ -103,11 +98,9 @@ export const AddExpenseButton = ({
       
       if (error) throw error;
       
-      // Success
       toast.dismiss(saveToast);
       toast.success("Expense added successfully!");
       
-      // Refresh expenses list
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       
       return true;
@@ -119,7 +112,6 @@ export const AddExpenseButton = ({
     }
   };
 
-  // Process receipt scan with direct database save
   const processReceiptScan = async (file: File) => {
     if (!file) return;
 
@@ -141,16 +133,15 @@ export const AddExpenseButton = ({
       if (data && data.success && data.receiptData) {
         toast.success("Receipt scanned successfully!", { id: scanToast });
         
-        // For receipts with multiple items, add each as a separate expense
         if (data.receiptData.items && data.receiptData.items.length > 0) {
-          const totalItems = data.receiptData.items.length;
-          const storeName = data.receiptData.storeName || "Unknown Merchant";
+          const storeName = data.receiptData.storeName || "Supermarket";
           
-          // Check for empty or unrealistic values
           let validItems = data.receiptData.items.filter(item => {
             const amount = parseFloat(item.amount);
-            return item.name && item.name.trim().length > 0 && 
-                   !isNaN(amount) && amount > 0;
+            return item.name && 
+                  item.name.trim().length > 1 && 
+                  !isNaN(amount) && 
+                  amount > 0;
           });
           
           if (validItems.length === 0) {
@@ -163,17 +154,15 @@ export const AddExpenseButton = ({
           let savedCount = 0;
           
           for (const item of validItems) {
-            // Create a clean description
             const description = item.name.trim();
               
             if (!description || description.length < 2) continue;
               
-            // Save each item as a separate expense
             const success = await saveExpenseToDatabase({
               description: description,
               amount: parseFloat(item.amount),
               date: data.receiptData.date || new Date().toISOString().split('T')[0],
-              category: item.category || "Shopping",
+              category: item.category || "Groceries",
               paymentMethod: data.receiptData.paymentMethod || "Card"
             });
             
@@ -182,27 +171,26 @@ export const AddExpenseButton = ({
           
           toast.dismiss(scanToast);
           if (savedCount > 0) {
-            toast.success(`Added ${savedCount} expense${savedCount > 1 ? 's' : ''} from receipt!`);
-            onAddExpense(); // Refresh the expense list
+            toast.success(`Added ${savedCount} items from receipt!`);
+            onAddExpense();
           } else {
             toast.error("Failed to add items from receipt.");
           }
         } else {
-          // Add the receipt as a single expense using store name and total
           const amount = parseFloat(data.receiptData.total);
           if (!isNaN(amount) && amount > 0) {
             const success = await saveExpenseToDatabase({
-              description: data.receiptData.storeName || "Store Purchase",
+              description: data.receiptData.storeName || "Supermarket Purchase",
               amount: amount,
               date: data.receiptData.date || new Date().toISOString().split('T')[0],
-              category: "Shopping",
+              category: "Groceries",
               paymentMethod: data.receiptData.paymentMethod || "Card"
             });
             
             toast.dismiss(scanToast);
             if (success) {
               toast.success("Expense added from receipt!");
-              onAddExpense(); // Refresh the expense list
+              onAddExpense();
             }
           } else {
             toast.dismiss(scanToast);

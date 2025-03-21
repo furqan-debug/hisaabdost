@@ -3,171 +3,127 @@
 // Extract individual line items from receipt text
 export function extractLineItems(lines: string[]): Array<{name: string; amount: string; category: string}> {
   const items: Array<{name: string; amount: string; category: string}> = [];
+  console.log("Starting item extraction from", lines.length, "lines");
   
-  // More precise restaurant receipt item pattern that handles quantity prefixes and price formats
-  // This pattern looks for lines with formats like "5 BLOODY MARY $40.75" or "1 FRESH OYSTER $ 12.50"
-  const restaurantItemPattern = /^\s*(\d+)?\s*([A-Za-z\s\&\-\']+)\s+\$?\s*(\d+\.\d{2})\s*$/;
+  // Simple item pattern for grocery/supermarket receipts
+  // Format like "Item Name          12.34" or "Item Name     $12.34"
+  const itemPattern = /^([A-Za-z\s\&\-\']+\w)[\s\.]+(\d+\.\d{2})$/;
+  const itemPricePattern = /^([A-Za-z\s\&\-\']+\w)[\s\.]+\$?(\d+\.\d{2})$/;
   
-  // Skip the first few lines (likely header) and last few lines (likely footer)
-  const startIndex = Math.min(5, Math.floor(lines.length * 0.15));
-  const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
+  // More specific pattern for items with weight/quantity indicators
+  // Format like "Item Name 1lb       12.34" or "Item 12pk       $12.34"
+  const itemWithUnitPattern = /^([A-Za-z\s\&\-\']+\w)\s+(\d+(?:lb|pk|oz|kg|g))[\s\.]+\$?(\d+\.\d{2})$/;
   
-  console.log(`Looking for items between lines ${startIndex} and ${endIndex}`);
-  
-  // First pass: identify likely restaurant menu items
-  let foundRestaurantItems = false;
-  
+  // Process each line looking for patterns
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
     if (line.length === 0) continue;
     
-    // Check for restaurant menu item pattern
-    const menuItemMatch = line.match(restaurantItemPattern);
-    if (menuItemMatch) {
-      foundRestaurantItems = true;
-      const quantity = menuItemMatch[1] ? parseInt(menuItemMatch[1]) : 1;
-      const itemName = menuItemMatch[2].trim();
-      const price = menuItemMatch[3];
-      
-      console.log(`Found restaurant menu item: "${quantity} ${itemName}" with price: $${price}`);
-      
-      // For menu items, we keep the quantity as part of the item name when it's present
-      const fullItemName = quantity > 1 ? `${quantity} ${itemName}` : itemName;
-      
-      items.push({
-        name: cleanupItemName(fullItemName),
-        amount: price,
-        category: guessCategory(itemName)
-      });
-    }
-  }
-  
-  // If we found restaurant menu items, return them and don't try other extraction methods
-  if (foundRestaurantItems && items.length > 0) {
-    console.log(`Found ${items.length} restaurant menu items, using these`);
-    return items;
-  }
-  
-  // Fall back to the generic item extraction logic for non-restaurant receipts
-  console.log("No restaurant menu items found, falling back to generic extraction");
-  
-  // Generic price pattern that handles different formats
-  const pricePattern = /\$?\s*(\d+\.\d{2})\s*$/;
-  
-  // Look for generic items with prices
-  for (let i = startIndex; i < endIndex; i++) {
-    const line = lines[i].trim();
+    console.log(`Checking line: "${line}"`);
     
-    // Skip header/footer lines
+    // Skip lines that are clearly headers, footers, or metadata
     if (shouldSkipLine(line)) {
+      console.log(`Skipping line: "${line}"`);
       continue;
     }
     
-    // Check for price pattern at the end of the line
-    const priceMatch = line.match(pricePattern);
-    if (priceMatch) {
-      const price = priceMatch[1];
+    // Check for item with unit pattern first (more specific)
+    const unitMatch = line.match(itemWithUnitPattern);
+    if (unitMatch) {
+      const itemName = unitMatch[1].trim() + " " + unitMatch[2].trim();
+      const price = unitMatch[3];
+      console.log(`Found item with unit: "${itemName}" for $${price}`);
       
-      // Extract item name by removing the price part
-      let itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
+      items.push({
+        name: cleanupItemName(itemName),
+        amount: price,
+        category: guessCategory(itemName)
+      });
+      continue;
+    }
+    
+    // Check for standard item pattern
+    const match = line.match(itemPattern) || line.match(itemPricePattern);
+    if (match) {
+      const itemName = match[1].trim();
+      const price = match[2];
+      console.log(`Found standard item: "${itemName}" for $${price}`);
       
-      // Clean up item name - remove common prefixes, quantities
-      itemName = cleanupItemName(itemName);
+      items.push({
+        name: cleanupItemName(itemName),
+        amount: price,
+        category: guessCategory(itemName)
+      });
+      continue;
+    }
+    
+    // Try to match more complex patterns with split lines or formatting
+    const priceAtEndMatch = line.match(/^(.+?)\s+(\d+\.\d{2})$/);
+    if (priceAtEndMatch && !line.match(/total|subtotal|tax|balance|due/i)) {
+      const itemName = priceAtEndMatch[1].trim();
+      const price = priceAtEndMatch[2];
       
-      if (itemName && price && parseFloat(price) > 0) {
-        console.log(`Found generic item: "${itemName}" with price: $${price}`);
+      // Skip short or non-descriptive names
+      if (itemName.length > 3 && !isNumeric(itemName)) {
+        console.log(`Found complex item: "${itemName}" for $${price}`);
         items.push({
-          name: itemName,
+          name: cleanupItemName(itemName),
           amount: price,
-          category: "Shopping"
+          category: guessCategory(itemName)
         });
       }
     }
   }
   
-  // Filter out any items with zero or negative prices, or non-descriptive names
-  const validItems = items.filter(item => {
-    const price = parseFloat(item.amount);
-    return !isNaN(price) && 
-           price > 0 && 
-           item.name.length > 1 && 
-           !item.name.match(/^\d+$/) && // Not just digits
-           !isCommonNonItemText(item.name);
-  });
+  console.log(`Extracted ${items.length} items from receipt`);
   
-  console.log(`Found ${validItems.length} valid items out of ${items.length} total items`);
-  return validItems;
-}
-
-// Guess category based on item name
-function guessCategory(itemName: string): string {
-  const lowerName = itemName.toLowerCase();
-  
-  // Check for food categories
-  if (lowerName.includes("burger") || 
-      lowerName.includes("pizza") || 
-      lowerName.includes("sandwich") || 
-      lowerName.includes("salad") || 
-      lowerName.includes("fries") || 
-      lowerName.includes("chicken") || 
-      lowerName.includes("steak") ||
-      lowerName.includes("fish") ||
-      lowerName.includes("oyster") ||
-      lowerName.includes("seafood")) {
-    return "Food";
+  // If we found no items, try a more aggressive approach
+  if (items.length === 0) {
+    console.log("No items found with standard patterns, trying backup extraction");
+    extractItemsAggressively(lines, 0, lines.length, items);
   }
   
-  // Check for drink categories
-  if (lowerName.includes("coffee") || 
-      lowerName.includes("tea") || 
-      lowerName.includes("soda") || 
-      lowerName.includes("drink") || 
-      lowerName.includes("water") || 
-      lowerName.includes("juice") || 
-      lowerName.includes("beer") || 
-      lowerName.includes("wine") ||
-      lowerName.includes("cocktail") ||
-      lowerName.includes("bloody mary") ||
-      lowerName.includes("martini") ||
-      lowerName.includes("margarita")) {
-    return "Drinks";
-  }
-  
-  // Default to restaurant category for unrecognized items on restaurant receipts
-  return "Restaurant";
+  return items;
 }
 
 // Check if a line should be skipped when searching for items
 export function shouldSkipLine(line: string): boolean {
   const lowerLine = line.toLowerCase();
-  return lowerLine.includes("receipt") || 
-    lowerLine.includes("order") || 
-    lowerLine.includes("tel:") || 
-    lowerLine.includes("phone") || 
-    lowerLine.includes("address") || 
-    lowerLine.includes("thank you") ||
-    lowerLine.includes("subtotal") ||
-    lowerLine.includes("total") ||
-    lowerLine.includes("change") ||
-    lowerLine.includes("cash") ||
-    lowerLine.includes("card") ||
-    lowerLine.includes("payment") ||
-    lowerLine.includes("tax") ||
-    lowerLine.includes("date") ||
-    lowerLine.includes("store") ||
-    lowerLine.includes("coupon") ||
-    lowerLine.includes("discount") ||
-    lowerLine.match(/^\d+$/) || // Just a number
-    lowerLine.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/); // Just a date
+  
+  // Skip common receipt headers and metadata
+  if (lowerLine.includes("store #") || 
+      lowerLine.includes("receipt") ||
+      lowerLine.includes("order") || 
+      lowerLine.includes("tel:") || 
+      lowerLine.includes("phone") || 
+      lowerLine.includes("address") || 
+      lowerLine.includes("thank you") ||
+      lowerLine.includes("subtotal") ||
+      lowerLine.includes("total") ||
+      lowerLine.includes("change") ||
+      lowerLine.includes("cash") ||
+      lowerLine.includes("card") ||
+      lowerLine.includes("payment") ||
+      lowerLine.includes("tax") ||
+      lowerLine.includes("date") ||
+      lowerLine.includes("store") ||
+      lowerLine.includes("coupon") ||
+      lowerLine.includes("discount") ||
+      lowerLine.match(/^\d+$/) || // Just a number
+      lowerLine.match(/^\=+$/) || // Just equals signs
+      lowerLine.match(/^\-+$/) || // Just hyphens
+      lowerLine.match(/^\*+$/) || // Just asterisks
+      lowerLine.match(/^[\=\-\*]+$/) || // Just separator characters
+      lowerLine.match(/^\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}$/)) { // Just a date
+    return true;
+  }
+  
+  return false;
 }
 
 // Clean up an item name by removing common prefixes and special characters
 export function cleanupItemName(itemName: string): string {
   let cleanName = itemName;
-  
-  // For restaurant items, we want to keep the quantity for things like "5 BLOODY MARY"
-  // So we don't remove quantity indicators here
   
   // Remove special characters but keep apostrophes and hyphens
   cleanName = cleanName.replace(/[\*\#\$\@\%\(\)]/g, '');
@@ -183,7 +139,7 @@ export function cleanupItemName(itemName: string): string {
     return "Store Item";
   }
   
-  // Capitalize first letter of each word (but preserve words already in ALL CAPS)
+  // Ensure proper capitalization (first letter of each word)
   cleanName = cleanName.replace(/\w\S*/g, (txt) => {
     // If the word is all uppercase, keep it that way
     if (txt === txt.toUpperCase()) {
@@ -194,6 +150,125 @@ export function cleanupItemName(itemName: string): string {
   });
   
   return cleanName;
+}
+
+// Try a more aggressive approach to extract items from receipt text
+export function extractItemsAggressively(
+  lines: string[], 
+  startIndex: number, 
+  endIndex: number, 
+  items: Array<{name: string; amount: string; category: string}>
+): void {
+  // For supermarket receipts, try to match the pattern where items and prices are aligned
+  console.log("Using aggressive item extraction");
+  
+  // Start at a reasonable point (skip the header)
+  const startLine = Math.max(5, startIndex);
+  const endLine = Math.min(endIndex, lines.length - 5);
+  
+  for (let i = startLine; i < endLine; i++) {
+    const line = lines[i].trim();
+    
+    // Skip already processed lines or clear non-item lines
+    if (shouldSkipLine(line) || line.length < 5) {
+      continue;
+    }
+    
+    // Look for price-like patterns at the end of the line
+    const priceMatch = line.match(/\s+(\d+\.\d{2})$/);
+    if (priceMatch) {
+      const price = priceMatch[1];
+      
+      // Get the text before the price as the item name
+      let itemName = line.substring(0, line.lastIndexOf(priceMatch[0])).trim();
+      
+      // Clean up the item name
+      itemName = cleanupItemName(itemName);
+      
+      if (itemName && price && 
+          parseFloat(price) > 0 && 
+          !isCommonNonItemText(itemName) && 
+          itemName.length > 2) {
+        console.log(`[Aggressive] Found item: "${itemName}" with price: $${price}`);
+        items.push({
+          name: itemName,
+          amount: price,
+          category: guessCategory(itemName)
+        });
+      }
+    }
+  }
+}
+
+// Guess category based on item name
+function guessCategory(itemName: string): string {
+  const lowerName = itemName.toLowerCase();
+  
+  // Grocery categories
+  if (lowerName.includes("eggs") || 
+      lowerName.includes("milk") || 
+      lowerName.includes("cheese") || 
+      lowerName.includes("yogurt") || 
+      lowerName.includes("butter") || 
+      lowerName.includes("cream")) {
+    return "Groceries";
+  }
+  
+  // Produce/vegetables/fruits
+  if (lowerName.includes("tomato") || 
+      lowerName.includes("banana") || 
+      lowerName.includes("apple") || 
+      lowerName.includes("lettuce") || 
+      lowerName.includes("potato") || 
+      lowerName.includes("onion") || 
+      lowerName.includes("pepper") ||
+      lowerName.includes("aubergine") ||
+      lowerName.includes("fruit") ||
+      lowerName.includes("vegetable")) {
+    return "Groceries";
+  }
+  
+  // Meat and protein
+  if (lowerName.includes("chicken") || 
+      lowerName.includes("beef") || 
+      lowerName.includes("pork") || 
+      lowerName.includes("fish") || 
+      lowerName.includes("tuna") || 
+      lowerName.includes("meat") || 
+      lowerName.includes("steak") ||
+      lowerName.includes("breast")) {
+    return "Groceries";
+  }
+  
+  // Snacks and treats
+  if (lowerName.includes("cookie") || 
+      lowerName.includes("cracker") || 
+      lowerName.includes("chip") || 
+      lowerName.includes("chocolate") || 
+      lowerName.includes("candy") || 
+      lowerName.includes("snack")) {
+    return "Groceries";
+  }
+  
+  // Household items
+  if (lowerName.includes("paper") || 
+      lowerName.includes("toilet") || 
+      lowerName.includes("wipe") || 
+      lowerName.includes("napkin") || 
+      lowerName.includes("towel") || 
+      lowerName.includes("soap") || 
+      lowerName.includes("detergent") ||
+      lowerName.includes("clean")) {
+    return "Household";
+  }
+  
+  // Default to groceries for supermarket receipts
+  return "Groceries";
+}
+
+// Helper function to check if a string is numeric
+function isNumeric(str: string): boolean {
+  return /^\d+$/.test(str);
 }
 
 // Check if text is commonly found in receipts but isn't an actual item
@@ -210,76 +285,4 @@ function isCommonNonItemText(text: string): boolean {
          lowerText === "qty" || 
          lowerText === "amount" || 
          lowerText === "price";
-}
-
-// Try a more aggressive approach to extract items from receipt text
-export function extractItemsAggressively(
-  lines: string[], 
-  startIndex: number, 
-  endIndex: number, 
-  items: Array<{name: string; amount: string; category: string}>
-): void {
-  // Look for any numeric values that could be prices
-  for (let i = startIndex; i < endIndex; i++) {
-    const line = lines[i].trim();
-    
-    // Skip already processed lines or clear non-item lines
-    if (shouldSkipLine(line)) {
-      continue;
-    }
-    
-    // Look for price-like patterns anywhere in the line
-    const priceMatches = Array.from(line.matchAll(/\$?\s*(\d+\.\d{2})/g));
-    
-    if (priceMatches.length === 1) {
-      const price = priceMatches[0][1];
-      
-      // Get the text before the price as the item name
-      let itemName = line.substring(0, line.indexOf(priceMatches[0][0])).trim();
-      
-      // If no text before price, check if this is a continuation line
-      if (!itemName && i > 0) {
-        const prevLine = lines[i-1].trim();
-        if (!shouldSkipLine(prevLine) && !prevLine.match(/\d+\.\d{2}/)) {
-          itemName = prevLine;
-        }
-      }
-      
-      // Clean up the item name
-      itemName = cleanupItemName(itemName);
-      
-      if (itemName && price && parseFloat(price) > 0 && 
-          !items.some(item => item.name === itemName && item.amount === price) &&
-          !isCommonNonItemText(itemName)) {
-        console.log(`[Pass 2] Found item: "${itemName}" with price: $${price}`);
-        items.push({
-          name: itemName,
-          amount: price,
-          category: "Shopping"
-        });
-      }
-    }
-    // For cases where the price might be on the next line
-    else if (priceMatches.length === 0 && i + 1 < endIndex) {
-      const nextLine = lines[i + 1].trim();
-      const nextLinePriceMatch = nextLine.match(/^\s*\$?\s*(\d+\.\d{2})\s*$/);
-      
-      if (nextLinePriceMatch && line.length > 3 && !shouldSkipLine(line)) {
-        const itemName = cleanupItemName(line);
-        const price = nextLinePriceMatch[1];
-        
-        if (parseFloat(price) > 0 && !isCommonNonItemText(itemName)) {
-          console.log(`[Pass 3] Found item spanning two lines: "${itemName}" with price: $${price}`);
-          items.push({
-            name: itemName,
-            amount: price,
-            category: "Shopping"
-          });
-          
-          // Skip the next line since we've used it
-          i++;
-        }
-      }
-    }
-  }
 }
