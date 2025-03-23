@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReceiptScannerProps {
   receiptUrl: string;
@@ -16,6 +17,7 @@ export function useReceiptScanner({
   onItemsExtracted 
 }: ReceiptScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
+  const queryClient = useQueryClient();
 
   // Check if we have a receipt image to scan
   const canScanReceipt = !!receiptUrl && !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
@@ -67,30 +69,84 @@ export function useReceiptScanner({
       
       // Check response
       if (data && data.success && data.items && data.items.length > 0) {
-        toast.dismiss(scanToast);
-        toast.success("Receipt scanned successfully!");
+        // Get current user
+        const { data: userData, error: userError } = await supabase.auth.getUser();
         
-        const receiptItems = data.items;
-        console.log("Extracted receipt data:", receiptItems);
+        if (userError || !userData.user) {
+          toast.dismiss(scanToast);
+          toast.error("You must be logged in to add expenses");
+          setIsScanning(false);
+          return;
+        }
         
-        // Process the items
-        if (onItemsExtracted) {
-          // Calculate total
-          const total = receiptItems.reduce((sum: number, item: any) => {
-            const amount = parseFloat(item.amount.replace('$', ''));
-            return sum + (isNaN(amount) ? 0 : amount);
-          }, 0).toFixed(2);
+        const userId = userData.user.id;
+        
+        // Process each item from the receipt and add to Supabase
+        const items = data.items;
+        let successCount = 0;
+        
+        for (const item of items) {
+          // Format the amount correctly
+          const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
           
-          // Create receipt data structure
+          if (isNaN(amount) || amount <= 0) {
+            console.log("Skipping item with invalid amount:", item);
+            continue;
+          }
+          
+          // Extract date
+          let expenseDate = new Date().toISOString().split('T')[0]; // Default to today
+          if (item.date) {
+            try {
+              const date = new Date(item.date);
+              if (!isNaN(date.getTime())) {
+                expenseDate = date.toISOString().split('T')[0];
+              }
+            } catch (e) {
+              console.log("Error parsing date from receipt item:", e);
+            }
+          }
+          
+          // Insert the expense into Supabase
+          const { error: insertError } = await supabase.from('expenses').insert([{
+            user_id: userId,
+            description: item.name,
+            amount: amount,
+            date: expenseDate,
+            category: item.category || "Groceries",
+            payment: "Card", // Default payment method
+            is_recurring: false,
+            notes: "Added from receipt scan",
+            receipt_url: receiptUrl || null
+          }]);
+          
+          if (insertError) {
+            console.error("Error adding item to expenses:", insertError);
+          } else {
+            successCount++;
+          }
+        }
+        
+        // Invalidate expenses query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        
+        toast.dismiss(scanToast);
+        toast.success(`Successfully added ${successCount} items from the receipt!`);
+        
+        // Also support the original callback flows
+        if (onItemsExtracted) {
           const receiptData: ReceiptScanResult = {
             storeName: "Store", // We don't extract store name in the new implementation
-            date: receiptItems[0].date, // Use the date from the first item
-            items: receiptItems.map((item: any) => ({
+            date: items[0].date,
+            items: items.map((item: any) => ({
               name: item.name,
               amount: item.amount.replace('$', ''),
               category: item.category
             })),
-            total: total,
+            total: items.reduce((sum: number, item: any) => {
+              const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
+              return sum + (isNaN(amount) ? 0 : amount);
+            }, 0).toFixed(2),
             paymentMethod: "Card" // Default payment method
           };
           
@@ -98,9 +154,9 @@ export function useReceiptScanner({
         }
         
         // Also support the original single-item flow
-        if (onScanComplete && receiptItems.length > 0) {
+        if (onScanComplete && items.length > 0) {
           // Use the first item for the single expense flow
-          const firstItem = receiptItems[0];
+          const firstItem = items[0];
           
           const extractedData: ScanResult = {
             description: firstItem.name,

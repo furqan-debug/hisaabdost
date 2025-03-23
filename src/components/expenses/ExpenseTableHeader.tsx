@@ -1,20 +1,15 @@
 
-import { Button } from "@/components/ui/button";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowDownIcon, ArrowUpIcon, CheckSquare, Square } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-
-type SortField = 'date' | 'amount' | 'category' | 'description';
-type SortOrder = 'asc' | 'desc';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Expense } from "@/components/AddExpenseSheet";
 
 interface ExpenseTableHeaderProps {
-  sortConfig: {
-    field: SortField;
-    order: SortOrder;
-  };
-  handleSort: (field: SortField) => void;
+  sortConfig: { field: 'date' | 'amount' | 'category' | 'description'; order: 'asc' | 'desc' };
+  handleSort: (field: 'date' | 'amount' | 'category' | 'description') => void;
   selectedExpenses: Set<string>;
-  filteredExpenses: any[];
+  filteredExpenses: Expense[];
   toggleSelectAll: () => void;
 }
 
@@ -23,123 +18,71 @@ export function ExpenseTableHeader({
   handleSort,
   selectedExpenses,
   filteredExpenses,
-  toggleSelectAll,
+  toggleSelectAll
 }: ExpenseTableHeaderProps) {
-  const isMobile = useIsMobile();
-  
-  const getSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) return null;
-    return sortConfig.order === 'asc' ? 
-      <ArrowUpIcon className="h-4 w-4 ml-1" /> : 
-      <ArrowDownIcon className="h-4 w-4 ml-1" />;
+  const sortIndicator = (field: 'date' | 'amount' | 'category' | 'description') => {
+    if (sortConfig.field === field) {
+      return sortConfig.order === 'asc' ? (
+        <ArrowUp className="ml-1 h-3 w-3" />
+      ) : (
+        <ArrowDown className="ml-1 h-3 w-3" />
+      );
+    }
+    return null;
   };
 
-  if (isMobile) {
-    return (
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[40px] p-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSelectAll}
-              className="h-8 w-8 p-0"
-            >
-              {selectedExpenses.size === filteredExpenses.length ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-            </Button>
-          </TableHead>
-          <TableHead className="p-2">
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => handleSort('description')}
-                className="h-8 text-xs"
-              >
-                Details {getSortIcon('description')}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => handleSort('date')}
-                className="h-8 text-xs"
-              >
-                Date {getSortIcon('date')}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => handleSort('amount')}
-                className="h-8 text-xs"
-              >
-                $ {getSortIcon('amount')}
-              </Button>
-            </div>
-          </TableHead>
-          <TableHead className="w-[40px] p-2"></TableHead>
-        </TableRow>
-      </TableHeader>
-    );
-  }
+  const allSelected = filteredExpenses.length > 0 && 
+    filteredExpenses.every(expense => selectedExpenses.has(expense.id));
+  
+  const someSelected = selectedExpenses.size > 0 && !allSelected;
 
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-[40px]">
+        <TableHead className="w-[30px]">
+          <Checkbox
+            checked={allSelected}
+            indeterminate={someSelected}
+            onCheckedChange={toggleSelectAll}
+          />
+        </TableHead>
+        <TableHead>
           <Button
             variant="ghost"
-            size="icon"
-            onClick={toggleSelectAll}
-            className="h-8 w-8 p-0"
-          >
-            {selectedExpenses.size === filteredExpenses.length ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-          </Button>
-        </TableHead>
-        <TableHead>
-          <Button 
-            variant="ghost" 
+            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('date')}
-            className="flex items-center"
           >
-            Date {getSortIcon('date')}
+            Date {sortIndicator('date')}
           </Button>
         </TableHead>
         <TableHead>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
+            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('description')}
-            className="flex items-center"
           >
-            Description {getSortIcon('description')}
+            Name {sortIndicator('description')}
           </Button>
         </TableHead>
         <TableHead>
-          <Button 
-            variant="ghost" 
-            onClick={() => handleSort('category')}
-            className="flex items-center"
-          >
-            Category {getSortIcon('category')}
-          </Button>
-        </TableHead>
-        <TableHead>Payment</TableHead>
-        <TableHead className="text-right">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
+            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('amount')}
-            className="flex items-center justify-end w-full"
           >
-            Amount {getSortIcon('amount')}
+            Amount {sortIndicator('amount')}
           </Button>
         </TableHead>
+        <TableHead className="hidden md:table-cell">
+          <Button
+            variant="ghost"
+            className="p-0 font-medium flex items-center"
+            onClick={() => handleSort('category')}
+          >
+            Category {sortIndicator('category')}
+          </Button>
+        </TableHead>
+        <TableHead className="hidden lg:table-cell">Payment</TableHead>
         <TableHead className="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
