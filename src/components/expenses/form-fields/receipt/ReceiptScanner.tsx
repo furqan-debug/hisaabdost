@@ -65,65 +65,58 @@ export function useReceiptScanner({
         return;
       }
       
-      // Check for success status in data
-      if (data && data.success && data.receiptData) {
-        const isFromFallback = data.isFromFallback || false;
+      // Check response
+      if (data && data.success && data.items && data.items.length > 0) {
+        toast.dismiss(scanToast);
+        toast.success("Receipt scanned successfully!");
         
-        if (isFromFallback) {
-          toast.dismiss(scanToast);
-          toast.warning(
-            "OCR service unavailable: Using sample data. " + 
-            (data.error ? `(${data.error})` : "")
-          );
-        } else {
-          toast.dismiss(scanToast);
-          toast.success("Receipt scanned successfully!");
-        }
+        const receiptItems = data.items;
+        console.log("Extracted receipt data:", receiptItems);
         
-        const receiptData = data.receiptData;
-        console.log("Extracted receipt data:", receiptData);
-        
-        // Check if we have individual items
-        if (receiptData.items && receiptData.items.length > 0) {
-          console.log(`Found ${receiptData.items.length} individual items on receipt`);
+        // Process the items
+        if (onItemsExtracted) {
+          // Calculate total
+          const total = receiptItems.reduce((sum: number, item: any) => {
+            const amount = parseFloat(item.amount.replace('$', ''));
+            return sum + (isNaN(amount) ? 0 : amount);
+          }, 0).toFixed(2);
           
-          if (onItemsExtracted) {
-            // Pass the entire receipt data with items to the handler
-            onItemsExtracted({
-              storeName: receiptData.storeName || "Store",
-              date: receiptData.date || new Date().toISOString().split('T')[0],
-              items: receiptData.items.map(item => ({
-                name: item.name,
-                amount: item.amount,
-                category: item.category || guessStoreCategory(item.name)
-              })),
-              total: receiptData.total || "0.00",
-              paymentMethod: receiptData.paymentMethod || "Card"
-            });
-          }
-        } else if (!isFromFallback) {
-          toast.error("No items found on this receipt");
+          // Create receipt data structure
+          const receiptData: ReceiptScanResult = {
+            storeName: "Store", // We don't extract store name in the new implementation
+            date: receiptItems[0].date, // Use the date from the first item
+            items: receiptItems.map((item: any) => ({
+              name: item.name,
+              amount: item.amount.replace('$', ''),
+              category: item.category
+            })),
+            total: total,
+            paymentMethod: "Card" // Default payment method
+          };
+          
+          onItemsExtracted(receiptData);
         }
         
-        // Still support the original single-item flow for backward compatibility
-        if (onScanComplete) {
+        // Also support the original single-item flow
+        if (onScanComplete && receiptItems.length > 0) {
+          // Use the first item for the single expense flow
+          const firstItem = receiptItems[0];
+          
           const extractedData: ScanResult = {
-            storeName: receiptData.storeName || "",
-            description: receiptData.storeName ? `Purchase from ${receiptData.storeName}` : "Purchase",
-            amount: receiptData.total || "0.00",
-            date: receiptData.date || new Date().toISOString().split('T')[0],
-            category: guessStoreCategory(receiptData.storeName || ""),
-            paymentMethod: receiptData.paymentMethod || "Card"
+            description: firstItem.name,
+            amount: firstItem.amount.replace('$', ''),
+            date: firstItem.date ? convertDateFormat(firstItem.date) : new Date().toISOString().split('T')[0],
+            category: firstItem.category || "Shopping",
+            paymentMethod: "Card",
+            storeName: "" // We don't extract store name in the new implementation
           };
           
           onScanComplete(extractedData);
         }
       } else if (data && !data.success) {
         toast.dismiss(scanToast);
-        console.error("Receipt scan error:", data.error, data.details);
-        const errorMessage = data.error || "Failed to extract information from receipt";
-        const detailsMessage = data.details ? `\n${data.details}` : "";
-        toast.error(errorMessage + detailsMessage);
+        console.error("Receipt scan error:", data.error);
+        toast.error(data.error || "Failed to extract information from receipt");
       } else {
         toast.dismiss(scanToast);
         toast.error("Receipt scanning failed. Please try uploading a clearer image.");
@@ -137,37 +130,17 @@ export function useReceiptScanner({
     }
   };
 
-  // Helper function to guess category based on store name or item name
-  function guessStoreCategory(text: string): string {
-    const lowerText = text.toLowerCase();
-    
-    // Gas station related
-    if (lowerText.includes('gas') || 
-        lowerText.includes('shell') || 
-        lowerText.includes('fuel') ||
-        lowerText.includes('petrol') ||
-        lowerText.includes('exxon') ||
-        lowerText.includes('mobil') ||
-        lowerText.includes('bp') ||
-        lowerText.includes('chevron')) {
-      return "Transportation";
+  // Helper function to convert date format from "Mar 23, 2025" to "2025-03-23"
+  function convertDateFormat(dateStr: string): string {
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return new Date().toISOString().split('T')[0];
+      }
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      return new Date().toISOString().split('T')[0];
     }
-    
-    // Grocery related
-    if (lowerText.includes('supermarket') || 
-        lowerText.includes('grocery') || 
-        lowerText.includes('food store')) {
-      return "Groceries";
-    }
-    
-    // Restaurant related
-    if (lowerText.includes('restaurant') || 
-        lowerText.includes('cafe') || 
-        lowerText.includes('bar')) {
-      return "Restaurant";
-    }
-    
-    return "Shopping";
   }
 
   return {
