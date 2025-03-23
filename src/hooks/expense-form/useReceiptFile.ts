@@ -19,7 +19,10 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         return;
       }
 
+      // Store the file object for further processing
       updateField('receiptFile', file);
+      
+      // Create blob URL for preview
       const url = URL.createObjectURL(file);
       updateField('receiptUrl', url);
 
@@ -29,6 +32,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       }
       
       toast.success('Receipt uploaded successfully');
+    } else {
+      console.log("No file selected in handleFileChange");
     }
   };
 

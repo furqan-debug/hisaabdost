@@ -23,8 +23,9 @@ export function useReceiptScanner({
   const canScanReceipt = !!receiptUrl && !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
 
   const handleScanReceipt = async () => {
+    // Get file element by id
     const fileInput = document.getElementById('expense-receipt') as HTMLInputElement;
-    if (!fileInput.files || fileInput.files.length === 0) {
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
       toast.error("Please upload a receipt image first");
       return;
     }
@@ -55,9 +56,12 @@ export function useReceiptScanner({
       const formData = new FormData();
       formData.append('receipt', file);
 
+      console.log("Sending receipt to scan-receipt function");
       const { data, error } = await supabase.functions.invoke('scan-receipt', {
         body: formData,
       });
+
+      console.log("Scan receipt response:", data, error);
 
       if (error) {
         console.error("Supabase function error:", error);
@@ -68,7 +72,15 @@ export function useReceiptScanner({
       }
       
       // Check response
+      if (!data) {
+        toast.dismiss(scanToast);
+        toast.error("No data returned from receipt scanner");
+        setIsScanning(false);
+        return;
+      }
+
       if (data && data.success && data.items && data.items.length > 0) {
+        console.log("Receipt scanned successfully with items:", data.items);
         // Get current user
         const { data: userData, error: userError } = await supabase.auth.getUser();
         
@@ -136,8 +148,8 @@ export function useReceiptScanner({
         // Also support the original callback flows
         if (onItemsExtracted) {
           const receiptData: ReceiptScanResult = {
-            storeName: "Store", // We don't extract store name in the new implementation
-            date: items[0].date,
+            storeName: data.storeName || "Store", 
+            date: items[0].date || new Date().toLocaleDateString(),
             items: items.map((item: any) => ({
               name: item.name,
               amount: item.amount.replace('$', ''),
@@ -164,7 +176,7 @@ export function useReceiptScanner({
             date: firstItem.date ? convertDateFormat(firstItem.date) : new Date().toISOString().split('T')[0],
             category: firstItem.category || "Shopping",
             paymentMethod: "Card",
-            storeName: "" // We don't extract store name in the new implementation
+            storeName: data.storeName || "" 
           };
           
           onScanComplete(extractedData);
