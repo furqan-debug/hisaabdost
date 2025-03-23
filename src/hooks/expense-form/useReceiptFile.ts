@@ -18,6 +18,12 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         toast.error('Please upload an image or PDF file');
         return;
       }
+      
+      // Check file size (8MB limit)
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error('File is too large. Please upload a file smaller than 8MB');
+        return;
+      }
 
       // Store the file object for further processing
       updateField('receiptFile', file);

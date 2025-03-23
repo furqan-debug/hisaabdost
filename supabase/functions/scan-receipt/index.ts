@@ -134,6 +134,7 @@ async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
       console.error(`Google Vision API error: ${response.status} ${response.statusText}`)
       console.error('Error details:', errorText)
       
+      // Return sample data if the API call fails
       return generateSampleData()
     }
     

@@ -79,8 +79,18 @@ export function useReceiptScanner({
         return;
       }
 
-      if (data && data.success && data.items && data.items.length > 0) {
-        console.log("Receipt scanned successfully with items:", data.items);
+      // Proceed if we have valid item data
+      if (data && data.success) {
+        console.log("Receipt scan success. Items:", data.items);
+        const items = data.items || [];
+        
+        if (items.length === 0) {
+          toast.dismiss(scanToast);
+          toast.error("Unable to extract any items from the receipt");
+          setIsScanning(false);
+          return;
+        }
+        
         // Get current user
         const { data: userData, error: userError } = await supabase.auth.getUser();
         
@@ -92,11 +102,9 @@ export function useReceiptScanner({
         }
         
         const userId = userData.user.id;
-        
-        // Process each item from the receipt and add to Supabase
-        const items = data.items;
         let successCount = 0;
         
+        // Process each item from the receipt and add to Supabase
         for (const item of items) {
           // Format the amount correctly
           const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
@@ -143,7 +151,12 @@ export function useReceiptScanner({
         queryClient.invalidateQueries({ queryKey: ['expenses'] });
         
         toast.dismiss(scanToast);
-        toast.success(`Successfully added ${successCount} items from the receipt!`);
+        
+        if (successCount > 0) {
+          toast.success(`Successfully added ${successCount} items from the receipt!`);
+        } else {
+          toast.error("Could not add any items from the receipt");
+        }
         
         // Also support the original callback flows
         if (onItemsExtracted) {
@@ -181,13 +194,9 @@ export function useReceiptScanner({
           
           onScanComplete(extractedData);
         }
-      } else if (data && !data.success) {
-        toast.dismiss(scanToast);
-        console.error("Receipt scan error:", data.error);
-        toast.error(data.error || "Failed to extract information from receipt");
       } else {
         toast.dismiss(scanToast);
-        toast.error("Receipt scanning failed. Please try uploading a clearer image.");
+        toast.error(data.error || "Could not extract data from receipt. Please try again or enter details manually.");
       }
     } catch (error) {
       console.error("Receipt scanning error:", error);
