@@ -4,7 +4,7 @@ import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
 
