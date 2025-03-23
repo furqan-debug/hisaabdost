@@ -5,6 +5,7 @@ import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useReceiptScanner } from "./receipt/ReceiptScanner";
 import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
+import { useRef } from "react";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -19,6 +20,7 @@ export function ReceiptField({
   onScanComplete,
   onItemsExtracted 
 }: ReceiptFieldProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { isScanning, canScanReceipt, handleScanReceipt } = useReceiptScanner({
     receiptUrl,
     onScanComplete,
@@ -26,14 +28,15 @@ export function ReceiptField({
   });
 
   const handleUpload = () => {
-    document.getElementById('expense-receipt')?.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleCapture = () => {
-    const input = document.getElementById('expense-receipt') as HTMLInputElement;
-    if (input) {
-      input.setAttribute('capture', 'environment');
-      input.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute('capture', 'environment');
+      fileInputRef.current.click();
     }
   };
 
@@ -52,6 +55,7 @@ export function ReceiptField({
           type="file"
           accept="image/*,.pdf"
           onChange={onFileChange}
+          ref={fileInputRef}
           className="hidden"
         />
         

@@ -15,7 +15,11 @@ interface ViewReceiptDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function ViewReceiptDialog({ receiptUrl, open: externalOpen, onOpenChange: externalOnOpenChange }: ViewReceiptDialogProps) {
+export function ViewReceiptDialog({ 
+  receiptUrl, 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange 
+}: ViewReceiptDialogProps) {
   // Internal state for when the component is used without external control
   const [internalOpen, setInternalOpen] = useState(false);
   
