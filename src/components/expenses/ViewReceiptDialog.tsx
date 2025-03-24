@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, FileImage } from "lucide-react";
+import { toast } from "sonner";
 
 interface ViewReceiptDialogProps {
   receiptUrl?: string;
@@ -24,15 +25,24 @@ export function ViewReceiptDialog({
   // Internal state for when the component is used without external control
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const handleOpenChange = externalOnOpenChange || setInternalOpen;
+  const handleOpenChange = (open: boolean) => {
+    // Use the external handler if provided, otherwise use the internal one
+    if (externalOnOpenChange) {
+      externalOnOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
+  };
   
-  // Reset image error state when dialog opens
+  // Reset image states when dialog opens
   useEffect(() => {
     if (isOpen) {
       setImageError(false);
+      setImageLoaded(false);
     }
   }, [isOpen]);
   
@@ -40,19 +50,28 @@ export function ViewReceiptDialog({
     if (!receiptUrl) return;
     
     try {
+      // Create a link element and trigger download
       const link = document.createElement('a');
       link.href = receiptUrl;
       link.download = `receipt-${new Date().toISOString().split('T')[0]}.${receiptUrl.split('.').pop() || 'jpg'}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      toast.success("Receipt downloaded successfully");
     } catch (error) {
       console.error("Download failed:", error);
+      toast.error("Failed to download receipt");
     }
   };
 
   const handleImageError = () => {
+    console.error("Image failed to load:", receiptUrl);
     setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
   };
 
   if (!receiptUrl) return null;
@@ -71,7 +90,10 @@ export function ViewReceiptDialog({
         </Button>
       )}
       
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog 
+        open={isOpen} 
+        onOpenChange={handleOpenChange}
+      >
         <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex justify-between items-center">
@@ -81,18 +103,27 @@ export function ViewReceiptDialog({
                 Download Receipt
               </Button>
             </DialogTitle>
-            <DialogDescription className="sr-only">
-              View and download expense receipt
+            <DialogDescription>
+              View and download your expense receipt
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto flex-1 relative flex items-center justify-center bg-black/5 rounded-md p-4">
             {receiptUrl && !imageError ? (
-              <img
-                src={receiptUrl}
-                alt="Receipt"
-                className="max-h-full max-w-full object-contain"
-                onError={handleImageError}
-              />
+              <>
+                {!imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  </div>
+                )}
+                <img
+                  src={receiptUrl}
+                  alt="Receipt"
+                  className="max-h-full max-w-full object-contain"
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
+                  style={{ display: imageLoaded ? 'block' : 'none' }}
+                />
+              </>
             ) : (
               <div className="text-center p-4">
                 <FileImage className="h-12 w-12 mx-auto text-muted-foreground mb-2" />

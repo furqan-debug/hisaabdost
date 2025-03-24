@@ -27,6 +27,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         
         // Create local blob URL for preview
         const localUrl = URL.createObjectURL(file);
+        console.log("Created new blob URL for receipt:", localUrl);
         updateField('receiptUrl', localUrl);
         updateField('receiptFile', file);
       } catch (error) {
@@ -40,6 +41,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   useEffect(() => {
     return () => {
       if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
+        console.log("Cleaning up blob URL on unmount:", formData.receiptUrl);
         URL.revokeObjectURL(formData.receiptUrl);
       }
     };

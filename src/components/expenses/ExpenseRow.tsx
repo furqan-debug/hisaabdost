@@ -33,6 +33,12 @@ export function ExpenseRow({
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
+  const handleViewReceipt = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setReceiptDialogOpen(true);
+  };
+  
   return (
     <TableRow>
       <TableCell className="w-[30px]">
@@ -72,22 +78,17 @@ export function ExpenseRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {expense.receiptUrl && (
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setReceiptDialogOpen(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={handleViewReceipt}>
                   <FileImage className="h-4 w-4 mr-2" />
                   View Receipt
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onSelect={() => onEdit(expense)}>
+              <DropdownMenuItem onClick={() => onEdit(expense)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={() => onDelete(expense.id)}
+                onClick={() => onDelete(expense.id)}
                 className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -95,16 +96,15 @@ export function ExpenseRow({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          {/* Put the dialog outside the dropdown but still in the row */}
-          {expense.receiptUrl && (
-            <ViewReceiptDialog 
-              receiptUrl={expense.receiptUrl} 
-              open={receiptDialogOpen}
-              onOpenChange={setReceiptDialogOpen}
-            />
-          )}
         </div>
+
+        {expense.receiptUrl && (
+          <ViewReceiptDialog 
+            receiptUrl={expense.receiptUrl} 
+            open={receiptDialogOpen}
+            onOpenChange={setReceiptDialogOpen}
+          />
+        )}
       </TableCell>
     </TableRow>
   );
