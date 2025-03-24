@@ -9,6 +9,8 @@ interface ScanButtonProps {
   disabled: boolean;
   autoSave?: boolean;
   isAutoProcessing?: boolean;
+  scanProgress?: number;
+  statusMessage?: string;
 }
 
 export function ScanButton({
@@ -17,7 +19,9 @@ export function ScanButton({
   onClick,
   disabled,
   autoSave = false,
-  isAutoProcessing = false
+  isAutoProcessing = false,
+  scanProgress = 0,
+  statusMessage
 }: ScanButtonProps) {
   const buttonText = () => {
     if (isScanning) return "Processing...";
@@ -38,6 +42,9 @@ export function ScanButton({
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           {buttonText()}
+          {scanProgress > 0 && scanProgress < 100 && (
+            <span className="ml-1 text-xs">({scanProgress}%)</span>
+          )}
         </>
       ) : (
         <>
