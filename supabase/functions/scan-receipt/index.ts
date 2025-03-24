@@ -31,8 +31,17 @@ serve(async (req) => {
 
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`)
     
+    // Get the receipt URL if provided (for Supabase storage images)
+    const receiptUrl = formData.get('receiptUrl')
+    
     // Process the receipt image with either Google Vision or a fallback approach
     const result = await processReceipt(receiptImage);
+    
+    // Add receipt URL to result if provided
+    if (receiptUrl && typeof receiptUrl === 'string') {
+      result.receiptUrl = receiptUrl;
+    }
+    
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { saveReceiptExtraction } from '@/services/receiptService';
 
 interface UseScanResultsProps {
   isScanning: boolean;
@@ -37,7 +38,10 @@ export function useScanResults({
           console.log("Processing scan result:", lastScanResult);
           
           if (lastScanResult.items && lastScanResult.items.length > 0) {
-            // Process scan results
+            // Save receipt data to database if user is logged in
+            saveToDatabase(lastScanResult);
+            
+            // Process scan results for the expense form
             processScanResults(lastScanResult, autoSave, onCapture, setOpen);
             
             // Clear the stored result after processing
@@ -63,6 +67,61 @@ export function useScanResults({
       onCleanup();
     };
   }, [onCleanup]);
+  
+  // Save receipt data to database
+  const saveToDatabase = async (result: any) => {
+    if (!result || !result.items || result.items.length === 0) return;
+    
+    try {
+      // Format receipt data for storage
+      const receiptData = {
+        merchant: result.storeName || "Unknown Merchant",
+        date: formatDateForStorage(result.date),
+        total: calculateTotal(result.items),
+        items: result.items,
+        receiptUrl: result.receiptUrl || "",
+        paymentMethod: "Card" // Default assumption
+      };
+      
+      // Save to database
+      const receiptId = await saveReceiptExtraction(receiptData);
+      if (receiptId) {
+        console.log("Receipt data saved with ID:", receiptId);
+      }
+    } catch (error) {
+      console.error("Failed to save receipt data to database:", error);
+      // Don't show error to user - this is a background operation
+    }
+  };
+}
+
+// Format date for database storage
+function formatDateForStorage(dateString: string | undefined): string {
+  if (!dateString) return new Date().toISOString().split('T')[0];
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return new Date().toISOString().split('T')[0];
+    }
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+// Calculate total from items
+function calculateTotal(items: Array<{amount: string}>): string {
+  if (!items || items.length === 0) return "0.00";
+  
+  try {
+    const total = items.reduce((sum, item) => {
+      return sum + parseFloat(item.amount || "0");
+    }, 0);
+    return total.toFixed(2);
+  } catch (error) {
+    return "0.00";
+  }
 }
 
 // Process scan results and extract expense details

@@ -173,6 +173,80 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_extractions: {
+        Row: {
+          created_at: string
+          date: string
+          extraction_metadata: Json | null
+          id: string
+          merchant: string
+          payment_method: string | null
+          receipt_text: string | null
+          receipt_url: string | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          extraction_metadata?: Json | null
+          id?: string
+          merchant?: string
+          payment_method?: string | null
+          receipt_text?: string | null
+          receipt_url?: string | null
+          total?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          extraction_metadata?: Json | null
+          id?: string
+          merchant?: string
+          payment_method?: string | null
+          receipt_text?: string | null
+          receipt_url?: string | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      receipt_items: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          receipt_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          receipt_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_extractions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
