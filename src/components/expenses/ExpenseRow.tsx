@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,11 +33,24 @@ export function ExpenseRow({
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
-  const handleViewReceipt = (e: React.MouseEvent) => {
+  // Use memoized functions to prevent unnecessary re-renders
+  const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setReceiptDialogOpen(true);
-  };
+  }, []);
+  
+  const handleReceiptDialogChange = useCallback((open: boolean) => {
+    setReceiptDialogOpen(open);
+  }, []);
+  
+  const handleEdit = useCallback(() => {
+    onEdit(expense);
+  }, [expense, onEdit]);
+  
+  const handleDelete = useCallback(() => {
+    onDelete(expense.id);
+  }, [expense.id, onDelete]);
   
   return (
     <TableRow>
@@ -83,12 +96,12 @@ export function ExpenseRow({
                   View Receipt
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => onEdit(expense)}>
+              <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onDelete(expense.id)}
+                onClick={handleDelete}
                 className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -102,7 +115,7 @@ export function ExpenseRow({
           <ViewReceiptDialog 
             receiptUrl={expense.receiptUrl} 
             open={receiptDialogOpen}
-            onOpenChange={setReceiptDialogOpen}
+            onOpenChange={handleReceiptDialogChange}
           />
         )}
       </TableCell>
