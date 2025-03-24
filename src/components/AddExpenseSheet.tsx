@@ -29,6 +29,7 @@ const AddExpenseSheet = ({
   const {
     formData,
     isSubmitting,
+    isUploading,
     updateField,
     handleFileChange,
     handleSubmit
@@ -53,6 +54,7 @@ const AddExpenseSheet = ({
           formData={formData}
           isSubmitting={isSubmitting}
           isEditing={!!expenseToEdit}
+          isUploading={isUploading}
           onSubmit={handleSubmit}
           onFieldChange={updateField}
           onFileChange={handleFileChange}

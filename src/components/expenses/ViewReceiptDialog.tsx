@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -55,40 +55,51 @@ export function ViewReceiptDialog({
     };
   }, []);
   
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (!receiptUrl || imageError) return;
     
     try {
-      const link = document.createElement('a');
-      link.href = receiptUrl;
-      link.download = `receipt-${new Date().toISOString().split('T')[0]}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Receipt downloaded successfully");
+      // For remote URLs (not blob URLs)
+      fetch(receiptUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `receipt-${new Date().toISOString().split('T')[0]}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success("Receipt downloaded successfully");
+        })
+        .catch(err => {
+          console.error("Download failed:", err);
+          toast.error("Failed to download receipt");
+        });
     } catch (error) {
       console.error("Download failed:", error);
       toast.error("Failed to download receipt");
     }
-  };
+  }, [receiptUrl, imageError]);
 
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     if (isMounted.current) {
       setImageLoading(false);
       setImageError(false);
     }
-  };
+  }, []);
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     if (isMounted.current) {
       setImageError(true);
       setImageLoading(false);
     }
-  };
+  }, []);
   
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setIsOpen(false);
-  };
+  }, [setIsOpen]);
 
   if (!receiptUrl) return null;
 
@@ -145,6 +156,7 @@ export function ViewReceiptDialog({
                 }}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="text-center p-4">

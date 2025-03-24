@@ -62,7 +62,7 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     });
   };
 
-  const { handleFileChange } = useReceiptFile({ 
+  const { handleFileChange, isUploading } = useReceiptFile({ 
     formData, 
     updateField 
   });
@@ -81,6 +81,7 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
   return {
     formData,
     isSubmitting,
+    isUploading,
     updateField,
     handleFileChange,
     handleScanComplete,

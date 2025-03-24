@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
 
 interface UseReceiptFileProps {
@@ -8,6 +10,9 @@ interface UseReceiptFileProps {
 }
 
 export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
+  const { user } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
+  
   // Keep a ref to track the current blob URL to avoid stale closures in cleanup
   const currentBlobUrlRef = useRef<string | null>(null);
 
@@ -19,6 +24,47 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       } catch (error) {
         console.error("Error revoking blob URL:", error);
       }
+    }
+  };
+
+  const uploadToSupabase = async (file: File): Promise<string | null> => {
+    if (!user) {
+      toast.error('You must be logged in to upload files');
+      return null;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Create a unique file path for this user and receipt
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = `receipts/${fileName}`;
+      
+      // Upload the file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('receipts')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type,
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(filePath);
+      
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading to Supabase:", error);
+      toast.error('Failed to upload receipt. Please try again.');
+      return null;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -45,8 +91,18 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         // Update the ref with the new URL
         currentBlobUrlRef.current = localUrl;
         
+        // Update form with local URL for immediate preview
         updateField('receiptUrl', localUrl);
         updateField('receiptFile', file);
+        
+        // Upload to Supabase and get permanent URL
+        const supabaseUrl = await uploadToSupabase(file);
+        
+        // If upload was successful, update the form with the permanent URL
+        if (supabaseUrl) {
+          updateField('receiptUrl', supabaseUrl);
+          toast.success('Receipt uploaded successfully');
+        }
       } catch (error) {
         console.error("Error handling receipt file:", error);
         toast.error('Failed to process receipt file');
@@ -71,5 +127,5 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     };
   }, [formData.receiptUrl]);
 
-  return { handleFileChange };
+  return { handleFileChange, isUploading };
 }

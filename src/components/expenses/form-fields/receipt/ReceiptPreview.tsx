@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FileImage, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,17 +23,20 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   
   if (!receiptUrl) return null;
   
-  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i) || receiptUrl.startsWith('blob:');
+  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+                 receiptUrl.startsWith('blob:') || 
+                 receiptUrl.includes('storage.googleapis.com') || 
+                 receiptUrl.includes('supabase');
   
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     setImageError(false);
-  };
+  }, []);
   
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     setImageError(true);
     setImageLoaded(false);
-  };
+  }, []);
   
   return (
     <div className="relative group overflow-hidden rounded-md">
@@ -54,6 +57,7 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
             )}
             onLoad={handleImageLoad}
             onError={handleImageError}
+            crossOrigin="anonymous"
           />
           
           {imageError && (

@@ -11,6 +11,7 @@ interface ExpenseFormProps {
   formData: ExpenseFormData;
   isSubmitting: boolean;
   isEditing: boolean;
+  isUploading?: boolean;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onFieldChange: <K extends keyof ExpenseFormData>(field: K, value: ExpenseFormData[K]) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -20,6 +21,7 @@ export function ExpenseForm({
   formData,
   isSubmitting,
   isEditing,
+  isUploading = false,
   onSubmit,
   onFieldChange,
   onFileChange
@@ -50,12 +52,13 @@ export function ExpenseForm({
       <FormSection>
         <ReceiptSection 
           receiptUrl={formData.receiptUrl} 
-          onFileChange={onFileChange} 
+          onFileChange={onFileChange}
+          isUploading={isUploading}
         />
       </FormSection>
 
       <FormActions 
-        isSubmitting={isSubmitting} 
+        isSubmitting={isSubmitting || isUploading} 
         isEditing={isEditing} 
       />
     </form>
