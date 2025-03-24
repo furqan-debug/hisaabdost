@@ -21,13 +21,7 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
     }
   }, [receiptUrl]);
   
-  if (!receiptUrl) return null;
-  
-  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
-                 receiptUrl.startsWith('blob:') || 
-                 receiptUrl.includes('storage.googleapis.com') || 
-                 receiptUrl.includes('supabase');
-  
+  // Define callbacks outside any conditional blocks to ensure consistent hook calls
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     setImageError(false);
@@ -37,6 +31,13 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
     setImageError(true);
     setImageLoaded(false);
   }, []);
+  
+  if (!receiptUrl) return null;
+  
+  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+                 receiptUrl.startsWith('blob:') || 
+                 receiptUrl.includes('storage.googleapis.com') || 
+                 receiptUrl.includes('supabase');
   
   return (
     <div className="relative group overflow-hidden rounded-md">
