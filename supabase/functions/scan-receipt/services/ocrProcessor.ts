@@ -3,13 +3,13 @@ import { parseReceiptText } from "../utils/textParser.ts";
 
 // Process receipt with Google Cloud Vision API
 export async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
-  console.log("Processing receipt with Google Vision API")
+  console.log("Processing receipt with Google Vision API");
 
   try {
     // Convert image to base64
-    const arrayBuffer = await receiptImage.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
-    const base64Image = btoa(String.fromCharCode.apply(null, [...uint8Array]))
+    const arrayBuffer = await receiptImage.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const base64Image = btoa(String.fromCharCode.apply(null, [...uint8Array]));
     
     // Prepare request for Google Cloud Vision API
     const requestBody = {
@@ -29,7 +29,7 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string) 
           }
         }
       ]
-    }
+    };
 
     // Send request to Google Cloud Vision API
     const response = await fetch(
@@ -41,51 +41,51 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string) 
         },
         body: JSON.stringify(requestBody)
       }
-    )
+    );
 
-    console.log(`Google Vision API response status: ${response.status}`)
+    console.log(`Google Vision API response status: ${response.status}`);
     
     // Handle API response errors
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Google Vision API error: ${response.status} ${response.statusText}`)
-      console.error('Error details:', errorText)
+      const errorText = await response.text();
+      console.error(`Google Vision API error: ${response.status} ${response.statusText}`);
+      console.error('Error details:', errorText);
       
-      // If Google Vision API fails, try with Tesseract instead
-      console.log("Falling back to simple OCR")
-      return await processReceiptWithTesseract(receiptImage)
+      // If Google Vision API fails, try with the simplified approach
+      console.log("Falling back to simple OCR");
+      return await processReceiptWithTesseract(receiptImage);
     }
     
-    const responseData = await response.json()
+    const responseData = await response.json();
     
     // Check if we got a successful response with text annotations
     if (!responseData.responses || 
         !responseData.responses[0] || 
         !responseData.responses[0].textAnnotations || 
         responseData.responses[0].textAnnotations.length === 0) {
-      console.error("No text annotations in Google Vision response")
-      return await processReceiptWithTesseract(receiptImage)
+      console.error("No text annotations in Google Vision response");
+      return await processReceiptWithTesseract(receiptImage);
     }
 
     // Extract the full text from the first annotation
-    const extractedText = responseData.responses[0].textAnnotations[0].description
-    console.log("Extracted text sample:", extractedText.substring(0, 200) + "...")
+    const extractedText = responseData.responses[0].textAnnotations[0].description;
+    console.log("Extracted text sample:", extractedText.substring(0, 200) + "...");
 
     // Parse the text into a structured format with only items, prices, and date
-    const parsedItems = parseReceiptText(extractedText)
-    console.log("Parsed items:", JSON.stringify(parsedItems))
+    const parsedItems = parseReceiptText(extractedText);
+    console.log("Parsed items:", JSON.stringify(parsedItems));
     
-    return parsedItems
+    return parsedItems;
   } catch (error) {
-    console.error("Error processing with Vision API:", error)
-    // Fallback to Tesseract if Vision API fails
-    return await processReceiptWithTesseract(receiptImage)
+    console.error("Error processing with Vision API:", error);
+    // Fallback to simplified approach if Vision API fails
+    return await processReceiptWithTesseract(receiptImage);
   }
 }
 
 // Process receipt with a simpler text extraction approach since we can't use browser Tesseract in Deno
 export async function processReceiptWithTesseract(receiptImage: File) {
-  console.log("Processing receipt with simple OCR fallback")
+  console.log("Processing receipt with simple OCR fallback");
   
   try {
     // Since we can't use browser-based Tesseract in Deno, we'll use a simpler approach
@@ -93,30 +93,28 @@ export async function processReceiptWithTesseract(receiptImage: File) {
     // In a production environment, you might want to use a Deno-compatible OCR library
     // or call a separate OCR service API
     
-    console.log("Note: Using simplified OCR. For better results, configure Google Vision API key")
+    console.log("Note: Using simplified OCR. For better results, configure Google Vision API key");
     
     // Create a basic implementation that extracts some text from the image
     // This is not as good as proper OCR but serves as a fallback
-    const arrayBuffer = await receiptImage.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
+    const arrayBuffer = await receiptImage.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
     
     // Log image info
-    console.log(`Processing image: ${receiptImage.name}, size: ${receiptImage.size} bytes, type: ${receiptImage.type}`)
+    console.log(`Processing image: ${receiptImage.name}, size: ${receiptImage.size} bytes, type: ${receiptImage.type}`);
     
     // Generate some basic receipt data as a fallback
     // In a real implementation, you would process the image to extract text
-    const basicItems = [
+    return [
       {
         name: "Store Purchase",
         amount: "15.99",
         category: "Shopping",
         date: new Date().toISOString().split('T')[0]
       }
-    ]
-    
-    return basicItems
+    ];
   } catch (error) {
-    console.error("Error in simplified OCR processing:", error)
-    return []
+    console.error("Error in simplified OCR processing:", error);
+    return [];
   }
 }
