@@ -42,7 +42,7 @@ export function useReceiptScanner({
       // Check if file is too large
       if (file.size > 8 * 1024 * 1024) {
         toast.dismiss(scanToast);
-        toast.error("Receipt image is too large. Please use an image smaller than 8MB.");
+        toast.error("Receipt image is too large. Please use an image smaller than 8MB for faster processing");
         setIsScanning(false);
         return;
       }
@@ -330,3 +330,4 @@ export function useReceiptScanner({
     handleScanReceipt
   };
 }
+

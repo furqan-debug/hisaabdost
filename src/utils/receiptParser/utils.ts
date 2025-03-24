@@ -35,5 +35,6 @@ export function isNonItemText(text: string): boolean {
          lowerText === "approved" ||
          lowerText === "paid" ||
          lowerText === "due" ||
-         lowerText.match(/^\d+$/) !== null; // Just numbers
+         lowerText.match(/^\d+$/) !== null || // Just numbers
+         lowerText.match(/^\$\d+\.\d{2}$/) !== null; // Just dollar amounts
 }
