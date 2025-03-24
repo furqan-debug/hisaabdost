@@ -1,4 +1,3 @@
-
 import React from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -257,6 +256,29 @@ export const AddExpenseButton = ({
 
     const scanToast = toast.loading("Scanning and processing receipt...");
     try {
+      // First upload to Supabase storage
+      const { data: uploadData } = await supabase.storage
+        .from("receipts")
+        .upload(`receipts/${file.name}`, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+      
+      if (!uploadData) {
+        console.error("Failed to upload receipt to storage");
+        // Continue with scan anyway using the original file
+      }
+      
+      // Get public URL if upload was successful
+      let receiptUrl = null;
+      if (uploadData) {
+        const { data: publicUrlData } = supabase.storage
+          .from("receipts")
+          .getPublicUrl(`receipts/${file.name}`);
+          
+        receiptUrl = publicUrlData.publicUrl;
+      }
+      
       const formData = new FormData();
       formData.append('receipt', file);
       
@@ -333,8 +355,8 @@ export const AddExpenseButton = ({
           toast.error("Could not determine expense amount from receipt.");
         }
       } else {
-        toast.error("Could not extract data from receipt.");
         toast.dismiss(scanToast);
+        toast.error("Could not extract data from receipt. Please try manually entering the expense.");
       }
     } catch (error) {
       console.error("Error processing receipt:", error);

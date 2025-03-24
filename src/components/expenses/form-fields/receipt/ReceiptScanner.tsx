@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ReceiptScanResult, ScanResult } from "@/hooks/expense-form/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { uploadReceipt } from "@/utils/receiptUtils";
 
 interface ReceiptScannerProps {
   receiptUrl: string;
@@ -51,6 +52,15 @@ export function useReceiptScanner({
         toast.error("Please upload an image file (JPG, PNG, etc.)");
         setIsScanning(false);
         return;
+      }
+      
+      // First upload to Supabase storage to get a permanent URL
+      let storageUrl = receiptUrl;
+      if (!receiptUrl.includes('supabase.co')) {
+        const uploadedUrl = await uploadReceipt(file);
+        if (uploadedUrl) {
+          storageUrl = uploadedUrl;
+        }
       }
       
       const formData = new FormData();
@@ -137,7 +147,7 @@ export function useReceiptScanner({
             payment: "Card", // Default payment method
             is_recurring: false,
             notes: "Added from receipt scan",
-            receipt_url: receiptUrl || null
+            receipt_url: storageUrl || null
           }]);
           
           if (insertError) {
