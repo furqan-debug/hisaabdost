@@ -1,90 +1,126 @@
 
 // Check if a line should be skipped (not an item)
 export function shouldSkipLine(line: string): boolean {
-  const lowerLine = line.toLowerCase();
-  
-  // Common non-item keywords
-  const nonItemKeywords = [
-    'total', 'subtotal', 'tax', 'change', 'cash', 'card', 'credit', 'debit',
-    'balance', 'due', 'payment', 'receipt', 'order', 'transaction', 'thank you',
-    'welcome', 'discount', 'savings', 'points', 'rewards', 'store', 'tel:',
-    'phone', 'address', 'website', 'www', 'http', 'promotion', 'member'
+  // Common text patterns that are not items
+  const nonItemPatterns = [
+    /^subtotal/i,
+    /^total/i,
+    /^balance/i,
+    /^change/i,
+    /^tax/i,
+    /^vat/i,
+    /^gst/i,
+    /^hst/i,
+    /^discount/i,
+    /^payment/i,
+    /^pay/i,
+    /^cash/i,
+    /^card/i,
+    /^credit/i,
+    /^debit/i,
+    /^visa/i,
+    /^mastercard/i,
+    /^amex/i,
+    /^american express/i,
+    /^paypal/i,
+    /^receipt/i,
+    /^invoice/i,
+    /^date/i,
+    /^time/i,
+    /^terminal/i,
+    /^merchant/i,
+    /^store/i,
+    /^address/i,
+    /^tel/i,
+    /^phone/i,
+    /^fax/i,
+    /^email/i,
+    /^web/i,
+    /^url/i,
+    /^www\./i,
+    /^http/i,
+    /^thank/i,
+    /^welcome/i,
+    /^customer/i,
+    /^order/i,
+    /^item\s*$/i,
+    /^qty\s*$/i,
+    /^description\s*$/i,
+    /^price\s*$/i,
+    /^amount\s*$/i,
+    /^please/i,
+    /^have/i,
+    /^nice/i,
+    /^day/i,
+    /^return/i,
+    /^policy/i,
+    /^register/i,
+    /^clerk/i,
+    /^cashier/i,
+    /^employee/i,
+    /^transaction/i,
+    /^loyalty/i,
+    /^points/i,
+    /^rewards/i,
+    /^account/i,
+    /^balance/i,
+    /^due/i,
+    /^id\s*:/i,
+    /^no\s*:/i,
+    /^number\s*:/i,
+    /^ref\s*:/i
   ];
   
-  // Check for non-item keywords
-  for (const keyword of nonItemKeywords) {
-    if (lowerLine.includes(keyword)) {
+  // Check if the line matches any non-item pattern
+  for (const pattern of nonItemPatterns) {
+    if (line.match(pattern)) {
       return true;
     }
   }
   
-  // Skip lines that are just numbers, dashes, etc.
-  if (lowerLine.match(/^\d+$/) || lowerLine.match(/^[-=*]+$/)) {
+  // Check for lines that are just numbers or very short
+  if (line.match(/^\d+$/) || line.length < 3) {
     return true;
   }
   
-  // Skip very short lines (likely not items)
-  if (lowerLine.length < 3) {
+  // Lines with only special characters
+  if (line.match(/^[^a-zA-Z0-9]+$/)) {
     return true;
   }
   
   return false;
 }
 
-// Check if text is likely non-item text
-export function isNonItemText(name: string): boolean {
-  const lowerName = name.toLowerCase();
-  
-  // Common non-item phrases
-  const nonItemPhrases = [
-    'subtotal', 'total', 'tax', 'discount', 'coupon', 'change', 'balance', 
-    'receipt', 'cashier', 'date', 'time', 'order', 'item', 'qty', 'quantity',
-    'price', 'amount', 'payment', 'thank you', 'thanks', 'please', 'cash',
-    'card', 'void', 'debit', 'credit', 'approved', 'paid', 'due'
-  ];
-  
-  // Check for non-item phrases
-  for (const phrase of nonItemPhrases) {
-    if (lowerName.includes(phrase)) {
-      return true;
-    }
-  }
-  
-  // Skip very short names
-  if (lowerName.length < 2) {
-    return true;
-  }
-  
-  // Skip if just numbers or special characters
-  if (!/[a-z]/i.test(lowerName)) {
-    return true;
-  }
-  
-  return false;
+// Check if text is common non-item text
+export function isNonItemText(text: string): boolean {
+  return shouldSkipLine(text.toLowerCase());
 }
 
-// Deduplicate and sort items by price
-export function deduplicateItems(items: Array<{name: string; amount: string; category: string}>): Array<{name: string; amount: string; category: string}> {
-  // Create a map to track unique items, using item name as key
-  const uniqueItems = new Map<string, {name: string; amount: string; category: string}>();
+// Remove duplicate items
+export function deduplicateItems(items: Array<{name: string; amount: string; category: string; date?: string}>): Array<{name: string; amount: string; category: string; date?: string}> {
+  // Create a map to store unique items
+  const uniqueItems = new Map();
   
   // Process each item
-  items.forEach(item => {
-    const key = item.name.toLowerCase();
-    const amount = parseFloat(item.amount);
+  for (const item of items) {
+    // Create a key based on name and amount
+    const key = `${item.name.toLowerCase()}|${item.amount}`;
     
-    // Skip invalid amounts
-    if (isNaN(amount) || amount <= 0) {
-      return;
-    }
-    
-    // If this item doesn't exist yet or has a higher price, update it
-    if (!uniqueItems.has(key) || parseFloat(uniqueItems.get(key)!.amount) < amount) {
+    // Only add if not already in map
+    if (!uniqueItems.has(key)) {
       uniqueItems.set(key, item);
     }
+  }
+  
+  // Convert map values back to array
+  const dedupedItems = Array.from(uniqueItems.values());
+  
+  // Sort items by amount (highest first)
+  dedupedItems.sort((a, b) => {
+    const amountA = parseFloat(a.amount);
+    const amountB = parseFloat(b.amount);
+    return amountB - amountA;
   });
   
-  // Convert map back to array and sort by price (highest first)
-  return Array.from(uniqueItems.values())
-    .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+  return dedupedItems;
 }

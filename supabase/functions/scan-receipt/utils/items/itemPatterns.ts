@@ -3,13 +3,16 @@
 export function findItemsSectionStart(lines: string[]): number {
   // Usually items start after headers, store info, etc.
   // Look for common section indicators or just return a reasonable default
-  for (let i = 0; i < Math.min(10, lines.length); i++) {
+  for (let i = 0; i < Math.min(15, lines.length); i++) {
     const line = lines[i].toLowerCase();
     if (line.includes("item") || 
         line.includes("description") || 
         line.includes("qty") || 
         line.includes("price") ||
-        line.includes("amount")) {
+        line.includes("amount") ||
+        line.includes("product") ||
+        line.match(/^-{5,}$/) || // Dashed line separator
+        line.match(/^\*{5,}$/)) { // Star line separator
       return i + 1; // Start after this header line
     }
   }
@@ -20,18 +23,23 @@ export function findItemsSectionStart(lines: string[]): number {
 
 export function findItemsSectionEnd(lines: string[]): number {
   // Items usually end before footer elements like totals
-  for (let i = Math.floor(lines.length * 0.6); i < lines.length; i++) {
+  for (let i = Math.floor(lines.length * 0.5); i < lines.length; i++) {
     const line = lines[i].toLowerCase();
     if (line.includes("subtotal") || 
         line.includes("total") || 
         line.includes("tax") ||
-        line.includes("balance")) {
+        line.includes("balance") ||
+        line.includes("change") ||
+        line.includes("cash") ||
+        line.includes("card") ||
+        line.includes("payment") ||
+        line.includes("thank you")) {
       return i - 1; // End before this footer line
     }
   }
   
   // Default: exclude the last few lines (likely footer/totals)
-  return Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
+  return Math.max(lines.length - 8, Math.ceil(lines.length * 0.8));
 }
 
 // Common patterns to extract items with prices
@@ -40,11 +48,68 @@ export const itemExtractionPatterns = [
   /^(.+?)\s+\$?(\d+\.\d{2})$/,
   
   // Item with quantity x price
-  /(\d+)\s*[xX]\s*(.+?)\s*@\s*\$?(\d+\.\d{2})/,
+  /(\d+)\s*[xX]\s*(.+?)\s*@?\s*\$?(\d+\.\d{2})/,
   
   // Item with price anywhere
   /^(.+?)\s+\$?(\d+\.\d{2})/,
   
   // More flexible pattern for various formats
-  /(.+?)(?:\s|:)+\$?(\d+\.\d{2})(?:\s|$)/
+  /(.+?)(?:\s|:)+\$?(\d+\.\d{2})(?:\s|$)/,
+  
+  // Number + item name + price (common in grocery receipts)
+  /^\d+\s+(.+?)\s+\$?(\d+\.\d{2})$/,
+  
+  // Item with price with potential multiple spaces or tabs
+  /(.+?)\s{2,}(\d+\.\d{2})$/,
+  
+  // Item code + description + price
+  /\d{3,}[-\s]+(.+?)\s+\$?(\d+\.\d{2})$/
 ];
+
+// Improved helper functions for item extraction
+export function isLikelyItemLine(line: string): boolean {
+  // Check if the line contains a price pattern
+  if (line.match(/\$?\d+\.\d{2}/) || line.match(/\d+\s*@\s*\$?\d+\.\d{2}/)) {
+    // Exclude lines that are likely non-item lines
+    const nonItemPatterns = [
+      /subtotal/i, /tax/i, /total/i, /balance/i, /change/i, 
+      /card/i, /cash/i, /payment/i, /discount/i, /thank you/i,
+      /receipt/i, /date/i, /time/i, /store/i, /address/i, /tel/i
+    ];
+    
+    // Check if the line matches any non-item pattern
+    for (const pattern of nonItemPatterns) {
+      if (line.match(pattern)) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  return false;
+}
+
+export function cleanItemText(text: string): string {
+  // Remove common prefixes
+  text = text.replace(/^item[:\s]+/i, '')
+               .replace(/^product[:\s]+/i, '')
+               .replace(/^[\d]+[\s-]+/, '') // Item numbers/codes
+               .replace(/^\*+\s*/, '') // Asterisks
+               .replace(/^-+\s*/, ''); // Dashes
+  
+  // Remove non-descriptive elements
+  text = text.replace(/SKU\s*\d+/i, '')
+             .replace(/UPC\s*\d+/i, '')
+             .replace(/PLU\s*\d+/i, '')
+             .replace(/\(\d+\s*for\s*\$?[\d\.]+\)/i, '') // Multi-buy offers
+             .replace(/\d+\s*\@\s*\$?[\d\.]+/i, ''); // Price per unit
+  
+  // Trim whitespace and capitalize first letter
+  text = text.trim();
+  if (text.length > 0) {
+    text = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  }
+  
+  return text;
+}

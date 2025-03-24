@@ -1,5 +1,6 @@
 
-import { parseReceiptText } from "../utils/textParser.ts";
+import { extractDate } from "../utils/dateExtractor.ts";
+import { extractStoreName } from "../utils/storeExtractor.ts";
 
 // Process receipt with Google Cloud Vision API
 export async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
@@ -70,12 +71,16 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string) 
     // Extract the full text from the first annotation
     const extractedText = responseData.responses[0].textAnnotations[0].description;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + "...");
-
-    // Parse the text into a structured format with only items, prices, and date
-    const parsedItems = parseReceiptText(extractedText);
-    console.log("Parsed items:", JSON.stringify(parsedItems));
     
-    return parsedItems;
+    // Extract date and merchant from the text
+    const date = extractDate(extractedText);
+    const merchant = extractStoreName(extractedText.split('\n'));
+    
+    return {
+      text: extractedText,
+      date,
+      merchant
+    };
   } catch (error) {
     console.error("Error processing with Vision API:", error);
     // Fallback to simplified approach if Vision API fails
@@ -95,26 +100,23 @@ export async function processReceiptWithTesseract(receiptImage: File) {
     
     console.log("Note: Using simplified OCR. For better results, configure Google Vision API key");
     
-    // Create a basic implementation that extracts some text from the image
-    // This is not as good as proper OCR but serves as a fallback
-    const arrayBuffer = await receiptImage.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
     // Log image info
     console.log(`Processing image: ${receiptImage.name}, size: ${receiptImage.size} bytes, type: ${receiptImage.type}`);
     
-    // Generate some basic receipt data as a fallback
-    // In a real implementation, you would process the image to extract text
-    return [
-      {
-        name: "Store Purchase",
-        amount: "15.99",
-        category: "Shopping",
-        date: new Date().toISOString().split('T')[0]
-      }
-    ];
+    // Generate placeholder text for testing
+    const placeholderText = `Store Receipt\nDate: ${new Date().toLocaleDateString()}\n\nItem 1  $15.99\nItem 2  $9.99\nTax    $2.00\nTotal  $27.98`;
+    
+    return {
+      text: placeholderText,
+      date: new Date().toISOString().split('T')[0],
+      merchant: "Store"
+    };
   } catch (error) {
     console.error("Error in simplified OCR processing:", error);
-    return [];
+    return {
+      text: "",
+      date: new Date().toISOString().split('T')[0],
+      merchant: "Store"
+    };
   }
 }

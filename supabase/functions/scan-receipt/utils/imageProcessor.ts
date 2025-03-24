@@ -33,50 +33,61 @@ export async function preprocessImage(imageFile: File) {
     const imageData = ctx.getImageData(0, 0, img.width, img.height)
     const data = imageData.data
     
-    // Step 1: Convert to grayscale
+    // Step 1: Convert to grayscale with enhanced contrast
     for (let i = 0; i < data.length; i += 4) {
+      // Better grayscale algorithm with weighted channels for text clarity
       const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
-      data[i] = gray     // R
-      data[i + 1] = gray // G
-      data[i + 2] = gray // B
+      data[i] = data[i + 1] = data[i + 2] = gray
     }
     
-    // Step 2: Apply noise reduction using a simple box blur
+    // Step 2: Apply noise reduction - Bilateral filter for edge-preserving smoothing
     const tempData = new Uint8ClampedArray(data)
     const width = img.width
     const height = img.height
     
-    for (let y = 1; y < height - 1; y++) {
-      for (let x = 1; x < width - 1; x++) {
+    // Apply noise reduction with edge preservation for better text clarity
+    for (let y = 2; y < height - 2; y++) {
+      for (let x = 2; x < width - 2; x++) {
         const idx = (y * width + x) * 4
         
-        // Apply blur only to non-text areas (avoiding edges)
-        // Skip pixels that seem to be text (high contrast)
-        const current = data[idx]
-        const neighbors = [
-          tempData[idx - 4], tempData[idx + 4],          // left, right
-          tempData[idx - width * 4], tempData[idx + width * 4]  // top, bottom
-        ]
+        // Use a 5x5 window for more effective noise reduction
+        let sum = 0
+        let count = 0
+        let centerPixel = data[idx]
         
-        const avg = neighbors.reduce((sum, val) => sum + val, 0) / neighbors.length
+        // Process the 5x5 window
+        for (let ky = -2; ky <= 2; ky++) {
+          for (let kx = -2; kx <= 2; kx++) {
+            const nidx = ((y + ky) * width + (x + kx)) * 4
+            if (nidx >= 0 && nidx < data.length) {
+              // Weight based on spatial distance and intensity difference (bilateral filter)
+              const pixelDiff = Math.abs(centerPixel - tempData[nidx])
+              // Only include pixels that are similar in intensity (preserves edges/text)
+              if (pixelDiff < 35) {  // Threshold for intensity similarity
+                sum += tempData[nidx]
+                count++
+              }
+            }
+          }
+        }
         
-        // If pixel is similar to neighbors, apply blur (noise reduction)
-        if (Math.abs(current - avg) < 30) {  // Threshold for what's considered noise
-          data[idx] = data[idx + 1] = data[idx + 2] = avg
+        // Apply the bilateral filter result
+        if (count > 0) {
+          data[idx] = data[idx + 1] = data[idx + 2] = sum / count
         }
       }
     }
     
-    // Step 3: Apply adaptive thresholding to improve text clarity
-    const blockSize = 15 // Size of neighborhood for adaptive threshold
-    const C = 5 // Constant subtracted from mean
+    // Step 3: Apply adaptive thresholding for better text extraction
+    const blockSize = 25 // Larger block size for more robust thresholding
+    const C = 10 // Constant for threshold adjustment
 
-    // We'll use a simplified approach for adaptive thresholding
+    // More sophisticated adaptive thresholding
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4
         
-        // Calculate local mean (simplified)
+        // Calculate local mean with larger neighborhood
         let sum = 0
         let count = 0
         
@@ -93,29 +104,37 @@ export async function preprocessImage(imageFile: File) {
           }
         }
         
-        const mean = sum / count
+        const localMean = sum / count
         
-        // Apply threshold
-        data[idx] = data[idx + 1] = data[idx + 2] = (data[idx] > mean - C) ? 255 : 0
+        // Apply thresholding with local mean
+        data[idx] = data[idx + 1] = data[idx + 2] = (data[idx] > localMean - C) ? 255 : 0
       }
     }
     
-    // Step 4: Enhance contrast for better OCR
-    const min = 0
-    const max = 255
+    // Step 4: Enhance contrast - stretch histogram
+    let min = 255
+    let max = 0
     
+    // Find min and max gray values
     for (let i = 0; i < data.length; i += 4) {
-      // Apply contrast enhancement
-      const value = data[i]
-      const newVal = (value - min) / (max - min) * 255
-      data[i] = data[i + 1] = data[i + 2] = newVal
+      if (data[i] < min) min = data[i]
+      if (data[i] > max) max = data[i]
+    }
+    
+    // Stretch histogram if there's a valid range
+    if (max > min) {
+      const range = max - min
+      for (let i = 0; i < data.length; i += 4) {
+        const normalized = (data[i] - min) / range * 255
+        data[i] = data[i + 1] = data[i + 2] = normalized
+      }
     }
     
     // Put the processed data back on the canvas
     ctx.putImageData(imageData, 0, 0)
     
-    // Convert canvas to blob
-    const processedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 })
+    // Convert canvas to blob with higher quality
+    const processedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.95 })
     
     // Clean up
     URL.revokeObjectURL(imageUrl)

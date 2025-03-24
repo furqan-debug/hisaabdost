@@ -10,6 +10,8 @@ interface DialogActionsProps {
   disabled: boolean;
   autoSave?: boolean;
   isAutoProcessing?: boolean;
+  scanProgress?: number;
+  statusMessage?: string;
 }
 
 export function DialogActions({
@@ -19,7 +21,9 @@ export function DialogActions({
   handleScanReceipt,
   disabled,
   autoSave = false,
-  isAutoProcessing = false
+  isAutoProcessing = false,
+  scanProgress = 0,
+  statusMessage
 }: DialogActionsProps) {
   return (
     <div className="flex w-full gap-2">
@@ -40,6 +44,8 @@ export function DialogActions({
         disabled={disabled}
         autoSave={autoSave}
         isAutoProcessing={isAutoProcessing}
+        scanProgress={scanProgress}
+        statusMessage={statusMessage}
       />
     </div>
   );

@@ -1,16 +1,8 @@
 
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { ScanProgress } from "./components/ScanProgress";
 import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
-import { ScanButton } from "./components/ScanButton";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
 import { useEffect } from "react";
@@ -101,6 +93,8 @@ export function ReceiptScanDialog({
             handleScanReceipt={handleScanReceipt}
             disabled={!file}
             autoSave={autoSave}
+            scanProgress={scanProgress}
+            statusMessage={statusMessage}
           />
         </div>
       </DialogContent>

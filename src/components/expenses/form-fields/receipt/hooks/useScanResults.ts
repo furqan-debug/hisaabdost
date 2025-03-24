@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { formatDateForStorage, calculateTotal } from '../utils/formatUtils';
 import { processScanResults } from '../utils/processScanUtils';
-import { saveReceiptExtraction } from '@/services/receiptService';
+import { saveMultipleExpensesFromReceipt } from '@/services/expenseService';
 
 interface UseScanResultsProps {
   isScanning: boolean;
@@ -42,14 +42,16 @@ export function useScanResults({
           console.log("Processing scan result:", lastScanResult);
           
           if (lastScanResult.items && lastScanResult.items.length > 0) {
-            // Save receipt data to database if user is logged in
-            saveToDatabase(lastScanResult);
-            
-            // Process scan results for the expense form
-            processScanResults(lastScanResult, autoSave, onCapture, setOpen);
+            // Save all items to database if auto-save is enabled
+            if (autoSave) {
+              saveMultipleItemsToDatabase(lastScanResult);
+            } else {
+              // Process scan results for the expense form
+              processScanResults(lastScanResult, autoSave, onCapture, setOpen);
+            }
             
             // Successful scan toast
-            toast.success("Receipt scanned successfully!");
+            toast.success(`Found ${lastScanResult.items.length} item${lastScanResult.items.length > 1 ? 's' : ''} in receipt`);
             
             // Clear the stored result after processing
             sessionStorage.removeItem('lastScanResult');
@@ -80,29 +82,35 @@ export function useScanResults({
     };
   }, [onCleanup]);
   
-  // Save receipt data to database
-  const saveToDatabase = async (result: any) => {
+  // Save multiple receipt items to database
+  const saveMultipleItemsToDatabase = async (result: any) => {
     if (!result || !result.items || result.items.length === 0) return;
     
     try {
       // Format receipt data for storage
-      const receiptData = {
-        merchant: result.storeName || "Unknown Merchant",
-        date: formatDateForStorage(result.date),
-        total: calculateTotal(result.items),
-        items: result.items,
+      const expenses = result.items.map((item: any) => ({
+        description: item.name,
+        amount: item.amount,
+        date: formatDateForStorage(item.date || result.date),
+        category: item.category || "Other",
+        paymentMethod: "Card", // Default assumption
         receiptUrl: result.receiptUrl || "",
-        paymentMethod: "Card" // Default assumption
-      };
+        merchant: result.merchant || result.storeName || "Unknown"
+      }));
       
-      // Save to database
-      const receiptId = await saveReceiptExtraction(receiptData);
-      if (receiptId) {
-        console.log("Receipt data saved with ID:", receiptId);
+      // Save all items as separate expenses
+      const success = await saveMultipleExpensesFromReceipt(expenses);
+      if (success) {
+        toast.success(`Saved ${expenses.length} expense${expenses.length > 1 ? 's' : ''} from receipt`);
+        
+        // Close the dialog after successful save
+        setTimeout(() => {
+          setOpen(false);
+        }, 1500);
       }
     } catch (error) {
-      console.error("Failed to save receipt data to database:", error);
-      // Don't show error to user - this is a background operation
+      console.error("Failed to save receipt items to database:", error);
+      toast.error("Failed to save some or all items. Please try again.");
     }
   };
 }
