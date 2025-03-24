@@ -3,6 +3,19 @@ import { isNonItemText } from "../utils";
 import { cleanupItemName } from "./itemNameCleaner";
 
 /**
+ * Common patterns to identify non-item lines
+ */
+export function getNonItemPatterns(): RegExp[] {
+  return [
+    /subtotal|tax|total|balance|due|change|cash|card|payment|credit|debit|master|visa|transaction|receipt|thank|you/i,
+    /\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}/,  // Date patterns
+    /^\s*\d+\s*$/,  // Just a number
+    /^\s*\*+\s*$/,  // Just asterisks
+    /^\s*\-+\s*$/   // Just dashes
+  ];
+}
+
+/**
  * Extracts items using standard price patterns
  */
 export function extractItemsWithPricePatterns(
@@ -105,17 +118,4 @@ export function extractItemsWithPricePatterns(
   }
   
   return items;
-}
-
-/**
- * Common patterns to identify non-item lines
- */
-export function getNonItemPatterns(): RegExp[] {
-  return [
-    /subtotal|tax|total|balance|due|change|cash|card|payment|credit|debit|master|visa|transaction|receipt|thank|you/i,
-    /\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}/,  // Date patterns
-    /^\s*\d+\s*$/,  // Just a number
-    /^\s*\*+\s*$/,  // Just asterisks
-    /^\s*\-+\s*$/   // Just dashes
-  ];
 }
