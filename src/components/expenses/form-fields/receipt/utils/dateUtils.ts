@@ -1,5 +1,7 @@
 
-// Format a date string to be stored in the database
+/**
+ * Format a date string to be stored in the database
+ */
 export function formatDate(dateString?: string): string {
   if (!dateString) {
     return new Date().toISOString().split('T')[0];
@@ -26,3 +28,9 @@ export function formatDate(dateString?: string): string {
     return new Date().toISOString().split('T')[0];
   }
 }
+
+/**
+ * Format date for storage in the database
+ * Alias for formatDate to maintain compatibility with both naming conventions
+ */
+export const formatDateForStorage = formatDate;
