@@ -1,6 +1,6 @@
 
 import { preprocessImage } from "../utils/imageProcessor.ts";
-import { processReceiptWithOCR } from "./ocrProcessor.ts";
+import { processReceiptWithOCR, processReceiptWithTesseract } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
 import { extractStoreName } from "../utils/storeExtractor.ts";
 
@@ -11,28 +11,25 @@ const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY')
 export async function processReceipt(receiptImage: File) {
   console.log("Starting receipt processing");
   
-  // Check if Vision API key is configured
-  if (!VISION_API_KEY) {
-    console.error("No Google Vision API key configured")
-    return { 
-      success: true, 
-      items: generateFallbackData(), 
-      storeName: "Sample Store",
-      error: "No API key configured"
-    };
-  }
-  
-  // Process receipt with Google Vision API
+  // Process receipt with appropriate OCR method
   try {
-    console.log("Starting OCR processing with Vision API")
+    console.log("Starting OCR processing")
     
     // Preprocess the image first
     const preprocessedImage = await preprocessImage(receiptImage)
     console.log("Image preprocessing completed")
     
-    // Process with the enhanced image
-    const extractedData = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY)
-    console.log("Extracted data from Vision API:", extractedData.length > 0 
+    // Choose OCR method based on API key availability
+    let extractedData = [];
+    if (VISION_API_KEY) {
+      console.log("Using Google Vision API for OCR")
+      extractedData = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY)
+    } else {
+      console.log("No Google Vision API key configured, using Tesseract OCR")
+      extractedData = await processReceiptWithTesseract(preprocessedImage)
+    }
+    
+    console.log("Extracted data:", extractedData.length > 0 
       ? `Found ${extractedData.length} items` 
       : "No items found")
     
@@ -44,7 +41,7 @@ export async function processReceipt(receiptImage: File) {
       storeName: extractedData.length > 0 ? extractStoreName(extractedData) : "Store"
     };
   } catch (processingError) {
-    console.error("Error in Vision API processing:", processingError)
+    console.error("Error in OCR processing:", processingError)
     return { 
       success: true, 
       items: generateFallbackData(),
@@ -53,3 +50,4 @@ export async function processReceipt(receiptImage: File) {
     };
   }
 }
+
