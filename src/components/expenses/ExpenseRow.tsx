@@ -64,14 +64,6 @@ export function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
-          {expense.receiptUrl && (
-            <ViewReceiptDialog 
-              receiptUrl={expense.receiptUrl} 
-              open={receiptDialogOpen}
-              onOpenChange={setReceiptDialogOpen}
-            />
-          )}
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -103,6 +95,15 @@ export function ExpenseRow({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* Put the dialog outside the dropdown but still in the row */}
+          {expense.receiptUrl && (
+            <ViewReceiptDialog 
+              receiptUrl={expense.receiptUrl} 
+              open={receiptDialogOpen}
+              onOpenChange={setReceiptDialogOpen}
+            />
+          )}
         </div>
       </TableCell>
     </TableRow>

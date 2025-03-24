@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -22,18 +23,36 @@ export function ViewReceiptDialog({
 }: ViewReceiptDialogProps) {
   // Internal state for when the component is used without external control
   const [internalOpen, setInternalOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
   const handleOpenChange = externalOnOpenChange || setInternalOpen;
   
+  // Reset image error state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setImageError(false);
+    }
+  }, [isOpen]);
+  
   const handleDownload = () => {
-    if (receiptUrl) {
+    if (!receiptUrl) return;
+    
+    try {
       const link = document.createElement('a');
       link.href = receiptUrl;
-      link.download = `receipt-${new Date().toISOString().slice(0, 10)}.${receiptUrl.split('.').pop()}`;
+      link.download = `receipt-${new Date().toISOString().split('T')[0]}.${receiptUrl.split('.').pop() || 'jpg'}`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download failed:", error);
     }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   if (!receiptUrl) return null;
@@ -62,14 +81,27 @@ export function ViewReceiptDialog({
                 Download Receipt
               </Button>
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              View and download expense receipt
+            </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto flex-1 relative flex items-center justify-center bg-black/5 rounded-md p-4">
-            {receiptUrl && (
+            {receiptUrl && !imageError ? (
               <img
                 src={receiptUrl}
                 alt="Receipt"
                 className="max-h-full max-w-full object-contain"
+                onError={handleImageError}
               />
+            ) : (
+              <div className="text-center p-4">
+                <FileImage className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">
+                  {imageError 
+                    ? "Unable to display receipt image" 
+                    : "No receipt image available"}
+                </p>
+              </div>
             )}
           </div>
         </DialogContent>
