@@ -34,17 +34,16 @@ export function useScanProcess({
       const formData = new FormData();
       formData.append('receipt', file);
       
-      // Get the function URL
-      const functionName = 'scan-receipt';
-      const { data } = await supabase.functions.invoke(functionName, {
-        method: 'POST',
-        body: formData,
-      });
-      
       // Set a timeout to detect when scanning takes too long
       const timeoutId = setTimeout(() => {
         setScanTimedOut(true);
       }, 20000); // 20 seconds timeout
+      
+      // Call the Supabase function with the correct method
+      const { data, error } = await supabase.functions.invoke('scan-receipt', {
+        method: 'POST',
+        body: formData,
+      });
       
       clearTimeout(timeoutId);
       
@@ -52,8 +51,8 @@ export function useScanProcess({
       clearInterval(progressInterval);
       setScanProgress(99);
       
-      if (data?.error) {
-        console.warn("Scan completed with error:", data.error);
+      if (error) {
+        console.warn("Scan completed with error:", error);
         toast.error("Couldn't read receipt clearly. Please enter details manually.");
       }
       
