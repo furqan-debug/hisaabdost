@@ -63,6 +63,10 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
+    // Set a shorter refetch interval to ensure scanned expenses appear quickly
+    refetchInterval: 5000, // Refetch every 5 seconds
+    // Refetch when window regains focus
+    refetchOnWindowFocus: true,
   });
 
   // Hook for filtering and sorting expenses

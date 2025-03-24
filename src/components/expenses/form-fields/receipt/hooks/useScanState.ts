@@ -1,38 +1,45 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from "react";
 
 export function useScanState() {
-  // Track scanning state
+  // State to track scanning process
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanTimedOut, setScanTimedOut] = useState(false);
 
-  // Helper functions to manage scan state
-  const startScan = () => {
+  // Start scan function
+  const startScan = useCallback(() => {
     setIsScanning(true);
     setScanProgress(0);
     setScanTimedOut(false);
-  };
+  }, []);
 
-  const endScan = () => {
+  // End scan function
+  const endScan = useCallback(() => {
     setIsScanning(false);
-  };
+  }, []);
 
-  const updateProgress = (progress: number, message?: string) => {
+  // Update progress function
+  const updateProgress = useCallback((progress: number, message?: string) => {
     setScanProgress(progress);
     if (message) {
-      console.log(`Scan progress (${progress}%): ${message}`);
+      console.log(message);
     }
-  };
+  }, []);
 
-  const timeoutScan = () => {
+  // Timeout scan function
+  const timeoutScan = useCallback(() => {
     setScanTimedOut(true);
-  };
+    setIsScanning(false);
+  }, []);
 
   return {
     isScanning,
+    setIsScanning,
     scanProgress,
+    setScanProgress,
     scanTimedOut,
+    setScanTimedOut,
     startScan,
     endScan,
     updateProgress,

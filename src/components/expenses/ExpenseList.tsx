@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 
 interface ExpenseListProps {
