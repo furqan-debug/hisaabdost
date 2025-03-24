@@ -1,6 +1,11 @@
 
 import { isNonItemText } from "./utils";
 import { extractAmount } from "./amountExtractor";
+import { findItemSectionStart, findItemSectionEnd } from "./extraction/textSections";
+import { extractItemsWithPricePatterns } from "./extraction/patternMatching";
+import { extractItemsAggressively, extractItemsWithNumberPatterns } from "./extraction/aggressiveExtraction";
+import { createFallbackItem } from "./extraction/fallbackExtraction";
+import { deduplicateItems } from "./extraction/itemDeduplication";
 
 /**
  * Extracts individual line items with their prices
@@ -10,265 +15,35 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
   console.log("Starting item extraction from", lines.length, "lines");
   
   // Focus on the middle portion of the receipt where items usually are
-  // Skip first few lines (header) and last few lines (totals, footer)
-  const startIndex = Math.min(5, Math.floor(lines.length * 0.15));
-  const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
+  const startIndex = findItemSectionStart(lines);
+  const endIndex = findItemSectionEnd(lines);
   
   console.log(`Processing lines from ${startIndex} to ${endIndex}`);
   
-  // Common patterns to identify non-item lines
-  const nonItemPatterns = [
-    /subtotal|tax|total|balance|due|change|cash|card|payment|credit|debit|master|visa|transaction|receipt|thank|you/i,
-    /\d{2}\/\d{2}\/\d{2,4}|\d{2}\-\d{2}\-\d{2,4}/,  // Date patterns
-    /^\s*\d+\s*$/,  // Just a number
-    /^\s*\*+\s*$/,  // Just asterisks
-    /^\s*\-+\s*$/   // Just dashes
-  ];
-  
   // First pass: Look for clear price patterns
-  for (let i = startIndex; i < endIndex; i++) {
-    const line = lines[i].trim();
-    
-    // Skip lines that match non-item patterns
-    if (nonItemPatterns.some(pattern => line.match(pattern))) {
-      continue;
-    }
-    
-    // Look for price patterns with more flexibility
-    // Try multiple price patterns for different receipt formats
-    const pricePatterns = [
-      // Standard price pattern (e.g., $10.99 or 10.99)
-      /(?:^|\s)(\$?\s*\d+\.\d{2})\s*$/,
-      // Price with quantity (e.g., 2 x $10.99)
-      /(\d+)\s*[xX]\s*\$?\s*(\d+\.\d{2})/,
-      // Price anywhere in the line
-      /\$?\s*(\d+\.\d{2})/
-    ];
-    
-    let matched = false;
-    
-    // Try each price pattern
-    for (const pattern of pricePatterns) {
-      const priceMatch = line.match(pattern);
-      if (priceMatch) {
-        matched = true;
-        
-        // Extract price based on pattern type
-        let price = "";
-        let itemName = "";
-        
-        if (pattern.toString().includes('[xX]')) {
-          // Handle quantity pattern
-          const qty = parseInt(priceMatch[1]);
-          price = priceMatch[2].replace('$', '').trim();
-          itemName = line.substring(0, line.indexOf(priceMatch[0])).trim();
-          
-          // Add quantity indicator to item name if not already there
-          if (!itemName.includes(qty.toString())) {
-            itemName = `${itemName} (${qty}x)`;
-          }
-        } else {
-          // Standard price pattern
-          price = priceMatch[1].replace('$', '').trim();
-          
-          // Extract the item name by removing the price part
-          const priceIndex = line.lastIndexOf(priceMatch[0]);
-          if (priceIndex > 0) {
-            itemName = line.substring(0, priceIndex).trim();
-          } else {
-            // If price is at the beginning, look for item name after it
-            itemName = line.substring(priceMatch[0].length).trim();
-          }
-        }
-        
-        // Clean up item name
-        itemName = cleanupItemName(itemName);
-        
-        // Skip if item name is too short or the price is zero
-        if (itemName.length >= 2 && parseFloat(price) > 0 && !isNonItemText(itemName)) {
-          console.log(`Found item: "${itemName}" with price $${price}`);
-          items.push({
-            name: itemName,
-            amount: price
-          });
-          break; // Found a match, no need to try other patterns
-        }
-      }
-    }
-    
-    // If we didn't match any price pattern, check for split lines
-    if (!matched && i + 1 < endIndex) {
-      const nextLine = lines[i + 1].trim();
-      const nextLinePriceMatch = nextLine.match(/^\s*\$?\s*(\d+\.\d{2})\s*$/);
-      
-      if (nextLinePriceMatch && line.length > 2 && 
-          !nonItemPatterns.some(pattern => line.match(pattern))) {
-        // Clean up this item name
-        let itemName = cleanupItemName(line);
-        
-        if (itemName.length >= 2 && !isNonItemText(itemName)) {
-          console.log(`Found split-line item: "${itemName}" with price $${nextLinePriceMatch[1]}`);
-          items.push({
-            name: itemName,
-            amount: nextLinePriceMatch[1].replace('$', '').trim()
-          });
-          i++; // Skip the next line since we've processed it
-        }
-      }
-    }
-  }
+  const standardItems = extractItemsWithPricePatterns(lines, startIndex, endIndex);
+  items.push(...standardItems);
   
   // Second pass: more aggressive approach if first pass found very few items
   if (items.length <= 1) {
-    console.log("First pass found <= 1 items, trying more aggressive pattern matching");
-    for (let i = startIndex; i < endIndex; i++) {
-      const line = lines[i].trim();
-      
-      // Skip already processed non-item lines
-      if (nonItemPatterns.some(pattern => line.match(pattern))) {
-        continue;
-      }
-      
-      const priceMatches = Array.from(line.matchAll(/\$?\s*(\d+\.\d{2})/g));
-      
-      if (priceMatches.length === 1) {
-        const price = priceMatches[0][1];
-        let itemText = line.replace(priceMatches[0][0], '').trim();
-        let itemName = cleanupItemName(itemText);
-        
-        if (itemName.length >= 2 && parseFloat(price) > 0 && 
-            !nonItemPatterns.some(pattern => itemName.match(pattern)) &&
-            !isNonItemText(itemName)) {
-          console.log(`Found item (aggressive): "${itemName}" with price $${price}`);
-          items.push({
-            name: itemName,
-            amount: price
-          });
-        }
-      }
-    }
+    const aggressiveItems = extractItemsAggressively(lines, startIndex, endIndex);
+    items.push(...aggressiveItems);
   }
   
   // Third pass: look for number-only patterns that might be prices
   if (items.length === 0) {
-    console.log("Second pass found no items, trying number pattern matching");
-    
-    const numberPattern = /(\d+)/;
-    
-    for (let i = startIndex; i < endIndex; i++) {
-      const line = lines[i].trim();
-      
-      // Skip non-item lines
-      if (nonItemPatterns.some(pattern => line.match(pattern)) || line.length < 3) {
-        continue;
-      }
-      
-      // Look for text followed by a number
-      const parts = line.split(/\s+/);
-      if (parts.length >= 2) {
-        const lastPart = parts[parts.length - 1];
-        const numberMatch = lastPart.match(numberPattern);
-        
-        if (numberMatch) {
-          const price = parseInt(numberMatch[1]) / 100; // Assume it's in cents
-          if (price > 0.50) { // Only consider reasonable prices
-            const itemName = cleanupItemName(parts.slice(0, -1).join(' '));
-            
-            if (itemName.length >= 2 && !isNonItemText(itemName)) {
-              console.log(`Found number-pattern item: "${itemName}" with price $${price.toFixed(2)}`);
-              items.push({
-                name: itemName,
-                amount: price.toFixed(2)
-              });
-            }
-          }
-        }
-      }
-    }
+    const numberPatternItems = extractItemsWithNumberPatterns(lines, startIndex, endIndex);
+    items.push(...numberPatternItems);
   }
   
   // If we still found no items, create at least one item based on the total
   if (items.length === 0) {
-    console.log("No items found through pattern matching, using total amount");
-    // Look for total amount
-    const totalAmount = extractAmount(lines, fullText);
-    if (totalAmount !== "0.00") {
-      console.log(`Creating generic item with total amount: $${totalAmount}`);
-      items.push({
-        name: "Store Purchase",
-        amount: totalAmount
-      });
-    } else {
-      // Last resort - create a default item if we couldn't find anything
-      console.log("Could not find any amounts, creating default item");
-      items.push({
-        name: "Purchase",
-        amount: "10.00" // Default amount
-      });
-    }
+    const fallbackItems = createFallbackItem(lines, fullText);
+    items.push(...fallbackItems);
   }
   
   console.log(`Final item count: ${items.length}`);
   
   // Remove duplicates and sort by price (largest first)
   return deduplicateItems(items);
-}
-
-/**
- * Helper function to clean up an item name
- */
-function cleanupItemName(itemName: string): string {
-  let cleanedName = itemName;
-  
-  // Remove quantity indicators
-  cleanedName = cleanedName.replace(/^\d+\s*[xX]\s*/, '');  // Remove "2 x " prefix
-  cleanedName = cleanedName.replace(/^\d+\s+/, '');  // Remove "2 " prefix
-  
-  // Remove item numbers and SKU codes
-  cleanedName = cleanedName.replace(/^#\d+\s*/, ''); // Remove "#123 " prefix
-  cleanedName = cleanedName.replace(/\s+\d+$/, '');  // Remove trailing numbers
-  cleanedName = cleanedName.replace(/\s{2,}/g, ' ');  // Remove multiple spaces
-  
-  // Remove special characters at beginning and end
-  cleanedName = cleanedName.replace(/^[^a-zA-Z0-9]+/, '');
-  cleanedName = cleanedName.replace(/[^a-zA-Z0-9]+$/, '');
-  
-  // Handle common abbreviations
-  cleanedName = cleanedName.replace(/(\b)EA(\b)/i, '$1each$2');
-  cleanedName = cleanedName.replace(/(\b)PK(\b)/i, '$1pack$2');
-  
-  // Make first letter uppercase for better appearance
-  if (cleanedName.length > 0) {
-    cleanedName = cleanedName.charAt(0).toUpperCase() + cleanedName.slice(1);
-  }
-  
-  return cleanedName;
-}
-
-/**
- * Deduplicate and clean up extracted items
- */
-function deduplicateItems(items: Array<{name: string; amount: string}>): Array<{name: string; amount: string}> {
-  // Create a map to track unique items, using item name as key
-  const uniqueItems = new Map<string, {name: string; amount: string}>();
-  
-  // Process each item
-  items.forEach(item => {
-    const key = item.name.toLowerCase();
-    const amount = parseFloat(item.amount);
-    
-    // Skip invalid amounts
-    if (isNaN(amount) || amount <= 0) {
-      return;
-    }
-    
-    // If this item doesn't exist yet or has a higher price, update it
-    if (!uniqueItems.has(key) || parseFloat(uniqueItems.get(key)!.amount) < amount) {
-      uniqueItems.set(key, item);
-    }
-  });
-  
-  // Convert map back to array and sort by price (highest first)
-  return Array.from(uniqueItems.values())
-    .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
 }
