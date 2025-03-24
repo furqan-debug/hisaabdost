@@ -5,12 +5,16 @@ interface ReceiptSectionProps {
   receiptUrl: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isUploading?: boolean;
+  setFileInputRef?: (ref: HTMLInputElement | null) => void;
+  setCameraInputRef?: (ref: HTMLInputElement | null) => void;
 }
 
 export function ReceiptSection({ 
   receiptUrl, 
   onFileChange,
-  isUploading = false
+  isUploading = false,
+  setFileInputRef,
+  setCameraInputRef
 }: ReceiptSectionProps) {
   return (
     <div>
@@ -20,7 +24,9 @@ export function ReceiptSection({
       </p>
       <ReceiptField 
         receiptUrl={receiptUrl} 
-        onFileChange={onFileChange} 
+        onFileChange={onFileChange}
+        setFileInputRef={setFileInputRef}
+        setCameraInputRef={setCameraInputRef}
       />
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">

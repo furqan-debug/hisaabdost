@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Expense } from "@/components/expenses/types";
 import { ExpenseFormData, UseExpenseFormProps } from './expense-form/types';
 import { useReceiptFile } from './expense-form/useReceiptFile';
@@ -9,6 +9,9 @@ import { useExpenseSubmit } from './expense-form/useExpenseSubmit';
 export type { ExpenseFormData } from './expense-form/types';
 
 export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  
   const [formData, setFormData] = useState<ExpenseFormData>({
     amount: expenseToEdit?.amount.toString() || "",
     description: expenseToEdit?.description || "",
@@ -77,6 +80,28 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     formData,
     resetForm
   });
+  
+  // Functions to trigger file upload or camera capture
+  const triggerFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const triggerCameraCapture = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+  
+  // Expose the refs for ReceiptField component
+  const setFileInputRef = (ref: HTMLInputElement | null) => {
+    fileInputRef.current = ref;
+  };
+  
+  const setCameraInputRef = (ref: HTMLInputElement | null) => {
+    cameraInputRef.current = ref;
+  };
 
   return {
     formData,
@@ -86,5 +111,9 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     handleFileChange,
     handleScanComplete,
     handleSubmit,
+    triggerFileUpload,
+    triggerCameraCapture,
+    setFileInputRef,
+    setCameraInputRef
   };
 }

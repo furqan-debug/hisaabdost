@@ -1,12 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { useExpenseForm } from "@/hooks/useExpenseForm";
+import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -26,23 +29,47 @@ export const AddExpenseButton = ({
   onAddExpense,
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
+  
+  const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+    setCaptureMode(mode);
+    setShowAddExpense(true);
+  };
   
   return (
     <div className="mt-6">
       <OnboardingTooltip
-        content="Add an expense by entering details manually"
+        content="Add an expense in different ways"
         defaultOpen={isNewUser}
       >
         <div className="bg-card rounded-xl border shadow-sm p-4">
           <h3 className="text-base font-medium mb-3">Add New Expense</h3>
-          <div className="flex justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               variant="outline"
-              onClick={() => setShowAddExpense(true)}
+              onClick={() => handleOpenSheet('manual')}
               className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
             >
               <Plus className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Manual Entry</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => handleOpenSheet('upload')}
+              className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+            >
+              <Upload className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Upload Receipt</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => handleOpenSheet('camera')}
+              className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30"
+            >
+              <Camera className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Take Photo</span>
             </Button>
           </div>
         </div>
@@ -57,6 +84,7 @@ export const AddExpenseButton = ({
         }}
         open={showAddExpense || expenseToEdit !== undefined}
         onOpenChange={setShowAddExpense}
+        initialCaptureMode={captureMode}
       />
     </div>
   );

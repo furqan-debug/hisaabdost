@@ -10,6 +10,7 @@ import {
 import { ExpenseForm } from "./expenses/ExpenseForm";
 import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
+import { useEffect } from "react";
 
 interface AddExpenseSheetProps {
   onAddExpense: (expense: Expense) => void;
@@ -17,6 +18,7 @@ interface AddExpenseSheetProps {
   onClose?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  initialCaptureMode?: 'manual' | 'upload' | 'camera';
 }
 
 const AddExpenseSheet = ({ 
@@ -24,7 +26,8 @@ const AddExpenseSheet = ({
   expenseToEdit, 
   onClose,
   open,
-  onOpenChange 
+  onOpenChange,
+  initialCaptureMode = 'manual'
 }: AddExpenseSheetProps) => {
   const {
     formData,
@@ -32,11 +35,29 @@ const AddExpenseSheet = ({
     isUploading,
     updateField,
     handleFileChange,
-    handleSubmit
+    handleSubmit,
+    triggerFileUpload,
+    triggerCameraCapture
   } = useExpenseForm({ 
     expenseToEdit, 
     onClose 
   });
+
+  // Handle initial capture mode
+  useEffect(() => {
+    if (open && !expenseToEdit) {
+      // Only trigger if opening a new expense, not editing
+      if (initialCaptureMode === 'upload') {
+        setTimeout(() => {
+          triggerFileUpload();
+        }, 100);
+      } else if (initialCaptureMode === 'camera') {
+        setTimeout(() => {
+          triggerCameraCapture();
+        }, 100);
+      }
+    }
+  }, [open, expenseToEdit, initialCaptureMode, triggerFileUpload, triggerCameraCapture]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

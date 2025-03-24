@@ -4,23 +4,38 @@ import { Input } from "@/components/ui/input";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setFileInputRef?: (ref: HTMLInputElement | null) => void;
+  setCameraInputRef?: (ref: HTMLInputElement | null) => void;
 }
 
 export function ReceiptField({ 
   receiptUrl, 
-  onFileChange 
+  onFileChange,
+  setFileInputRef,
+  setCameraInputRef
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Expose the refs to the parent component if needed
+  useEffect(() => {
+    if (setFileInputRef && fileInputRef.current) {
+      setFileInputRef(fileInputRef.current);
+    }
+    
+    if (setCameraInputRef && cameraInputRef.current) {
+      setCameraInputRef(cameraInputRef.current);
+    }
+  }, [setFileInputRef, setCameraInputRef]);
+  
   // Check if device is mobile or has camera capabilities
-  useState(() => {
+  useEffect(() => {
     const checkMobile = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|windows phone/i.test(userAgent);
@@ -28,7 +43,7 @@ export function ReceiptField({
     };
     
     checkMobile();
-  });
+  }, []);
 
   const handleUpload = () => {
     if (fileInputRef.current) {
