@@ -100,6 +100,17 @@ export async function preprocessImage(imageFile: File) {
       }
     }
     
+    // Step 4: Enhance contrast for better OCR
+    const min = 0
+    const max = 255
+    
+    for (let i = 0; i < data.length; i += 4) {
+      // Apply contrast enhancement
+      const value = data[i]
+      const newVal = (value - min) / (max - min) * 255
+      data[i] = data[i + 1] = data[i + 2] = newVal
+    }
+    
     // Put the processed data back on the canvas
     ctx.putImageData(imageData, 0, 0)
     

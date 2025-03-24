@@ -39,7 +39,8 @@ const AddExpenseSheet = ({
     triggerFileUpload,
     triggerCameraCapture,
     setFileInputRef,
-    setCameraInputRef
+    setCameraInputRef,
+    handleScanComplete
   } = useExpenseForm({ 
     expenseToEdit, 
     onClose 
@@ -69,7 +70,7 @@ const AddExpenseSheet = ({
           <SheetDescription>
             {expenseToEdit 
               ? "Edit your expense details below." 
-              : "Review and complete your expense details below. Click save when you're done."}
+              : "Upload a receipt for automatic processing or enter expense details manually."}
           </SheetDescription>
         </SheetHeader>
         
@@ -83,6 +84,7 @@ const AddExpenseSheet = ({
           onFileChange={handleFileChange}
           setFileInputRef={setFileInputRef}
           setCameraInputRef={setCameraInputRef}
+          onScanComplete={handleScanComplete}
         />
       </SheetContent>
     </Sheet>

@@ -5,23 +5,37 @@ import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setFileInputRef?: (ref: HTMLInputElement | null) => void;
   setCameraInputRef?: (ref: HTMLInputElement | null) => void;
+  onCapture?: (expenseDetails: {
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => void;
 }
 
 export function ReceiptField({ 
   receiptUrl, 
   onFileChange,
   setFileInputRef,
-  setCameraInputRef
+  setCameraInputRef,
+  onCapture
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // State for receipt scanning dialog
+  const [scanDialogOpen, setScanDialogOpen] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   
   // Expose the refs to the parent component if needed
   useEffect(() => {
@@ -56,6 +70,32 @@ export function ReceiptField({
       cameraInputRef.current.click();
     }
   };
+  
+  // Handle file selection and open scan dialog
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL for the file
+      const previewUrl = URL.createObjectURL(file);
+      setFilePreviewUrl(previewUrl);
+      setReceiptFile(file);
+      
+      // Open the scan dialog
+      setScanDialogOpen(true);
+      
+      // Call the original onFileChange to handle storage
+      onFileChange(e);
+    }
+  };
+  
+  // Clean up resources when dialog is closed
+  const handleCleanup = () => {
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+      setFilePreviewUrl(null);
+    }
+    setReceiptFile(null);
+  };
 
   return (
     <div className="space-y-2">
@@ -72,7 +112,7 @@ export function ReceiptField({
           name="receipt"
           type="file"
           accept="image/*"
-          onChange={onFileChange}
+          onChange={handleFileSelection}
           ref={fileInputRef}
           className="hidden"
         />
@@ -84,7 +124,7 @@ export function ReceiptField({
           type="file"
           accept="image/*"
           capture="environment"
-          onChange={onFileChange}
+          onChange={handleFileSelection}
           ref={cameraInputRef}
           className="hidden"
         />
@@ -125,6 +165,18 @@ export function ReceiptField({
           </div>
         )}
       </div>
+      
+      {/* Scan Dialog */}
+      <ReceiptScanDialog
+        file={receiptFile}
+        previewUrl={filePreviewUrl}
+        open={scanDialogOpen}
+        setOpen={setScanDialogOpen}
+        onCleanup={handleCleanup}
+        onCapture={onCapture}
+        autoSave={true}
+        autoProcess={true}
+      />
     </div>
   );
 }

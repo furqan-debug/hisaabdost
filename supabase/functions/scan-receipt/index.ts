@@ -20,12 +20,10 @@ serve(async (req) => {
       console.error("No receipt image in request")
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          items: generateFallbackData(),
-          storeName: "Store",
-          error: "No receipt image"
+          success: false, 
+          error: "No receipt image provided",
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
@@ -35,7 +33,10 @@ serve(async (req) => {
     const receiptUrl = formData.get('receiptUrl')
     
     // Process the receipt image with either Google Vision or a fallback approach
+    const startTime = performance.now()
     const result = await processReceipt(receiptImage);
+    const processingTime = (performance.now() - startTime).toFixed(2)
+    console.log(`Receipt processing completed in ${processingTime}ms`)
     
     // Add receipt URL to result if provided
     if (receiptUrl && typeof receiptUrl === 'string') {
@@ -43,7 +44,10 @@ serve(async (req) => {
     }
     
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        ...result,
+        processingTime: `${processingTime}ms`
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
@@ -52,11 +56,14 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        success: true, // Still return success for fallback handling
+        success: false, 
         error: 'Failed to process receipt: ' + (error.message || "Unknown error"),
         items: generateFallbackData() // Return fallback data so front-end can still work
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      }
     )
   }
 })

@@ -9,6 +9,7 @@ interface DialogActionsProps {
   handleScanReceipt: () => void;
   disabled: boolean;
   autoSave?: boolean;
+  isAutoProcessing?: boolean;
 }
 
 export function DialogActions({
@@ -17,7 +18,8 @@ export function DialogActions({
   scanTimedOut,
   handleScanReceipt,
   disabled,
-  autoSave = false
+  autoSave = false,
+  isAutoProcessing = false
 }: DialogActionsProps) {
   return (
     <div className="flex w-full gap-2">
@@ -25,7 +27,7 @@ export function DialogActions({
         type="button"
         variant="outline"
         onClick={onCleanup}
-        disabled={isScanning}
+        disabled={isScanning || isAutoProcessing}
         className="flex-1"
       >
         Cancel
@@ -37,6 +39,7 @@ export function DialogActions({
         onClick={handleScanReceipt}
         disabled={disabled}
         autoSave={autoSave}
+        isAutoProcessing={isAutoProcessing}
       />
     </div>
   );

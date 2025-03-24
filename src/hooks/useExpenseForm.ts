@@ -5,6 +5,7 @@ import { ExpenseFormData, UseExpenseFormProps } from './expense-form/types';
 import { useReceiptFile } from './expense-form/useReceiptFile';
 import { useReceiptScanner } from './expense-form/useReceiptScanner';
 import { useExpenseSubmit } from './expense-form/useExpenseSubmit';
+import { toast } from "sonner";
 
 export type { ExpenseFormData } from './expense-form/types';
 
@@ -102,6 +103,42 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
   const setCameraInputRef = (ref: HTMLInputElement | null) => {
     cameraInputRef.current = ref;
   };
+  
+  // Handle receipt scan completion with extracted data
+  const handleScanCompleteWithFeedback = (expenseDetails: {
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => {
+    // Update form with extracted data
+    if (expenseDetails.description) {
+      updateField('description', expenseDetails.description);
+    }
+    
+    if (expenseDetails.amount) {
+      updateField('amount', expenseDetails.amount);
+    }
+    
+    if (expenseDetails.date) {
+      updateField('date', expenseDetails.date);
+    }
+    
+    if (expenseDetails.category) {
+      updateField('category', expenseDetails.category);
+    }
+    
+    if (expenseDetails.paymentMethod) {
+      updateField('paymentMethod', expenseDetails.paymentMethod);
+    }
+    
+    // Show toast confirmation
+    toast.success("Receipt scanned and form updated");
+    
+    // Call the original handler
+    handleScanComplete();
+  };
 
   return {
     formData,
@@ -109,7 +146,7 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     isUploading,
     updateField,
     handleFileChange,
-    handleScanComplete,
+    handleScanComplete: handleScanCompleteWithFeedback,
     handleSubmit,
     triggerFileUpload,
     triggerCameraCapture,

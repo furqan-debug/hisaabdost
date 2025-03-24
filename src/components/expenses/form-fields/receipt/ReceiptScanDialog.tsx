@@ -13,6 +13,7 @@ import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
 import { ScanButton } from "./components/ScanButton";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
+import { useEffect } from "react";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -28,6 +29,7 @@ interface ReceiptScanDialogProps {
     paymentMethod: string;
   }) => void;
   autoSave?: boolean;
+  autoProcess?: boolean;
 }
 
 export function ReceiptScanDialog({
@@ -37,7 +39,8 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = false
+  autoSave = false,
+  autoProcess = true
 }: ReceiptScanDialogProps) {
   const {
     isScanning,
@@ -45,7 +48,9 @@ export function ReceiptScanDialog({
     scanTimedOut,
     scanError,
     statusMessage,
-    handleScanReceipt
+    handleScanReceipt,
+    isAutoProcessing,
+    autoProcessReceipt
   } = useScanReceipt({
     file,
     onCleanup,
@@ -53,6 +58,13 @@ export function ReceiptScanDialog({
     autoSave,
     setOpen
   });
+  
+  // Automatically start processing when dialog opens with a file
+  useEffect(() => {
+    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError) {
+      autoProcessReceipt();
+    }
+  }, [open, file, autoProcess, isScanning, isAutoProcessing, scanTimedOut, scanError, autoProcessReceipt]);
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
@@ -71,7 +83,7 @@ export function ReceiptScanDialog({
           <ReceiptPreviewImage previewUrl={previewUrl} />
           
           <ScanProgress
-            isScanning={isScanning}
+            isScanning={isScanning || isAutoProcessing}
             progress={scanProgress}
             statusMessage={statusMessage}
           />
@@ -84,6 +96,7 @@ export function ReceiptScanDialog({
           <DialogActions
             onCleanup={onCleanup}
             isScanning={isScanning}
+            isAutoProcessing={isAutoProcessing}
             scanTimedOut={scanTimedOut || !!scanError}
             handleScanReceipt={handleScanReceipt}
             disabled={!file}

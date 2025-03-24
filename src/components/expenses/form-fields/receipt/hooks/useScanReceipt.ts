@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useScanState } from "./useScanState";
 import { useScanProcess } from "./useScanProcess";
 import { useScanResults } from "./useScanResults";
@@ -39,6 +39,9 @@ export function useScanReceipt({
     timeoutScan,
     errorScan
   } = useScanState();
+  
+  // Add state for auto-processing
+  const [isAutoProcessing, setIsAutoProcessing] = useState(false);
 
   // Use the process scan hook for actually processing the scan
   const processScan = useScanProcess({
@@ -59,28 +62,42 @@ export function useScanReceipt({
     onCleanup
   });
 
-  // Handle scan button click
-  const handleScanReceipt = useCallback(async () => {
-    if (!file) {
-      toast.error("No receipt file selected.");
-      return;
-    }
-    
+  // Validate the receipt file
+  const validateReceiptFile = useCallback((file: File): boolean => {
     // Validate file size
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
       toast.error("File is too large. Please use an image under 10MB.");
-      return;
+      return false;
     }
     
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
       toast.error("Invalid file type. Please use JPEG, PNG, HEIC or PDF.");
+      return false;
+    }
+    
+    return true;
+  }, []);
+
+  // Process scan with common logic
+  const processScanWithCommonLogic = useCallback(async (isAuto: boolean) => {
+    if (!file) {
+      toast.error("No receipt file selected.");
+      return;
+    }
+    
+    if (!validateReceiptFile(file)) {
       return;
     }
 
     try {
-      startScan();
+      if (isAuto) {
+        setIsAutoProcessing(true);
+        updateProgress(10, "Auto-processing receipt...");
+      } else {
+        startScan();
+      }
       
       // Create FormData with receipt file
       const formData = new FormData();
@@ -89,11 +106,27 @@ export function useScanReceipt({
       // Process the scan
       await processScan(formData);
       
+      if (isAuto) {
+        setIsAutoProcessing(false);
+      }
     } catch (error) {
-      console.error("Error in handleScanReceipt:", error);
+      console.error("Error in processScanWithCommonLogic:", error);
       errorScan("An unexpected error occurred during scanning.");
+      if (isAuto) {
+        setIsAutoProcessing(false);
+      }
     }
-  }, [file, startScan, processScan, errorScan]);
+  }, [file, startScan, processScan, errorScan, validateReceiptFile, updateProgress]);
+
+  // Handle manual scan button click
+  const handleScanReceipt = useCallback(() => {
+    processScanWithCommonLogic(false);
+  }, [processScanWithCommonLogic]);
+  
+  // Handle automatic processing
+  const autoProcessReceipt = useCallback(() => {
+    processScanWithCommonLogic(true);
+  }, [processScanWithCommonLogic]);
 
   return {
     isScanning,
@@ -101,6 +134,8 @@ export function useScanReceipt({
     scanTimedOut,
     scanError,
     statusMessage,
-    handleScanReceipt
+    handleScanReceipt,
+    isAutoProcessing,
+    autoProcessReceipt
   };
 }

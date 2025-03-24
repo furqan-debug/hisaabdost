@@ -8,6 +8,7 @@ interface ScanButtonProps {
   onClick: () => void;
   disabled: boolean;
   autoSave?: boolean;
+  isAutoProcessing?: boolean;
 }
 
 export function ScanButton({
@@ -15,25 +16,33 @@ export function ScanButton({
   scanTimedOut,
   onClick,
   disabled,
-  autoSave = false
+  autoSave = false,
+  isAutoProcessing = false
 }: ScanButtonProps) {
+  const buttonText = () => {
+    if (isScanning) return "Processing...";
+    if (isAutoProcessing) return "Auto-Processing...";
+    if (scanTimedOut) return "Retry";
+    return `Process Receipt${autoSave ? " & Save" : ""}`;
+  };
+
   return (
     <Button
       type="button"
       variant="default"
       onClick={onClick}
-      disabled={disabled || isScanning}
+      disabled={disabled || isScanning || isAutoProcessing}
       className="flex-1"
     >
-      {isScanning ? (
+      {(isScanning || isAutoProcessing) ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Processing...
+          {buttonText()}
         </>
       ) : (
         <>
           <ScanLine className="mr-2 h-4 w-4" />
-          {scanTimedOut ? "Retry" : `Process Receipt${autoSave ? " & Save" : ""}`}
+          {buttonText()}
         </>
       )}
     </Button>

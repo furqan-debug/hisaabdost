@@ -17,6 +17,13 @@ interface ExpenseFormProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setFileInputRef?: (ref: HTMLInputElement | null) => void;
   setCameraInputRef?: (ref: HTMLInputElement | null) => void;
+  onScanComplete?: (expenseDetails: {
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => void;
 }
 
 export function ExpenseForm({
@@ -28,7 +35,8 @@ export function ExpenseForm({
   onFieldChange,
   onFileChange,
   setFileInputRef,
-  setCameraInputRef
+  setCameraInputRef,
+  onScanComplete
 }: ExpenseFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
@@ -60,6 +68,7 @@ export function ExpenseForm({
           isUploading={isUploading}
           setFileInputRef={setFileInputRef}
           setCameraInputRef={setCameraInputRef}
+          onCapture={onScanComplete}
         />
       </FormSection>
 

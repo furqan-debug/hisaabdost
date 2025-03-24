@@ -12,42 +12,59 @@ const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY');
 export async function processReceipt(receiptImage: File) {
   console.log("Starting receipt processing");
   
-  // Process receipt with appropriate OCR method
   try {
-    console.log("Starting OCR processing");
-    
     // Preprocess the image first
+    console.log("Starting image preprocessing");
     const preprocessedImage = await preprocessImage(receiptImage);
     console.log("Image preprocessing completed");
     
     // Choose OCR method based on API key availability
     let extractedData = [];
-    if (VISION_API_KEY) {
-      console.log("Using Google Vision API for OCR");
-      extractedData = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY);
-    } else {
-      console.log("No Google Vision API key configured, using simplified OCR");
-      extractedData = await processReceiptWithTesseract(preprocessedImage);
+    let storeName = "Store";
+    
+    try {
+      if (VISION_API_KEY) {
+        console.log("Using Google Vision API for OCR");
+        extractedData = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY);
+      } else {
+        console.log("No Google Vision API key configured, using simplified OCR");
+        extractedData = await processReceiptWithTesseract(preprocessedImage);
+      }
+      
+      console.log("OCR processing completed");
+      
+      // Extract store name if we have data
+      if (extractedData.length > 0) {
+        storeName = extractStoreName(extractedData);
+      }
+      
+      // Post-process extracted data to enhance relevance
+      const enhancedData = postProcessItems(extractedData);
+      
+      // Check if we found any usable data
+      if (enhancedData.length > 0) {
+        return { 
+          success: true, 
+          items: enhancedData, 
+          storeName: storeName
+        };
+      } else {
+        console.log("No usable items found after processing, using fallback data");
+        return { 
+          success: true, 
+          items: generateFallbackData(), 
+          storeName: storeName,
+          warning: "Could not identify specific items on receipt"
+        };
+      }
+    } catch (ocrError) {
+      console.error("Error in OCR processing:", ocrError);
+      throw ocrError;
     }
-    
-    console.log("Extracted data:", extractedData.length > 0 
-      ? `Found ${extractedData.length} items` 
-      : "No items found");
-    
-    // Post-process extracted data to enhance relevance
-    const enhancedData = postProcessItems(extractedData);
-    
-    // Always return success: true, even if no items were found
-    // The frontend will use fallback data if needed
-    return { 
-      success: true, 
-      items: enhancedData.length > 0 ? enhancedData : generateFallbackData(), 
-      storeName: extractedData.length > 0 ? extractStoreName(extractedData) : "Store"
-    };
   } catch (processingError) {
-    console.error("Error in OCR processing:", processingError);
+    console.error("Error in receipt processing:", processingError);
     return { 
-      success: true, 
+      success: false, 
       items: generateFallbackData(),
       storeName: "Store",
       error: "Processing error: " + (processingError.message || "Unknown error")
@@ -84,5 +101,13 @@ function postProcessItems(items: any[]) {
     }
   }
   
-  return Array.from(uniqueItems.values());
+  // Sort items by price (higher first) to find main purchases
+  const sortedItems = Array.from(uniqueItems.values())
+    .sort((a, b) => {
+      const amountA = parseFloat(a.amount) || 0;
+      const amountB = parseFloat(b.amount) || 0;
+      return amountB - amountA;
+    });
+  
+  return sortedItems;
 }
