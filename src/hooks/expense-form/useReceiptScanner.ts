@@ -6,10 +6,10 @@ interface UseReceiptScannerProps {
 }
 
 export function useReceiptScanner({ updateField }: UseReceiptScannerProps) {
-  // Simplified version with no scanning functionality
+  // Placeholder function that doesn't do anything since scanning functionality has been removed
   const handleScanComplete = () => {
     // This function is kept as a placeholder to maintain interface compatibility
-    // but has no functionality since scanning has been removed
+    console.log("Receipt scanning functionality has been removed");
   };
 
   return { handleScanComplete };

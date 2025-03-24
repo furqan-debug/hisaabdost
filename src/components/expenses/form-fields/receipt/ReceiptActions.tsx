@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Upload, Camera, ScanLine, Loader2 } from "lucide-react";
-import { ScanButton } from "./components/ScanButton";
+import { Upload, Camera } from "lucide-react";
 
 interface ReceiptActionsProps {
   onUpload: () => void;
@@ -24,9 +23,6 @@ export function ReceiptActions({
 }: ReceiptActionsProps) {
   const hasReceipt = !!receiptUrl;
   
-  // Only show scan button if there's a receipt
-  const showScanButton = hasReceipt && canScan;
-  
   return (
     <div className="flex flex-col sm:flex-row gap-2">
       {!hasReceipt ? (
@@ -42,16 +38,6 @@ export function ReceiptActions({
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload Receipt
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCapture}
-                className="flex-1"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Take Photo
               </Button>
             </>
           ) : (
@@ -78,15 +64,6 @@ export function ReceiptActions({
             <Upload className="mr-2 h-4 w-4" />
             Replace Receipt
           </Button>
-          
-          {showScanButton && (
-            <ScanButton
-              isScanning={isScanning}
-              scanTimedOut={false}
-              onClick={onScan}
-              disabled={isScanning}
-            />
-          )}
         </div>
       )}
     </div>
