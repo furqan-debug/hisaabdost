@@ -2,4 +2,4 @@
 project_id = "bklfolfivjonzpprytkz"
 
 [storage.buckets]
-receipts = { public = true, allow_downloads = true }
+receipts = { public = true }
