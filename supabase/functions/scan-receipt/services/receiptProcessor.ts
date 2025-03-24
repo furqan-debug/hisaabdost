@@ -3,6 +3,7 @@ import { preprocessImage } from "../utils/imageProcessor.ts";
 import { processReceiptWithOCR, processReceiptWithTesseract } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
 import { extractStoreName } from "../utils/storeExtractor.ts";
+import { cleanItemText, isLikelyProduct } from "../utils/items/itemCleanup.ts";
 
 // Get Google Vision API key from environment variable
 const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY');
@@ -60,11 +61,13 @@ function postProcessItems(items: any[]) {
   
   // Filter out items with very generic names
   const filteredItems = items.filter(item => {
-    const name = (item.name || '').toLowerCase();
-    return name.length >= 3 && 
-           !name.includes('subtotal') && 
-           !name.includes('total') && 
-           !name.includes('tax');
+    if (!item.name) return false;
+    
+    // Clean up the item name
+    const cleanedName = cleanItemText(item.name);
+    
+    // Check if it's likely a product
+    return isLikelyProduct(cleanedName);
   });
   
   // If filtering removed all items, return the original items

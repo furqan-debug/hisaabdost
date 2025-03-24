@@ -1,6 +1,6 @@
 
 import { itemExtractionPatterns, findItemsSectionStart, findItemsSectionEnd } from "./items/itemPatterns.ts";
-import { cleanupItemName } from "./items/itemCleanup.ts";
+import { cleanItemText, isLikelyProduct } from "./items/itemCleanup.ts";
 import { shouldSkipLine, isNonItemText, deduplicateItems } from "./items/itemHelpers.ts";
 import { guessCategoryFromItemName } from "./items/itemCategories.ts";
 import { fallbackItemExtraction } from "./items/fallbackExtractor.ts";
@@ -28,19 +28,36 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
     for (const pattern of itemExtractionPatterns) {
       const match = line.match(pattern);
       if (match) {
-        const name = cleanupItemName(match[1]);
-        const price = match[2];
-        
-        // Validation: check name is meaningful and price is valid
-        if (name.length >= 2 && !isNonItemText(name) && parseFloat(price) > 0) {
-          items.push({
-            name: name,
-            amount: price,
-            category: guessCategoryFromItemName(name)
-          });
-          itemFound = true;
-          break;
+        // Handle patterns with quantity indicators
+        if (pattern.toString().includes('[xX]')) {
+          const qty = parseInt(match[1]);
+          const name = cleanItemText(match[2]);
+          const price = parseFloat(match[3]) * qty;
+          
+          if (isLikelyProduct(name) && price > 0) {
+            items.push({
+              name: `${name} (${qty}x)`,
+              amount: price.toFixed(2),
+              category: guessCategoryFromItemName(name)
+            });
+            itemFound = true;
+          }
+        } else {
+          // Standard item-price patterns
+          const name = cleanItemText(match[1]);
+          const price = match[2];
+          
+          if (isLikelyProduct(name) && parseFloat(price) > 0) {
+            items.push({
+              name: name,
+              amount: price,
+              category: guessCategoryFromItemName(name)
+            });
+            itemFound = true;
+          }
         }
+        
+        if (itemFound) break;
       }
     }
     
@@ -53,10 +70,10 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
         const price = priceMatch[1];
         // Extract the item name by removing the price part
         let nameText = line.replace(priceMatch[0], '').trim();
-        nameText = cleanupItemName(nameText);
+        nameText = cleanItemText(nameText);
         
         // Only add if we have a reasonable name and price
-        if (nameText.length >= 2 && !isNonItemText(nameText) && parseFloat(price) > 0) {
+        if (isLikelyProduct(nameText) && parseFloat(price) > 0) {
           items.push({
             name: nameText,
             amount: price,
