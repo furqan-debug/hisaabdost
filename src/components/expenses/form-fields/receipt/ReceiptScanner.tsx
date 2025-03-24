@@ -273,11 +273,11 @@ export function useReceiptScanner({
           date: expenseDate,
           items: validItems.map((item: any) => ({
             name: item.name,
-            amount: item.amount.toString().replace(/^\$/, ''),
+            amount: typeof item.amount === 'number' ? item.amount.toString() : item.amount.toString().replace(/^\$/, ''),
             category: item.category || "Groceries"
           })),
           total: validItems.reduce((sum: number, item: any) => {
-            const amount = parseFloat(item.amount.toString().replace(/[^\d.]/g, ''));
+            const amount = parseFloat(typeof item.amount === 'number' ? item.amount.toString() : item.amount.toString().replace(/[^\d.]/g, ''));
             return sum + (isNaN(amount) ? 0 : amount);
           }, 0).toFixed(2),
           paymentMethod: "Card" // Default payment method
@@ -293,7 +293,7 @@ export function useReceiptScanner({
         
         const extractedData: ScanResult = {
           description: firstItem.name,
-          amount: firstItem.amount.toString().replace(/^\$/, ''),
+          amount: typeof firstItem.amount === 'number' ? firstItem.amount.toString() : firstItem.amount.toString().replace(/^\$/, ''),
           date: expenseDate,
           category: firstItem.category || "Shopping",
           paymentMethod: "Card",
