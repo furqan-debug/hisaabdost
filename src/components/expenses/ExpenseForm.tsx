@@ -24,6 +24,8 @@ interface ExpenseFormProps {
     category: string;
     paymentMethod: string;
   }) => void;
+  // Add field to indicate if this is from the manual entry mode
+  isManualEntry?: boolean;
 }
 
 export function ExpenseForm({
@@ -36,7 +38,8 @@ export function ExpenseForm({
   onFileChange,
   setFileInputRef,
   setCameraInputRef,
-  onScanComplete
+  onScanComplete,
+  isManualEntry = true // Default to true for backward compatibility
 }: ExpenseFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 mt-4">
@@ -69,6 +72,7 @@ export function ExpenseForm({
           setFileInputRef={setFileInputRef}
           setCameraInputRef={setCameraInputRef}
           onCapture={onScanComplete}
+          isManualForm={isManualEntry}
         />
       </FormSection>
 

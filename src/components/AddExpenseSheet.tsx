@@ -62,6 +62,9 @@ const AddExpenseSheet = ({
     }
   }, [open, expenseToEdit, initialCaptureMode, triggerFileUpload, triggerCameraCapture]);
 
+  // Determine if this is a manual entry or automated receipt process
+  const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto">
@@ -70,7 +73,10 @@ const AddExpenseSheet = ({
           <SheetDescription>
             {expenseToEdit 
               ? "Edit your expense details below." 
-              : "Upload a receipt for automatic processing or enter expense details manually."}
+              : isManualEntry
+                ? "Enter expense details manually or add a receipt for reference."
+                : "Upload a receipt for automatic processing."
+            }
           </SheetDescription>
         </SheetHeader>
         
@@ -85,6 +91,7 @@ const AddExpenseSheet = ({
           setFileInputRef={setFileInputRef}
           setCameraInputRef={setCameraInputRef}
           onScanComplete={handleScanComplete}
+          isManualEntry={isManualEntry}
         />
       </SheetContent>
     </Sheet>

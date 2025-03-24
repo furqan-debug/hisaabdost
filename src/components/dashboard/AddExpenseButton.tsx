@@ -52,6 +52,7 @@ export const AddExpenseButton = ({
             >
               <Plus className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Manual Entry</span>
+              <span className="text-xs text-muted-foreground">Enter details yourself</span>
             </Button>
             
             <Button
@@ -61,6 +62,7 @@ export const AddExpenseButton = ({
             >
               <Upload className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Upload Receipt</span>
+              <span className="text-xs text-muted-foreground">Auto-extract expenses</span>
             </Button>
             
             <Button
@@ -70,6 +72,7 @@ export const AddExpenseButton = ({
             >
               <Camera className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Take Photo</span>
+              <span className="text-xs text-muted-foreground">Scan receipt with camera</span>
             </Button>
           </div>
         </div>

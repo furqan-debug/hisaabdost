@@ -19,6 +19,7 @@ interface ReceiptFieldProps {
     category: string;
     paymentMethod: string;
   }) => void;
+  autoProcess?: boolean;
 }
 
 export function ReceiptField({ 
@@ -26,7 +27,8 @@ export function ReceiptField({
   onFileChange,
   setFileInputRef,
   setCameraInputRef,
-  onCapture
+  onCapture,
+  autoProcess = false // Default to false for manual forms
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -78,8 +80,10 @@ export function ReceiptField({
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Open the scan dialog automatically
-      setScanDialogOpen(true);
+      // Only open the scan dialog if autoProcess is true
+      if (autoProcess) {
+        setScanDialogOpen(true);
+      }
       
       // Call the original onFileChange to handle storage
       onFileChange(e);
@@ -164,17 +168,20 @@ export function ReceiptField({
         )}
       </div>
       
-      {/* Scan Dialog */}
-      <ReceiptScanDialog
-        file={receiptFile}
-        previewUrl={filePreviewUrl}
-        open={scanDialogOpen}
-        setOpen={setScanDialogOpen}
-        onCleanup={handleCleanup}
-        onCapture={onCapture}
-        autoSave={true} // Always auto-save expenses
-        autoProcess={true} // Always auto-process
-      />
+      {/* Scan Dialog - only shown when autoProcess is true */}
+      {autoProcess && (
+        <ReceiptScanDialog
+          file={receiptFile}
+          previewUrl={filePreviewUrl}
+          open={scanDialogOpen}
+          setOpen={setScanDialogOpen}
+          onCleanup={handleCleanup}
+          onCapture={onCapture}
+          autoSave={autoProcess} // Match autoSave to autoProcess
+          autoProcess={autoProcess}
+        />
+      )}
     </div>
   );
 }
+
