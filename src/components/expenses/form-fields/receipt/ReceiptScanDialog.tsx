@@ -31,7 +31,7 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = false,
+  autoSave = true, // Set default to true to always auto-save expenses
   autoProcess = true
 }: ReceiptScanDialogProps) {
   const {
@@ -64,10 +64,10 @@ export function ReceiptScanDialog({
       setOpen(open);
     }}>
       <DialogContent className="sm:max-w-md">
-        <DialogTitle>Scan Receipt</DialogTitle>
+        <DialogTitle>Processing Receipt</DialogTitle>
         <DialogDescription>
           {autoSave 
-            ? "We'll extract all items and save them automatically" 
+            ? "We'll extract all items and save them automatically as separate expenses" 
             : "We'll extract the store name, amount, date and other details"}
         </DialogDescription>
         

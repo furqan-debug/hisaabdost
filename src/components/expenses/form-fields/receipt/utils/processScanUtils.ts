@@ -1,67 +1,54 @@
 
-import { toast } from 'sonner';
-import { cleanItemDescription, formatDateForForm } from './formatUtils';
+import { formatDateForStorage } from './formatUtils';
 
-// Find the most relevant item from a list of extracted items
-export function findMainItem(items: any[]): any {
-  if (!items || items.length === 0) return {};
-  
-  // If there's only one item, use it
-  if (items.length === 1) return items[0];
-  
-  // Sort by price (highest first) and return the most expensive item
-  const sortedItems = [...items].sort((a, b) => {
-    const amountA = parseFloat(a.amount || '0');
-    const amountB = parseFloat(b.amount || '0');
-    return amountB - amountA;
-  });
-  
-  return sortedItems[0];
-}
-
-// Process scan results and extract expense details
+/**
+ * Process the results of the receipt scan
+ */
 export function processScanResults(
-  result: any, 
+  scanResult: any,
   autoSave: boolean,
-  onCapture?: (expenseDetails: any) => void,
+  onCapture?: (expenseDetails: {
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }) => void,
   setOpen?: (open: boolean) => void
 ) {
-  if (!result || !result.items || result.items.length === 0) {
-    console.warn("No items found in scan result");
+  if (!scanResult.items || scanResult.items.length === 0) {
+    console.log("No items found in scan result");
     return;
   }
   
-  // If autosave is enabled, handle all items
-  if (autoSave) {
-    toast.success(`Found ${result.items.length} items to add`);
-    // This would be implemented for batch adding expenses
-    console.log("Auto-saving items:", result.items);
-    return;
-  }
+  // Get the most relevant item (usually the first one or one with highest amount)
+  const mainItem = scanResult.items.reduce((highest: any, current: any) => {
+    if (!highest) return current;
+    
+    const highestAmount = parseFloat(highest.amount || '0');
+    const currentAmount = parseFloat(current.amount || '0');
+    
+    return currentAmount > highestAmount ? current : highest;
+  }, null);
   
-  // For single item capture
+  if (!mainItem) return;
+  
+  // Format the expense details for the form
+  const expenseDetails = {
+    description: mainItem.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
+    amount: mainItem.amount || "0.00",
+    date: formatDateForStorage(scanResult.date),
+    category: mainItem.category || "Other",
+    paymentMethod: "Card" // Default assumption for receipts
+  };
+  
+  // Pass the details to the onCapture callback if provided
   if (onCapture) {
-    // Get the most relevant item - typically the most expensive one
-    const mainItem = findMainItem(result.items);
-    
-    // Extract expense details
-    const expenseDetails = {
-      description: cleanItemDescription(mainItem.name) || (result.storeName ? `Purchase from ${result.storeName}` : "Store Purchase"),
-      amount: mainItem.amount || "0.00",
-      date: formatDateForForm(mainItem.date) || new Date().toISOString().split('T')[0],
-      category: mainItem.category || "Other",
-      paymentMethod: "Card"
-    };
-    
-    console.log("Captured expense details:", expenseDetails);
-    
-    // Notify and update form
-    toast.success("Receipt scanned successfully!");
     onCapture(expenseDetails);
-    
-    // Close dialog if needed
-    if (setOpen) {
-      setTimeout(() => setOpen(false), 500);
-    }
+  }
+  
+  // Close the dialog if autoSave is enabled and setOpen is provided
+  if (autoSave && setOpen) {
+    setTimeout(() => setOpen(false), 1000);
   }
 }

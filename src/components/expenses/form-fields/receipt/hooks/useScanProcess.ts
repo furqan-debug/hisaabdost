@@ -40,7 +40,7 @@ export function useScanProcess({
         clearTimeout(timeoutId);
         
         if (error) {
-          console.warn("Scan completed with error:", error);
+          console.error("Scan completed with error:", error);
           errorScan("We couldn't read the receipt clearly. Try a better photo or enter details manually.");
           return null;
         }
@@ -56,12 +56,18 @@ export function useScanProcess({
         // Store the result in session storage for use
         if (data) {
           try {
+            // Ensure data.items is an array
+            if (!data.items || !Array.isArray(data.items)) {
+              data.items = [{ name: "Store Purchase", amount: data.total || "0.00" }];
+            }
+            
             sessionStorage.setItem('lastScanResult', JSON.stringify(data));
             
             // Automatically add the expense to the database if results are valid
             if (data.items && data.items.length > 0) {
               updateProgress(90, "Saving expense data...");
               await saveExpenseFromScan(data);
+              toast.success(`Saved ${data.items.length} expense${data.items.length > 1 ? 's' : ''}`);
             } else {
               // If no items were found, consider it a partial success
               toast.warning("Some receipt details were found, but no items were detected.");

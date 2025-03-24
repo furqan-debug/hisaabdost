@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
 
@@ -46,10 +46,8 @@ export function ReceiptField({
     if (setCameraInputRef && cameraInputRef.current) {
       setCameraInputRef(cameraInputRef.current);
     }
-  }, [setFileInputRef, setCameraInputRef]);
-  
-  // Check if device is mobile or has camera capabilities
-  useEffect(() => {
+    
+    // Check if device is mobile or has camera capabilities
     const checkMobile = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|windows phone/i.test(userAgent);
@@ -57,7 +55,7 @@ export function ReceiptField({
     };
     
     checkMobile();
-  }, []);
+  }, [setFileInputRef, setCameraInputRef]);
 
   const handleUpload = () => {
     if (fileInputRef.current) {
@@ -80,7 +78,7 @@ export function ReceiptField({
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Open the scan dialog
+      // Open the scan dialog automatically
       setScanDialogOpen(true);
       
       // Call the original onFileChange to handle storage
@@ -174,8 +172,8 @@ export function ReceiptField({
         setOpen={setScanDialogOpen}
         onCleanup={handleCleanup}
         onCapture={onCapture}
-        autoSave={true}
-        autoProcess={true}
+        autoSave={true} // Always auto-save expenses
+        autoProcess={true} // Always auto-process
       />
     </div>
   );

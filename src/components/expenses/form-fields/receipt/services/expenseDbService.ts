@@ -1,57 +1,58 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
-import { findMainItem } from "../utils/itemSelectionUtils";
-import { formatDate } from "../utils/dateUtils";
-import { formatDescription } from "../utils/itemSelectionUtils";
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import { formatDateForStorage } from '../utils/dateUtils';
 
 /**
- * Save an expense from scan data to the database
+ * Saves all expenses extracted from a receipt scan
  */
-export async function saveExpenseFromScan(scanData: any): Promise<boolean> {
+export async function saveExpenseFromScan(scanResult: any): Promise<boolean> {
   try {
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.log("User not authenticated, skipping auto-save");
+      toast.error("You must be logged in to save expenses");
       return false;
     }
-    
-    // Find the most relevant item (usually the most expensive one)
-    const mainItem = findMainItem(scanData.items);
-    if (!mainItem) {
+
+    // Make sure we have items to save
+    if (!scanResult.items || !Array.isArray(scanResult.items) || scanResult.items.length === 0) {
+      console.error("No valid items in scan result", scanResult);
       return false;
     }
+
+    // Format the date from the receipt, using today as fallback
+    const receiptDate = formatDateForStorage(scanResult.date);
     
-    // Format expense data
-    const newExpense = {
+    // Convert items to expense records
+    const expenses = scanResult.items.map((item: any) => ({
       id: uuidv4(),
       user_id: user.id,
-      description: formatDescription(mainItem.name, scanData.storeName),
-      amount: parseFloat(mainItem.amount) || 0,
-      date: formatDate(mainItem.date),
-      category: mainItem.category || 'Other',
-      payment: 'Card', // Default to card
-      receipt_url: scanData.receiptUrl || null,
-      is_recurring: false
-    };
-    
-    // Insert expense into database
-    const { error } = await supabase
-      .from('expenses')
-      .insert(newExpense);
-    
+      amount: typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount,
+      description: item.name || "Store Purchase",
+      date: receiptDate,
+      category: item.category || "Other",
+      payment: "Card", // Default to card for receipts
+      notes: scanResult.merchant ? `From: ${scanResult.merchant}` : "",
+      is_recurring: false,
+      receipt_url: scanResult.receiptUrl || null
+    }));
+
+    // Insert all expenses in one operation
+    const { error } = await supabase.from('expenses').insert(expenses);
+
     if (error) {
-      console.error("Error saving expense:", error);
+      console.error("Error saving expenses from receipt:", error);
+      toast.error("Failed to save expenses from receipt.");
       return false;
     }
-    
-    toast.success("Receipt scanned and expense added automatically");
+
+    console.log(`Successfully saved ${expenses.length} expense(s) from receipt`);
     return true;
-    
   } catch (error) {
-    console.error("Error auto-saving expense:", error);
+    console.error("Error in saveExpenseFromScan:", error);
+    toast.error("An error occurred while saving expenses from receipt.");
     return false;
   }
 }
