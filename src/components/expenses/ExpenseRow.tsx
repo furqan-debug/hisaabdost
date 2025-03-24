@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ export function ExpenseRow({
   onDelete
 }: ExpenseRowProps) {
   const isSelected = selectedExpenses.has(expense.id);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
   return (
     <TableRow>
@@ -62,6 +64,14 @@ export function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
+          {expense.receiptUrl && (
+            <ViewReceiptDialog 
+              receiptUrl={expense.receiptUrl} 
+              open={receiptDialogOpen}
+              onOpenChange={setReceiptDialogOpen}
+            />
+          )}
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -73,18 +83,7 @@ export function ExpenseRow({
                 <DropdownMenuItem
                   onSelect={(e) => {
                     e.preventDefault();
-                    const dialog = document.createElement('div');
-                    document.body.appendChild(dialog);
-                    const viewDialog = (
-                      <ViewReceiptDialog 
-                        receiptUrl={expense.receiptUrl} 
-                        open={true} 
-                        onOpenChange={() => {
-                          document.body.removeChild(dialog);
-                        }}
-                      />
-                    );
-                    // React would handle this in a real component
+                    setReceiptDialogOpen(true);
                   }}
                 >
                   <FileImage className="h-4 w-4 mr-2" />

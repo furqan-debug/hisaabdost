@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileImage, MoreHorizontal } from "lucide-react";
+import { Download, FileImage } from "lucide-react";
 
 interface ViewReceiptDialogProps {
   receiptUrl?: string;
