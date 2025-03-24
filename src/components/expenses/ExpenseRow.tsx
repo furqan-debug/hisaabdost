@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,8 @@ interface ExpenseRowProps {
   onDelete: (id: string) => void;
 }
 
-export function ExpenseRow({
+// Use memo to prevent unnecessary re-renders of rows
+export const ExpenseRow = memo(function ExpenseRow({
   expense,
   selectedExpenses,
   toggleExpenseSelection,
@@ -33,7 +34,6 @@ export function ExpenseRow({
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
-  // Use memoized functions to prevent unnecessary re-renders
   const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -52,12 +52,16 @@ export function ExpenseRow({
     onDelete(expense.id);
   }, [expense.id, onDelete]);
   
+  const handleCheckboxChange = useCallback(() => {
+    toggleExpenseSelection(expense.id);
+  }, [expense.id, toggleExpenseSelection]);
+  
   return (
     <TableRow>
       <TableCell className="w-[30px]">
         <Checkbox
           checked={isSelected}
-          onCheckedChange={() => toggleExpenseSelection(expense.id)}
+          onCheckedChange={handleCheckboxChange}
         />
       </TableCell>
       <TableCell className="font-medium">
@@ -121,4 +125,4 @@ export function ExpenseRow({
       </TableCell>
     </TableRow>
   );
-}
+});

@@ -12,18 +12,12 @@ interface ReceiptPreviewProps {
 export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
   
   // Reset states when receipt URL changes
   useEffect(() => {
     if (receiptUrl) {
       setImageLoaded(false);
       setImageError(false);
-      // Small delay to ensure UI updates
-      const timer = setTimeout(() => setIsVisible(true), 50);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
     }
   }, [receiptUrl]);
   
@@ -37,7 +31,6 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   };
   
   const handleImageError = () => {
-    console.error("Receipt preview image failed to load:", receiptUrl);
     setImageError(true);
     setImageLoaded(false);
   };
@@ -52,18 +45,16 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
             </div>
           )}
           
-          {isVisible && (
-            <img
-              src={receiptUrl}
-              alt="Receipt preview"
-              className={cn(
-                "max-h-32 w-full rounded-md border object-cover",
-                !imageLoaded && "hidden"
-              )}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-          )}
+          <img
+            src={receiptUrl}
+            alt="Receipt preview"
+            className={cn(
+              "max-h-32 w-full rounded-md border object-cover",
+              !imageLoaded && "hidden"
+            )}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
           
           {imageError && (
             <div className="h-32 rounded-md border bg-muted flex flex-col items-center justify-center gap-2">

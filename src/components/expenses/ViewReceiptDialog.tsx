@@ -26,7 +26,7 @@ export function ViewReceiptDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
+  const imageRef = useRef<HTMLImageElement>(null);
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -43,7 +43,6 @@ export function ViewReceiptDialog({
     if (isOpen) {
       setImageLoading(true);
       setImageError(false);
-      setLoadAttempts(0);
     }
   }, [isOpen]);
   
@@ -57,38 +56,16 @@ export function ViewReceiptDialog({
   }, []);
   
   const handleDownload = () => {
-    if (!receiptUrl) return;
+    if (!receiptUrl || imageError) return;
     
     try {
-      // For blob URLs, we need to fetch the data and create a new download
-      if (receiptUrl.startsWith('blob:')) {
-        fetch(receiptUrl)
-          .then(response => response.blob())
-          .then(blob => {
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = `receipt-${new Date().toISOString().split('T')[0]}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl); // Clean up
-            toast.success("Receipt downloaded successfully");
-          })
-          .catch(error => {
-            console.error("Blob download failed:", error);
-            toast.error("Failed to download receipt");
-          });
-      } else {
-        // Regular URL download
-        const link = document.createElement('a');
-        link.href = receiptUrl;
-        link.download = `receipt-${new Date().toISOString().split('T')[0]}.${receiptUrl.split('.').pop() || 'jpg'}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Receipt downloaded successfully");
-      }
+      const link = document.createElement('a');
+      link.href = receiptUrl;
+      link.download = `receipt-${new Date().toISOString().split('T')[0]}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Receipt downloaded successfully");
     } catch (error) {
       console.error("Download failed:", error);
       toast.error("Failed to download receipt");
@@ -104,21 +81,8 @@ export function ViewReceiptDialog({
 
   const handleImageError = () => {
     if (isMounted.current) {
-      console.error("Image failed to load:", receiptUrl);
       setImageError(true);
       setImageLoading(false);
-      
-      // Try to reload the image a few times (helpful for blob URLs)
-      if (loadAttempts < 2) {
-        setLoadAttempts(prev => prev + 1);
-        // Add a small delay before retrying
-        setTimeout(() => {
-          if (isMounted.current) {
-            setImageLoading(true);
-            setImageError(false);
-          }
-        }, 500);
-      }
     }
   };
   
@@ -167,9 +131,11 @@ export function ViewReceiptDialog({
               </div>
             )}
             
-            {receiptUrl && !imageError ? (
+            {!imageError ? (
+              // Use a key to force re-render when the dialog opens
               <img
-                key={`receipt-img-${loadAttempts}`}
+                key={`receipt-img-${isOpen}`}
+                ref={imageRef}
                 src={receiptUrl}
                 alt="Receipt"
                 className="max-h-full max-w-full object-contain"
@@ -184,15 +150,13 @@ export function ViewReceiptDialog({
               <div className="text-center p-4">
                 <ImageOff className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
                 <p className="text-muted-foreground">
-                  {imageError 
-                    ? "Unable to display receipt image" 
-                    : "No receipt image available"}
+                  Unable to display receipt image
                 </p>
               </div>
             )}
           </div>
           
-          {/* Custom close button to ensure proper state cleanup */}
+          {/* Custom close button with focus on proper cleanup */}
           <Button
             onClick={handleCloseDialog}
             variant="ghost"
