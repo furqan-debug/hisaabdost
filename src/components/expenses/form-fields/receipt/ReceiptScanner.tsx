@@ -91,14 +91,14 @@ export function useReceiptScanner({
           toast.info("Using local receipt parsing as a fallback");
           
           // Create a fallback response with default data
-          handleFallbackParsing(file, storageUrl, scanToast);
+          handleFallbackParsing(file, storageUrl, scanToast.toString());
           return;
         }
         
         // Check response
         if (!data) {
           console.log("No data returned from receipt scanner, using fallback");
-          handleFallbackParsing(file, storageUrl, scanToast);
+          handleFallbackParsing(file, storageUrl, scanToast.toString());
           return;
         }
 
@@ -109,19 +109,19 @@ export function useReceiptScanner({
           
           if (items.length === 0) {
             console.log("No items extracted, using fallback");
-            handleFallbackParsing(file, storageUrl, scanToast);
+            handleFallbackParsing(file, storageUrl, scanToast.toString());
             return;
           }
           
           // Process the extracted items
-          processExtractedItems(items, data.storeName, storageUrl, scanToast);
+          processExtractedItems(items, data.storeName, storageUrl, scanToast.toString());
         } else {
           console.log("Scan did not return success: true, using fallback");
-          handleFallbackParsing(file, storageUrl, scanToast);
+          handleFallbackParsing(file, storageUrl, scanToast.toString());
         }
       } catch (scanError) {
         console.error("Error during receipt scan:", scanError);
-        handleFallbackParsing(file, storageUrl, scanToast);
+        handleFallbackParsing(file, storageUrl, scanToast.toString());
       }
     } catch (error) {
       console.error("Receipt scanning error:", error);
@@ -201,7 +201,9 @@ export function useReceiptScanner({
         if (!item.name || !item.amount) return false;
         
         // Parse amount and ensure it's valid
-        const cleanAmount = item.amount.toString().replace(/[^\d.]/g, '');
+        const cleanAmount = typeof item.amount === 'string' 
+          ? item.amount.replace(/[^\d.]/g, '') 
+          : item.amount.toString();
         const amount = parseFloat(cleanAmount);
         return !isNaN(amount) && amount > 0;
       });
@@ -220,7 +222,9 @@ export function useReceiptScanner({
       // Process each valid item from the receipt and add to Supabase
       for (const item of validItems) {
         // Format the amount correctly
-        const amountStr = item.amount.toString().replace(/[^\d.]/g, '');
+        const amountStr = typeof item.amount === 'string' 
+          ? item.amount.replace(/[^\d.]/g, '') 
+          : item.amount.toString();
         const amount = parseFloat(amountStr);
         
         if (isNaN(amount) || amount <= 0) {
@@ -273,11 +277,17 @@ export function useReceiptScanner({
           date: expenseDate,
           items: validItems.map((item: any) => ({
             name: item.name,
-            amount: typeof item.amount === 'number' ? item.amount.toString() : item.amount.toString().replace(/^\$/, ''),
+            amount: typeof item.amount === 'number' 
+              ? item.amount.toString() 
+              : item.amount.toString().replace(/^\$/, ''),
             category: item.category || "Groceries"
           })),
           total: validItems.reduce((sum: number, item: any) => {
-            const amount = parseFloat(typeof item.amount === 'number' ? item.amount.toString() : item.amount.toString().replace(/[^\d.]/g, ''));
+            const amount = parseFloat(
+              typeof item.amount === 'number' 
+                ? item.amount.toString() 
+                : item.amount.toString().replace(/[^\d.]/g, '')
+            );
             return sum + (isNaN(amount) ? 0 : amount);
           }, 0).toFixed(2),
           paymentMethod: "Card" // Default payment method
@@ -293,7 +303,9 @@ export function useReceiptScanner({
         
         const extractedData: ScanResult = {
           description: firstItem.name,
-          amount: typeof firstItem.amount === 'number' ? firstItem.amount.toString() : firstItem.amount.toString().replace(/^\$/, ''),
+          amount: typeof firstItem.amount === 'number' 
+            ? firstItem.amount.toString() 
+            : firstItem.amount.toString().replace(/^\$/, ''),
           date: expenseDate,
           category: firstItem.category || "Shopping",
           paymentMethod: "Card",
