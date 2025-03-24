@@ -31,7 +31,7 @@ serve(async (req) => {
 
     console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`)
     
-    // Process the receipt image with either Google Vision or Tesseract
+    // Process the receipt image with either Google Vision or a fallback approach
     const result = await processReceipt(receiptImage);
     return new Response(
       JSON.stringify(result),
@@ -54,4 +54,3 @@ serve(async (req) => {
 
 // Import from data module
 import { generateFallbackData } from "./data/fallbackData.ts";
-

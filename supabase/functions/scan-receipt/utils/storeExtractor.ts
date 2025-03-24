@@ -1,13 +1,16 @@
 
-// Try to extract store name from the item data
-export function extractStoreName(items: any[]) {
-  // If we have items with a store property, use that
+// Extract store name from receipt data
+export function extractStoreName(items: any[]): string {
+  if (!items || items.length === 0) {
+    return "Store";
+  }
+  
+  // Try to get store name from items if available
   for (const item of items) {
-    if (item.store && item.store.trim().length > 0) {
-      return item.store.trim();
+    if (item.store && typeof item.store === 'string' && item.store.length > 1) {
+      return item.store;
     }
   }
   
-  // Default fallback
   return "Store";
 }
