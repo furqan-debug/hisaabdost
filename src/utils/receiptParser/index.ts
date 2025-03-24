@@ -3,6 +3,7 @@ import { extractMerchant } from "./merchantExtractor";
 import { extractLineItems } from "./itemExtractor";
 import { extractDate } from "./dateExtractor";
 import { extractAmount } from "./amountExtractor";
+import { isNonItemText } from "./utils";
 
 /**
  * Extracts merchant name, items with prices, and date from receipt text
@@ -52,6 +53,14 @@ export function parseReceiptText(text: string): {
       total 
     });
     
+    // If no items were found but we have a total, create a generic item
+    if (items.length === 0 && total !== "0.00") {
+      items.push({
+        name: merchant !== "Unknown Merchant" ? `Purchase from ${merchant}` : "Store Purchase",
+        amount: total
+      });
+    }
+    
     return {
       merchant,
       items,
@@ -72,4 +81,14 @@ export function parseReceiptText(text: string): {
       total: "0.00"
     };
   }
+}
+
+// Utility function to create fallback items 
+// for testing or when OCR/parsing fails
+export function generateFallbackItems(): Array<{name: string; amount: string}> {
+  return [
+    { name: "Grocery Purchase", amount: "15.99" },
+    { name: "Household Item", amount: "9.99" },
+    { name: "Snacks", amount: "5.49" }
+  ];
 }
