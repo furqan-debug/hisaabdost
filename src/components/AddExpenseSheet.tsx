@@ -37,7 +37,9 @@ const AddExpenseSheet = ({
     handleFileChange,
     handleSubmit,
     triggerFileUpload,
-    triggerCameraCapture
+    triggerCameraCapture,
+    setFileInputRef,
+    setCameraInputRef
   } = useExpenseForm({ 
     expenseToEdit, 
     onClose 
@@ -79,6 +81,8 @@ const AddExpenseSheet = ({
           onSubmit={handleSubmit}
           onFieldChange={updateField}
           onFileChange={handleFileChange}
+          setFileInputRef={setFileInputRef}
+          setCameraInputRef={setCameraInputRef}
         />
       </SheetContent>
     </Sheet>
