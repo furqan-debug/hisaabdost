@@ -34,39 +34,31 @@ export function useScanProcess({
       const formData = new FormData();
       formData.append('receipt', file);
       
-      // Get the function URL from Supabase
-      const { data: { functionUrl } } = await supabase.functions.getUrl('scan-receipt');
+      // Get the function URL
+      const functionName = 'scan-receipt';
+      const { data } = await supabase.functions.invoke(functionName, {
+        method: 'POST',
+        body: formData,
+      });
       
       // Set a timeout to detect when scanning takes too long
       const timeoutId = setTimeout(() => {
         setScanTimedOut(true);
       }, 20000); // 20 seconds timeout
       
-      // Call the edge function to process the receipt
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        body: formData,
-      });
-      
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`Error scanning receipt: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
       
       // Stop the progress animation at 99% (will be set to 100% after processing)
       clearInterval(progressInterval);
       setScanProgress(99);
       
-      if (result.error) {
-        console.warn("Scan completed with error:", result.error);
+      if (data?.error) {
+        console.warn("Scan completed with error:", data.error);
         toast.error("Couldn't read receipt clearly. Please enter details manually.");
       }
       
       // Store the result in session storage for use
-      storeResultInSession(result);
+      storeResultInSession(data);
       
       // Mark scan as complete
       setTimeout(() => {
@@ -74,7 +66,7 @@ export function useScanProcess({
         setIsScanning(false);
       }, 300);
       
-      return result;
+      return data;
     } catch (error) {
       console.error("Error scanning receipt:", error);
       setIsScanning(false);
