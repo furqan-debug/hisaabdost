@@ -7,11 +7,14 @@ import { extractAmount } from "./amountExtractor";
  */
 export function extractLineItems(lines: string[], fullText: string): Array<{name: string; amount: string}> {
   const items: Array<{name: string; amount: string}> = [];
+  console.log("Starting item extraction from", lines.length, "lines");
   
   // Focus on the middle portion of the receipt where items usually are
   // Skip first few lines (header) and last few lines (totals, footer)
   const startIndex = Math.min(5, Math.floor(lines.length * 0.15));
   const endIndex = Math.max(lines.length - 5, Math.ceil(lines.length * 0.8));
+  
+  console.log(`Processing lines from ${startIndex} to ${endIndex}`);
   
   // Common patterns to identify non-item lines
   const nonItemPatterns = [
@@ -44,6 +47,8 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
       // Clean up item name by removing quantity indicators and SKU codes
       itemName = cleanupItemName(itemName);
       
+      console.log(`Found item: "${itemName}" with price $${price}`);
+      
       // Skip if item name is too short or the price is zero
       if (itemName.length >= 2 && parseFloat(price) > 0 && !isNonItemText(itemName)) {
         items.push({
@@ -64,6 +69,7 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
         let itemName = cleanupItemName(line);
         
         if (itemName.length >= 2 && !isNonItemText(itemName)) {
+          console.log(`Found split-line item: "${itemName}" with price $${nextLinePriceMatch[1]}`);
           items.push({
             name: itemName,
             amount: nextLinePriceMatch[1].replace('$', '').trim()
@@ -76,6 +82,7 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
   
   // Second pass: more aggressive approach if first pass found very few items
   if (items.length <= 1) {
+    console.log("First pass found <= 1 items, trying more aggressive pattern matching");
     for (let i = startIndex; i < endIndex; i++) {
       const line = lines[i].trim();
       
@@ -94,6 +101,7 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
         if (itemName.length >= 2 && parseFloat(price) > 0 && 
             !nonItemPatterns.some(pattern => itemName.match(pattern)) &&
             !isNonItemText(itemName)) {
+          console.log(`Found item (aggressive): "${itemName}" with price $${price}`);
           items.push({
             name: itemName,
             amount: price
@@ -105,15 +113,19 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
   
   // If we still found no items, create at least one item based on the total
   if (items.length === 0) {
+    console.log("No items found, using total amount");
     // Look for total amount
     const totalAmount = extractAmount(lines, fullText);
     if (totalAmount !== "0.00") {
+      console.log(`Creating generic item with total amount: $${totalAmount}`);
       items.push({
         name: "Store Purchase",
         amount: totalAmount
       });
     }
   }
+  
+  console.log(`Final item count: ${items.length}`);
   
   // Remove duplicates and sort by price (largest first)
   return deduplicateItems(items);

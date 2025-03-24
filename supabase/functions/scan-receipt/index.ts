@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 // Default CORS headers for the function
@@ -38,7 +39,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          items: generateSampleData(), // Return sample data so front-end can still work
+          items: generateFallbackData(), 
           storeName: "Sample Store"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -47,14 +48,17 @@ serve(async (req) => {
     
     // Process receipt with Google Vision API
     try {
+      console.log("Starting OCR processing with Vision API")
       const extractedData = await processReceiptWithOCR(receiptImage, VISION_API_KEY)
-      console.log("Extracted data from Vision API:", JSON.stringify(extractedData).substring(0, 200) + "...")
+      console.log("Extracted data from Vision API:", extractedData.length > 0 
+        ? `Found ${extractedData.length} items` 
+        : "No items found")
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          items: extractedData.length > 0 ? extractedData : generateSampleData(), 
-          storeName: extractedData.length > 0 ? "Store" : "Sample Store"
+          items: extractedData.length > 0 ? extractedData : generateFallbackData(), 
+          storeName: extractedData.length > 0 ? extractStoreName(extractedData) : "Sample Store"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -63,7 +67,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          items: generateSampleData(),
+          items: generateFallbackData(),
           storeName: "Sample Store" 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,15 +81,28 @@ serve(async (req) => {
       JSON.stringify({ 
         success: false, 
         error: 'Failed to process receipt: ' + (error.message || "Unknown error"),
-        items: generateSampleData() // Return sample data so front-end can still work
+        items: generateFallbackData() // Return fallback data so front-end can still work
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
 
+// Try to extract store name from the item data
+function extractStoreName(items) {
+  // If we have items with a store property, use that
+  for (const item of items) {
+    if (item.store && item.store.trim().length > 0) {
+      return item.store.trim();
+    }
+  }
+  
+  // Default fallback
+  return "Store";
+}
+
 // Process receipt with Google Cloud Vision API
-async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
+async function processReceiptWithOCR(receiptImage, apiKey) {
   console.log("Processing receipt with Google Vision API")
 
   try {
@@ -134,8 +151,8 @@ async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
       console.error(`Google Vision API error: ${response.status} ${response.statusText}`)
       console.error('Error details:', errorText)
       
-      // Return sample data if the API call fails
-      return generateSampleData()
+      // Return fallback data if the API call fails
+      return generateFallbackData()
     }
     
     const responseData = await response.json()
@@ -146,12 +163,12 @@ async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
         !responseData.responses[0].textAnnotations || 
         responseData.responses[0].textAnnotations.length === 0) {
       console.error("No text annotations in Google Vision response")
-      return generateSampleData()
+      return generateFallbackData()
     }
 
     // Extract the full text from the first annotation
     const extractedText = responseData.responses[0].textAnnotations[0].description
-    console.log("Extracted text sample:", extractedText.substring(0, 200))
+    console.log("Extracted text sample:", extractedText.substring(0, 200) + "...")
 
     // Parse the text into a structured format with only items, prices, and date
     const parsedItems = parseReceiptText(extractedText)
@@ -160,17 +177,24 @@ async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
     return parsedItems
   } catch (error) {
     console.error("Error processing with Vision API:", error)
-    return generateSampleData()
+    return generateFallbackData()
   }
 }
 
 // Parse receipt text into a structured format
-function parseReceiptText(text: string) {
+function parseReceiptText(text) {
+  console.log("Starting receipt text parsing")
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+  console.log(`Parsing ${lines.length} lines of text`)
+  
   const result = []
   
   // Extract date from receipt
   const date = extractDate(text) || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  console.log("Extracted date:", date)
+  
+  // Try to extract store name
+  const storeName = extractStoreName(lines)
   
   // Look for item patterns in each line
   for (let i = 0; i < lines.length; i++) {
@@ -192,22 +216,99 @@ function parseReceiptText(text: string) {
           date: date,
           name: capitalizeFirstLetter(name),
           amount: formatPrice(price),
-          category: guessCategory(name)
+          category: guessCategory(name),
+          store: storeName
         })
       }
     }
   }
   
-  // If we didn't find any items, return sample data
+  // If we didn't find any items using standard patterns, try more aggressive pattern matching
   if (result.length === 0) {
-    return generateSampleData()
+    console.log("No items found with standard patterns, trying aggressive matching")
+    return aggressiveItemExtraction(lines, date, storeName)
   }
   
   return result
 }
 
+// Try to extract store name from the receipt
+function extractStoreName(lines) {
+  // Look at the first few lines for store name
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const line = lines[i].trim()
+    
+    // Skip very short lines
+    if (line.length < 3) continue
+    
+    // Skip lines with common non-store patterns
+    if (line.match(/receipt|invoice|tel|phone|fax|date|time|\d{2}\/\d{2}\/\d{4}|thank|you/i)) continue
+    
+    // Potential store name - uppercase words are often store names at the top
+    if (line.toUpperCase() === line && line.length > 3) {
+      return capitalizeFirstLetter(line.toLowerCase())
+    }
+    
+    // Another pattern - first line that's not a date, number, etc.
+    if (!line.match(/^\d/) && !line.match(/^[A-Z]{1,3}$/) && line.length > 3) {
+      return capitalizeFirstLetter(line)
+    }
+  }
+  
+  return "Store"  // Default if no store name found
+}
+
+// More aggressive item extraction for difficult receipts
+function aggressiveItemExtraction(lines, date, storeName) {
+  const items = []
+  
+  // Consider only the middle portion of the receipt
+  const startIdx = Math.floor(lines.length * 0.2)
+  const endIdx = Math.floor(lines.length * 0.8)
+  
+  for (let i = startIdx; i < endIdx; i++) {
+    const line = lines[i].trim()
+    
+    // Skip very short lines
+    if (line.length < 3) continue
+    
+    // Look for price patterns anywhere
+    const priceMatch = line.match(/(\d+\.\d{2})/)
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[1])
+      
+      // Get potential item name by removing the price
+      let name = line.replace(priceMatch[0], '').trim()
+      
+      // Clean up the name
+      name = name.replace(/^\d+\s*x\s*/, '')  // Remove "2 x " prefix
+            .replace(/^\d+\s+/, '')           // Remove "2 " prefix
+            .replace(/^[#*]+\s*/, '')         // Remove "### " prefix
+            .replace(/\s{2,}/g, ' ')          // Remove multiple spaces
+      
+      if (name.length >= 2 && price > 0 && !shouldSkipLine(name)) {
+        items.push({
+          date: date,
+          name: capitalizeFirstLetter(name),
+          amount: formatPrice(price),
+          category: guessCategory(name),
+          store: storeName
+        })
+      }
+    }
+  }
+  
+  // If still no items found, create at least one generic item
+  if (items.length === 0) {
+    console.log("No items found with aggressive matching, using fallback item")
+    return generateFallbackData()
+  }
+  
+  return items
+}
+
 // Extract item name and price from a line
-function extractItemAndPrice(line: string): { name: string, price: number } | null {
+function extractItemAndPrice(line) {
   // Pattern: item followed by price at the end of line
   const priceAtEndMatch = line.match(/(.+?)\s+\$?(\d+\.\d{2})(?:\s|$)/)
   if (priceAtEndMatch) {
@@ -228,7 +329,7 @@ function extractItemAndPrice(line: string): { name: string, price: number } | nu
 }
 
 // Clean up item name
-function cleanItemName(name: string): string {
+function cleanItemName(name) {
   return name
     .replace(/^\d+\s*[xX]\s*/, '') // Remove quantity indicators like "2 x"
     .replace(/^\d+\s+/, '')         // Remove quantity numbers like "2 "
@@ -238,7 +339,7 @@ function cleanItemName(name: string): string {
 }
 
 // Extract date from receipt text
-function extractDate(text: string): string | null {
+function extractDate(text) {
   // Common date patterns in receipts
   const datePatterns = [
     // MM/DD/YYYY
@@ -258,7 +359,7 @@ function extractDate(text: string): string | null {
         
         if (pattern.toString().includes('Jan|Feb|Mar')) {
           // Handle month name patterns
-          const monthMap: { [key: string]: number } = {
+          const monthMap = {
             'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
             'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
           }
@@ -319,7 +420,7 @@ function extractDate(text: string): string | null {
 }
 
 // Check if a line should be skipped (not an item)
-function shouldSkipLine(line: string): boolean {
+function shouldSkipLine(line) {
   const lowerLine = line.toLowerCase()
   
   // Skip common non-item lines
@@ -339,12 +440,11 @@ function shouldSkipLine(line: string): boolean {
          lowerLine.includes('transaction') ||
          lowerLine.includes('thank you') ||
          lowerLine.includes('welcome') ||
-         lowerLine.includes('store') ||
          lowerLine.match(/^\d+$/) !== null // Just numbers
 }
 
-// Generate sample data for fallback
-function generateSampleData() {
+// Generate fallback data for testing or when OCR fails
+function generateFallbackData() {
   return [
     { 
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
@@ -368,17 +468,17 @@ function generateSampleData() {
 }
 
 // Format price to match required output
-function formatPrice(price: number): string {
+function formatPrice(price) {
   return `$${price.toFixed(2)}`
 }
 
 // Capitalize the first letter of a string
-function capitalizeFirstLetter(str: string): string {
+function capitalizeFirstLetter(str) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 // Guess category based on item name
-function guessCategory(itemName: string): string {
+function guessCategory(itemName) {
   const lowerName = itemName.toLowerCase()
   
   // Food categories

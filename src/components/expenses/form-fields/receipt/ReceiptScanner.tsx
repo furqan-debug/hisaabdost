@@ -57,11 +57,17 @@ export function useReceiptScanner({
       // First upload to Supabase storage to get a permanent URL
       let storageUrl = receiptUrl;
       if (!receiptUrl.includes('supabase.co')) {
-        const uploadedUrl = await uploadReceipt(file);
-        if (uploadedUrl) {
-          storageUrl = uploadedUrl;
-        } else {
-          console.log("Failed to upload receipt to storage, continuing with local URL");
+        try {
+          const uploadedUrl = await uploadReceipt(file);
+          if (uploadedUrl) {
+            storageUrl = uploadedUrl;
+            console.log("Receipt uploaded to storage:", storageUrl);
+          } else {
+            console.log("Failed to upload receipt to storage, continuing with local URL");
+          }
+        } catch (uploadError) {
+          console.error("Error uploading receipt:", uploadError);
+          // Continue with local URL if upload fails
         }
       }
       
@@ -120,7 +126,8 @@ export function useReceiptScanner({
         // Process each item from the receipt and add to Supabase
         for (const item of items) {
           // Format the amount correctly
-          const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
+          const amountStr = item.amount.replace(/[^\d.]/g, '');
+          const amount = parseFloat(amountStr);
           
           if (isNaN(amount) || amount <= 0) {
             console.log("Skipping item with invalid amount:", item);
@@ -181,8 +188,8 @@ export function useReceiptScanner({
             date: items[0].date || new Date().toLocaleDateString(),
             items: items.map((item: any) => ({
               name: item.name,
-              amount: item.amount.replace('$', ''),
-              category: item.category
+              amount: item.amount.replace(/^\$/, ''),
+              category: item.category || "Groceries"
             })),
             total: items.reduce((sum: number, item: any) => {
               const amount = parseFloat(item.amount.replace(/[^\d.]/g, ''));
@@ -201,7 +208,7 @@ export function useReceiptScanner({
           
           const extractedData: ScanResult = {
             description: firstItem.name,
-            amount: firstItem.amount.replace('$', ''),
+            amount: firstItem.amount.replace(/^\$/, ''),
             date: firstItem.date ? convertDateFormat(firstItem.date) : new Date().toISOString().split('T')[0],
             category: firstItem.category || "Shopping",
             paymentMethod: "Card",
