@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileImage } from "lucide-react";
+import { Download, FileImage, MoreHorizontal } from "lucide-react";
 
 interface ViewReceiptDialogProps {
   receiptUrl?: string;
@@ -36,6 +36,8 @@ export function ViewReceiptDialog({
     }
   };
 
+  if (!receiptUrl) return null;
+
   return (
     <>
       {/* Only show the button when used without external control */}
@@ -51,7 +53,7 @@ export function ViewReceiptDialog({
       )}
       
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-3xl h-[80vh]">
+        <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex justify-between items-center">
               <span>Receipt</span>
@@ -61,12 +63,12 @@ export function ViewReceiptDialog({
               </Button>
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto flex-1 relative h-full">
+          <div className="overflow-auto flex-1 relative flex items-center justify-center bg-black/5 rounded-md p-4">
             {receiptUrl && (
               <img
                 src={receiptUrl}
                 alt="Receipt"
-                className="w-full h-auto object-contain"
+                className="max-h-full max-w-full object-contain"
               />
             )}
           </div>

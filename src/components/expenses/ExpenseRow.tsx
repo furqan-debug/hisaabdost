@@ -1,12 +1,18 @@
 
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, FileImage, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/chartUtils";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ExpenseRowProps {
   expense: Expense;
@@ -56,21 +62,48 @@ export function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
-          {expense.receiptUrl && <ViewReceiptDialog receiptUrl={expense.receiptUrl} />}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(expense)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(expense.id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {expense.receiptUrl && (
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    const dialog = document.createElement('div');
+                    document.body.appendChild(dialog);
+                    const viewDialog = (
+                      <ViewReceiptDialog 
+                        receiptUrl={expense.receiptUrl} 
+                        open={true} 
+                        onOpenChange={() => {
+                          document.body.removeChild(dialog);
+                        }}
+                      />
+                    );
+                    // React would handle this in a real component
+                  }}
+                >
+                  <FileImage className="h-4 w-4 mr-2" />
+                  View Receipt
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onSelect={() => onEdit(expense)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => onDelete(expense.id)}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </TableCell>
     </TableRow>

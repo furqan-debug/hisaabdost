@@ -13,12 +13,12 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif)$/i);
   
   return (
-    <div className="relative group">
+    <div className="relative group overflow-hidden rounded-md">
       {isImage ? (
         <img
           src={receiptUrl}
           alt="Receipt preview"
-          className="max-h-32 rounded-md border object-cover w-full"
+          className="max-h-32 w-full rounded-md border object-cover"
         />
       ) : (
         <div className="h-32 rounded-md border bg-muted flex items-center justify-center">

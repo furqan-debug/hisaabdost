@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ScanLine, Loader2 } from "lucide-react";
 
@@ -17,6 +16,7 @@ export function ScanButton({
   disabled,
   autoSave = false
 }: ScanButtonProps) {
+  // This is a simplified version that we're keeping for compatibility
   return (
     <Button
       type="button"
@@ -28,12 +28,12 @@ export function ScanButton({
       {isScanning ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Scanning...
+          Processing...
         </>
       ) : (
         <>
           <ScanLine className="mr-2 h-4 w-4" />
-          {scanTimedOut ? "Retry Scan" : `Scan Receipt${autoSave ? " & Save" : ""}`}
+          {scanTimedOut ? "Retry" : `Process Receipt${autoSave ? " & Save" : ""}`}
         </>
       )}
     </Button>
