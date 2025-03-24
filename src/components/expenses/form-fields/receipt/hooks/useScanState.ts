@@ -6,12 +6,16 @@ export function useScanState() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanTimedOut, setScanTimedOut] = useState(false);
+  const [scanError, setScanError] = useState<string | undefined>(undefined);
+  const [statusMessage, setStatusMessage] = useState<string | undefined>(undefined);
 
   // Start scan function
   const startScan = useCallback(() => {
     setIsScanning(true);
     setScanProgress(0);
     setScanTimedOut(false);
+    setScanError(undefined);
+    setStatusMessage(undefined);
   }, []);
 
   // End scan function
@@ -23,6 +27,7 @@ export function useScanState() {
   const updateProgress = useCallback((progress: number, message?: string) => {
     setScanProgress(progress);
     if (message) {
+      setStatusMessage(message);
       console.log(message);
     }
   }, []);
@@ -30,6 +35,12 @@ export function useScanState() {
   // Timeout scan function
   const timeoutScan = useCallback(() => {
     setScanTimedOut(true);
+    setIsScanning(false);
+  }, []);
+  
+  // Error scan function
+  const errorScan = useCallback((errorMessage: string) => {
+    setScanError(errorMessage);
     setIsScanning(false);
   }, []);
 
@@ -40,9 +51,14 @@ export function useScanState() {
     setScanProgress,
     scanTimedOut,
     setScanTimedOut,
+    scanError,
+    setScanError,
+    statusMessage,
+    setStatusMessage,
     startScan,
     endScan,
     updateProgress,
-    timeoutScan
+    timeoutScan,
+    errorScan
   };
 }

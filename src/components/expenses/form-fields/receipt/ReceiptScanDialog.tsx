@@ -43,6 +43,8 @@ export function ReceiptScanDialog({
     isScanning,
     scanProgress,
     scanTimedOut,
+    scanError,
+    statusMessage,
     handleScanReceipt
   } = useScanReceipt({
     file,
@@ -71,14 +73,18 @@ export function ReceiptScanDialog({
           <ScanProgress
             isScanning={isScanning}
             progress={scanProgress}
+            statusMessage={statusMessage}
           />
           
-          <ScanTimeoutMessage scanTimedOut={scanTimedOut} />
+          <ScanTimeoutMessage 
+            scanTimedOut={scanTimedOut}
+            scanError={scanError}
+          />
           
           <DialogActions
             onCleanup={onCleanup}
             isScanning={isScanning}
-            scanTimedOut={scanTimedOut}
+            scanTimedOut={scanTimedOut || !!scanError}
             handleScanReceipt={handleScanReceipt}
             disabled={!file}
             autoSave={autoSave}

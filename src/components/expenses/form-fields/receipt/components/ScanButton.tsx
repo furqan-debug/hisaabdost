@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ScanLine, Loader2 } from "lucide-react";
 
@@ -16,7 +17,6 @@ export function ScanButton({
   disabled,
   autoSave = false
 }: ScanButtonProps) {
-  // This is a simplified version that we're keeping for compatibility
   return (
     <Button
       type="button"

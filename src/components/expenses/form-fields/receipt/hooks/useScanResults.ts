@@ -8,6 +8,7 @@ import { saveReceiptExtraction } from '@/services/receiptService';
 interface UseScanResultsProps {
   isScanning: boolean;
   scanTimedOut: boolean;
+  scanError?: string;
   autoSave: boolean;
   onCapture?: (expenseDetails: {
     description: string;
@@ -23,6 +24,7 @@ interface UseScanResultsProps {
 export function useScanResults({
   isScanning,
   scanTimedOut,
+  scanError,
   autoSave,
   onCapture,
   setOpen,
@@ -31,7 +33,7 @@ export function useScanResults({
   // Effect to handle scan results when scanning completes
   useEffect(() => {
     // This effect runs when scanning is complete
-    if (!isScanning && !scanTimedOut) {
+    if (!isScanning && !scanTimedOut && !scanError) {
       // Check for last scan result
       try {
         const lastScanResultJson = sessionStorage.getItem('lastScanResult');
@@ -46,20 +48,28 @@ export function useScanResults({
             // Process scan results for the expense form
             processScanResults(lastScanResult, autoSave, onCapture, setOpen);
             
+            // Successful scan toast
+            toast.success("Receipt scanned successfully!");
+            
             // Clear the stored result after processing
             sessionStorage.removeItem('lastScanResult');
+          } else {
+            toast.warning("Receipt scanned, but no items were detected.");
           }
         }
       } catch (error) {
         console.error("Error processing scan results:", error);
+        toast.error("Error processing scan results.");
       }
     }
     
-    // Handle timeout case
+    // Handle error cases
     if (scanTimedOut) {
-      toast.error("Receipt scanning took too long. Please try again or enter details manually.");
+      toast.error("Receipt scanning took too long. Please try again with a clearer image.");
+    } else if (scanError) {
+      toast.error(scanError);
     }
-  }, [isScanning, scanTimedOut, autoSave, onCapture, setOpen]);
+  }, [isScanning, scanTimedOut, scanError, autoSave, onCapture, setOpen]);
 
   // Effect for cleanup when unmounting
   useEffect(() => {

@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
 import { ScanButton } from "./ScanButton";
 
 interface DialogActionsProps {
@@ -21,11 +20,13 @@ export function DialogActions({
   autoSave = false
 }: DialogActionsProps) {
   return (
-    <DialogFooter className="w-full flex justify-between sm:justify-between">
+    <div className="flex w-full gap-2">
       <Button
         type="button"
         variant="outline"
         onClick={onCleanup}
+        disabled={isScanning}
+        className="flex-1"
       >
         Cancel
       </Button>
@@ -37,6 +38,6 @@ export function DialogActions({
         disabled={disabled}
         autoSave={autoSave}
       />
-    </DialogFooter>
+    </div>
   );
 }

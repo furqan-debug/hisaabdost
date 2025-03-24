@@ -3,6 +3,7 @@ import { useCallback, useEffect } from "react";
 import { useScanState } from "./useScanState";
 import { useScanProcess } from "./useScanProcess";
 import { useScanResults } from "./useScanResults";
+import { toast } from "sonner";
 
 interface UseScanReceiptProps {
   file: File | null;
@@ -28,28 +29,30 @@ export function useScanReceipt({
   // Use the scan state hook for managing state
   const { 
     isScanning, 
-    setIsScanning,
     scanProgress, 
-    setScanProgress,
     scanTimedOut,
-    setScanTimedOut,
+    scanError,
+    statusMessage,
     startScan,
     endScan,
     updateProgress,
-    timeoutScan 
+    timeoutScan,
+    errorScan
   } = useScanState();
 
   // Use the process scan hook for actually processing the scan
   const processScan = useScanProcess({
     updateProgress,
     endScan,
-    timeoutScan
+    timeoutScan,
+    errorScan
   });
 
   // Handle scan results
   useScanResults({
     isScanning,
     scanTimedOut,
+    scanError,
     autoSave,
     onCapture,
     setOpen,
@@ -58,7 +61,23 @@ export function useScanReceipt({
 
   // Handle scan button click
   const handleScanReceipt = useCallback(async () => {
-    if (!file) return;
+    if (!file) {
+      toast.error("No receipt file selected.");
+      return;
+    }
+    
+    // Validate file size
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error("File is too large. Please use an image under 10MB.");
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please use JPEG, PNG, HEIC or PDF.");
+      return;
+    }
 
     try {
       startScan();
@@ -72,14 +91,16 @@ export function useScanReceipt({
       
     } catch (error) {
       console.error("Error in handleScanReceipt:", error);
-      endScan();
+      errorScan("An unexpected error occurred during scanning.");
     }
-  }, [file, startScan, processScan, endScan]);
+  }, [file, startScan, processScan, errorScan]);
 
   return {
     isScanning,
     scanProgress,
     scanTimedOut,
+    scanError,
+    statusMessage,
     handleScanReceipt
   };
 }
