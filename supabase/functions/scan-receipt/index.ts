@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 // Default CORS headers for the function
@@ -49,6 +48,7 @@ serve(async (req) => {
     // Process receipt with Google Vision API
     try {
       const extractedData = await processReceiptWithOCR(receiptImage, VISION_API_KEY)
+      console.log("Extracted data from Vision API:", JSON.stringify(extractedData).substring(0, 200) + "...")
       
       return new Response(
         JSON.stringify({ 

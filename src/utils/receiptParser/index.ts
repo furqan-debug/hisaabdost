@@ -13,9 +13,12 @@ export function parseReceiptText(text: string): {
   merchant: string; 
   items: Array<{name: string; amount: string}>;
   date: string;
+  total: string;
 } {
   // Split into lines for easier processing
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  console.log("Parsing receipt text with", lines.length, "lines");
   
   // Extract merchant name (usually at the top of the receipt)
   const merchant = extractMerchant(lines);
@@ -26,9 +29,20 @@ export function parseReceiptText(text: string): {
   // Extract date
   const date = extractDate(text, lines);
   
+  // Extract total amount (as fallback if individual items not found)
+  const total = extractAmount(lines, text);
+  
+  console.log("Parsed receipt data:", { 
+    merchant, 
+    itemsCount: items.length, 
+    date, 
+    total 
+  });
+  
   return {
     merchant,
     items,
-    date
+    date,
+    total
   };
 }

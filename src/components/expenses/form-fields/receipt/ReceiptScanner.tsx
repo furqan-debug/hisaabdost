@@ -60,9 +60,12 @@ export function useReceiptScanner({
         const uploadedUrl = await uploadReceipt(file);
         if (uploadedUrl) {
           storageUrl = uploadedUrl;
+        } else {
+          console.log("Failed to upload receipt to storage, continuing with local URL");
         }
       }
       
+      // Create form data for the scan-receipt function
       const formData = new FormData();
       formData.append('receipt', file);
 
@@ -128,6 +131,7 @@ export function useReceiptScanner({
           let expenseDate = new Date().toISOString().split('T')[0]; // Default to today
           if (item.date) {
             try {
+              // Try to parse the date - it could be in various formats
               const date = new Date(item.date);
               if (!isNaN(date.getTime())) {
                 expenseDate = date.toISOString().split('T')[0];
@@ -136,6 +140,8 @@ export function useReceiptScanner({
               console.log("Error parsing date from receipt item:", e);
             }
           }
+          
+          console.log(`Adding expense: ${item.name}, $${amount}, date: ${expenseDate}`);
           
           // Insert the expense into Supabase
           const { error: insertError } = await supabase.from('expenses').insert([{
