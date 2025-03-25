@@ -10,7 +10,7 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
   if (!scanTimedOut && !scanError) return null;
   
   return (
-    <div className="text-sm text-amber-500 flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-md w-full">
+    <div className="text-sm text-amber-500 flex items-center gap-2 bg-amber-950/30 dark:bg-amber-950/30 p-3 rounded-md w-full">
       {scanTimedOut ? (
         <>
           <RefreshCw className="h-4 w-4 shrink-0" />

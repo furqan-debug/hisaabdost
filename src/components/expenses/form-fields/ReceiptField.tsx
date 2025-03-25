@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
@@ -110,6 +109,13 @@ export function ReceiptField({
     setReceiptFile(null);
     setProcessingStarted(false); // Allow new uploads after cleanup
   };
+  
+  // Handle manual entry after scan fails
+  const handleManualEntry = () => {
+    // Just close the dialog but keep the receipt image
+    setScanDialogOpen(false);
+    setProcessingStarted(false);
+  };
 
   return (
     <div className="space-y-2">
@@ -194,6 +200,7 @@ export function ReceiptField({
           onCapture={onCapture}
           autoSave={autoProcess} // Match autoSave to autoProcess
           autoProcess={autoProcess}
+          onManualEntry={handleManualEntry}
         />
       )}
     </div>

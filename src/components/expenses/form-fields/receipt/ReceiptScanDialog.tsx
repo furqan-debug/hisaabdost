@@ -22,6 +22,7 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
+  onManualEntry?: () => void;
 }
 
 export function ReceiptScanDialog({
@@ -32,7 +33,8 @@ export function ReceiptScanDialog({
   onCleanup,
   onCapture,
   autoSave = true, // Set default to true to always auto-save expenses
-  autoProcess = true
+  autoProcess = true,
+  onManualEntry
 }: ReceiptScanDialogProps) {
   const {
     isScanning,
@@ -82,6 +84,16 @@ export function ReceiptScanDialog({
       setOpen(false);
     }
   };
+  
+  // Handle switching to manual entry
+  const handleManualEntry = () => {
+    if (onManualEntry) {
+      resetScanState();
+      onCleanup();
+      setOpen(false);
+      onManualEntry();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -125,6 +137,7 @@ export function ReceiptScanDialog({
             autoSave={autoSave}
             scanProgress={scanProgress}
             statusMessage={statusMessage}
+            onManualEntry={handleManualEntry}
           />
         </div>
       </DialogContent>

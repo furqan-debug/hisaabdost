@@ -34,7 +34,7 @@ export function useScanProcess({
         // Add a timestamp to prevent caching issues with identical receipts
         formData.append('timestamp', Date.now().toString());
         
-        const { data, error } = await supabase.functions.invoke('scan-receipt', {
+        const { data, error, status } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
           headers: {
@@ -43,6 +43,20 @@ export function useScanProcess({
         });
         
         clearTimeout(timeoutId);
+        
+        // Handle explicit timeout response
+        if (status === 408) {
+          console.error("Scan timed out on server side");
+          timeoutScan();
+          
+          // If server returned fallback data despite timeout, use it
+          if (data && data.items && data.items.length > 0) {
+            console.log("Server returned fallback data despite timeout:", data);
+            return data;
+          }
+          
+          return null;
+        }
         
         if (error) {
           console.error("Scan completed with error:", error);
@@ -59,12 +73,20 @@ export function useScanProcess({
         console.log("Raw scan data received:", data);
         updateProgress(70, "Analyzing receipt data...");
         
+        // Check if the API returned an error but with fallback data
+        if (data.error || data.warning) {
+          console.warn("Scan completed with warning:", data.error || data.warning);
+          // Continue with fallback data but show warning
+          toast.warning(data.warning || "Receipt processed with limited accuracy");
+        }
+        
         // Process the data to ensure it has the expected structure
         const processedData = {
           items: Array.isArray(data.items) ? data.items : [],
           merchant: data.storeName || data.merchant || "Store",
           date: data.date || new Date().toISOString().split('T')[0],
-          total: data.total || "0.00"
+          total: data.total || "0.00",
+          receiptUrl: data.receiptUrl
         };
         
         // Ensure items array exists and has at least one entry
