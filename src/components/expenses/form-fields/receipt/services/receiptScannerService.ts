@@ -38,9 +38,12 @@ export async function scanReceipt({
   
   try {
     console.log(`Starting receipt scan for ${file.name} (${file.size} bytes)`);
+    console.log(`Using receipt URL: ${receiptUrl || 'None provided'}`);
     
-    // Create form data for the request
+    // Create form data for the request - IMPORTANT: this must be multipart/form-data
     const formData = new FormData();
+    
+    // Append the file with the correct field name 'receipt'
     formData.append('receipt', file);
     
     // If we have a stored receipt URL, add it to the form data
@@ -51,7 +54,7 @@ export async function scanReceipt({
     // Add enhanced processing flag
     formData.append('enhanced', 'true');
     
-    // Add a timestamp to prevent caching
+    // Add a timestamp to prevent caching issues
     formData.append('timestamp', Date.now().toString());
     
     // Report progress at start
@@ -64,13 +67,18 @@ export async function scanReceipt({
       console.warn("Receipt scan request timed out");
     }, 60000); // 60 second timeout
     
+    console.log("Making API request to scan receipt...");
+    
     // Make the API request to the Supabase Edge Function
+    // Use direct fetch to ensure FormData is correctly sent
     const response = await fetch('https://skmzvfihekgmxtjcsdmg.supabase.co/functions/v1/scan-receipt', {
       method: 'POST',
-      body: formData,
+      body: formData, // FormData automatically sets the correct content-type
       signal: controller.signal,
       headers: {
-        // No custom headers needed as FormData sets the content-type automatically
+        // Do not set Content-Type manually, the browser will set it correctly with boundary
+        // Just add any custom headers needed
+        'X-Client-Info': 'receipt-scanner',
       }
     }).catch(error => {
       // Check if the error is due to timeout/abort
@@ -85,9 +93,12 @@ export async function scanReceipt({
     
     onProgress?.(30, "Processing receipt image...");
     
+    // Debug information about the response
+    console.log("Scan API response status:", response.status);
+    
     // Check for timeout response status
     if (response.status === 408) {
-      console.error("Receipt scanning timed out");
+      console.error("Receipt scanning timed out (status code 408)");
       onTimeout?.();
       return { success: false, isTimeout: true, error: "Processing timed out" };
     }

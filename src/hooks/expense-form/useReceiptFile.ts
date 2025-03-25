@@ -37,29 +37,44 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     setIsUploading(true);
     
     try {
+      // Create the storage bucket if it doesn't exist yet
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.find(bucket => bucket.name === 'receipts')) {
+        await supabase.storage.createBucket('receipts', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
+        });
+      }
+      
       // Create a unique file path for this user and receipt
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const filePath = `receipts/${fileName}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
       
-      // Upload the file to Supabase Storage
+      // Upload the file to Supabase Storage with public access
       const { data, error } = await supabase.storage
         .from('receipts')
         .upload(filePath, file, {
           upsert: true,
           contentType: file.type,
+          cacheControl: '3600'
         });
       
       if (error) {
+        console.error("Upload error:", error);
         throw error;
       }
       
-      // Get the public URL
+      // Get the public URL with a timestamp to prevent caching issues
       const { data: urlData } = supabase.storage
         .from('receipts')
         .getPublicUrl(filePath);
       
-      return urlData.publicUrl;
+      // Add cache-busting parameter to the URL
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      console.log("Receipt uploaded successfully to:", publicUrl);
+      
+      return publicUrl;
     } catch (error) {
       console.error("Error uploading to Supabase:", error);
       toast.error('Failed to upload receipt. Please try again.');
@@ -100,8 +115,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       
       // If upload was successful, update the form with the permanent URL
       if (supabaseUrl) {
+        console.log("Updating receipt URL from blob to Supabase URL");
         updateField('receiptUrl', supabaseUrl);
-        console.log("Receipt uploaded successfully to:", supabaseUrl);
       }
     } catch (error) {
       console.error("Error processing receipt file:", error);

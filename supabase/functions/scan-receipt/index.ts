@@ -27,22 +27,35 @@ serve(async (req) => {
       )
     }
     
-    // Make sure we have a multipart form data request
+    // Get content type from headers
     const contentType = req.headers.get('content-type') || ''
+    console.log(`Request content type: ${contentType}`)
+    
+    // Make sure we have a multipart form data request
     if (!contentType.includes('multipart/form-data')) {
+      console.error("Invalid content type:", contentType)
       return new Response(
-        JSON.stringify({ error: "Content-Type must be multipart/form-data" }),
+        JSON.stringify({ 
+          error: "Content-Type must be multipart/form-data",
+          receivedContentType: contentType
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
     
     // Parse the multipart form data
     const formData = await req.formData()
+    console.log("Form data fields:", [...formData.keys()])
+    
     const receiptFile = formData.get('receipt')
     
     if (!receiptFile || !(receiptFile instanceof File)) {
+      console.error("Missing or invalid receipt file")
       return new Response(
-        JSON.stringify({ error: "No receipt file provided" }),
+        JSON.stringify({ 
+          error: "No receipt file provided", 
+          formDataKeys: [...formData.keys()].join(', ')
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -80,7 +93,9 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || "An error occurred while processing the receipt",
         success: false,
-        isTimeout: false
+        isTimeout: false,
+        errorType: error.name,
+        errorStack: error.stack
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
