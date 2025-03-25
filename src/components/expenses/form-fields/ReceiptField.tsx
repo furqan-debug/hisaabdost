@@ -1,5 +1,5 @@
+
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useState, useRef, useEffect } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
