@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import Index from "./pages/Index";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "next-themes";
@@ -99,8 +100,9 @@ const AppWithProviders = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/auth/verify" element={<AuthCallback />} />
+              <Route path="/" element={<Index />} />
               <Route 
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <Layout>
