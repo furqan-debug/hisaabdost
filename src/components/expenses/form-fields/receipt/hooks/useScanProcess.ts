@@ -2,7 +2,6 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { saveExpenseFromScan } from '../services/expenseDbService';
 
 interface UseScanProcessProps {
   updateProgress: (progress: number, message?: string) => void;
@@ -51,35 +50,41 @@ export function useScanProcess({
           return null;
         }
         
+        console.log("Raw scan data received:", data);
         updateProgress(70, "Analyzing receipt data...");
         
-        // Store the result in session storage for use
-        if (data) {
-          try {
-            // Ensure data.items is an array
-            if (!data.items || !Array.isArray(data.items)) {
-              data.items = [{ name: "Store Purchase", amount: data.total || "0.00" }];
-            }
-            
-            // Store result for usage after scan completes
-            sessionStorage.setItem('lastScanResult', JSON.stringify(data));
-            
-            // For auto-saving we'll let the useScanResults hook handle it
-            // as it has access to the complete scan state
-            updateProgress(100, "Receipt processed successfully!");
-          } catch (err) {
-            console.error("Error storing scan result:", err);
-            errorScan("Error saving scan results. Please try again.");
-            return null;
-          }
+        // Process the data to ensure it has the expected structure
+        const processedData = {
+          items: Array.isArray(data.items) ? data.items : [],
+          merchant: data.storeName || data.merchant || "Store",
+          date: data.date || new Date().toISOString().split('T')[0],
+          total: data.total || "0.00"
+        };
+        
+        // Ensure items array exists and has at least one entry
+        if (!processedData.items || processedData.items.length === 0) {
+          // Add a fallback item if none were detected
+          processedData.items = [{ 
+            name: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
+            amount: processedData.total || "0.00",
+            date: processedData.date
+          }];
         }
+        
+        // Store result for usage after scan completes
+        sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
+        console.log("Stored scan result:", processedData);
+        
+        // For auto-saving we'll let the useScanResults hook handle it
+        // as it has access to the complete scan state
+        updateProgress(100, "Receipt processed successfully!");
         
         // Mark scan as complete
         setTimeout(() => {
           endScan();
         }, 300);
         
-        return data;
+        return processedData;
       } catch (error) {
         clearTimeout(timeoutId);
         throw error; // rethrow to be caught by outer try/catch

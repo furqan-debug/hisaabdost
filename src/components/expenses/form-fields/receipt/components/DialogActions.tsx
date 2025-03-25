@@ -25,13 +25,19 @@ export function DialogActions({
   scanProgress = 0,
   statusMessage
 }: DialogActionsProps) {
+  // The cancel button should be disabled during scanning or auto-processing
+  const isCancelDisabled = isScanning || isAutoProcessing;
+  
+  // The scan button should be disabled during scanning, auto-processing, or if no file
+  const isScanDisabled = disabled || isScanning || isAutoProcessing;
+  
   return (
     <div className="flex w-full gap-2">
       <Button
         type="button"
         variant="outline"
         onClick={onCleanup}
-        disabled={isScanning || isAutoProcessing}
+        disabled={isCancelDisabled}
         className="flex-1"
       >
         Cancel
@@ -41,7 +47,7 @@ export function DialogActions({
         isScanning={isScanning}
         scanTimedOut={scanTimedOut}
         onClick={handleScanReceipt}
-        disabled={disabled}
+        disabled={isScanDisabled}
         autoSave={autoSave}
         isAutoProcessing={isAutoProcessing}
         scanProgress={scanProgress}

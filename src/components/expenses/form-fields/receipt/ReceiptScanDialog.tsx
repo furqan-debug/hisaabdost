@@ -1,11 +1,10 @@
-
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { ScanProgress } from "./components/ScanProgress";
 import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -51,17 +50,26 @@ export function ReceiptScanDialog({
     setOpen
   });
   
-  // Automatically start processing when dialog opens with a file
+  const hasAutoProcessed = useRef(false);
+  
   useEffect(() => {
-    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError) {
-      // Add a small delay to ensure UI is ready
+    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError && !hasAutoProcessed.current) {
+      hasAutoProcessed.current = true;
+      
       const timer = setTimeout(() => {
+        console.log("Auto-processing receipt...");
         autoProcessReceipt();
       }, 300);
       
       return () => clearTimeout(timer);
     }
   }, [open, file, autoProcess, isScanning, isAutoProcessing, scanTimedOut, scanError, autoProcessReceipt]);
+  
+  useEffect(() => {
+    if (!open) {
+      hasAutoProcessed.current = false;
+    }
+  }, [open]);
 
   const handleClose = () => {
     if (!isScanning && !isAutoProcessing) {
@@ -73,7 +81,6 @@ export function ReceiptScanDialog({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) {
-        // Only allow closing if not currently scanning
         if (!isScanning && !isAutoProcessing) {
           handleClose();
         }

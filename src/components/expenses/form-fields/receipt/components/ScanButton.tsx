@@ -30,12 +30,15 @@ export function ScanButton({
     return `Process Receipt${autoSave ? " & Save" : ""}`;
   };
 
+  // Determine button variant based on state
+  const variant = scanTimedOut ? "destructive" : "default";
+
   return (
     <Button
       type="button"
-      variant="default"
+      variant={variant}
       onClick={onClick}
-      disabled={disabled || isScanning || isAutoProcessing}
+      disabled={disabled}
       className="flex-1"
     >
       {(isScanning || isAutoProcessing) ? (

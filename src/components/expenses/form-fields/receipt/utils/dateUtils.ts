@@ -15,10 +15,21 @@ export function formatDate(dateText: string): string {
       return dateText;
     }
     
+    // Handle MM/DD/YYYY format
+    const mmddyyyyMatch = dateText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (mmddyyyyMatch) {
+      const month = parseInt(mmddyyyyMatch[1]).toString().padStart(2, '0');
+      const day = parseInt(mmddyyyyMatch[2]).toString().padStart(2, '0');
+      const year = mmddyyyyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Try to parse as a Date object
     const date = new Date(dateText);
     
     // Check if the date is valid
     if (isNaN(date.getTime())) {
+      console.warn("Invalid date format:", dateText);
       return new Date().toISOString().split('T')[0];
     }
     
@@ -61,7 +72,7 @@ export function extractDateFromText(text: string): string | null {
         const date = new Date(dateStr);
         
         if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0];
+          return formatDate(dateStr);
         }
       } catch (e) {
         // Continue to next pattern if this one fails

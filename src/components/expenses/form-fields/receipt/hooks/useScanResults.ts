@@ -1,8 +1,6 @@
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { formatDate } from '../utils/dateUtils';
-import { calculateTotal } from '../utils/formatUtils';
 import { processScanResults } from '../utils/processScanUtils';
 
 interface UseScanResultsProps {
@@ -32,23 +30,37 @@ export function useScanResults({
 }: UseScanResultsProps) {
   // Effect to handle scan results when scanning completes
   useEffect(() => {
-    // This effect runs when scanning is complete
+    // This effect runs when scanning is complete (not scanning, not timed out, no error)
     if (!isScanning && !scanTimedOut && !scanError) {
       // Check for last scan result
       try {
         const lastScanResultJson = sessionStorage.getItem('lastScanResult');
         if (lastScanResultJson) {
           const lastScanResult = JSON.parse(lastScanResultJson);
-          console.log("Processing scan result:", lastScanResult);
+          console.log("Processing scan result from session:", lastScanResult);
           
           if (lastScanResult.items && lastScanResult.items.length > 0) {
             // Process scan results - this handles both auto-save and form update modes
-            const result = processScanResults(lastScanResult, autoSave, onCapture, setOpen);
-            
-            // Clear the stored result after processing
-            setTimeout(() => {
-              sessionStorage.removeItem('lastScanResult');
-            }, 1500);
+            processScanResults(lastScanResult, autoSave, onCapture, setOpen)
+              .then(success => {
+                console.log("Scan processing result:", success);
+                
+                // Clear the stored result after processing
+                setTimeout(() => {
+                  sessionStorage.removeItem('lastScanResult');
+                }, 1500);
+                
+                if (!success && autoSave) {
+                  toast.error("Failed to save expenses from receipt");
+                }
+              })
+              .catch(error => {
+                console.error("Error in scan processing:", error);
+                toast.error("Error processing scan results");
+                
+                // Clear the stored result
+                sessionStorage.removeItem('lastScanResult');
+              });
           } else {
             toast.warning("Receipt scanned, but no items were detected.");
             
