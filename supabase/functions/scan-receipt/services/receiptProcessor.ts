@@ -1,6 +1,6 @@
 
 import { preprocessImage } from "../utils/imageProcessor.ts";
-import { processReceiptWithOCR, processReceiptWithTesseract } from "./ocrProcessor.ts";
+import { processReceiptWithOCR, processReceiptWithOpenRouter, processReceiptWithTesseract } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
 import { extractDate } from "../utils/dateExtractor.ts";
 import { cleanItemText, isLikelyItemLine, itemExtractionPatterns } from "../utils/items/itemPatterns.ts";
@@ -8,6 +8,8 @@ import { guessCategoryFromItemName } from "../utils/items/itemCategories.ts";
 
 // Get Google Vision API key from environment variable
 const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY');
+// Get OpenRouter API key from environment variable
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 
 // Process receipt and extract information
 export async function processReceipt(receiptImage: File, enhancedProcessing = false) {
@@ -31,8 +33,14 @@ export async function processReceipt(receiptImage: File, enhancedProcessing = fa
         extractedText = ocrResult.text;
         receiptDate = ocrResult.date || receiptDate;
         storeName = ocrResult.merchant || storeName;
+      } else if (OPENROUTER_API_KEY) {
+        console.log("Google Vision API key not found, using OpenRouter for OCR");
+        const openRouterResult = await processReceiptWithOpenRouter(preprocessedImage);
+        extractedText = openRouterResult.text;
+        receiptDate = openRouterResult.date || receiptDate;
+        storeName = openRouterResult.merchant || storeName;
       } else {
-        console.log("No Google Vision API key configured, using simplified OCR");
+        console.log("No OCR API keys configured, using simplified OCR");
         const tesseractResult = await processReceiptWithTesseract(preprocessedImage);
         extractedText = tesseractResult.text;
         receiptDate = tesseractResult.date || receiptDate;
