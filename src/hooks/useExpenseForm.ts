@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export type { ExpenseFormData } from './expense-form/types';
 
-export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) {
+export function useExpenseForm({ expenseToEdit, onClose, onAddExpense }: UseExpenseFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   
@@ -79,7 +79,8 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     expenseToEdit,
     onClose,
     formData,
-    resetForm
+    resetForm,
+    onAddExpense // Pass onAddExpense to useExpenseSubmit
   });
   
   // Functions to trigger file upload or camera capture

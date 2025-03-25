@@ -16,7 +16,8 @@ export function useExpenseSubmit({
   expenseToEdit, 
   onClose, 
   formData, 
-  resetForm 
+  resetForm,
+  onAddExpense 
 }: UseExpenseSubmitProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,23 +43,60 @@ export function useExpenseSubmit({
       };
 
       let error;
+      let newExpense: Expense | null = null;
+
       if (expenseToEdit) {
         const { error: updateError } = await supabase
           .from('expenses')
           .update(expenseData)
           .eq('id', expenseToEdit.id);
         error = updateError;
+        
+        if (!error) {
+          newExpense = {
+            ...expenseToEdit,
+            amount: parseFloat(formData.amount),
+            description: formData.description,
+            date: formData.date,
+            category: formData.category,
+            paymentMethod: formData.paymentMethod,
+            notes: formData.notes,
+            isRecurring: formData.isRecurring,
+            receiptUrl: formData.receiptUrl
+          };
+        }
       } else {
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
           .from('expenses')
-          .insert([expenseData]);
+          .insert([expenseData])
+          .select('id')
+          .single();
         error = insertError;
+        
+        if (!error && data) {
+          newExpense = {
+            id: data.id,
+            amount: parseFloat(formData.amount),
+            description: formData.description,
+            date: formData.date,
+            category: formData.category,
+            paymentMethod: formData.paymentMethod,
+            notes: formData.notes || "",
+            isRecurring: formData.isRecurring,
+            receiptUrl: formData.receiptUrl || ""
+          };
+        }
       }
 
       if (error) throw error;
 
       await queryClient.invalidateQueries({ queryKey: ['expenses'] });
       await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+
+      // Notify parent about new/updated expense if callback is provided
+      if (onAddExpense && newExpense) {
+        onAddExpense(newExpense);
+      }
 
       toast({
         title: expenseToEdit ? "Expense Updated" : "Expense Added",

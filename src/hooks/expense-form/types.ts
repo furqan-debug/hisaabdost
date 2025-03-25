@@ -16,6 +16,7 @@ export interface ExpenseFormData {
 export interface UseExpenseFormProps {
   expenseToEdit?: Expense;
   onClose?: () => void;
+  onAddExpense?: (expense: Expense) => void; // Added onAddExpense property
 }
 
 export interface ScanResult {
