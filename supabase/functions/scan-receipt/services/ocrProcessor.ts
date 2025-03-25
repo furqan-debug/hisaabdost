@@ -1,10 +1,9 @@
-
 import { extractDate } from "../utils/dateExtractor.ts";
 import { extractStoreName } from "../utils/storeExtractor.ts";
 
-// Process receipt with Google Cloud Vision API
+// Process receipt with OpenAI Vision API
 export async function processReceiptWithOCR(receiptImage: File, apiKey: string, enhancedProcessing = false) {
-  console.log("Processing receipt with Google Vision API");
+  console.log("Processing receipt with OpenAI Vision API");
 
   try {
     // Convert image to base64
@@ -12,99 +11,105 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string, 
     const uint8Array = new Uint8Array(arrayBuffer);
     const base64Image = btoa(String.fromCharCode.apply(null, [...uint8Array]));
     
-    // Prepare request for Google Cloud Vision API
+    // Get the OpenAI API key from environment variables if not provided
+    const OPENAI_API_KEY = apiKey || Deno.env.get("OPENAI_API_KEY");
+    
+    if (!OPENAI_API_KEY) {
+      console.error("OpenAI API key not found");
+      return await processReceiptWithOpenRouter(receiptImage);
+    }
+    
+    // Create the system prompt
+    const systemPrompt = `
+      You are a receipt OCR expert. Extract text content from the receipt image.
+      Then identify:
+      1. Store or merchant name
+      2. Date of purchase (in YYYY-MM-DD format)
+      3. List of purchased items with their prices
+      4. Total amount
+      Return only the extracted text.
+    `;
+    
+    // Prepare request for OpenAI API
     const requestBody = {
-      requests: [
+      model: "gpt-4o",
+      messages: [
         {
-          image: {
-            content: base64Image
-          },
-          features: [
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: [
             {
-              type: "TEXT_DETECTION",
-              maxResults: 100
+              type: "text",
+              text: "Extract all text content from this receipt image:"
             },
-            // Add document text detection for enhanced processing
-            ...(enhancedProcessing ? [{
-              type: "DOCUMENT_TEXT_DETECTION",
-              maxResults: 100
-            }] : [])
-          ],
-          imageContext: {
-            languageHints: ["en"],
-            // Add additional context for enhanced processing
-            ...(enhancedProcessing ? {
-              textDetectionParams: {
-                enableTextDetectionConfidenceScore: true
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
               }
-            } : {})
-          }
+            }
+          ]
         }
       ]
     };
 
-    // Send request to Google Cloud Vision API
+    // Send request to OpenAI API
     const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify(requestBody)
       }
     );
 
-    console.log(`Google Vision API response status: ${response.status}`);
+    console.log(`OpenAI API response status: ${response.status}`);
     
     // Handle API response errors
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Google Vision API error: ${response.status} ${response.statusText}`);
+      console.error(`OpenAI API error: ${response.status} ${response.statusText}`);
       console.error('Error details:', errorText);
       
-      // If Google Vision API fails, try with the OpenRouter approach
+      // If OpenAI API fails, try with the OpenRouter approach
       console.log("Falling back to OpenRouter for OCR");
       return await processReceiptWithOpenRouter(receiptImage);
     }
     
     const responseData = await response.json();
     
-    // Check if we got a successful response with text annotations
-    if (!responseData.responses || 
-        !responseData.responses[0] || 
-        !responseData.responses[0].textAnnotations || 
-        responseData.responses[0].textAnnotations.length === 0) {
-      console.error("No text annotations in Google Vision response");
+    // Check if we got a successful response with content
+    if (!responseData.choices || 
+        !responseData.choices[0] || 
+        !responseData.choices[0].message || 
+        !responseData.choices[0].message.content) {
+      console.error("No content in OpenAI response");
       return await processReceiptWithOpenRouter(receiptImage);
     }
 
-    // Extract the full text from the first annotation
-    const extractedText = responseData.responses[0].textAnnotations[0].description;
+    // Extract the text from the response
+    const extractedText = responseData.choices[0].message.content;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + "...");
     
-    // If enhanced processing is enabled, try to extract more structured data
-    let documentText = extractedText;
-    if (enhancedProcessing && 
-        responseData.responses[0].fullTextAnnotation && 
-        responseData.responses[0].fullTextAnnotation.text) {
-      documentText = responseData.responses[0].fullTextAnnotation.text;
-      console.log("Using enhanced document text extraction");
-    }
-    
     // Extract date and merchant from the text
-    const date = extractDate(documentText);
-    const merchant = extractStoreName(documentText.split('\n'));
+    const date = extractDate(extractedText, extractedText.split('\n'));
+    const merchant = extractStoreName(extractedText.split('\n'));
     
     return {
-      text: documentText,
+      text: extractedText,
       date,
       merchant,
       success: true
     };
   } catch (error) {
-    console.error("Error processing with Vision API:", error);
-    // Fallback to OpenRouter approach if Vision API fails
+    console.error("Error processing with OpenAI API:", error);
+    // Fallback to OpenRouter approach if OpenAI API fails
     return await processReceiptWithOpenRouter(receiptImage);
   }
 }

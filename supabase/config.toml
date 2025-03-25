@@ -3,3 +3,6 @@ project_id = "bklfolfivjonzpprytkz"
 
 [storage.buckets]
 receipts = { public = true }
+
+[secrets]
+OPENAI_API_KEY = "your_openai_api_key_placeholder"
