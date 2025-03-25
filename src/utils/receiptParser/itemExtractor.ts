@@ -2,7 +2,7 @@
 import { isNonItemText } from "./utils";
 import { extractAmount } from "./amountExtractor";
 import { findItemSectionStart, findItemSectionEnd } from "./extraction/textSections";
-import { extractItemsWithPricePatterns } from "./extraction/patternMatching";
+import { extractItemsWithPricePatterns, extractSupermarketItems } from "./extraction/patternMatching";
 import { extractItemsAggressively, extractItemsWithNumberPatterns } from "./extraction/aggressiveExtraction";
 import { createFallbackItem } from "./extraction/fallbackExtraction";
 import { deduplicateItems } from "./extraction/itemDeduplication";
@@ -20,24 +20,34 @@ export function extractLineItems(lines: string[], fullText: string): Array<{name
   
   console.log(`Processing lines from ${startIndex} to ${endIndex}`);
   
-  // First pass: Look for clear price patterns
-  const standardItems = extractItemsWithPricePatterns(lines, startIndex, endIndex);
-  items.push(...standardItems);
+  // First pass: Check if this is a supermarket receipt and use specialized extraction
+  const supermarketItems = extractSupermarketItems(lines, startIndex, endIndex);
+  if (supermarketItems.length > 0) {
+    console.log("Identified as supermarket receipt, using specialized extraction");
+    items.push(...supermarketItems);
+  } else {
+    // Second pass: Look for clear price patterns with normal extraction
+    const standardItems = extractItemsWithPricePatterns(lines, startIndex, endIndex);
+    items.push(...standardItems);
+  }
   
-  // Second pass: more aggressive approach if first pass found very few items
+  // Third pass: more aggressive approach if first passes found very few items
   if (items.length <= 1) {
+    console.log("Few items found, using aggressive extraction");
     const aggressiveItems = extractItemsAggressively(lines, startIndex, endIndex);
     items.push(...aggressiveItems);
   }
   
-  // Third pass: look for number-only patterns that might be prices
+  // Fourth pass: look for number-only patterns that might be prices
   if (items.length === 0) {
+    console.log("No items found, trying number pattern extraction");
     const numberPatternItems = extractItemsWithNumberPatterns(lines, startIndex, endIndex);
     items.push(...numberPatternItems);
   }
   
   // If we still found no items, create at least one item based on the total
   if (items.length === 0) {
+    console.log("Creating fallback item based on total");
     const fallbackItems = createFallbackItem(lines, fullText);
     items.push(...fallbackItems);
   }

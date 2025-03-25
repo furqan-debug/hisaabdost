@@ -6,6 +6,7 @@ import { useReceiptFile } from './expense-form/useReceiptFile';
 import { useReceiptScanner } from './expense-form/useReceiptScanner';
 import { useExpenseSubmit } from './expense-form/useExpenseSubmit';
 import { toast } from "sonner";
+import { formatSafeAmount, formatSafeDate, guessCategoryFromDescription } from '@/components/expenses/form-fields/receipt/utils/formatUtils';
 
 export type { ExpenseFormData } from './expense-form/types';
 
@@ -80,7 +81,7 @@ export function useExpenseForm({ expenseToEdit, onClose, onAddExpense }: UseExpe
     onClose,
     formData,
     resetForm,
-    onAddExpense // Pass onAddExpense to useExpenseSubmit
+    onAddExpense
   });
   
   // Functions to trigger file upload or camera capture
@@ -113,25 +114,36 @@ export function useExpenseForm({ expenseToEdit, onClose, onAddExpense }: UseExpe
     category: string;
     paymentMethod: string;
   }) => {
+    console.log("Receipt scan completed with details:", expenseDetails);
+    
+    // Format and validate the data before updating the form
+    const formattedDetails = {
+      description: expenseDetails.description || "Store Purchase",
+      amount: formatSafeAmount(expenseDetails.amount || "0.00"),
+      date: formatSafeDate(expenseDetails.date || new Date().toISOString().split('T')[0]),
+      category: expenseDetails.category || guessCategoryFromDescription(expenseDetails.description) || "Other",
+      paymentMethod: expenseDetails.paymentMethod || "Card"
+    };
+    
     // Update form with extracted data
-    if (expenseDetails.description) {
-      updateField('description', expenseDetails.description);
+    if (formattedDetails.description) {
+      updateField('description', formattedDetails.description);
     }
     
-    if (expenseDetails.amount) {
-      updateField('amount', expenseDetails.amount);
+    if (formattedDetails.amount) {
+      updateField('amount', formattedDetails.amount);
     }
     
-    if (expenseDetails.date) {
-      updateField('date', expenseDetails.date);
+    if (formattedDetails.date) {
+      updateField('date', formattedDetails.date);
     }
     
-    if (expenseDetails.category) {
-      updateField('category', expenseDetails.category);
+    if (formattedDetails.category) {
+      updateField('category', formattedDetails.category);
     }
     
-    if (expenseDetails.paymentMethod) {
-      updateField('paymentMethod', expenseDetails.paymentMethod);
+    if (formattedDetails.paymentMethod) {
+      updateField('paymentMethod', formattedDetails.paymentMethod);
     }
     
     // Show toast confirmation

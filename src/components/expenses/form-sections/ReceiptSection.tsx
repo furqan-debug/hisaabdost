@@ -1,5 +1,6 @@
 
 import { ReceiptField } from "../form-fields/ReceiptField";
+import { useEffect, useState } from "react";
 
 interface ReceiptSectionProps {
   receiptUrl: string;
@@ -27,6 +28,13 @@ export function ReceiptSection({
   onCapture,
   isManualForm = true // Default to true for backward compatibility
 }: ReceiptSectionProps) {
+  const [hasReceipt, setHasReceipt] = useState(!!receiptUrl);
+  
+  // Update hasReceipt state when receiptUrl changes
+  useEffect(() => {
+    setHasReceipt(!!receiptUrl);
+  }, [receiptUrl]);
+  
   return (
     <div>
       <h3 className="text-base font-medium mb-2">Receipt</h3>
@@ -46,6 +54,11 @@ export function ReceiptSection({
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">
           Uploading receipt...
+        </p>
+      )}
+      {hasReceipt && !isUploading && (
+        <p className="text-xs text-green-600 mt-2">
+          Receipt successfully uploaded
         </p>
       )}
     </div>
