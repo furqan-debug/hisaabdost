@@ -1,15 +1,15 @@
 
 import { Button } from "@/components/ui/button";
-import { ScanButton } from "./ScanButton";
+import { RefreshCcw, AlertCircle, Check, X, Pencil } from "lucide-react";
 
 interface DialogActionsProps {
   onCleanup: () => void;
   isScanning: boolean;
+  isAutoProcessing: boolean;
   scanTimedOut: boolean;
   handleScanReceipt: () => void;
   disabled: boolean;
   autoSave?: boolean;
-  isAutoProcessing?: boolean;
   scanProgress?: number;
   statusMessage?: string;
   onManualEntry?: () => void;
@@ -18,58 +18,101 @@ interface DialogActionsProps {
 export function DialogActions({
   onCleanup,
   isScanning,
+  isAutoProcessing,
   scanTimedOut,
   handleScanReceipt,
   disabled,
   autoSave = false,
-  isAutoProcessing = false,
   scanProgress = 0,
   statusMessage,
   onManualEntry
 }: DialogActionsProps) {
-  // The cancel button should be disabled during scanning or auto-processing
-  const isCancelDisabled = isScanning || isAutoProcessing;
+  const isComplete = scanProgress === 100 && !isScanning && !isAutoProcessing && !scanTimedOut;
   
-  // The scan button should only be disabled if no file or currently scanning/processing
-  // For retry cases (scanTimedOut), we want to enable the button even if disabled=true
-  const isScanDisabled = (disabled && !scanTimedOut) || isScanning || isAutoProcessing;
+  if (isScanning || isAutoProcessing) {
+    return (
+      <div className="flex justify-end w-full">
+        {/* Show cancel button only when automatic processing is happening */}
+        {isAutoProcessing && (
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={onCleanup}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+        )}
+      </div>
+    );
+  }
+  
+  if (isComplete) {
+    return (
+      <div className="flex justify-end w-full">
+        <Button
+          type="button"
+          variant="default"
+          onClick={onCleanup}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Check className="mr-2 h-4 w-4" />
+          {autoSave ? "Expenses Saved" : "Complete"}
+        </Button>
+      </div>
+    );
+  }
   
   return (
-    <div className="flex flex-col w-full gap-3">
-      {/* Show error message when scan failed with option to go to manual entry */}
-      {(scanTimedOut || disabled) && onManualEntry && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onManualEntry}
-          className="w-full"
-        >
-          Switch to Manual Entry
-        </Button>
+    <div className="flex flex-wrap gap-2 w-full">
+      {scanTimedOut ? (
+        <>
+          <Button
+            type="button"
+            variant="default"
+            onClick={handleScanReceipt}
+            disabled={disabled}
+            className="flex-1"
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Retry Scan
+          </Button>
+          
+          {onManualEntry && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onManualEntry}
+              className="flex-1"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Switch to Manual Entry
+            </Button>
+          )}
+        </>
+      ) : (
+        <>
+          <Button
+            type="button"
+            variant="default"
+            onClick={handleScanReceipt}
+            disabled={disabled || isScanning}
+            className="flex-1"
+          >
+            {statusMessage ? statusMessage : "Scan Receipt"}
+          </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCleanup}
+            className="flex-shrink-0"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Close
+          </Button>
+        </>
       )}
-      
-      <div className="flex w-full gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCleanup}
-          disabled={isCancelDisabled}
-          className="flex-1"
-        >
-          Cancel
-        </Button>
-        
-        <ScanButton
-          isScanning={isScanning}
-          scanTimedOut={scanTimedOut}
-          onClick={handleScanReceipt}
-          disabled={isScanDisabled}
-          autoSave={autoSave}
-          isAutoProcessing={isAutoProcessing}
-          scanProgress={scanProgress}
-          statusMessage={statusMessage}
-        />
-      </div>
     </div>
   );
 }
