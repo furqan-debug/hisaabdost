@@ -24,7 +24,7 @@ export async function listUserReceipts(userId: string) {
       .list(folderPath);
       
     if (error) {
-      if (error.statusCode === 404) {
+      if (error.message && error.message.includes("The resource was not found")) {
         console.error(`Bucket "${bucketName}" not found`);
         return [];
       }
@@ -64,7 +64,7 @@ export async function checkFileExists(filePath: string) {
       .list(folderPath);
       
     if (error) {
-      if (error.statusCode === 404) {
+      if (error.message && error.message.includes("The resource was not found")) {
         console.error(`Bucket "${bucketName}" not found`);
         return false;
       }
@@ -125,6 +125,38 @@ export async function checkReceiptsBucketExists() {
     }
   } catch (error) {
     console.error("Error checking if bucket exists:", error);
+    return false;
+  }
+}
+
+/**
+ * Creates the receipts bucket if it doesn't exist
+ * @returns Boolean indicating success
+ */
+export async function createReceiptsBucket() {
+  try {
+    // First check if bucket already exists
+    const exists = await checkReceiptsBucketExists();
+    if (exists) {
+      console.log(`Bucket "${bucketName}" already exists`);
+      return true;
+    }
+    
+    // Create the bucket
+    const { error } = await supabase.storage.createBucket(bucketName, {
+      public: true,
+      fileSizeLimit: 5242880, // 5MB limit
+    });
+    
+    if (error) {
+      console.error(`Error creating "${bucketName}" bucket:`, error);
+      return false;
+    }
+    
+    console.log(`Successfully created "${bucketName}" bucket`);
+    return true;
+  } catch (error) {
+    console.error(`Error creating "${bucketName}" bucket:`, error);
     return false;
   }
 }

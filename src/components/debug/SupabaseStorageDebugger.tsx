@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
-import { listUserReceipts, checkFileExists, getFileUrl, ensureReceiptsBucketExists } from "@/utils/testSupabaseStorage";
+import { listUserReceipts, checkFileExists, getFileUrl, checkReceiptsBucketExists, createReceiptsBucket } from "@/utils/testSupabaseStorage";
 import { supabase } from "@/integrations/supabase/client";
 
 export function SupabaseStorageDebugger() {
@@ -29,7 +29,7 @@ export function SupabaseStorageDebugger() {
   }, [user]);
 
   const checkBucketStatus = async () => {
-    const result = await ensureReceiptsBucketExists();
+    const result = await checkReceiptsBucketExists();
     setBucketStatus(result);
   };
 
@@ -72,6 +72,17 @@ export function SupabaseStorageDebugger() {
     setUploadResult(null);
     
     try {
+      // First check if bucket exists, create if it doesn't
+      const bucketExists = await checkReceiptsBucketExists();
+      if (!bucketExists) {
+        const created = await createReceiptsBucket();
+        if (!created) {
+          setUploadResult("Error: Failed to create receipts bucket");
+          setLoading(false);
+          return;
+        }
+      }
+      
       // Generate a unique filename
       const fileName = `test-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
       const fileExt = testFile.name.split('.').pop() || 'jpg';
@@ -101,6 +112,15 @@ export function SupabaseStorageDebugger() {
     }
   };
 
+  const handleCreateBucket = async () => {
+    setLoading(true);
+    const created = await createReceiptsBucket();
+    if (created) {
+      setBucketStatus(true);
+    }
+    setLoading(false);
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto my-4">
       <CardHeader>
@@ -121,14 +141,26 @@ export function SupabaseStorageDebugger() {
               {bucketStatus === null ? 'Unknown' : 
                bucketStatus ? 'Receipts bucket exists' : 'Receipts bucket missing'}
             </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={checkBucketStatus} 
-              disabled={loading}
-            >
-              Check
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={checkBucketStatus} 
+                disabled={loading}
+              >
+                Check
+              </Button>
+              {!bucketStatus && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleCreateBucket}
+                  disabled={loading}
+                >
+                  Create Bucket
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 

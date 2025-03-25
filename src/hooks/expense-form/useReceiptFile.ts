@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
+import { checkReceiptsBucketExists, createReceiptsBucket } from "@/utils/testSupabaseStorage";
 
 interface UseReceiptFileProps {
   formData: ExpenseFormData;
@@ -53,6 +54,15 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     setIsUploading(true);
     
     try {
+      // Check if the receipts bucket exists
+      const bucketExists = await checkReceiptsBucketExists();
+      if (!bucketExists) {
+        // Don't try to create the bucket automatically from here
+        // It should be created by an admin using the debugger tool
+        toast.error('Receipt storage is not configured. Please contact support.');
+        return null;
+      }
+      
       // Create a unique file path for this user and receipt
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -68,8 +78,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         });
       
       if (error) {
-        // If the error is a 404 Not Found, it likely means the bucket doesn't exist
-        if (error.statusCode === 404) {
+        // Check if the error message indicates the bucket doesn't exist
+        if (error.message && error.message.includes("The resource was not found")) {
           toast.error('Receipt storage is not configured. Please contact support.');
           return null;
         }
