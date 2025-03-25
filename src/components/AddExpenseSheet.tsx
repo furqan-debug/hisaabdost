@@ -29,7 +29,7 @@ const AddExpenseSheet = ({
   onClose,
   open,
   onOpenChange,
-  initialCaptureMode = 'manual',
+  initialCaptureMode = 'upload', // Default to auto-upload mode
   initialFile = null
 }: AddExpenseSheetProps) => {
   const [showScanDialog, setShowScanDialog] = useState(false);
@@ -58,24 +58,18 @@ const AddExpenseSheet = ({
     if (open && !expenseToEdit) {
       if (initialFile) {
         // For upload/camera modes with a file, we need to auto-process
-        if (initialCaptureMode === 'upload' || initialCaptureMode === 'camera') {
-          // Create a preview URL for the dialog
-          const previewUrl = URL.createObjectURL(initialFile);
-          setFilePreviewUrl(previewUrl);
-          
-          // Process the file for form
-          processReceiptFile(initialFile);
-          
-          // Show the scan dialog
-          setShowScanDialog(true);
-        } 
-        // For manual mode with a file, just process it for the form
-        else if (initialCaptureMode === 'manual') {
-          processReceiptFile(initialFile);
-        }
+        // Create a preview URL for the dialog
+        const previewUrl = URL.createObjectURL(initialFile);
+        setFilePreviewUrl(previewUrl);
+        
+        // Process the file for form
+        processReceiptFile(initialFile);
+        
+        // Always show scan dialog if we have a file
+        setShowScanDialog(true);
       }
     }
-  }, [open, expenseToEdit, initialFile, initialCaptureMode, processReceiptFile]);
+  }, [open, expenseToEdit, initialFile, processReceiptFile]);
 
   // Clean up preview URL when closing
   useEffect(() => {
@@ -130,8 +124,8 @@ const AddExpenseSheet = ({
         </SheetContent>
       </Sheet>
 
-      {/* Separate receipt scan dialog for auto-processing */}
-      {initialFile && (initialCaptureMode === 'upload' || initialCaptureMode === 'camera') && (
+      {/* Always enable auto-processing for receipts */}
+      {initialFile && (
         <ReceiptScanDialog
           file={initialFile}
           previewUrl={filePreviewUrl}
@@ -141,6 +135,7 @@ const AddExpenseSheet = ({
           onCapture={handleScanComplete}
           autoSave={true}
           autoProcess={true}
+          onManualEntry={() => setShowScanDialog(false)}
         />
       )}
     </>

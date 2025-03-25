@@ -27,7 +27,7 @@ export function ReceiptField({
   setFileInputRef,
   setCameraInputRef,
   onCapture,
-  autoProcess = false
+  autoProcess = true
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -76,10 +76,8 @@ export function ReceiptField({
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Always open scan dialog if we have a file and autoProcess is enabled
-      if (autoProcess) {
-        setScanDialogOpen(true);
-      }
+      // Always open scan dialog if we have a file
+      setScanDialogOpen(true);
       
       // Call the original onFileChange to handle storage
       onFileChange(e);
@@ -143,27 +141,25 @@ export function ReceiptField({
           receiptUrl={receiptUrl}
           onUpload={handleUpload}
           onCapture={isMobile ? handleCameraCapture : undefined}
-          onRetry={autoProcess ? handleRetryScan : undefined}
+          onRetry={receiptFile ? handleRetryScan : undefined}
           showCameraButton={isMobile}
-          showRetryButton={autoProcess && !!receiptFile}
+          showRetryButton={!!receiptFile}
           isProcessing={processingStarted}
         />
       </div>
       
-      {/* Scan Dialog - only shown when autoProcess is true */}
-      {autoProcess && (
-        <ReceiptScanDialog
-          file={receiptFile}
-          previewUrl={filePreviewUrl}
-          open={scanDialogOpen}
-          setOpen={setScanDialogOpen}
-          onCleanup={handleCleanup}
-          onCapture={onCapture}
-          autoSave={autoProcess}
-          autoProcess={autoProcess}
-          onManualEntry={handleManualEntry}
-        />
-      )}
+      {/* Scan Dialog - always shown for automatic processing */}
+      <ReceiptScanDialog
+        file={receiptFile}
+        previewUrl={filePreviewUrl}
+        open={scanDialogOpen}
+        setOpen={setScanDialogOpen}
+        onCleanup={handleCleanup}
+        onCapture={onCapture}
+        autoSave={true}
+        autoProcess={true}
+        onManualEntry={handleManualEntry}
+      />
     </div>
   );
 }

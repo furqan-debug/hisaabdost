@@ -23,7 +23,7 @@ export function useScanReceipt({
   file, 
   onCleanup, 
   onCapture, 
-  autoSave = false,
+  autoSave = true,
   setOpen 
 }: UseScanReceiptProps) {
   const {
@@ -67,14 +67,12 @@ export function useScanReceipt({
           onCapture(result.items[0]);
         }
         
-        // Save to database if autoSave is enabled
-        if (autoSave) {
-          await saveExpenseFromScan({
-            items: result.items,
-            merchant: result.merchant,
-            date: result.date
-          });
-        }
+        // Always save to database
+        await saveExpenseFromScan({
+          items: result.items,
+          merchant: result.merchant,
+          date: result.date
+        });
         
         // Success - close dialog
         setTimeout(() => {
@@ -93,13 +91,12 @@ export function useScanReceipt({
           if (onCapture && result.items[0]) {
             onCapture(result.items[0]);
             
-            if (autoSave) {
-              await saveExpenseFromScan({
-                items: result.items,
-                merchant: result.merchant,
-                date: result.date
-              });
-            }
+            // Always save to database
+            await saveExpenseFromScan({
+              items: result.items,
+              merchant: result.merchant,
+              date: result.date
+            });
             
             toast.warning("Receipt processed with limited accuracy");
             
@@ -124,7 +121,7 @@ export function useScanReceipt({
       console.error("Error scanning receipt:", error);
       errorScan(error instanceof Error ? error.message : "An unknown error occurred");
     }
-  }, [file, lastScannedFile, isScanning, isAutoProcessing, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, autoSave, onCleanup, setOpen]);
+  }, [file, lastScannedFile, isScanning, isAutoProcessing, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, onCleanup, setOpen]);
   
   // Auto-process a receipt scan
   const autoProcessReceipt = useCallback(async () => {
@@ -150,58 +147,48 @@ export function useScanReceipt({
           onCapture(result.items[0]);
         }
         
-        // Save to database if autoSave is enabled
-        if (autoSave) {
-          const saveResult = await saveExpenseFromScan({
-            items: result.items,
-            merchant: result.merchant,
-            date: result.date
-          });
-          
-          if (saveResult) {
-            // Success - close dialog
-            updateProgress(100, "Receipt processed and expenses saved!");
-            
-            setTimeout(() => {
-              setIsAutoProcessing(false);
-              onCleanup();
-              setOpen(false);
-              
-              toast.success("Receipt processed and expenses saved successfully");
-            }, 1000);
-            return;
-          }
-        } else {
-          // Just close dialog without saving
-          updateProgress(100, "Receipt processed successfully!");
+        // Always save to database
+        const saveResult = await saveExpenseFromScan({
+          items: result.items,
+          merchant: result.merchant,
+          date: result.date
+        });
+        
+        if (saveResult) {
+          // Success - close dialog
+          updateProgress(100, "Receipt processed and expenses saved!");
           
           setTimeout(() => {
             setIsAutoProcessing(false);
             onCleanup();
             setOpen(false);
             
-            toast.success("Receipt processed successfully");
+            toast.success("Receipt processed and expenses saved successfully");
           }, 1000);
           return;
+        } else {
+          // Save failed but we have valid items
+          errorScan("Failed to save expenses to database");
+          setIsAutoProcessing(false);
         }
-      }
-      
-      // If we got here, something failed
-      if (result.isTimeout) {
-        timeoutScan();
-      } else if (result.error) {
-        errorScan(result.error);
       } else {
-        errorScan("Failed to process receipt");
+        // If we got here, something failed
+        if (result.isTimeout) {
+          timeoutScan();
+        } else if (result.error) {
+          errorScan(result.error);
+        } else {
+          errorScan("Failed to process receipt");
+        }
+        
+        setIsAutoProcessing(false);
       }
-      
-      setIsAutoProcessing(false);
     } catch (error) {
       console.error("Error in auto-processing:", error);
       errorScan(error instanceof Error ? error.message : "An unknown error occurred");
       setIsAutoProcessing(false);
     }
-  }, [file, isScanning, isAutoProcessing, updateProgress, timeoutScan, errorScan, onCapture, autoSave, onCleanup, setOpen]);
+  }, [file, isScanning, isAutoProcessing, updateProgress, timeoutScan, errorScan, onCapture, onCleanup, setOpen]);
   
   // Reset all state
   const resetScanState = useCallback(() => {

@@ -24,15 +24,12 @@ export async function listUserReceipts(userId: string) {
       .list(folderPath);
       
     if (error) {
-      if (error.message && error.message.includes("The resource was not found")) {
-        console.error(`Bucket "${bucketName}" not found`);
-        return [];
-      }
+      // Handle error but don't block functionality
       console.error("Error fetching files:", error);
       return [];
     }
 
-    console.log(`Found ${data.length} files for user ${userId}:`, data);
+    console.log(`Found ${data.length} files for user ${userId}`);
     return data;
   } catch (error) {
     console.error("Error listing receipts:", error);
@@ -64,10 +61,7 @@ export async function checkFileExists(filePath: string) {
       .list(folderPath);
       
     if (error) {
-      if (error.message && error.message.includes("The resource was not found")) {
-        console.error(`Bucket "${bucketName}" not found`);
-        return false;
-      }
+      // Handle error but don't block functionality
       console.error("Error fetching files:", error);
       return false;
     }
@@ -124,7 +118,6 @@ export async function checkReceiptsBucketExists() {
     if (bucketError) {
       console.error("Error listing buckets:", bucketError);
       // Return true anyway to avoid blocking receipt uploads
-      // Most likely the bucket exists but the user doesn't have permission to list buckets
       console.log("Assuming bucket exists despite error (to enable uploads)");
       return true;
     }
@@ -151,20 +144,20 @@ export async function checkReceiptsBucketExists() {
  */
 export async function createReceiptsBucket() {
   try {
-    // First check if bucket already exists
-    const exists = await checkReceiptsBucketExists();
-    if (exists) {
-      console.log(`Bucket "${bucketName}" already exists`);
-      return true;
-    }
-    
-    // Create the bucket
+    // Always try to create the bucket regardless of existence check
+    // This is more reliable and Supabase will handle duplicate bucket creation gracefully
     const { error } = await supabase.storage.createBucket(bucketName, {
       public: true,
-      fileSizeLimit: 5242880, // 5MB limit
+      fileSizeLimit: 10485760, // 10MB limit
     });
     
     if (error) {
+      // Check if the error is just that the bucket already exists
+      if (error.message && error.message.includes("already exists")) {
+        console.log(`Bucket "${bucketName}" already exists`);
+        return true;
+      }
+      
       console.error(`Error creating "${bucketName}" bucket:`, error);
       return false;
     }

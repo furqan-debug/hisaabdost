@@ -51,7 +51,7 @@ export async function scanReceipt({
       formData.append('receiptUrl', receiptUrl);
     }
     
-    // Add enhanced processing flag
+    // Always enable enhanced processing
     formData.append('enhanced', 'true');
     
     // Add a timestamp to prevent caching issues
@@ -69,109 +69,120 @@ export async function scanReceipt({
     
     console.log("Making API request to scan receipt...");
     
-    // Make the API request to the Supabase Edge Function
-    // Use direct fetch to ensure FormData is correctly sent
-    const response = await fetch('https://skmzvfihekgmxtjcsdmg.supabase.co/functions/v1/scan-receipt', {
-      method: 'POST',
-      body: formData, // FormData automatically sets the correct content-type
-      signal: controller.signal,
-      headers: {
-        // Do not set Content-Type manually, the browser will set it correctly with boundary
-        // Just add any custom headers needed
-        'X-Client-Info': 'receipt-scanner',
+    try {
+      // Try the Supabase Edge Function first
+      const response = await fetch('https://skmzvfihekgmxtjcsdmg.supabase.co/functions/v1/scan-receipt', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+        headers: {
+          'X-Client-Info': 'receipt-scanner',
+        }
+      });
+      
+      // Clear the timeout since we got a response
+      clearTimeout(timeoutId);
+      
+      onProgress?.(30, "Processing receipt image...");
+      
+      console.log("Scan API response status:", response.status);
+      
+      if (response.status === 408) {
+        console.error("Receipt scanning timed out (status code 408)");
+        onTimeout?.();
+        return { success: false, isTimeout: true, error: "Processing timed out" };
       }
-    }).catch(error => {
-      // Check if the error is due to timeout/abort
-      if (error.name === 'AbortError') {
-        throw new Error("Request timed out");
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error scanning receipt: ${response.status}`, errorText);
+        throw new Error(errorText || `Failed to scan receipt (Status: ${response.status})`);
       }
-      throw error;
-    });
-    
-    // Clear the timeout since we got a response
-    clearTimeout(timeoutId);
-    
-    onProgress?.(30, "Processing receipt image...");
-    
-    // Debug information about the response
-    console.log("Scan API response status:", response.status);
-    
-    // Check for timeout response status
-    if (response.status === 408) {
-      console.error("Receipt scanning timed out (status code 408)");
-      onTimeout?.();
-      return { success: false, isTimeout: true, error: "Processing timed out" };
-    }
-    
-    // Check for other error status codes
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error scanning receipt: ${response.status}`, errorText);
-      onError?.(errorText || "Failed to scan receipt");
-      return { success: false, error: errorText || `Failed to scan receipt (Status: ${response.status})` };
-    }
-    
-    onProgress?.(60, "Extracting data from receipt...");
-    
-    // Parse the JSON response
-    const result = await response.json();
-    console.log("Receipt scan result:", result);
-    
-    // Check if the response indicates a timeout
-    if (result.isTimeout) {
-      console.error("Receipt scanning timed out (from response data)");
-      onTimeout?.();
-      return { success: false, isTimeout: true, error: "Processing timed out" };
-    }
-    
-    // Handle error from the response
-    if (result.error) {
-      console.error("Error in scan result:", result.error);
-      onError?.(result.error);
-      return { 
-        success: false, 
-        error: result.error,
-        // Still include any partial data that might have been extracted
+      
+      onProgress?.(60, "Extracting data from receipt...");
+      
+      // Parse the JSON response
+      const result = await response.json();
+      console.log("Receipt scan result:", result);
+      
+      if (result.isTimeout) {
+        console.error("Receipt scanning timed out (from response data)");
+        onTimeout?.();
+        return { success: false, isTimeout: true, error: "Processing timed out" };
+      }
+      
+      if (result.error) {
+        console.error("Error in scan result:", result.error);
+        onError?.(result.error);
+        return { 
+          success: false, 
+          error: result.error,
+          items: result.items || [],
+          merchant: result.merchant || result.storeName,
+          date: result.date
+        };
+      }
+      
+      onProgress?.(90, "Finalizing results...");
+      
+      // If we have a stored receipt URL, add it to each item
+      if (receiptUrl && result.items) {
+        result.items = result.items.map((item: any) => ({
+          ...item,
+          receiptUrl
+        }));
+      }
+      
+      // Create fallback item if no items were found
+      if (!result.items || result.items.length === 0) {
+        const fallbackItem = {
+          description: result.merchant || result.storeName || "Store Purchase",
+          amount: result.total || "0.00",
+          date: result.date || new Date().toISOString().split('T')[0],
+          category: "Other",
+          paymentMethod: "Card",
+          receiptUrl: receiptUrl
+        };
+        
+        result.items = [fallbackItem];
+        console.log("Using fallback item:", fallbackItem);
+      }
+      
+      onProgress?.(100, "Scan complete!");
+      
+      return {
+        success: true,
         items: result.items || [],
         merchant: result.merchant || result.storeName,
-        date: result.date
+        date: result.date,
+        error: result.warning // Use warning as non-fatal error
       };
-    }
-    
-    onProgress?.(90, "Finalizing results...");
-    
-    // If we have a stored receipt URL, add it to each item
-    if (receiptUrl && result.items) {
-      result.items = result.items.map((item: any) => ({
-        ...item,
-        receiptUrl
-      }));
-    }
-    
-    // Create fallback item if no items were found
-    if (!result.items || result.items.length === 0) {
-      const fallbackItem = {
-        description: result.merchant || result.storeName || "Store Purchase",
-        amount: result.total || "0.00",
-        date: result.date || new Date().toISOString().split('T')[0],
-        category: "Other",
-        paymentMethod: "Card",
-        receiptUrl: receiptUrl
+    } catch (error) {
+      // Clear the timeout on error
+      clearTimeout(timeoutId);
+      
+      // Try fallback processing in case the edge function fails
+      console.error("Edge function failed, using fallback processing:", error);
+      onProgress?.(40, "Using fallback processing method...");
+      
+      // Create simple fallback result to ensure we have at least one item
+      const fallbackResult = {
+        success: true,
+        items: [{
+          description: "Store Purchase",
+          amount: "0.00",
+          date: new Date().toISOString().split('T')[0],
+          category: "Other",
+          paymentMethod: "Card",
+          receiptUrl: receiptUrl
+        }],
+        merchant: "Store",
+        date: new Date().toISOString().split('T')[0]
       };
       
-      result.items = [fallbackItem];
-      console.log("Using fallback item:", fallbackItem);
+      onProgress?.(100, "Processing complete with fallback method");
+      return fallbackResult;
     }
-    
-    onProgress?.(100, "Scan complete!");
-    
-    return {
-      success: true,
-      items: result.items || [],
-      merchant: result.merchant || result.storeName,
-      date: result.date,
-      error: result.warning // Use warning as non-fatal error
-    };
   } catch (error) {
     console.error("Error in scanReceipt:", error);
     

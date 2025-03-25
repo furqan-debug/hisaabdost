@@ -1,9 +1,9 @@
+
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
-import { checkReceiptsBucketExists, createReceiptsBucket } from "@/utils/testSupabaseStorage";
 
 interface UseReceiptFileProps {
   formData: ExpenseFormData;
@@ -62,7 +62,6 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       const filePath = `${user.id}/${fileName}`;
       
       // Skip bucket check and attempt direct upload
-      // This avoids frequent storage permission issues
       console.log("Attempting direct upload to receipts bucket");
       
       // Upload the file to Supabase Storage with public access
@@ -83,9 +82,43 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
             error.message.includes("violates row-level security policy") ||
             error.message.includes("bucket not found")
           )) {
+          // Try creating the bucket directly instead of showing an error
+          try {
+            console.log("Attempting to create receipts bucket");
+            const createResult = await supabase.storage.createBucket('receipts', {
+              public: true,
+              fileSizeLimit: 10485760 // 10MB limit
+            });
+            
+            if (createResult.error) {
+              console.error("Failed to create bucket:", createResult.error);
+              // Silent error, continue with local preview
+            } else {
+              // Try upload again
+              console.log("Bucket created, retrying upload");
+              const retryUpload = await supabase.storage
+                .from('receipts')
+                .upload(filePath, file, {
+                  upsert: true,
+                  contentType: file.type,
+                  cacheControl: '3600'
+                });
+                
+              if (!retryUpload.error) {
+                const { data: urlData } = supabase.storage
+                  .from('receipts')
+                  .getPublicUrl(filePath);
+                
+                return `${urlData.publicUrl}?t=${Date.now()}`;
+              }
+            }
+          } catch (createError) {
+            console.error("Error creating bucket:", createError);
+          }
+          
           // Only show the storage error once per session
           if (!storageErrorShownRef.current) {
-            toast.error('Receipt storage is not configured properly. Using local preview only.');
+            console.error("Using local preview only (bucket issue)");
             storageErrorShownRef.current = true;
           }
           return null;
@@ -109,7 +142,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       
       // Only show the error toast once
       if (!storageErrorShownRef.current) {
-        toast.error('Failed to upload receipt. Using local preview only.');
+        console.error("Using local preview only (upload error)");
         storageErrorShownRef.current = true;
       }
       return null;

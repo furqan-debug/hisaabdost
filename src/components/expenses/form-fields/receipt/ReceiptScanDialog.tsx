@@ -32,8 +32,8 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = true,
-  autoProcess = true,
+  autoSave = true, // Default to true to always auto-save
+  autoProcess = true, // Default to true to always auto-process
   onManualEntry
 }: ReceiptScanDialogProps) {
   const {
@@ -50,7 +50,7 @@ export function ReceiptScanDialog({
     file,
     onCleanup,
     onCapture,
-    autoSave,
+    autoSave: true, // Always auto-save
     setOpen
   });
   
@@ -58,17 +58,14 @@ export function ReceiptScanDialog({
   
   // Auto-process the receipt when the dialog opens
   useEffect(() => {
-    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
+    if (open && file && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
       hasAutoProcessed.current = true;
       
-      const timer = setTimeout(() => {
-        console.log("Auto-processing receipt...");
-        autoProcessReceipt();
-      }, 300);
-      
-      return () => clearTimeout(timer);
+      // Start processing immediately
+      console.log("Auto-processing receipt...");
+      autoProcessReceipt();
     }
-  }, [open, file, autoProcess, isScanning, isAutoProcessing, autoProcessReceipt]);
+  }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt]);
   
   // Reset the auto-processed flag when the dialog is closed
   useEffect(() => {
@@ -77,6 +74,7 @@ export function ReceiptScanDialog({
     }
   }, [open]);
 
+  // Handle dialog close - only allow closing when not processing
   const handleClose = () => {
     if (!isScanning && !isAutoProcessing) {
       resetScanState();
@@ -95,15 +93,9 @@ export function ReceiptScanDialog({
     }
   };
   
-  // Get appropriate dialog title based on auto-save setting
-  const dialogTitle = autoSave 
-    ? "Processing Receipt" 
-    : "Scanning Receipt";
-    
-  // Get appropriate dialog description based on auto-save setting
-  const dialogDescription = autoSave 
-    ? "We'll extract all items and save them automatically as separate expenses" 
-    : "We'll extract the store name, amount, date and other details";
+  // Get appropriate dialog title and description
+  const dialogTitle = "Processing Receipt";
+  const dialogDescription = "We'll extract all items and save them automatically as separate expenses";
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -142,7 +134,7 @@ export function ReceiptScanDialog({
             scanTimedOut={scanTimedOut || !!scanError}
             handleScanReceipt={handleScanReceipt}
             disabled={!file}
-            autoSave={autoSave}
+            autoSave={true}
             scanProgress={scanProgress}
             statusMessage={statusMessage}
             onManualEntry={handleManualEntry}
