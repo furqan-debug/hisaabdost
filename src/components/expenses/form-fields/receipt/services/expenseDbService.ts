@@ -2,7 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { formatDateForStorage } from '../utils/dateUtils';
+import { formatDate } from '../utils/dateUtils';
+
+// Create an alias for formatDate as formatDateForStorage for backward compatibility
+const formatDateForStorage = formatDate;
 
 /**
  * Saves all expenses extracted from a receipt scan

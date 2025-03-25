@@ -38,6 +38,7 @@ export function ReceiptField({
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [processingStarted, setProcessingStarted] = useState(false);
   
   // Expose the refs to the parent component if needed
   useEffect(() => {
@@ -60,13 +61,15 @@ export function ReceiptField({
   }, [setFileInputRef, setCameraInputRef]);
 
   const handleUpload = () => {
-    if (fileInputRef.current) {
+    // Only open file dialog if we're not already processing a receipt
+    if (!processingStarted && fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
   
   const handleCameraCapture = () => {
-    if (cameraInputRef.current) {
+    // Only open camera if we're not already processing a receipt
+    if (!processingStarted && cameraInputRef.current) {
       cameraInputRef.current.click();
     }
   };
@@ -75,18 +78,26 @@ export function ReceiptField({
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Flag that we've started processing to prevent reopening
+      setProcessingStarted(true);
+      
       // Create a preview URL for the file
       const previewUrl = URL.createObjectURL(file);
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Only open the scan dialog if autoProcess is true
+      // Always open scan dialog if we have a file
       if (autoProcess) {
         setScanDialogOpen(true);
       }
       
       // Call the original onFileChange to handle storage
       onFileChange(e);
+      
+      // Reset the file input so the same file can be selected again later
+      if (e.target) {
+        e.target.value = '';
+      }
     }
   };
   
@@ -97,6 +108,7 @@ export function ReceiptField({
       setFilePreviewUrl(null);
     }
     setReceiptFile(null);
+    setProcessingStarted(false); // Allow new uploads after cleanup
   };
 
   return (
@@ -136,6 +148,7 @@ export function ReceiptField({
             type="button"
             variant="outline"
             onClick={handleUpload}
+            disabled={processingStarted}
             className="w-full"
           >
             <Upload className="mr-2 h-4 w-4" />
@@ -147,6 +160,7 @@ export function ReceiptField({
               type="button"
               variant="outline"
               onClick={handleUpload}
+              disabled={processingStarted}
               className="flex-1"
             >
               <Upload className="mr-2 h-4 w-4" />
@@ -158,6 +172,7 @@ export function ReceiptField({
                 type="button"
                 variant="outline"
                 onClick={handleCameraCapture}
+                disabled={processingStarted}
                 className="flex-1"
               >
                 <Camera className="mr-2 h-4 w-4" />
@@ -184,4 +199,3 @@ export function ReceiptField({
     </div>
   );
 }
-

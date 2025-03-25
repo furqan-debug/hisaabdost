@@ -1,27 +1,30 @@
 
 /**
- * Format a date string to be stored in the database
+ * Format a date string to YYYY-MM-DD format for storage
+ * @param dateString A date string in any valid format
+ * @returns A string in YYYY-MM-DD format, using today if invalid
  */
-export function formatDate(dateString?: string): string {
+export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) {
     return new Date().toISOString().split('T')[0];
   }
   
   try {
-    // If it's already in ISO format
-    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
-      return dateString.split('T')[0];
+    // If the date is already in ISO format (YYYY-MM-DD), return it
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
     }
     
-    // Try to parse the date
+    // Parse the date string
     const date = new Date(dateString);
     
     // Check if date is valid
     if (isNaN(date.getTime())) {
+      // Invalid date, return today's date
       return new Date().toISOString().split('T')[0];
     }
     
-    // Return as YYYY-MM-DD
+    // Format as YYYY-MM-DD
     return date.toISOString().split('T')[0];
   } catch (error) {
     console.error("Error formatting date:", error);
@@ -29,8 +32,5 @@ export function formatDate(dateString?: string): string {
   }
 }
 
-/**
- * Format date for storage in the database
- * Alias for formatDate to maintain compatibility with both naming conventions
- */
-export const formatDateForStorage = formatDate;
+// Add an export alias for backward compatibility
+export { formatDate as formatDateForStorage };

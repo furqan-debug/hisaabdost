@@ -1,7 +1,8 @@
 
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { formatDateForStorage, calculateTotal } from '../utils/formatUtils';
+import { formatDate } from '../utils/dateUtils';
+import { calculateTotal } from '../utils/formatUtils';
 import { processScanResults } from '../utils/processScanUtils';
 import { saveMultipleExpensesFromReceipt } from '@/services/expenseService';
 
@@ -55,8 +56,18 @@ export function useScanResults({
             
             // Clear the stored result after processing
             sessionStorage.removeItem('lastScanResult');
+            
+            // Close the dialog after a short delay to show success message
+            setTimeout(() => {
+              setOpen(false);
+            }, 1000);
           } else {
             toast.warning("Receipt scanned, but no items were detected.");
+            
+            // Close the dialog after a short delay even if no items detected
+            setTimeout(() => {
+              setOpen(false);
+            }, 1500);
           }
         }
       } catch (error) {
@@ -89,9 +100,9 @@ export function useScanResults({
     try {
       // Format receipt data for storage
       const expenses = result.items.map((item: any) => ({
-        description: item.name,
-        amount: item.amount,
-        date: formatDateForStorage(item.date || result.date),
+        description: item.name || "Store Purchase",
+        amount: item.amount || "0.00",
+        date: formatDate(item.date || result.date),
         category: item.category || "Other",
         paymentMethod: "Card", // Default assumption
         receiptUrl: result.receiptUrl || "",
@@ -102,11 +113,6 @@ export function useScanResults({
       const success = await saveMultipleExpensesFromReceipt(expenses);
       if (success) {
         toast.success(`Saved ${expenses.length} expense${expenses.length > 1 ? 's' : ''} from receipt`);
-        
-        // Close the dialog after successful save
-        setTimeout(() => {
-          setOpen(false);
-        }, 1500);
       }
     } catch (error) {
       console.error("Failed to save receipt items to database:", error);

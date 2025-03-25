@@ -7,9 +7,6 @@ import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { useExpenseForm } from "@/hooks/useExpenseForm";
-import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -33,7 +30,36 @@ export const AddExpenseButton = ({
   
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setCaptureMode(mode);
-    setShowAddExpense(true);
+    
+    // Only open the sheet for manual mode
+    // For upload and camera modes, we'll handle file selection first
+    if (mode === 'manual') {
+      setShowAddExpense(true);
+    } else {
+      // For upload and camera, we'll trigger the file input directly
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      
+      // For camera on mobile, use capture attribute
+      if (mode === 'camera' && isMobile) {
+        fileInput.setAttribute('capture', 'environment');
+      }
+      
+      fileInput.onchange = (e) => {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        
+        if (file) {
+          // After file selection, open sheet with auto-process mode
+          setCaptureMode(mode);
+          setShowAddExpense(true);
+        }
+      };
+      
+      // Trigger the file input click
+      fileInput.click();
+    }
   };
   
   return (

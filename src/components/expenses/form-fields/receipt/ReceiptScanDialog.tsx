@@ -53,15 +53,33 @@ export function ReceiptScanDialog({
   
   // Automatically start processing when dialog opens with a file
   useEffect(() => {
+    // Check if we should auto-process and if we have a file and the dialog is open
     if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError) {
-      autoProcessReceipt();
+      console.log("Auto-processing receipt...");
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        autoProcessReceipt();
+      }, 100);
     }
   }, [open, file, autoProcess, isScanning, isAutoProcessing, scanTimedOut, scanError, autoProcessReceipt]);
 
+  const handleClose = () => {
+    if (!isScanning && !isAutoProcessing) {
+      onCleanup();
+      setOpen(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) onCleanup();
-      setOpen(open);
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        // Only allow closing if not currently scanning
+        if (!isScanning && !isAutoProcessing) {
+          handleClose();
+        }
+      } else {
+        setOpen(true);
+      }
     }}>
       <DialogContent className="sm:max-w-md">
         <DialogTitle>Processing Receipt</DialogTitle>
@@ -86,7 +104,7 @@ export function ReceiptScanDialog({
           />
           
           <DialogActions
-            onCleanup={onCleanup}
+            onCleanup={handleClose}
             isScanning={isScanning}
             isAutoProcessing={isAutoProcessing}
             scanTimedOut={scanTimedOut || !!scanError}
