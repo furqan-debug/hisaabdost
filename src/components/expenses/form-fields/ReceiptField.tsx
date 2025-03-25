@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { useState, useRef, useEffect } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
@@ -32,7 +31,7 @@ export function ReceiptField({
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   
   // State for receipt scanning dialog
   const [scanDialogOpen, setScanDialogOpen] = useState(false);

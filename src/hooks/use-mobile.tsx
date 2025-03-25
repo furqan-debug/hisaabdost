@@ -20,7 +20,7 @@ export function useIsMobile() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return { isMobile };
+  return isMobile;
 }
 
 // Define useMobile as a function instead of an alias to ensure it's properly exported
