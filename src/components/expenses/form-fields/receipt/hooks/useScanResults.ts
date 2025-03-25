@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { formatDate } from '../utils/dateUtils';
 import { calculateTotal } from '../utils/formatUtils';
 import { processScanResults } from '../utils/processScanUtils';
-import { saveExpenseFromScan } from '../services/expenseDbService';
 
 interface UseScanResultsProps {
   isScanning: boolean;
@@ -43,39 +42,13 @@ export function useScanResults({
           console.log("Processing scan result:", lastScanResult);
           
           if (lastScanResult.items && lastScanResult.items.length > 0) {
-            // Save all items to database if auto-save is enabled
-            if (autoSave) {
-              saveExpenseFromScan(lastScanResult)
-                .then(success => {
-                  if (success) {
-                    toast.success(`Successfully saved ${lastScanResult.items.length} expense(s) from receipt`);
-                    
-                    // Close the dialog after a short delay
-                    setTimeout(() => {
-                      setOpen(false);
-                    }, 1000);
-                  } else {
-                    toast.error("Failed to save expenses from receipt");
-                  }
-                })
-                .catch(error => {
-                  console.error("Error saving expense from scan:", error);
-                  toast.error("Error processing receipt");
-                });
-            } else {
-              // Process scan results for the expense form
-              processScanResults(lastScanResult, autoSave, onCapture);
-              
-              // Successful scan toast
-              toast.success(`Found ${lastScanResult.items.length} item${lastScanResult.items.length > 1 ? 's' : ''} in receipt`);
-              
-              // Close the dialog after a short delay to show success message
-              setTimeout(() => {
-                setOpen(false);
-                // Clear the stored result after processing
-                sessionStorage.removeItem('lastScanResult');
-              }, 1000);
-            }
+            // Process scan results - this handles both auto-save and form update modes
+            const result = processScanResults(lastScanResult, autoSave, onCapture, setOpen);
+            
+            // Clear the stored result after processing
+            setTimeout(() => {
+              sessionStorage.removeItem('lastScanResult');
+            }, 1500);
           } else {
             toast.warning("Receipt scanned, but no items were detected.");
             

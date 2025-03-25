@@ -61,25 +61,18 @@ export function useScanProcess({
               data.items = [{ name: "Store Purchase", amount: data.total || "0.00" }];
             }
             
+            // Store result for usage after scan completes
             sessionStorage.setItem('lastScanResult', JSON.stringify(data));
             
-            // Automatically add the expense to the database if results are valid
-            if (data.items && data.items.length > 0) {
-              updateProgress(90, "Saving expense data...");
-              await saveExpenseFromScan(data);
-              toast.success(`Saved ${data.items.length} expense${data.items.length > 1 ? 's' : ''}`);
-            } else {
-              // If no items were found, consider it a partial success
-              toast.warning("Some receipt details were found, but no items were detected.");
-            }
+            // For auto-saving we'll let the useScanResults hook handle it
+            // as it has access to the complete scan state
+            updateProgress(100, "Receipt processed successfully!");
           } catch (err) {
             console.error("Error storing scan result:", err);
             errorScan("Error saving scan results. Please try again.");
             return null;
           }
         }
-        
-        updateProgress(100, "Scan complete!");
         
         // Mark scan as complete
         setTimeout(() => {

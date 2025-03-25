@@ -2,12 +2,22 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { formatDate } from '../utils/dateUtils';
 
 /**
  * Saves all expenses extracted from a receipt scan
  */
-export async function saveExpenseFromScan(scanResult: any): Promise<boolean> {
+export async function saveExpenseFromScan(scanResult: {
+  items: Array<{
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+    receiptUrl?: string | null;
+  }>;
+  merchant?: string;
+  date?: string;
+}): Promise<boolean> {
   try {
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser();
@@ -22,22 +32,23 @@ export async function saveExpenseFromScan(scanResult: any): Promise<boolean> {
       return false;
     }
 
-    // Format the date from the receipt, using today as fallback
-    const receiptDate = formatDate(scanResult.date);
-    
     // Convert items to expense records
-    const expenses = scanResult.items.map((item: any) => ({
+    const expenses = scanResult.items.map((item) => ({
       id: uuidv4(),
       user_id: user.id,
-      amount: typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount,
-      description: item.name || "Store Purchase",
-      date: receiptDate,
+      amount: typeof item.amount === 'string' ? 
+        parseFloat(item.amount.replace(/[$,]/g, '')) : 
+        item.amount,
+      description: item.description,
+      date: item.date,
       category: item.category || "Other",
-      payment: "Card", // Default to card for receipts
+      payment: item.paymentMethod || "Card", // Default to card for receipts
       notes: scanResult.merchant ? `From: ${scanResult.merchant}` : "",
       is_recurring: false,
-      receipt_url: scanResult.receiptUrl || null
+      receipt_url: item.receiptUrl || null
     }));
+
+    console.log("Saving expenses to database:", expenses);
 
     // Insert all expenses in one operation
     const { error } = await supabase.from('expenses').insert(expenses);

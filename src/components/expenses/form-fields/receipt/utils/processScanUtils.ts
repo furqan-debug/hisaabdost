@@ -1,5 +1,6 @@
-
 import { formatDateForStorage } from './formatUtils';
+import { saveExpenseFromScan } from '../services/expenseDbService';
+import { toast } from 'sonner';
 
 /**
  * Process the results of the receipt scan
@@ -16,41 +17,66 @@ export function processScanResults(
   }) => void,
   setOpen?: (open: boolean) => void
 ) {
-  if (!scanResult.items || scanResult.items.length === 0) {
+  if (!scanResult || !scanResult.items || scanResult.items.length === 0) {
     console.log("No items found in scan result");
-    return;
+    return null;
   }
   
-  // Get the most relevant item (usually the first one or one with highest amount)
-  const mainItem = scanResult.items.reduce((highest: any, current: any) => {
-    if (!highest) return current;
+  console.log("Processing scan result:", scanResult);
+  
+  // Format all items for saving
+  const formattedItems = scanResult.items.map((item: any) => ({
+    description: item.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
+    amount: item.amount?.replace('$', '') || scanResult.total || "0.00",
+    date: formatDateForStorage(scanResult.date || item.date),
+    category: item.category || "Other",
+    paymentMethod: "Card", // Default assumption for receipts
+    receiptUrl: scanResult.receiptUrl || null
+  }));
+  
+  // If autoSave is enabled, save all expenses directly
+  if (autoSave) {
+    if (formattedItems.length > 0) {
+      return saveExpenseFromScan({
+        items: formattedItems,
+        merchant: scanResult.merchant || "Store",
+        date: scanResult.date
+      })
+        .then(success => {
+          if (success) {
+            toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
+            
+            // Close the dialog after a short delay
+            if (setOpen) {
+              setTimeout(() => setOpen(false), 1000);
+            }
+            return true;
+          } else {
+            toast.error("Failed to save expenses from receipt");
+            return false;
+          }
+        })
+        .catch(error => {
+          console.error("Error saving expense from scan:", error);
+          toast.error("Error processing receipt");
+          return false;
+        });
+    }
+  } 
+  // Otherwise, pass the main item to the onCapture callback for form update
+  else if (onCapture) {
+    // Get the most relevant item for form capture
+    const mainItem = formattedItems[0];
     
-    const highestAmount = parseFloat(highest.amount || '0');
-    const currentAmount = parseFloat(current.amount || '0');
+    onCapture(mainItem);
     
-    return currentAmount > highestAmount ? current : highest;
-  }, null);
-  
-  if (!mainItem) return;
-  
-  // Format the expense details for the form
-  const expenseDetails = {
-    description: mainItem.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
-    amount: mainItem.amount || scanResult.total || "0.00",
-    date: formatDateForStorage(scanResult.date),
-    category: mainItem.category || "Other",
-    paymentMethod: "Card" // Default assumption for receipts
-  };
-  
-  // Pass the details to the onCapture callback if provided
-  if (onCapture) {
-    onCapture(expenseDetails);
+    // Close the dialog if setOpen is provided
+    if (setOpen) {
+      setTimeout(() => setOpen(false), 1000);
+    }
+    
+    return mainItem;
   }
   
-  // Close the dialog if autoSave is enabled and setOpen is provided
-  if (autoSave && setOpen) {
-    setTimeout(() => setOpen(false), 1000);
-  }
-  
-  return expenseDetails;
+  return formattedItems[0];
 }
