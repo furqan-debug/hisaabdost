@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import { useScanState } from "./useScanState";
 import { useScanProcess } from "./useScanProcess";
@@ -22,10 +23,9 @@ export function useScanReceipt({
   file,
   onCleanup,
   onCapture,
-  autoSave = false,
+  autoSave = true,
   setOpen
 }: UseScanReceiptProps) {
-  // Use the scan state hook for managing state
   const { 
     isScanning, 
     scanProgress, 
@@ -40,13 +40,9 @@ export function useScanReceipt({
     resetState
   } = useScanState();
   
-  // Add state for auto-processing
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
-  
-  // Store the last used form data for retries
   const [lastFormData, setLastFormData] = useState<FormData | null>(null);
 
-  // Use the process scan hook for actually processing the scan
   const processScan = useScanProcess({
     updateProgress,
     endScan,
@@ -65,32 +61,23 @@ export function useScanReceipt({
     onCleanup
   });
 
-  // Validate the receipt file
-  const validateReceiptFile = useCallback((file: File): boolean => {
+  // Validate and process receipt file
+  const validateAndProcessReceipt = useCallback(async (isAuto: boolean) => {
+    if (!file) {
+      toast.error("No receipt file selected");
+      return;
+    }
+    
     // Validate file size
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      toast.error("File is too large. Please use an image under 10MB.");
-      return false;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File is too large. Please use an image under 10MB");
+      return;
     }
     
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
-      toast.error("Invalid file type. Please use JPEG, PNG, HEIC or PDF.");
-      return false;
-    }
-    
-    return true;
-  }, []);
-
-  // Process scan with common logic
-  const processScanWithCommonLogic = useCallback(async (isAuto: boolean) => {
-    if (!file) {
-      toast.error("No receipt file selected.");
-      return;
-    }
-    
-    if (!validateReceiptFile(file)) {
+      toast.error("Invalid file type. Please use JPEG, PNG, HEIC or PDF");
       return;
     }
 
@@ -102,11 +89,9 @@ export function useScanReceipt({
         startScan();
       }
       
-      // Create FormData with receipt file
+      // Create FormData
       const formData = new FormData();
       formData.append('receipt', file);
-      
-      // Store formData for retries
       setLastFormData(formData);
       
       // Process the scan
@@ -116,15 +101,15 @@ export function useScanReceipt({
         setIsAutoProcessing(false);
       }
     } catch (error) {
-      console.error("Error in processScanWithCommonLogic:", error);
-      errorScan("An unexpected error occurred during scanning.");
+      console.error("Error processing receipt:", error);
+      errorScan("An unexpected error occurred during scanning");
       if (isAuto) {
         setIsAutoProcessing(false);
       }
     }
-  }, [file, startScan, processScan, errorScan, validateReceiptFile, updateProgress]);
+  }, [file, startScan, processScan, errorScan, updateProgress]);
 
-  // Handle retry with the last form data
+  // Handle retry with existing form data
   const handleRetry = useCallback(() => {
     if (lastFormData && (scanTimedOut || scanError)) {
       console.log("Retrying scan with existing receipt...");
@@ -135,27 +120,25 @@ export function useScanReceipt({
         errorScan("Retry failed. The receipt may be too complex to process.");
       });
     } else {
-      toast.error("No previous scan data available for retry.");
+      toast.error("No previous scan data available for retry");
     }
   }, [lastFormData, scanTimedOut, scanError, resetState, startScan, processScan, errorScan]);
 
   // Handle manual scan button click
   const handleScanReceipt = useCallback(() => {
-    // If we're in a timed out or error state, use retry logic
     if (scanTimedOut || scanError) {
       handleRetry();
     } else {
-      // Otherwise do a fresh scan
-      processScanWithCommonLogic(false);
+      validateAndProcessReceipt(false);
     }
-  }, [processScanWithCommonLogic, scanTimedOut, scanError, handleRetry]);
+  }, [validateAndProcessReceipt, scanTimedOut, scanError, handleRetry]);
   
   // Handle automatic processing
   const autoProcessReceipt = useCallback(() => {
-    processScanWithCommonLogic(true);
-  }, [processScanWithCommonLogic]);
+    validateAndProcessReceipt(true);
+  }, [validateAndProcessReceipt]);
 
-  // Reset scan state function for external components
+  // Reset scan state
   const resetScanState = useCallback(() => {
     resetState();
     setIsAutoProcessing(false);

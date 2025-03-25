@@ -28,24 +28,24 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Received image: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`)
+    console.log(`Processing receipt: ${receiptImage.name}, type: ${receiptImage.type}, size: ${receiptImage.size} bytes`)
     
-    // Get the receipt URL if provided (for Supabase storage images)
+    // Get the receipt URL if provided
     const receiptUrl = formData.get('receiptUrl')
     
-    // Check for processing level header to determine intensity
-    const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
+    // Set processing level to high for better accuracy
+    const processingLevel = 'high';
     console.log(`Using processing level: ${processingLevel}`);
     
-    // Set timeout for the request to avoid hanging
+    // Set timeout for the request
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Processing timeout')), 40000);
+      setTimeout(() => reject(new Error('Processing timeout')), 45000);
     });
     
     // Process the receipt image with enhanced processing
     const processingPromise = (async () => {
       const startTime = performance.now()
-      const result = await processReceipt(receiptImage, processingLevel === 'high');
+      const result = await processReceipt(receiptImage, true);
       const processingTime = (performance.now() - startTime).toFixed(2)
       console.log(`Receipt processing completed in ${processingTime}ms`)
       
@@ -78,8 +78,8 @@ serve(async (req) => {
         success: false, 
         error: isTimeout ? 'Receipt processing timed out. Please try again with a clearer image.' : 
           'Failed to process receipt: ' + (error.message || "Unknown error"),
-        items: generateFallbackData(), // Return fallback data so front-end can still work
-        isTimeout: true
+        isTimeout: isTimeout,
+        items: generateFallbackData() // Return fallback data so front-end can still work
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

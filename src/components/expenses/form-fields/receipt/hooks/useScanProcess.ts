@@ -16,43 +16,36 @@ export function useScanProcess({
   timeoutScan,
   errorScan
 }: UseScanProcessProps) {
-  // Process the scan with edge function
+  
   const processScan = useCallback(async (formData: FormData) => {
     try {
-      // Start with uploading
       updateProgress(10, "Preparing receipt for OCR...");
       
-      // Set a timeout to detect when scanning takes too long
       const timeoutId = setTimeout(() => {
         timeoutScan();
-      }, 45000); // Extend timeout to 45 seconds for more complex receipts
+      }, 45000);
       
       try {
-        // Call the Supabase function
         updateProgress(30, "Processing with OCR...");
         
-        // Add a timestamp to prevent caching issues with identical receipts
         formData.append('timestamp', Date.now().toString());
         
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
           headers: {
-            'X-Processing-Level': 'high', // Signal more intensive processing
+            'X-Processing-Level': 'high',
           }
         });
         
         clearTimeout(timeoutId);
         
-        // Check if the response is a timeout response
-        // Use data properties instead of status code to determine timeout
-        if (data && data.isTimeout === true) {
+        if (data?.isTimeout === true) {
           console.error("Scan timed out on server side");
           timeoutScan();
           
-          // If server returned fallback data despite timeout, use it
-          if (data && data.items && data.items.length > 0) {
-            console.log("Server returned fallback data despite timeout:", data);
+          if (data?.items?.length > 0) {
+            console.log("Using fallback data despite timeout:", data);
             return data;
           }
           
@@ -60,12 +53,11 @@ export function useScanProcess({
         }
         
         if (error) {
-          console.error("Scan completed with error:", error);
-          errorScan("We couldn't read the receipt clearly. Try again or use manual entry.");
+          console.error("Scan error:", error);
+          errorScan("Failed to process receipt. Please try again or use manual entry.");
           return null;
         }
         
-        // Handle missing or invalid data
         if (!data) {
           errorScan("No data was returned from the receipt scanner.");
           return null;
@@ -74,14 +66,11 @@ export function useScanProcess({
         console.log("Raw scan data received:", data);
         updateProgress(70, "Analyzing receipt data...");
         
-        // Check if the API returned an error but with fallback data
         if (data.error || data.warning) {
           console.warn("Scan completed with warning:", data.error || data.warning);
-          // Continue with fallback data but show warning
           toast.warning(data.warning || "Receipt processed with limited accuracy");
         }
         
-        // Process the data to ensure it has the expected structure
         const processedData = {
           items: Array.isArray(data.items) ? data.items : [],
           merchant: data.storeName || data.merchant || "Store",
@@ -90,9 +79,7 @@ export function useScanProcess({
           receiptUrl: data.receiptUrl
         };
         
-        // Ensure items array exists and has at least one entry
         if (!processedData.items || processedData.items.length === 0) {
-          // Add a fallback item if none were detected
           processedData.items = [{ 
             name: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
             amount: processedData.total || "0.00",
@@ -100,22 +87,20 @@ export function useScanProcess({
           }];
         }
         
-        // Store result for usage after scan completes
         sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
         console.log("Stored scan result:", processedData);
         
-        // Mark scan as complete
         updateProgress(100, "Receipt processed successfully!");
         
-        // Complete scan after a short delay to show the success state
         setTimeout(() => {
           endScan();
         }, 300);
         
         return processedData;
+        
       } catch (error) {
         clearTimeout(timeoutId);
-        throw error; // rethrow to be caught by outer try/catch
+        throw error;
       }
     } catch (error) {
       console.error("Error scanning receipt:", error);
