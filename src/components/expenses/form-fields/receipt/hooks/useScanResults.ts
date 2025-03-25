@@ -64,7 +64,7 @@ export function useScanResults({
                 });
             } else {
               // Process scan results for the expense form
-              processScanResults(lastScanResult, autoSave, onCapture, setOpen);
+              processScanResults(lastScanResult, autoSave, onCapture);
               
               // Successful scan toast
               toast.success(`Found ${lastScanResult.items.length} item${lastScanResult.items.length > 1 ? 's' : ''} in receipt`);
@@ -72,17 +72,18 @@ export function useScanResults({
               // Close the dialog after a short delay to show success message
               setTimeout(() => {
                 setOpen(false);
+                // Clear the stored result after processing
+                sessionStorage.removeItem('lastScanResult');
               }, 1000);
             }
-            
-            // Clear the stored result after processing
-            sessionStorage.removeItem('lastScanResult');
           } else {
             toast.warning("Receipt scanned, but no items were detected.");
             
             // Close the dialog after a short delay even if no items detected
             setTimeout(() => {
               setOpen(false);
+              // Clear the stored result
+              sessionStorage.removeItem('lastScanResult');
             }, 1500);
           }
         }
@@ -104,7 +105,6 @@ export function useScanResults({
   useEffect(() => {
     return () => {
       // Cleanup function runs when component unmounts
-      sessionStorage.removeItem('lastScanResult');
       onCleanup();
     };
   }, [onCleanup]);

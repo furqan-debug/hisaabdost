@@ -53,13 +53,13 @@ export function ReceiptScanDialog({
   
   // Automatically start processing when dialog opens with a file
   useEffect(() => {
-    // Check if we should auto-process and if we have a file and the dialog is open
     if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError) {
-      console.log("Auto-processing receipt...");
-      // Small delay to ensure UI is ready
-      setTimeout(() => {
+      // Add a small delay to ensure UI is ready
+      const timer = setTimeout(() => {
         autoProcessReceipt();
-      }, 100);
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
   }, [open, file, autoProcess, isScanning, isAutoProcessing, scanTimedOut, scanError, autoProcessReceipt]);
 

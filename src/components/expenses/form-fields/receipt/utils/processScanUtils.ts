@@ -36,7 +36,7 @@ export function processScanResults(
   // Format the expense details for the form
   const expenseDetails = {
     description: mainItem.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
-    amount: mainItem.amount || "0.00",
+    amount: mainItem.amount || scanResult.total || "0.00",
     date: formatDateForStorage(scanResult.date),
     category: mainItem.category || "Other",
     paymentMethod: "Card" // Default assumption for receipts
@@ -51,4 +51,6 @@ export function processScanResults(
   if (autoSave && setOpen) {
     setTimeout(() => setOpen(false), 1000);
   }
+  
+  return expenseDetails;
 }

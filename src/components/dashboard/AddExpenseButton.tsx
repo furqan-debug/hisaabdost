@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -36,8 +35,19 @@ export const AddExpenseButton = ({
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setCaptureMode('upload');
-      setShowAddExpense(true);
+      
+      // For upload and camera modes, we'll set autoProcess to true
+      // but we'll keep the sheet closed for manual mode
+      if (captureMode === 'manual') {
+        setShowAddExpense(true);
+      } else {
+        // For upload and camera, process automatically without showing the form
+        setCaptureMode('upload');
+        setShowAddExpense(true);
+      }
+      
+      // Reset the input value to allow selecting the same file again
+      e.target.value = '';
     }
   };
   
