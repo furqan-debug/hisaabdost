@@ -5,4 +5,4 @@ project_id = "bklfolfivjonzpprytkz"
 receipts = { public = true }
 
 [secrets]
-OPENAI_API_KEY = "your_openai_api_key_placeholder"
+OPENAI_API_KEY = "to_be_configured"

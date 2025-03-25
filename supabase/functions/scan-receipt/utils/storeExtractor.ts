@@ -1,62 +1,118 @@
 
-// Extract store/merchant name from OCR text
+/**
+ * Extracts the store or merchant name from receipt lines
+ */
 export function extractStoreName(lines: string[]): string {
-  // Check the first few lines for store name (typically at the top of receipt)
-  const maxLinesToCheck = Math.min(7, lines.length);
+  if (!lines || lines.length === 0) {
+    return 'Unknown';
+  }
   
-  for (let i = 0; i < maxLinesToCheck; i++) {
-    const line = lines[i].trim();
-    
-    // Skip very short lines
-    if (line.length < 3) continue;
-    
-    // Skip lines with common non-store patterns
-    if (line.match(/receipt|invoice|tel|phone|fax|date|time|\d{2}\/\d{2}\/\d{4}|thank|you|www|http|order|number/i)) {
+  // First check for explicit merchant name indicators
+  const merchantPatterns = [
+    /merchant:?\s*(.+)/i,
+    /store:?\s*(.+)/i,
+    /vendor:?\s*(.+)/i,
+    /seller:?\s*(.+)/i,
+    /restaurant:?\s*(.+)/i
+  ];
+  
+  for (const line of lines) {
+    for (const pattern of merchantPatterns) {
+      const match = line.match(pattern);
+      if (match && match[1]) {
+        return clean(match[1]);
+      }
+    }
+  }
+  
+  // If no explicit merchant indicator, the store name is typically one of the first few lines
+  // We'll try a heuristic approach
+  
+  // Skip very short lines
+  const potentialNames = lines.slice(0, 5).filter(line => line.length > 3);
+  
+  if (potentialNames.length === 0) {
+    return 'Unknown';
+  }
+  
+  // Look for capitalized text that's not a date, address, or receipt number
+  for (const line of potentialNames) {
+    // Skip common non-merchant lines
+    if (line.match(/^(date|time|receipt|tel|phone|tax|invoice)/i)) {
       continue;
     }
     
-    // Potential store name patterns:
-    
-    // 1. All uppercase is often a store name logo
-    if (line === line.toUpperCase() && line.length > 3 && !/^\d+$/.test(line)) {
-      return formatStoreName(line);
+    // Skip dates
+    if (line.match(/^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/) || 
+        line.match(/^\d{4}[\/.-]\d{1,2}[\/.-]\d{1,2}/)) {
+      continue;
     }
     
-    // 2. First substantive line that's not a date, number, etc.
-    if (!line.match(/^\d/) && !line.match(/^[A-Z]{1,3}$/) && line.length > 3) {
-      return formatStoreName(line);
+    // Skip phone numbers
+    if (line.match(/^(\+\d{1,3})?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/)) {
+      continue;
+    }
+    
+    // Skip website URLs
+    if (line.toLowerCase().includes('www.') || line.toLowerCase().includes('http')) {
+      continue;
+    }
+    
+    // Skip receipt numbers
+    if (line.match(/^#\s?\d+/) || line.match(/^order:?\s?\d+/i)) {
+      continue;
+    }
+    
+    // Skip address lines with typical street address formats
+    if (line.match(/^\d+\s+[a-z\s]+,?\s[a-z\s]+,?\s[a-z]{2}\s+\d{5}/i)) {
+      continue;
+    }
+    
+    // This is likely the store name
+    return clean(line);
+  }
+  
+  // If we couldn't find a good candidate, use the first line that's not too long or short
+  for (const line of potentialNames) {
+    if (line.length > 3 && line.length < 40) {
+      return clean(line);
     }
   }
   
-  // If no clear store name found in header, try to find in URL/website mentions
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].toLowerCase();
-    
-    // Look for website mentions
-    const websiteMatch = line.match(/(?:www\.|http:\/\/|https:\/\/)([a-zA-Z0-9-]+)(?:\.[a-zA-Z0-9-]+)+/);
-    if (websiteMatch && websiteMatch[1] && websiteMatch[1].length > 3) {
-      return formatStoreName(websiteMatch[1]);
-    }
-  }
-  
-  return "Store";  // Default if no store name found
+  // Last resort: just use the first line
+  return clean(potentialNames[0]);
 }
 
-// Format store name for readability
-function formatStoreName(name: string): string {
-  // Convert to lowercase
-  let formattedName = name.toLowerCase();
+/**
+ * Cleans a potential store name
+ */
+function clean(text: string): string {
+  // Remove leading/trailing spaces
+  let cleaned = text.trim();
   
-  // Remove non-alphanumeric characters
-  formattedName = formattedName.replace(/[^a-z0-9\s]/g, ' ').trim();
+  // Remove common prefixes
+  cleaned = cleaned.replace(/^(welcome to|thank you for shopping at|receipt from)/i, '').trim();
   
-  // Remove excess spaces
-  formattedName = formattedName.replace(/\s+/g, ' ');
+  // Remove trailing stuff after commas or hyphens (likely addresses or branches)
+  const commaPos = cleaned.indexOf(',');
+  if (commaPos > 0) {
+    cleaned = cleaned.substring(0, commaPos).trim();
+  }
   
-  // Capitalize words
-  formattedName = formattedName.split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const dashPos = cleaned.indexOf(' - ');
+  if (dashPos > 0) {
+    cleaned = cleaned.substring(0, dashPos).trim();
+  }
   
-  return formattedName;
+  // Ensure proper capitalization if all caps
+  if (cleaned === cleaned.toUpperCase() && cleaned.length > 3) {
+    cleaned = cleaned.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  }
+  
+  // Cap the length
+  if (cleaned.length > 30) {
+    cleaned = cleaned.substring(0, 30);
+  }
+  
+  return cleaned || 'Unknown';
 }

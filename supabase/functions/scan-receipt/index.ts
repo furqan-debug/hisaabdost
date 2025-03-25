@@ -1,134 +1,199 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { processReceipt } from "./services/receiptProcessor.ts"
-import { parseReceiptText } from "./utils/textParser.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { processReceiptWithOCR } from "./services/ocrProcessor.ts";
+import { parseReceiptText } from "./utils/receiptParser.ts";
 
-// Set up CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-}
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-Processing-Level',
+};
 
 serve(async (req) => {
+  console.log("Receipt scan function called");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 204 })
+    return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
-    console.log(`Processing receipt scan request: ${req.method}`)
+    // Process the multipart form data
+    const formData = await req.formData();
+    const receiptFile = formData.get('receipt') as File;
     
-    // Check if it's a POST request
-    if (req.method !== 'POST') {
+    if (!receiptFile) {
       return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        JSON.stringify({ error: "No receipt file provided" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
     
-    // Get content type from headers
-    const contentType = req.headers.get('content-type') || ''
-    console.log(`Request content type: ${contentType}`)
+    // Get the processing level (if any)
+    const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
+    const enhancedProcessing = processingLevel === 'high';
     
-    // Make sure we have a multipart form data request
-    if (!contentType.includes('multipart/form-data')) {
-      console.error("Invalid content type:", contentType)
-      return new Response(
-        JSON.stringify({ 
-          error: "Content-Type must be multipart/form-data",
-          receivedContentType: contentType
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    // Get the API key
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    // Parse the multipart form data
-    const formData = await req.formData()
-    console.log("Form data fields:", [...formData.keys()])
-    
-    const receiptFile = formData.get('receipt')
-    
-    if (!receiptFile || !(receiptFile instanceof File)) {
-      console.error("Missing or invalid receipt file")
+    if (!OPENAI_API_KEY) {
+      console.warn("OpenAI API key not found in environment variables");
       return new Response(
         JSON.stringify({ 
-          error: "No receipt file provided", 
-          formDataKeys: [...formData.keys()].join(', ')
+          error: "OpenAI API key not configured", 
+          warning: "Limited OCR capabilities available without API key"
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
     
-    console.log(`Processing receipt file: ${receiptFile.name}, size: ${receiptFile.size} bytes, type: ${receiptFile.type}`)
+    // Process the receipt image with OCR
+    const startTime = Date.now();
+    const ocrResult = await processReceiptWithOCR(receiptFile, OPENAI_API_KEY, enhancedProcessing);
+    const processingTime = Date.now() - startTime;
     
-    // Always use enhanced processing
-    const enhancedProcessing = true
-    
-    // Process the receipt with OCR
-    console.log(`Starting receipt processing with enhanced settings`)
-    const processingResult = await processReceipt(receiptFile, enhancedProcessing)
-    
-    console.log("Processing completed, result:", processingResult.success ? "Success" : "Failed")
-    
-    // Set a timeout for simulating long-running operations
-    const processingTime = receiptFile.size > 2000000 ? 3000 : 1000
-    
-    // Only add artificial delay in development
-    if (Deno.env.get('DENO_ENV') === 'development') {
-      await new Promise(resolve => setTimeout(resolve, processingTime))
+    // Check for timeout
+    if (processingTime > 25000) {
+      console.warn("Processing took too long:", processingTime, "ms");
     }
     
-    // Make sure we return a valid response even if processing failed
-    if (!processingResult.success || !processingResult.items || processingResult.items.length === 0) {
-      // Create fallback item if the processor failed
-      processingResult.items = [{
-        description: processingResult.merchant || processingResult.storeName || "Store Purchase",
-        amount: processingResult.total || "0.00",
-        date: processingResult.date || new Date().toISOString().split('T')[0],
-        category: "Other",
-        paymentMethod: "Card"
-      }];
-      
-      processingResult.success = true;
-      
-      if (processingResult.error) {
-        processingResult.warning = processingResult.error;
-        delete processingResult.error;
-      }
+    // If no text was extracted, return an error
+    if (!ocrResult.text) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Could not extract text from receipt", 
+          isTimeout: processingTime > 25000
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
     
-    // Return the processed data
+    // Parse the extracted text to get structured data
+    const receiptData = parseReceiptText(ocrResult.text);
+    
+    // Add the merchant name if available
+    if (ocrResult.merchant && receiptData.merchant === 'Unknown') {
+      receiptData.merchant = ocrResult.merchant;
+    }
+    
+    // Add the date if available
+    if (ocrResult.date && ocrResult.date !== new Date().toISOString().split('T')[0]) {
+      receiptData.date = ocrResult.date;
+    }
+    
+    // Create items array compatible with the frontend expectations
+    const items = receiptData.items.map(item => ({
+      description: item.name,
+      amount: item.amount,
+      date: receiptData.date,
+      category: guessCategory(item.name),
+      paymentMethod: "Card"
+    }));
+    
+    // Include the receipt URL if it was provided
+    const receiptUrl = formData.get('receiptUrl');
+    if (receiptUrl && typeof receiptUrl === 'string') {
+      items.forEach(item => item.receiptUrl = receiptUrl);
+    }
+    
+    // Return the parsed receipt data
     return new Response(
-      JSON.stringify(processingResult),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({
+        items,
+        merchant: receiptData.merchant,
+        storeName: receiptData.merchant,
+        date: receiptData.date,
+        total: receiptData.total,
+        text: ocrResult.text,
+        isTimeout: processingTime > 25000,
+        processingTime
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
     
   } catch (error) {
-    console.error("Error processing receipt:", error)
+    console.error("Error processing receipt:", error);
     
-    // Create a fallback response with valid data structure
-    const fallbackResponse = { 
-      success: true,
-      error: error.message || "An error occurred while processing the receipt", 
-      isTimeout: false,
-      errorType: error.name,
-      items: [{
-        description: "Store Purchase",
-        amount: "0.00",
-        date: new Date().toISOString().split('T')[0],
-        category: "Other",
-        paymentMethod: "Card"
-      }],
-      merchant: "Store",
-      date: new Date().toISOString().split('T')[0],
-      warning: "Error during processing, using fallback data"
-    };
-    
-    // Return a more detailed error response
     return new Response(
-      JSON.stringify(fallbackResponse),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({ 
+        error: error.message || "An error occurred processing the receipt", 
+        isTimeout: error.message?.includes('timeout')
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   }
-})
+});
+
+// Helper function to guess expense category from item description
+function guessCategory(description: string): string {
+  const lowerDesc = description.toLowerCase();
+  
+  if (lowerDesc.includes('food') || 
+      lowerDesc.includes('burger') || 
+      lowerDesc.includes('pizza') || 
+      lowerDesc.includes('restaurant') ||
+      lowerDesc.includes('meal') ||
+      lowerDesc.includes('cafe') ||
+      lowerDesc.includes('coffee')) {
+    return 'Food';
+  }
+  
+  if (lowerDesc.includes('transport') || 
+      lowerDesc.includes('uber') || 
+      lowerDesc.includes('lyft') ||
+      lowerDesc.includes('taxi') ||
+      lowerDesc.includes('bus') ||
+      lowerDesc.includes('train') ||
+      lowerDesc.includes('metro')) {
+    return 'Transport';
+  }
+  
+  if (lowerDesc.includes('grocery') || 
+      lowerDesc.includes('supermarket') || 
+      lowerDesc.includes('market') || 
+      lowerDesc.includes('food store')) {
+    return 'Groceries';
+  }
+  
+  if (lowerDesc.includes('entertain') || 
+      lowerDesc.includes('movie') || 
+      lowerDesc.includes('cinema') || 
+      lowerDesc.includes('theatre') ||
+      lowerDesc.includes('theater') ||
+      lowerDesc.includes('concert')) {
+    return 'Entertainment';
+  }
+  
+  if (lowerDesc.includes('utilities') || 
+      lowerDesc.includes('electricity') || 
+      lowerDesc.includes('water') || 
+      lowerDesc.includes('gas') ||
+      lowerDesc.includes('internet') ||
+      lowerDesc.includes('phone')) {
+    return 'Utilities';
+  }
+  
+  if (lowerDesc.includes('housing') || 
+      lowerDesc.includes('rent') || 
+      lowerDesc.includes('mortgage')) {
+    return 'Housing';
+  }
+  
+  if (lowerDesc.includes('health') || 
+      lowerDesc.includes('medical') || 
+      lowerDesc.includes('doctor') || 
+      lowerDesc.includes('pharmacy') ||
+      lowerDesc.includes('medicine')) {
+    return 'Healthcare';
+  }
+  
+  if (lowerDesc.includes('cloth') || 
+      lowerDesc.includes('apparel') || 
+      lowerDesc.includes('shoes') ||
+      lowerDesc.includes('shirt') ||
+      lowerDesc.includes('pants') ||
+      lowerDesc.includes('dress')) {
+    return 'Clothing';
+  }
+  
+  return 'Other';
+}
