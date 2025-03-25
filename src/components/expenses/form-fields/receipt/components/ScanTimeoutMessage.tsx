@@ -14,7 +14,7 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
       {scanTimedOut ? (
         <>
           <RefreshCw className="h-4 w-4 shrink-0" />
-          <p>The scan timed out. Try taking a clearer photo or using a smaller image file.</p>
+          <p>The scan timed out. Try taking a clearer photo, using a smaller image file, or switch to manual entry.</p>
         </>
       ) : scanError ? (
         <>

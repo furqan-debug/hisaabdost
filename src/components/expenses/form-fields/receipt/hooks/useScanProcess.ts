@@ -34,7 +34,7 @@ export function useScanProcess({
         // Add a timestamp to prevent caching issues with identical receipts
         formData.append('timestamp', Date.now().toString());
         
-        const { data, error, status } = await supabase.functions.invoke('scan-receipt', {
+        const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
           headers: {
@@ -44,8 +44,9 @@ export function useScanProcess({
         
         clearTimeout(timeoutId);
         
-        // Handle explicit timeout response
-        if (status === 408) {
+        // Check if the response is a timeout response
+        // Use data properties instead of status code to determine timeout
+        if (data && data.isTimeout === true) {
           console.error("Scan timed out on server side");
           timeoutScan();
           

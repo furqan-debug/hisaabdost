@@ -56,7 +56,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           ...result,
-          processingTime: `${processingTime}ms`
+          processingTime: `${processingTime}ms`,
+          isTimeout: false
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -77,7 +78,7 @@ serve(async (req) => {
         error: isTimeout ? 'Receipt processing timed out. Please try again with a clearer image.' : 
           'Failed to process receipt: ' + (error.message || "Unknown error"),
         items: generateFallbackData(), // Return fallback data so front-end can still work
-        isTimeout: isTimeout
+        isTimeout: true
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
