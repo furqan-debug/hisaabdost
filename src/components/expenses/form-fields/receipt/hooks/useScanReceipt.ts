@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from "react";
 import { useScanState } from "./useScanState";
 import { useScanProcess } from "./useScanProcess";
@@ -37,11 +36,15 @@ export function useScanReceipt({
     endScan,
     updateProgress,
     timeoutScan,
-    errorScan
+    errorScan,
+    resetState
   } = useScanState();
   
   // Add state for auto-processing
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  
+  // Store the last used form data for retries
+  const [lastFormData, setLastFormData] = useState<FormData | null>(null);
 
   // Use the process scan hook for actually processing the scan
   const processScan = useScanProcess({
@@ -103,6 +106,9 @@ export function useScanReceipt({
       const formData = new FormData();
       formData.append('receipt', file);
       
+      // Store formData for retries
+      setLastFormData(formData);
+      
       // Process the scan
       await processScan(formData);
       
@@ -118,15 +124,43 @@ export function useScanReceipt({
     }
   }, [file, startScan, processScan, errorScan, validateReceiptFile, updateProgress]);
 
+  // Handle retry with the last form data
+  const handleRetry = useCallback(() => {
+    if (lastFormData && (scanTimedOut || scanError)) {
+      console.log("Retrying scan with existing receipt...");
+      resetState();
+      startScan();
+      processScan(lastFormData).catch((error) => {
+        console.error("Error in retry:", error);
+        errorScan("Retry failed. The receipt may be too complex to process.");
+      });
+    } else {
+      toast.error("No previous scan data available for retry.");
+    }
+  }, [lastFormData, scanTimedOut, scanError, resetState, startScan, processScan, errorScan]);
+
   // Handle manual scan button click
   const handleScanReceipt = useCallback(() => {
-    processScanWithCommonLogic(false);
-  }, [processScanWithCommonLogic]);
+    // If we're in a timed out or error state, use retry logic
+    if (scanTimedOut || scanError) {
+      handleRetry();
+    } else {
+      // Otherwise do a fresh scan
+      processScanWithCommonLogic(false);
+    }
+  }, [processScanWithCommonLogic, scanTimedOut, scanError, handleRetry]);
   
   // Handle automatic processing
   const autoProcessReceipt = useCallback(() => {
     processScanWithCommonLogic(true);
   }, [processScanWithCommonLogic]);
+
+  // Reset scan state function for external components
+  const resetScanState = useCallback(() => {
+    resetState();
+    setIsAutoProcessing(false);
+    setLastFormData(null);
+  }, [resetState]);
 
   return {
     isScanning,
@@ -136,6 +170,7 @@ export function useScanReceipt({
     statusMessage,
     handleScanReceipt,
     isAutoProcessing,
-    autoProcessReceipt
+    autoProcessReceipt,
+    resetScanState
   };
 }

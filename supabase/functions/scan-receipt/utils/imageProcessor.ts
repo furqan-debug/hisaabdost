@@ -33,19 +33,19 @@ export async function preprocessImage(imageFile: File) {
     const imageData = ctx.getImageData(0, 0, img.width, img.height)
     const data = imageData.data
     
-    // Step 1: Convert to grayscale with enhanced contrast
+    // Step 1: Enhanced grayscale conversion with weighted channels for better text clarity
     for (let i = 0; i < data.length; i += 4) {
-      // Better grayscale algorithm with weighted channels for text clarity
-      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+      // Use BT.709 coefficients for better grayscale conversion
+      const gray = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]
       data[i] = data[i + 1] = data[i + 2] = gray
     }
     
-    // Step 2: Apply noise reduction - Bilateral filter for edge-preserving smoothing
+    // Step 2: Advanced noise reduction - Bilateral filter for edge-preserving smoothing
     const tempData = new Uint8ClampedArray(data)
     const width = img.width
     const height = img.height
     
-    // Apply noise reduction with edge preservation for better text clarity
+    // Apply selective noise reduction with edge preservation for better text clarity
     for (let y = 2; y < height - 2; y++) {
       for (let x = 2; x < width - 2; x++) {
         const idx = (y * width + x) * 4
@@ -63,7 +63,7 @@ export async function preprocessImage(imageFile: File) {
               // Weight based on spatial distance and intensity difference (bilateral filter)
               const pixelDiff = Math.abs(centerPixel - tempData[nidx])
               // Only include pixels that are similar in intensity (preserves edges/text)
-              if (pixelDiff < 35) {  // Threshold for intensity similarity
+              if (pixelDiff < 30) {  // Lower threshold for better edge preservation
                 sum += tempData[nidx]
                 count++
               }
@@ -79,8 +79,8 @@ export async function preprocessImage(imageFile: File) {
     }
     
     // Step 3: Apply adaptive thresholding for better text extraction
-    const blockSize = 25 // Larger block size for more robust thresholding
-    const C = 10 // Constant for threshold adjustment
+    const blockSize = 35 // Larger block size for more robust thresholding
+    const C = 8 // Lower constant for better text detection
 
     // More sophisticated adaptive thresholding
     for (let y = 0; y < height; y++) {
@@ -111,22 +111,62 @@ export async function preprocessImage(imageFile: File) {
       }
     }
     
-    // Step 4: Enhance contrast - stretch histogram
-    let min = 255
-    let max = 0
+    // Step 4: Enhanced contrast - histogram equalization
+    // Create a histogram
+    const histogram = new Array(256).fill(0)
+    let pixelCount = 0
     
-    // Find min and max gray values
     for (let i = 0; i < data.length; i += 4) {
-      if (data[i] < min) min = data[i]
-      if (data[i] > max) max = data[i]
+      histogram[data[i]]++
+      pixelCount++
     }
     
-    // Stretch histogram if there's a valid range
-    if (max > min) {
-      const range = max - min
-      for (let i = 0; i < data.length; i += 4) {
-        const normalized = (data[i] - min) / range * 255
-        data[i] = data[i + 1] = data[i + 2] = normalized
+    // Calculate the cumulative distribution function (CDF)
+    const cdf = new Array(256).fill(0)
+    cdf[0] = histogram[0]
+    
+    for (let i = 1; i < 256; i++) {
+      cdf[i] = cdf[i - 1] + histogram[i]
+    }
+    
+    // Normalize the CDF to create the lookup table
+    const lookupTable = new Array(256).fill(0)
+    const cdfMin = cdf.find(val => val > 0) || 0
+    
+    for (let i = 0; i < 256; i++) {
+      lookupTable[i] = Math.round(((cdf[i] - cdfMin) / (pixelCount - cdfMin)) * 255)
+    }
+    
+    // Apply histogram equalization
+    for (let i = 0; i < data.length; i += 4) {
+      const newVal = lookupTable[data[i]]
+      data[i] = data[i + 1] = data[i + 2] = newVal
+    }
+    
+    // Step 5: Apply sharpening for better text legibility
+    const sharpenKernel = [
+      0, -1, 0,
+      -1, 5, -1,
+      0, -1, 0
+    ]
+    
+    const tempData2 = new Uint8ClampedArray(data)
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        const idx = (y * width + x) * 4
+        
+        let val = 0
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const kernelIdx = (ky + 1) * 3 + (kx + 1)
+            const pixelIdx = ((y + ky) * width + (x + kx)) * 4
+            val += tempData2[pixelIdx] * sharpenKernel[kernelIdx]
+          }
+        }
+        
+        // Clamp value between 0 and 255
+        data[idx] = data[idx + 1] = data[idx + 2] = Math.max(0, Math.min(255, val))
       }
     }
     

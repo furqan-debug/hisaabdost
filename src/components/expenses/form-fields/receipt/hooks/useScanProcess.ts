@@ -20,27 +20,33 @@ export function useScanProcess({
   const processScan = useCallback(async (formData: FormData) => {
     try {
       // Start with uploading
-      updateProgress(10, "Uploading receipt...");
+      updateProgress(10, "Preparing receipt for OCR...");
       
       // Set a timeout to detect when scanning takes too long
       const timeoutId = setTimeout(() => {
         timeoutScan();
-      }, 25000); // 25 seconds timeout
+      }, 45000); // Extend timeout to 45 seconds for more complex receipts
       
       try {
         // Call the Supabase function
         updateProgress(30, "Processing with OCR...");
         
+        // Add a timestamp to prevent caching issues with identical receipts
+        formData.append('timestamp', Date.now().toString());
+        
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
+          headers: {
+            'X-Processing-Level': 'high', // Signal more intensive processing
+          }
         });
         
         clearTimeout(timeoutId);
         
         if (error) {
           console.error("Scan completed with error:", error);
-          errorScan("We couldn't read the receipt clearly. Try a better photo or enter details manually.");
+          errorScan("We couldn't read the receipt clearly. Try again or use manual entry.");
           return null;
         }
         
@@ -75,11 +81,10 @@ export function useScanProcess({
         sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
         console.log("Stored scan result:", processedData);
         
-        // For auto-saving we'll let the useScanResults hook handle it
-        // as it has access to the complete scan state
+        // Mark scan as complete
         updateProgress(100, "Receipt processed successfully!");
         
-        // Mark scan as complete
+        // Complete scan after a short delay to show the success state
         setTimeout(() => {
           endScan();
         }, 300);

@@ -10,8 +10,8 @@ import { guessCategoryFromItemName } from "../utils/items/itemCategories.ts";
 const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY');
 
 // Process receipt and extract information
-export async function processReceipt(receiptImage: File) {
-  console.log("Starting receipt processing");
+export async function processReceipt(receiptImage: File, enhancedProcessing = false) {
+  console.log(`Starting receipt processing with ${enhancedProcessing ? 'enhanced' : 'standard'} processing`);
   
   try {
     // Preprocess the image first
@@ -27,7 +27,7 @@ export async function processReceipt(receiptImage: File) {
     try {
       if (VISION_API_KEY) {
         console.log("Using Google Vision API for OCR");
-        const ocrResult = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY);
+        const ocrResult = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY, enhancedProcessing);
         extractedText = ocrResult.text;
         receiptDate = ocrResult.date || receiptDate;
         storeName = ocrResult.merchant || storeName;

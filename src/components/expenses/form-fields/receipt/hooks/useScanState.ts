@@ -44,6 +44,15 @@ export function useScanState() {
     setIsScanning(false);
   }, []);
 
+  // Reset all state
+  const resetState = useCallback(() => {
+    setIsScanning(false);
+    setScanProgress(0);
+    setScanTimedOut(false);
+    setScanError(undefined);
+    setStatusMessage(undefined);
+  }, []);
+
   return {
     isScanning,
     setIsScanning,
@@ -59,6 +68,7 @@ export function useScanState() {
     endScan,
     updateProgress,
     timeoutScan,
-    errorScan
+    errorScan,
+    resetState
   };
 }

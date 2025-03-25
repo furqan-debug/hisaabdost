@@ -28,8 +28,9 @@ export function DialogActions({
   // The cancel button should be disabled during scanning or auto-processing
   const isCancelDisabled = isScanning || isAutoProcessing;
   
-  // The scan button should be disabled during scanning, auto-processing, or if no file
-  const isScanDisabled = disabled || isScanning || isAutoProcessing;
+  // The scan button should only be disabled if no file or currently scanning/processing
+  // For retry cases (scanTimedOut), we want to enable the button even if disabled=true
+  const isScanDisabled = (disabled && !scanTimedOut) || isScanning || isAutoProcessing;
   
   return (
     <div className="flex w-full gap-2">

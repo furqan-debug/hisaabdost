@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ScanLine, Loader2 } from "lucide-react";
+import { ScanLine, Loader2, RefreshCw } from "lucide-react";
 
 interface ScanButtonProps {
   isScanning: boolean;
@@ -26,7 +26,7 @@ export function ScanButton({
   const buttonText = () => {
     if (isScanning) return "Processing...";
     if (isAutoProcessing) return "Auto-Processing...";
-    if (scanTimedOut) return "Retry";
+    if (scanTimedOut) return "Retry Scan";
     return `Process Receipt${autoSave ? " & Save" : ""}`;
   };
 
@@ -48,6 +48,11 @@ export function ScanButton({
           {scanProgress > 0 && scanProgress < 100 && (
             <span className="ml-1 text-xs">({scanProgress}%)</span>
           )}
+        </>
+      ) : scanTimedOut ? (
+        <>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {buttonText()}
         </>
       ) : (
         <>

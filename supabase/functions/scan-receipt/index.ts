@@ -32,37 +32,56 @@ serve(async (req) => {
     // Get the receipt URL if provided (for Supabase storage images)
     const receiptUrl = formData.get('receiptUrl')
     
-    // Process the receipt image with either Google Vision or a fallback approach
-    const startTime = performance.now()
-    const result = await processReceipt(receiptImage);
-    const processingTime = (performance.now() - startTime).toFixed(2)
-    console.log(`Receipt processing completed in ${processingTime}ms`)
+    // Check for processing level header to determine intensity
+    const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
+    console.log(`Using processing level: ${processingLevel}`);
     
-    // Add receipt URL to result if provided
-    if (receiptUrl && typeof receiptUrl === 'string') {
-      result.receiptUrl = receiptUrl;
-    }
+    // Set timeout for the request to avoid hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Processing timeout')), 40000);
+    });
     
-    return new Response(
-      JSON.stringify({
-        ...result,
-        processingTime: `${processingTime}ms`
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Process the receipt image with enhanced processing
+    const processingPromise = (async () => {
+      const startTime = performance.now()
+      const result = await processReceipt(receiptImage, processingLevel === 'high');
+      const processingTime = (performance.now() - startTime).toFixed(2)
+      console.log(`Receipt processing completed in ${processingTime}ms`)
+      
+      // Add receipt URL to result if provided
+      if (receiptUrl && typeof receiptUrl === 'string') {
+        result.receiptUrl = receiptUrl;
+      }
+      
+      return new Response(
+        JSON.stringify({
+          ...result,
+          processingTime: `${processingTime}ms`
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    })();
+    
+    // Race the processing against the timeout
+    return await Promise.race([processingPromise, timeoutPromise]);
     
   } catch (error) {
     console.error("Error processing receipt:", error)
     
+    // Determine if it's a timeout error
+    const isTimeout = error.message === 'Processing timeout';
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: 'Failed to process receipt: ' + (error.message || "Unknown error"),
-        items: generateFallbackData() // Return fallback data so front-end can still work
+        error: isTimeout ? 'Receipt processing timed out. Please try again with a clearer image.' : 
+          'Failed to process receipt: ' + (error.message || "Unknown error"),
+        items: generateFallbackData(), // Return fallback data so front-end can still work
+        isTimeout: isTimeout
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: isTimeout ? 408 : 500
       }
     )
   }

@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { ScanProgress } from "./components/ScanProgress";
@@ -41,7 +42,8 @@ export function ReceiptScanDialog({
     statusMessage,
     handleScanReceipt,
     isAutoProcessing,
-    autoProcessReceipt
+    autoProcessReceipt,
+    resetScanState
   } = useScanReceipt({
     file,
     onCleanup,
@@ -52,8 +54,9 @@ export function ReceiptScanDialog({
   
   const hasAutoProcessed = useRef(false);
   
+  // Auto-process the receipt when the dialog opens
   useEffect(() => {
-    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !scanTimedOut && !scanError && !hasAutoProcessed.current) {
+    if (open && file && autoProcess && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
       hasAutoProcessed.current = true;
       
       const timer = setTimeout(() => {
@@ -63,8 +66,9 @@ export function ReceiptScanDialog({
       
       return () => clearTimeout(timer);
     }
-  }, [open, file, autoProcess, isScanning, isAutoProcessing, scanTimedOut, scanError, autoProcessReceipt]);
+  }, [open, file, autoProcess, isScanning, isAutoProcessing, autoProcessReceipt]);
   
+  // Reset the auto-processed flag when the dialog is closed
   useEffect(() => {
     if (!open) {
       hasAutoProcessed.current = false;
@@ -73,6 +77,7 @@ export function ReceiptScanDialog({
 
   const handleClose = () => {
     if (!isScanning && !isAutoProcessing) {
+      resetScanState();
       onCleanup();
       setOpen(false);
     }

@@ -3,7 +3,7 @@ import { extractDate } from "../utils/dateExtractor.ts";
 import { extractStoreName } from "../utils/storeExtractor.ts";
 
 // Process receipt with Google Cloud Vision API
-export async function processReceiptWithOCR(receiptImage: File, apiKey: string) {
+export async function processReceiptWithOCR(receiptImage: File, apiKey: string, enhancedProcessing = false) {
   console.log("Processing receipt with Google Vision API");
 
   try {
@@ -23,10 +23,21 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string) 
             {
               type: "TEXT_DETECTION",
               maxResults: 100
-            }
+            },
+            // Add document text detection for enhanced processing
+            ...(enhancedProcessing ? [{
+              type: "DOCUMENT_TEXT_DETECTION",
+              maxResults: 100
+            }] : [])
           ],
           imageContext: {
-            languageHints: ["en"]
+            languageHints: ["en"],
+            // Add additional context for enhanced processing
+            ...(enhancedProcessing ? {
+              textDetectionParams: {
+                enableTextDetectionConfidenceScore: true
+              }
+            } : {})
           }
         }
       ]
@@ -72,12 +83,21 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string) 
     const extractedText = responseData.responses[0].textAnnotations[0].description;
     console.log("Extracted text sample:", extractedText.substring(0, 200) + "...");
     
+    // If enhanced processing is enabled, try to extract more structured data
+    let documentText = extractedText;
+    if (enhancedProcessing && 
+        responseData.responses[0].fullTextAnnotation && 
+        responseData.responses[0].fullTextAnnotation.text) {
+      documentText = responseData.responses[0].fullTextAnnotation.text;
+      console.log("Using enhanced document text extraction");
+    }
+    
     // Extract date and merchant from the text
-    const date = extractDate(extractedText);
-    const merchant = extractStoreName(extractedText.split('\n'));
+    const date = extractDate(documentText);
+    const merchant = extractStoreName(documentText.split('\n'));
     
     return {
-      text: extractedText,
+      text: documentText,
       date,
       merchant
     };
