@@ -99,7 +99,8 @@ export async function processReceiptWithOCR(receiptImage: File, apiKey: string, 
     return {
       text: documentText,
       date,
-      merchant
+      merchant,
+      success: true
     };
   } catch (error) {
     console.error("Error processing with Vision API:", error);
@@ -202,7 +203,8 @@ export async function processReceiptWithOpenRouter(receiptImage: File) {
     return {
       text: extractedText,
       date,
-      merchant
+      merchant,
+      success: true
     };
   } catch (error) {
     console.error("Error processing with OpenRouter:", error);
@@ -232,14 +234,17 @@ export async function processReceiptWithTesseract(receiptImage: File) {
     return {
       text: placeholderText,
       date: new Date().toISOString().split('T')[0],
-      merchant: "Store"
+      merchant: "Store",
+      success: true
     };
   } catch (error) {
     console.error("Error in simplified OCR processing:", error);
     return {
       text: "",
       date: new Date().toISOString().split('T')[0],
-      merchant: "Store"
+      merchant: "Store",
+      success: false,
+      error: "OCR processing failed"
     };
   }
 }

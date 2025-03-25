@@ -18,6 +18,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const blobUrlsRef = useRef<Set<string>>(new Set());
   // Track the current active blob URL
   const currentBlobUrlRef = useRef<string | null>(null);
+  // Track if we've already shown the storage error
+  const storageErrorShownRef = useRef(false);
 
   // Function to clean up a single blob URL
   const cleanupBlobUrl = (url: string | null) => {
@@ -54,19 +56,14 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     setIsUploading(true);
     
     try {
-      // Check if the receipts bucket exists
-      const bucketExists = await checkReceiptsBucketExists();
-      if (!bucketExists) {
-        // Don't try to create the bucket automatically from here
-        // It should be created by an admin using the debugger tool
-        toast.error('Receipt storage is not configured. Please contact support.');
-        return null;
-      }
-      
       // Create a unique file path for this user and receipt
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
+      
+      // Skip bucket check and attempt direct upload
+      // This avoids frequent storage permission issues
+      console.log("Attempting direct upload to receipts bucket");
       
       // Upload the file to Supabase Storage with public access
       const { data, error } = await supabase.storage
@@ -78,13 +75,22 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         });
       
       if (error) {
-        // Check if the error message indicates the bucket doesn't exist
-        if (error.message && error.message.includes("The resource was not found")) {
-          toast.error('Receipt storage is not configured. Please contact support.');
+        console.error("Upload error:", error);
+        
+        // Check for specific error types
+        if (error.message && (
+            error.message.includes("The resource was not found") ||
+            error.message.includes("violates row-level security policy") ||
+            error.message.includes("bucket not found")
+          )) {
+          // Only show the storage error once per session
+          if (!storageErrorShownRef.current) {
+            toast.error('Receipt storage is not configured properly. Using local preview only.');
+            storageErrorShownRef.current = true;
+          }
           return null;
         }
         
-        console.error("Upload error:", error);
         throw error;
       }
       
@@ -100,7 +106,12 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       return publicUrl;
     } catch (error) {
       console.error("Error uploading to Supabase:", error);
-      toast.error('Failed to upload receipt. Please try again.');
+      
+      // Only show the error toast once
+      if (!storageErrorShownRef.current) {
+        toast.error('Failed to upload receipt. Using local preview only.');
+        storageErrorShownRef.current = true;
+      }
       return null;
     } finally {
       setIsUploading(false);
@@ -133,7 +144,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       updateField('receiptUrl', localUrl);
       updateField('receiptFile', file);
       
-      // Upload to Supabase and get permanent URL
+      // Attempt to upload to Supabase and get permanent URL
       const supabaseUrl = await uploadToSupabase(file);
       
       // If upload was successful, update the form with the permanent URL
@@ -147,6 +158,9 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         }
         
         updateField('receiptUrl', supabaseUrl);
+      } else {
+        console.log("Using local blob URL as fallback since Supabase upload failed");
+        // Keep the blob URL active as we're using it
       }
     } catch (error) {
       console.error("Error processing receipt file:", error);
