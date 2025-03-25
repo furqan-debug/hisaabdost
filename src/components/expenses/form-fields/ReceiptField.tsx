@@ -1,10 +1,11 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
 import { ReceiptActions } from "./receipt/ReceiptActions";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -31,7 +32,7 @@ export function ReceiptField({
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { isMobile } = useMobile();
+  const { isMobile } = useIsMobile();
   
   // State for receipt scanning dialog
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
@@ -40,7 +41,7 @@ export function ReceiptField({
   const [processingStarted, setProcessingStarted] = useState(false);
   
   // Expose the refs to the parent component if needed
-  useState(() => {
+  useEffect(() => {
     if (setFileInputRef && fileInputRef.current) {
       setFileInputRef(fileInputRef.current);
     }
@@ -48,7 +49,7 @@ export function ReceiptField({
     if (setCameraInputRef && cameraInputRef.current) {
       setCameraInputRef(cameraInputRef.current);
     }
-  });
+  }, [setFileInputRef, setCameraInputRef]);
 
   const handleUpload = () => {
     // Only open file dialog if we're not already processing a receipt
@@ -124,27 +125,19 @@ export function ReceiptField({
           onReplace={handleUpload} 
         />
         
-        {/* Hidden file input for regular uploads */}
-        <Input
+        {/* Hidden file inputs */}
+        <ReceiptFileInput
           id="expense-receipt"
-          name="receipt"
-          type="file"
-          accept="image/*"
           onChange={handleFileSelection}
-          ref={fileInputRef}
-          className="hidden"
+          inputRef={fileInputRef}
+          useCamera={false}
         />
         
-        {/* Hidden file input specifically for camera capture */}
-        <Input
+        <ReceiptFileInput
           id="camera-capture"
-          name="camera"
-          type="file"
-          accept="image/*"
-          capture="environment"
           onChange={handleFileSelection}
-          ref={cameraInputRef}
-          className="hidden"
+          inputRef={cameraInputRef}
+          useCamera={true}
         />
         
         <ReceiptActions
