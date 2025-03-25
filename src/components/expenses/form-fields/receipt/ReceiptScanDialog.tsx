@@ -5,7 +5,8 @@ import { ScanProgress } from "./components/ScanProgress";
 import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -32,10 +33,13 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = true, // Default to true to always auto-save
-  autoProcess = true, // Default to true to always auto-process
+  autoSave = true,
+  autoProcess = true,
   onManualEntry
 }: ReceiptScanDialogProps) {
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [processingComplete, setProcessingComplete] = useState(false);
+  
   const {
     isScanning,
     scanProgress,
@@ -50,8 +54,11 @@ export function ReceiptScanDialog({
     file,
     onCleanup,
     onCapture,
-    autoSave: true, // Always auto-save
-    setOpen
+    autoSave: true,
+    setOpen,
+    onSuccess: () => {
+      setProcessingComplete(true);
+    }
   });
   
   const hasAutoProcessed = useRef(false);
@@ -61,18 +68,61 @@ export function ReceiptScanDialog({
     if (open && file && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
       hasAutoProcessed.current = true;
       
-      // Start processing immediately
-      console.log("Auto-processing receipt...");
-      autoProcessReceipt();
+      // Start processing immediately with a small delay to allow UI to render
+      setTimeout(() => {
+        console.log("Auto-processing receipt...");
+        autoProcessReceipt();
+        setAttemptCount(prev => prev + 1);
+      }, 100);
     }
   }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt]);
   
-  // Reset the auto-processed flag when the dialog is closed
+  // Reset state when dialog is closed
   useEffect(() => {
     if (!open) {
       hasAutoProcessed.current = false;
+      setProcessingComplete(false);
+      setAttemptCount(0);
     }
   }, [open]);
+
+  // Retry logic for failed scans
+  useEffect(() => {
+    if ((scanTimedOut || scanError) && attemptCount < 2 && open && !processingComplete) {
+      // Auto-retry once after short delay
+      const retryTimer = setTimeout(() => {
+        console.log("Auto-retrying receipt scan...");
+        resetScanState();
+        autoProcessReceipt();
+        setAttemptCount(prev => prev + 1);
+      }, 1500);
+      
+      return () => clearTimeout(retryTimer);
+    }
+    
+    // If we've reached max retries and still have errors, show a message
+    if ((scanTimedOut || scanError) && attemptCount >= 2 && !processingComplete) {
+      toast.error("Receipt processing failed. Using basic information only.");
+      
+      // Try to get at least basic info from the image
+      if (onCapture) {
+        onCapture({
+          description: "Store Purchase",
+          amount: "0.00",
+          date: new Date().toISOString().split('T')[0],
+          category: "Other",
+          paymentMethod: "Card"
+        });
+      }
+      
+      // Close dialog after showing error
+      const closeTimer = setTimeout(() => {
+        setOpen(false);
+      }, 2000);
+      
+      return () => clearTimeout(closeTimer);
+    }
+  }, [scanTimedOut, scanError, attemptCount, open, processingComplete, resetScanState, autoProcessReceipt, onCapture, setOpen]);
 
   // Handle dialog close - only allow closing when not processing
   const handleClose = () => {

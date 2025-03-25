@@ -12,6 +12,7 @@ import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
 import { useEffect, useState } from "react";
 import { ReceiptScanDialog } from "./expenses/form-fields/receipt/ReceiptScanDialog";
+import { toast } from "sonner";
 
 interface AddExpenseSheetProps {
   onAddExpense: (expense: Expense) => void;
@@ -34,6 +35,7 @@ const AddExpenseSheet = ({
 }: AddExpenseSheetProps) => {
   const [showScanDialog, setShowScanDialog] = useState(false);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [processingError, setProcessingError] = useState<string | null>(null);
 
   const {
     formData,
@@ -50,23 +52,30 @@ const AddExpenseSheet = ({
     processReceiptFile
   } = useExpenseForm({ 
     expenseToEdit, 
-    onClose 
+    onClose,
+    onAddExpense
   });
 
   // Handle initial capture mode and file
   useEffect(() => {
-    if (open && !expenseToEdit) {
-      if (initialFile) {
+    if (open && !expenseToEdit && initialFile) {
+      try {
         // For upload/camera modes with a file, we need to auto-process
         // Create a preview URL for the dialog
         const previewUrl = URL.createObjectURL(initialFile);
         setFilePreviewUrl(previewUrl);
         
         // Process the file for form
-        processReceiptFile(initialFile);
+        processReceiptFile(initialFile).catch(err => {
+          console.error("Error processing receipt file:", err);
+          setProcessingError("Failed to process receipt image");
+        });
         
         // Always show scan dialog if we have a file
         setShowScanDialog(true);
+      } catch (error) {
+        console.error("Error setting up initial file:", error);
+        toast.error("Failed to process the receipt image");
       }
     }
   }, [open, expenseToEdit, initialFile, processReceiptFile]);
@@ -87,14 +96,30 @@ const AddExpenseSheet = ({
       setFilePreviewUrl(null);
     }
     setShowScanDialog(false);
+    setProcessingError(null);
   };
 
   // Determine if this is a manual entry or automated receipt process
   const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
 
+  // Handle sheet close
+  const handleSheetClose = (open: boolean) => {
+    if (!open) {
+      // Clean up any resources
+      handleScanDialogCleanup();
+      
+      // Call the parent's onOpenChange if provided
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
+    } else if (onOpenChange) {
+      onOpenChange(true);
+    }
+  };
+
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={handleSheetClose}>
         <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</SheetTitle>
@@ -124,8 +149,8 @@ const AddExpenseSheet = ({
         </SheetContent>
       </Sheet>
 
-      {/* Always enable auto-processing for receipts */}
-      {initialFile && (
+      {/* Receipt scanning dialog */}
+      {(initialFile || filePreviewUrl) && (
         <ReceiptScanDialog
           file={initialFile}
           previewUrl={filePreviewUrl}

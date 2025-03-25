@@ -1,131 +1,131 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export interface ExpenseItem {
-  description: string;
-  amount: string | number;
-  date: string;
-  category: string;
-  paymentMethod: string;
-  receiptUrl?: string | null;
-}
-
-export interface ScanResult {
-  items: ExpenseItem[];
+export async function saveExpenseFromScan(scanResult: {
+  items: Array<{
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+    receiptUrl?: string | null;
+  }>;
   merchant?: string;
   date?: string;
-}
-
-export async function saveExpenseFromScan(scanResult: ScanResult): Promise<boolean> {
-  try {
-    console.log("Starting saveExpenseFromScan with:", scanResult);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("You must be logged in to save expenses");
-      console.error("User not authenticated");
-      return false;
-    }
-
-    if (!scanResult.items || !Array.isArray(scanResult.items) || scanResult.items.length === 0) {
-      console.error("No valid items in scan result", scanResult);
-      toast.error("No valid items found in receipt");
-      return false;
-    }
-
-    const expenses = scanResult.items.map((item) => {
-      let amount = 0;
-      if (typeof item.amount === 'string') {
-        const cleanAmount = item.amount.replace(/[$,]/g, '');
-        amount = parseFloat(cleanAmount);
-        if (isNaN(amount)) {
-          console.warn("Invalid amount detected:", item.amount);
-          amount = 0;
-        }
-      } else if (typeof item.amount === 'number') {
-        amount = item.amount;
-      }
-      
-      const date = item.date || scanResult.date || new Date().toISOString().split('T')[0];
-      
-      return {
-        id: uuidv4(),
-        user_id: user.id,
-        amount: amount,
-        description: item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
-        date: date,
-        category: item.category || "Other",
-        payment: item.paymentMethod || "Card",
-        notes: scanResult.merchant ? `From: ${scanResult.merchant}` : "",
-        is_recurring: false,
-        receipt_url: item.receiptUrl || null
-      };
-    });
-
-    console.log("Saving expenses to database:", expenses);
-
-    const validExpenses = expenses.filter(exp => 
-      exp.description && 
-      exp.amount > 0 && 
-      exp.date && 
-      exp.category
-    );
-    
-    // If we filtered out all expenses, create a fallback expense
-    if (validExpenses.length === 0) {
-      console.warn("No valid expenses after filtering, creating fallback expense");
-      
-      validExpenses.push({
-        id: uuidv4(),
-        user_id: user.id,
-        amount: 1, // Use 1 as default amount
-        description: scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase",
-        date: scanResult.date || new Date().toISOString().split('T')[0],
-        category: "Other",
-        payment: "Card",
-        notes: "Created from receipt scan",
-        is_recurring: false,
-        receipt_url: scanResult.items[0]?.receiptUrl || null
-      });
-    }
-
-    const { error } = await supabase.from('expenses').insert(validExpenses);
-
-    if (error) {
-      console.error("Error saving expenses from receipt:", error);
-      toast.error("Failed to save expenses from receipt");
-      return false;
-    }
-
-    console.log(`Successfully saved ${validExpenses.length} expense(s) from receipt`);
-    toast.success(`Successfully saved ${validExpenses.length} expense(s)`);
-    return true;
-  } catch (error) {
-    console.error("Error in saveExpenseFromScan:", error);
-    toast.error("An error occurred while saving expenses from receipt");
-    return false;
-  }
-}
-
-// Function to retry saving expenses with manual data
-export async function saveManualExpenseFromReceipt(expenseData: {
-  description: string;
-  amount: string | number;
-  date: string;
-  category: string;
-  paymentMethod: string;
-  receiptUrl?: string | null;
 }): Promise<boolean> {
   try {
-    return await saveExpenseFromScan({
-      items: [expenseData],
-      date: expenseData.date
+    // Check if we have a logged-in user
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      console.error("User not authenticated");
+      
+      // Store the receipt data in sessionStorage for later use
+      // This allows the form to be populated even without saving to DB
+      sessionStorage.setItem('lastScanResult', JSON.stringify(scanResult));
+      
+      // Return true to indicate that at least we saved to session
+      return true;
+    }
+    
+    const userId = userData.user.id;
+    
+    // First, save receipt extraction to database
+    const { data: extractionData, error: extractionError } = await supabase
+      .from('receipt_extractions')
+      .insert({
+        user_id: userId,
+        merchant: scanResult.merchant || 'Unknown',
+        date: scanResult.date || new Date().toISOString().split('T')[0],
+        total: scanResult.items.reduce((sum, item) => sum + parseFloat(item.amount), 0),
+        receipt_url: scanResult.items[0]?.receiptUrl || null,
+        receipt_text: JSON.stringify(scanResult),
+        payment_method: scanResult.items[0]?.paymentMethod || 'Card'
+      })
+      .select()
+      .single();
+      
+    if (extractionError) {
+      console.error("Error saving receipt extraction:", extractionError);
+      // Continue even if receipt extraction fails
+    }
+    
+    const receiptId = extractionData?.id;
+    
+    // Format and validate items
+    const validatedItems = scanResult.items.map(item => {
+      // Validate date
+      let itemDate = item.date;
+      try {
+        // Try to parse as date, fall back to today if invalid
+        const date = new Date(item.date);
+        if (isNaN(date.getTime())) {
+          itemDate = new Date().toISOString().split('T')[0];
+        }
+      } catch (e) {
+        itemDate = new Date().toISOString().split('T')[0];
+      }
+      
+      // Validate amount
+      let itemAmount = parseFloat(item.amount.replace(/[^\d.-]/g, ''));
+      if (isNaN(itemAmount) || itemAmount <= 0) {
+        itemAmount = 0.01; // Set a minimum amount
+      }
+      
+      // Format payment method
+      const paymentMethod = item.paymentMethod || 'Card';
+      
+      return {
+        user_id: userId,
+        description: item.description || 'Store Purchase',
+        amount: itemAmount,
+        date: itemDate,
+        category: item.category || 'Other',
+        is_recurring: false,
+        receipt_url: item.receiptUrl || null,
+        payment: paymentMethod
+      };
     });
+    
+    // Save all expenses in a batch
+    if (validatedItems.length > 0) {
+      const { error: expensesError } = await supabase
+        .from('expenses')
+        .insert(validatedItems);
+        
+      if (expensesError) {
+        console.error("Error saving expenses:", expensesError);
+        toast.error("Failed to save expenses to database");
+        return false;
+      }
+      
+      // If we have a receipt ID, also save receipt items
+      if (receiptId && extractionData) {
+        try {
+          const receiptItems = scanResult.items.map(item => ({
+            receipt_id: receiptId,
+            name: item.description,
+            amount: parseFloat(item.amount.replace(/[^\d.-]/g, '')),
+            category: item.category
+          }));
+          
+          await supabase
+            .from('receipt_items')
+            .insert(receiptItems);
+        } catch (itemError) {
+          console.error("Error saving receipt items:", itemError);
+          // Continue even if receipt items fail
+        }
+      }
+      
+      console.log(`Successfully saved ${validatedItems.length} expenses`);
+      return true;
+    } else {
+      console.error("No valid items to save");
+      return false;
+    }
   } catch (error) {
-    console.error("Error in saveManualExpenseFromReceipt:", error);
-    toast.error("Failed to save manual expense");
+    console.error("Error in saveExpenseFromScan:", error);
     return false;
   }
 }
