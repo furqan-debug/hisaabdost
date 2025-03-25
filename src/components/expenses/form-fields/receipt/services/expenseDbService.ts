@@ -68,7 +68,8 @@ export async function saveExpenseFromScan(scanResult: {
       return {
         user_id: userId,
         description: item.description || 'Store Purchase',
-        amount: itemAmount,
+        // Convert amount to number for database
+        amount: parseFloat(itemAmount),
         date: itemDate,
         category: item.category || 'Other',
         is_recurring: false,
