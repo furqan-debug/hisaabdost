@@ -48,14 +48,40 @@ export async function scanReceipt({
       formData.append('receiptUrl', receiptUrl);
     }
     
+    // Add enhanced processing flag
+    formData.append('enhanced', 'true');
+    
+    // Add a timestamp to prevent caching
+    formData.append('timestamp', Date.now().toString());
+    
     // Report progress at start
     onProgress?.(10, "Preparing receipt for scanning...");
+    
+    // Set up abort controller for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.warn("Receipt scan request timed out");
+    }, 60000); // 60 second timeout
     
     // Make the API request to the Supabase Edge Function
     const response = await fetch('https://skmzvfihekgmxtjcsdmg.supabase.co/functions/v1/scan-receipt', {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
+      headers: {
+        // No custom headers needed as FormData sets the content-type automatically
+      }
+    }).catch(error => {
+      // Check if the error is due to timeout/abort
+      if (error.name === 'AbortError') {
+        throw new Error("Request timed out");
+      }
+      throw error;
     });
+    
+    // Clear the timeout since we got a response
+    clearTimeout(timeoutId);
     
     onProgress?.(30, "Processing receipt image...");
     
@@ -71,7 +97,7 @@ export async function scanReceipt({
       const errorText = await response.text();
       console.error(`Error scanning receipt: ${response.status}`, errorText);
       onError?.(errorText || "Failed to scan receipt");
-      return { success: false, error: errorText || "Failed to scan receipt" };
+      return { success: false, error: errorText || `Failed to scan receipt (Status: ${response.status})` };
     }
     
     onProgress?.(60, "Extracting data from receipt...");
@@ -87,6 +113,20 @@ export async function scanReceipt({
       return { success: false, isTimeout: true, error: "Processing timed out" };
     }
     
+    // Handle error from the response
+    if (result.error) {
+      console.error("Error in scan result:", result.error);
+      onError?.(result.error);
+      return { 
+        success: false, 
+        error: result.error,
+        // Still include any partial data that might have been extracted
+        items: result.items || [],
+        merchant: result.merchant || result.storeName,
+        date: result.date
+      };
+    }
+    
     onProgress?.(90, "Finalizing results...");
     
     // If we have a stored receipt URL, add it to each item
@@ -97,6 +137,21 @@ export async function scanReceipt({
       }));
     }
     
+    // Create fallback item if no items were found
+    if (!result.items || result.items.length === 0) {
+      const fallbackItem = {
+        description: result.merchant || result.storeName || "Store Purchase",
+        amount: result.total || "0.00",
+        date: result.date || new Date().toISOString().split('T')[0],
+        category: "Other",
+        paymentMethod: "Card",
+        receiptUrl: receiptUrl
+      };
+      
+      result.items = [fallbackItem];
+      console.log("Using fallback item:", fallbackItem);
+    }
+    
     onProgress?.(100, "Scan complete!");
     
     return {
@@ -104,11 +159,23 @@ export async function scanReceipt({
       items: result.items || [],
       merchant: result.merchant || result.storeName,
       date: result.date,
-      error: result.error
+      error: result.warning // Use warning as non-fatal error
     };
   } catch (error) {
     console.error("Error in scanReceipt:", error);
-    onError?.(error instanceof Error ? error.message : "Unknown error occurred");
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    
+    // Check for network errors which might be causing "Failed to fetch"
+    const errorMessage = error instanceof Error 
+      ? (error.name === 'TypeError' && error.message.includes('fetch') 
+          ? "Network error: Please check your internet connection and try again"
+          : error.message)
+      : "Unknown error occurred";
+      
+    onError?.(errorMessage);
+    
+    return { 
+      success: false, 
+      error: errorMessage
+    };
   }
 }

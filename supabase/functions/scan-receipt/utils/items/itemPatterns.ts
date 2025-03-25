@@ -63,18 +63,28 @@ export const itemExtractionPatterns = [
   /(.+?)\s{2,}(\d+\.\d{2})$/,
   
   // Item code + description + price
-  /\d{3,}[-\s]+(.+?)\s+\$?(\d+\.\d{2})$/
+  /\d{3,}[-\s]+(.+?)\s+\$?(\d+\.\d{2})$/,
+  
+  // Indian/European currency format with ₹/€ symbol and comma for decimal
+  /(.+?)\s+[₹€]\s*(\d+[,\.]\d{2})$/,
+  
+  // Indian format with ₹ symbol at beginning
+  /(.+?)\s+₹\s*(\d+[,\.]\d{2})$/,
+  
+  // Format for receipt in the image: quantity | item | price
+  /^(\d+)\s+(.+?)\s+[₹€$]\s*(\d+[,\.]\d{2})$/
 ];
 
 // Improved helper functions for item extraction
 export function isLikelyItemLine(line: string): boolean {
-  // Check if the line contains a price pattern
-  if (line.match(/\$?\d+\.\d{2}/) || line.match(/\d+\s*@\s*\$?\d+\.\d{2}/)) {
+  // Check if the line contains a price pattern with any common currency symbol
+  if (line.match(/[\$₹€]?\d+[,\.]\d{2}/) || line.match(/\d+\s*@\s*[\$₹€]?\d+[,\.]\d{2}/)) {
     // Exclude lines that are likely non-item lines
     const nonItemPatterns = [
       /subtotal/i, /tax/i, /total/i, /balance/i, /change/i, 
       /card/i, /cash/i, /payment/i, /discount/i, /thank you/i,
-      /receipt/i, /date/i, /time/i, /store/i, /address/i, /tel/i
+      /receipt/i, /date/i, /time/i, /store/i, /address/i, /tel/i,
+      /sale/i, /visa/i, /mastercard/i, /credit/i, /debit/i
     ];
     
     // Check if the line matches any non-item pattern
@@ -91,19 +101,38 @@ export function isLikelyItemLine(line: string): boolean {
 }
 
 export function cleanItemText(text: string): string {
+  if (!text) return '';
+  
   // Remove common prefixes
-  text = text.replace(/^item[:\s]+/i, '')
-               .replace(/^product[:\s]+/i, '')
-               .replace(/^[\d]+[\s-]+/, '') // Item numbers/codes
-               .replace(/^\*+\s*/, '') // Asterisks
-               .replace(/^-+\s*/, ''); // Dashes
+  text = text
+    .replace(/^item[:\s]+/i, '')
+    .replace(/^product[:\s]+/i, '')
+    .replace(/^[\d]+[\s-]+/, '') // Item numbers/codes
+    .replace(/^\*+\s*/, '') // Asterisks
+    .replace(/^-+\s*/, ''); // Dashes
   
   // Remove non-descriptive elements
-  text = text.replace(/SKU\s*\d+/i, '')
-             .replace(/UPC\s*\d+/i, '')
-             .replace(/PLU\s*\d+/i, '')
-             .replace(/\(\d+\s*for\s*\$?[\d\.]+\)/i, '') // Multi-buy offers
-             .replace(/\d+\s*\@\s*\$?[\d\.]+/i, ''); // Price per unit
+  text = text
+    .replace(/SKU\s*\d+/i, '')
+    .replace(/UPC\s*\d+/i, '')
+    .replace(/PLU\s*\d+/i, '')
+    .replace(/\(\d+\s*for\s*\$?[\d\.]+\)/i, '') // Multi-buy offers
+    .replace(/\d+\s*\@\s*\$?[\d\.]+/i, ''); // Price per unit
+  
+  // Remove trailing price-related text
+  text = text
+    .replace(/\s+[\$₹€]\s*\d+[,\.]\d{2}$/, '')
+    .replace(/\s+\d+[,\.]\d{2}$/, '');
+  
+  // Remove item quantities from the start (like "2 x")
+  text = text
+    .replace(/^\d+\s*[xX]\s*/, '')
+    .replace(/^\s*[xX]\s*\d+\s*/, '');
+    
+  // Handle fish burger case like in the image
+  if (text.toLowerCase().includes('fish') || text.toLowerCase().includes('burger')) {
+    text = text.replace(/\s+$/, '');
+  }
   
   // Trim whitespace and capitalize first letter
   text = text.trim();

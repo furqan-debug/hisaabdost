@@ -41,16 +41,21 @@ export function useScanReceipt({
   } = useScanState();
   
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  const [lastScannedFile, setLastScannedFile] = useState<File | null>(null);
   
   // Scan the receipt manually
   const handleScanReceipt = useCallback(async () => {
-    if (!file || isScanning || isAutoProcessing) return;
+    // Use the current file or the last successfully scanned file for retry
+    const fileToScan = file || lastScannedFile;
+    
+    if (!fileToScan || isScanning || isAutoProcessing) return;
     
     startScan();
+    setLastScannedFile(fileToScan);
     
     try {
       const result = await scanReceipt({
-        file,
+        file: fileToScan,
         onProgress: updateProgress,
         onTimeout: timeoutScan,
         onError: errorScan
@@ -83,6 +88,32 @@ export function useScanReceipt({
           }
         }, 1000);
       } else {
+        // Handle partial success - we might have errors but still got some data
+        if (result.items && result.items.length > 0) {
+          if (onCapture && result.items[0]) {
+            onCapture(result.items[0]);
+            
+            if (autoSave) {
+              await saveExpenseFromScan({
+                items: result.items,
+                merchant: result.merchant,
+                date: result.date
+              });
+            }
+            
+            toast.warning("Receipt processed with limited accuracy");
+            
+            setTimeout(() => {
+              endScan();
+              onCleanup();
+              setOpen(false);
+            }, 1000);
+            
+            return;
+          }
+        }
+        
+        // No useful data was extracted
         if (result.isTimeout) {
           timeoutScan();
         } else {
@@ -93,13 +124,14 @@ export function useScanReceipt({
       console.error("Error scanning receipt:", error);
       errorScan(error instanceof Error ? error.message : "An unknown error occurred");
     }
-  }, [file, isScanning, isAutoProcessing, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, autoSave, onCleanup, setOpen]);
+  }, [file, lastScannedFile, isScanning, isAutoProcessing, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, autoSave, onCleanup, setOpen]);
   
   // Auto-process a receipt scan
   const autoProcessReceipt = useCallback(async () => {
     if (!file || isScanning || isAutoProcessing) return;
     
     setIsAutoProcessing(true);
+    setLastScannedFile(file);
     updateProgress(5, "Starting automatic receipt processing...");
     
     try {
@@ -175,6 +207,7 @@ export function useScanReceipt({
   const resetScanState = useCallback(() => {
     resetState();
     setIsAutoProcessing(false);
+    // Don't reset lastScannedFile so it can be used for retries
   }, [resetState]);
   
   return {

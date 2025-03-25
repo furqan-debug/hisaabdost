@@ -1,86 +1,82 @@
 
-// Map common item words to expense categories
-const categoryKeywords: Record<string, string[]> = {
-  "Groceries": [
-    "apple", "banana", "bread", "milk", "cheese", "yogurt", "cereal", "eggs", 
-    "butter", "chicken", "beef", "pork", "rice", "pasta", "vegetable", "fruit",
-    "juice", "soda", "water", "coffee", "tea", "sugar", "flour", "grocery", "food",
-    "produce", "meat", "dairy", "bakery", "organic", "tomato", "potato", "onion",
-    "carrot", "lettuce", "cucumber", "pepper", "beans", "frozen", "snack", "cookie",
-    "chip", "sauce", "oil", "vinegar", "spice", "herb", "condiment"
-  ],
-  "Dining": [
-    "restaurant", "cafe", "diner", "eatery", "bistro", "pub", "bar", "grill", 
-    "steakhouse", "pizzeria", "sushi", "burger", "taco", "sandwich", "coffee",
-    "breakfast", "lunch", "dinner", "meal", "entree", "appetizer", "dessert",
-    "delivery", "takeout", "doordash", "ubereats", "grubhub", "mcdonalds", 
-    "wendys", "subway", "chipotle", "starbucks", "dunkin"
+// Map common items to expense categories
+const categoryMap: Record<string, string[]> = {
+  "Food": [
+    "grocery", "groceries", "food", "meal", "burger", "pizza", "restaurant", 
+    "cafe", "coffee", "lunch", "dinner", "breakfast", "snack", "drink", 
+    "beverage", "beer", "wine", "liquor", "takeout", "bakery", "meat", 
+    "produce", "fruit", "vegetable", "dairy", "milk", "cheese", "yogurt",
+    "fish", "chips", "sandwich", "salad", "dessert", "cake", "ice cream",
+    "chocolate", "candy", "soda", "juice", "water", "tea"
   ],
   "Transportation": [
-    "gas", "fuel", "petrol", "diesel", "uber", "lyft", "taxi", "cab", "fare",
-    "rail", "train", "subway", "bus", "transit", "transport", "commute", "toll",
-    "parking", "garage", "car", "vehicle", "auto", "tire", "oil", "change", 
-    "service", "repair", "maintenance", "wash", "ticket", "pass", "metro"
-  ],
-  "Housing": [
-    "rent", "mortgage", "landlord", "property", "apartment", "condo", "house",
-    "home", "tenant", "lease", "security", "deposit", "housing", "accommodation",
-    "utility", "electric", "gas", "water", "sewage", "garbage", "waste", "internet",
-    "cable", "tv", "phone", "furniture", "appliance", "repair", "maintenance"
-  ],
-  "Entertainment": [
-    "movie", "theater", "cinema", "film", "concert", "show", "event", "ticket",
-    "sport", "game", "match", "play", "musical", "opera", "performance", "exhibit",
-    "museum", "gallery", "park", "zoo", "aquarium", "tour", "festival", "fair",
-    "amusement", "entertainment", "netflix", "hulu", "disney", "spotify", "streaming"
-  ],
-  "Shopping": [
-    "clothing", "apparel", "fashion", "accessory", "shoe", "jewelry", "watch",
-    "handbag", "purse", "wallet", "backpack", "luggage", "electronic", "device",
-    "gadget", "computer", "laptop", "tablet", "phone", "headphone", "speaker",
-    "camera", "book", "gift", "present", "souvenir", "decor", "decoration", "retail",
-    "store", "shop", "mall", "outlet", "market", "amazon", "walmart", "target"
-  ],
-  "Healthcare": [
-    "doctor", "physician", "medical", "medicine", "health", "healthcare", "clinic",
-    "hospital", "emergency", "er", "urgent", "care", "specialist", "dentist", "dental",
-    "vision", "eye", "optometrist", "prescription", "pharmacy", "drug", "medication",
-    "treatment", "therapy", "physical", "mental", "counseling", "psychology", "insurance"
-  ],
-  "Personal": [
-    "haircut", "salon", "spa", "massage", "beauty", "cosmetic", "makeup", "skincare",
-    "nail", "manicure", "pedicure", "barber", "grooming", "hygiene", "personal",
-    "care", "toiletry", "vitamin", "supplement", "fitness", "gym", "exercise",
-    "workout", "training", "membership", "subscription"
-  ],
-  "Education": [
-    "school", "college", "university", "education", "academic", "tuition", "fee",
-    "course", "class", "lecture", "seminar", "workshop", "training", "book", "textbook",
-    "notebook", "supply", "material", "equipment", "software", "subscription", "library",
-    "research", "study", "student", "test", "exam", "certification", "degree", "diploma"
+    "gas", "fuel", "petrol", "diesel", "car", "auto", "vehicle", "repair", 
+    "maintenance", "oil", "tire", "tyre", "battery", "parking", "toll", 
+    "fare", "ticket", "uber", "lyft", "taxi", "cab", "bus", "train", 
+    "subway", "metro", "transit", "transport", "flight", "airline"
   ],
   "Utilities": [
-    "electric", "electricity", "gas", "water", "sewage", "garbage", "waste", "recycling",
-    "internet", "wifi", "broadband", "cable", "tv", "phone", "mobile", "cellular",
-    "utility", "bill", "service", "provider", "connection", "usage", "consumption"
+    "electric", "electricity", "water", "gas", "power", "utility", "sewage", 
+    "garbage", "trash", "waste", "internet", "wifi", "phone", "mobile", 
+    "cell", "cable", "tv", "television", "streaming", "subscription"
+  ],
+  "Housing": [
+    "rent", "mortgage", "house", "apartment", "condo", "housing", "property", 
+    "maintenance", "repair", "improvement", "furniture", "decor", "appliance", 
+    "cleaning", "service", "lawn", "garden", "home", "insurance"
+  ],
+  "Entertainment": [
+    "movie", "theatre", "theater", "concert", "show", "event", "ticket", 
+    "game", "sport", "hobby", "book", "music", "subscription", "streaming", 
+    "netflix", "hulu", "spotify", "disney", "amazon", "apple", "video", "audio"
+  ],
+  "Health": [
+    "doctor", "medical", "medicine", "health", "dental", "vision", "prescription", 
+    "drug", "fitness", "gym", "exercise", "vitamin", "supplement", "therapy", 
+    "hospital", "clinic", "insurance"
+  ],
+  "Shopping": [
+    "clothing", "clothes", "apparel", "fashion", "accessory", "jewelry", 
+    "electronic", "device", "gadget", "technology", "computer", "laptop", 
+    "phone", "retail", "store", "mall", "online", "amazon", "ebay", "etsy", 
+    "walmart", "target", "best buy", "apple", "purchase", "shopping"
+  ],
+  "Personal": [
+    "haircut", "salon", "spa", "beauty", "cosmetic", "makeup", "skincare", 
+    "personal", "care", "hygiene", "toiletry", "laundry", "dry clean", 
+    "service", "education", "course", "class", "tuition", "school", "college"
+  ],
+  "Business": [
+    "office", "supply", "business", "professional", "service", "consulting", 
+    "software", "subscription", "license", "fee", "dues", "membership"
+  ],
+  "Bills": [
+    "bill", "payment", "fee", "subscription", "insurance", "tax", "loan", 
+    "credit", "debt", "finance", "interest", "bank", "service"
   ]
 };
 
-// Guess category based on item name
+// Guess the most likely category for an item based on its name
 export function guessCategoryFromItemName(itemName: string): string {
   if (!itemName) return "Other";
   
-  const normalizedName = itemName.toLowerCase();
+  const lowerName = itemName.toLowerCase();
   
-  // Check if any category keywords match
-  for (const [category, keywords] of Object.entries(categoryKeywords)) {
+  // Check each category's keywords
+  for (const [category, keywords] of Object.entries(categoryMap)) {
     for (const keyword of keywords) {
-      if (normalizedName.includes(keyword)) {
+      if (lowerName.includes(keyword)) {
         return category;
       }
     }
   }
   
-  // Return default category if no match found
+  // Special case detection for specific patterns
+  if (lowerName.match(/\d+\s*x/)) {
+    // If it has a quantity, it's likely a grocery/food item
+    return "Food";
+  }
+  
+  // Default category if no match found
   return "Other";
 }

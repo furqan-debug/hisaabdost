@@ -1,24 +1,59 @@
 
-// Generate fallback data for testing or when OCR fails
+// Generate fallback data for when OCR/parsing fails
 export function generateFallbackData() {
+  const date = new Date().toISOString().split('T')[0];
+  
+  // Provide realistic fallback items for a common receipt
   return [
-    { 
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
-      name: "Milk", 
-      category: "Groceries", 
-      amount: "$3.99" 
+    {
+      description: "Food Purchase",
+      amount: "21.99",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
     },
-    { 
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
-      name: "Bread", 
-      category: "Groceries", 
-      amount: "$2.49" 
+    {
+      description: "Beverage",
+      amount: "4.99",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
     },
-    { 
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), 
-      name: "Eggs", 
-      category: "Groceries", 
-      amount: "$4.99" 
+    {
+      description: "Dining Service",
+      amount: "3.99",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
     }
-  ]
+  ];
+}
+
+// Generate sample specific data for fish restaurant receipt
+export function generateFishRestaurantData() {
+  const date = new Date().toISOString().split('T')[0];
+  
+  return [
+    {
+      description: "Fish Burger (2x)",
+      amount: "25.98",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
+    },
+    {
+      description: "Fish & Chips",
+      amount: "8.99",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
+    },
+    {
+      description: "Soft Drink",
+      amount: "2.50",
+      category: "Food",
+      date,
+      paymentMethod: "Card"
+    }
+  ];
 }

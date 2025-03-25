@@ -63,7 +63,7 @@ export async function preprocessImage(imageFile: File) {
               // Weight based on spatial distance and intensity difference (bilateral filter)
               const pixelDiff = Math.abs(centerPixel - tempData[nidx])
               // Only include pixels that are similar in intensity (preserves edges/text)
-              if (pixelDiff < 30) {  // Lower threshold for better edge preservation
+              if (pixelDiff < 20) {  // Lower threshold for better edge preservation
                 sum += tempData[nidx]
                 count++
               }
@@ -79,8 +79,8 @@ export async function preprocessImage(imageFile: File) {
     }
     
     // Step 3: Apply adaptive thresholding for better text extraction
-    const blockSize = 35 // Larger block size for more robust thresholding
-    const C = 8 // Lower constant for better text detection
+    const blockSize = 25 // Larger block size for more robust thresholding
+    const C = 5 // Lower constant for better text detection
 
     // More sophisticated adaptive thresholding
     for (let y = 0; y < height; y++) {

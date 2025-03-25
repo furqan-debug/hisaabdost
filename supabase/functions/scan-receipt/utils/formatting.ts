@@ -1,43 +1,33 @@
 
-// Format price to match required output
-export function formatPrice(price: number) {
-  return `$${price.toFixed(2)}`
+// Format a price number to a standard string format
+export function formatPrice(price: number): string {
+  return price.toFixed(2);
 }
 
 // Capitalize the first letter of a string
-export function capitalizeFirstLetter(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
+export function capitalizeFirstLetter(string: string): string {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// Guess category based on item name
-export function guessCategory(itemName: string) {
-  const lowerName = itemName.toLowerCase()
+// Format a date to a standard string format (YYYY-MM-DD)
+export function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+// Parse a number from a string, handling various formats
+export function parseNumber(str: string): number {
+  if (!str) return 0;
   
-  // Food categories
-  if (lowerName.includes('milk') || 
-      lowerName.includes('egg') || 
-      lowerName.includes('bread') ||
-      lowerName.includes('cheese') ||
-      lowerName.includes('yogurt') ||
-      lowerName.includes('fruit') ||
-      lowerName.includes('vegetable') ||
-      lowerName.includes('meat') ||
-      lowerName.includes('chicken') ||
-      lowerName.includes('fish') ||
-      lowerName.includes('cereal')) {
-    return "Groceries"
-  }
+  // Remove currency symbols and other non-numeric characters except for decimal points
+  const cleanedStr = str.replace(/[^\d.,]/g, '')
+                        .replace(',', '.'); // Replace comma with dot for decimal
   
-  // Household items
-  if (lowerName.includes('paper') ||
-      lowerName.includes('cleaner') ||
-      lowerName.includes('soap') ||
-      lowerName.includes('detergent') ||
-      lowerName.includes('tissue') ||
-      lowerName.includes('toilet')) {
-    return "Household"
-  }
-  
-  // Default category
-  return "Shopping"
+  return parseFloat(cleanedStr) || 0;
+}
+
+// Check if a string contains a valid price
+export function containsPrice(str: string): boolean {
+  // Match patterns like $12.99, 12,99€, ₹12.99, etc.
+  return /[\$€₹]?\s*\d+[.,]\d{2}/.test(str);
 }
