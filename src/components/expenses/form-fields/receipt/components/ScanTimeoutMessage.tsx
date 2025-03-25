@@ -1,5 +1,6 @@
 
-import { AlertTriangle, RefreshCw, FileWarning } from "lucide-react";
+import { AlertTriangle, RefreshCw, FileWarning, FileX } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface ScanTimeoutMessageProps {
   scanTimedOut: boolean;
@@ -7,7 +8,27 @@ interface ScanTimeoutMessageProps {
 }
 
 export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessageProps) {
-  if (!scanTimedOut && !scanError) return null;
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(scanError);
+  
+  // Handle file access errors
+  useEffect(() => {
+    if (scanError && scanError.includes("ERR_FILE_NOT_FOUND")) {
+      setErrorMessage("The receipt image file could not be accessed. It may have been removed or expired.");
+    } else {
+      setErrorMessage(scanError);
+    }
+  }, [scanError]);
+  
+  if (!scanTimedOut && !errorMessage) return null;
+  
+  // Check if error is related to file access
+  const isFileAccessError = errorMessage && (
+    errorMessage.includes("ERR_FILE_NOT_FOUND") || 
+    errorMessage.includes("blob:") || 
+    errorMessage.includes("Failed to fetch") ||
+    errorMessage.includes("access") ||
+    errorMessage.includes("file")
+  );
   
   return (
     <div className="text-sm text-amber-500 flex items-center gap-2 bg-amber-950/30 dark:bg-amber-950/30 p-3 rounded-md w-full">
@@ -16,11 +37,21 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
           <RefreshCw className="h-4 w-4 shrink-0" />
           <p>The scan timed out. Try taking a clearer photo, using a smaller image file, or click "Retry Scan".</p>
         </>
-      ) : scanError ? (
+      ) : isFileAccessError ? (
+        <>
+          <FileX className="h-4 w-4 shrink-0" />
+          <div>
+            <p>The receipt image file could not be accessed.</p>
+            <p className="mt-1 text-xs">Try uploading the receipt again or click "Retry Scan".</p>
+          </div>
+        </>
+      ) : errorMessage ? (
         <>
           <FileWarning className="h-4 w-4 shrink-0" />
-          <p>{scanError}</p>
-          <p className="mt-1 text-xs">Click "Retry Scan" to attempt processing again.</p>
+          <div>
+            <p>{errorMessage}</p>
+            <p className="mt-1 text-xs">Click "Retry Scan" to attempt processing again.</p>
+          </div>
         </>
       ) : (
         <>
