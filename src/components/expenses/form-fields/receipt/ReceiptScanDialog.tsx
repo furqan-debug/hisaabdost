@@ -54,7 +54,7 @@ export function ReceiptScanDialog({
     file,
     onCleanup,
     onCapture,
-    autoSave: true,
+    autoSave,
     setOpen,
     onSuccess: () => {
       setProcessingComplete(true);
@@ -68,12 +68,14 @@ export function ReceiptScanDialog({
     if (open && file && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
       hasAutoProcessed.current = true;
       
-      // Start processing immediately with a small delay to allow UI to render
-      setTimeout(() => {
+      // Start processing after a small delay to allow UI to render
+      const timer = setTimeout(() => {
         console.log("Auto-processing receipt...");
         autoProcessReceipt();
         setAttemptCount(prev => prev + 1);
       }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt]);
   
@@ -86,16 +88,19 @@ export function ReceiptScanDialog({
     }
   }, [open]);
 
-  // Retry logic for failed scans
+  // Retry logic for failed scans with exponential backoff
   useEffect(() => {
     if ((scanTimedOut || scanError) && attemptCount < 2 && open && !processingComplete) {
-      // Auto-retry once after short delay
+      // Calculate backoff delay (first retry 1.5s, second retry 3s)
+      const backoffDelay = Math.min(1500 * Math.pow(2, attemptCount - 1), 3000);
+      
+      // Auto-retry with backoff
       const retryTimer = setTimeout(() => {
-        console.log("Auto-retrying receipt scan...");
+        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1})...`);
         resetScanState();
         autoProcessReceipt();
         setAttemptCount(prev => prev + 1);
-      }, 1500);
+      }, backoffDelay);
       
       return () => clearTimeout(retryTimer);
     }
@@ -164,7 +169,8 @@ export function ReceiptScanDialog({
         </DialogDescription>
         
         <div className="flex flex-col items-center space-y-4">
-          <ReceiptPreviewImage previewUrl={previewUrl} />
+          {/* Only show preview if we have a URL and it's not a revoked blob URL */}
+          {previewUrl && <ReceiptPreviewImage previewUrl={previewUrl} />}
           
           <ScanProgress
             isScanning={isScanning || isAutoProcessing}

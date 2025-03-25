@@ -21,7 +21,6 @@ export async function saveExpenseFromScan(scanResult: {
       console.error("User not authenticated");
       
       // Store the receipt data in sessionStorage for later use
-      // This allows the form to be populated even without saving to DB
       sessionStorage.setItem('lastScanResult', JSON.stringify(scanResult));
       
       // Return true to indicate that at least we saved to session
@@ -38,7 +37,7 @@ export async function saveExpenseFromScan(scanResult: {
         merchant: scanResult.merchant || 'Unknown',
         date: scanResult.date || new Date().toISOString().split('T')[0],
         total: scanResult.items.reduce((sum, item) => sum + parseFloat(item.amount), 0),
-        receipt_url: scanResult.items[0]?.receiptUrl || null,
+        receipt_url: sanitizeReceiptUrl(scanResult.items[0]?.receiptUrl),
         receipt_text: JSON.stringify(scanResult),
         payment_method: scanResult.items[0]?.paymentMethod || 'Card'
       })
@@ -55,22 +54,13 @@ export async function saveExpenseFromScan(scanResult: {
     // Format and validate items
     const validatedItems = scanResult.items.map(item => {
       // Validate date
-      let itemDate = item.date;
-      try {
-        // Try to parse as date, fall back to today if invalid
-        const date = new Date(item.date);
-        if (isNaN(date.getTime())) {
-          itemDate = new Date().toISOString().split('T')[0];
-        }
-      } catch (e) {
-        itemDate = new Date().toISOString().split('T')[0];
-      }
+      let itemDate = validateDate(item.date);
       
       // Validate amount
-      let itemAmount = parseFloat(item.amount.replace(/[^\d.-]/g, ''));
-      if (isNaN(itemAmount) || itemAmount <= 0) {
-        itemAmount = 0.01; // Set a minimum amount
-      }
+      let itemAmount = validateAmount(item.amount);
+      
+      // Sanitize receipt URL (don't save blob URLs)
+      const receiptUrl = sanitizeReceiptUrl(item.receiptUrl);
       
       // Format payment method
       const paymentMethod = item.paymentMethod || 'Card';
@@ -82,7 +72,7 @@ export async function saveExpenseFromScan(scanResult: {
         date: itemDate,
         category: item.category || 'Other',
         is_recurring: false,
-        receipt_url: item.receiptUrl || null,
+        receipt_url: receiptUrl,
         payment: paymentMethod
       };
     });
@@ -105,7 +95,7 @@ export async function saveExpenseFromScan(scanResult: {
           const receiptItems = scanResult.items.map(item => ({
             receipt_id: receiptId,
             name: item.description,
-            amount: parseFloat(item.amount.replace(/[^\d.-]/g, '')),
+            amount: parseFloat(validateAmount(item.amount)),
             category: item.category
           }));
           
@@ -128,4 +118,50 @@ export async function saveExpenseFromScan(scanResult: {
     console.error("Error in saveExpenseFromScan:", error);
     return false;
   }
+}
+
+// Helper function to validate date
+function validateDate(dateStr: string): string {
+  try {
+    // Check if date is in valid format
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+    
+    // Default to today if invalid
+    return new Date().toISOString().split('T')[0];
+  } catch (e) {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+// Helper function to validate amount
+function validateAmount(amount: string): string {
+  try {
+    // Remove any non-numeric characters except decimal point
+    const cleanAmount = amount.replace(/[^\d.-]/g, '');
+    const num = parseFloat(cleanAmount);
+    
+    if (isNaN(num) || num <= 0) {
+      return "0.01";
+    }
+    
+    return num.toFixed(2);
+  } catch (e) {
+    return "0.01";
+  }
+}
+
+// Helper function to sanitize receipt URL
+function sanitizeReceiptUrl(url?: string | null): string | null {
+  if (!url) return null;
+  
+  // Don't save blob URLs to database
+  if (url.startsWith('blob:')) {
+    console.log("Avoiding storing blob URL in database");
+    return null;
+  }
+  
+  return url;
 }

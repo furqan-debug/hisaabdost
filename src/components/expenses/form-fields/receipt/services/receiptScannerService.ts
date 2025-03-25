@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 interface ScanReceiptOptions {
@@ -26,7 +25,7 @@ interface ScanResult {
 }
 
 const MAX_RETRIES = 2;
-const TIMEOUT_MS = 40000; // 40 seconds max
+const TIMEOUT_MS = 30000; // 30 seconds max
 
 export async function scanReceipt({
   file,
@@ -42,6 +41,13 @@ export async function scanReceipt({
   // Check if file is an image
   if (!file.type.startsWith('image/')) {
     return { success: false, error: "File is not an image" };
+  }
+  
+  // Don't pass blob URLs to the scan service
+  let sanitizedReceiptUrl = receiptUrl;
+  if (receiptUrl && receiptUrl.startsWith('blob:')) {
+    console.log("Detected blob URL in scan request, not forwarding to backend");
+    sanitizedReceiptUrl = undefined;
   }
   
   // Track retries
@@ -60,7 +66,7 @@ export async function scanReceipt({
       
       // Fallback mechanism - parse receipt locally if we're on retry or if file is small
       if (retryCount > 0 || file.size < 100000) {
-        const localResult = await parseReceiptLocally(file, receiptUrl);
+        const localResult = await parseReceiptLocally(file, sanitizedReceiptUrl);
         
         if (localResult.success) {
           onProgress?.(100, "Processing complete with fallback method");
@@ -71,8 +77,8 @@ export async function scanReceipt({
       // Create form data for the request
       const formData = new FormData();
       formData.append('receipt', file);
-      if (receiptUrl) {
-        formData.append('receiptUrl', receiptUrl);
+      if (sanitizedReceiptUrl) {
+        formData.append('receiptUrl', sanitizedReceiptUrl);
       }
       formData.append('enhanced', 'true');
       formData.append('timestamp', Date.now().toString());
@@ -88,7 +94,7 @@ export async function scanReceipt({
       
       try {
         // Try the Supabase Edge Function
-        const response = await fetch('https://skmzvfihekgmxtjcsdmg.supabase.co/functions/v1/scan-receipt', {
+        const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt', {
           method: 'POST',
           body: formData,
           signal: controller.signal,
@@ -119,7 +125,7 @@ export async function scanReceipt({
         onProgress?.(90, "Finalizing results...");
         
         // Format the result
-        const formattedResult = formatScanResult(result, receiptUrl);
+        const formattedResult = formatScanResult(result, sanitizedReceiptUrl);
         
         onProgress?.(100, "Scan complete!");
         
@@ -142,7 +148,7 @@ export async function scanReceipt({
             isTimeout: true, 
             error: "Processing timed out",
             date: new Date().toISOString().split('T')[0],
-            items: createFallbackItems(receiptUrl)
+            items: createFallbackItems(sanitizedReceiptUrl)
           };
         }
         
@@ -159,7 +165,7 @@ export async function scanReceipt({
           success: false, 
           error: errorMessage,
           date: new Date().toISOString().split('T')[0],
-          items: createFallbackItems(receiptUrl)
+          items: createFallbackItems(sanitizedReceiptUrl)
         };
       }
     }
@@ -170,7 +176,7 @@ export async function scanReceipt({
     success: false, 
     error: "Failed after multiple attempts",
     date: new Date().toISOString().split('T')[0],
-    items: createFallbackItems(receiptUrl)
+    items: createFallbackItems(sanitizedReceiptUrl)
   };
 }
 
@@ -198,7 +204,7 @@ function formatScanResult(result: any, receiptUrl: string | undefined): ScanResu
     const fallbackItem = {
       description: result.merchant || result.storeName || "Store Purchase",
       amount: result.total || "0.00",
-      date: result.date || new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0],
       category: "Other",
       paymentMethod: "Card",
       receiptUrl: receiptUrl
