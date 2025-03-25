@@ -18,17 +18,26 @@ export async function listUserReceipts(userId: string) {
   const folderPath = `${userId}/`;
   console.log(`Checking receipts in folder: ${folderPath}`);
   
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .list(folderPath);
-    
-  if (error) {
-    console.error("Error fetching files:", error);
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list(folderPath);
+      
+    if (error) {
+      if (error.statusCode === 404) {
+        console.error(`Bucket "${bucketName}" not found`);
+        return [];
+      }
+      console.error("Error fetching files:", error);
+      return [];
+    }
+
+    console.log(`Found ${data.length} files for user ${userId}:`, data);
+    return data;
+  } catch (error) {
+    console.error("Error listing receipts:", error);
     return [];
   }
-
-  console.log(`Found ${data.length} files for user ${userId}:`, data);
-  return data;
 }
 
 /**
@@ -49,19 +58,28 @@ export async function checkFileExists(filePath: string) {
   
   console.log(`Checking if file exists in folder "${folderPath}": ${fileName}`);
   
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .list(folderPath);
-    
-  if (error) {
-    console.error("Error fetching files:", error);
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list(folderPath);
+      
+    if (error) {
+      if (error.statusCode === 404) {
+        console.error(`Bucket "${bucketName}" not found`);
+        return false;
+      }
+      console.error("Error fetching files:", error);
+      return false;
+    }
+
+    // Check if the file exists in the list
+    const fileExists = data.some(file => file.name === fileName);
+    console.log(`File "${fileName}" exists:`, fileExists);
+    return fileExists;
+  } catch (error) {
+    console.error("Error checking if file exists:", error);
     return false;
   }
-
-  // Check if the file exists in the list
-  const fileExists = data.some(file => file.name === fileName);
-  console.log(`File "${fileName}" exists:`, fileExists);
-  return fileExists;
 }
 
 /**
@@ -84,34 +102,29 @@ export async function getFileUrl(filePath: string) {
 }
 
 /**
- * Creates the receipts bucket if it doesn't exist
- * @returns Boolean indicating success
+ * Checks if the receipts bucket exists
+ * @returns Boolean indicating if the bucket exists
  */
-export async function ensureReceiptsBucketExists() {
+export async function checkReceiptsBucketExists() {
   try {
     // Check if receipts bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets, error } = await supabase.storage.listBuckets();
     
-    if (!buckets?.find(bucket => bucket.name === bucketName)) {
-      console.log(`Creating "${bucketName}" bucket...`);
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 5242880 // 5MB
-      });
-      
-      if (error) {
-        console.error("Error creating bucket:", error);
-        return false;
-      }
-      
-      console.log(`Created "${bucketName}" bucket successfully`);
-    } else {
-      console.log(`"${bucketName}" bucket already exists`);
+    if (error) {
+      console.error("Error listing buckets:", error);
+      return false;
     }
     
-    return true;
+    const bucketExists = buckets?.find(bucket => bucket.name === bucketName);
+    if (bucketExists) {
+      console.log(`"${bucketName}" bucket exists`);
+      return true;
+    } else {
+      console.log(`"${bucketName}" bucket does not exist`);
+      return false;
+    }
   } catch (error) {
-    console.error("Error ensuring bucket exists:", error);
+    console.error("Error checking if bucket exists:", error);
     return false;
   }
 }

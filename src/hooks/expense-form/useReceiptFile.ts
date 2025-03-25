@@ -53,15 +53,6 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     setIsUploading(true);
     
     try {
-      // Create the storage bucket if it doesn't exist yet
-      const { data: buckets } = await supabase.storage.listBuckets();
-      if (!buckets?.find(bucket => bucket.name === 'receipts')) {
-        await supabase.storage.createBucket('receipts', {
-          public: true,
-          fileSizeLimit: 5242880 // 5MB
-        });
-      }
-      
       // Create a unique file path for this user and receipt
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -77,6 +68,12 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         });
       
       if (error) {
+        // If the error is a 404 Not Found, it likely means the bucket doesn't exist
+        if (error.statusCode === 404) {
+          toast.error('Receipt storage is not configured. Please contact support.');
+          return null;
+        }
+        
         console.error("Upload error:", error);
         throw error;
       }
