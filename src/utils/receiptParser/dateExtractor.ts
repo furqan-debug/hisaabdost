@@ -134,16 +134,16 @@ function parseMatchToISODate(match: RegExpMatchArray, pattern: RegExp): string |
   if (patternStr.includes('([a-z]+)\\s+(\\d{1,2})[,\\s]+(\\d{4})') || 
       patternStr.includes('(\\d{1,2})[,\\s]+([a-z]+)[,\\s]+(\\d{4})')) {
     
-    // Map of month names to numbers
+    // Map of month names to numbers (with no duplicates)
     const monthMap: {[key: string]: number} = {
+      // English months
       'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
       'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12,
-      // German months
-      'jan': 1, 'feb': 2, 'mär': 3, 'mar': 3, 'apr': 4, 'mai': 5, 'jun': 6,
-      'jul': 7, 'aug': 8, 'sep': 9, 'okt': 10, 'nov': 11, 'dez': 12,
-      // French months
-      'janv': 1, 'févr': 2, 'mars': 3, 'avri': 4, 'mai': 5, 'juin': 6,
-      'juil': 7, 'août': 8, 'sept': 9, 'oct': 10, 'nov': 11, 'déc': 12
+      // German months (only those with different spellings)
+      'mär': 3, 'mai': 5, 'okt': 10, 'dez': 12,
+      // French months (only those with different spellings)
+      'janv': 1, 'févr': 2, 'avri': 4, 'juin': 6,
+      'juil': 7, 'août': 8, 'sept': 9, 'déc': 12
     };
     
     let day, month, year;
