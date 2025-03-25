@@ -1,48 +1,83 @@
 
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { ReceiptButton } from "./components/ReceiptButton";
 
 interface ReceiptActionsProps {
   onUpload: () => void;
   onCapture?: () => void;
-  onScan?: () => void;
-  canScan?: boolean;
-  isScanning?: boolean;
+  onRetry?: () => void;
   receiptUrl: string;
-  showSeparateButtons?: boolean;
+  showCameraButton?: boolean;
+  showRetryButton?: boolean;
+  isProcessing?: boolean;
 }
 
 export function ReceiptActions({
   onUpload,
+  onCapture,
+  onRetry,
   receiptUrl,
-  showSeparateButtons = false
+  showCameraButton = false,
+  showRetryButton = false,
+  isProcessing = false
 }: ReceiptActionsProps) {
   const hasReceipt = !!receiptUrl;
   
   return (
     <div className="flex flex-col sm:flex-row gap-2">
       {!hasReceipt ? (
-        // If no receipt is uploaded yet, show upload buttons
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onUpload}
-          className="flex-1"
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Add Receipt
-        </Button>
+        // If no receipt is uploaded yet
+        <>
+          <ReceiptButton
+            type="button"
+            variant="outline"
+            icon="upload"
+            onClick={onUpload}
+            disabled={isProcessing}
+            className="flex-1"
+          >
+            Upload Receipt
+          </ReceiptButton>
+          
+          {showCameraButton && onCapture && (
+            <ReceiptButton
+              type="button"
+              variant="outline"
+              icon="camera"
+              onClick={onCapture}
+              disabled={isProcessing}
+              className="flex-1"
+            >
+              Take Photo
+            </ReceiptButton>
+          )}
+        </>
       ) : (
         // If a receipt is already uploaded
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onUpload}
-          className="flex-1"
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Replace Receipt
-        </Button>
+        <>
+          <ReceiptButton
+            type="button"
+            variant="outline"
+            icon="upload"
+            onClick={onUpload}
+            disabled={isProcessing}
+            className="flex-1"
+          >
+            Replace Receipt
+          </ReceiptButton>
+          
+          {showRetryButton && onRetry && (
+            <ReceiptButton
+              type="button"
+              variant="outline"
+              icon="retry"
+              onClick={onRetry}
+              disabled={isProcessing}
+              className="flex-1"
+            >
+              Retry Scan
+            </ReceiptButton>
+          )}
+        </>
       )}
     </div>
   );

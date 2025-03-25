@@ -1,10 +1,10 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useState, useRef } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
-import { Button } from "@/components/ui/button";
-import { Upload, Camera } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
+import { ReceiptActions } from "./receipt/ReceiptActions";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -27,11 +27,11 @@ export function ReceiptField({
   setFileInputRef,
   setCameraInputRef,
   onCapture,
-  autoProcess = false // Default to false for manual forms
+  autoProcess = false
 }: ReceiptFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile } = useMobile();
   
   // State for receipt scanning dialog
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
@@ -40,7 +40,7 @@ export function ReceiptField({
   const [processingStarted, setProcessingStarted] = useState(false);
   
   // Expose the refs to the parent component if needed
-  useEffect(() => {
+  useState(() => {
     if (setFileInputRef && fileInputRef.current) {
       setFileInputRef(fileInputRef.current);
     }
@@ -48,16 +48,7 @@ export function ReceiptField({
     if (setCameraInputRef && cameraInputRef.current) {
       setCameraInputRef(cameraInputRef.current);
     }
-    
-    // Check if device is mobile or has camera capabilities
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|windows phone/i.test(userAgent);
-      setIsMobile(isMobileDevice);
-    };
-    
-    checkMobile();
-  }, [setFileInputRef, setCameraInputRef]);
+  });
 
   const handleUpload = () => {
     // Only open file dialog if we're not already processing a receipt
@@ -85,7 +76,7 @@ export function ReceiptField({
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Always open scan dialog if we have a file
+      // Always open scan dialog if we have a file and autoProcess is enabled
       if (autoProcess) {
         setScanDialogOpen(true);
       }
@@ -97,6 +88,13 @@ export function ReceiptField({
       if (e.target) {
         e.target.value = '';
       }
+    }
+  };
+  
+  // Handle retrying the scan with the existing file
+  const handleRetryScan = () => {
+    if (receiptFile && filePreviewUrl) {
+      setScanDialogOpen(true);
     }
   };
   
@@ -149,44 +147,15 @@ export function ReceiptField({
           className="hidden"
         />
         
-        {receiptUrl ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleUpload}
-            disabled={processingStarted}
-            className="w-full"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Replace Receipt
-          </Button>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleUpload}
-              disabled={processingStarted}
-              className="flex-1"
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Receipt
-            </Button>
-            
-            {isMobile && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCameraCapture}
-                disabled={processingStarted}
-                className="flex-1"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Take Photo
-              </Button>
-            )}
-          </div>
-        )}
+        <ReceiptActions
+          receiptUrl={receiptUrl}
+          onUpload={handleUpload}
+          onCapture={isMobile ? handleCameraCapture : undefined}
+          onRetry={autoProcess ? handleRetryScan : undefined}
+          showCameraButton={isMobile}
+          showRetryButton={autoProcess && !!receiptFile}
+          isProcessing={processingStarted}
+        />
       </div>
       
       {/* Scan Dialog - only shown when autoProcess is true */}
@@ -198,7 +167,7 @@ export function ReceiptField({
           setOpen={setScanDialogOpen}
           onCleanup={handleCleanup}
           onCapture={onCapture}
-          autoSave={autoProcess} // Match autoSave to autoProcess
+          autoSave={autoProcess}
           autoProcess={autoProcess}
           onManualEntry={handleManualEntry}
         />

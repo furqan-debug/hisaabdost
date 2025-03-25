@@ -1,8 +1,8 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { useScanState } from "./useScanState";
-import { useScanProcess } from "./useScanProcess";
-import { useScanResults } from "./useScanResults";
+import { scanReceipt } from "../services/receiptScannerService";
+import { saveExpenseFromScan } from "../services/expenseDbService";
 import { toast } from "sonner";
 
 interface UseScanReceiptProps {
@@ -19,16 +19,16 @@ interface UseScanReceiptProps {
   setOpen: (open: boolean) => void;
 }
 
-export function useScanReceipt({
-  file,
-  onCleanup,
-  onCapture,
-  autoSave = true,
-  setOpen
+export function useScanReceipt({ 
+  file, 
+  onCleanup, 
+  onCapture, 
+  autoSave = false,
+  setOpen 
 }: UseScanReceiptProps) {
-  const { 
-    isScanning, 
-    scanProgress, 
+  const {
+    isScanning,
+    scanProgress,
     scanTimedOut,
     scanError,
     statusMessage,
@@ -41,110 +41,142 @@ export function useScanReceipt({
   } = useScanState();
   
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
-  const [lastFormData, setLastFormData] = useState<FormData | null>(null);
-
-  const processScan = useScanProcess({
-    updateProgress,
-    endScan,
-    timeoutScan,
-    errorScan
-  });
-
-  // Handle scan results
-  useScanResults({
-    isScanning,
-    scanTimedOut,
-    scanError,
-    autoSave,
-    onCapture,
-    setOpen,
-    onCleanup
-  });
-
-  // Validate and process receipt file
-  const validateAndProcessReceipt = useCallback(async (isAuto: boolean) => {
-    if (!file) {
-      toast.error("No receipt file selected");
-      return;
-    }
+  
+  // Scan the receipt manually
+  const handleScanReceipt = useCallback(async () => {
+    if (!file || isScanning || isAutoProcessing) return;
     
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File is too large. Please use an image under 10MB");
-      return;
-    }
+    startScan();
     
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Invalid file type. Please use JPEG, PNG, HEIC or PDF");
-      return;
-    }
-
     try {
-      if (isAuto) {
-        setIsAutoProcessing(true);
-        updateProgress(10, "Auto-processing receipt...");
+      const result = await scanReceipt({
+        file,
+        onProgress: updateProgress,
+        onTimeout: timeoutScan,
+        onError: errorScan
+      });
+      
+      if (result.success && result.items && result.items.length > 0) {
+        // Save to session storage for the form to use
+        if (onCapture && result.items[0]) {
+          onCapture(result.items[0]);
+        }
+        
+        // Save to database if autoSave is enabled
+        if (autoSave) {
+          await saveExpenseFromScan({
+            items: result.items,
+            merchant: result.merchant,
+            date: result.date
+          });
+        }
+        
+        // Success - close dialog
+        setTimeout(() => {
+          endScan();
+          onCleanup();
+          setOpen(false);
+          
+          // Only show the success message if we're not auto-processing
+          if (!isAutoProcessing) {
+            toast.success("Receipt processed successfully");
+          }
+        }, 1000);
       } else {
-        startScan();
-      }
-      
-      // Create FormData
-      const formData = new FormData();
-      formData.append('receipt', file);
-      setLastFormData(formData);
-      
-      // Process the scan
-      await processScan(formData);
-      
-      if (isAuto) {
-        setIsAutoProcessing(false);
+        if (result.isTimeout) {
+          timeoutScan();
+        } else {
+          errorScan(result.error || "Failed to process receipt");
+        }
       }
     } catch (error) {
-      console.error("Error processing receipt:", error);
-      errorScan("An unexpected error occurred during scanning");
-      if (isAuto) {
-        setIsAutoProcessing(false);
-      }
+      console.error("Error scanning receipt:", error);
+      errorScan(error instanceof Error ? error.message : "An unknown error occurred");
     }
-  }, [file, startScan, processScan, errorScan, updateProgress]);
-
-  // Handle retry with existing form data
-  const handleRetry = useCallback(() => {
-    if (lastFormData && (scanTimedOut || scanError)) {
-      console.log("Retrying scan with existing receipt...");
-      resetState();
-      startScan();
-      processScan(lastFormData).catch((error) => {
-        console.error("Error in retry:", error);
-        errorScan("Retry failed. The receipt may be too complex to process.");
-      });
-    } else {
-      toast.error("No previous scan data available for retry");
-    }
-  }, [lastFormData, scanTimedOut, scanError, resetState, startScan, processScan, errorScan]);
-
-  // Handle manual scan button click
-  const handleScanReceipt = useCallback(() => {
-    if (scanTimedOut || scanError) {
-      handleRetry();
-    } else {
-      validateAndProcessReceipt(false);
-    }
-  }, [validateAndProcessReceipt, scanTimedOut, scanError, handleRetry]);
+  }, [file, isScanning, isAutoProcessing, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, autoSave, onCleanup, setOpen]);
   
-  // Handle automatic processing
-  const autoProcessReceipt = useCallback(() => {
-    validateAndProcessReceipt(true);
-  }, [validateAndProcessReceipt]);
-
-  // Reset scan state
+  // Auto-process a receipt scan
+  const autoProcessReceipt = useCallback(async () => {
+    if (!file || isScanning || isAutoProcessing) return;
+    
+    setIsAutoProcessing(true);
+    updateProgress(5, "Starting automatic receipt processing...");
+    
+    try {
+      const result = await scanReceipt({
+        file,
+        onProgress: (progress, message) => {
+          updateProgress(progress, message);
+        },
+        onTimeout: timeoutScan,
+        onError: errorScan
+      });
+      
+      if (result.success && result.items && result.items.length > 0) {
+        // Save to session storage for the form to use
+        if (onCapture && result.items[0]) {
+          onCapture(result.items[0]);
+        }
+        
+        // Save to database if autoSave is enabled
+        if (autoSave) {
+          const saveResult = await saveExpenseFromScan({
+            items: result.items,
+            merchant: result.merchant,
+            date: result.date
+          });
+          
+          if (saveResult) {
+            // Success - close dialog
+            updateProgress(100, "Receipt processed and expenses saved!");
+            
+            setTimeout(() => {
+              setIsAutoProcessing(false);
+              onCleanup();
+              setOpen(false);
+              
+              toast.success("Receipt processed and expenses saved successfully");
+            }, 1000);
+            return;
+          }
+        } else {
+          // Just close dialog without saving
+          updateProgress(100, "Receipt processed successfully!");
+          
+          setTimeout(() => {
+            setIsAutoProcessing(false);
+            onCleanup();
+            setOpen(false);
+            
+            toast.success("Receipt processed successfully");
+          }, 1000);
+          return;
+        }
+      }
+      
+      // If we got here, something failed
+      if (result.isTimeout) {
+        timeoutScan();
+      } else if (result.error) {
+        errorScan(result.error);
+      } else {
+        errorScan("Failed to process receipt");
+      }
+      
+      setIsAutoProcessing(false);
+    } catch (error) {
+      console.error("Error in auto-processing:", error);
+      errorScan(error instanceof Error ? error.message : "An unknown error occurred");
+      setIsAutoProcessing(false);
+    }
+  }, [file, isScanning, isAutoProcessing, updateProgress, timeoutScan, errorScan, onCapture, autoSave, onCleanup, setOpen]);
+  
+  // Reset all state
   const resetScanState = useCallback(() => {
     resetState();
     setIsAutoProcessing(false);
-    setLastFormData(null);
   }, [resetState]);
-
+  
   return {
     isScanning,
     scanProgress,

@@ -3,18 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
-export async function saveExpenseFromScan(scanResult: {
-  items: Array<{
-    description: string;
-    amount: string;
-    date: string;
-    category: string;
-    paymentMethod: string;
-    receiptUrl?: string | null;
-  }>;
+export interface ExpenseItem {
+  description: string;
+  amount: string | number;
+  date: string;
+  category: string;
+  paymentMethod: string;
+  receiptUrl?: string | null;
+}
+
+export interface ScanResult {
+  items: ExpenseItem[];
   merchant?: string;
   date?: string;
-}): Promise<boolean> {
+}
+
+export async function saveExpenseFromScan(scanResult: ScanResult): Promise<boolean> {
   try {
     console.log("Starting saveExpenseFromScan with:", scanResult);
     
@@ -89,6 +93,27 @@ export async function saveExpenseFromScan(scanResult: {
   } catch (error) {
     console.error("Error in saveExpenseFromScan:", error);
     toast.error("An error occurred while saving expenses from receipt");
+    return false;
+  }
+}
+
+// Function to retry saving expenses with manual data
+export async function saveManualExpenseFromReceipt(expenseData: {
+  description: string;
+  amount: string | number;
+  date: string;
+  category: string;
+  paymentMethod: string;
+  receiptUrl?: string | null;
+}): Promise<boolean> {
+  try {
+    return await saveExpenseFromScan({
+      items: [expenseData],
+      date: expenseData.date
+    });
+  } catch (error) {
+    console.error("Error in saveManualExpenseFromReceipt:", error);
+    toast.error("Failed to save manual expense");
     return false;
   }
 }
