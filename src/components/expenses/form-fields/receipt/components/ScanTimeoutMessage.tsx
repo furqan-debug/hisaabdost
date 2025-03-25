@@ -12,9 +12,15 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
   
   // Handle file access errors
   useEffect(() => {
-    if (scanError && scanError.includes("ERR_FILE_NOT_FOUND")) {
+    if (!scanError) {
+      setErrorMessage(undefined);
+      return;
+    }
+
+    // Check for specific error patterns
+    if (scanError.includes("ERR_FILE_NOT_FOUND") || scanError.includes("blob:")) {
       setErrorMessage("The receipt image file could not be accessed. It may have been removed or expired.");
-    } else if (scanError && scanError.includes("Failed to fetch")) {
+    } else if (scanError.includes("Failed to fetch")) {
       setErrorMessage("Network error: Could not connect to the receipt processing service.");
     } else {
       setErrorMessage(scanError);

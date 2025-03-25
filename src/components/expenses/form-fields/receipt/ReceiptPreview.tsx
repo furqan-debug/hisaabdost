@@ -28,9 +28,10 @@ export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
   }, []);
   
   const handleImageError = useCallback(() => {
+    console.error("Image failed to load from URL:", receiptUrl);
     setImageError(true);
     setImageLoaded(false);
-  }, []);
+  }, [receiptUrl]);
   
   if (!receiptUrl) return null;
   

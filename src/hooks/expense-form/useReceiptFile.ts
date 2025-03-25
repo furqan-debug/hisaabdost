@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,18 +13,35 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   
-  // Keep a ref to track the current blob URL to avoid stale closures in cleanup
+  // Keep track of all blob URLs created during the component's lifetime
+  const blobUrlsRef = useRef<Set<string>>(new Set());
+  // Track the current active blob URL
   const currentBlobUrlRef = useRef<string | null>(null);
 
+  // Function to clean up a single blob URL
   const cleanupBlobUrl = (url: string | null) => {
     if (url && url.startsWith('blob:')) {
+      try {
+        console.log("Cleaning up blob URL:", url);
+        URL.revokeObjectURL(url);
+        blobUrlsRef.current.delete(url);
+      } catch (error) {
+        console.error("Error revoking blob URL:", error);
+      }
+    }
+  };
+
+  // Function to clean up all blob URLs
+  const cleanupAllBlobUrls = () => {
+    blobUrlsRef.current.forEach(url => {
       try {
         console.log("Cleaning up blob URL:", url);
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error("Error revoking blob URL:", error);
       }
-    }
+    });
+    blobUrlsRef.current.clear();
   };
 
   const uploadToSupabase = async (file: File): Promise<string | null> => {
@@ -47,7 +63,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       }
       
       // Create a unique file path for this user and receipt
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
       
@@ -93,17 +109,17 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         return;
       }
       
-      // Clean up previous blob URL if it exists
-      if (currentBlobUrlRef.current) {
-        cleanupBlobUrl(currentBlobUrlRef.current);
-        currentBlobUrlRef.current = null;
-      }
-      
       // Create local blob URL for preview
       const localUrl = URL.createObjectURL(file);
       console.log("Created new blob URL for receipt:", localUrl);
       
-      // Update the ref with the new URL
+      // Clean up previous blob URL if it exists
+      if (currentBlobUrlRef.current) {
+        cleanupBlobUrl(currentBlobUrlRef.current);
+      }
+      
+      // Track the new blob URL
+      blobUrlsRef.current.add(localUrl);
       currentBlobUrlRef.current = localUrl;
       
       // Update form with local URL for immediate preview
@@ -116,6 +132,13 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       // If upload was successful, update the form with the permanent URL
       if (supabaseUrl) {
         console.log("Updating receipt URL from blob to Supabase URL");
+        
+        // Now we can safely clean up the blob URL since we have a permanent URL
+        if (currentBlobUrlRef.current) {
+          cleanupBlobUrl(currentBlobUrlRef.current);
+          currentBlobUrlRef.current = null;
+        }
+        
         updateField('receiptUrl', supabaseUrl);
       }
     } catch (error) {
@@ -134,21 +157,24 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     }
   };
 
-  // Cleanup blob URLs on unmount or when the URL changes
+  // Cleanup blob URLs on unmount
   useEffect(() => {
-    // Store the current URL in a variable that won't change during cleanup
-    const blobUrl = formData.receiptUrl;
-    
-    if (blobUrl && blobUrl.startsWith('blob:')) {
-      currentBlobUrlRef.current = blobUrl;
-    }
-    
     return () => {
+      cleanupAllBlobUrls();
+    };
+  }, []);
+
+  // Cleanup when receiptUrl changes to a non-blob URL
+  useEffect(() => {
+    // If the current receipt URL is not a blob URL (e.g., it's a Supabase URL),
+    // we can clean up any existing blob URLs since they're no longer needed
+    if (formData.receiptUrl && !formData.receiptUrl.startsWith('blob:')) {
+      // Clean up any lingering blob URLs
       if (currentBlobUrlRef.current) {
         cleanupBlobUrl(currentBlobUrlRef.current);
         currentBlobUrlRef.current = null;
       }
-    };
+    }
   }, [formData.receiptUrl]);
 
   return { handleFileChange, isUploading, processReceiptFile };
