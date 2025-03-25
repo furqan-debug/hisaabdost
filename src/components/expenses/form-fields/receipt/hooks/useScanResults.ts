@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { formatDate } from '../utils/dateUtils';
 import { calculateTotal } from '../utils/formatUtils';
 import { processScanResults } from '../utils/processScanUtils';
-import { saveMultipleExpensesFromReceipt } from '@/services/expenseService';
+import { saveExpenseFromScan } from '../services/expenseDbService';
 
 interface UseScanResultsProps {
   isScanning: boolean;
@@ -45,22 +45,38 @@ export function useScanResults({
           if (lastScanResult.items && lastScanResult.items.length > 0) {
             // Save all items to database if auto-save is enabled
             if (autoSave) {
-              saveMultipleItemsToDatabase(lastScanResult);
+              saveExpenseFromScan(lastScanResult)
+                .then(success => {
+                  if (success) {
+                    toast.success(`Successfully saved ${lastScanResult.items.length} expense(s) from receipt`);
+                    
+                    // Close the dialog after a short delay
+                    setTimeout(() => {
+                      setOpen(false);
+                    }, 1000);
+                  } else {
+                    toast.error("Failed to save expenses from receipt");
+                  }
+                })
+                .catch(error => {
+                  console.error("Error saving expense from scan:", error);
+                  toast.error("Error processing receipt");
+                });
             } else {
               // Process scan results for the expense form
               processScanResults(lastScanResult, autoSave, onCapture, setOpen);
+              
+              // Successful scan toast
+              toast.success(`Found ${lastScanResult.items.length} item${lastScanResult.items.length > 1 ? 's' : ''} in receipt`);
+              
+              // Close the dialog after a short delay to show success message
+              setTimeout(() => {
+                setOpen(false);
+              }, 1000);
             }
-            
-            // Successful scan toast
-            toast.success(`Found ${lastScanResult.items.length} item${lastScanResult.items.length > 1 ? 's' : ''} in receipt`);
             
             // Clear the stored result after processing
             sessionStorage.removeItem('lastScanResult');
-            
-            // Close the dialog after a short delay to show success message
-            setTimeout(() => {
-              setOpen(false);
-            }, 1000);
           } else {
             toast.warning("Receipt scanned, but no items were detected.");
             
@@ -92,31 +108,4 @@ export function useScanResults({
       onCleanup();
     };
   }, [onCleanup]);
-  
-  // Save multiple receipt items to database
-  const saveMultipleItemsToDatabase = async (result: any) => {
-    if (!result || !result.items || result.items.length === 0) return;
-    
-    try {
-      // Format receipt data for storage
-      const expenses = result.items.map((item: any) => ({
-        description: item.name || "Store Purchase",
-        amount: item.amount || "0.00",
-        date: formatDate(item.date || result.date),
-        category: item.category || "Other",
-        paymentMethod: "Card", // Default assumption
-        receiptUrl: result.receiptUrl || "",
-        merchant: result.merchant || result.storeName || "Unknown"
-      }));
-      
-      // Save all items as separate expenses
-      const success = await saveMultipleExpensesFromReceipt(expenses);
-      if (success) {
-        toast.success(`Saved ${expenses.length} expense${expenses.length > 1 ? 's' : ''} from receipt`);
-      }
-    } catch (error) {
-      console.error("Failed to save receipt items to database:", error);
-      toast.error("Failed to save some or all items. Please try again.");
-    }
-  };
 }

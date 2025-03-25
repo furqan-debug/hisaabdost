@@ -66,7 +66,7 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     });
   };
 
-  const { handleFileChange, isUploading } = useReceiptFile({ 
+  const { handleFileChange, isUploading, processReceiptFile } = useReceiptFile({ 
     formData, 
     updateField 
   });
@@ -151,6 +151,7 @@ export function useExpenseForm({ expenseToEdit, onClose }: UseExpenseFormProps) 
     triggerFileUpload,
     triggerCameraCapture,
     setFileInputRef,
-    setCameraInputRef
+    setCameraInputRef,
+    processReceiptFile
   };
 }

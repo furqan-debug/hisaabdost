@@ -1,12 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -27,39 +27,43 @@ export const AddExpenseButton = ({
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setCaptureMode('upload');
+      setShowAddExpense(true);
+    }
+  };
   
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setCaptureMode(mode);
     
-    // Only open the sheet for manual mode
-    // For upload and camera modes, we'll handle file selection first
+    // Only open the sheet for manual mode directly
     if (mode === 'manual') {
       setShowAddExpense(true);
-    } else {
-      // For upload and camera, we'll trigger the file input directly
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      
-      // For camera on mobile, use capture attribute
-      if (mode === 'camera' && isMobile) {
-        fileInput.setAttribute('capture', 'environment');
-      }
-      
-      fileInput.onchange = (e) => {
-        const input = e.target as HTMLInputElement;
-        const file = input.files?.[0];
-        
-        if (file) {
-          // After file selection, open sheet with auto-process mode
-          setCaptureMode(mode);
-          setShowAddExpense(true);
-        }
-      };
-      
-      // Trigger the file input click
-      fileInput.click();
+    } else if (mode === 'upload' && fileInputRef.current) {
+      // Trigger file input click for upload mode
+      fileInputRef.current.click();
+    } else if (mode === 'camera' && cameraInputRef.current) {
+      // Trigger camera input click for camera mode
+      cameraInputRef.current.click();
     }
+  };
+  
+  // Reset state when the sheet is closed
+  const handleSheetClose = () => {
+    setExpenseToEdit(undefined);
+    setShowAddExpense(false);
+    setSelectedFile(null);
+    // Reset input values to allow selecting the same file again
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
   
   return (
@@ -104,16 +108,28 @@ export const AddExpenseButton = ({
         </div>
       </OnboardingTooltip>
       
+      {/* Hidden file inputs */}
+      <ReceiptFileInput
+        onChange={handleFileChange}
+        inputRef={fileInputRef}
+        id="receipt-upload-button"
+      />
+      
+      <ReceiptFileInput
+        onChange={handleFileChange}
+        inputRef={cameraInputRef}
+        id="camera-capture-button"
+        useCamera={true}
+      />
+      
       <AddExpenseSheet 
         onAddExpense={onAddExpense}
         expenseToEdit={expenseToEdit}
-        onClose={() => {
-          setExpenseToEdit(undefined);
-          setShowAddExpense(false);
-        }}
+        onClose={handleSheetClose}
         open={showAddExpense || expenseToEdit !== undefined}
         onOpenChange={setShowAddExpense}
         initialCaptureMode={captureMode}
+        initialFile={selectedFile}
       />
     </div>
   );

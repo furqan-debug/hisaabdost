@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,45 +69,53 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     }
   };
 
+  // Function to process a file directly (without event)
+  const processReceiptFile = async (file: File) => {
+    try {
+      // Only allow images
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      
+      // Clean up previous blob URL if it exists
+      if (currentBlobUrlRef.current) {
+        cleanupBlobUrl(currentBlobUrlRef.current);
+        currentBlobUrlRef.current = null;
+      }
+      
+      // Create local blob URL for preview
+      const localUrl = URL.createObjectURL(file);
+      console.log("Created new blob URL for receipt:", localUrl);
+      
+      // Update the ref with the new URL
+      currentBlobUrlRef.current = localUrl;
+      
+      // Update form with local URL for immediate preview
+      updateField('receiptUrl', localUrl);
+      updateField('receiptFile', file);
+      
+      // Upload to Supabase and get permanent URL
+      const supabaseUrl = await uploadToSupabase(file);
+      
+      // If upload was successful, update the form with the permanent URL
+      if (supabaseUrl) {
+        updateField('receiptUrl', supabaseUrl);
+        console.log("Receipt uploaded successfully to:", supabaseUrl);
+      }
+    } catch (error) {
+      console.error("Error processing receipt file:", error);
+      toast.error('Failed to process receipt file');
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      try {
-        // Only allow images
-        if (!file.type.startsWith('image/')) {
-          toast.error('Please upload an image file');
-          return;
-        }
-        
-        // Clean up previous blob URL if it exists
-        if (currentBlobUrlRef.current) {
-          cleanupBlobUrl(currentBlobUrlRef.current);
-          currentBlobUrlRef.current = null;
-        }
-        
-        // Create local blob URL for preview
-        const localUrl = URL.createObjectURL(file);
-        console.log("Created new blob URL for receipt:", localUrl);
-        
-        // Update the ref with the new URL
-        currentBlobUrlRef.current = localUrl;
-        
-        // Update form with local URL for immediate preview
-        updateField('receiptUrl', localUrl);
-        updateField('receiptFile', file);
-        
-        // Upload to Supabase and get permanent URL
-        const supabaseUrl = await uploadToSupabase(file);
-        
-        // If upload was successful, update the form with the permanent URL
-        if (supabaseUrl) {
-          updateField('receiptUrl', supabaseUrl);
-          toast.success('Receipt uploaded successfully');
-        }
-      } catch (error) {
-        console.error("Error handling receipt file:", error);
-        toast.error('Failed to process receipt file');
-      }
+      await processReceiptFile(file);
+      
+      // Reset the input value to allow selecting the same file again
+      e.target.value = '';
     }
   };
 
@@ -127,5 +136,5 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     };
   }, [formData.receiptUrl]);
 
-  return { handleFileChange, isUploading };
+  return { handleFileChange, isUploading, processReceiptFile };
 }

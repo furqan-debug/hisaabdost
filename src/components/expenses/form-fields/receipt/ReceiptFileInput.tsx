@@ -5,9 +5,15 @@ interface ReceiptFileInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   inputRef?: React.RefObject<HTMLInputElement>;
   id?: string;
+  useCamera?: boolean;
 }
 
-export function ReceiptFileInput({ onChange, inputRef, id = "receipt-upload" }: ReceiptFileInputProps) {
+export function ReceiptFileInput({ 
+  onChange, 
+  inputRef, 
+  id = "receipt-upload",
+  useCamera = false
+}: ReceiptFileInputProps) {
   const defaultRef = useRef<HTMLInputElement>(null);
   const ref = inputRef || defaultRef;
   
@@ -17,6 +23,7 @@ export function ReceiptFileInput({ onChange, inputRef, id = "receipt-upload" }: 
       id={id}
       type="file"
       accept="image/*,.pdf"
+      capture={useCamera ? "environment" : undefined}
       onChange={onChange}
       className="hidden"
     />

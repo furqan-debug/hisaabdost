@@ -4,9 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { formatDate } from '../utils/dateUtils';
 
-// Create an alias for formatDate as formatDateForStorage for backward compatibility
-const formatDateForStorage = formatDate;
-
 /**
  * Saves all expenses extracted from a receipt scan
  */
@@ -26,7 +23,7 @@ export async function saveExpenseFromScan(scanResult: any): Promise<boolean> {
     }
 
     // Format the date from the receipt, using today as fallback
-    const receiptDate = formatDateForStorage(scanResult.date);
+    const receiptDate = formatDate(scanResult.date);
     
     // Convert items to expense records
     const expenses = scanResult.items.map((item: any) => ({

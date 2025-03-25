@@ -19,6 +19,7 @@ interface AddExpenseSheetProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   initialCaptureMode?: 'manual' | 'upload' | 'camera';
+  initialFile?: File | null;
 }
 
 const AddExpenseSheet = ({ 
@@ -27,7 +28,8 @@ const AddExpenseSheet = ({
   onClose,
   open,
   onOpenChange,
-  initialCaptureMode = 'manual'
+  initialCaptureMode = 'manual',
+  initialFile = null
 }: AddExpenseSheetProps) => {
   const {
     formData,
@@ -40,27 +42,23 @@ const AddExpenseSheet = ({
     triggerCameraCapture,
     setFileInputRef,
     setCameraInputRef,
-    handleScanComplete
+    handleScanComplete,
+    processReceiptFile
   } = useExpenseForm({ 
     expenseToEdit, 
     onClose 
   });
 
-  // Handle initial capture mode
+  // Handle initial capture mode and file
   useEffect(() => {
     if (open && !expenseToEdit) {
-      // Only trigger if opening a new expense, not editing
-      if (initialCaptureMode === 'upload') {
-        setTimeout(() => {
-          triggerFileUpload();
-        }, 100);
-      } else if (initialCaptureMode === 'camera') {
-        setTimeout(() => {
-          triggerCameraCapture();
-        }, 100);
-      }
+      if (initialFile) {
+        // Process the file directly if provided
+        processReceiptFile(initialFile);
+      } 
+      // We removed the auto-triggering of file inputs to prevent reopening
     }
-  }, [open, expenseToEdit, initialCaptureMode, triggerFileUpload, triggerCameraCapture]);
+  }, [open, expenseToEdit, initialFile, initialCaptureMode, processReceiptFile]);
 
   // Determine if this is a manual entry or automated receipt process
   const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
