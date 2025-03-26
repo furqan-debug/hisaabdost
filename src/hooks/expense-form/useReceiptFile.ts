@@ -14,30 +14,61 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const [isUploading, setIsUploading] = useState(false);
   
   // Keep track of all blob URLs created during the component's lifetime
-  const blobUrlsRef = useRef<Set<string>>(new Set());
+  const blobUrlsRef = useRef<Map<string, { inUse: boolean }>>(new Map());
   // Track the current active blob URL
   const currentBlobUrlRef = useRef<string | null>(null);
   // Track if we've already shown the storage error
   const storageErrorShownRef = useRef(false);
 
-  // Function to clean up a single blob URL
-  const cleanupBlobUrl = (url: string | null) => {
-    if (url && url.startsWith('blob:')) {
-      try {
-        console.log("Cleaning up blob URL:", url);
-        URL.revokeObjectURL(url);
-        blobUrlsRef.current.delete(url);
-      } catch (error) {
-        console.error("Error revoking blob URL:", error);
-      }
+  // Function to mark a blob URL as no longer in use (but don't revoke immediately)
+  const markBlobUrlForCleanup = (url: string | null) => {
+    if (url && url.startsWith('blob:') && blobUrlsRef.current.has(url)) {
+      console.log("Marking blob URL for cleanup:", url);
+      blobUrlsRef.current.set(url, { inUse: false });
     }
   };
 
-  // Function to clean up all blob URLs
-  const cleanupAllBlobUrls = () => {
-    blobUrlsRef.current.forEach(url => {
+  // Function to clean up a single blob URL with delay to ensure it's not in use
+  const cleanupBlobUrl = (url: string | null, immediate = false) => {
+    if (!url || !url.startsWith('blob:')) return;
+
+    if (immediate) {
       try {
-        console.log("Cleaning up blob URL:", url);
+        if (blobUrlsRef.current.has(url)) {
+          console.log("Immediately cleaning up blob URL:", url);
+          URL.revokeObjectURL(url);
+          blobUrlsRef.current.delete(url);
+        }
+      } catch (error) {
+        console.error("Error revoking blob URL:", error);
+      }
+    } else {
+      // Mark it as not in use, but don't revoke yet
+      markBlobUrlForCleanup(url);
+    }
+  };
+
+  // Function to clean up all blob URLs no longer in use
+  const cleanupUnusedBlobUrls = () => {
+    console.log("Cleaning up unused blob URLs");
+    blobUrlsRef.current.forEach((status, url) => {
+      if (!status.inUse) {
+        try {
+          console.log("Cleaning up unused blob URL:", url);
+          URL.revokeObjectURL(url);
+          blobUrlsRef.current.delete(url);
+        } catch (error) {
+          console.error("Error revoking blob URL:", error);
+        }
+      }
+    });
+  };
+
+  // Function to clean up all blob URLs (for component unmount)
+  const cleanupAllBlobUrls = () => {
+    console.log("Cleaning up all blob URLs");
+    blobUrlsRef.current.forEach((_, url) => {
+      try {
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error("Error revoking blob URL:", error);
@@ -163,13 +194,13 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       const localUrl = URL.createObjectURL(file);
       console.log("Created new blob URL for receipt:", localUrl);
       
-      // Clean up previous blob URL if it exists
+      // Clean up previous blob URL if it exists but after a delay
       if (currentBlobUrlRef.current) {
-        cleanupBlobUrl(currentBlobUrlRef.current);
+        markBlobUrlForCleanup(currentBlobUrlRef.current);
       }
       
-      // Track the new blob URL
-      blobUrlsRef.current.add(localUrl);
+      // Track the new blob URL as in use
+      blobUrlsRef.current.set(localUrl, { inUse: true });
       currentBlobUrlRef.current = localUrl;
       
       // Update form with local URL for immediate preview
@@ -183,10 +214,11 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       if (supabaseUrl) {
         console.log("Updating receipt URL from blob to Supabase URL");
         
-        // Now we can safely clean up the blob URL since we have a permanent URL
+        // Mark the blob URL for cleanup, but don't revoke it immediately
+        // in case it's still being displayed
         if (currentBlobUrlRef.current) {
-          cleanupBlobUrl(currentBlobUrlRef.current);
-          currentBlobUrlRef.current = null;
+          markBlobUrlForCleanup(currentBlobUrlRef.current);
+          // We'll keep the reference for now, and clean it up later
         }
         
         updateField('receiptUrl', supabaseUrl);
@@ -194,6 +226,10 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         console.log("Using local blob URL as fallback since Supabase upload failed");
         // Keep the blob URL active as we're using it
       }
+      
+      // Clean up any unused blob URLs after a short delay
+      setTimeout(cleanupUnusedBlobUrls, 2000);
+      
     } catch (error) {
       console.error("Error processing receipt file:", error);
       toast.error('Failed to process receipt file');
@@ -210,22 +246,33 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     }
   };
 
-  // Cleanup blob URLs on unmount
+  // Cleanup blob URLs on unmount, but with a delay to ensure they're not still being accessed
   useEffect(() => {
     return () => {
-      cleanupAllBlobUrls();
+      // Wait a moment before cleaning everything up
+      setTimeout(() => {
+        cleanupAllBlobUrls();
+      }, 500);
     };
+  }, []);
+
+  // Cleanup URLs that are no longer in use with periodic sweep
+  useEffect(() => {
+    const cleanupTimer = setInterval(() => {
+      cleanupUnusedBlobUrls();
+    }, 5000);
+    
+    return () => clearInterval(cleanupTimer);
   }, []);
 
   // Cleanup when receiptUrl changes to a non-blob URL
   useEffect(() => {
     // If the current receipt URL is not a blob URL (e.g., it's a Supabase URL),
-    // we can clean up any existing blob URLs since they're no longer needed
+    // we can mark previous blob URLs for cleanup since they're no longer needed
     if (formData.receiptUrl && !formData.receiptUrl.startsWith('blob:')) {
-      // Clean up any lingering blob URLs
-      if (currentBlobUrlRef.current) {
-        cleanupBlobUrl(currentBlobUrlRef.current);
-        currentBlobUrlRef.current = null;
+      // We'll let the periodic cleanup handle these URLs
+      if (currentBlobUrlRef.current && currentBlobUrlRef.current !== formData.receiptUrl) {
+        markBlobUrlForCleanup(currentBlobUrlRef.current);
       }
     }
   }, [formData.receiptUrl]);

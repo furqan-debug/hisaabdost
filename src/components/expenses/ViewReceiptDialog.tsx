@@ -27,6 +27,7 @@ export function ViewReceiptDialog({
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
+  const dialogOpenTime = useRef<number>(0);
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -43,6 +44,7 @@ export function ViewReceiptDialog({
     if (isOpen) {
       setImageLoading(true);
       setImageError(false);
+      dialogOpenTime.current = Date.now();
     }
   }, [isOpen]);
   
@@ -59,6 +61,12 @@ export function ViewReceiptDialog({
     if (!receiptUrl || imageError) return;
     
     try {
+      // Skip downloading for blob URLs
+      if (receiptUrl.startsWith('blob:')) {
+        toast.error("Cannot download temporary receipt images");
+        return;
+      }
+      
       // For remote URLs (not blob URLs)
       fetch(receiptUrl)
         .then(response => response.blob())
@@ -70,7 +78,12 @@ export function ViewReceiptDialog({
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          
+          // Clean up the blob URL after a short delay
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          }, 1000);
+          
           toast.success("Receipt downloaded successfully");
         })
         .catch(err => {
@@ -85,21 +98,40 @@ export function ViewReceiptDialog({
 
   const handleImageLoad = useCallback(() => {
     if (isMounted.current) {
+      console.log("Image loaded successfully in dialog:", receiptUrl);
       setImageLoading(false);
       setImageError(false);
     }
-  }, []);
+  }, [receiptUrl]);
 
   const handleImageError = useCallback(() => {
     if (isMounted.current) {
-      setImageError(true);
-      setImageLoading(false);
+      // If error happens immediately after opening dialog, it might be a timing issue
+      const timeOpenMs = Date.now() - dialogOpenTime.current;
+      if (timeOpenMs < 100) {
+        console.log("Image error occurred too quickly, delaying error state");
+        // Delay setting error to avoid false positives
+        setTimeout(() => {
+          if (isMounted.current) {
+            console.error("Image failed to load in dialog after delay:", receiptUrl);
+            setImageError(true);
+            setImageLoading(false);
+          }
+        }, 300);
+      } else {
+        console.error("Image failed to load in dialog:", receiptUrl);
+        setImageError(true);
+        setImageLoading(false);
+      }
     }
-  }, []);
+  }, [receiptUrl]);
   
   const handleCloseDialog = useCallback(() => {
     setIsOpen(false);
   }, [setIsOpen]);
+
+  // Determine if receipt is a blob URL
+  const isBlobUrl = receiptUrl?.startsWith('blob:') || false;
 
   if (!receiptUrl) return null;
 
@@ -125,13 +157,20 @@ export function ViewReceiptDialog({
           <DialogHeader>
             <DialogTitle className="flex justify-between items-center">
               <span>Receipt</span>
-              <Button variant="outline" onClick={handleDownload} disabled={imageError}>
+              <Button 
+                variant="outline" 
+                onClick={handleDownload} 
+                disabled={imageError || isBlobUrl}
+                title={isBlobUrl ? "Cannot download temporary receipts" : undefined}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Download Receipt
               </Button>
             </DialogTitle>
             <DialogDescription>
-              View and download your expense receipt
+              {isBlobUrl 
+                ? "Preview of your receipt image" 
+                : "View and download your expense receipt"}
             </DialogDescription>
           </DialogHeader>
           
@@ -145,7 +184,7 @@ export function ViewReceiptDialog({
             {!imageError ? (
               // Use a key to force re-render when the dialog opens
               <img
-                key={`receipt-img-${isOpen}`}
+                key={`receipt-img-${isOpen}-${receiptUrl}`}
                 ref={imageRef}
                 src={receiptUrl}
                 alt="Receipt"
@@ -157,6 +196,7 @@ export function ViewReceiptDialog({
                 onLoad={handleImageLoad}
                 onError={handleImageError}
                 crossOrigin="anonymous"
+                loading="lazy"
               />
             ) : (
               <div className="text-center p-4">
@@ -164,6 +204,14 @@ export function ViewReceiptDialog({
                 <p className="text-muted-foreground">
                   Unable to display receipt image
                 </p>
+              </div>
+            )}
+            
+            {isBlobUrl && !imageError && (
+              <div className="absolute bottom-4 left-0 right-0 text-center">
+                <div className="inline-block px-3 py-1 bg-black/60 text-white text-xs rounded-full">
+                  Temporary preview
+                </div>
               </div>
             )}
           </div>

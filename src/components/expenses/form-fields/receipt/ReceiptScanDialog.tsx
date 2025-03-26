@@ -39,6 +39,7 @@ export function ReceiptScanDialog({
 }: ReceiptScanDialogProps) {
   const [attemptCount, setAttemptCount] = useState(0);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const hasCleanedUpRef = useRef(false);
   
   const {
     isScanning,
@@ -52,7 +53,10 @@ export function ReceiptScanDialog({
     resetScanState
   } = useScanReceipt({
     file,
-    onCleanup,
+    onCleanup: () => {
+      // We'll handle cleanup separately to avoid premature revoking of blob URLs
+      hasCleanedUpRef.current = true;
+    },
     onCapture,
     autoSave,
     setOpen,
@@ -85,6 +89,7 @@ export function ReceiptScanDialog({
       hasAutoProcessed.current = false;
       setProcessingComplete(false);
       setAttemptCount(0);
+      hasCleanedUpRef.current = false;
     }
   }, [open]);
 
@@ -120,7 +125,7 @@ export function ReceiptScanDialog({
         });
       }
       
-      // Close dialog after showing error
+      // Close dialog after showing error, but with a delay
       const closeTimer = setTimeout(() => {
         setOpen(false);
       }, 2000);
@@ -133,7 +138,16 @@ export function ReceiptScanDialog({
   const handleClose = () => {
     if (!isScanning && !isAutoProcessing) {
       resetScanState();
-      onCleanup();
+      
+      // Call onCleanup only if not already called
+      if (!hasCleanedUpRef.current) {
+        // Add a small delay before cleaning up to make sure we're not still using the resources
+        setTimeout(() => {
+          onCleanup();
+        }, 300);
+        hasCleanedUpRef.current = true;
+      }
+      
       setOpen(false);
     }
   };
@@ -142,11 +156,32 @@ export function ReceiptScanDialog({
   const handleManualEntry = () => {
     if (onManualEntry) {
       resetScanState();
-      onCleanup();
+      
+      // Add a delay before cleanup to avoid issues
+      setTimeout(() => {
+        if (!hasCleanedUpRef.current) {
+          onCleanup();
+          hasCleanedUpRef.current = true;
+        }
+      }, 300);
+      
       setOpen(false);
       onManualEntry();
     }
   };
+  
+  // Cleanup when dialog is closed but component isn't unmounted
+  useEffect(() => {
+    if (!open && !hasCleanedUpRef.current) {
+      // Add a delay before cleanup
+      const timer = setTimeout(() => {
+        onCleanup();
+        hasCleanedUpRef.current = true;
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open, onCleanup]);
   
   // Get appropriate dialog title and description
   const dialogTitle = "Processing Receipt";
@@ -169,7 +204,7 @@ export function ReceiptScanDialog({
         </DialogDescription>
         
         <div className="flex flex-col items-center space-y-4">
-          {/* Only show preview if we have a URL and it's not a revoked blob URL */}
+          {/* Only show preview if we have a URL */}
           {previewUrl && <ReceiptPreviewImage previewUrl={previewUrl} />}
           
           <ScanProgress
