@@ -24,7 +24,19 @@ export function ReceiptParserDemo() {
     if (!ocrText.trim()) return;
     try {
       const result = processReceiptText(ocrText);
-      setParsedResult(result);
+      
+      // Convert the result to match our state type
+      const formattedResult = {
+        merchant: result.merchant,
+        date: result.date,
+        total: result.total.toString(),
+        items: result.items.map(item => ({
+          name: item.name,
+          amount: item.amount.toString()
+        }))
+      };
+      
+      setParsedResult(formattedResult);
     } catch (error) {
       console.error("Error parsing receipt:", error);
       toast.error("Failed to parse receipt text");

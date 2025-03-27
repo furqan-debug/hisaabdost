@@ -23,13 +23,25 @@ export function ReceiptParserTester() {
       // Add a small delay to allow UI to update
       setTimeout(() => {
         const parsedResult = processReceiptText(receiptText);
-        setResult(parsedResult);
+        
+        // Convert the result to ensure proper string formatting for display
+        const formattedResult = {
+          merchant: parsedResult.merchant,
+          date: parsedResult.date,
+          total: parsedResult.total.toString(),
+          items: parsedResult.items.map(item => ({
+            name: item.name,
+            amount: item.amount.toString()
+          }))
+        };
+        
+        setResult(formattedResult);
         setLoading(false);
         
-        if (parsedResult.items.length === 0) {
+        if (formattedResult.items.length === 0) {
           toast.warning("No items could be extracted from the receipt text");
         } else {
-          toast.success(`Successfully extracted ${parsedResult.items.length} items`);
+          toast.success(`Successfully extracted ${formattedResult.items.length} items`);
         }
       }, 100);
     } catch (error) {
