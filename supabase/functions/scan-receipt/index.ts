@@ -43,8 +43,10 @@ serve(async (req) => {
   
   try {
     console.log("Starting receipt scanning process");
-    // Check if this is a browser-friendly format
+    
+    // Check content type
     const contentType = req.headers.get('content-type') || '';
+    console.log("Content-Type:", contentType);
     
     // OpenAI API key from environment
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -64,65 +66,92 @@ serve(async (req) => {
     
     let receiptImage: File | null = null;
     
+    // Check if this is multipart/form-data
     if (contentType.includes('multipart/form-data')) {
       console.log("Handling multipart form data");
-      const formData = await req.formData();
-      receiptImage = formData.get('receipt') as File;
       
-      if (!receiptImage) {
-        console.error("No receipt image found in form data");
+      try {
+        // Parse the form data
+        const formData = await req.formData();
+        console.log("Form data keys:", [...formData.keys()]);
+        
+        // Get the receipt file from the form data
+        receiptImage = formData.get('receipt') as File;
+        
+        if (!receiptImage) {
+          console.error("No receipt image found in form data");
+          return new Response(JSON.stringify({
+            error: 'No receipt image provided',
+            formDataKeys: [...formData.keys()],
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        console.log(`Processing ${receiptImage.name} (${receiptImage.size} bytes, type: ${receiptImage.type})`);
+
+        try {
+          // Race between processing and timeout
+          const results = await Promise.race([
+            runOCR(receiptImage, openaiApiKey),
+            createTimeout(28000) // 28 second timeout (Edge Function has 30s limit)
+          ]);
+          
+          // Check if this was a timeout
+          if ('isTimeout' in results) {
+            console.log("OCR processing timed out");
+            return new Response(JSON.stringify({
+              isTimeout: true,
+              warning: "Processing timed out, partial results returned",
+              date: new Date().toISOString().split('T')[0]
+            }), {
+              status: 200, // Return 200 with timeout indication rather than error
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          
+          // Return the processed results
+          console.log("OCR processing completed successfully");
+          return new Response(JSON.stringify({
+            ...results,
+            receiptDetails: {
+              filename: receiptImage.name,
+              size: receiptImage.size,
+              type: receiptImage.type
+            }
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          console.error("Error processing receipt:", error);
+          return new Response(JSON.stringify({
+            error: 'Receipt processing failed',
+            details: error.message,
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (formDataError) {
+        console.error("Error parsing form data:", formDataError);
         return new Response(JSON.stringify({
-          error: 'No receipt image provided',
+          error: 'Failed to parse form data',
+          details: formDataError.message,
+          contentType: contentType,
         }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      
-      console.log(`Processing ${receiptImage.name} (${receiptImage.size} bytes)`);
-
-      try {
-        // Race between processing and timeout
-        const results = await Promise.race([
-          runOCR(receiptImage, openaiApiKey),
-          createTimeout(28000) // 28 second timeout (Edge Function has 30s limit)
-        ]);
-        
-        // Check if this was a timeout
-        if ('isTimeout' in results) {
-          console.log("OCR processing timed out");
-          return new Response(JSON.stringify({
-            isTimeout: true,
-            warning: "Processing timed out, partial results returned",
-            date: new Date().toISOString().split('T')[0]
-          }), {
-            status: 200, // Return 200 with timeout indication rather than error
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        // Return the processed results
-        console.log("OCR processing completed successfully");
-        return new Response(JSON.stringify(results), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (error) {
-        console.error("Error processing receipt:", error);
-        return new Response(JSON.stringify({
-          error: 'Receipt processing failed',
-          details: error.message,
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
     } else {
-      // Handle direct JSON requests for testing
+      // Handle direct JSON requests or invalid content types
       console.error("Unsupported content type:", contentType);
       return new Response(JSON.stringify({
         error: 'Unsupported content type',
         expected: 'multipart/form-data',
+        received: contentType,
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
