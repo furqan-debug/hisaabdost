@@ -1,3 +1,4 @@
+
 import { extractDate } from "../utils/dateExtractor.ts";
 
 // Process receipt with OpenAI Vision API
@@ -29,7 +30,6 @@ You are an expert in receipt data extraction. Extract:
 Ignore store name, taxes, discounts, payment method, and subtotal.
 
 ### **JSON format:**
-\`\`\`json
 {
   "date": "YYYY-MM-DD",
   "items": [
@@ -37,7 +37,6 @@ Ignore store name, taxes, discounts, payment method, and subtotal.
     { "name": "Item 2", "amount": X.XX, "category": "transport" }
   ]
 }
-\`\`\`
 Ensure the output is **valid JSON**.
 `;
 
@@ -84,12 +83,70 @@ Ensure the output is **valid JSON**.
       return { success: false, error: "No data extracted" };
     }
 
-    // Ensure valid JSON parsing
+    // Improved JSON parsing with error handling
     let extractedData;
     try {
-      extractedData = JSON.parse(extractedText);
+      // Check if response is wrapped in code blocks and extract just the JSON
+      let jsonText = extractedText;
+      
+      // Remove markdown code blocks if present
+      const jsonMatch = extractedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (jsonMatch && jsonMatch[1]) {
+        jsonText = jsonMatch[1].trim();
+      }
+      
+      extractedData = JSON.parse(jsonText);
+      
+      // Validate data structure
+      if (!extractedData.items || !Array.isArray(extractedData.items)) {
+        extractedData.items = [];
+      }
+      
+      // Normalize items format
+      extractedData.items = extractedData.items.map(item => ({
+        description: item.name,
+        amount: typeof item.amount === 'number' ? item.amount.toFixed(2) : item.amount.toString(),
+        category: item.category || "Other",
+        date: extractedData.date || new Date().toISOString().split('T')[0],
+        paymentMethod: "Card"
+      }));
+      
+      console.log("Successfully parsed response:", extractedData);
     } catch (err) {
       console.error("Invalid JSON response from OpenAI:", extractedText);
+      
+      // Try extracting structured data even from invalid JSON
+      const itemsRegex = /name":\s*"([^"]+)",\s*"amount":\s*([\d.]+)/g;
+      const dateRegex = /"date":\s*"([^"]+)"/;
+      
+      const items = [];
+      let match;
+      while ((match = itemsRegex.exec(extractedText)) !== null) {
+        items.push({
+          description: match[1],
+          amount: parseFloat(match[2]).toFixed(2),
+          category: "Other",
+          date: new Date().toISOString().split('T')[0],
+          paymentMethod: "Card"
+        });
+      }
+      
+      let date = new Date().toISOString().split('T')[0];
+      const dateMatch = dateRegex.exec(extractedText);
+      if (dateMatch) {
+        date = dateMatch[1];
+      }
+      
+      if (items.length > 0) {
+        console.log("Extracted data from malformed JSON:", items);
+        return { 
+          success: true, 
+          items, 
+          date,
+          merchant: "Store"
+        };
+      }
+      
       return { success: false, error: "Invalid JSON from OpenAI" };
     }
 

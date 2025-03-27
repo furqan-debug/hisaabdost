@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -77,7 +78,7 @@ export async function scanReceipt({
       
       // Create form data for the request
       const formData = new FormData();
-      formData.append('receipt', file);
+      formData.append('image', file);
       if (sanitizedReceiptUrl) {
         formData.append('receiptUrl', sanitizedReceiptUrl);
       }
@@ -112,7 +113,10 @@ export async function scanReceipt({
           
           if (data?.items?.length > 0) {
             console.log("Using fallback data despite timeout:", data);
-            return data;
+            return {
+              success: true,
+              ...data
+            };
           }
           
           return { 
@@ -166,7 +170,9 @@ export async function scanReceipt({
           processedData.items = [{ 
             description: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
             amount: processedData.total || "0.00",
-            date: processedData.date
+            date: processedData.date,
+            category: "Other",
+            paymentMethod: "Card"
           }];
         }
         

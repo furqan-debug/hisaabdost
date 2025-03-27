@@ -21,6 +21,9 @@ export async function runOCR(receiptImage: File, apiKey: string) {
         merchant: ocrResult.merchant || "Store"
       };
     } else {
+      // If OCR failed with error, log it
+      console.error("OCR failed:", ocrResult.error);
+      
       // Fall back to generating data based on the image type/name
       console.log("OCR processing failed, using fallback data");
       
