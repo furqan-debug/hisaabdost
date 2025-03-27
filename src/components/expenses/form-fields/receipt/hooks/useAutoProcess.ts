@@ -1,9 +1,7 @@
-
-import { useState, useCallback } from "react";
-import { formatReceiptItem } from "../utils/formatUtils";
-import { scanReceipt } from "../services/receiptScannerService";
-import { saveExpenseFromScan } from "../services/expenseDbService";
-import { toast } from "sonner";
+import { useCallback } from 'react';
+import { toast } from 'sonner';
+import { scanReceipt } from '../services/receiptScannerService';
+import { selectMainItem } from './utils';
 
 interface UseAutoProcessProps {
   file: File | null;
@@ -19,12 +17,12 @@ interface UseAutoProcessProps {
   startScan: () => void;
   updateProgress: (progress: number, message?: string) => void;
   timeoutScan: () => void;
-  errorScan: (error: string) => void;
+  errorScan: (message: string) => void;
   endScan: () => void;
-  onSuccess?: () => void;
   onCleanup: () => void;
   setOpen: (open: boolean) => void;
-  autoSave: boolean;
+  autoSave?: boolean;
+  onSuccess?: () => void;
 }
 
 export function useAutoProcess({
@@ -37,86 +35,86 @@ export function useAutoProcess({
   timeoutScan,
   errorScan,
   endScan,
-  onSuccess,
   onCleanup,
   setOpen,
-  autoSave
+  autoSave,
+  onSuccess
 }: UseAutoProcessProps) {
-  // Auto-process a receipt scan
+  
   const autoProcessReceipt = useCallback(async () => {
     if (!file || isScanning || isAutoProcessing) return;
     
-    updateProgress(5, "Starting automatic receipt processing...");
+    startScan();
+    updateProgress(5, "Preparing receipt...");
     
     try {
-      const result = await scanReceipt({
+      const receiptUrl = file ? URL.createObjectURL(file) : undefined;
+      
+      const scanResults = await scanReceipt({
         file,
-        onProgress: (progress, message) => {
-          updateProgress(progress, message);
-        },
-        onTimeout: timeoutScan,
-        onError: errorScan
+        receiptUrl,
+        onProgress: (progress, message) => updateProgress(progress, message),
+        onTimeout: () => timeoutScan(),
+        onError: (error) => errorScan(error)
       });
       
-      if (result.success && result.items && result.items.length > 0) {
-        // Process the received data to ensure it's valid
-        const validatedItems = result.items.map(item => formatReceiptItem(item, result.date));
+      if (scanResults?.isTimeout) {
+        toast.error("Receipt scan timed out. Please try again or enter details manually.");
+      } else if (scanResults?.error) {
+        toast.error(scanResults.error);
+      }
+      
+      if (scanResults && scanResults.success && scanResults.items && scanResults.items.length > 0) {
+        const mainItem = selectMainItem(scanResults.items);
         
-        // Save to session storage for the form to use
-        if (onCapture && validatedItems[0]) {
-          onCapture(validatedItems[0]);
-        }
+        // Get general expense information
+        let expenseDetails = {
+          description: mainItem.description || "Store Purchase",
+          amount: mainItem.amount || "0.00",
+          date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
+          category: mainItem.category || "Other",
+          paymentMethod: "Card",
+        };
         
-        // Save to database if autoSave is enabled
-        if (autoSave) {
-          const saveResult = await saveExpenseFromScan({
-            items: validatedItems,
-            merchant: result.merchant || "Store",
-            date: validatedItems[0].date
-          });
-          
-          if (saveResult) {
-            // Success - close dialog after a short delay
-            updateProgress(100, "Receipt processed and expenses saved!");
-            
-            setTimeout(() => {
-              if (onSuccess) onSuccess();
-              onCleanup();
-              setOpen(false);
-              
-              toast.success("Receipt processed and expenses saved successfully");
-            }, 1000);
-            return;
-          } else {
-            // Save failed but we have valid items
-            errorScan("Failed to save expenses to database");
-          }
-        } else {
-          // Just update the form with data, don't save to database
-          updateProgress(100, "Receipt data extracted!");
-          
-          setTimeout(() => {
-            if (onSuccess) onSuccess();
-            onCleanup();
-            setOpen(false);
-          }, 1000);
-          return;
-        }
-      } else {
-        // If we got here, something failed
-        if (result.isTimeout) {
-          timeoutScan();
-        } else if (result.error) {
-          errorScan(result.error);
-        } else {
-          errorScan("Failed to process receipt");
+        console.log("Extracted expense details:", expenseDetails);
+        
+        // Update form with the extracted information
+        if (onCapture) {
+          onCapture(expenseDetails);
         }
       }
+      
+      // Cleanup tasks
+      endScan();
+      onCleanup();
+      setOpen(false);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      
     } catch (error) {
-      console.error("Error in auto-processing:", error);
-      errorScan(error instanceof Error ? error.message : "An unknown error occurred");
+      console.error("Error during auto-processing:", error);
+      errorScan("Failed to auto-process receipt. Please try again.");
+      toast.error("Failed to auto-process receipt. Please try again.");
+    } finally {
+      endScan();
     }
-  }, [file, isScanning, isAutoProcessing, updateProgress, timeoutScan, errorScan, onCapture, onCleanup, setOpen, autoSave, onSuccess]);
+  }, [
+    file,
+    isScanning,
+    isAutoProcessing,
+    onCapture,
+    startScan,
+    updateProgress,
+    timeoutScan,
+    errorScan,
+    endScan,
+    onCleanup,
+    setOpen,
+    autoSave,
+    onSuccess
+  ]);
 
   return { autoProcessReceipt };
 }

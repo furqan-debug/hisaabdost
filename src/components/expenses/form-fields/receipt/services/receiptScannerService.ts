@@ -233,7 +233,7 @@ export async function scanReceipt({
 // Format scan result into a standardized structure
 function formatScanResult(result: any, receiptUrl: string | undefined): ScanResult {
   // Handle empty or invalid results
-  if (!result || (!result.items && !result.merchant && !result.date)) {
+  if (!result || (!result.items && !result.date)) {
     return {
       success: false,
       error: "Invalid scan result",
@@ -252,9 +252,9 @@ function formatScanResult(result: any, receiptUrl: string | undefined): ScanResu
   // Create fallback item if no items were found
   if (!result.items || result.items.length === 0) {
     const fallbackItem = {
-      description: result.merchant || result.storeName || "Store Purchase",
+      description: result.storeName || "Store Purchase",
       amount: result.total || "0.00",
-      date: new Date().toISOString().split('T')[0],
+      date: result.date || new Date().toISOString().split('T')[0],
       category: "Other",
       paymentMethod: "Card",
       receiptUrl: receiptUrl
@@ -274,7 +274,6 @@ function formatScanResult(result: any, receiptUrl: string | undefined): ScanResu
   return {
     success: true,
     items: result.items || [],
-    merchant: result.merchant || result.storeName || "Store",
     date: result.date || new Date().toISOString().split('T')[0],
     error: result.warning // Use warning as non-fatal error
   };
