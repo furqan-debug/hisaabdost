@@ -17,8 +17,8 @@ export async function runOCR(receiptImage: File, apiKey: string) {
       return {
         success: true,
         items: ocrResult.items || [],
-        date: ocrResult.date || new Date().toISOString().split('T')[0],
-        merchant: ocrResult.merchant || "Store"
+        date: ocrResult.date || new Date().toISOString().split('T')[0]
+        // Merchant field has been removed
       };
     } else {
       // If OCR failed with error, log it
@@ -55,8 +55,8 @@ export async function runOCR(receiptImage: File, apiKey: string) {
               date: new Date().toISOString().split('T')[0]
             }
           ],
-          merchant: "Fish Restaurant",
           date: new Date().toISOString().split('T')[0],
+          // Merchant field has been removed
         };
       }
       
@@ -65,8 +65,8 @@ export async function runOCR(receiptImage: File, apiKey: string) {
         success: true,
         warning: "Using fallback data as OCR failed",
         items: generateFallbackData(),
-        merchant: "Store",
         date: new Date().toISOString().split('T')[0],
+        // Merchant field has been removed
       };
     }
   } catch (error) {
@@ -76,8 +76,8 @@ export async function runOCR(receiptImage: File, apiKey: string) {
       success: false,
       error: error.message || "Unknown OCR error",
       items: generateFallbackData(),
-      merchant: "Store",
       date: new Date().toISOString().split('T')[0],
+      // Merchant field has been removed
     };
   }
 }

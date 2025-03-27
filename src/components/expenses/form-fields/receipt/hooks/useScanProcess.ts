@@ -46,7 +46,10 @@ export function useScanProcess({
           
           if (data?.items?.length > 0) {
             console.log("Using fallback data despite timeout:", data);
-            return data;
+            return {
+              success: true,
+              ...data
+            };
           }
           
           return null;
@@ -72,16 +75,17 @@ export function useScanProcess({
         }
         
         const processedData = {
+          success: true,
           items: Array.isArray(data.items) ? data.items : [],
-          merchant: data.storeName || data.merchant || "Store",
           date: data.date || new Date().toISOString().split('T')[0],
           total: data.total || "0.00",
           receiptUrl: data.receiptUrl
+          // Merchant field has been removed
         };
         
         if (!processedData.items || processedData.items.length === 0) {
           processedData.items = [{ 
-            name: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
+            name: "Store Purchase", 
             amount: processedData.total || "0.00",
             date: processedData.date
           }];

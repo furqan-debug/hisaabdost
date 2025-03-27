@@ -142,8 +142,8 @@ Ensure the output is **valid JSON**.
         return { 
           success: true, 
           items, 
-          date,
-          merchant: "Store"
+          date
+          // Merchant field has been removed
         };
       }
       

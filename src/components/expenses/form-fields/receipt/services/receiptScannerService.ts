@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,7 +19,6 @@ interface ScanResult {
     paymentMethod: string;
     receiptUrl?: string | null;
   }>;
-  merchant?: string;
   date?: string;
   error?: string;
   isTimeout?: boolean;
@@ -160,7 +158,6 @@ export async function scanReceipt({
         const processedData = {
           success: true,
           items: Array.isArray(data.items) ? data.items : [],
-          merchant: data.storeName || data.merchant || "Store",
           date: data.date || new Date().toISOString().split('T')[0],
           total: data.total || "0.00",
           receiptUrl: data.receiptUrl
@@ -168,7 +165,7 @@ export async function scanReceipt({
         
         if (!processedData.items || processedData.items.length === 0) {
           processedData.items = [{ 
-            description: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
+            description: "Store Purchase", 
             amount: processedData.total || "0.00",
             date: processedData.date,
             category: "Other",
@@ -322,7 +319,6 @@ async function parseReceiptLocally(file: File, receiptUrl?: string): Promise<Sca
             receiptUrl: receiptUrl
           }
         ],
-        merchant: "Fish Restaurant",
         date: new Date().toISOString().split('T')[0]
       };
     }
@@ -340,7 +336,6 @@ async function parseReceiptLocally(file: File, receiptUrl?: string): Promise<Sca
           receiptUrl: receiptUrl
         }
       ],
-      merchant: "Store",
       date: new Date().toISOString().split('T')[0],
       error: "Limited information extracted"
     };
@@ -405,7 +400,6 @@ function handleFishBurgerReceipt(result: any, receiptUrl?: string): any {
         receiptUrl: receiptUrl
       }
     ],
-    merchant: "Fish Restaurant",
     date: result.date || new Date().toISOString().split('T')[0],
   };
 }

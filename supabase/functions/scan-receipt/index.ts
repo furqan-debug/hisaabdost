@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
@@ -148,7 +147,6 @@ serve(async (req) => {
         });
       }
     } else {
-      // Handle direct JSON requests or invalid content types
       console.error("Unsupported content type:", contentType);
       return new Response(JSON.stringify({
         error: 'Unsupported content type',
