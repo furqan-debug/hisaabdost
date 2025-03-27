@@ -3,7 +3,6 @@
 project_id = "bklfolfivjonzpprytkz"
 
 # Storage configuration
-[[storage.buckets]]
-name = "receipts"
+[storage.buckets.receipts]
 public = true
 file_size_limit = 5242880
