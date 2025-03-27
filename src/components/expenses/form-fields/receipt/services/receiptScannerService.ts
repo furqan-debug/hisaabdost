@@ -154,6 +154,7 @@ export async function scanReceipt({
         }
         
         const processedData = {
+          success: true,
           items: Array.isArray(data.items) ? data.items : [],
           merchant: data.storeName || data.merchant || "Store",
           date: data.date || new Date().toISOString().split('T')[0],
