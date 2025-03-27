@@ -75,8 +75,10 @@ serve(async (req) => {
         const formData = await req.formData();
         console.log("Form data keys:", [...formData.keys()]);
         
-        // Get the receipt file from the form data
-        receiptImage = formData.get('receipt') as File;
+        // Get the receipt file from the form data - try multiple possible field names
+        receiptImage = formData.get('receipt') as File || 
+                       formData.get('image') as File || 
+                       formData.get('file') as File;
         
         if (!receiptImage) {
           console.error("No receipt image found in form data");

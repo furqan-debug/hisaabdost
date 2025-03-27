@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScanReceiptOptions {
   file: File;
@@ -94,12 +95,11 @@ export async function scanReceipt({
       
       try {
         // Try the Supabase Edge Function
-        const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt', {
+        const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
-          signal: controller.signal,
           headers: {
-            'X-Client-Info': 'receipt-scanner',
+            'X-Processing-Level': 'high',
           }
         });
         
@@ -107,29 +107,75 @@ export async function scanReceipt({
         
         onProgress?.(60, "Extracting data from receipt...");
         
-        if (response.status === 408) {
-          throw new Error("Request timed out");
+        if (data?.isTimeout === true) {
+          console.error("Scan timed out on server side");
+          
+          if (data?.items?.length > 0) {
+            console.log("Using fallback data despite timeout:", data);
+            return data;
+          }
+          
+          return { 
+            success: false, 
+            isTimeout: true, 
+            error: "Processing timed out",
+            date: new Date().toISOString().split('T')[0],
+            items: createFallbackItems(sanitizedReceiptUrl)
+          };
         }
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || `Failed to scan receipt (Status: ${response.status})`);
+        if (error) {
+          console.error("Scan error:", error);
+          onError?.("Failed to process receipt. Please try again or use manual entry.");
+          return { 
+            success: false, 
+            error: "Failed to process receipt. Please try again or use manual entry.",
+            date: new Date().toISOString().split('T')[0],
+            items: createFallbackItems(sanitizedReceiptUrl)
+          };
         }
         
-        const result = await response.json();
-        
-        if (result.isTimeout) {
-          throw new Error("Processing timed out");
+        if (!data) {
+          onError?.("No data was returned from the receipt scanner.");
+          return { 
+            success: false, 
+            error: "No data was returned from the receipt scanner.",
+            date: new Date().toISOString().split('T')[0],
+            items: createFallbackItems(sanitizedReceiptUrl)
+          };
         }
         
-        onProgress?.(90, "Finalizing results...");
+        console.log("Raw scan data received:", data);
+        onProgress?.(70, "Analyzing receipt data...");
         
-        // Format the result
-        const formattedResult = formatScanResult(result, sanitizedReceiptUrl);
+        if (data.error || data.warning) {
+          console.warn("Scan completed with warning:", data.error || data.warning);
+          toast.warning(data.warning || "Receipt processed with limited accuracy");
+        }
         
-        onProgress?.(100, "Scan complete!");
+        const processedData = {
+          items: Array.isArray(data.items) ? data.items : [],
+          merchant: data.storeName || data.merchant || "Store",
+          date: data.date || new Date().toISOString().split('T')[0],
+          total: data.total || "0.00",
+          receiptUrl: data.receiptUrl
+        };
         
-        return formattedResult;
+        if (!processedData.items || processedData.items.length === 0) {
+          processedData.items = [{ 
+            description: processedData.merchant ? `Purchase from ${processedData.merchant}` : "Store Purchase", 
+            amount: processedData.total || "0.00",
+            date: processedData.date
+          }];
+        }
+        
+        sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
+        console.log("Stored scan result:", processedData);
+        
+        onProgress?.(100, "Receipt processed successfully!");
+        
+        return processedData;
+        
       } catch (error) {
         clearTimeout(timeoutId);
         throw error;
