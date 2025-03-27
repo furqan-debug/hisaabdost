@@ -26,54 +26,79 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
 
   // Function to process a file directly (without event)
   const processReceiptFile = async (file: File) => {
-    const result = await processFile(
-      file, 
-      user?.id, 
-      currentBlobUrlRef.current, 
-      updateField, 
-      setIsUploading
-    );
+    console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
     
-    // Track the new URL
-    if (result && result.startsWith('blob:')) {
-      currentBlobUrlRef.current = result;
-    } else {
-      currentBlobUrlRef.current = null;
+    try {
+      const result = await processFile(
+        file, 
+        user?.id, 
+        currentBlobUrlRef.current, 
+        updateField, 
+        setIsUploading
+      );
+      
+      // Track the new URL
+      if (result) {
+        if (result.startsWith('blob:')) {
+          currentBlobUrlRef.current = result;
+        } else {
+          // If we got a permanent URL, clear the blob URL reference
+          currentBlobUrlRef.current = null;
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error in processReceiptFile:", error);
+      // In case of error, don't change URL references
+      return null;
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    await handleFileInputChange(
-      e, 
-      user?.id, 
-      currentBlobUrlRef.current, 
-      updateField, 
-      setIsUploading
-    );
+    console.log("useReceiptFile: File input change detected");
     
-    // Update current blob URL reference
-    if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
-      currentBlobUrlRef.current = formData.receiptUrl;
+    try {
+      await handleFileInputChange(
+        e, 
+        user?.id, 
+        currentBlobUrlRef.current, 
+        updateField, 
+        setIsUploading
+      );
+      
+      // Update current blob URL reference
+      if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
+        currentBlobUrlRef.current = formData.receiptUrl;
+      }
+    } catch (error) {
+      console.error("Error in handleFileChange:", error);
     }
   };
 
   // Cleanup blob URLs on unmount, but with a delay to ensure they're not still being accessed
   useEffect(() => {
     return () => {
+      console.log("useReceiptFile: Component unmounting, cleaning up blob URLs");
       // Wait a moment before cleaning everything up
       setTimeout(() => {
         cleanupAllBlobUrls();
-      }, 500);
+      }, 1000);
     };
   }, []);
 
   // Cleanup URLs that are no longer in use with periodic sweep
   useEffect(() => {
+    console.log("useReceiptFile: Setting up periodic cleanup of unused blob URLs");
+    
     const cleanupTimer = setInterval(() => {
       cleanupUnusedBlobUrls();
-    }, 5000);
+    }, 10000); // Run every 10 seconds instead of 5
     
-    return () => clearInterval(cleanupTimer);
+    return () => {
+      console.log("useReceiptFile: Clearing cleanup timer");
+      clearInterval(cleanupTimer);
+    };
   }, []);
 
   // Cleanup when receiptUrl changes to a non-blob URL
@@ -81,12 +106,15 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     // If the current receipt URL is not a blob URL (e.g., it's a Supabase URL),
     // we can mark previous blob URLs for cleanup since they're no longer needed
     if (formData.receiptUrl && !formData.receiptUrl.startsWith('blob:')) {
-      // We'll let the periodic cleanup handle these URLs
+      console.log("useReceiptFile: Receipt URL changed to permanent URL, marking blob URLs for cleanup");
+      
+      // Mark previous blob URL for cleanup if it exists
       if (currentBlobUrlRef.current && currentBlobUrlRef.current !== formData.receiptUrl) {
         markBlobUrlForCleanup(currentBlobUrlRef.current);
         currentBlobUrlRef.current = null;
       }
     } else if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
+      console.log("useReceiptFile: Receipt URL changed to blob URL");
       currentBlobUrlRef.current = formData.receiptUrl;
     }
   }, [formData.receiptUrl]);

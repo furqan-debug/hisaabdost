@@ -1,5 +1,10 @@
 import { toast } from "sonner";
-import { createManagedBlobUrl, markBlobUrlForCleanup, cleanupUnusedBlobUrls } from "./blobUrlManager";
+import { 
+  createManagedBlobUrl, 
+  markBlobUrlForCleanup, 
+  cleanupUnusedBlobUrls, 
+  addBlobUrlReference 
+} from "./blobUrlManager";
 import { uploadToSupabase } from "./supabaseUploader";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
 
@@ -26,39 +31,58 @@ export async function processReceiptFile(
       return null;
     }
     
+    console.log(`Processing receipt file: ${file.name} (${file.size} bytes)`);
+    
     // Create local blob URL for preview
     const localUrl = createManagedBlobUrl(file);
     
     // Clean up previous blob URL if it exists but after a delay
     if (currentBlobUrl) {
-      markBlobUrlForCleanup(currentBlobUrl);
+      console.log(`Marking previous URL for cleanup: ${currentBlobUrl}`);
+      // Wait a bit before marking for cleanup to avoid flickering
+      setTimeout(() => {
+        markBlobUrlForCleanup(currentBlobUrl);
+      }, 500);
     }
     
     // Update form with local URL for immediate preview
     updateField('receiptUrl', localUrl);
     updateField('receiptFile', file);
     
-    // Attempt to upload to Supabase and get permanent URL
-    const supabaseUrl = await uploadToSupabase(file, userId, setIsUploading);
+    // Add an extra reference to keep the blob URL alive during the upload
+    addBlobUrlReference(localUrl);
     
-    // If upload was successful, update the form with the permanent URL
-    if (supabaseUrl) {
-      console.log("Updating receipt URL from blob to Supabase URL");
+    try {
+      // Attempt to upload to Supabase and get permanent URL
+      const supabaseUrl = await uploadToSupabase(file, userId, setIsUploading);
       
-      // Mark the blob URL for cleanup, but don't revoke it immediately
-      // in case it's still being displayed
+      // If upload was successful, update the form with the permanent URL
+      if (supabaseUrl) {
+        console.log("Updating receipt URL from blob to Supabase URL");
+        
+        // Mark the blob URL for cleanup, but don't revoke it immediately
+        // in case it's still being displayed
+        markBlobUrlForCleanup(localUrl);
+        // And mark again for the reference we added above
+        markBlobUrlForCleanup(localUrl);
+        
+        updateField('receiptUrl', supabaseUrl);
+        return supabaseUrl;
+      } else {
+        console.log("Using local blob URL as fallback since Supabase upload failed");
+        // Remove the extra reference as we're keeping the blob URL
+        markBlobUrlForCleanup(localUrl);
+        return localUrl;
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      // Remove the extra reference since upload failed
       markBlobUrlForCleanup(localUrl);
-      
-      updateField('receiptUrl', supabaseUrl);
-    } else {
-      console.log("Using local blob URL as fallback since Supabase upload failed");
-      // Keep the blob URL active as we're using it
+      return localUrl;
+    } finally {
+      // Clean up any unused blob URLs after a delay
+      setTimeout(cleanupUnusedBlobUrls, 2000);
     }
-    
-    // Clean up any unused blob URLs after a short delay
-    setTimeout(cleanupUnusedBlobUrls, 2000);
-    
-    return supabaseUrl || localUrl;
   } catch (error) {
     console.error("Error processing receipt file:", error);
     toast.error('Failed to process receipt file');
@@ -83,9 +107,19 @@ export async function handleReceiptFileChange(
   setIsUploading?: (loading: boolean) => void
 ): Promise<void> {
   const file = e.target.files?.[0];
-  if (file) {
+  if (!file) {
+    console.log("No file selected");
+    return;
+  }
+  
+  console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type})`);
+  
+  try {
     await processReceiptFile(file, userId, currentBlobUrl, updateField, setIsUploading);
-    
+  } catch (error) {
+    console.error("File processing error:", error);
+    toast.error("Failed to process the receipt file");
+  } finally {
     // Reset the input value to allow selecting the same file again
     e.target.value = '';
   }

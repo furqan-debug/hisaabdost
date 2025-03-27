@@ -4,7 +4,10 @@
  */
 
 // Track all blob URLs created
-const blobUrlRegistry = new Map<string, { inUse: boolean, created: number }>();
+const blobUrlRegistry = new Map<string, { inUse: boolean, created: number, references: number }>();
+
+// Debug mode flag
+const DEBUG = false;
 
 /**
  * Create a blob URL and register it for tracking
@@ -13,8 +16,8 @@ const blobUrlRegistry = new Map<string, { inUse: boolean, created: number }>();
  */
 export function createManagedBlobUrl(blob: Blob): string {
   const url = URL.createObjectURL(blob);
-  console.log("Created new blob URL:", url);
-  blobUrlRegistry.set(url, { inUse: true, created: Date.now() });
+  logDebug("Created new blob URL:", url);
+  blobUrlRegistry.set(url, { inUse: true, created: Date.now(), references: 1 });
   return url;
 }
 
@@ -26,11 +29,39 @@ export function markBlobUrlForCleanup(url: string | null | undefined): void {
   if (!url || !url.startsWith('blob:')) return;
   
   if (blobUrlRegistry.has(url)) {
-    console.log("Marking blob URL for cleanup:", url);
+    logDebug("Marking blob URL for cleanup:", url);
     const info = blobUrlRegistry.get(url);
     if (info) {
-      blobUrlRegistry.set(url, { ...info, inUse: false });
+      // Decrease reference count
+      const newRefCount = Math.max(0, info.references - 1);
+      blobUrlRegistry.set(url, { 
+        ...info, 
+        inUse: newRefCount > 0,
+        references: newRefCount
+      });
     }
+  }
+}
+
+/**
+ * Increment reference count for a blob URL
+ * @param url The blob URL to reference
+ */
+export function addBlobUrlReference(url: string | null | undefined): void {
+  if (!url || !url.startsWith('blob:')) return;
+  
+  if (blobUrlRegistry.has(url)) {
+    const info = blobUrlRegistry.get(url)!;
+    blobUrlRegistry.set(url, { 
+      ...info, 
+      inUse: true,
+      references: info.references + 1
+    });
+    logDebug(`Added reference to ${url}, new count: ${info.references + 1}`);
+  } else {
+    // If URL wasn't created through our manager, add it now
+    blobUrlRegistry.set(url, { inUse: true, created: Date.now(), references: 1 });
+    logDebug(`Registered external blob URL: ${url}`);
   }
 }
 
@@ -38,14 +69,19 @@ export function markBlobUrlForCleanup(url: string | null | undefined): void {
  * Clean up a specific blob URL
  * @param url The URL to clean up
  * @param immediate Whether to clean up immediately or just mark for cleanup
+ * @param force Whether to force cleanup regardless of reference count
  */
-export function cleanupBlobUrl(url: string | null | undefined, immediate = false): void {
+export function cleanupBlobUrl(
+  url: string | null | undefined, 
+  immediate = false,
+  force = false
+): void {
   if (!url || !url.startsWith('blob:')) return;
 
-  if (immediate) {
+  if (immediate || force) {
     try {
       if (blobUrlRegistry.has(url)) {
-        console.log("Immediately cleaning up blob URL:", url);
+        logDebug(`${force ? "Force cleaning" : "Immediately cleaning"} blob URL: ${url}`);
         URL.revokeObjectURL(url);
         blobUrlRegistry.delete(url);
       }
@@ -61,32 +97,41 @@ export function cleanupBlobUrl(url: string | null | undefined, immediate = false
  * Clean up all blob URLs that are no longer in use
  */
 export function cleanupUnusedBlobUrls(): void {
-  console.log("Cleaning up unused blob URLs");
+  logDebug("Cleaning up unused blob URLs");
   
   // Get the current time
   const now = Date.now();
+  const staleThresholdMs = 5000; // 5 seconds
   
+  let cleaned = 0;
   blobUrlRegistry.forEach((info, url) => {
-    // Only clean up URLs that have been unused for at least 3 seconds
-    if (!info.inUse && (now - info.created > 3000)) {
+    // Only clean up URLs that have been unused for at least 5 seconds
+    // and have no references
+    if (!info.inUse && info.references === 0 && (now - info.created > staleThresholdMs)) {
       try {
-        console.log("Cleaning up unused blob URL:", url);
+        logDebug(`Cleaning up unused blob URL: ${url} (age: ${now - info.created}ms)`);
         URL.revokeObjectURL(url);
         blobUrlRegistry.delete(url);
+        cleaned++;
       } catch (error) {
         console.error("Error revoking blob URL:", error);
         // Remove from registry anyway to avoid memory leaks
         blobUrlRegistry.delete(url);
+        cleaned++;
       }
     }
   });
+  
+  if (cleaned > 0) {
+    logDebug(`Cleaned up ${cleaned} unused blob URLs`);
+  }
 }
 
 /**
  * Clean up all blob URLs, used for component unmount
  */
 export function cleanupAllBlobUrls(): void {
-  console.log("Cleaning up all blob URLs");
+  logDebug(`Cleaning up all ${blobUrlRegistry.size} blob URLs`);
   
   blobUrlRegistry.forEach((_, url) => {
     try {
@@ -116,4 +161,11 @@ export function getBlobUrlStats(): { total: number, active: number, inactive: nu
     active,
     inactive
   };
+}
+
+// Utility logging function
+function logDebug(...args: any[]): void {
+  if (DEBUG) {
+    console.log(...args);
+  }
 }

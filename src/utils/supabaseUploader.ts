@@ -1,8 +1,10 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Track if we've already tried creating the bucket
 let storageErrorShown = false;
+let bucketCreationAttempted = false;
 
 /**
  * Upload a file to Supabase storage
@@ -28,7 +30,39 @@ export async function uploadToSupabase(
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `${userId}/${fileName}`;
 
-    console.log("Checking if file already exists...");
+    console.log(`Preparing to upload ${fileName} (${file.size} bytes)`);
+
+    // First, try to create the bucket if it doesn't exist and we haven't tried already
+    if (!bucketCreationAttempted) {
+      bucketCreationAttempted = true;
+      
+      console.log("Checking if 'receipts' bucket exists...");
+      const { data: buckets, error: bucketListError } = await supabase.storage
+        .listBuckets();
+      
+      if (bucketListError) {
+        console.error("Error listing buckets:", bucketListError);
+      } else {
+        const receiptsBucketExists = buckets?.some(b => b.name === 'receipts');
+        
+        if (!receiptsBucketExists) {
+          console.log("'receipts' bucket does not exist, creating it...");
+          const { error: createBucketError } = await supabase.storage
+            .createBucket('receipts', {
+              public: true,
+              fileSizeLimit: 10485760 // 10MB limit
+            });
+            
+          if (createBucketError) {
+            console.error("Failed to create 'receipts' bucket:", createBucketError);
+          } else {
+            console.log("'receipts' bucket created successfully");
+          }
+        } else {
+          console.log("'receipts' bucket already exists");
+        }
+      }
+    }
 
     // Check if file already exists to prevent duplicate uploads
     const { data: existingFiles, error: listError } = await supabase.storage
@@ -40,6 +74,7 @@ export async function uploadToSupabase(
     } else if (existingFiles?.some(f => f.name === fileName)) {
       console.warn("File already exists. Skipping upload.");
       toast.info("File already exists. Skipping upload.");
+      if (setIsUploading) setIsUploading(false);
       return null;
     }
 
@@ -69,13 +104,15 @@ export async function uploadToSupabase(
 
         if (createBucket.error) {
           console.error("Failed to create bucket:", createBucket.error);
+          toast.error(`Bucket creation failed: ${createBucket.error.message}`);
         } else {
           console.log("Bucket created successfully. Retrying upload...");
           return await uploadToSupabase(file, userId, setIsUploading);
         }
       }
 
-      toast.error("Upload failed. Please try again.");
+      toast.error(`Upload failed: ${error.message}`);
+      if (setIsUploading) setIsUploading(false);
       return null;
     }
 
@@ -84,13 +121,22 @@ export async function uploadToSupabase(
       .from('receipts')
       .getPublicUrl(filePath);
 
+    if (!urlData?.publicUrl) {
+      console.error("Failed to get public URL");
+      toast.error("Failed to get file URL");
+      if (setIsUploading) setIsUploading(false);
+      return null;
+    }
+
     const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     console.log("Receipt uploaded successfully to:", publicUrl);
+    toast.success("Receipt uploaded successfully");
 
     return publicUrl;
   } catch (error) {
-    console.error("Error uploading to Supabase:", error);
-    toast.error("An unexpected error occurred during upload.");
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error uploading to Supabase:", errorMessage);
+    toast.error(`Upload error: ${errorMessage}`);
     return null;
   } finally {
     if (setIsUploading) setIsUploading(false);

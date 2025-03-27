@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, FileImage, ImageOff, X } from "lucide-react";
 import { toast } from "sonner";
+import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ViewReceiptDialogProps {
   receiptUrl?: string;
@@ -26,6 +27,7 @@ export function ViewReceiptDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(receiptUrl);
   const imageRef = useRef<HTMLImageElement>(null);
   const dialogOpenTime = useRef<number>(0);
   
@@ -45,8 +47,25 @@ export function ViewReceiptDialog({
       setImageLoading(true);
       setImageError(false);
       dialogOpenTime.current = Date.now();
+      
+      // Update image source when dialog opens
+      if (receiptUrl !== imageSrc) {
+        setImageSrc(receiptUrl);
+      }
+      
+      // For blob URLs, add a reference
+      if (receiptUrl && receiptUrl.startsWith('blob:')) {
+        addBlobUrlReference(receiptUrl);
+      }
     }
-  }, [isOpen]);
+    
+    return () => {
+      // Clean up blob URL reference when dialog closes
+      if (!isOpen && receiptUrl && receiptUrl.startsWith('blob:')) {
+        markBlobUrlForCleanup(receiptUrl);
+      }
+    };
+  }, [isOpen, receiptUrl, imageSrc]);
   
   // Track if component is mounted
   const isMounted = useRef(true);
@@ -68,8 +87,13 @@ export function ViewReceiptDialog({
       }
       
       // For remote URLs (not blob URLs)
-      fetch(receiptUrl)
-        .then(response => response.blob())
+      fetch(receiptUrl, { mode: 'cors', credentials: 'same-origin' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.blob();
+        })
         .then(blob => {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
@@ -184,7 +208,7 @@ export function ViewReceiptDialog({
             {!imageError ? (
               // Use a key to force re-render when the dialog opens
               <img
-                key={`receipt-img-${isOpen}-${receiptUrl}`}
+                key={`receipt-img-${isOpen}-${receiptUrl}-${Date.now()}`}
                 ref={imageRef}
                 src={receiptUrl}
                 alt="Receipt"
@@ -196,7 +220,7 @@ export function ViewReceiptDialog({
                 onLoad={handleImageLoad}
                 onError={handleImageError}
                 crossOrigin="anonymous"
-                loading="lazy"
+                loading="eager"
               />
             ) : (
               <div className="text-center p-4">

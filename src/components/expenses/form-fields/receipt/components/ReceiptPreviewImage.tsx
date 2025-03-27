@@ -1,6 +1,7 @@
 
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ReceiptPreviewImageProps {
   previewUrl: string | null;
@@ -13,6 +14,30 @@ export function ReceiptPreviewImage({
 }: ReceiptPreviewImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const previousUrlRef = useRef<string | null>(null);
+  
+  // Handle URL reference counting
+  useEffect(() => {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      // Add reference when URL is set or changes
+      addBlobUrlReference(previewUrl);
+      
+      // Mark old URL for cleanup
+      if (previousUrlRef.current && previousUrlRef.current !== previewUrl) {
+        markBlobUrlForCleanup(previousUrlRef.current);
+      }
+      
+      // Update previous URL ref
+      previousUrlRef.current = previewUrl;
+      
+      // Clean up when component unmounts
+      return () => {
+        if (previousUrlRef.current) {
+          markBlobUrlForCleanup(previousUrlRef.current);
+        }
+      };
+    }
+  }, [previewUrl]);
   
   // Reset states when the URL changes
   useEffect(() => {
@@ -41,7 +66,7 @@ export function ReceiptPreviewImage({
         </div>
       ) : (
         <img 
-          src={previewUrl} 
+          src={previewUrl}
           alt="Receipt preview" 
           className="max-h-52 rounded-md object-contain border bg-background" 
           onError={() => {
@@ -54,6 +79,7 @@ export function ReceiptPreviewImage({
             setIsLoading(false);
           }}
           loading="lazy"
+          crossOrigin="anonymous"
         />
       )}
       
