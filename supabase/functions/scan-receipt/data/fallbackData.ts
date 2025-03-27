@@ -1,58 +1,16 @@
 
-// Generate fallback data for when OCR/parsing fails
+/**
+ * Generate fallback data when OCR processing fails
+ * @returns Array of generic expense items
+ */
 export function generateFallbackData() {
-  const date = new Date().toISOString().split('T')[0];
-  
-  // Provide realistic fallback items for a common receipt
+  // Return a generic expense item
   return [
-    {
-      description: "Food Purchase",
-      amount: "21.99",
-      category: "Food",
-      date,
-      paymentMethod: "Card"
-    },
-    {
-      description: "Beverage",
-      amount: "4.99",
-      category: "Food",
-      date,
-      paymentMethod: "Card"
-    },
-    {
-      description: "Dining Service",
-      amount: "3.99",
-      category: "Food",
-      date,
-      paymentMethod: "Card"
-    }
-  ];
-}
-
-// Generate sample specific data for fish restaurant receipt
-export function generateFishRestaurantData() {
-  const date = new Date().toISOString().split('T')[0];
-  
-  return [
-    {
-      description: "Fish Burger (2x)",
-      amount: "25.98",
-      category: "Food",
-      date,
-      paymentMethod: "Card"
-    },
-    {
-      description: "Fish & Chips",
-      amount: "8.99",
-      category: "Food",
-      date,
-      paymentMethod: "Card"
-    },
-    {
-      description: "Soft Drink",
-      amount: "2.50",
-      category: "Food",
-      date,
+    { 
+      description: "Store Purchase",
+      amount: "15.99",
+      category: "Shopping",
+      date: new Date().toISOString().split('T')[0],
       paymentMethod: "Card"
     }
   ];

@@ -1,199 +1,141 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { processReceiptWithOCR } from "./services/ocrProcessor.ts";
-import { parseReceiptText } from "./utils/receiptParser.ts";
+import { processReceipt } from "./services/receiptProcessor.ts";
+import { runOCR } from "./services/ocrService.ts";
 
+// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-Processing-Level',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
+// Create a timeout promise for long-running operations
+function createTimeout(timeoutMs = 28000) {
+  return new Promise<{ isTimeout: true }>((resolve) => {
+    setTimeout(() => resolve({ isTimeout: true }), timeoutMs);
+  });
+}
+
 serve(async (req) => {
-  console.log("Receipt scan function called");
+  console.log("Receipt scanning function called");
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log("Handling CORS preflight request");
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
+  }
+  
+  // Ensure this is a POST request
+  if (req.method !== 'POST') {
+    console.error(`Invalid method: ${req.method}`);
+    return new Response(JSON.stringify({
+      error: 'Method not allowed',
+    }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
   
   try {
-    // Process the multipart form data
-    const formData = await req.formData();
-    const receiptFile = formData.get('receipt') as File;
+    console.log("Starting receipt scanning process");
+    // Check if this is a browser-friendly format
+    const contentType = req.headers.get('content-type') || '';
     
-    if (!receiptFile) {
-      return new Response(
-        JSON.stringify({ error: "No receipt file provided" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+    // OpenAI API key from environment
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error("OpenAI API key not found");
+      return new Response(JSON.stringify({
+        error: 'OpenAI API key not configured',
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
-    // Get the processing level (if any)
+    // Processing level from header (standard or enhanced)
     const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
     const enhancedProcessing = processingLevel === 'high';
     
-    // Get the API key
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    let receiptImage: File | null = null;
     
-    if (!OPENAI_API_KEY) {
-      console.warn("OpenAI API key not found in environment variables");
-      return new Response(
-        JSON.stringify({ 
-          error: "OpenAI API key not configured", 
-          warning: "Limited OCR capabilities available without API key"
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
+    if (contentType.includes('multipart/form-data')) {
+      console.log("Handling multipart form data");
+      const formData = await req.formData();
+      receiptImage = formData.get('receipt') as File;
+      
+      if (!receiptImage) {
+        console.error("No receipt image found in form data");
+        return new Response(JSON.stringify({
+          error: 'No receipt image provided',
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log(`Processing ${receiptImage.name} (${receiptImage.size} bytes)`);
+
+      try {
+        // Race between processing and timeout
+        const results = await Promise.race([
+          runOCR(receiptImage, openaiApiKey),
+          createTimeout(28000) // 28 second timeout (Edge Function has 30s limit)
+        ]);
+        
+        // Check if this was a timeout
+        if ('isTimeout' in results) {
+          console.log("OCR processing timed out");
+          return new Response(JSON.stringify({
+            isTimeout: true,
+            warning: "Processing timed out, partial results returned",
+            date: new Date().toISOString().split('T')[0]
+          }), {
+            status: 200, // Return 200 with timeout indication rather than error
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // Return the processed results
+        console.log("OCR processing completed successfully");
+        return new Response(JSON.stringify(results), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        console.error("Error processing receipt:", error);
+        return new Response(JSON.stringify({
+          error: 'Receipt processing failed',
+          details: error.message,
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else {
+      // Handle direct JSON requests for testing
+      console.error("Unsupported content type:", contentType);
+      return new Response(JSON.stringify({
+        error: 'Unsupported content type',
+        expected: 'multipart/form-data',
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-    
-    // Process the receipt image with OCR
-    const startTime = Date.now();
-    const ocrResult = await processReceiptWithOCR(receiptFile, OPENAI_API_KEY, enhancedProcessing);
-    const processingTime = Date.now() - startTime;
-    
-    // Check for timeout
-    if (processingTime > 25000) {
-      console.warn("Processing took too long:", processingTime, "ms");
-    }
-    
-    // If no text was extracted, return an error
-    if (!ocrResult.text) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Could not extract text from receipt", 
-          isTimeout: processingTime > 25000
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
-    }
-    
-    // Parse the extracted text to get structured data
-    const receiptData = parseReceiptText(ocrResult.text);
-    
-    // Add the merchant name if available
-    if (ocrResult.merchant && receiptData.merchant === 'Unknown') {
-      receiptData.merchant = ocrResult.merchant;
-    }
-    
-    // Add the date if available
-    if (ocrResult.date && ocrResult.date !== new Date().toISOString().split('T')[0]) {
-      receiptData.date = ocrResult.date;
-    }
-    
-    // Create items array compatible with the frontend expectations
-    const items = receiptData.items.map(item => ({
-      description: item.name,
-      amount: item.amount,
-      date: receiptData.date,
-      category: guessCategory(item.name),
-      paymentMethod: "Card"
-    }));
-    
-    // Include the receipt URL if it was provided
-    const receiptUrl = formData.get('receiptUrl');
-    if (receiptUrl && typeof receiptUrl === 'string') {
-      items.forEach(item => item.receiptUrl = receiptUrl);
-    }
-    
-    // Return the parsed receipt data
-    return new Response(
-      JSON.stringify({
-        items,
-        merchant: receiptData.merchant,
-        storeName: receiptData.merchant,
-        date: receiptData.date,
-        total: receiptData.total,
-        text: ocrResult.text,
-        isTimeout: processingTime > 25000,
-        processingTime
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    );
-    
   } catch (error) {
-    console.error("Error processing receipt:", error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || "An error occurred processing the receipt", 
-        isTimeout: error.message?.includes('timeout')
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    console.error("Unhandled error:", error);
+    return new Response(JSON.stringify({
+      error: 'Internal server error',
+      details: error.message,
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
-
-// Helper function to guess expense category from item description
-function guessCategory(description: string): string {
-  const lowerDesc = description.toLowerCase();
-  
-  if (lowerDesc.includes('food') || 
-      lowerDesc.includes('burger') || 
-      lowerDesc.includes('pizza') || 
-      lowerDesc.includes('restaurant') ||
-      lowerDesc.includes('meal') ||
-      lowerDesc.includes('cafe') ||
-      lowerDesc.includes('coffee')) {
-    return 'Food';
-  }
-  
-  if (lowerDesc.includes('transport') || 
-      lowerDesc.includes('uber') || 
-      lowerDesc.includes('lyft') ||
-      lowerDesc.includes('taxi') ||
-      lowerDesc.includes('bus') ||
-      lowerDesc.includes('train') ||
-      lowerDesc.includes('metro')) {
-    return 'Transport';
-  }
-  
-  if (lowerDesc.includes('grocery') || 
-      lowerDesc.includes('supermarket') || 
-      lowerDesc.includes('market') || 
-      lowerDesc.includes('food store')) {
-    return 'Groceries';
-  }
-  
-  if (lowerDesc.includes('entertain') || 
-      lowerDesc.includes('movie') || 
-      lowerDesc.includes('cinema') || 
-      lowerDesc.includes('theatre') ||
-      lowerDesc.includes('theater') ||
-      lowerDesc.includes('concert')) {
-    return 'Entertainment';
-  }
-  
-  if (lowerDesc.includes('utilities') || 
-      lowerDesc.includes('electricity') || 
-      lowerDesc.includes('water') || 
-      lowerDesc.includes('gas') ||
-      lowerDesc.includes('internet') ||
-      lowerDesc.includes('phone')) {
-    return 'Utilities';
-  }
-  
-  if (lowerDesc.includes('housing') || 
-      lowerDesc.includes('rent') || 
-      lowerDesc.includes('mortgage')) {
-    return 'Housing';
-  }
-  
-  if (lowerDesc.includes('health') || 
-      lowerDesc.includes('medical') || 
-      lowerDesc.includes('doctor') || 
-      lowerDesc.includes('pharmacy') ||
-      lowerDesc.includes('medicine')) {
-    return 'Healthcare';
-  }
-  
-  if (lowerDesc.includes('cloth') || 
-      lowerDesc.includes('apparel') || 
-      lowerDesc.includes('shoes') ||
-      lowerDesc.includes('shirt') ||
-      lowerDesc.includes('pants') ||
-      lowerDesc.includes('dress')) {
-    return 'Clothing';
-  }
-  
-  return 'Other';
-}

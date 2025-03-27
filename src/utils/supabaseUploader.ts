@@ -1,142 +1,134 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-// Track if we've already tried creating the bucket
-let storageErrorShown = false;
-let bucketCreationAttempted = false;
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /**
  * Upload a file to Supabase storage
- * @param file The file to upload
- * @param userId The user ID for the file path
- * @param setIsUploading Optional state setter for upload status
- * @returns The public URL of the uploaded file, or null if upload failed
+ * @param file File to upload
+ * @param userId User ID for storage path
+ * @param setIsUploading Optional callback to update loading state
+ * @returns URL of uploaded file or null on failure
  */
 export async function uploadToSupabase(
-  file: File, 
+  file: File,
   userId: string | undefined,
   setIsUploading?: (loading: boolean) => void
 ): Promise<string | null> {
-  if (!userId) {
-    toast.error('You must be logged in to upload files');
-    return null;
-  }
-
-  if (setIsUploading) setIsUploading(true);
-
   try {
-    const fileExt = file.name.split('.').pop() || 'jpg';
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `${userId}/${fileName}`;
-
-    console.log(`Preparing to upload ${fileName} (${file.size} bytes)`);
-
-    // First, try to create the bucket if it doesn't exist and we haven't tried already
-    if (!bucketCreationAttempted) {
-      bucketCreationAttempted = true;
-      
-      console.log("Checking if 'receipts' bucket exists...");
-      const { data: buckets, error: bucketListError } = await supabase.storage
-        .listBuckets();
-      
-      if (bucketListError) {
-        console.error("Error listing buckets:", bucketListError);
-      } else {
-        const receiptsBucketExists = buckets?.some(b => b.name === 'receipts');
+    if (!file) return null;
+    if (setIsUploading) setIsUploading(true);
+    
+    console.log(`Uploading file to Supabase...`);
+    
+    // Create a unique file name with timestamp and random string
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 10);
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${timestamp}-${randomString}.${fileExt}`;
+    
+    // Create storage path based on user ID or fallback to 'public'
+    const storagePath = userId ? `users/${userId}/${filePath}` : `public/${filePath}`;
+    
+    // Check if storage bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    
+    // Define the bucket we want to use
+    const bucketName = 'receipts';
+    
+    // Check if our bucket exists
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    // If bucket doesn't exist, create one (this might fail if user doesn't have admin privileges)
+    if (!bucketExists) {
+      try {
+        // Try to create bucket if it doesn't exist (requires admin privileges)
+        const { error: createBucketError } = await supabase.storage.createBucket(bucketName, {
+          public: true // Make receipts publicly accessible
+        });
         
-        if (!receiptsBucketExists) {
-          console.log("'receipts' bucket does not exist, creating it...");
-          const { error: createBucketError } = await supabase.storage
-            .createBucket('receipts', {
-              public: true,
-              fileSizeLimit: 10485760 // 10MB limit
+        if (createBucketError) {
+          console.warn(`Could not create bucket: ${createBucketError.message}`);
+          // Fall back to using any existing bucket
+          const firstBucket = buckets && buckets.length > 0 ? buckets[0].name : null;
+          if (firstBucket) {
+            console.log(`Falling back to existing bucket: ${firstBucket}`);
+            // Use the first available bucket
+            const { data, error } = await supabase.storage
+              .from(firstBucket)
+              .upload(storagePath, file, {
+                cacheControl: '3600',
+                upsert: true
+              });
+              
+            if (error) throw error;
+            
+            // Get the public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from(firstBucket)
+              .getPublicUrl(storagePath);
+              
+            console.log(`File uploaded successfully to ${firstBucket}`);
+            return publicUrl;
+          } else {
+            throw new Error('No storage buckets available');
+          }
+        }
+      } catch (error) {
+        console.error('Bucket creation error:', error);
+        // Continue with upload attempt even if bucket creation fails
+        // as it might already exist on the server but not in our list
+      }
+    }
+    
+    // Upload file to the bucket
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(storagePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+      
+    if (error) {
+      // If we get an error uploading to our preferred bucket, try a fallback
+      console.error('Error uploading to primary bucket:', error);
+      
+      // Try to use any existing bucket as fallback
+      if (buckets && buckets.length > 0) {
+        const fallbackBucket = buckets[0].name;
+        if (fallbackBucket !== bucketName) {
+          console.log(`Trying fallback bucket: ${fallbackBucket}`);
+          const { data: fallbackData, error: fallbackError } = await supabase.storage
+            .from(fallbackBucket)
+            .upload(storagePath, file, {
+              cacheControl: '3600',
+              upsert: true
             });
             
-          if (createBucketError) {
-            console.error("Failed to create 'receipts' bucket:", createBucketError);
-          } else {
-            console.log("'receipts' bucket created successfully");
-          }
-        } else {
-          console.log("'receipts' bucket already exists");
+          if (fallbackError) throw fallbackError;
+          
+          // Get public URL from fallback bucket
+          const { data: { publicUrl } } = supabase.storage
+            .from(fallbackBucket)
+            .getPublicUrl(storagePath);
+            
+          console.log(`File uploaded successfully to fallback bucket`);
+          return publicUrl;
         }
       }
+      
+      throw error;
     }
-
-    // Check if file already exists to prevent duplicate uploads
-    const { data: existingFiles, error: listError } = await supabase.storage
-      .from('receipts')
-      .list(userId);
-
-    if (listError) {
-      console.warn("Could not list files:", listError.message);
-    } else if (existingFiles?.some(f => f.name === fileName)) {
-      console.warn("File already exists. Skipping upload.");
-      toast.info("File already exists. Skipping upload.");
-      if (setIsUploading) setIsUploading(false);
-      return null;
-    }
-
-    console.log("Uploading file to Supabase...");
-
-    // Upload the file to Supabase Storage with public access
-    const { data, error } = await supabase.storage
-      .from('receipts')
-      .upload(filePath, file, {
-        upsert: true,
-        contentType: file.type,
-        cacheControl: '3600'
-      });
-
-    if (error) {
-      console.error("Upload error:", error);
-
-      // If bucket is missing, attempt to create it (only once)
-      if (error.message.includes("bucket not found") && !storageErrorShown) {
-        storageErrorShown = true;
-
-        console.log("Creating missing 'receipts' bucket...");
-        const createBucket = await supabase.storage.createBucket('receipts', {
-          public: true,
-          fileSizeLimit: 10485760 // 10MB limit
-        });
-
-        if (createBucket.error) {
-          console.error("Failed to create bucket:", createBucket.error);
-          toast.error(`Bucket creation failed: ${createBucket.error.message}`);
-        } else {
-          console.log("Bucket created successfully. Retrying upload...");
-          return await uploadToSupabase(file, userId, setIsUploading);
-        }
-      }
-
-      toast.error(`Upload failed: ${error.message}`);
-      if (setIsUploading) setIsUploading(false);
-      return null;
-    }
-
+    
     // Get the public URL
-    const { data: urlData } = supabase.storage
-      .from('receipts')
-      .getPublicUrl(filePath);
-
-    if (!urlData?.publicUrl) {
-      console.error("Failed to get public URL");
-      toast.error("Failed to get file URL");
-      if (setIsUploading) setIsUploading(false);
-      return null;
-    }
-
-    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-    console.log("Receipt uploaded successfully to:", publicUrl);
-    toast.success("Receipt uploaded successfully");
-
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(storagePath);
+      
+    console.log(`File uploaded successfully to ${bucketName}`);
     return publicUrl;
+    
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error uploading to Supabase:", errorMessage);
-    toast.error(`Upload error: ${errorMessage}`);
+    console.error("Error uploading to Supabase:", error);
     return null;
   } finally {
     if (setIsUploading) setIsUploading(false);
