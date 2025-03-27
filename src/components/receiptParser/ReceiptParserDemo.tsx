@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { parseReceiptText } from "@/utils/receiptParser";
+import { processReceiptText } from "@/utils/receiptParser";
 import { saveReceiptExtraction } from "@/services/receiptService";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,7 @@ export function ReceiptParserDemo() {
   const handleParse = () => {
     if (!ocrText.trim()) return;
     try {
-      const result = parseReceiptText(ocrText);
+      const result = processReceiptText(ocrText);
       setParsedResult(result);
     } catch (error) {
       console.error("Error parsing receipt:", error);

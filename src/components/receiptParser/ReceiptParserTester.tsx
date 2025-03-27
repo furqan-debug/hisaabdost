@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { parseReceiptText } from "@/utils/receiptParser";
+import { processReceiptText } from "@/utils/receiptParser";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -22,7 +22,7 @@ export function ReceiptParserTester() {
     try {
       // Add a small delay to allow UI to update
       setTimeout(() => {
-        const parsedResult = parseReceiptText(receiptText);
+        const parsedResult = processReceiptText(receiptText);
         setResult(parsedResult);
         setLoading(false);
         
