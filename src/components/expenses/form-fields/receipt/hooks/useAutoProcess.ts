@@ -1,7 +1,8 @@
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { scanReceipt } from '../services/receiptScannerService';
-import { selectMainItem } from './utils';
+import { selectMainItem } from '../utils/itemSelectionUtils';
 
 interface UseAutoProcessProps {
   file: File | null;

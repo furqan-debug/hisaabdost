@@ -1,7 +1,8 @@
+
 import { useState, useCallback } from "react";
 import { scanReceipt } from "../services/receiptScannerService";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
-import { selectMainItem } from "../utils/itemUtils";
+import { selectMainItem } from "../utils/itemSelectionUtils";
 
 interface UseManualScanProps {
   file: File | null;
