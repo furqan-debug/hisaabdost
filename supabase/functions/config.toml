@@ -1,6 +1,8 @@
 
+# Project configuration
 project_id = "bklfolfivjonzpprytkz"
 
+# Storage configuration
 [[storage.buckets]]
 name = "receipts"
 public = true
