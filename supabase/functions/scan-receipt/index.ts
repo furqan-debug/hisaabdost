@@ -45,7 +45,7 @@ serve(async (req) => {
   try {
     console.log("Starting receipt scanning process");
     
-    // Check content type
+    // Check content type - ensure we don't do strict matching that would break boundary detection
     const contentType = req.headers.get('content-type') || '';
     console.log("Content-Type:", contentType);
     
@@ -68,7 +68,7 @@ serve(async (req) => {
     let receiptImage: File | null = null;
     let formDataFields: string[] = [];
     
-    // Check if this is multipart/form-data
+    // Check if this is multipart/form-data (just check the start, not the boundary part)
     if (contentType.includes('multipart/form-data')) {
       console.log("Handling multipart form data");
       

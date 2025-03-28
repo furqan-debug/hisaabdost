@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -111,11 +112,13 @@ export async function scanReceipt({
         }
         
         // Call the Supabase Edge Function
+        // IMPORTANT: DO NOT set the Content-Type header manually for multipart/form-data
+        // Let the browser/fetch API handle the boundary parameter automatically
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
           headers: {
-            'Content-Type': 'multipart/form-data',
+            // Only add custom headers, not Content-Type for multipart/form-data
             'X-Processing-Level': 'high',
           }
         });

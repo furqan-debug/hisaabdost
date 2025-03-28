@@ -30,6 +30,8 @@ export function useScanProcess({
         
         formData.append('timestamp', Date.now().toString());
         
+        // IMPORTANT: DO NOT manually set the Content-Type header for multipart/form-data
+        // Let the browser/fetch API handle it automatically to include the boundary parameter
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
