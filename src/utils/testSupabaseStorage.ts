@@ -101,28 +101,37 @@ export async function getFileUrl(filePath: string) {
  */
 export async function checkReceiptsBucketExists() {
   try {
-    // First try using a simple list operation as it's more reliable
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .list('');
-      
+    // First try a simple list operation with a very short timeout
+    const listPromise = supabase.storage.from(bucketName).list('', { limit: 1 });
+    
+    // Add a timeout to the request
+    const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: null, 
+          error: new Error('Bucket check timed out')
+        });
+      }, 3000);
+    });
+    
+    // Use the result of whichever finishes first
+    const { error } = await Promise.race([listPromise, timeoutPromise]);
+    
     if (!error) {
       console.log(`"${bucketName}" bucket exists and is accessible`);
       return true;
     }
     
-    // If the simple list fails, try the more thorough approach
-    // Check if receipts bucket exists
+    // If the simple check fails, try getting bucket information
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
     
     if (bucketError) {
       console.error("Error listing buckets:", bucketError);
-      // Return true anyway to avoid blocking receipt uploads
-      console.log("Assuming bucket exists despite error (to enable uploads)");
-      return true;
+      // Continue anyway to avoid blocking receipt uploads
+      return false;
     }
     
-    const bucketExists = buckets?.find(bucket => bucket.name === bucketName);
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     if (bucketExists) {
       console.log(`"${bucketName}" bucket exists`);
       return true;
@@ -132,9 +141,7 @@ export async function checkReceiptsBucketExists() {
     }
   } catch (error) {
     console.error("Error checking if bucket exists:", error);
-    // Return true to avoid blocking receipt uploads in case of network issues
-    console.log("Assuming bucket exists despite error (to enable uploads)");
-    return true;
+    return false;
   }
 }
 
@@ -144,15 +151,21 @@ export async function checkReceiptsBucketExists() {
  */
 export async function createReceiptsBucket() {
   try {
-    // Always try to create the bucket regardless of existence check
-    // This is more reliable and Supabase will handle duplicate bucket creation gracefully
+    // Check if bucket exists first
+    const exists = await checkReceiptsBucketExists();
+    if (exists) {
+      console.log(`Bucket "${bucketName}" already exists`);
+      return true;
+    }
+    
+    // Create the bucket with public access
     const { error } = await supabase.storage.createBucket(bucketName, {
       public: true,
       fileSizeLimit: 10485760, // 10MB limit
     });
     
     if (error) {
-      // Check if the error is just that the bucket already exists
+      // Check if error is just that the bucket already exists
       if (error.message && error.message.includes("already exists")) {
         console.log(`Bucket "${bucketName}" already exists`);
         return true;

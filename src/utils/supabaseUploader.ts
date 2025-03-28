@@ -71,14 +71,8 @@ async function performUpload(
   const bucketName = 'receipts';
   
   try {
-    // Check if bucket exists, if not, don't try to upload
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.error(`Bucket '${bucketName}' does not exist`);
-      return null;
-    }
+    // Ensure the bucket exists before attempting to upload
+    await ensureBucketExists(bucketName);
     
     // Upload file to the bucket
     const { data, error } = await supabase.storage
@@ -90,6 +84,7 @@ async function performUpload(
       
     if (error) {
       console.error('Error uploading to bucket:', error);
+      toast.error(`Upload failed: ${error.message}`);
       return null;
     }
     
@@ -112,4 +107,48 @@ async function performUpload(
 function generateFileFingerprint(file: File): string {
   // Create a fingerprint based on file properties
   return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+/**
+ * Ensures that the specified bucket exists and is accessible
+ * This function will create the bucket if it doesn't exist
+ */
+async function ensureBucketExists(bucketName: string): Promise<boolean> {
+  try {
+    // First try to list files in the bucket as a quick check
+    const { error: listError } = await supabase.storage
+      .from(bucketName)
+      .list('', { limit: 1 });
+    
+    // If no error, bucket exists and we have access
+    if (!listError) {
+      return true;
+    }
+    
+    console.log(`Bucket access check failed, attempting to create bucket '${bucketName}'`);
+    
+    // Try to create the bucket
+    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+      public: true,
+      fileSizeLimit: 10485760 // 10MB limit
+    });
+    
+    if (createError) {
+      // If error is not just "bucket already exists", log it but continue anyway
+      if (!createError.message.includes('already exists')) {
+        console.warn(`Couldn't create bucket: ${createError.message}`);
+        // We'll try to upload anyway as a last resort
+      } else {
+        console.log(`Bucket '${bucketName}' already exists according to API`);
+      }
+    } else {
+      console.log(`Successfully created bucket '${bucketName}'`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Error ensuring bucket '${bucketName}' exists:`, error);
+    // Return true anyway as a last resort to attempt upload
+    return true;
+  }
 }

@@ -45,7 +45,9 @@ export function useScanProcess({
         try {
           updateProgress(30, "Processing with OCR...");
           
-          formData.append('timestamp', Date.now().toString());
+          // We want to ensure unique timestamps to avoid duplicate scans
+          const uniqueTimestamp = Date.now().toString();
+          formData.set('timestamp', uniqueTimestamp);
           
           // IMPORTANT: DO NOT manually set the Content-Type header for multipart/form-data
           // Let the browser/fetch API handle it automatically to include the boundary parameter
