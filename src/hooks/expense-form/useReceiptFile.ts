@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
 import { 
@@ -24,9 +25,17 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const currentBlobUrlRef = useRef<string | null>(null);
   // Track processed file fingerprints (using file name as a simple fingerprint)
   const processedFilesRef = useRef<Set<string>>(new Set());
+  // Track component mount state
+  const isMountedRef = useRef(true);
 
   // Function to process a file directly (without event)
-  const processReceiptFile = async (file: File) => {
+  const processReceiptFile = useCallback(async (file: File) => {
+    // Ensure we don't process after unmount
+    if (!isMountedRef.current) {
+      console.log("useReceiptFile: Component unmounted, skipping processing");
+      return null;
+    }
+    
     console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
 
     // Prevent duplicate processing: if file was already processed, skip reprocessing
@@ -46,13 +55,16 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         setIsUploading
       );
       
-      // Track the new URL
-      if (result) {
-        if (result.startsWith('blob:')) {
-          currentBlobUrlRef.current = result;
-        } else {
-          // If we got a permanent URL, clear the blob URL reference
-          currentBlobUrlRef.current = null;
+      // Only update references if still mounted
+      if (isMountedRef.current) {
+        // Track the new URL
+        if (result) {
+          if (result.startsWith('blob:')) {
+            currentBlobUrlRef.current = result;
+          } else {
+            // If we got a permanent URL, clear the blob URL reference
+            currentBlobUrlRef.current = null;
+          }
         }
       }
       
@@ -61,9 +73,15 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       console.error("Error in processReceiptFile:", error);
       return null;
     }
-  };
+  }, [user?.id, updateField]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Ensure we don't process after unmount
+    if (!isMountedRef.current) {
+      console.log("useReceiptFile: Component unmounted, skipping file change handling");
+      return;
+    }
+    
     console.log("useReceiptFile: File input change detected");
     
     try {
@@ -75,19 +93,26 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
         setIsUploading
       );
       
-      // Update current blob URL reference if applicable
-      if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
-        currentBlobUrlRef.current = formData.receiptUrl;
+      // Only update references if still mounted
+      if (isMountedRef.current) {
+        // Update current blob URL reference if applicable
+        if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
+          currentBlobUrlRef.current = formData.receiptUrl;
+        }
       }
     } catch (error) {
       console.error("Error in handleFileChange:", error);
     }
-  };
+  }, [user?.id, updateField, formData.receiptUrl]);
 
   // Cleanup blob URLs on unmount, but with a delay to ensure they're not still being accessed
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
       console.log("useReceiptFile: Component unmounting, cleaning up blob URLs");
+      isMountedRef.current = false;
+      
       setTimeout(() => {
         cleanupAllBlobUrls();
       }, 1000);
@@ -98,7 +123,9 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   useEffect(() => {
     console.log("useReceiptFile: Setting up periodic cleanup of unused blob URLs");
     const cleanupTimer = setInterval(() => {
-      cleanupUnusedBlobUrls();
+      if (isMountedRef.current) {
+        cleanupUnusedBlobUrls();
+      }
     }, 10000); // Run every 10 seconds
     
     return () => {
@@ -109,6 +136,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
 
   // Monitor receiptUrl changes to mark old blob URLs for cleanup
   useEffect(() => {
+    if (!isMountedRef.current) return;
+    
     if (formData.receiptUrl && !formData.receiptUrl.startsWith('blob:')) {
       console.log("useReceiptFile: Receipt URL changed to permanent URL, marking blob URLs for cleanup");
       if (currentBlobUrlRef.current && currentBlobUrlRef.current !== formData.receiptUrl) {

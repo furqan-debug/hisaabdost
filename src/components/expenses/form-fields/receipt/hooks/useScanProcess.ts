@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -10,28 +10,32 @@ interface UseScanProcessProps {
   errorScan: (message: string) => void;
 }
 
-// Track ongoing scans to prevent duplicates - use a more robust implementation with timestamps
-const ongoingScans = new Map<string, { timestamp: number, promise: Promise<any> }>();
-
-// Clean up stale scan entries every 60 seconds
-setInterval(() => {
-  const now = Date.now();
-  const staleThreshold = 5 * 60 * 1000; // 5 minutes
-  
-  for (const [scanId, data] of ongoingScans.entries()) {
-    if (now - data.timestamp > staleThreshold) {
-      console.log(`Removing stale scan entry: ${scanId}`);
-      ongoingScans.delete(scanId);
-    }
-  }
-}, 60000);
-
 export function useScanProcess({
   updateProgress,
   endScan,
   timeoutScan,
   errorScan
 }: UseScanProcessProps) {
+  // Use ref to track ongoing scans inside the component
+  const ongoingScansRef = useRef<Map<string, { timestamp: number, promise: Promise<any> }>>(new Map());
+  
+  // Clean up stale scan entries periodically
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      const staleThreshold = 5 * 60 * 1000; // 5 minutes
+      const ongoingScans = ongoingScansRef.current;
+      
+      for (const [scanId, data] of ongoingScans.entries()) {
+        if (now - data.timestamp > staleThreshold) {
+          console.log(`Removing stale scan entry: ${scanId}`);
+          ongoingScans.delete(scanId);
+        }
+      }
+    }, 60000);
+    
+    return () => clearInterval(cleanupInterval);
+  }, []);
   
   const processScan = useCallback(async (formData: FormData) => {
     try {
@@ -42,6 +46,7 @@ export function useScanProcess({
       const scanId = `scan-${fileInfo}-${uniqueTimestamp}`;
       
       // Check if this scan is already in progress
+      const ongoingScans = ongoingScansRef.current;
       if (ongoingScans.has(scanId)) {
         console.log(`Scan with ID ${scanId} is already in progress, reusing existing promise`);
         return ongoingScans.get(scanId)?.promise;
@@ -152,13 +157,13 @@ export function useScanProcess({
           // Remove from ongoing scans map after a delay
           // This prevents immediate reprocessing but allows future processing
           setTimeout(() => {
-            ongoingScans.delete(scanId);
+            ongoingScansRef.current.delete(scanId);
           }, 10000);
         }
       })();
       
-      // Track this scan
-      ongoingScans.set(scanId, { 
+      // Track this scan using the ref
+      ongoingScansRef.current.set(scanId, { 
         timestamp: Date.now(),
         promise: scanPromise
       });

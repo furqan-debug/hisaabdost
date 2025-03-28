@@ -76,12 +76,15 @@ export function ReceiptScanDialog({
   
   // Auto-process the receipt when the dialog opens - only once per file
   useEffect(() => {
+    // Only run if component is mounted and dialog is open
+    if (!open) return;
+    
     // Generate a fingerprint for the current file
     const currentFingerprint = file ? 
       `${file.name}-${file.size}-${file.lastModified}` : 'no-file';
     
     // Store the last processed file fingerprint
-    const lastProcessedFingerprintRef = useRef<string | null>(null);
+    const lastProcessedFingerprintRef = { current: null as string | null };
     
     // Only process if:
     // 1. Dialog is open
@@ -90,8 +93,7 @@ export function ReceiptScanDialog({
     // 4. Auto-process is enabled
     // 5. We haven't started auto-processing already
     // 6. This is a different file than the last one we processed
-    if (open && 
-        file && 
+    if (file && 
         !isScanning && 
         !isAutoProcessing && 
         autoProcess && 
