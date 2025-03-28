@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
@@ -74,16 +75,51 @@ serve(async (req) => {
         const formData = await req.formData();
         console.log("Form data keys:", [...formData.keys()]);
         
-        // Get the receipt file from the form data - try multiple possible field names
-        receiptImage = formData.get('receipt') as File || 
-                       formData.get('image') as File || 
-                       formData.get('file') as File;
+        // Try all common field names for the receipt file
+        for (const fieldName of ['receipt', 'image', 'file', 'receiptImage']) {
+          const file = formData.get(fieldName) as File;
+          if (file && file.size > 0) {
+            receiptImage = file;
+            console.log(`Found receipt image in field '${fieldName}': ${file.name} (${file.size} bytes, type: ${file.type})`);
+            break;
+          }
+        }
         
         if (!receiptImage) {
           console.error("No receipt image found in form data");
           return new Response(JSON.stringify({
             error: 'No receipt image provided',
             formDataKeys: [...formData.keys()],
+            formDataValues: Object.fromEntries([...formData.entries()].map(([key, value]) => {
+              if (value instanceof File) {
+                return [key, `File: ${value.name} (${value.size} bytes, ${value.type})`];
+              }
+              return [key, typeof value === 'string' ? value : 'Non-string value'];
+            })),
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // Validate file type
+        if (!receiptImage.type.startsWith('image/')) {
+          console.error(`Invalid file type: ${receiptImage.type}`);
+          return new Response(JSON.stringify({
+            error: 'Invalid file type. Please upload an image.',
+            fileType: receiptImage.type,
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // Validate file size (max 10MB)
+        if (receiptImage.size > 10 * 1024 * 1024) {
+          console.error(`File too large: ${receiptImage.size} bytes`);
+          return new Response(JSON.stringify({
+            error: 'File too large. Maximum size is 10MB.',
+            fileSize: receiptImage.size,
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -116,6 +152,7 @@ serve(async (req) => {
           console.log("OCR processing completed successfully");
           return new Response(JSON.stringify({
             ...results,
+            success: true,
             receiptDetails: {
               filename: receiptImage.name,
               size: receiptImage.size,
