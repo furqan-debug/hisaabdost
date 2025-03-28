@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { useState, useRef, useEffect } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
@@ -68,6 +69,8 @@ export function ReceiptField({
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type})`);
+      
       // Flag that we've started processing to prevent reopening
       setProcessingStarted(true);
       
@@ -76,8 +79,10 @@ export function ReceiptField({
       setFilePreviewUrl(previewUrl);
       setReceiptFile(file);
       
-      // Always open scan dialog if we have a file
-      setScanDialogOpen(true);
+      // Always open scan dialog if we have a file and autoProcess is enabled
+      if (autoProcess) {
+        setScanDialogOpen(true);
+      }
       
       // Call the original onFileChange to handle storage
       onFileChange(e);
@@ -128,6 +133,7 @@ export function ReceiptField({
           onChange={handleFileSelection}
           inputRef={fileInputRef}
           useCamera={false}
+          accept="image/*"
         />
         
         <ReceiptFileInput
@@ -135,6 +141,7 @@ export function ReceiptField({
           onChange={handleFileSelection}
           inputRef={cameraInputRef}
           useCamera={true}
+          accept="image/*"
         />
         
         <ReceiptActions
@@ -148,18 +155,20 @@ export function ReceiptField({
         />
       </div>
       
-      {/* Scan Dialog - always shown for automatic processing */}
-      <ReceiptScanDialog
-        file={receiptFile}
-        previewUrl={filePreviewUrl}
-        open={scanDialogOpen}
-        setOpen={setScanDialogOpen}
-        onCleanup={handleCleanup}
-        onCapture={onCapture}
-        autoSave={true}
-        autoProcess={true}
-        onManualEntry={handleManualEntry}
-      />
+      {/* Scan Dialog - only shown when scanDialogOpen is true */}
+      {receiptFile && (
+        <ReceiptScanDialog
+          file={receiptFile}
+          previewUrl={filePreviewUrl}
+          open={scanDialogOpen}
+          setOpen={setScanDialogOpen}
+          onCleanup={handleCleanup}
+          onCapture={onCapture}
+          autoSave={true}
+          autoProcess={autoProcess}
+          onManualEntry={handleManualEntry}
+        />
+      )}
     </div>
   );
 }

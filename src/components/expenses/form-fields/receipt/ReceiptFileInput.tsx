@@ -1,31 +1,31 @@
 
-import { useRef } from "react";
+import React from "react";
 
 interface ReceiptFileInputProps {
+  id: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  inputRef?: React.RefObject<HTMLInputElement>;
-  id?: string;
-  useCamera?: boolean;
+  inputRef: React.RefObject<HTMLInputElement>;
+  useCamera: boolean;
+  accept?: string;
 }
 
-export function ReceiptFileInput({ 
-  onChange, 
-  inputRef, 
-  id = "receipt-upload",
-  useCamera = false
+export function ReceiptFileInput({
+  id,
+  onChange,
+  inputRef,
+  useCamera,
+  accept = "image/*"
 }: ReceiptFileInputProps) {
-  const defaultRef = useRef<HTMLInputElement>(null);
-  const ref = inputRef || defaultRef;
-  
   return (
     <input
-      ref={ref}
+      type={useCamera ? "file" : "file"}
       id={id}
-      type="file"
-      accept="image/*,.pdf"
+      name={id}
+      accept={accept}
       capture={useCamera ? "environment" : undefined}
-      onChange={onChange}
       className="hidden"
+      onChange={onChange}
+      ref={inputRef}
     />
   );
 }

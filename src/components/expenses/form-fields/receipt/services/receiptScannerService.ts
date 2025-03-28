@@ -36,13 +36,21 @@ export async function scanReceipt({
   onError
 }: ScanReceiptOptions): Promise<ScanResult> {
   if (!file) {
-    return { success: false, error: "No file provided" };
+    const errorMsg = "No file provided";
+    console.error(errorMsg);
+    if (onError) onError(errorMsg);
+    return { success: false, error: errorMsg };
   }
   
   // Check if file is an image
   if (!file.type.startsWith('image/')) {
-    return { success: false, error: "File is not an image" };
+    const errorMsg = `File is not an image: ${file.type}`;
+    console.error(errorMsg);
+    if (onError) onError(errorMsg);
+    return { success: false, error: errorMsg };
   }
+  
+  console.log(`Starting receipt scan for ${file.name} (${file.size} bytes, type: ${file.type})`);
   
   // Don't pass blob URLs to the scan service
   let sanitizedReceiptUrl = receiptUrl;
@@ -64,7 +72,6 @@ export async function scanReceipt({
         // Wait before retrying with exponential backoff
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[retryCount - 1] || 3000));
       } else {
-        console.log(`Starting receipt scan for ${file.name} (${file.size} bytes)`);
         onProgress?.(10, "Preparing receipt for scanning...");
       }
       
@@ -108,8 +115,9 @@ export async function scanReceipt({
           method: 'POST',
           body: formData,
           headers: {
+            'Content-Type': 'multipart/form-data',
             'X-Processing-Level': 'high',
-          },
+          }
         });
         
         clearTimeout(timeoutId);
@@ -169,7 +177,6 @@ export async function scanReceipt({
           throw new Error(data.error);
         }
         
-        console.log("Raw scan data received:", data);
         onProgress?.(80, "Processing scan results...");
         
         // Display warnings but continue with processing
@@ -214,6 +221,7 @@ export async function scanReceipt({
       }
     } catch (error) {
       lastError = error;
+      console.error(`Scan attempt ${retryCount + 1} failed:`, error);
       retryCount++;
       
       // If we've used all our retries, report the final error

@@ -43,13 +43,24 @@ export function useAutoProcess({
 }: UseAutoProcessProps) {
   
   const autoProcessReceipt = useCallback(async () => {
-    if (!file || isScanning || isAutoProcessing) return;
+    if (!file || isScanning || isAutoProcessing) {
+      console.log("Cannot auto-process: file missing or already processing", {
+        hasFile: !!file,
+        fileInfo: file ? `${file.name} (${file.size} bytes, ${file.type})` : 'none',
+        isScanning,
+        isAutoProcessing
+      });
+      return;
+    }
     
+    console.log(`Auto-processing receipt: ${file.name} (${file.size} bytes, ${file.type})`);
     startScan();
     updateProgress(5, "Preparing receipt...");
     
     try {
       const receiptUrl = file ? URL.createObjectURL(file) : undefined;
+      
+      updateProgress(20, "Uploading receipt for processing...");
       
       const scanResults = await scanReceipt({
         file,
@@ -66,6 +77,8 @@ export function useAutoProcess({
       }
       
       if (scanResults && scanResults.success && scanResults.items && scanResults.items.length > 0) {
+        updateProgress(90, "Extracting expense information...");
+        
         const mainItem = selectMainItem(scanResults.items);
         
         // Get general expense information
@@ -74,7 +87,7 @@ export function useAutoProcess({
           amount: mainItem.amount || "0.00",
           date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
           category: mainItem.category || "Other",
-          paymentMethod: "Card",
+          paymentMethod: mainItem.paymentMethod || "Card",
         };
         
         console.log("Extracted expense details:", expenseDetails);
@@ -83,23 +96,31 @@ export function useAutoProcess({
         if (onCapture) {
           onCapture(expenseDetails);
         }
+      } else {
+        console.warn("No valid items found in scan results");
       }
       
       // Cleanup tasks
-      endScan();
-      onCleanup();
-      setOpen(false);
+      updateProgress(100, "Receipt processed successfully!");
       
-      if (onSuccess) {
-        onSuccess();
-      }
+      setTimeout(() => {
+        endScan();
+        onCleanup();
+        setOpen(false);
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+      }, 500);
       
     } catch (error) {
       console.error("Error during auto-processing:", error);
       errorScan("Failed to auto-process receipt. Please try again.");
       toast.error("Failed to auto-process receipt. Please try again.");
     } finally {
-      endScan();
+      setTimeout(() => {
+        endScan();
+      }, 300);
     }
   }, [
     file,

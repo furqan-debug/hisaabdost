@@ -3,7 +3,7 @@
 
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
-    console.log("Processing receipt with OpenAI Vision API");
+    console.log(`Processing receipt with OpenAI Vision API: ${file.name} (${file.size} bytes)`);
     
     // Read the file into an ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
@@ -13,6 +13,8 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     
     // Create the prompt for OpenAI
     const prompt = "Extract all information from this receipt. Return the results as valid JSON with the following format: { \"date\": \"YYYY-MM-DD\", \"items\": [ { \"description\": \"item name\", \"amount\": \"0.00\", \"category\": \"category\", \"date\": \"YYYY-MM-DD\", \"paymentMethod\": \"Card\" } ] }. Make sure all fields are there and properly filled. If the receipt doesn't have clear items, create a best guess based on the receipt's context.";
+    
+    console.log("Sending request to OpenAI API...");
     
     // Call OpenAI's API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -45,6 +47,8 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error (${response.status}): ${errorText}`);
       throw new Error(`OpenAI API responded with status: ${response.status}`);
     }
     
@@ -65,11 +69,13 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     const jsonString = jsonMatch[1]?.trim() || textContent;
     
     try {
+      console.log("Attempting to parse JSON response:", jsonString);
       const parsedData = JSON.parse(jsonString);
       console.log("Successfully parsed response:", parsedData);
       return parsedData;
     } catch (parseError) {
       console.error("Invalid JSON response from OpenAI:", textContent);
+      console.error("Parse error:", parseError);
       
       // Create fallback data if JSON parsing fails
       return {

@@ -81,28 +81,53 @@ export function useScanReceipt({
   
   // Wrapper for auto-processing to update component state
   const handleAutoProcessReceipt = useCallback(async () => {
-    if (!file || isScanning || isAutoProcessing) return;
+    if (!file || isScanning || isAutoProcessing) {
+      console.log("Cannot process: file missing or already processing", {
+        hasFile: !!file,
+        isScanning,
+        isAutoProcessing
+      });
+      return;
+    }
     
+    console.log(`Starting auto-processing for ${file.name} (${file.size} bytes)`);
     setIsAutoProcessing(true);
     setLastScannedFile(file);
     
     try {
       await autoProcessReceipt();
+    } catch (error) {
+      console.error("Auto-processing error:", error);
+      errorScan(error instanceof Error ? error.message : "Unknown error during processing");
     } finally {
       setIsAutoProcessing(false);
     }
-  }, [file, isScanning, isAutoProcessing, autoProcessReceipt]);
+  }, [file, isScanning, isAutoProcessing, autoProcessReceipt, errorScan]);
   
   // Wrapper for manual scanning to update component state
   const handleManualScanReceipt = useCallback(async () => {
+    if (!file && !lastScannedFile) {
+      console.error("Cannot scan: No file available");
+      errorScan("No file available for scanning");
+      return;
+    }
+    
     if (file) {
+      console.log(`Setting last scanned file: ${file.name}`);
       setLastScannedFile(file);
     }
-    await handleScanReceipt();
-  }, [file, handleScanReceipt]);
+    
+    try {
+      await handleScanReceipt();
+    } catch (error) {
+      console.error("Manual scan error:", error);
+      errorScan(error instanceof Error ? error.message : "Unknown error during scanning");
+    }
+  }, [file, lastScannedFile, handleScanReceipt, errorScan]);
   
   // Reset all state
   const resetScanState = useCallback(() => {
+    console.log("Resetting scan state");
     resetState();
     setIsAutoProcessing(false);
     // Don't reset lastScannedFile so it can be used for retries

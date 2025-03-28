@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { scanReceipt } from "../services/receiptScannerService";
 import { selectMainItem } from "../utils/itemSelectionUtils";
@@ -44,16 +45,36 @@ export function useManualScan({
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   
   const handleScanReceipt = useCallback(async () => {
-    if (!file || isScanning || isAutoProcessing) return;
+    // Use the current file or fallback to the last scanned file
+    const fileToScan = file || lastScannedFile;
     
+    if (!fileToScan || isScanning || isAutoProcessing) {
+      console.log("Cannot scan: no valid file or already processing", {
+        hasFile: !!fileToScan,
+        fileInfo: fileToScan ? `${fileToScan.name} (${fileToScan.size} bytes, ${fileToScan.type})` : 'none',
+        isScanning,
+        isAutoProcessing
+      });
+      return;
+    }
+    
+    console.log(`Manual scanning receipt: ${fileToScan.name} (${fileToScan.size} bytes, ${fileToScan.type})`);
     startScan();
     
     try {
-      const localReceiptUrl = URL.createObjectURL(file);
+      // Clean up any previous URL
+      if (receiptUrl) {
+        URL.revokeObjectURL(receiptUrl);
+      }
+      
+      // Create a new URL for the file
+      const localReceiptUrl = URL.createObjectURL(fileToScan);
       setReceiptUrl(localReceiptUrl);
       
+      updateProgress(20, "Processing receipt image...");
+      
       const scanResults = await scanReceipt({
-        file: file,
+        file: fileToScan,
         receiptUrl: localReceiptUrl,
         onProgress: updateProgress,
         onTimeout: timeoutScan,
@@ -61,6 +82,8 @@ export function useManualScan({
       });
       
       if (scanResults && scanResults.success && scanResults.items && scanResults.items.length > 0) {
+        updateProgress(90, "Extracting expense information...");
+        
         const mainItem = selectMainItem(scanResults.items);
               
         let expenseDetails = {
@@ -68,7 +91,7 @@ export function useManualScan({
           amount: mainItem.amount || "0.00",
           date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
           category: mainItem.category || "Other",
-          paymentMethod: "Card",
+          paymentMethod: mainItem.paymentMethod || "Card",
         };
               
         console.log("Extracted expense details:", expenseDetails);
@@ -78,12 +101,16 @@ export function useManualScan({
         }
         
         if (autoSave) {
-          setOpen(false);
-          onSuccess?.();
+          updateProgress(100, "Receipt processed successfully!");
+          
+          setTimeout(() => {
+            setOpen(false);
+            onSuccess?.();
+          }, 500);
         }
         
         endScan();
-        onCleanup();
+        
       } else {
         if (scanResults && scanResults.success && (!scanResults.items || scanResults.items.length === 0)) {
           const genericExpense = {
@@ -104,9 +131,6 @@ export function useManualScan({
             setOpen(false);
             onSuccess?.();
           }
-          
-          endScan();
-          onCleanup();
         } else {
           if (scanResults && scanResults.isTimeout) {
             timeoutScan();
@@ -115,22 +139,24 @@ export function useManualScan({
           } else {
             errorScan("Failed to scan receipt. Please try again.");
           }
-          
-          endScan();
         }
       }
     } catch (error) {
       console.error("Error during manual scan:", error);
       errorScan("An unexpected error occurred during the scan.");
-      endScan();
     } finally {
       if (receiptUrl) {
         URL.revokeObjectURL(receiptUrl);
         setReceiptUrl(null);
       }
+      
+      setTimeout(() => {
+        endScan();
+      }, 300);
     }
   }, [
     file,
+    lastScannedFile,
     isScanning,
     isAutoProcessing,
     onCapture,
