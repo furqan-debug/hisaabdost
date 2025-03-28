@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,6 +26,7 @@ interface ScanResult {
 
 const MAX_RETRIES = 2;
 const TIMEOUT_MS = 30000; // 30 seconds max
+const RETRY_DELAYS = [1500, 3000]; // Exponential backoff
 
 export async function scanReceipt({
   file,
@@ -55,34 +55,33 @@ export async function scanReceipt({
   let retryCount = 0;
   let lastError: any = null;
   
-  while (retryCount < MAX_RETRIES) {
+  while (retryCount <= MAX_RETRIES) {
     try {
       if (retryCount > 0) {
         console.log(`Retry attempt ${retryCount} for receipt scan`);
         onProgress?.(5, `Retrying scan (attempt ${retryCount + 1})...`);
+        
+        // Wait before retrying with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[retryCount - 1] || 3000));
       } else {
         console.log(`Starting receipt scan for ${file.name} (${file.size} bytes)`);
         onProgress?.(10, "Preparing receipt for scanning...");
       }
       
-      // Fallback mechanism - parse receipt locally if we're on retry or if file is small
-      if (retryCount > 0 || file.size < 100000) {
-        const localResult = await parseReceiptLocally(file, sanitizedReceiptUrl);
-        
-        if (localResult.success) {
-          onProgress?.(100, "Processing complete with fallback method");
-          return localResult;
-        }
-      }
-      
       // Create form data for the request
       const formData = new FormData();
-      formData.append('image', file);
+      
+      // Use 'file' as the field name to match what the backend expects
+      formData.append('file', file);
+      
       if (sanitizedReceiptUrl) {
         formData.append('receiptUrl', sanitizedReceiptUrl);
       }
-      formData.append('enhanced', 'true');
+      
+      // Add metadata to help with debugging
       formData.append('timestamp', Date.now().toString());
+      formData.append('retry', retryCount.toString());
+      formData.append('enhanced', 'true');
       
       onProgress?.(30, "Processing receipt image...");
       
@@ -94,76 +93,89 @@ export async function scanReceipt({
       }, TIMEOUT_MS); 
       
       try {
-        // Try the Supabase Edge Function
+        // Call the Supabase Edge Function
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
           body: formData,
           headers: {
             'X-Processing-Level': 'high',
-          }
+          },
         });
         
         clearTimeout(timeoutId);
         
         onProgress?.(60, "Extracting data from receipt...");
         
-        if (data?.isTimeout === true) {
-          console.error("Scan timed out on server side");
+        if (error) {
+          console.error("Supabase function error:", error);
+          throw new Error(`Supabase function error: ${error.message || 'Unknown error'}`);
+        }
+        
+        if (!data) {
+          throw new Error("No data returned from scan function");
+        }
+        
+        // Check for timeout in the response
+        if (data.isTimeout === true) {
+          console.log("Scan timed out on server side");
           
-          if (data?.items?.length > 0) {
-            console.log("Using fallback data despite timeout:", data);
+          if (data.items?.length > 0) {
+            console.log("Using partial data despite timeout:", data);
             return {
               success: true,
               ...data
             };
           }
           
+          if (onTimeout) onTimeout();
+          
           return { 
             success: false, 
             isTimeout: true, 
             error: "Processing timed out",
-            date: new Date().toISOString().split('T')[0],
+            date: data.date || new Date().toISOString().split('T')[0],
             items: createFallbackItems(sanitizedReceiptUrl)
           };
         }
         
-        if (error) {
-          console.error("Scan error:", error);
-          onError?.("Failed to process receipt. Please try again or use manual entry.");
-          return { 
-            success: false, 
-            error: "Failed to process receipt. Please try again or use manual entry.",
-            date: new Date().toISOString().split('T')[0],
-            items: createFallbackItems(sanitizedReceiptUrl)
-          };
-        }
-        
-        if (!data) {
-          onError?.("No data was returned from the receipt scanner.");
-          return { 
-            success: false, 
-            error: "No data was returned from the receipt scanner.",
-            date: new Date().toISOString().split('T')[0],
-            items: createFallbackItems(sanitizedReceiptUrl)
-          };
+        // Handle explicit errors in the response
+        if (data.error) {
+          console.error("API reported error:", data.error);
+          
+          // If this is the last retry, report the error
+          if (retryCount >= MAX_RETRIES) {
+            if (onError) onError(data.error);
+            return { 
+              success: false, 
+              error: data.error,
+              date: data.date || new Date().toISOString().split('T')[0],
+              items: data.items || createFallbackItems(sanitizedReceiptUrl)
+            };
+          }
+          
+          // Otherwise, throw to trigger retry
+          throw new Error(data.error);
         }
         
         console.log("Raw scan data received:", data);
-        onProgress?.(70, "Analyzing receipt data...");
+        onProgress?.(80, "Processing scan results...");
         
-        if (data.error || data.warning) {
-          console.warn("Scan completed with warning:", data.error || data.warning);
+        // Display warnings but continue with processing
+        if (data.warning) {
+          console.warn("Scan completed with warning:", data.warning);
           toast.warning(data.warning || "Receipt processed with limited accuracy");
         }
         
+        // Process the data
         const processedData = {
           success: true,
           items: Array.isArray(data.items) ? data.items : [],
           date: data.date || new Date().toISOString().split('T')[0],
           total: data.total || "0.00",
-          receiptUrl: data.receiptUrl
+          receiptUrl: sanitizedReceiptUrl
         };
         
+        // Create fallback item if no items were found
         if (!processedData.items || processedData.items.length === 0) {
           processedData.items = [{ 
             description: "Store Purchase", 
@@ -174,26 +186,30 @@ export async function scanReceipt({
           }];
         }
         
-        sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
-        console.log("Stored scan result:", processedData);
+        // Store for potential later use
+        try {
+          sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
+        } catch (storageError) {
+          console.warn("Could not store scan result in session storage:", storageError);
+        }
         
         onProgress?.(100, "Receipt processed successfully!");
-        
         return processedData;
         
-      } catch (error) {
+      } catch (requestError) {
         clearTimeout(timeoutId);
-        throw error;
+        throw requestError; // Rethrow to be caught by outer try-catch
       }
     } catch (error) {
       lastError = error;
       retryCount++;
       
-      if (retryCount >= MAX_RETRIES) {
+      // If we've used all our retries, report the final error
+      if (retryCount > MAX_RETRIES) {
         console.error("Final error in scanReceipt after retries:", error);
         
         if (error instanceof Error && error.name === 'AbortError') {
-          onTimeout?.();
+          if (onTimeout) onTimeout();
           return { 
             success: false, 
             isTimeout: true, 
@@ -209,9 +225,8 @@ export async function scanReceipt({
               : error.message)
           : "Unknown error occurred";
         
-        onError?.(errorMessage);
+        if (onError) onError(errorMessage);
         
-        // Return fallback data even on error
         return { 
           success: false, 
           error: errorMessage,
@@ -222,13 +237,34 @@ export async function scanReceipt({
     }
   }
   
-  // This should never be reached, but just in case
+  // This should never be reached due to the return in the final error handler
   return { 
     success: false, 
     error: "Failed after multiple attempts",
     date: new Date().toISOString().split('T')[0],
     items: createFallbackItems(sanitizedReceiptUrl)
   };
+}
+
+// Create default fallback items
+function createFallbackItems(receiptUrl?: string): Array<{
+  description: string;
+  amount: string;
+  date: string;
+  category: string;
+  paymentMethod: string;
+  receiptUrl?: string;
+}> {
+  return [
+    {
+      description: "Store Purchase",
+      amount: "0.00",
+      date: new Date().toISOString().split('T')[0],
+      category: "Other",
+      paymentMethod: "Card",
+      receiptUrl: receiptUrl
+    }
+  ];
 }
 
 // Format scan result into a standardized structure
@@ -347,27 +383,6 @@ async function parseReceiptLocally(file: File, receiptUrl?: string): Promise<Sca
       items: createFallbackItems(receiptUrl)
     };
   }
-}
-
-// Create default fallback items
-function createFallbackItems(receiptUrl?: string): Array<{
-  description: string;
-  amount: string;
-  date: string;
-  category: string;
-  paymentMethod: string;
-  receiptUrl?: string;
-}> {
-  return [
-    {
-      description: "Store Purchase",
-      amount: "0.00",
-      date: new Date().toISOString().split('T')[0],
-      category: "Other",
-      paymentMethod: "Card",
-      receiptUrl: receiptUrl
-    }
-  ];
 }
 
 // Special handling for fish burger receipt (from the image)

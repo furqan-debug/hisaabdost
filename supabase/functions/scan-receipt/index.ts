@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
@@ -65,6 +66,7 @@ serve(async (req) => {
     const enhancedProcessing = processingLevel === 'high';
     
     let receiptImage: File | null = null;
+    let formDataFields: string[] = [];
     
     // Check if this is multipart/form-data
     if (contentType.includes('multipart/form-data')) {
@@ -73,29 +75,41 @@ serve(async (req) => {
       try {
         // Parse the form data
         const formData = await req.formData();
-        console.log("Form data keys:", [...formData.keys()]);
+        formDataFields = [...formData.keys()];
+        console.log("Form data keys:", formDataFields);
         
         // Try all common field names for the receipt file
-        for (const fieldName of ['receipt', 'image', 'file', 'receiptImage']) {
+        const fieldNamesToCheck = ['receipt', 'image', 'file', 'receiptImage'];
+        
+        for (const fieldName of fieldNamesToCheck) {
           const file = formData.get(fieldName) as File;
-          if (file && file.size > 0) {
+          if (file && file instanceof File && file.size > 0) {
             receiptImage = file;
             console.log(`Found receipt image in field '${fieldName}': ${file.name} (${file.size} bytes, type: ${file.type})`);
             break;
+          } else if (formData.has(fieldName)) {
+            console.log(`Field '${fieldName}' exists but is not a valid file or is empty`);
           }
         }
         
         if (!receiptImage) {
           console.error("No receipt image found in form data");
-          return new Response(JSON.stringify({
-            error: 'No receipt image provided',
-            formDataKeys: [...formData.keys()],
-            formDataValues: Object.fromEntries([...formData.entries()].map(([key, value]) => {
+          
+          // Create a more detailed error response with debug info
+          const formDataEntries = Object.fromEntries(
+            [...formData.entries()].map(([key, value]) => {
               if (value instanceof File) {
                 return [key, `File: ${value.name} (${value.size} bytes, ${value.type})`];
               }
-              return [key, typeof value === 'string' ? value : 'Non-string value'];
-            })),
+              return [key, typeof value === 'string' ? value.substring(0, 100) : 'Non-string value'];
+            })
+          );
+          
+          return new Response(JSON.stringify({
+            error: 'No receipt image provided',
+            formDataKeys: formDataFields,
+            formDataEntries,
+            fieldNamesChecked: fieldNamesToCheck,
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -130,9 +144,12 @@ serve(async (req) => {
 
         try {
           // Race between processing and timeout
+          const timeoutDuration = 28000; // 28 seconds
+          console.log(`Setting timeout for OCR processing: ${timeoutDuration}ms`);
+          
           const results = await Promise.race([
             runOCR(receiptImage, openaiApiKey),
-            createTimeout(28000) // 28 second timeout (Edge Function has 30s limit)
+            createTimeout(timeoutDuration)
           ]);
           
           // Check if this was a timeout
@@ -148,21 +165,45 @@ serve(async (req) => {
             });
           }
 
-          // ✅ SUPABASE INTEGRATION: Insert expenses into database
+          // Supabase integration: Insert expenses into database
           const supabaseUrl = Deno.env.get('SUPABASE_URL');
           const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
           if (!supabaseUrl || !supabaseAnonKey) {
             console.error("Supabase credentials missing");
           } else {
-            const supabase = createClient(supabaseUrl, supabaseAnonKey);
-            if (results.items && results.items.length > 0) {
-              const { data, error } = await supabase.from('expenses').insert(results.items);
-              if (error) {
-                console.error("Failed to insert expenses into Supabase:", error);
+            try {
+              const supabase = createClient(supabaseUrl, supabaseAnonKey);
+              if (results.items && results.items.length > 0) {
+                console.log(`Attempting to insert ${results.items.length} expenses into Supabase`);
+                
+                // Validate and format items before inserting
+                const validItems = results.items.filter(item => 
+                  item && typeof item.amount !== 'undefined' && 
+                  !isNaN(parseFloat(item.amount.toString()))
+                ).map(item => ({
+                  ...item,
+                  amount: parseFloat(item.amount.toString()),
+                  created_at: new Date().toISOString(),
+                  receipt_url: item.receiptUrl || null,
+                }));
+                
+                if (validItems.length > 0) {
+                  const { data, error } = await supabase.from('expenses').insert(validItems);
+                  
+                  if (error) {
+                    console.error("Failed to insert expenses into Supabase:", error);
+                  } else {
+                    console.log(`Successfully inserted ${validItems.length} expenses`);
+                  }
+                } else {
+                  console.warn("No valid items to insert after filtering");
+                }
               } else {
-                console.log("Expenses successfully inserted:", data);
+                console.log("No items to insert into Supabase");
               }
+            } catch (dbError) {
+              console.error("Error during Supabase database operation:", dbError);
             }
           }
 

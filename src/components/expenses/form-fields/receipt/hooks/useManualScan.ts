@@ -1,7 +1,5 @@
-
 import { useState, useCallback } from "react";
 import { scanReceipt } from "../services/receiptScannerService";
-import { ExpenseFormData } from "@/hooks/expense-form/types";
 import { selectMainItem } from "../utils/itemSelectionUtils";
 
 interface UseManualScanProps {
@@ -45,18 +43,15 @@ export function useManualScan({
 }: UseManualScanProps) {
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   
-  // Handle the scan receipt process
   const handleScanReceipt = useCallback(async () => {
     if (!file || isScanning || isAutoProcessing) return;
     
     startScan();
     
     try {
-      // Generate a local URL for the image
       const localReceiptUrl = URL.createObjectURL(file);
       setReceiptUrl(localReceiptUrl);
       
-      // Scan the receipt using the receipt scanner service
       const scanResults = await scanReceipt({
         file: file,
         receiptUrl: localReceiptUrl,
@@ -65,11 +60,9 @@ export function useManualScan({
         onError: errorScan
       });
       
-      // First instance where 'merchant' needs to be removed
       if (scanResults && scanResults.success && scanResults.items && scanResults.items.length > 0) {
         const mainItem = selectMainItem(scanResults.items);
               
-        // Get general expense information
         let expenseDetails = {
           description: mainItem.description || "Store Purchase",
           amount: mainItem.amount || "0.00",
@@ -80,25 +73,19 @@ export function useManualScan({
               
         console.log("Extracted expense details:", expenseDetails);
         
-        // Capture the extracted expense details
         if (onCapture) {
           onCapture(expenseDetails);
         }
         
-        // Auto-save and close the modal
         if (autoSave) {
           setOpen(false);
           onSuccess?.();
         }
         
-        // Clean up after a successful scan
         endScan();
         onCleanup();
-        
       } else {
-        // Update the part with the single generic item reference
         if (scanResults && scanResults.success && (!scanResults.items || scanResults.items.length === 0)) {
-          // Generate a generic expense if no items were found
           const genericExpense = {
             description: "Store Purchase",
             amount: "0.00",
@@ -109,22 +96,18 @@ export function useManualScan({
           
           console.log("Using generic expense:", genericExpense);
           
-          // Capture the generic expense details
           if (onCapture) {
             onCapture(genericExpense);
           }
           
-          // Auto-save and close the modal
           if (autoSave) {
             setOpen(false);
             onSuccess?.();
           }
           
-          // Clean up after a successful scan
           endScan();
           onCleanup();
         } else {
-          // Handle errors and timeouts
           if (scanResults && scanResults.isTimeout) {
             timeoutScan();
           } else if (scanResults && scanResults.error) {
@@ -133,7 +116,6 @@ export function useManualScan({
             errorScan("Failed to scan receipt. Please try again.");
           }
           
-          // Clean up after an unsuccessful scan
           endScan();
         }
       }
@@ -142,7 +124,6 @@ export function useManualScan({
       errorScan("An unexpected error occurred during the scan.");
       endScan();
     } finally {
-      // Revoke the local URL
       if (receiptUrl) {
         URL.revokeObjectURL(receiptUrl);
         setReceiptUrl(null);
