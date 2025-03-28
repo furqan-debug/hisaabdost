@@ -5,7 +5,7 @@ import { ScanProgress } from "./components/ScanProgress";
 import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ReceiptScanDialogProps {
@@ -39,16 +39,16 @@ export function ReceiptScanDialog({
 }: ReceiptScanDialogProps) {
   const [attemptCount, setAttemptCount] = useState(0);
   const [processingComplete, setProcessingComplete] = useState(false);
-  const hasCleanedUpRef = useRef(false);
-  const autoProcessHasStarted = useRef(false);
-  const fileRef = useRef<File | null>(null);
+  const [hasCleanedUp, setHasCleanedUp] = useState(false);
+  const [autoProcessStarted, setAutoProcessStarted] = useState(false);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
   
-  // Store the file in a ref to prevent unnecessary re-renders and reprocessing
+  // Update file state if it changes
   useEffect(() => {
-    if (file && fileRef.current !== file) {
-      fileRef.current = file;
+    if (file && (!currentFile || file !== currentFile)) {
+      setCurrentFile(file);
     }
-  }, [file]);
+  }, [file, currentFile]);
   
   const {
     isScanning,
@@ -61,10 +61,10 @@ export function ReceiptScanDialog({
     autoProcessReceipt,
     resetScanState
   } = useScanReceipt({
-    file: fileRef.current,
+    file: currentFile,
     onCleanup: () => {
-      // We'll handle cleanup separately to avoid premature revoking of blob URLs
-      hasCleanedUpRef.current = true;
+      // Mark as cleaned up
+      setHasCleanedUp(true);
     },
     onCapture,
     autoSave,
@@ -80,11 +80,8 @@ export function ReceiptScanDialog({
     if (!open) return;
     
     // Generate a fingerprint for the current file
-    const currentFingerprint = file ? 
-      `${file.name}-${file.size}-${file.lastModified}` : 'no-file';
-    
-    // Store the last processed file fingerprint
-    const lastProcessedFingerprintRef = { current: null as string | null };
+    const currentFingerprint = currentFile ? 
+      `${currentFile.name}-${currentFile.size}-${currentFile.lastModified}` : 'no-file';
     
     // Only process if:
     // 1. Dialog is open
@@ -92,17 +89,14 @@ export function ReceiptScanDialog({
     // 3. We're not already scanning or processing
     // 4. Auto-process is enabled
     // 5. We haven't started auto-processing already
-    // 6. This is a different file than the last one we processed
-    if (file && 
+    if (currentFile && 
         !isScanning && 
         !isAutoProcessing && 
         autoProcess && 
-        !autoProcessHasStarted.current &&
-        currentFingerprint !== lastProcessedFingerprintRef.current) {
+        !autoProcessStarted) {
       
       console.log("Auto-processing receipt...");
-      autoProcessHasStarted.current = true;
-      lastProcessedFingerprintRef.current = currentFingerprint;
+      setAutoProcessStarted(true);
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
@@ -112,15 +106,15 @@ export function ReceiptScanDialog({
       
       return () => clearTimeout(timer);
     }
-  }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt, autoProcess]);
+  }, [open, currentFile, isScanning, isAutoProcessing, autoProcessReceipt, autoProcess, autoProcessStarted]);
   
   // Reset state when dialog is closed
   useEffect(() => {
     if (!open) {
-      autoProcessHasStarted.current = false;
+      setAutoProcessStarted(false);
       setProcessingComplete(false);
       setAttemptCount(0);
-      hasCleanedUpRef.current = false;
+      setHasCleanedUp(false);
     }
   }, [open]);
 
@@ -175,12 +169,12 @@ export function ReceiptScanDialog({
       resetScanState();
       
       // Call onCleanup only if not already called
-      if (!hasCleanedUpRef.current) {
+      if (!hasCleanedUp) {
         // Add a small delay before cleaning up to make sure we're not still using the resources
         setTimeout(() => {
           onCleanup();
         }, 300);
-        hasCleanedUpRef.current = true;
+        setHasCleanedUp(true);
       }
       
       setOpen(false);
@@ -194,9 +188,9 @@ export function ReceiptScanDialog({
       
       // Add a delay before cleanup to avoid issues
       setTimeout(() => {
-        if (!hasCleanedUpRef.current) {
+        if (!hasCleanedUp) {
           onCleanup();
-          hasCleanedUpRef.current = true;
+          setHasCleanedUp(true);
         }
       }, 300);
       
@@ -207,16 +201,16 @@ export function ReceiptScanDialog({
   
   // Cleanup when dialog is closed but component isn't unmounted
   useEffect(() => {
-    if (!open && !hasCleanedUpRef.current) {
+    if (!open && !hasCleanedUp) {
       // Add a delay before cleanup
       const timer = setTimeout(() => {
         onCleanup();
-        hasCleanedUpRef.current = true;
+        setHasCleanedUp(true);
       }, 300);
       
       return () => clearTimeout(timer);
     }
-  }, [open, onCleanup]);
+  }, [open, onCleanup, hasCleanedUp]);
 
   // Get appropriate dialog title and description
   const dialogTitle = "Processing Receipt";
@@ -259,7 +253,7 @@ export function ReceiptScanDialog({
             isAutoProcessing={isAutoProcessing}
             scanTimedOut={scanTimedOut || !!scanError}
             handleScanReceipt={handleScanReceipt}
-            disabled={!file}
+            disabled={!currentFile}
             autoSave={true}
             scanProgress={scanProgress}
             statusMessage={statusMessage}

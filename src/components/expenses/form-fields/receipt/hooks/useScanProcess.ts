@@ -16,7 +16,7 @@ export function useScanProcess({
   timeoutScan,
   errorScan
 }: UseScanProcessProps) {
-  // Use ref to track ongoing scans inside the component
+  // Move the ref inside the component function
   const ongoingScansRef = useRef<Map<string, { timestamp: number, promise: Promise<any> }>>(new Map());
   
   // Clean up stale scan entries periodically
