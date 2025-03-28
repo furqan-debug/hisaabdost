@@ -9,7 +9,8 @@ import {
 } from "@/utils/blobUrlManager";
 import { 
   processReceiptFile as processFile,
-  handleReceiptFileChange as handleFileInputChange
+  handleReceiptFileChange as handleFileInputChange,
+  generateFileFingerprint
 } from "@/utils/receiptFileProcessor";
 
 interface UseReceiptFileProps {
@@ -23,8 +24,10 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   
   // Track the current active blob URL
   const currentBlobUrlRef = useRef<string | null>(null);
-  // Track processed file fingerprints (using file name as a simple fingerprint)
+  // Track processed file fingerprints
   const processedFilesRef = useRef<Set<string>>(new Set());
+  // Track processing status
+  const isProcessingRef = useRef<boolean>(false);
   // Track component mount state
   const isMountedRef = useRef(true);
 
@@ -36,15 +39,23 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       return null;
     }
     
+    // Prevent processing if already in progress
+    if (isProcessingRef.current) {
+      console.log("useReceiptFile: Already processing a file, skipping");
+      return null;
+    }
+    
     console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
+    const fileFingerprint = generateFileFingerprint(file);
 
     // Prevent duplicate processing: if file was already processed, skip reprocessing
-    if (processedFilesRef.current.has(file.name)) {
+    if (processedFilesRef.current.has(fileFingerprint)) {
       console.log("useReceiptFile: File already processed, skipping duplicate processing:", file.name);
       return currentBlobUrlRef.current;
     }
-    // Mark this file as processed
-    processedFilesRef.current.add(file.name);
+    
+    // Mark this file as processing
+    isProcessingRef.current = true;
     
     try {
       const result = await processFile(
@@ -57,6 +68,9 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       
       // Only update references if still mounted
       if (isMountedRef.current) {
+        // Mark as processed
+        processedFilesRef.current.add(fileFingerprint);
+        
         // Track the new URL
         if (result) {
           if (result.startsWith('blob:')) {
@@ -72,6 +86,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     } catch (error) {
       console.error("Error in processReceiptFile:", error);
       return null;
+    } finally {
+      isProcessingRef.current = false;
     }
   }, [user?.id, updateField]);
 
@@ -82,7 +98,14 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       return;
     }
     
+    // Prevent processing if already in progress
+    if (isProcessingRef.current) {
+      console.log("useReceiptFile: Already processing a file, skipping file change");
+      return;
+    }
+    
     console.log("useReceiptFile: File input change detected");
+    isProcessingRef.current = true;
     
     try {
       await handleFileInputChange(
@@ -102,6 +125,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       }
     } catch (error) {
       console.error("Error in handleFileChange:", error);
+    } finally {
+      isProcessingRef.current = false;
     }
   }, [user?.id, updateField, formData.receiptUrl]);
 
@@ -126,7 +151,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       if (isMountedRef.current) {
         cleanupUnusedBlobUrls();
       }
-    }, 10000); // Run every 10 seconds
+    }, 30000); // Run every 30 seconds
     
     return () => {
       console.log("useReceiptFile: Clearing cleanup timer");

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useScanState } from "./useScanState";
 import { useAutoProcess } from "./useAutoProcess";
 import { useManualScan } from "./useManualScan";
@@ -42,10 +42,11 @@ export function useScanReceipt({
   } = useScanState();
   
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
-  const [lastScannedFile, setLastScannedFile] = useState<File | null>(null);
+  const lastScannedFileRef = useRef<File | null>(null);
+  const processingRef = useRef(false);
   
   // Import auto processing functionality
-  const { autoProcessReceipt } = useAutoProcess({
+  const { autoProcessReceipt: autoProcessFn } = useAutoProcess({
     file,
     isScanning,
     isAutoProcessing,
@@ -62,9 +63,9 @@ export function useScanReceipt({
   });
   
   // Import manual scanning functionality
-  const { handleScanReceipt } = useManualScan({
+  const { handleScanReceipt: manualScanFn } = useManualScan({
     file,
-    lastScannedFile,
+    lastScannedFile: lastScannedFileRef.current,
     isScanning,
     isAutoProcessing,
     onCapture,
@@ -80,57 +81,70 @@ export function useScanReceipt({
   });
   
   // Wrapper for auto-processing to update component state
-  const handleAutoProcessReceipt = useCallback(async () => {
-    if (!file || isScanning || isAutoProcessing) {
+  const autoProcessReceipt = useCallback(async () => {
+    if (!file || isScanning || isAutoProcessing || processingRef.current) {
       console.log("Cannot process: file missing or already processing", {
         hasFile: !!file,
         isScanning,
-        isAutoProcessing
+        isAutoProcessing,
+        isProcessingRef: processingRef.current
       });
       return;
     }
     
     console.log(`Starting auto-processing for ${file.name} (${file.size} bytes)`);
     setIsAutoProcessing(true);
-    setLastScannedFile(file);
+    processingRef.current = true;
+    lastScannedFileRef.current = file;
     
     try {
-      await autoProcessReceipt();
+      await autoProcessFn();
     } catch (error) {
       console.error("Auto-processing error:", error);
       errorScan(error instanceof Error ? error.message : "Unknown error during processing");
     } finally {
       setIsAutoProcessing(false);
+      processingRef.current = false;
     }
-  }, [file, isScanning, isAutoProcessing, autoProcessReceipt, errorScan]);
+  }, [file, isScanning, isAutoProcessing, autoProcessFn, errorScan]);
   
   // Wrapper for manual scanning to update component state
-  const handleManualScanReceipt = useCallback(async () => {
-    if (!file && !lastScannedFile) {
+  const handleScanReceipt = useCallback(async () => {
+    if (processingRef.current) {
+      console.log("Processing already in progress, skipping scan request");
+      return;
+    }
+    
+    if (!file && !lastScannedFileRef.current) {
       console.error("Cannot scan: No file available");
       errorScan("No file available for scanning");
       return;
     }
     
+    processingRef.current = true;
+    
     if (file) {
       console.log(`Setting last scanned file: ${file.name}`);
-      setLastScannedFile(file);
+      lastScannedFileRef.current = file;
     }
     
     try {
-      await handleScanReceipt();
+      await manualScanFn();
     } catch (error) {
       console.error("Manual scan error:", error);
       errorScan(error instanceof Error ? error.message : "Unknown error during scanning");
+    } finally {
+      processingRef.current = false;
     }
-  }, [file, lastScannedFile, handleScanReceipt, errorScan]);
+  }, [file, manualScanFn, errorScan]);
   
   // Reset all state
   const resetScanState = useCallback(() => {
     console.log("Resetting scan state");
     resetState();
     setIsAutoProcessing(false);
-    // Don't reset lastScannedFile so it can be used for retries
+    processingRef.current = false;
+    // Don't reset lastScannedFileRef so it can be used for retries
   }, [resetState]);
   
   return {
@@ -139,9 +153,9 @@ export function useScanReceipt({
     scanTimedOut,
     scanError,
     statusMessage,
-    handleScanReceipt: handleManualScanReceipt,
+    handleScanReceipt,
     isAutoProcessing,
-    autoProcessReceipt: handleAutoProcessReceipt,
+    autoProcessReceipt,
     resetScanState
   };
 }

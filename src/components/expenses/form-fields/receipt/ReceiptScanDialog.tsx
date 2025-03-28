@@ -5,7 +5,7 @@ import { ScanProgress } from "./components/ScanProgress";
 import { ScanTimeoutMessage } from "./components/ScanTimeoutMessage";
 import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
 import { DialogActions } from "./components/DialogActions";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 
 interface ReceiptScanDialogProps {
@@ -41,14 +41,15 @@ export function ReceiptScanDialog({
   const [processingComplete, setProcessingComplete] = useState(false);
   const [hasCleanedUp, setHasCleanedUp] = useState(false);
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const fileRef = useRef<File | null>(null);
+  const processingRef = useRef(false);
   
-  // Update file state if it changes
+  // Store the file in ref to avoid dependency changes
   useEffect(() => {
-    if (file && (!currentFile || file !== currentFile)) {
-      setCurrentFile(file);
+    if (file && file !== fileRef.current) {
+      fileRef.current = file;
     }
-  }, [file, currentFile]);
+  }, [file]);
   
   const {
     isScanning,
@@ -61,7 +62,7 @@ export function ReceiptScanDialog({
     autoProcessReceipt,
     resetScanState
   } = useScanReceipt({
-    file: currentFile,
+    file: fileRef.current,
     onCleanup: () => {
       // Mark as cleaned up
       setHasCleanedUp(true);
@@ -71,6 +72,7 @@ export function ReceiptScanDialog({
     setOpen,
     onSuccess: () => {
       setProcessingComplete(true);
+      processingRef.current = false;
     }
   });
   
@@ -78,25 +80,24 @@ export function ReceiptScanDialog({
   useEffect(() => {
     // Only run if component is mounted and dialog is open
     if (!open) return;
-    
-    // Generate a fingerprint for the current file
-    const currentFingerprint = currentFile ? 
-      `${currentFile.name}-${currentFile.size}-${currentFile.lastModified}` : 'no-file';
-    
+
     // Only process if:
     // 1. Dialog is open
     // 2. We have a file
     // 3. We're not already scanning or processing
     // 4. Auto-process is enabled
     // 5. We haven't started auto-processing already
-    if (currentFile && 
+    // 6. No processing is currently in progress
+    if (fileRef.current && 
         !isScanning && 
         !isAutoProcessing && 
         autoProcess && 
-        !autoProcessStarted) {
+        !autoProcessStarted &&
+        !processingRef.current) {
       
       console.log("Auto-processing receipt...");
       setAutoProcessStarted(true);
+      processingRef.current = true;
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
@@ -106,7 +107,7 @@ export function ReceiptScanDialog({
       
       return () => clearTimeout(timer);
     }
-  }, [open, currentFile, isScanning, isAutoProcessing, autoProcessReceipt, autoProcess, autoProcessStarted]);
+  }, [open, isScanning, isAutoProcessing, autoProcessReceipt, autoProcess, autoProcessStarted]);
   
   // Reset state when dialog is closed
   useEffect(() => {
@@ -115,15 +116,27 @@ export function ReceiptScanDialog({
       setProcessingComplete(false);
       setAttemptCount(0);
       setHasCleanedUp(false);
+      processingRef.current = false;
     }
   }, [open]);
 
   // Retry logic for failed scans with exponential backoff
   // Limit to 1 retry (2 total attempts) and add more delay between retries
   useEffect(() => {
-    // Only retry if we have an error, are under max retries, dialog is open, and the first process hasn't completed
-    if ((scanTimedOut || scanError) && attemptCount === 1 && open && !processingComplete) {
+    // Only retry if:
+    // 1. We have an error or timeout
+    // 2. We're on the first attempt
+    // 3. Dialog is open
+    // 4. The first process hasn't completed
+    // 5. No processing is currently in progress
+    if ((scanTimedOut || scanError) && 
+        attemptCount === 1 && 
+        open && 
+        !processingComplete && 
+        !processingRef.current) {
+      
       console.log(`Retry logic triggered. Attempt count: ${attemptCount}, Max: 1 retry`);
+      processingRef.current = true; // Mark as processing
       
       // Use a longer backoff delay (3 seconds)
       const backoffDelay = 3000;
@@ -142,6 +155,7 @@ export function ReceiptScanDialog({
     // If we've reached max retries and still have errors, show a message
     if ((scanTimedOut || scanError) && attemptCount >= 2 && !processingComplete) {
       toast.error("Receipt processing failed. Using basic information only.");
+      processingRef.current = false; // Mark as not processing
       
       // Try to get at least basic info from the image
       if (onCapture) {
@@ -177,6 +191,7 @@ export function ReceiptScanDialog({
         setHasCleanedUp(true);
       }
       
+      processingRef.current = false;
       setOpen(false);
     }
   };
@@ -194,6 +209,7 @@ export function ReceiptScanDialog({
         }
       }, 300);
       
+      processingRef.current = false;
       setOpen(false);
       onManualEntry();
     }
@@ -253,7 +269,7 @@ export function ReceiptScanDialog({
             isAutoProcessing={isAutoProcessing}
             scanTimedOut={scanTimedOut || !!scanError}
             handleScanReceipt={handleScanReceipt}
-            disabled={!currentFile}
+            disabled={!fileRef.current}
             autoSave={true}
             scanProgress={scanProgress}
             statusMessage={statusMessage}

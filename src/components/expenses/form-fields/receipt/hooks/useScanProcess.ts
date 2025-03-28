@@ -16,7 +16,7 @@ export function useScanProcess({
   timeoutScan,
   errorScan
 }: UseScanProcessProps) {
-  // Move the ref inside the component function
+  // Reference to track ongoing scans
   const ongoingScansRef = useRef<Map<string, { timestamp: number, promise: Promise<any> }>>(new Map());
   
   // Clean up stale scan entries periodically
@@ -37,13 +37,24 @@ export function useScanProcess({
     return () => clearInterval(cleanupInterval);
   }, []);
   
+  // Create a more robust file fingerprint
+  const createFileFingerprint = useCallback((file: File): string => {
+    return `${file.name}-${file.size}-${file.lastModified}`;
+  }, []);
+  
   const processScan = useCallback(async (formData: FormData) => {
     try {
-      // Generate a unique ID for this scan request based on timestamp and content
+      // Get the file from the form data
       const file = formData.get('file') as File;
-      const fileInfo = file ? `${file.name}-${file.size}-${file.lastModified}` : 'no-file';
+      if (!file) {
+        console.error("No file in formData");
+        return null;
+      }
+      
+      // Generate a unique ID for this scan request using the file fingerprint
+      const fileFingerprint = createFileFingerprint(file);
       const uniqueTimestamp = Date.now().toString();
-      const scanId = `scan-${fileInfo}-${uniqueTimestamp}`;
+      const scanId = `scan-${fileFingerprint}`;
       
       // Check if this scan is already in progress
       const ongoingScans = ongoingScansRef.current;
@@ -52,6 +63,8 @@ export function useScanProcess({
         return ongoingScans.get(scanId)?.promise;
       }
       
+      console.log(`Starting new scan for file: ${file.name} (${file.size} bytes) with ID: ${scanId}`);
+      
       // Create a new scan process
       const scanPromise = (async () => {
         try {
@@ -59,7 +72,6 @@ export function useScanProcess({
           
           const timeoutId = setTimeout(() => {
             timeoutScan();
-            // Don't delete from ongoingScans map here, as the promise might still resolve
           }, 45000);
           
           try {
@@ -68,8 +80,11 @@ export function useScanProcess({
             // Use the unique timestamp to prevent duplicate scans
             formData.set('timestamp', uniqueTimestamp);
             
+            // Add request metadata for tracking
+            formData.set('retry', '0'); // Initial attempt
+            formData.set('enhanced', 'true');
+            
             // IMPORTANT: DO NOT manually set the Content-Type header for multipart/form-data
-            // Let the browser/fetch API handle it automatically to include the boundary parameter
             const { data, error } = await supabase.functions.invoke('scan-receipt', {
               method: 'POST',
               body: formData,
@@ -134,7 +149,8 @@ export function useScanProcess({
             // Store scan result in session storage with a timestamp to enable expiration
             const storageData = {
               ...processedData,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              fileFingerprint // Store the file fingerprint for future reference
             };
             sessionStorage.setItem('lastScanResult', JSON.stringify(storageData));
             console.log("Stored scan result:", processedData);
@@ -154,11 +170,13 @@ export function useScanProcess({
         } catch (error) {
           throw error;
         } finally {
-          // Remove from ongoing scans map after a delay
-          // This prevents immediate reprocessing but allows future processing
+          // Remove from ongoing scans map after completion
           setTimeout(() => {
-            ongoingScansRef.current.delete(scanId);
-          }, 10000);
+            if (ongoingScansRef.current.has(scanId)) {
+              console.log(`Removing completed scan: ${scanId}`);
+              ongoingScansRef.current.delete(scanId);
+            }
+          }, 5000); // Short delay to allow other code to access the result
         }
       })();
       
@@ -175,7 +193,7 @@ export function useScanProcess({
       errorScan("Failed to scan receipt. Please try again or enter details manually.");
       return null;
     }
-  }, [updateProgress, endScan, timeoutScan, errorScan]);
+  }, [updateProgress, endScan, timeoutScan, errorScan, createFileFingerprint]);
 
-  return processScan;
+  return { processScan, createFileFingerprint };
 }
