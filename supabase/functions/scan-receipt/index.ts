@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -165,7 +165,7 @@ serve(async (req) => {
             });
           }
 
-          // Supabase integration: Insert expenses into database
+          // Supabase integration: Insert expenses into database if credentials are available
           const supabaseUrl = Deno.env.get('SUPABASE_URL');
           const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 

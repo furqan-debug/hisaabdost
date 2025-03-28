@@ -93,6 +93,16 @@ export async function scanReceipt({
       }, TIMEOUT_MS); 
       
       try {
+        // Log the Form data contents for debugging
+        console.log("Form data entries:");
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`- ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`- ${key}: ${value}`);
+          }
+        }
+        
         // Call the Supabase Edge Function
         const { data, error } = await supabase.functions.invoke('scan-receipt', {
           method: 'POST',
@@ -114,6 +124,8 @@ export async function scanReceipt({
         if (!data) {
           throw new Error("No data returned from scan function");
         }
+        
+        console.log("Scan function response:", data);
         
         // Check for timeout in the response
         if (data.isTimeout === true) {

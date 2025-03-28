@@ -1,4 +1,3 @@
-
 import { preprocessImage } from "../utils/imageProcessor.ts";
 import { processReceiptWithOCR, processReceiptWithOpenRouter, processReceiptWithTesseract } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
@@ -12,13 +11,13 @@ const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY');
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 
 // Process receipt and extract information
-export async function processReceipt(receiptImage: File, enhancedProcessing = false) {
-  console.log(`Starting receipt processing with ${enhancedProcessing ? 'enhanced' : 'standard'} processing`);
+export async function processReceipt(file: File, apiKey: string): Promise<any> {
+  console.log(`Starting receipt processing with ${apiKey ? 'enhanced' : 'standard'} processing`);
   
   try {
     // Preprocess the image first
     console.log("Starting image preprocessing");
-    const preprocessedImage = await preprocessImage(receiptImage);
+    const preprocessedImage = await preprocessImage(file);
     console.log("Image preprocessing completed");
     
     // Choose OCR method based on API key availability
@@ -29,7 +28,7 @@ export async function processReceipt(receiptImage: File, enhancedProcessing = fa
     try {
       if (VISION_API_KEY) {
         console.log("Using Google Vision API for OCR");
-        const ocrResult = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY, enhancedProcessing);
+        const ocrResult = await processReceiptWithOCR(preprocessedImage, VISION_API_KEY);
         extractedText = ocrResult.text;
         receiptDate = ocrResult.date || receiptDate;
         storeName = ocrResult.merchant || storeName;
