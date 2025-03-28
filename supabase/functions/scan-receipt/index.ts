@@ -178,17 +178,24 @@ serve(async (req) => {
                 console.log(`Attempting to insert ${results.items.length} expenses into Supabase`);
                 
                 // Validate and format items before inserting
+                // FIX: Map paymentMethod to payment column, since the database column is named 'payment'
                 const validItems = results.items.filter(item => 
                   item && typeof item.amount !== 'undefined' && 
                   !isNaN(parseFloat(item.amount.toString()))
                 ).map(item => ({
-                  ...item,
+                  user_id: item.userId || null,
+                  description: item.description || 'Store Purchase',
                   amount: parseFloat(item.amount.toString()),
-                  created_at: new Date().toISOString(),
+                  date: item.date || new Date().toISOString().split('T')[0],
+                  category: item.category || 'Other',
+                  is_recurring: false,
                   receipt_url: item.receiptUrl || null,
+                  payment: item.paymentMethod || null, // Map paymentMethod to payment column
+                  created_at: new Date().toISOString()
                 }));
                 
                 if (validItems.length > 0) {
+                  console.log("Inserting formatted items:", JSON.stringify(validItems, null, 2));
                   const { data, error } = await supabase.from('expenses').insert(validItems);
                   
                   if (error) {

@@ -62,8 +62,8 @@ export async function saveExpenseFromScan(scanResult: {
       // Sanitize receipt URL (don't save blob URLs)
       const receiptUrl = sanitizeReceiptUrl(item.receiptUrl);
       
-      // Format payment method
-      const paymentMethod = item.paymentMethod || 'Card';
+      // Format payment method - Map paymentMethod to payment column
+      const payment = item.paymentMethod || 'Card';
       
       return {
         user_id: userId,
@@ -74,7 +74,7 @@ export async function saveExpenseFromScan(scanResult: {
         category: item.category || 'Other',
         is_recurring: false,
         receipt_url: receiptUrl,
-        payment: paymentMethod
+        payment: payment // Use payment instead of paymentMethod to match database column name
       };
     });
     

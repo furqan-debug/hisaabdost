@@ -148,7 +148,7 @@ function extractItemsFromText(text: string, receiptDate: string) {
               amount: priceValue.toFixed(2),
               category: guessCategoryFromItemName(name),
               date: receiptDate,
-              paymentMethod: "Card"
+              payment: "Card" // Changed from paymentMethod to payment to match DB column
             });
             seenItems.add(itemKey);
           }
@@ -179,7 +179,7 @@ function extractItemsFromText(text: string, receiptDate: string) {
           amount: price.toFixed(2),
           category: "Food",
           date: receiptDate,
-          paymentMethod: "Card"
+          payment: "Card" // Changed from paymentMethod to payment
         });
       }
       
@@ -191,7 +191,7 @@ function extractItemsFromText(text: string, receiptDate: string) {
           amount: price.toFixed(2),
           category: "Food",
           date: receiptDate,
-          paymentMethod: "Card"
+          payment: "Card" // Changed from paymentMethod to payment
         });
       }
       
@@ -203,7 +203,7 @@ function extractItemsFromText(text: string, receiptDate: string) {
           amount: price.toFixed(2),
           category: "Food",
           date: receiptDate,
-          paymentMethod: "Card"
+          payment: "Card" // Changed from paymentMethod to payment
         });
       }
     }
@@ -220,21 +220,21 @@ function extractItemsFromText(text: string, receiptDate: string) {
         amount: "25.98",
         category: "Food",
         date: receiptDate,
-        paymentMethod: "Card"
+        payment: "Card" // Changed from paymentMethod to payment
       },
       {
         description: "Fish & Chips",
         amount: "8.99",
         category: "Food",
         date: receiptDate,
-        paymentMethod: "Card"
+        payment: "Card" // Changed from paymentMethod to payment
       },
       {
         description: "Soft Drink",
         amount: "2.50",
         category: "Food",
         date: receiptDate,
-        paymentMethod: "Card"
+        payment: "Card" // Changed from paymentMethod to payment
       }
     ];
   }
