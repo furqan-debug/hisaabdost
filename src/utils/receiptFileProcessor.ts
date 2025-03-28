@@ -232,7 +232,17 @@ export async function handleReceiptFileChange(
     return;
   }
   
-  console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type})`);
+  const fingerprint = generateFileFingerprint(file);
+  console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type}), fingerprint: ${fingerprint}`);
+  
+  // Check if this file is already being processed
+  if (processedFiles.has(fingerprint) && processedFiles.get(fingerprint)?.inProgress) {
+    console.log(`File is already being processed: ${fingerprint}`);
+    toast.info("This file is already being processed");
+    // Reset the input value to allow selecting the same file again
+    e.target.value = '';
+    return;
+  }
   
   try {
     await processReceiptFile(file, userId, currentBlobUrl, updateField, setIsUploading);

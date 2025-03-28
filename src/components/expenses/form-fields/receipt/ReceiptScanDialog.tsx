@@ -43,11 +43,15 @@ export function ReceiptScanDialog({
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
   const fileRef = useRef<File | null>(null);
   const processingRef = useRef(false);
+  const fileFingerprint = useRef<string | null>(null);
   
   // Store the file in ref to avoid dependency changes
   useEffect(() => {
     if (file && file !== fileRef.current) {
       fileRef.current = file;
+      // Create a fingerprint to track if we've processed this file
+      fileFingerprint.current = `${file.name}-${file.size}-${file.lastModified}`;
+      console.log(`New file assigned to dialog: ${file.name} (fingerprint: ${fileFingerprint.current})`);
     }
   }, [file]);
   
@@ -81,7 +85,7 @@ export function ReceiptScanDialog({
     // Only run if component is mounted and dialog is open
     if (!open) return;
 
-    // Only process if:
+    // Only process if all these conditions are true:
     // 1. Dialog is open
     // 2. We have a file
     // 3. We're not already scanning or processing
@@ -95,7 +99,7 @@ export function ReceiptScanDialog({
         !autoProcessStarted &&
         !processingRef.current) {
       
-      console.log("Auto-processing receipt...");
+      console.log(`Auto-processing starting for: ${fileFingerprint.current}`);
       setAutoProcessStarted(true);
       processingRef.current = true;
       
@@ -112,6 +116,7 @@ export function ReceiptScanDialog({
   // Reset state when dialog is closed
   useEffect(() => {
     if (!open) {
+      // Only reset state if it was previously open (to avoid unnecessary resets)
       setAutoProcessStarted(false);
       setProcessingComplete(false);
       setAttemptCount(0);
@@ -135,7 +140,7 @@ export function ReceiptScanDialog({
         !processingComplete && 
         !processingRef.current) {
       
-      console.log(`Retry logic triggered. Attempt count: ${attemptCount}, Max: 1 retry`);
+      console.log(`Retry trigger fired. Attempt count: ${attemptCount}, file: ${fileFingerprint.current}`);
       processingRef.current = true; // Mark as processing
       
       // Use a longer backoff delay (3 seconds)
@@ -143,7 +148,7 @@ export function ReceiptScanDialog({
       
       // Auto-retry with backoff
       const retryTimer = setTimeout(() => {
-        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1} of 2)...`);
+        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1} of 2): ${fileFingerprint.current}`);
         resetScanState();
         autoProcessReceipt();
         setAttemptCount(prev => prev + 1);
@@ -180,6 +185,7 @@ export function ReceiptScanDialog({
   // Handle dialog close - only allow closing when not processing
   const handleClose = () => {
     if (!isScanning && !isAutoProcessing) {
+      console.log("Closing receipt dialog, cleaning up resources");
       resetScanState();
       
       // Call onCleanup only if not already called
@@ -199,6 +205,7 @@ export function ReceiptScanDialog({
   // Handle switching to manual entry
   const handleManualEntry = () => {
     if (onManualEntry) {
+      console.log("Switching to manual entry mode");
       resetScanState();
       
       // Add a delay before cleanup to avoid issues
@@ -220,6 +227,7 @@ export function ReceiptScanDialog({
     if (!open && !hasCleanedUp) {
       // Add a delay before cleanup
       const timer = setTimeout(() => {
+        console.log("Automatic cleanup triggered for closed dialog");
         onCleanup();
         setHasCleanedUp(true);
       }, 300);
