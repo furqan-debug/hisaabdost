@@ -1,4 +1,5 @@
 
+import { createClient } from '@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
@@ -130,10 +131,29 @@ serve(async (req) => {
 
         try {
           // Race between processing and timeout
-          const results = await Promise.race([
-            runOCR(receiptImage, openaiApiKey),
-            createTimeout(28000) // 28 second timeout (Edge Function has 30s limit)
-          ]);
+         const results = await Promise.race([
+  runOCR(receiptImage, openaiApiKey),
+  createTimeout(28000) // 28s timeout
+]);
+
+if (results && results.items && results.items.length > 0) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase credentials missing");
+  } else {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data, error } = await supabase.from('expenses').insert(results.items);
+    
+    if (error) {
+      console.error("Failed to insert expenses:", error);
+    } else {
+      console.log("Expenses successfully inserted:", data);
+    }
+  }
+}
+
           
           // Check if this was a timeout
           if ('isTimeout' in results) {
