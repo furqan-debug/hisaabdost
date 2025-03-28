@@ -18,7 +18,7 @@ export function ReceiptFileInput({
 }: ReceiptFileInputProps) {
   return (
     <input
-      type={useCamera ? "file" : "file"}
+      type="file"
       id={id}
       name={id}
       accept={accept}
