@@ -1,6 +1,16 @@
 
 // This service handles the communication with OpenAI's API
 
+// Helper function to convert ArrayBuffer to Base64
+function bufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
     console.log(`Processing receipt with OpenAI Vision API: ${file.name} (${file.size} bytes)`);
@@ -62,47 +72,42 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     }
     
     // Extract the JSON from the response (it might be wrapped in markdown code blocks)
-    const jsonMatch = textContent.match(/```json\n([\s\S]*?)\n```/) || 
-                      textContent.match(/```([\s\S]*?)```/) ||
-                      [null, textContent];
+    const jsonMatch = textContent.match(/```json\s*([\s\S]*?)\s*```/) || 
+                       textContent.match(/```\s*([\s\S]*?)\s*```/) || 
+                       textContent.match(/{[\s\S]*}/);
     
-    const jsonString = jsonMatch[1]?.trim() || textContent;
+    if (!jsonMatch) {
+      console.error("Could not extract JSON from response:", textContent);
+      throw new Error("Invalid response format from OpenAI API");
+    }
+    
+    const jsonString = jsonMatch[0].startsWith('```') ? jsonMatch[1] : jsonMatch[0];
+    
+    console.log("Attempting to parse JSON response:", jsonString);
     
     try {
-      console.log("Attempting to parse JSON response:", jsonString);
       const parsedData = JSON.parse(jsonString);
       console.log("Successfully parsed response:", parsedData);
       return parsedData;
     } catch (parseError) {
-      console.error("Invalid JSON response from OpenAI:", textContent);
-      console.error("Parse error:", parseError);
+      console.error("JSON parse error:", parseError, "for text:", jsonString);
       
-      // Create fallback data if JSON parsing fails
-      return {
-        date: new Date().toISOString().split('T')[0],
-        items: [
-          {
-            description: "Receipt Item",
-            amount: "0.00",
-            category: "Other",
-            date: new Date().toISOString().split('T')[0],
-            paymentMethod: "Card"
-          }
-        ]
-      };
+      // Try to find any JSON-like structure in the response
+      const lastResortMatch = textContent.match(/{[\s\S]*?}/);
+      if (lastResortMatch) {
+        try {
+          const lastResortJson = JSON.parse(lastResortMatch[0]);
+          console.warn("Parsed JSON using fallback method:", lastResortJson);
+          return lastResortJson;
+        } catch (e) {
+          console.error("Last resort parsing also failed");
+        }
+      }
+      
+      throw new Error("Failed to parse JSON response from OpenAI");
     }
   } catch (error) {
-    console.error("Error in OCR processing:", error);
+    console.error("Error processing receipt with OpenAI:", error);
     throw error;
   }
-}
-
-// Helper function to convert ArrayBuffer to Base64
-function bufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }
