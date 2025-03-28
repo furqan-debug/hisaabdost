@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { 
   createManagedBlobUrl, 
@@ -7,6 +8,9 @@ import {
 } from "./blobUrlManager";
 import { uploadToSupabase } from "./supabaseUploader";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
+
+// Cache to prevent duplicate processing of the same file
+const processedFiles = new Map<string, boolean>();
 
 /**
  * Process a receipt file - create local preview and upload to storage
@@ -31,7 +35,22 @@ export async function processReceiptFile(
       return null;
     }
     
-    console.log(`Processing receipt file: ${file.name} (${file.size} bytes)`);
+    // Generate file fingerprint
+    const fileFingerprint = `${file.name}-${file.size}-${file.lastModified}`;
+    
+    // Check if we've already processed this exact file recently
+    if (processedFiles.has(fileFingerprint)) {
+      console.log(`File already processed recently: ${fileFingerprint}`);
+      return null;
+    }
+    
+    console.log(`Processing receipt file: ${file.name} (${file.size} bytes), fingerprint: ${fileFingerprint}`);
+    
+    // Mark as processed for 10 seconds to prevent duplicate processing
+    processedFiles.set(fileFingerprint, true);
+    setTimeout(() => {
+      processedFiles.delete(fileFingerprint);
+    }, 10000);
     
     // Create local blob URL for preview
     const localUrl = createManagedBlobUrl(file);

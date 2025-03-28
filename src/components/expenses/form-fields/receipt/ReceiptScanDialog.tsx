@@ -40,6 +40,7 @@ export function ReceiptScanDialog({
   const [attemptCount, setAttemptCount] = useState(0);
   const [processingComplete, setProcessingComplete] = useState(false);
   const hasCleanedUpRef = useRef(false);
+  const autoProcessHasStarted = useRef(false);
   
   const {
     isScanning,
@@ -65,28 +66,26 @@ export function ReceiptScanDialog({
     }
   });
   
-  const hasAutoProcessed = useRef(false);
-  
   // Auto-process the receipt when the dialog opens
   useEffect(() => {
-    if (open && file && !isScanning && !isAutoProcessing && !hasAutoProcessed.current) {
-      hasAutoProcessed.current = true;
+    if (open && file && !isScanning && !isAutoProcessing && autoProcess && !autoProcessHasStarted.current) {
+      autoProcessHasStarted.current = true;
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
         console.log("Auto-processing receipt...");
         autoProcessReceipt();
-        setAttemptCount(prev => prev + 1);
+        setAttemptCount(1); // Start at 1 for the first attempt
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt]);
+  }, [open, file, isScanning, isAutoProcessing, autoProcessReceipt, autoProcess]);
   
   // Reset state when dialog is closed
   useEffect(() => {
     if (!open) {
-      hasAutoProcessed.current = false;
+      autoProcessHasStarted.current = false;
       setProcessingComplete(false);
       setAttemptCount(0);
       hasCleanedUpRef.current = false;
@@ -95,13 +94,16 @@ export function ReceiptScanDialog({
 
   // Retry logic for failed scans with exponential backoff
   useEffect(() => {
-    if ((scanTimedOut || scanError) && attemptCount < 2 && open && !processingComplete) {
+    // Only retry if we have an error, are under max retries, dialog is open, and the first process hasn't completed
+    if ((scanTimedOut || scanError) && attemptCount < 2 && attemptCount > 0 && open && !processingComplete) {
+      console.log(`Retry logic triggered. Attempt count: ${attemptCount}, Max: 2`);
+      
       // Calculate backoff delay (first retry 1.5s, second retry 3s)
       const backoffDelay = Math.min(1500 * Math.pow(2, attemptCount - 1), 3000);
       
       // Auto-retry with backoff
       const retryTimer = setTimeout(() => {
-        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1})...`);
+        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1} of 2)...`);
         resetScanState();
         autoProcessReceipt();
         setAttemptCount(prev => prev + 1);
@@ -182,7 +184,7 @@ export function ReceiptScanDialog({
       return () => clearTimeout(timer);
     }
   }, [open, onCleanup]);
-  
+
   // Get appropriate dialog title and description
   const dialogTitle = "Processing Receipt";
   const dialogDescription = "We'll extract all items and save them automatically as separate expenses";
