@@ -41,6 +41,14 @@ export function ReceiptScanDialog({
   const [processingComplete, setProcessingComplete] = useState(false);
   const hasCleanedUpRef = useRef(false);
   const autoProcessHasStarted = useRef(false);
+  const fileRef = useRef<File | null>(null);
+  
+  // Store the file in a ref to prevent unnecessary re-renders and reprocessing
+  useEffect(() => {
+    if (file && fileRef.current !== file) {
+      fileRef.current = file;
+    }
+  }, [file]);
   
   const {
     isScanning,
@@ -53,7 +61,7 @@ export function ReceiptScanDialog({
     autoProcessReceipt,
     resetScanState
   } = useScanReceipt({
-    file,
+    file: fileRef.current,
     onCleanup: () => {
       // We'll handle cleanup separately to avoid premature revoking of blob URLs
       hasCleanedUpRef.current = true;
@@ -66,14 +74,36 @@ export function ReceiptScanDialog({
     }
   });
   
-  // Auto-process the receipt when the dialog opens
+  // Auto-process the receipt when the dialog opens - only once per file
   useEffect(() => {
-    if (open && file && !isScanning && !isAutoProcessing && autoProcess && !autoProcessHasStarted.current) {
+    // Generate a fingerprint for the current file
+    const currentFingerprint = file ? 
+      `${file.name}-${file.size}-${file.lastModified}` : 'no-file';
+    
+    // Store the last processed file fingerprint
+    const lastProcessedFingerprintRef = useRef<string | null>(null);
+    
+    // Only process if:
+    // 1. Dialog is open
+    // 2. We have a file
+    // 3. We're not already scanning or processing
+    // 4. Auto-process is enabled
+    // 5. We haven't started auto-processing already
+    // 6. This is a different file than the last one we processed
+    if (open && 
+        file && 
+        !isScanning && 
+        !isAutoProcessing && 
+        autoProcess && 
+        !autoProcessHasStarted.current &&
+        currentFingerprint !== lastProcessedFingerprintRef.current) {
+      
+      console.log("Auto-processing receipt...");
       autoProcessHasStarted.current = true;
+      lastProcessedFingerprintRef.current = currentFingerprint;
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
-        console.log("Auto-processing receipt...");
         autoProcessReceipt();
         setAttemptCount(1); // Start at 1 for the first attempt
       }, 100);
@@ -93,13 +123,14 @@ export function ReceiptScanDialog({
   }, [open]);
 
   // Retry logic for failed scans with exponential backoff
+  // Limit to 1 retry (2 total attempts) and add more delay between retries
   useEffect(() => {
     // Only retry if we have an error, are under max retries, dialog is open, and the first process hasn't completed
-    if ((scanTimedOut || scanError) && attemptCount < 2 && attemptCount > 0 && open && !processingComplete) {
-      console.log(`Retry logic triggered. Attempt count: ${attemptCount}, Max: 2`);
+    if ((scanTimedOut || scanError) && attemptCount === 1 && open && !processingComplete) {
+      console.log(`Retry logic triggered. Attempt count: ${attemptCount}, Max: 1 retry`);
       
-      // Calculate backoff delay (first retry 1.5s, second retry 3s)
-      const backoffDelay = Math.min(1500 * Math.pow(2, attemptCount - 1), 3000);
+      // Use a longer backoff delay (3 seconds)
+      const backoffDelay = 3000;
       
       // Auto-retry with backoff
       const retryTimer = setTimeout(() => {
