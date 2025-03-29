@@ -14,10 +14,11 @@ import { exportExpensesToCSV } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const Expenses = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   
@@ -30,25 +31,26 @@ const Expenses = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      console.log("Fetching expenses for user:", user.id, "and month:", format(selectedMonth, 'yyyy-MM'));
+      
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
         console.error('Error fetching expenses:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load expenses. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to load expenses. Please try again.");
         return [];
       }
+      
+      console.log("Fetched expenses:", data);
       
       return data.map(exp => ({
         id: exp.id,
@@ -63,10 +65,11 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
-    // Set a shorter refetch interval to ensure scanned expenses appear quickly
-    refetchInterval: 3000, // Refetch every 3 seconds
-    // Refetch when window regains focus
+    // Refetch every 5 seconds and when component is mounted
+    refetchInterval: 5000,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
+    staleTime: 0, // Consider data stale immediately
   });
 
   // Hook for filtering and sorting expenses
@@ -122,10 +125,20 @@ const Expenses = () => {
       refetch();
     };
     
+    const handleExpensesUpdated = () => {
+      console.log("Expenses updated event detected, refreshing list");
+      refetch();
+    };
+    
     window.addEventListener('receipt-scanned', handleReceiptScan);
+    window.addEventListener('expenses-updated', handleExpensesUpdated);
+    
+    // Initial refetch when component mounts
+    refetch();
     
     return () => {
       window.removeEventListener('receipt-scanned', handleReceiptScan);
+      window.removeEventListener('expenses-updated', handleExpensesUpdated);
     };
   }, [refetch]);
 
