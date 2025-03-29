@@ -49,7 +49,7 @@ export function ReceiptSection({
         setFileInputRef={setFileInputRef}
         setCameraInputRef={setCameraInputRef}
         onCapture={onCapture}
-        autoProcess={true} // Always auto-process
+        autoProcess={!isManualForm} // Only auto-process when not in manual form
       />
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">

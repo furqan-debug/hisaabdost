@@ -100,8 +100,10 @@ export function ReceiptField({
     setFilePreviewUrl(previewUrl);
     setReceiptFile(file);
     
-    // Always open scan dialog for auto-processing
-    setScanDialogOpen(true);
+    // Only open scan dialog for auto-processing
+    if (autoProcess) {
+      setScanDialogOpen(true);
+    }
     
     // Call the original onFileChange to handle storage
     onFileChange(e);
@@ -179,15 +181,15 @@ export function ReceiptField({
           receiptUrl={receiptUrl}
           onUpload={handleUpload}
           onCapture={isMobile ? handleCameraCapture : undefined}
-          onRetry={receiptFile ? handleRetryScan : undefined}
+          onRetry={receiptFile && autoProcess ? handleRetryScan : undefined}
           showCameraButton={isMobile}
-          showRetryButton={!!receiptFile}
+          showRetryButton={!!receiptFile && autoProcess}
           isProcessing={processingStarted}
         />
       </div>
       
-      {/* Scan Dialog - only shown when scanDialogOpen is true */}
-      {receiptFile && (
+      {/* Scan Dialog - only shown when scanDialogOpen is true and autoProcess is enabled */}
+      {receiptFile && autoProcess && (
         <ReceiptScanDialog
           file={receiptFile}
           previewUrl={filePreviewUrl}

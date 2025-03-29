@@ -1,12 +1,5 @@
 
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ExpenseForm } from "./expenses/ExpenseForm";
 import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
@@ -34,7 +27,7 @@ const AddExpenseSheet = ({
   onClose,
   open,
   onOpenChange,
-  initialCaptureMode = 'upload', // Default to auto-upload mode
+  initialCaptureMode = 'manual', // Default to manual mode
   initialFile = null
 }: AddExpenseSheetProps) => {
   const [showScanDialog, setShowScanDialog] = useState(false);
@@ -61,6 +54,9 @@ const AddExpenseSheet = ({
     onClose,
     onAddExpense
   });
+
+  // Determine if this is a manual entry or auto-process mode
+  const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
 
   // Handle initial capture mode and file
   useEffect(() => {
@@ -94,8 +90,10 @@ const AddExpenseSheet = ({
           });
         }, 100);
         
-        // Always show scan dialog if we have a file
-        setShowScanDialog(true);
+        // Only show scan dialog for auto-processing modes (upload, camera)
+        if (initialCaptureMode !== 'manual') {
+          setShowScanDialog(true);
+        }
       } catch (error) {
         console.error("Error setting up initial file:", error);
         toast.error("Failed to process the receipt image");
@@ -104,7 +102,7 @@ const AddExpenseSheet = ({
         }
       }
     }
-  }, [open, expenseToEdit, initialFile, processReceiptFile]);
+  }, [open, expenseToEdit, initialFile, initialCaptureMode, processReceiptFile]);
 
   // Reset state when sheet is closed
   useEffect(() => {
@@ -144,9 +142,6 @@ const AddExpenseSheet = ({
       processingFiles.delete(initialFileFingerprint.current);
     }
   };
-
-  // Determine if this is a manual entry or automated receipt process
-  const isManualEntry = !!expenseToEdit;
 
   // Handle sheet close
   const handleSheetClose = (open: boolean) => {
@@ -195,8 +190,8 @@ const AddExpenseSheet = ({
         </SheetContent>
       </Sheet>
 
-      {/* Receipt scanning dialog */}
-      {(initialFile || filePreviewUrl) && (
+      {/* Receipt scanning dialog - only shown for auto-process modes */}
+      {!isManualEntry && initialFile && filePreviewUrl && (
         <ReceiptScanDialog
           file={initialFile}
           previewUrl={filePreviewUrl}

@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -35,10 +36,8 @@ export const AddExpenseButton = ({
     if (file) {
       setSelectedFile(file);
 
-      if (captureMode === 'manual') {
-        setShowAddExpense(true);
-      } else {
-        setCaptureMode('upload');
+      // For upload or camera modes, we want to auto-process
+      if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
 
@@ -50,10 +49,13 @@ export const AddExpenseButton = ({
     setCaptureMode(mode);
 
     if (mode === 'manual') {
+      // Just open the manual entry form
       setShowAddExpense(true);
     } else if (mode === 'upload' && fileInputRef.current) {
+      // Trigger file upload
       fileInputRef.current.click();
     } else if (mode === 'camera' && cameraInputRef.current) {
+      // Trigger camera
       cameraInputRef.current.click();
     }
   };
