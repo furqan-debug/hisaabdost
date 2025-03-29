@@ -1,6 +1,6 @@
 
-import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface ScanStatusProps {
   message?: string;
@@ -9,27 +9,32 @@ interface ScanStatusProps {
 }
 
 export function ScanStatus({ message, progress, isScanning }: ScanStatusProps) {
-  if (!isScanning) return null;
-  
-  // Custom status messages for different progress stages
-  const getDefaultMessage = () => {
-    if (progress < 20) return "Preparing to process receipt...";
-    if (progress < 50) return "Analyzing receipt contents...";
-    if (progress < 75) return "Extracting expense items...";
-    if (progress < 95) return "Adding items to your expenses...";
-    return "Almost done...";
+  const defaultMessages = {
+    0: 'Preparing to scan...',
+    20: 'Analyzing receipt...',
+    40: 'Extracting text...',
+    60: 'Identifying items...',
+    80: 'Finalizing data...',
+    100: 'Scan complete!'
   };
-  
-  const displayMessage = message || getDefaultMessage();
-  
+
+  // If no message is provided, use a default based on progress
+  const statusMessage = message || 
+    Object.entries(defaultMessages)
+      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+      .find(([threshold]) => progress <= parseInt(threshold))?.[1] ||
+    defaultMessages[0];
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex items-center gap-2 text-center p-2"
+      className="mt-2 text-sm text-center max-w-[300px] text-muted-foreground"
     >
-      <Loader2 className="h-4 w-4 animate-spin text-primary" />
-      <span className="text-sm text-foreground/80">{displayMessage}</span>
+      <p>{statusMessage}</p>
+      {progress > 0 && progress < 100 && (
+        <p className="text-xs mt-1">{Math.round(progress)}% complete</p>
+      )}
     </motion.div>
   );
 }

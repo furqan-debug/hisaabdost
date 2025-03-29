@@ -1,6 +1,7 @@
 
-import { Progress } from "@/components/ui/progress";
-import { motion } from "framer-motion";
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
 
 interface ScanProgressBarProps {
   progress: number;
@@ -8,30 +9,23 @@ interface ScanProgressBarProps {
 }
 
 export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) {
-  if (!isScanning) return null;
-  
-  // Determine progress color based on stage
-  const getProgressColor = () => {
-    if (progress < 30) return "bg-amber-500"; // Initial stages
-    if (progress < 70) return "bg-blue-500";  // Middle stages
-    return "bg-green-500";                   // Final stages
-  };
-  
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full max-w-xs mb-2"
-    >
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-medium">{Math.round(progress)}% complete</span>
-      </div>
-      <Progress 
-        value={progress} 
-        className="h-2 w-full" 
-        indicatorClassName={getProgressColor()}
-      />
-    </motion.div>
+    <div className="w-full max-w-[300px] px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Progress 
+          value={progress} 
+          className="h-2 bg-secondary"
+          style={{
+            '--progress-color': progress < 30 ? '#f59e0b' : 
+                               progress < 70 ? '#3b82f6' : 
+                               progress < 100 ? '#10b981' : '#10b981'
+          }}
+        />
+      </motion.div>
+    </div>
   );
 }

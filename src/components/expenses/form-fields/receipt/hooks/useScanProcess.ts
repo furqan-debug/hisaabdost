@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface UseScanProcessProps {
   updateProgress: (progress: number, message?: string) => void;
