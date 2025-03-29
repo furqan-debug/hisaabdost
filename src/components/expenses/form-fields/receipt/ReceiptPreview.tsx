@@ -7,14 +7,14 @@ interface ReceiptPreviewProps {
   receiptUrl: string | null;
   onReplace?: (() => void) | null;
   className?: string;
-  disabled?: boolean; // Added disabled prop
+  disabled?: boolean;
 }
 
 export function ReceiptPreview({ 
   receiptUrl, 
   onReplace, 
   className = "",
-  disabled = false // Default to false
+  disabled = false
 }: ReceiptPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,7 +41,7 @@ export function ReceiptPreview({
         </div>
       )}
       <ReceiptPreviewImage 
-        src={receiptUrl} 
+        previewUrl={receiptUrl} 
         onLoad={handleImageLoad} 
         className={`w-full h-auto object-contain ${className}`}
       />

@@ -4,13 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ReceiptPreviewImageProps {
-  previewUrl: string | null;
+  previewUrl: string;
   className?: string;
+  onLoad?: () => void;
 }
 
 export function ReceiptPreviewImage({ 
   previewUrl, 
-  className 
+  className,
+  onLoad
 }: ReceiptPreviewImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +79,7 @@ export function ReceiptPreviewImage({
           onLoad={() => {
             console.log("Image loaded successfully:", previewUrl);
             setIsLoading(false);
+            if (onLoad) onLoad();
           }}
           loading="lazy"
           crossOrigin="anonymous"
