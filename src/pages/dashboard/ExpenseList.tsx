@@ -1,5 +1,6 @@
+
 import { Card } from "@/components/ui/card";
-import { useExpenses } from "@/hooks/use-expenses";
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,11 +9,29 @@ import { useState } from "react";
 import { ExpenseSkeleton } from "@/components/expenses/ExpenseSkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/utils/formatters";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ExpenseList() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { data, isLoading, error } = useExpenses(refreshTrigger);
   const navigate = useNavigate();
+
+  // Define the fetch function for expenses
+  const fetchExpenses = async () => {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .order('date', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  };
+
+  // Use Tanstack Query to fetch expenses
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['expenses', refreshTrigger],
+    queryFn: fetchExpenses
+  });
 
   const handleAddExpense = () => {
     navigate('/expenses/new');

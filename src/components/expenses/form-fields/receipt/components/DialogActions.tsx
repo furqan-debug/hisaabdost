@@ -12,7 +12,7 @@ interface DialogActionsProps {
   disabled: boolean;
   autoSave: boolean;
   scanProgress: number;
-  statusMessage: string;
+  statusMessage?: string; // Make statusMessage optional with "?" here
   onManualEntry?: () => void;
 }
 
@@ -25,10 +25,14 @@ export function DialogActions({
   disabled,
   autoSave,
   scanProgress,
-  statusMessage,
+  statusMessage = "", // Provide default empty string
   onManualEntry
 }: DialogActionsProps) {
-  const showRetryScan = scanTimedOut || statusMessage.includes('error') || statusMessage.toLowerCase().includes('failed');
+  // Check if statusMessage is defined before calling includes
+  const showRetryScan = scanTimedOut || 
+    (typeof statusMessage === 'string' && 
+      (statusMessage.includes('error') || 
+       statusMessage.toLowerCase().includes('failed')));
 
   return (
     <div className="flex flex-col w-full gap-2 mt-2">
