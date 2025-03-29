@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
+import { cleanupAllBlobUrls, cleanupUnusedBlobUrls, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 import { processReceiptFile as processFile } from "@/utils/receiptFileProcessor";
 
 export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
@@ -13,7 +14,6 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
 
     try {
-      // Parse the receipt and get each item
       const result = await processFile(file, user?.id, currentBlobUrlRef.current, updateField, setIsUploading);
 
       if (result) {
@@ -30,6 +30,16 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
       return null;
     }
   };
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      console.log("useReceiptFile: Component unmounting, cleaning up blob URLs");
+      setTimeout(() => {
+        cleanupAllBlobUrls();  // Now this function should be available
+      }, 1000);
+    };
+  }, []);
 
   return { processReceiptFile, isUploading };
 }
