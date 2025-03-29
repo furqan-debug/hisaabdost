@@ -33,7 +33,6 @@ export function ReceiptScanDialog({
   autoSave = true,
   autoProcess = true
 }: ReceiptScanDialogProps) {
-  const [processingComplete, setProcessingComplete] = useState(false);
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
   const fileRef = useRef<File | null>(null);
   const fileFingerprint = useRef<string | null>(null);
@@ -56,6 +55,7 @@ export function ReceiptScanDialog({
     statusMessage,
     handleScanReceipt,
     isAutoProcessing,
+    processingComplete,
     autoProcessReceipt,
     resetScanState
   } = useScanReceipt({
@@ -67,10 +67,9 @@ export function ReceiptScanDialog({
     autoSave,
     setOpen,
     onSuccess: () => {
-      setProcessingComplete(true);
       retryHandler.setProcessing(false);
     },
-    processAllItems: true // Enable processing all items as separate expenses
+    processAllItems: true // Always process all items
   });
 
   // Use our custom hooks for retry logic and dialog cleanup
@@ -127,7 +126,6 @@ export function ReceiptScanDialog({
     if (!open) {
       // Only reset state if it was previously open (to avoid unnecessary resets)
       setAutoProcessStarted(false);
-      setProcessingComplete(false);
       retryHandler.setAttemptCount(0);
       retryHandler.setProcessing(false);
     }
@@ -158,6 +156,7 @@ export function ReceiptScanDialog({
           handleScanReceipt={handleScanReceipt}
           onCleanup={() => handleClose(isScanning, isAutoProcessing)}
           fileExists={!!fileRef.current}
+          processingComplete={processingComplete}
         />
       </DialogContent>
     </Dialog>

@@ -146,7 +146,7 @@ const AddExpenseSheet = ({
   };
 
   // Determine if this is a manual entry or automated receipt process
-  const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
+  const isManualEntry = !!expenseToEdit;
 
   // Handle sheet close
   const handleSheetClose = (open: boolean) => {
@@ -173,7 +173,7 @@ const AddExpenseSheet = ({
               {expenseToEdit 
                 ? "Edit your expense details below." 
                 : isManualEntry
-                  ? "Enter expense details manually or add a receipt for reference."
+                  ? "Enter expense details manually."
                   : "Upload a receipt for automatic processing."
               }
             </SheetDescription>

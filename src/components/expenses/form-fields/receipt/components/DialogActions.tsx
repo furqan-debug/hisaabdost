@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { CircleHelp, Scan, RefreshCw, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
 
 interface DialogActionsProps {
   onCleanup: () => void;
@@ -12,7 +11,7 @@ interface DialogActionsProps {
   disabled: boolean;
   autoSave: boolean;
   scanProgress: number;
-  statusMessage?: string; // Make statusMessage optional with "?" here
+  statusMessage?: string;
 }
 
 export function DialogActions({
@@ -24,27 +23,32 @@ export function DialogActions({
   disabled,
   autoSave,
   scanProgress,
-  statusMessage = "" // Provide default empty string
+  statusMessage = ""
 }: DialogActionsProps) {
-  // Check if statusMessage is defined before calling includes
-  const showRetryScan = scanTimedOut || 
-    (typeof statusMessage === 'string' && 
-      (statusMessage.includes('error') || 
-       statusMessage.toLowerCase().includes('failed')));
+  // Safe check for statusMessage - ensure it's a string before using includes
+  const hasError = typeof statusMessage === 'string' && (
+    statusMessage.toLowerCase().includes('error') || 
+    statusMessage.toLowerCase().includes('failed')
+  );
+
+  // Only show retry button if there's an error or timeout
+  const showRetryScan = scanTimedOut || hasError;
+
+  if (!showRetryScan) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col w-full gap-2 mt-2">
-      {showRetryScan && (
-        <Button
-          onClick={handleScanReceipt}
-          disabled={disabled || isScanning || isAutoProcessing}
-          variant="default"
-          className="w-full bg-green-600 hover:bg-green-700 gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Retry Scan
-        </Button>
-      )}
+      <Button
+        onClick={handleScanReceipt}
+        disabled={disabled || isScanning || isAutoProcessing}
+        variant="default"
+        className="w-full bg-green-600 hover:bg-green-700 gap-2"
+      >
+        <RefreshCw className="h-4 w-4" />
+        Retry Scan
+      </Button>
     </div>
   );
 }
