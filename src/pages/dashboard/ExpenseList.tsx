@@ -1,71 +1,40 @@
 
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useExpenseRefresh } from '@/hooks/useExpenseRefresh';
-import { supabase } from '@/integrations/supabase/client';
-import { ExpenseCard } from '@/components/expenses/ExpenseCard';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ExpenseCard } from '@/components/expenses/ExpenseCard';
+import { PlusCircle } from 'lucide-react';
 import { ExpenseSkeleton } from '@/components/expenses/ExpenseSkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatCurrency } from '@/utils/formatters';
 
 export function ExpenseList() {
-  const { refreshTrigger } = useExpenseRefresh();
+  const { data: expenses, isLoading, error } = useExpenseRefresh();
   const navigate = useNavigate();
-  
-  // Fetch expenses with a shorter refetch interval to ensure updates are reflected quickly
-  const { data: expenses, isLoading, error, refetch } = useQuery({
-    queryKey: ['expenses', refreshTrigger],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .order('date', { ascending: false });
-        
-      if (error) throw error;
-      return data || [];
-    },
-    refetchInterval: 2000, // Refetch every 2 seconds to ensure fresh data
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-  });
-  
-  // Trigger a refetch when refreshTrigger changes
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      console.log("Triggering expense list refetch due to refresh event");
-      refetch();
-    }
-  }, [refreshTrigger, refetch]);
 
   const handleAddExpense = () => {
     navigate('/expenses/new');
   };
 
-  // Calculate total expenses for the current month
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  const currentMonthExpenses = expenses?.filter(expense => {
-    const expenseDate = new Date(expense.date);
-    return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
-  }) || [];
+  const handleExpenseClick = (id: string) => {
+    navigate(`/expenses/${id}`);
+  };
 
-  const totalCurrentMonth = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  // Calculate total amount
+  const totalAmount = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
 
   if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Recent Expenses</h2>
-          <Button onClick={handleAddExpense} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+          <h2 className="text-xl font-bold">Recent Expenses</h2>
+          <Button variant="outline" onClick={handleAddExpense}>
+            <PlusCircle className="mr-2 h-4 w-4" />
             Add Expense
           </Button>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <ExpenseSkeleton />
           <ExpenseSkeleton />
           <ExpenseSkeleton />
@@ -76,42 +45,25 @@ export function ExpenseList() {
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Recent Expenses</h2>
-          <Button onClick={handleAddExpense} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Expense
-          </Button>
-        </div>
-        <div className="p-4 bg-red-50 text-red-700 rounded-md">
-          Error loading expenses. Please try again later.
-        </div>
-      </div>
+      <EmptyState
+        title="Error loading expenses"
+        description="There was a problem loading your expenses. Please try again later."
+        action={
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        }
+      />
     );
   }
 
   if (!expenses || expenses.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Recent Expenses</h2>
-          <Button onClick={handleAddExpense} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Expense
-          </Button>
-        </div>
-        <EmptyState
-          title="No expenses yet"
-          description="Start tracking your spending by adding your first expense."
-          action={
-            <Button onClick={handleAddExpense}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense
-            </Button>
-          }
-        />
-      </div>
+      <EmptyState
+        title="No expenses found"
+        description="You haven't added any expenses yet. Add your first expense to get started."
+        action={
+          <Button onClick={handleAddExpense}>Add Expense</Button>
+        }
+      />
     );
   }
 
@@ -119,19 +71,24 @@ export function ExpenseList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Recent Expenses</h2>
-          <p className="text-sm text-muted-foreground">
-            This month: {formatCurrency(totalCurrentMonth)}
-          </p>
+          <h2 className="text-xl font-bold">Recent Expenses</h2>
+          <p className="text-sm text-muted-foreground">Total: {formatCurrency(totalAmount)}</p>
         </div>
-        <Button onClick={handleAddExpense} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button variant="outline" onClick={handleAddExpense}>
+          <PlusCircle className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {expenses.map((expense) => (
-          <ExpenseCard key={expense.id} expense={expense} />
+          <ExpenseCard
+            key={expense.id}
+            description={expense.description}
+            amount={expense.amount}
+            date={expense.date}
+            category={expense.category}
+            onClick={() => handleExpenseClick(expense.id)}
+          />
         ))}
       </div>
     </div>

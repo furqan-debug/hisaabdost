@@ -1,72 +1,64 @@
 
-import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/utils/chartUtils";
-import { Expense } from "./types";
-import { CalendarIcon, CreditCard, Tag } from "lucide-react";
-import { formatDate } from "@/utils/chartUtils";
+import { Badge } from "@/components/ui/badge";
+import { Tag } from "lucide-react";
+import { formatCurrency } from "@/utils/formatters";
+import { formatDate } from "@/utils/formatters";
 
 interface ExpenseCardProps {
-  expense: Expense;
+  description: string;
+  amount: number;
+  date: string;
+  category: string;
   onClick?: () => void;
 }
 
-export function ExpenseCard({ expense, onClick }: ExpenseCardProps) {
+export function ExpenseCard({ 
+  description, 
+  amount, 
+  date, 
+  category, 
+  onClick 
+}: ExpenseCardProps) {
+  // Get category color based on category name
+  const getCategoryColor = () => {
+    switch (category.toLowerCase()) {
+      case 'food': return 'bg-green-500';
+      case 'transportation': return 'bg-blue-500';
+      case 'housing': return 'bg-purple-500';
+      case 'utilities': return 'bg-yellow-500';
+      case 'entertainment': return 'bg-pink-500';
+      case 'healthcare': return 'bg-red-500';
+      case 'personal': return 'bg-indigo-500';
+      case 'education': return 'bg-cyan-500';
+      case 'shopping': return 'bg-amber-500';
+      case 'other': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   return (
-    <Card 
-      className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer"
-      onClick={onClick}
-    >
+    <Card className="overflow-hidden hover:shadow-md transition-shadow" onClick={onClick}>
       <CardContent className="p-0">
         <div className="flex items-center">
-          <div className={`w-2 self-stretch bg-${getCategoryColor(expense.category)}-500`} />
+          <div className={`w-2 self-stretch ${getCategoryColor()}`} />
           <div className="flex-1 p-4">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="font-medium">{expense.description}</h3>
-                <div className="flex items-center text-xs text-muted-foreground mt-1">
-                  <CalendarIcon className="h-3 w-3 mr-1" />
-                  <span>{formatDate(expense.date)}</span>
-                </div>
+                <h3 className="font-medium text-sm line-clamp-1">{description}</h3>
+                <p className="text-xs text-muted-foreground">{formatDate(date)}</p>
               </div>
-              <span className="font-semibold">{formatCurrency(expense.amount)}</span>
+              <span className="font-semibold text-sm">{formatCurrency(amount)}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center text-xs bg-muted px-2 py-0.5 rounded">
-                  <Tag className="h-3 w-3 mr-1" />
-                  {expense.category}
-                </span>
-                {expense.paymentMethod && (
-                  <span className="inline-flex items-center text-xs bg-muted px-2 py-0.5 rounded">
-                    <CreditCard className="h-3 w-3 mr-1" />
-                    {expense.paymentMethod}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center gap-2 mt-3">
+              <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                <Tag className="h-3 w-3" />
+                {category}
+              </Badge>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-}
-
-// Helper function to get a color based on category
-function getCategoryColor(category: string): string {
-  const colorMap: Record<string, string> = {
-    "Food": "green",
-    "Transport": "blue",
-    "Entertainment": "purple",
-    "Shopping": "pink",
-    "Housing": "orange",
-    "Utilities": "yellow",
-    "Healthcare": "red",
-    "Personal": "indigo",
-    "Education": "cyan",
-    "Travel": "amber",
-    "Other": "gray"
-  };
-  
-  return colorMap[category] || "gray";
 }
