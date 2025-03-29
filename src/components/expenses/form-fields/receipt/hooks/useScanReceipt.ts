@@ -1,9 +1,16 @@
-
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
 import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { selectMainItem } from '../utils/itemSelectionUtils';
+
+interface ScanResult {
+  date?: string;
+  total?: string;
+  items?: any[];
+  merchant?: string;
+  receiptUrl?: string;
+}
 
 interface UseScanReceiptProps {
   file: File | null;
@@ -105,13 +112,10 @@ export function useScanReceipt({
       });
       
       if (scanResults?.success && scanResults.items && scanResults.items.length > 0) {
-        // Update progress to show we're extracting data
         updateProgress(90, "Extracting expense information...");
         
-        // Extract the main item to update the form
         const mainItem = selectMainItem(scanResults.items);
         
-        // Get general expense information
         let expenseDetails = {
           description: mainItem.description || "Store Purchase",
           amount: mainItem.amount || "0.00",
@@ -120,33 +124,27 @@ export function useScanReceipt({
           paymentMethod: mainItem.paymentMethod || "Card",
         };
         
-        // Save to database if autoSave is enabled
         if (autoSave) {
           try {
             updateProgress(95, "Saving expenses to database...");
             
-            // If processAllItems is true, save all items as separate expenses
             if (processAllItems && scanResults.items.length > 1) {
-              // Format receipt data for database save
               const receiptData = {
                 items: scanResults.items,
                 merchant: scanResults.merchant || mainItem.description || "Store",
                 date: scanResults.date || expenseDetails.date
               };
               
-              // Save all items to database
               const saveSuccess = await saveExpenseFromScan(receiptData);
               
               if (saveSuccess) {
                 updateProgress(100, "All expenses saved successfully!");
                 setProcessingComplete(true);
                 
-                // Call success handler if provided
                 if (onSuccess) {
                   onSuccess();
                 }
                 
-                // Dispatch custom events to trigger UI updates
                 const event = new CustomEvent('receipt-scanned', { 
                   detail: { items: scanResults.items, timestamp: Date.now() } 
                 });
@@ -156,7 +154,6 @@ export function useScanReceipt({
                 errorScan("Failed to save expenses to database");
               }
             } else {
-              // Just update the form with the main item
               if (onCapture) {
                 onCapture(expenseDetails);
               }
@@ -170,7 +167,6 @@ export function useScanReceipt({
             errorScan("Failed to save to database");
           }
         } else if (onCapture) {
-          // Just update the form with the main item
           onCapture(expenseDetails);
           updateProgress(100, "Receipt processed successfully!");
           setProcessingComplete(true);

@@ -29,11 +29,11 @@ export async function processScanResults(
   
   // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
-    description: item.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
+    description: item.name || item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
     date: formatDate(scanResult.date || item.date || new Date().toISOString().split('T')[0]),
     category: item.category || "Food", // Default to Food if no category
-    paymentMethod: "Card", // Default assumption for receipts
+    paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
     receiptUrl: scanResult.receiptUrl || null
   }));
   
