@@ -1,16 +1,17 @@
+import { Card } from "@/components/ui/card";
+import { useExpenses } from "@/hooks/use-expenses";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ExpenseCard } from "@/components/expenses/ExpenseCard";
+import { useState } from "react";
+import { ExpenseSkeleton } from "@/components/expenses/ExpenseSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { formatCurrency } from "@/utils/formatters";
 
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useExpenseRefresh } from '@/hooks/useExpenseRefresh';
-import { Button } from '@/components/ui/button';
-import { ExpenseCard } from '@/components/expenses/ExpenseCard';
-import { PlusCircle } from 'lucide-react';
-import { ExpenseSkeleton } from '@/components/expenses/ExpenseSkeleton';
-import { EmptyState } from '@/components/ui/empty-state';
-import { formatCurrency } from '@/utils/formatters';
-
-export function ExpenseList() {
-  const { data: expenses, isLoading, error } = useExpenseRefresh();
+export default function ExpenseList() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { data, isLoading, error } = useExpenses(refreshTrigger);
   const navigate = useNavigate();
 
   const handleAddExpense = () => {
@@ -22,7 +23,7 @@ export function ExpenseList() {
   };
 
   // Calculate total amount
-  const totalAmount = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+  const totalAmount = data?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
 
   if (isLoading) {
     return (
@@ -30,7 +31,7 @@ export function ExpenseList() {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">Recent Expenses</h2>
           <Button variant="outline" onClick={handleAddExpense}>
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Expense
           </Button>
         </div>
@@ -55,7 +56,7 @@ export function ExpenseList() {
     );
   }
 
-  if (!expenses || expenses.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <EmptyState
         title="No expenses found"
@@ -75,12 +76,12 @@ export function ExpenseList() {
           <p className="text-sm text-muted-foreground">Total: {formatCurrency(totalAmount)}</p>
         </div>
         <Button variant="outline" onClick={handleAddExpense}>
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
       </div>
       <div className="space-y-3">
-        {expenses.map((expense) => (
+        {data.map((expense) => (
           <ExpenseCard
             key={expense.id}
             description={expense.description}

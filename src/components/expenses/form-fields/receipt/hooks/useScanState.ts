@@ -6,7 +6,7 @@ export function useScanState() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanTimedOut, setScanTimedOut] = useState(false);
-  const [scanError, setScanError] = useState<string | undefined>(undefined);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | undefined>(undefined);
 
   // Start scan function
@@ -14,7 +14,7 @@ export function useScanState() {
     setIsScanning(true);
     setScanProgress(0);
     setScanTimedOut(false);
-    setScanError(undefined);
+    setScanError(null);
     setStatusMessage(undefined);
   }, []);
 
@@ -28,7 +28,6 @@ export function useScanState() {
     setScanProgress(progress);
     if (message) {
       setStatusMessage(message);
-      console.log(message);
     }
   }, []);
 
@@ -37,19 +36,19 @@ export function useScanState() {
     setScanTimedOut(true);
     setIsScanning(false);
   }, []);
-  
+
   // Error scan function
-  const errorScan = useCallback((errorMessage: string) => {
-    setScanError(errorMessage);
+  const errorScan = useCallback((error: string) => {
+    setScanError(error);
     setIsScanning(false);
   }, []);
 
-  // Reset all state
+  // Reset scan state function
   const resetState = useCallback(() => {
     setIsScanning(false);
     setScanProgress(0);
     setScanTimedOut(false);
-    setScanError(undefined);
+    setScanError(null);
     setStatusMessage(undefined);
   }, []);
 
