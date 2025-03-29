@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,7 +25,7 @@ const Expenses = () => {
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   // Fetch expenses from Supabase using React Query, filtered by selected month
-  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
+  const { data: expenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
     queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
@@ -64,7 +64,7 @@ const Expenses = () => {
     },
     enabled: !!user,
     // Set a shorter refetch interval to ensure scanned expenses appear quickly
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: 3000, // Refetch every 3 seconds
     // Refetch when window regains focus
     refetchOnWindowFocus: true,
   });
@@ -114,6 +114,20 @@ const Expenses = () => {
   const exportToCSV = () => {
     exportExpensesToCSV(filteredExpenses);
   };
+
+  // Listen for receipt scan event to trigger a refetch
+  useEffect(() => {
+    const handleReceiptScan = () => {
+      console.log("Receipt scan detected, refreshing expenses list");
+      refetch();
+    };
+    
+    window.addEventListener('receipt-scanned', handleReceiptScan);
+    
+    return () => {
+      window.removeEventListener('receipt-scanned', handleReceiptScan);
+    };
+  }, [refetch]);
 
   const isLoading = isMonthDataLoading || isExpensesLoading;
 

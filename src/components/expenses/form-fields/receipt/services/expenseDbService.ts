@@ -22,12 +22,14 @@ export async function saveExpenseFromScan(scanResult: {
       
       // Store the receipt data in sessionStorage for later use
       sessionStorage.setItem('lastScanResult', JSON.stringify(scanResult));
+      toast.warning("Please log in to save expenses automatically");
       
       // Return true to indicate that at least we saved to session
       return true;
     }
     
     const userId = userData.user.id;
+    console.log(`Saving expenses for user: ${userId}`);
     
     // First, save receipt extraction to database
     const { data: extractionData, error: extractionError } = await supabase
@@ -71,7 +73,7 @@ export async function saveExpenseFromScan(scanResult: {
         // Convert amount to number for database
         amount: parseFloat(itemAmount),
         date: itemDate,
-        category: item.category || 'Other',
+        category: item.category || 'Food', // Default to Food if no category
         is_recurring: false,
         receipt_url: receiptUrl,
         payment: payment // Use payment instead of paymentMethod to match database column name
@@ -80,15 +82,20 @@ export async function saveExpenseFromScan(scanResult: {
     
     // Save all expenses in a batch
     if (validatedItems.length > 0) {
-      const { error: expensesError } = await supabase
+      console.log(`Attempting to save ${validatedItems.length} expenses:`, validatedItems);
+      
+      const { data: savedExpenses, error: expensesError } = await supabase
         .from('expenses')
-        .insert(validatedItems);
+        .insert(validatedItems)
+        .select(); // Add select to return saved items
         
       if (expensesError) {
         console.error("Error saving expenses:", expensesError);
         toast.error("Failed to save expenses to database");
         return false;
       }
+      
+      console.log("Successfully saved expenses:", savedExpenses);
       
       // If we have a receipt ID, also save receipt items
       if (receiptId && extractionData) {
@@ -97,7 +104,7 @@ export async function saveExpenseFromScan(scanResult: {
             receipt_id: receiptId,
             name: item.description,
             amount: parseFloat(validateAmount(item.amount)),
-            category: item.category
+            category: item.category || 'Food'
           }));
           
           await supabase
@@ -110,13 +117,16 @@ export async function saveExpenseFromScan(scanResult: {
       }
       
       console.log(`Successfully saved ${validatedItems.length} expenses`);
+      toast.success(`Added ${validatedItems.length} expenses from your receipt`);
       return true;
     } else {
       console.error("No valid items to save");
+      toast.error("No valid items found in receipt");
       return false;
     }
   } catch (error) {
     console.error("Error in saveExpenseFromScan:", error);
+    toast.error("Failed to save expenses from receipt");
     return false;
   }
 }

@@ -1,3 +1,4 @@
+
 import { formatDate } from './dateUtils';
 import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
@@ -30,7 +31,7 @@ export async function processScanResults(
     description: item.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
     date: formatDate(scanResult.date || item.date || new Date().toISOString().split('T')[0]),
-    category: item.category || "Other",
+    category: item.category || "Food", // Default to Food if no category
     paymentMethod: "Card", // Default assumption for receipts
     receiptUrl: scanResult.receiptUrl || null
   }));
@@ -38,52 +39,49 @@ export async function processScanResults(
   // Log the formatted items
   console.log("Formatted items for processing:", formattedItems);
   
-  // If autoSave is enabled, save all expenses directly
-  if (autoSave) {
-    if (formattedItems.length > 0) {
-      try {
-        const success = await saveExpenseFromScan({
-          items: formattedItems,
-          merchant: scanResult.merchant || scanResult.storeName || "Store",
-          date: scanResult.date
-        });
+  // Always save all expenses automatically regardless of autoSave flag
+  if (formattedItems.length > 0) {
+    try {
+      const success = await saveExpenseFromScan({
+        items: formattedItems,
+        merchant: scanResult.merchant || scanResult.storeName || "Store",
+        date: scanResult.date
+      });
+      
+      if (success) {
+        toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
         
-        if (success) {
-          toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
-          
-          // Close the dialog after a short delay
-          if (setOpen) {
-            setTimeout(() => setOpen(false), 1000);
-          }
-          return true;
-        } else {
-          toast.error("Failed to save expenses from receipt");
-          return false;
+        // If onCapture is provided, also update the form with the first item
+        if (onCapture && formattedItems.length > 0) {
+          onCapture(formattedItems[0]);
         }
-      } catch (error) {
-        console.error("Error saving expense from scan:", error);
-        toast.error("Error processing receipt");
+        
+        // Close the dialog after a short delay
+        if (setOpen) {
+          setTimeout(() => setOpen(false), 1000);
+        }
+        return true;
+      } else {
+        toast.error("Failed to save expenses from receipt");
+        
+        // Even if saving to database failed, still update the form if onCapture is provided
+        if (onCapture && formattedItems.length > 0) {
+          onCapture(formattedItems[0]);
+        }
         return false;
       }
-    } else {
-      toast.error("No valid items found in receipt");
+    } catch (error) {
+      console.error("Error saving expense from scan:", error);
+      toast.error("Error processing receipt");
+      
+      // Even if an error occurred, still update the form if onCapture is provided
+      if (onCapture && formattedItems.length > 0) {
+        onCapture(formattedItems[0]);
+      }
       return false;
     }
-  } 
-  // Otherwise, pass the main item to the onCapture callback for form update
-  else if (onCapture && formattedItems.length > 0) {
-    // Get the most relevant item for form capture
-    const mainItem = formattedItems[0];
-    
-    onCapture(mainItem);
-    
-    // Close the dialog if setOpen is provided
-    if (setOpen) {
-      setTimeout(() => setOpen(false), 1000);
-    }
-    
-    return true;
+  } else {
+    toast.error("No valid items found in receipt");
+    return false;
   }
-  
-  return formattedItems.length > 0;
 }
