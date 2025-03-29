@@ -100,10 +100,8 @@ export function ReceiptField({
     setFilePreviewUrl(previewUrl);
     setReceiptFile(file);
     
-    // Always open scan dialog if we have a file and autoProcess is enabled
-    if (autoProcess) {
-      setScanDialogOpen(true);
-    }
+    // Always open scan dialog for auto-processing
+    setScanDialogOpen(true);
     
     // Call the original onFileChange to handle storage
     onFileChange(e);
@@ -136,13 +134,6 @@ export function ReceiptField({
     }
     setReceiptFile(null);
     setProcessingStarted(false); // Allow new uploads after cleanup
-  };
-  
-  // Handle manual entry after scan fails
-  const handleManualEntry = () => {
-    // Just close the dialog but keep the receipt image
-    setScanDialogOpen(false);
-    setProcessingStarted(false);
   };
   
   // Clean up resources when component unmounts
@@ -205,8 +196,7 @@ export function ReceiptField({
           onCleanup={handleCleanup}
           onCapture={onCapture}
           autoSave={true}
-          autoProcess={autoProcess}
-          onManualEntry={handleManualEntry}
+          autoProcess={true}
         />
       )}
     </div>

@@ -26,7 +26,7 @@ export function ReceiptSection({
   setFileInputRef,
   setCameraInputRef,
   onCapture,
-  isManualForm = true // Default to true for backward compatibility
+  isManualForm = false // Default to auto-processing mode
 }: ReceiptSectionProps) {
   const [hasReceipt, setHasReceipt] = useState(!!receiptUrl);
   
@@ -41,7 +41,7 @@ export function ReceiptSection({
       <p className="text-sm text-muted-foreground mb-3">
         {isManualForm 
           ? "Upload a receipt image to attach to this expense" 
-          : "Upload a receipt image or take a photo for automatic processing"}
+          : "Upload a receipt image and we'll automatically extract all items as expenses"}
       </p>
       <ReceiptField 
         receiptUrl={receiptUrl} 
@@ -49,7 +49,7 @@ export function ReceiptSection({
         setFileInputRef={setFileInputRef}
         setCameraInputRef={setCameraInputRef}
         onCapture={onCapture}
-        autoProcess={!isManualForm} // Only auto-process if it's not from manual form
+        autoProcess={true} // Always auto-process
       />
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">

@@ -13,7 +13,6 @@ interface DialogActionsProps {
   autoSave: boolean;
   scanProgress: number;
   statusMessage?: string; // Make statusMessage optional with "?" here
-  onManualEntry?: () => void;
 }
 
 export function DialogActions({
@@ -25,8 +24,7 @@ export function DialogActions({
   disabled,
   autoSave,
   scanProgress,
-  statusMessage = "", // Provide default empty string
-  onManualEntry
+  statusMessage = "" // Provide default empty string
 }: DialogActionsProps) {
   // Check if statusMessage is defined before calling includes
   const showRetryScan = scanTimedOut || 
@@ -47,18 +45,6 @@ export function DialogActions({
           Retry Scan
         </Button>
       )}
-      
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full gap-2 border-gray-300",
-          showRetryScan ? "mt-2" : ""
-        )}
-        onClick={onManualEntry}
-      >
-        <FileText className="h-4 w-4" />
-        Switch to Manual Entry
-      </Button>
     </div>
   );
 }

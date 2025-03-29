@@ -21,7 +21,6 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
-  onManualEntry?: () => void;
 }
 
 export function ReceiptScanDialog({
@@ -32,8 +31,7 @@ export function ReceiptScanDialog({
   onCleanup,
   onCapture,
   autoSave = true,
-  autoProcess = true,
-  onManualEntry
+  autoProcess = true
 }: ReceiptScanDialogProps) {
   const [processingComplete, setProcessingComplete] = useState(false);
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
@@ -71,7 +69,8 @@ export function ReceiptScanDialog({
     onSuccess: () => {
       setProcessingComplete(true);
       retryHandler.setProcessing(false);
-    }
+    },
+    processAllItems: true // Enable processing all items as separate expenses
   });
 
   // Use our custom hooks for retry logic and dialog cleanup
@@ -134,17 +133,6 @@ export function ReceiptScanDialog({
     }
   }, [open]);
 
-  // Handle switching to manual entry
-  const handleManualEntry = () => {
-    if (onManualEntry) {
-      console.log("Switching to manual entry mode");
-      resetScanState();
-      retryHandler.setProcessing(false);
-      setOpen(false);
-      onManualEntry();
-    }
-  };
-
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {
       if (handleClose(isScanning, isAutoProcessing)) {
@@ -169,7 +157,6 @@ export function ReceiptScanDialog({
           scanError={scanError}
           handleScanReceipt={handleScanReceipt}
           onCleanup={() => handleClose(isScanning, isAutoProcessing)}
-          onManualEntry={handleManualEntry}
           fileExists={!!fileRef.current}
         />
       </DialogContent>

@@ -1,10 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { useScanProcess } from './useScanProcess';
 import { useScanState } from './useScanState';
 import { processReceiptWithServer } from '../utils/serverProcessor';
 import { processReceiptLocally, createFallbackItems } from '../utils/localProcessor';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UseScanReceiptProps {
   file: File | null;
@@ -19,6 +19,7 @@ export interface UseScanReceiptProps {
   autoSave?: boolean;
   setOpen: (open: boolean) => void;
   onSuccess?: () => void;
+  processAllItems?: boolean;
 }
 
 export function useScanReceipt({
@@ -27,7 +28,8 @@ export function useScanReceipt({
   onCapture,
   autoSave = false,
   setOpen,
-  onSuccess
+  onSuccess,
+  processAllItems = false
 }: UseScanReceiptProps) {
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
   
@@ -45,6 +47,60 @@ export function useScanReceipt({
     errorScan,
     resetState
   } = useScanState();
+  
+  // Helper function to add expenses to the database
+  const addExpensesToDatabase = useCallback(async (items: Array<{
+    description: string;
+    amount: string;
+    date: string;
+    category: string;
+    paymentMethod: string;
+  }>) => {
+    if (!items || items.length === 0) return;
+    
+    try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("User not authenticated");
+        return;
+      }
+      
+      updateProgress(95, `Adding ${items.length} expenses to your list...`);
+      
+      // Format the items for the expenses table
+      const expenses = items.map(item => ({
+        user_id: user.id,
+        description: item.description,
+        amount: parseFloat(item.amount),
+        date: item.date,
+        category: item.category || 'Food',
+        is_recurring: false,
+        receipt_url: null,
+        payment: item.paymentMethod || 'Card', // Match the DB column name
+        created_at: new Date().toISOString()
+      }));
+      
+      console.log("Adding expenses to database:", expenses);
+      
+      // Insert all expenses
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert(expenses)
+        .select();
+      
+      if (error) {
+        console.error("Error saving expenses:", error);
+        toast.error(`Failed to save expenses: ${error.message}`);
+      } else {
+        toast.success(`Successfully added ${expenses.length} expenses`);
+        console.log("Expenses saved successfully:", data);
+      }
+    } catch (error) {
+      console.error("Error in addExpensesToDatabase:", error);
+      toast.error("Failed to save expenses");
+    }
+  }, [updateProgress]);
   
   // Handle manual scan request
   const handleScanReceipt = useCallback(async () => {
@@ -75,7 +131,7 @@ export function useScanReceipt({
           console.log("Server scan successful:", serverResults);
           
           // Process successful scan results
-          handleSuccessfulScan(serverResults);
+          await handleSuccessfulScan(serverResults);
           return;
         }
         
@@ -106,7 +162,7 @@ export function useScanReceipt({
           console.log("Local processing successful:", localResults);
           
           // Process successful scan results
-          handleSuccessfulScan(localResults);
+          await handleSuccessfulScan(localResults);
         } else {
           // Handle error with fallback
           console.error("Both server and local processing failed");
@@ -119,7 +175,7 @@ export function useScanReceipt({
             date: localResults.date || new Date().toISOString().split('T')[0]
           };
           
-          handleSuccessfulScan(fallbackData);
+          await handleSuccessfulScan(fallbackData);
         }
       } catch (localError) {
         console.error("Local processing also failed:", localError);
@@ -129,10 +185,10 @@ export function useScanReceipt({
       console.error("Receipt scanning error:", error);
       errorScan("An unexpected error occurred while scanning");
     }
-  }, [file, startScan, updateProgress, timeoutScan, errorScan, endScan, onCapture, setOpen, autoSave, onSuccess]);
+  }, [file, startScan, updateProgress, timeoutScan, errorScan, endScan]);
   
   // Helper to process successful scan results
-  const handleSuccessfulScan = useCallback((scanResults: {
+  const handleSuccessfulScan = useCallback(async (scanResults: {
     success: boolean;
     items?: Array<{
       description: string;
@@ -144,23 +200,28 @@ export function useScanReceipt({
     date?: string;
   }) => {
     if (scanResults.items && scanResults.items.length > 0) {
-      updateProgress(90, "Extracting expense information...");
+      updateProgress(90, `Found ${scanResults.items.length} items on receipt...`);
       
-      // Get the main item (first item or most expensive)
-      const mainItem = selectMainItem(scanResults.items);
-      
-      // Create expense details
-      const expenseDetails = {
-        description: mainItem.description || "Store Purchase",
-        amount: mainItem.amount || "0.00",
-        date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
-        category: mainItem.category || "Other",
-        paymentMethod: mainItem.paymentMethod || "Card"
-      };
-      
-      console.log("Captured expense details:", expenseDetails);
-      
-      if (onCapture) {
+      // If we should process all items, add them to the database
+      if (processAllItems) {
+        await addExpensesToDatabase(scanResults.items);
+      } 
+      // Otherwise, just get the main item (for backward compatibility)
+      else if (onCapture) {
+        // Get the main item (first item or most expensive)
+        const mainItem = selectMainItem(scanResults.items);
+        
+        // Create expense details
+        const expenseDetails = {
+          description: mainItem.description || "Store Purchase",
+          amount: mainItem.amount || "0.00",
+          date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
+          category: mainItem.category || "Food",
+          paymentMethod: mainItem.paymentMethod || "Card"
+        };
+        
+        console.log("Captured expense details:", expenseDetails);
+        
         onCapture(expenseDetails);
       }
       
@@ -180,7 +241,7 @@ export function useScanReceipt({
         onSuccess();
       }
     }, 300);
-  }, [updateProgress, endScan, onCapture, setOpen, autoSave, onSuccess]);
+  }, [updateProgress, endScan, onCapture, setOpen, autoSave, onSuccess, processAllItems, addExpensesToDatabase]);
   
   // Auto-process receipt without requiring user to click scan button
   const autoProcessReceipt = useCallback(() => {
@@ -232,7 +293,7 @@ function selectMainItem(items: Array<{
     description: "Store Purchase",
     amount: "0.00",
     date: new Date().toISOString().split('T')[0],
-    category: "Other",
+    category: "Food", 
     paymentMethod: "Card"
   };
   
