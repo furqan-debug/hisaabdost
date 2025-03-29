@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useScanState } from './useScanState';
 import { processReceiptWithServer } from '../utils/serverProcessor';
@@ -25,7 +26,7 @@ export function useScanReceipt({
   file,
   onCleanup,
   onCapture,
-  autoSave = false,
+  autoSave = true,
   setOpen,
   onSuccess,
   processAllItems = true
@@ -99,9 +100,15 @@ export function useScanReceipt({
       } else {
         const itemText = expenses.length === 1 ? "expense" : "expenses";
         toast.success(`Added ${expenses.length} ${itemText} from your receipt`, {
-          description: "Check your expenses list to see them"
+          description: "Check your expenses list to see them",
+          duration: 5000
         });
         console.log("Expenses saved successfully:", data);
+        
+        // Trigger a refresh of the expenses list
+        const event = new CustomEvent('expenses-updated');
+        window.dispatchEvent(event);
+        
         return true;
       }
     } catch (error) {
@@ -126,6 +133,8 @@ export function useScanReceipt({
       
       // First try server-side processing
       try {
+        updateProgress(20, "Uploading receipt for analysis...");
+        
         const serverResults = await processReceiptWithServer({
           file,
           onProgress: updateProgress,
@@ -200,7 +209,7 @@ export function useScanReceipt({
       errorScan("An unexpected error occurred while scanning");
       return false;
     }
-  }, [file, startScan, updateProgress, timeoutScan, errorScan, endScan]);
+  }, [file, startScan, updateProgress, timeoutScan, errorScan]);
   
   // Helper to process successful scan results
   const handleSuccessfulScan = useCallback(async (scanResults: {
@@ -236,13 +245,6 @@ export function useScanReceipt({
       updateProgress(100, "Receipt processed successfully!");
       setProcessingComplete(true);
       
-      if (autoSave) {
-        // Keep dialog open for a moment to show success
-        setTimeout(() => {
-          setOpen(false);
-        }, 2000);
-      }
-      
       setTimeout(() => {
         endScan();
         if (onSuccess) {
@@ -255,7 +257,7 @@ export function useScanReceipt({
       errorScan("Failed to add expenses to your list");
       return false;
     }
-  }, [updateProgress, endScan, onCapture, setOpen, autoSave, onSuccess, errorScan, addExpensesToDatabase]);
+  }, [updateProgress, endScan, onCapture, addExpensesToDatabase, onSuccess, errorScan]);
   
   // Auto-process receipt without requiring user to click scan button
   const autoProcessReceipt = useCallback(() => {
@@ -293,37 +295,4 @@ export function useScanReceipt({
     autoProcessReceipt,
     resetScanState: resetState
   };
-}
-
-// Helper function to select the most relevant item from scan results
-function selectMainItem(items: Array<{
-  description: string;
-  amount: string;
-  date: string;
-  category: string;
-  paymentMethod: string;
-}>): {
-  description: string;
-  amount: string;
-  date: string;
-  category: string;
-  paymentMethod: string;
-} {
-  if (!items || items.length === 0) return {
-    description: "Store Purchase",
-    amount: "0.00",
-    date: new Date().toISOString().split('T')[0],
-    category: "Food", 
-    paymentMethod: "Card"
-  };
-  
-  // If there's only one item, use it
-  if (items.length === 1) return items[0];
-  
-  // Try to find the item with the highest amount
-  return items.reduce((highest, current) => {
-    const highestAmount = parseFloat(highest.amount || '0');
-    const currentAmount = parseFloat(current.amount || '0');
-    return currentAmount > highestAmount ? current : highest;
-  }, items[0]);
 }

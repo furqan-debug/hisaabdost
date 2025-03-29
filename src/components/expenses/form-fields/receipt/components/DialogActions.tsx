@@ -1,6 +1,11 @@
 
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { 
+  Loader2, ReceiptText, Download, 
+  CheckCircle, XCircle, RefreshCw 
+} from "lucide-react";
+import { DialogFooter } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface DialogActionsProps {
   onCleanup: () => void;
@@ -8,10 +13,12 @@ interface DialogActionsProps {
   isAutoProcessing: boolean;
   scanTimedOut: boolean;
   handleScanReceipt: () => void;
-  disabled: boolean;
-  autoSave: boolean;
-  scanProgress: number;
+  disabled?: boolean;
+  autoSave?: boolean;
+  scanProgress?: number;
   statusMessage?: string;
+  autoProcess?: boolean;
+  processingComplete?: boolean;
 }
 
 export function DialogActions({
@@ -20,35 +27,82 @@ export function DialogActions({
   isAutoProcessing,
   scanTimedOut,
   handleScanReceipt,
-  disabled,
-  autoSave,
-  scanProgress,
-  statusMessage = ""
+  disabled = false,
+  autoSave = false,
+  scanProgress = 0,
+  statusMessage,
+  autoProcess = true,
+  processingComplete = false
 }: DialogActionsProps) {
-  // Safe check for statusMessage - ensure it's a string before using includes
-  const hasError = typeof statusMessage === 'string' && (
-    statusMessage.toLowerCase().includes('error') || 
-    statusMessage.toLowerCase().includes('failed')
-  );
-
-  // Only show retry button if there's an error or timeout
-  const showRetryScan = scanTimedOut || hasError;
-
-  if (!showRetryScan) {
-    return null;
-  }
-
+  // Determine if we should show the retry button
+  const showRetry = (scanTimedOut || scanProgress === 100 || processingComplete) && autoProcess;
+  
+  // Determine if scanning is in progress
+  const scanning = isScanning || isAutoProcessing;
+  
   return (
-    <div className="flex flex-col w-full gap-2 mt-2">
-      <Button
-        onClick={handleScanReceipt}
-        disabled={disabled || isScanning || isAutoProcessing}
-        variant="default"
-        className="w-full bg-green-600 hover:bg-green-700 gap-2"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Retry Scan
-      </Button>
-    </div>
+    <DialogFooter className="flex sm:justify-between items-center gap-2">
+      <div className="text-sm text-muted-foreground">
+        {scanning && (
+          <div className="flex items-center">
+            <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+            <span className="text-xs">
+              {scanProgress < 100 
+                ? `${Math.round(scanProgress)}% complete` 
+                : "Finalizing..."}
+            </span>
+          </div>
+        )}
+      </div>
+      
+      <div className="flex items-center gap-2 justify-end">
+        {!scanning && !processingComplete && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            type="button" 
+            onClick={onCleanup}
+          >
+            Cancel
+          </Button>
+        )}
+        
+        {processingComplete ? (
+          <Button 
+            size="sm"
+            type="button" 
+            onClick={onCleanup}
+            className="gap-2"
+            variant="default"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>Done</span>
+          </Button>
+        ) : showRetry ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            type="button" 
+            onClick={handleScanReceipt}
+            disabled={scanning || disabled}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Retry Scan</span>
+          </Button>
+        ) : !scanning && autoProcess ? (
+          <Button
+            type="button"
+            onClick={handleScanReceipt}
+            disabled={scanning || disabled}
+            className="gap-2"
+            size="sm"
+          >
+            <ReceiptText className="h-4 w-4" />
+            <span>Scan Receipt</span>
+          </Button>
+        ) : null}
+      </div>
+    </DialogFooter>
   );
 }
