@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
+import { ExpenseFormData } from "./types";
 import { processReceiptFile as processFile } from "@/utils/receiptFileProcessor";
 
 export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
@@ -7,43 +8,28 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const [isUploading, setIsUploading] = useState(false);
   const currentBlobUrlRef = useRef<string | null>(null);
 
-  // Function to process a receipt file automatically and add each item to the expense list
+  // Function to process the file and automatically add items to the expense list
   const processReceiptFile = async (file: File) => {
     console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
-    
+
     try {
+      // Parse the receipt and get each item
       const result = await processFile(file, user?.id, currentBlobUrlRef.current, updateField, setIsUploading);
-      
-      // If file is successfully processed, update the blob URL reference for cleanup
+
       if (result) {
-        if (result.startsWith('blob:')) {
-          currentBlobUrlRef.current = result;
-        } else {
-          currentBlobUrlRef.current = null;
-        }
-      }
-      
-      // Automatically add each expense item to the expense list
-      // Assuming 'result' contains parsed items in the format: [{ name, amount, category, date }]
-      if (result && Array.isArray(result)) {
-        result.forEach(item => {
-          updateField('expenses', prevExpenses => [...prevExpenses, item]); // Automatically add each item to the list
+        // If the result contains items, automatically add each item to the expense list
+        result.forEach((item: any) => {
+          updateField('expenses', (prevExpenses: any[]) => [...prevExpenses, item]); // Add item to expense list
         });
+        console.log("Items added to the expense list:", result);
       }
+
       return result;
     } catch (error) {
-      console.error("Error in processReceiptFile:", error);
+      console.error("Error processing receipt:", error);
       return null;
     }
   };
-
-  // Cleanup blob URLs and other resources on unmount or after processing
-  useEffect(() => {
-    return () => {
-      console.log("useReceiptFile: Cleaning up blob URLs");
-      setTimeout(() => cleanupAllBlobUrls(), 1000);
-    };
-  }, []);
 
   return { processReceiptFile, isUploading };
 }
