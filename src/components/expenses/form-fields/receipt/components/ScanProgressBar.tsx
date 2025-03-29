@@ -9,6 +9,13 @@ interface ScanProgressBarProps {
 }
 
 export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) {
+  // Calculate progress color based on percentage
+  const getProgressColor = () => {
+    if (progress < 30) return '#f59e0b'; // Amber
+    if (progress < 70) return '#3b82f6'; // Blue
+    return '#10b981'; // Green
+  };
+
   return (
     <div className="w-full max-w-[300px] px-4">
       <motion.div
@@ -19,11 +26,8 @@ export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) 
         <Progress 
           value={progress} 
           className="h-2 bg-secondary"
-          style={{
-            '--progress-color': progress < 30 ? '#f59e0b' : 
-                               progress < 70 ? '#3b82f6' : 
-                               progress < 100 ? '#10b981' : '#10b981'
-          }}
+          // Instead of using style with CSS vars, use indicatorClassName
+          indicatorClassName={`bg-[${getProgressColor()}]`}
         />
       </motion.div>
     </div>

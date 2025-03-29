@@ -3,19 +3,14 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface UseScanProcessProps {
+export function useScanProcess(props: {
   updateProgress: (progress: number, message?: string) => void;
   endScan: () => void;
   timeoutScan: () => void;
   errorScan: (message: string) => void;
-}
-
-export function useScanProcess({
-  updateProgress,
-  endScan,
-  timeoutScan,
-  errorScan
-}: UseScanProcessProps) {
+}) {
+  const { updateProgress, endScan, timeoutScan, errorScan } = props;
+  
   // Reference to track ongoing scans
   const ongoingScansRef = useRef<Map<string, { timestamp: number, promise: Promise<any> }>>(new Map());
   

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useScanState } from './useScanState';
 import { useScanProcess } from './useScanProcess';
