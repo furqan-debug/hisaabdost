@@ -245,19 +245,24 @@ export function useScanReceipt({
       updateProgress(100, "Receipt processed successfully!");
       setProcessingComplete(true);
       
+      // Close the scan dialog automatically after a short delay
       setTimeout(() => {
         endScan();
         if (onSuccess) {
           onSuccess();
         }
-      }, 500);
+        
+        // Automatically close the dialog after successful processing
+        setOpen(false);
+        onCleanup();
+      }, 1500);
       
       return true;
     } else {
       errorScan("Failed to add expenses to your list");
       return false;
     }
-  }, [updateProgress, endScan, onCapture, addExpensesToDatabase, onSuccess, errorScan]);
+  }, [updateProgress, endScan, onCapture, addExpensesToDatabase, onSuccess, errorScan, setOpen, onCleanup]);
   
   // Auto-process receipt without requiring user to click scan button
   const autoProcessReceipt = useCallback(() => {

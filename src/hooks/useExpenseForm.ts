@@ -67,10 +67,32 @@ export function useExpenseForm({ expenseToEdit, onClose, onAddExpense }: UseExpe
     });
   };
 
-  const { handleFileChange, isUploading, processReceiptFile } = useReceiptFile({ 
+  const { processReceiptFile, isUploading } = useReceiptFile({ 
     formData, 
     updateField 
   });
+
+  // We need to define our own handleFileChange function since it's no longer provided by useReceiptFile
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+    
+    console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type})`);
+    
+    // Update the form with the file
+    updateField('receiptFile', file);
+    
+    // Process the file to get a preview URL
+    processReceiptFile(file);
+    
+    // Reset the input value to allow selecting the same file again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
 
   const { handleScanComplete } = useReceiptScanner({ 
     updateField 

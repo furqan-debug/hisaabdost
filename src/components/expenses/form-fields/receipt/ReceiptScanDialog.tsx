@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
-import { motion } from "framer-motion";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -61,20 +60,13 @@ export function ReceiptScanDialog({
     resetScanState
   } = useScanReceipt({
     file: fileRef.current,
-    onCleanup: () => {
-      // Nothing needed here as we're handling cleanup separately
-    },
+    onCleanup,
     onCapture,
     autoSave,
     setOpen,
     onSuccess: () => {
       retryHandler.setProcessing(false);
-      // Auto-close the dialog after successful processing with a slight delay
-      if (autoProcess && autoSave) {
-        setTimeout(() => {
-          setOpen(false);
-        }, 3000); // 3 second delay to show success state
-      }
+      // Auto close handled in the hook now
     },
     processAllItems: true // Always process all items
   });
@@ -151,7 +143,7 @@ export function ReceiptScanDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-md md:max-w-lg">
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <ScanDialogContent
           previewUrl={previewUrl}
           isScanning={isScanning}

@@ -1,9 +1,10 @@
 
-import { Progress } from "@/components/ui/progress";
-import { Loader2, AlertCircle, CheckCircle2, Receipt } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ReceiptPreview } from "../ReceiptPreview";
 import { DialogActions } from "./DialogActions";
-import { cn } from "@/lib/utils";
+import { ScanProgressBar } from "./ScanProgressBar";
+import { ScanErrorDisplay } from "./ScanErrorDisplay";
+import { ScanStatus } from "./ScanStatus";
 import { motion } from "framer-motion";
 
 interface ScanDialogContentProps {
@@ -17,8 +18,8 @@ interface ScanDialogContentProps {
   handleScanReceipt: () => void;
   onCleanup: () => void;
   fileExists: boolean;
-  processingComplete?: boolean;
-  autoProcess?: boolean;
+  processingComplete: boolean;
+  autoProcess: boolean;
 }
 
 export function ScanDialogContent({
@@ -32,206 +33,103 @@ export function ScanDialogContent({
   handleScanReceipt,
   onCleanup,
   fileExists,
-  processingComplete = false,
-  autoProcess = true
+  processingComplete,
+  autoProcess
 }: ScanDialogContentProps) {
-  const processing = isScanning || isAutoProcessing;
-  const showErrorMessage = scanTimedOut || scanError;
-
-  // Animation variants for progress items
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
+  // Determine if we're in a scanning/processing state
+  const scanning = isScanning || isAutoProcessing;
   
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
-
+  // Determine if we're in an error state
+  const hasError = !!scanError || scanTimedOut;
+  
   return (
-    <motion.div 
-      className="space-y-4"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="flex flex-col gap-4">
       <DialogHeader>
         <DialogTitle>
-          {autoProcess 
-            ? "Processing Receipt" 
-            : "Receipt Upload"}
+          {processingComplete 
+            ? "Receipt Processing Complete"
+            : hasError
+              ? "Receipt Processing Error"
+              : scanning
+                ? "Processing Receipt..."
+                : "Scan Receipt"
+          }
         </DialogTitle>
         <DialogDescription>
-          {autoProcess 
-            ? "We'll extract all items and save them automatically as separate expenses" 
-            : "Attach this receipt to your expense record"}
+          {processingComplete
+            ? "All items from your receipt have been added to your expenses."
+            : hasError
+              ? "There was a problem processing your receipt."
+              : scanning
+                ? `${statusMessage || "Extracting information from your receipt..."}`
+                : autoProcess
+                  ? "Your receipt will be automatically processed and items added to your expenses."
+                  : "Scan your receipt to extract expense details."
+          }
         </DialogDescription>
       </DialogHeader>
-
-      {previewUrl && (
-        <motion.div 
-          className="relative w-full h-64 sm:h-80 bg-black flex items-center justify-center overflow-hidden rounded-md border"
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
-        >
-          <img
-            src={previewUrl}
-            alt="Receipt preview"
-            className={cn(
-              "max-w-full max-h-full object-contain transition-opacity duration-300",
-              processing ? "opacity-60" : processingComplete ? "opacity-90" : "opacity-80",
-              showErrorMessage ? "brightness-50" : ""
-            )}
-          />
-          {processing && (
-            <motion.div 
-              className="absolute inset-0 flex items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="bg-black/40 backdrop-blur-sm rounded-full p-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            </motion.div>
-          )}
-          {processingComplete && !showErrorMessage && (
-            <motion.div 
-              className="absolute inset-0 flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-            >
-              <div className="bg-green-500/20 backdrop-blur-sm rounded-full p-3">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-            </motion.div>
-          )}
-          <div className="absolute bottom-2 right-2 text-xs text-white bg-black/50 px-2 py-1 rounded-sm">
-            Preview
-          </div>
-        </motion.div>
-      )}
-
-      {processing && autoProcess && (
-        <motion.div 
-          className="space-y-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <p className="text-sm font-medium">
-              {statusMessage || "Processing receipt..."}
-            </p>
-          </div>
-          
-          <Progress 
-            value={scanProgress} 
-            className="h-3 overflow-hidden rounded-lg" 
-            indicatorClassName={cn(
-              "transition-all duration-700",
-              scanProgress < 30 ? "bg-amber-500" : 
-              scanProgress < 70 ? "bg-blue-500" : 
-              "bg-green-500"
-            )}
-          />
-          
+      
+      {/* Receipt preview */}
+      <div className={`relative rounded-md overflow-hidden ${scanning ? 'opacity-70' : 'opacity-100'}`}>
+        {previewUrl ? (
           <motion.div 
-            className="grid grid-cols-4 gap-2 pt-1"
-            variants={containerVariants}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <motion.div 
-              variants={itemVariants}
-              className={cn(
-                "text-center py-1 px-2 rounded-md text-xs",
-                scanProgress >= 10 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <span>Scanning</span>
-            </motion.div>
-            <motion.div 
-              variants={itemVariants}
-              className={cn(
-                "text-center py-1 px-2 rounded-md text-xs",
-                scanProgress >= 40 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <span>Extracting</span>
-            </motion.div>
-            <motion.div 
-              variants={itemVariants}
-              className={cn(
-                "text-center py-1 px-2 rounded-md text-xs",
-                scanProgress >= 70 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <span>Processing</span>
-            </motion.div>
-            <motion.div 
-              variants={itemVariants}
-              className={cn(
-                "text-center py-1 px-2 rounded-md text-xs",
-                scanProgress >= 90 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <span>Saving</span>
-            </motion.div>
+            <ReceiptPreview
+              receiptUrl={previewUrl} 
+              onReplace={null} 
+              disabled={scanning}
+              className="min-h-[300px] max-h-[400px] object-contain w-full"
+            />
           </motion.div>
-        </motion.div>
-      )}
-
-      {processingComplete && !showErrorMessage && (
-        <motion.div 
-          className="flex items-start gap-2 bg-green-50 p-4 rounded-md text-green-700 text-sm border border-green-200"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <CheckCircle2 className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium">Processing complete!</p>
-            <p>All items have been added to your expenses list</p>
-            <p className="text-xs text-green-600 mt-1">This window will close automatically...</p>
+        ) : (
+          <div className="h-[300px] bg-muted flex items-center justify-center rounded-md">
+            <span className="text-muted-foreground">No receipt selected</span>
           </div>
-        </motion.div>
+        )}
+        
+        {/* Show scan progress overlay */}
+        {scanning && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[1px]"
+          >
+            <ScanProgressBar progress={scanProgress} isScanning={scanning} />
+            <ScanStatus 
+              message={statusMessage} 
+              progress={scanProgress} 
+              isScanning={scanning} 
+            />
+          </motion.div>
+        )}
+      </div>
+      
+      {/* Error display */}
+      {hasError && (
+        <ScanErrorDisplay 
+          scanError={scanError}
+          scanTimedOut={scanTimedOut}
+        />
       )}
-
-      {showErrorMessage && (
-        <motion.div 
-          className="flex items-start gap-2 bg-amber-50 p-3 rounded-md text-amber-700 text-sm border border-amber-200"
-          initial={{ opacity: 0, y: 10 }}
+      
+      {/* Success message */}
+      {processingComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          className="p-3 rounded-md bg-green-50 border border-green-200 text-green-700"
         >
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium">Processing issue</p>
-            <p>{scanError || "Processing timed out. Please try again."}</p>
-          </div>
+          <p className="text-sm font-medium">Receipt successfully processed!</p>
+          <p className="text-xs mt-1">
+            All items from your receipt have been added to your expenses.
+          </p>
         </motion.div>
       )}
-
+      
+      {/* Actions */}
       <DialogActions
         onCleanup={onCleanup}
         isScanning={isScanning}
@@ -245,6 +143,6 @@ export function ScanDialogContent({
         autoProcess={autoProcess}
         processingComplete={processingComplete}
       />
-    </motion.div>
+    </div>
   );
 }

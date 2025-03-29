@@ -1,8 +1,14 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
 import { cleanupAllBlobUrls, cleanupUnusedBlobUrls, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 import { processReceiptFile as processFile } from "@/utils/receiptFileProcessor";
+
+interface UseReceiptFileProps {
+  formData: ExpenseFormData;
+  updateField: <K extends keyof ExpenseFormData>(field: K, value: ExpenseFormData[K]) => void;
+}
 
 export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const { user } = useAuth();
@@ -16,14 +22,8 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     try {
       const result = await processFile(file, user?.id, currentBlobUrlRef.current, updateField, setIsUploading);
 
-      if (result) {
-        // If the result contains items, automatically add each item to the expense list
-        result.forEach((item: any) => {
-          updateField('expenses', (prevExpenses: any[]) => [...prevExpenses, item]); // Add item to expense list
-        });
-        console.log("Items added to the expense list:", result);
-      }
-
+      // Return just the URL in this hook without trying to add items
+      // Item addition will be handled by the scan dialog directly
       return result;
     } catch (error) {
       console.error("Error processing receipt:", error);
