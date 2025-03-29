@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useExpenseRefresh } from '@/hooks/useExpenseRefresh';
@@ -5,14 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { ExpenseCard } from '@/components/expenses/ExpenseCard';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import { ExpenseSkeleton } from '@/components/expenses/ExpenseSkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatCurrency } from '@/utils/formatters';
 
 export function ExpenseList() {
   const { refreshTrigger } = useExpenseRefresh();
-  const router = useRouter();
+  const navigate = useNavigate();
   
   // Fetch expenses with a shorter refetch interval to ensure updates are reflected quickly
   const { data: expenses, isLoading, error, refetch } = useQuery({
@@ -41,7 +42,7 @@ export function ExpenseList() {
   }, [refreshTrigger, refetch]);
 
   const handleAddExpense = () => {
-    router.push('/expenses/new');
+    navigate('/expenses/new');
   };
 
   // Calculate total expenses for the current month

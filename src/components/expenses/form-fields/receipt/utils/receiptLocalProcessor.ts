@@ -1,5 +1,5 @@
 
-import { parseReceiptText, extractMerchant } from '@/utils/receiptParser';
+import { processReceiptText } from '@/utils/receiptParser';
 import { toast } from 'sonner';
 
 // Special case for the fish burger receipt in the image
