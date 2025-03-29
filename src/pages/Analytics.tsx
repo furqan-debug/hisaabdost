@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,15 +14,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { InsightsDisplay } from "@/components/analytics/InsightsDisplay";
+import { useMonthContext } from "@/hooks/use-month-context";
 
 export default function Analytics() {
   const { user } = useAuth();
+  const { selectedMonth } = useMonthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
     start: format(subMonths(new Date(), 1), 'yyyy-MM-dd'),
     end: format(new Date(), 'yyyy-MM-dd'),
   });
+  const useCustomDateRange = true;
 
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
@@ -85,6 +87,8 @@ export default function Analytics() {
           setCategoryFilter={setCategoryFilter}
           dateRange={dateRange}
           setDateRange={setDateRange}
+          selectedMonth={selectedMonth}
+          useCustomDateRange={useCustomDateRange}
         />
       </div>
 
