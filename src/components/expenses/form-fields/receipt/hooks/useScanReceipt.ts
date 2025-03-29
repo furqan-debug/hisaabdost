@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { processScanResults } from '../utils/processScanUtils';
 import { useScanProcess } from './useScanProcess';
+import { processLocalReceipt } from '../utils/receiptLocalProcessor';
 
 interface UseScanReceiptProps {
   file: File | null;
@@ -119,21 +120,54 @@ export function useScanReceipt({
         console.log(`- ${key}: ${value instanceof File ? 'File(' + value.name + ', ' + value.size + ' bytes, ' + value.type + ')' : value}`);
       }
       
-      // Process the scan
-      const scanResult = await processScan(formData);
-      
-      if (scanResult) {
-        console.log("Scan function response:", JSON.stringify(scanResult, null, 2));
+      try {
+        // Process the scan
+        const scanResult = await processScan(formData);
         
-        console.log("Processing scan results...");
-        // Process the scan results
-        await processScanResults(scanResult, autoSave, onCapture, setOpen);
-      } else {
-        // Handle empty result
-        setScanProgress(0);
-        setIsScanning(false);
-        setStatusMessage('Failed to process receipt');
-        toast.error('Failed to process receipt');
+        if (scanResult) {
+          console.log("Scan function response:", JSON.stringify(scanResult, null, 2));
+          
+          console.log("Processing scan results...");
+          // Process the scan results
+          await processScanResults(scanResult, autoSave, onCapture, setOpen);
+        } else {
+          // Handle empty result - try local processing as fallback
+          console.log("No results from server, trying local receipt processing...");
+          setScanProgress(60);
+          setStatusMessage('Using local processing...');
+          
+          const localResults = await processLocalReceipt(file);
+          if (localResults) {
+            await processScanResults(localResults, autoSave, onCapture, setOpen);
+          } else {
+            // Both remote and local processing failed
+            setScanProgress(0);
+            setIsScanning(false);
+            setStatusMessage('Failed to process receipt');
+            toast.error('Failed to process receipt');
+          }
+        }
+      } catch (error) {
+        // Handle network errors with local fallback
+        console.error("Network error scanning receipt:", error);
+        setScanProgress(50);
+        setStatusMessage('Network error, trying local processing...');
+        
+        try {
+          const localResults = await processLocalReceipt(file);
+          if (localResults) {
+            await processScanResults(localResults, autoSave, onCapture, setOpen);
+            toast.success("Successfully processed receipt locally");
+          } else {
+            setIsScanning(false);
+            setStatusMessage('Failed to process receipt locally');
+            toast.error('Receipt processing failed');
+          }
+        } catch (localError) {
+          setIsScanning(false);
+          setStatusMessage('Error processing receipt');
+          toast.error('Error processing receipt');
+        }
       }
     } catch (error) {
       console.error('Error scanning receipt:', error);
@@ -165,19 +199,48 @@ export function useScanReceipt({
       formData.append('retry', '0');
       formData.append('enhanced', 'true');
       
-      // Process the scan
-      const scanResult = await processScan(formData);
-      
-      if (scanResult) {
-        console.log("Auto-scan function response:", scanResult);
+      try {
+        // Process the scan
+        const scanResult = await processScan(formData);
         
-        // Process the scan results
-        await processScanResults(scanResult, autoSave, onCapture, setOpen);
-      } else {
-        // Handle empty result
-        setScanProgress(0);
-        setIsAutoProcessing(false);
-        setStatusMessage('Failed to process receipt');
+        if (scanResult) {
+          console.log("Auto-scan function response:", scanResult);
+          
+          // Process the scan results
+          await processScanResults(scanResult, autoSave, onCapture, setOpen);
+        } else {
+          // Try local processing as fallback
+          console.log("No results from server, trying local receipt processing...");
+          setScanProgress(60);
+          setStatusMessage('Using local processing...');
+          
+          const localResults = await processLocalReceipt(file);
+          if (localResults) {
+            await processScanResults(localResults, autoSave, onCapture, setOpen);
+          } else {
+            // Both remote and local processing failed
+            setScanProgress(0);
+            setIsAutoProcessing(false);
+            setStatusMessage('Failed to process receipt');
+          }
+        }
+      } catch (error) {
+        console.error("Network error auto-processing receipt:", error);
+        setScanProgress(50);
+        setStatusMessage('Network error, trying local processing...');
+        
+        try {
+          const localResults = await processLocalReceipt(file);
+          if (localResults) {
+            await processScanResults(localResults, autoSave, onCapture, setOpen);
+          } else {
+            setIsAutoProcessing(false);
+            setStatusMessage('Failed to process receipt locally');
+          }
+        } catch (localError) {
+          setIsAutoProcessing(false);
+          setStatusMessage('Error processing receipt');
+        }
       }
     } catch (error) {
       console.error('Error auto-processing receipt:', error);

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, AlertCircle, Check, X, Pencil } from "lucide-react";
+import { CircleHelp, Scan, RefreshCw, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DialogActionsProps {
   onCleanup: () => void;
@@ -9,9 +10,9 @@ interface DialogActionsProps {
   scanTimedOut: boolean;
   handleScanReceipt: () => void;
   disabled: boolean;
-  autoSave?: boolean;
-  scanProgress?: number;
-  statusMessage?: string;
+  autoSave: boolean;
+  scanProgress: number;
+  statusMessage: string;
   onManualEntry?: () => void;
 }
 
@@ -22,97 +23,38 @@ export function DialogActions({
   scanTimedOut,
   handleScanReceipt,
   disabled,
-  autoSave = false,
-  scanProgress = 0,
+  autoSave,
+  scanProgress,
   statusMessage,
   onManualEntry
 }: DialogActionsProps) {
-  const isComplete = scanProgress === 100 && !isScanning && !isAutoProcessing && !scanTimedOut;
-  
-  if (isScanning || isAutoProcessing) {
-    return (
-      <div className="flex justify-end w-full">
-        {/* Show cancel button only when automatic processing is happening */}
-        {isAutoProcessing && (
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={onCleanup}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </Button>
-        )}
-      </div>
-    );
-  }
-  
-  if (isComplete) {
-    return (
-      <div className="flex justify-end w-full">
-        <Button
-          type="button"
-          variant="default"
-          onClick={onCleanup}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          <Check className="mr-2 h-4 w-4" />
-          {autoSave ? "Expenses Saved" : "Complete"}
-        </Button>
-      </div>
-    );
-  }
-  
+  const showRetryScan = scanTimedOut || statusMessage.includes('error') || statusMessage.toLowerCase().includes('failed');
+
   return (
-    <div className="flex flex-wrap gap-2 w-full">
-      {scanTimedOut ? (
-        <>
-          <Button
-            type="button"
-            variant="default"
-            onClick={handleScanReceipt}
-            disabled={disabled}
-            className="flex-1"
-          >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Retry Scan
-          </Button>
-          
-          {onManualEntry && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onManualEntry}
-              className="flex-1"
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Switch to Manual Entry
-            </Button>
-          )}
-        </>
-      ) : (
-        <>
-          <Button
-            type="button"
-            variant="default"
-            onClick={handleScanReceipt}
-            disabled={disabled || isScanning}
-            className="flex-1"
-          >
-            {statusMessage ? statusMessage : "Scan Receipt"}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCleanup}
-            className="flex-shrink-0"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Close
-          </Button>
-        </>
+    <div className="flex flex-col w-full gap-2 mt-2">
+      {showRetryScan && (
+        <Button
+          onClick={handleScanReceipt}
+          disabled={disabled || isScanning || isAutoProcessing}
+          variant="default"
+          className="w-full bg-green-600 hover:bg-green-700 gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Retry Scan
+        </Button>
       )}
+      
+      <Button
+        variant="outline"
+        className={cn(
+          "w-full gap-2 border-gray-300",
+          showRetryScan ? "mt-2" : ""
+        )}
+        onClick={onManualEntry}
+      >
+        <FileText className="h-4 w-4" />
+        Switch to Manual Entry
+      </Button>
     </div>
   );
 }

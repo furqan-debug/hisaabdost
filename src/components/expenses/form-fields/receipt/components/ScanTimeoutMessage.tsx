@@ -1,16 +1,16 @@
 
-import { AlertTriangle, RefreshCw, FileWarning, FileX } from "lucide-react";
+import { AlertTriangle, RefreshCw, FileWarning, FileX, Wifi, WifiOff } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface ScanTimeoutMessageProps {
   scanTimedOut: boolean;
-  scanError?: string;
+  scanError?: string | null;
 }
 
 export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessageProps) {
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(scanError);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(scanError || undefined);
   
-  // Handle file access errors
+  // Handle errors and provide appropriate messages
   useEffect(() => {
     if (!scanError) {
       setErrorMessage(undefined);
@@ -20,8 +20,10 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
     // Check for specific error patterns
     if (scanError.includes("ERR_FILE_NOT_FOUND") || scanError.includes("blob:")) {
       setErrorMessage("The receipt image file could not be accessed. It may have been removed or expired.");
-    } else if (scanError.includes("Failed to fetch")) {
-      setErrorMessage("Network error: Could not connect to the receipt processing service.");
+    } else if (scanError.includes("Failed to fetch") || scanError.includes("network")) {
+      setErrorMessage("Network error: Could not connect to the receipt processing service. Using local processing instead.");
+    } else if (scanError.includes("timeout")) {
+      setErrorMessage("The receipt processing service took too long to respond. Using local processing instead.");
     } else {
       setErrorMessage(scanError);
     }
@@ -29,17 +31,14 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
   
   if (!scanTimedOut && !errorMessage) return null;
   
-  // Check if error is related to file access
+  // Check error type
   const isFileAccessError = errorMessage && (
     errorMessage.includes("ERR_FILE_NOT_FOUND") || 
     errorMessage.includes("blob:") || 
-    errorMessage.includes("Failed to fetch") ||
-    errorMessage.includes("access") ||
     errorMessage.includes("file") ||
     errorMessage.includes("permission")
   );
   
-  // Check if error is related to network
   const isNetworkError = errorMessage && (
     errorMessage.includes("network") ||
     errorMessage.includes("Failed to fetch") ||
@@ -52,7 +51,10 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
       {scanTimedOut ? (
         <>
           <RefreshCw className="h-4 w-4 shrink-0" />
-          <p>The scan timed out. Try taking a clearer photo, using a smaller image file, or click "Retry Scan".</p>
+          <div>
+            <p>The scan timed out. Processing locally instead.</p>
+            <p className="mt-1 text-xs">If necessary, click "Retry Scan" for better results.</p>
+          </div>
         </>
       ) : isFileAccessError ? (
         <>
@@ -64,10 +66,10 @@ export function ScanTimeoutMessage({ scanTimedOut, scanError }: ScanTimeoutMessa
         </>
       ) : isNetworkError ? (
         <>
-          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <WifiOff className="h-4 w-4 shrink-0" />
           <div>
-            <p>Network error: Could not connect to the receipt processing service.</p>
-            <p className="mt-1 text-xs">Check your internet connection and try again.</p>
+            <p>Network error: Using local processing instead.</p>
+            <p className="mt-1 text-xs">Check your internet connection to use cloud-based receipt processing.</p>
           </div>
         </>
       ) : errorMessage ? (
