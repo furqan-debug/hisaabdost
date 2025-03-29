@@ -45,6 +45,7 @@ export async function saveExpenseFromScan(receiptData: ReceiptData): Promise<boo
     }));
     
     console.log("Inserting expenses with user_id:", user.id);
+    console.log("Expense data:", formattedItems);
     
     // Insert all items at once
     const { data, error } = await supabase
@@ -62,7 +63,7 @@ export async function saveExpenseFromScan(receiptData: ReceiptData): Promise<boo
     
     // Dispatch custom event to trigger expense list refresh
     const event = new CustomEvent('expenses-updated', { 
-      detail: { timestamp: Date.now() }
+      detail: { timestamp: Date.now() } 
     });
     window.dispatchEvent(event);
     

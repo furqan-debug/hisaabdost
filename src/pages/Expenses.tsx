@@ -15,19 +15,21 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 
 const Expenses = () => {
   const { user } = useAuth();
   const { toast: uiToast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
+  const { refreshTrigger, triggerRefresh } = useExpenseRefresh();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
@@ -65,11 +67,10 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
-    // Refetch every 5 seconds and when component is mounted
     refetchInterval: 5000,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 0, // Consider data stale immediately
+    staleTime: 0,
   });
 
   // Hook for filtering and sorting expenses
@@ -123,11 +124,21 @@ const Expenses = () => {
     const handleReceiptScan = () => {
       console.log("Receipt scan detected, refreshing expenses list");
       refetch();
+      // Force a refresh after a delay to ensure DB has been updated
+      setTimeout(() => {
+        refetch();
+        triggerRefresh();
+      }, 1000);
     };
     
     const handleExpensesUpdated = () => {
       console.log("Expenses updated event detected, refreshing list");
       refetch();
+      // Force a refresh after a delay to ensure DB has been updated
+      setTimeout(() => {
+        refetch();
+        triggerRefresh();
+      }, 1000);
     };
     
     window.addEventListener('receipt-scanned', handleReceiptScan);
@@ -140,7 +151,7 @@ const Expenses = () => {
       window.removeEventListener('receipt-scanned', handleReceiptScan);
       window.removeEventListener('expenses-updated', handleExpensesUpdated);
     };
-  }, [refetch]);
+  }, [refetch, triggerRefresh]);
 
   const isLoading = isMonthDataLoading || isExpensesLoading;
 
