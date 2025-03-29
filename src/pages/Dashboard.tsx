@@ -9,6 +9,7 @@ import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -22,6 +23,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
+  const { refreshTrigger } = useExpenseRefresh();
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
@@ -40,11 +42,18 @@ const Dashboard = () => {
     }
   }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
   
+  // Handle manual expense refreshing
+  const handleExpenseRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+  };
+  
   // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
+      
+      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -65,6 +74,8 @@ const Dashboard = () => {
         });
         return [];
       }
+      
+      console.log(`Fetched ${data.length} expenses for the month`);
       
       return data.map(exp => ({
         id: exp.id,
@@ -100,6 +111,14 @@ const Dashboard = () => {
       });
     }
   }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
+
+  // Listen for expense update events and refresh data
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log("Refresh trigger changed, invalidating expense queries");
+      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+    }
+  }, [refreshTrigger, queryClient, selectedMonth]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -151,7 +170,7 @@ const Dashboard = () => {
         showAddExpense={showAddExpense}
         setExpenseToEdit={setExpenseToEdit}
         setShowAddExpense={setShowAddExpense}
-        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] })}
+        onAddExpense={handleExpenseRefresh}
       />
 
       <RecentExpensesCard 

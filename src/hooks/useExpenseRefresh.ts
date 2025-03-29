@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 /**
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export function useExpenseRefresh() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const refreshTimerRef = useRef<number | null>(null);
   
   const triggerRefresh = useCallback(() => {
     // Throttle refreshes to prevent multiple rapid refreshes
@@ -20,35 +21,51 @@ export function useExpenseRefresh() {
     }
   }, [lastRefreshTime]);
   
-  useEffect(() => {
-    // Listen for the custom expense-updated event
-    const handleExpensesUpdated = (event: Event) => {
-      console.log("Expense updated event received, triggering refresh");
+  // Function to handle various expense update events
+  const handleExpenseUpdateEvent = useCallback((event: Event) => {
+    const eventName = event.type;
+    console.log(`${eventName} event received, preparing to refresh data`);
+    
+    // Clear any existing timer
+    if (refreshTimerRef.current !== null) {
+      window.clearTimeout(refreshTimerRef.current);
+    }
+    
+    // Set a short timeout to batch potential multiple events
+    refreshTimerRef.current = window.setTimeout(() => {
+      console.log(`Refreshing expense list from ${eventName} event`);
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(Date.now());
-    };
+      refreshTimerRef.current = null;
+    }, 300);
+  }, []);
+  
+  useEffect(() => {
+    // Listen for all expense-related events
+    console.log("Setting up expense refresh event listeners");
     
-    // Listen for receipt-scanned event
-    const handleReceiptScanned = (event: Event) => {
-      console.log("Receipt scanned event received, triggering refresh");
-      
-      // Add a slight delay to ensure the database has been updated
-      setTimeout(() => {
-        setRefreshTrigger(prev => prev + 1);
-        setLastRefreshTime(Date.now());
-      }, 500);
-    };
-    
-    // Add event listeners
-    window.addEventListener('expenses-updated', handleExpensesUpdated);
-    window.addEventListener('receipt-scanned', handleReceiptScanned);
+    // Add event listeners for various expense update events
+    window.addEventListener('expenses-updated', handleExpenseUpdateEvent);
+    window.addEventListener('receipt-scanned', handleExpenseUpdateEvent);
+    window.addEventListener('expense-added', handleExpenseUpdateEvent);
+    window.addEventListener('expense-edited', handleExpenseUpdateEvent);
+    window.addEventListener('expense-deleted', handleExpenseUpdateEvent);
     
     // Cleanup listeners on unmount
     return () => {
-      window.removeEventListener('expenses-updated', handleExpensesUpdated);
-      window.removeEventListener('receipt-scanned', handleReceiptScanned);
+      console.log("Removing expense refresh event listeners");
+      window.removeEventListener('expenses-updated', handleExpenseUpdateEvent);
+      window.removeEventListener('receipt-scanned', handleExpenseUpdateEvent);
+      window.removeEventListener('expense-added', handleExpenseUpdateEvent);
+      window.removeEventListener('expense-edited', handleExpenseUpdateEvent);
+      window.removeEventListener('expense-deleted', handleExpenseUpdateEvent);
+      
+      // Clear any pending timeout
+      if (refreshTimerRef.current !== null) {
+        window.clearTimeout(refreshTimerRef.current);
+      }
     };
-  }, []);
+  }, [handleExpenseUpdateEvent]);
   
   return { refreshTrigger, triggerRefresh };
 }

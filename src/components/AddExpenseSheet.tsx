@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
 
 interface AddExpenseSheetProps {
-  onAddExpense: (expense: Expense) => void;
+  onAddExpense: (expense?: Expense) => void;
   expenseToEdit?: Expense;
   onClose?: () => void;
   open?: boolean;
@@ -148,6 +148,13 @@ const AddExpenseSheet = ({
   // Handle scan completion by closing the sheet after a delay
   const handleScanSuccess = () => {
     setProcessingComplete(true);
+    
+    // Notify parent about the expense addition
+    if (onAddExpense) {
+      console.log("Calling onAddExpense callback after successful scan");
+      onAddExpense(); // Call without arguments to trigger a general refresh
+    }
+    
     // Close the sheet after a delay
     setTimeout(() => {
       if (onOpenChange) {
