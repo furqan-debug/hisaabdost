@@ -38,7 +38,7 @@ export function useReceiptScanning({
   } = useScanState();
 
   // Initialize the scan process using the state management functions
-  const { processScan, createFileFingerprint, addExpensesToDatabase } = useScanProcess({
+  const { addExpensesToDatabase, processScan, createFileFingerprint } = useScanProcess({
     updateProgress,
     endScan,
     timeoutScan,
@@ -86,8 +86,10 @@ export function useReceiptScanning({
         }
         
         // Automatically close the dialog after successful processing
-        setOpen(false);
-        onCleanup();
+        setTimeout(() => {
+          setOpen(false);
+          onCleanup();
+        }, 1000);
       }, 1500);
       
       return true;

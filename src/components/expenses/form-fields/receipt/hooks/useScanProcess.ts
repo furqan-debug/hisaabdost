@@ -3,12 +3,14 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export function useScanProcess(props: {
+interface ScanProcessProps {
   updateProgress: (progress: number, message?: string) => void;
   endScan: () => void;
   timeoutScan: () => void;
   errorScan: (message: string) => void;
-}) {
+}
+
+export function useScanProcess(props: ScanProcessProps) {
   const { updateProgress, endScan, timeoutScan, errorScan } = props;
   
   // Reference to track ongoing scans
@@ -135,9 +137,11 @@ export function useScanProcess(props: {
             
             if (!processedData.items || processedData.items.length === 0) {
               processedData.items = [{ 
-                name: "Store Purchase", 
+                description: "Store Purchase", 
                 amount: processedData.total || "0.00",
-                date: processedData.date
+                date: processedData.date,
+                category: "Other",
+                paymentMethod: "Card"
               }];
             }
             
@@ -211,6 +215,7 @@ export function useScanProcess(props: {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.error("User not authenticated");
+        toast.error("You must be logged in to save expenses");
         return false;
       }
       
@@ -218,7 +223,7 @@ export function useScanProcess(props: {
       
       // Format the items for the expenses table
       const expenses = items.map(item => ({
-        user_id: user.id,
+        user_id: user.id, // Important: Include the user ID from auth
         description: item.description || "Store Purchase",
         amount: parseFloat(String(item.amount).replace('$', '')) || 0,
         date: item.date || new Date().toISOString().split('T')[0],
@@ -229,7 +234,8 @@ export function useScanProcess(props: {
         created_at: new Date().toISOString()
       }));
       
-      console.log("Adding expenses to database:", expenses);
+      console.log("Adding expenses to database with user_id:", user.id);
+      console.log("Expense data:", expenses);
       
       // Insert all expenses
       const { data, error } = await supabase

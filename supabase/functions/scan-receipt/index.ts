@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { processReceipt } from "./services/receiptProcessor.ts";
 import { runOCR } from "./services/ocrService.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -165,56 +164,8 @@ serve(async (req) => {
             });
           }
 
-          // Supabase integration: Insert expenses into database if credentials are available
-          const supabaseUrl = Deno.env.get('SUPABASE_URL');
-          const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-
-          if (!supabaseUrl || !supabaseAnonKey) {
-            console.error("Supabase credentials missing");
-          } else {
-            try {
-              const supabase = createClient(supabaseUrl, supabaseAnonKey);
-              if (results.items && results.items.length > 0) {
-                console.log(`Attempting to insert ${results.items.length} expenses into Supabase`);
-                
-                // Validate and format items before inserting
-                // FIX: Map paymentMethod to payment column, since the database column is named 'payment'
-                const validItems = results.items.filter(item => 
-                  item && typeof item.amount !== 'undefined' && 
-                  !isNaN(parseFloat(item.amount.toString()))
-                ).map(item => ({
-                  user_id: item.userId || null,
-                  description: item.description || 'Store Purchase',
-                  amount: parseFloat(item.amount.toString()),
-                  date: item.date || new Date().toISOString().split('T')[0],
-                  category: item.category || 'Other',
-                  is_recurring: false,
-                  receipt_url: item.receiptUrl || null,
-                  payment: item.paymentMethod || null, // Map paymentMethod to payment column
-                  created_at: new Date().toISOString()
-                }));
-                
-                if (validItems.length > 0) {
-                  console.log("Inserting formatted items:", JSON.stringify(validItems, null, 2));
-                  const { data, error } = await supabase.from('expenses').insert(validItems);
-                  
-                  if (error) {
-                    console.error("Failed to insert expenses into Supabase:", error);
-                  } else {
-                    console.log(`Successfully inserted ${validItems.length} expenses`);
-                  }
-                } else {
-                  console.warn("No valid items to insert after filtering");
-                }
-              } else {
-                console.log("No items to insert into Supabase");
-              }
-            } catch (dbError) {
-              console.error("Error during Supabase database operation:", dbError);
-            }
-          }
-
-          // Return the processed results
+          // Return the processed results without attempting database operations
+          // This avoids RLS issues as client will handle the database operations
           console.log("OCR processing completed successfully");
           return new Response(JSON.stringify({
             ...results,

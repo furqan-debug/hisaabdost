@@ -9,11 +9,11 @@ interface ScanProgressBarProps {
 }
 
 export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) {
-  // Calculate progress color based on percentage
-  const getProgressColor = () => {
-    if (progress < 30) return '#f59e0b'; // Amber
-    if (progress < 70) return '#3b82f6'; // Blue
-    return '#10b981'; // Green
+  // Get the appropriate color class based on the progress value
+  const getIndicatorClassName = () => {
+    if (progress < 30) return 'bg-amber-500';
+    if (progress < 70) return 'bg-blue-500';
+    return 'bg-emerald-500';
   };
 
   return (
@@ -26,8 +26,7 @@ export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) 
         <Progress 
           value={progress} 
           className="h-2 bg-secondary"
-          // Instead of using style with CSS vars, use tailwind classes
-          indicatorClassName={`bg-${progress < 30 ? 'amber-500' : progress < 70 ? 'blue-500' : 'emerald-500'}`}
+          indicatorClassName={getIndicatorClassName()}
         />
       </motion.div>
     </div>

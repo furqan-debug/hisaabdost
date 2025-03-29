@@ -21,6 +21,7 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
+  onSuccess?: () => void; // Added missing prop
 }
 
 export function ReceiptScanDialog({
@@ -31,7 +32,8 @@ export function ReceiptScanDialog({
   onCleanup,
   onCapture,
   autoSave = true,
-  autoProcess = true
+  autoProcess = true,
+  onSuccess
 }: ReceiptScanDialogProps) {
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
   const fileRef = useRef<File | null>(null);
@@ -64,13 +66,7 @@ export function ReceiptScanDialog({
     onCapture,
     autoSave,
     setOpen,
-    onSuccess: () => {
-      retryHandler.setProcessing(false);
-      // Close dialog after successful processing
-      setTimeout(() => {
-        setOpen(false);
-      }, 1000);
-    },
+    onSuccess,
     processAllItems: true // Always process all items
   });
 
