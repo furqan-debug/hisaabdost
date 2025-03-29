@@ -16,6 +16,7 @@ interface UseScanReceiptProps {
   }) => void;
   autoSave?: boolean;
   setOpen?: (open: boolean) => void;
+  onSuccess?: () => void; // Added the missing onSuccess callback property
 }
 
 // Custom event to notify about receipt scanning completion
@@ -32,7 +33,8 @@ export function useScanReceipt({
   onCleanup,
   onCapture,
   autoSave = true,
-  setOpen
+  setOpen,
+  onSuccess
 }: UseScanReceiptProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
@@ -58,7 +60,12 @@ export function useScanReceipt({
     
     // Dispatch event to notify UI that receipt was scanned
     dispatchReceiptScanned();
-  }, []);
+
+    // Call onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess();
+    }
+  }, [onSuccess]);
   
   const timeoutScan = useCallback(() => {
     setIsScanning(false);
