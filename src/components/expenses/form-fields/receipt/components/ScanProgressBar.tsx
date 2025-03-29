@@ -26,8 +26,8 @@ export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) 
         <Progress 
           value={progress} 
           className="h-2 bg-secondary"
-          // Instead of using style with CSS vars, use indicatorClassName
-          indicatorClassName={`bg-[${getProgressColor()}]`}
+          // Instead of using style with CSS vars, use tailwind classes
+          indicatorClassName={`bg-${progress < 30 ? 'amber-500' : progress < 70 ? 'blue-500' : 'emerald-500'}`}
         />
       </motion.div>
     </div>

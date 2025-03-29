@@ -38,7 +38,7 @@ export function useReceiptScanning({
   } = useScanState();
 
   // Initialize the scan process using the state management functions
-  const { processScan, createFileFingerprint } = useScanProcess({
+  const { processScan, createFileFingerprint, addExpensesToDatabase } = useScanProcess({
     updateProgress,
     endScan,
     timeoutScan,
@@ -64,84 +64,37 @@ export function useReceiptScanning({
     
     updateProgress(90, `Found ${scanResults.items.length} items on receipt...`);
     
-    // Add the expenses to the database using our expense service
-    try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error("User not authenticated");
-        return false;
+    // Add the expenses to the database
+    const success = await addExpensesToDatabase(scanResults.items, updateProgress);
+    
+    if (success) {
+      // Also call the onCapture callback for backward compatibility if needed
+      if (onCapture && scanResults.items.length > 0) {
+        // Use the first item as an example
+        onCapture(scanResults.items[0]);
       }
       
-      updateProgress(95, `Adding ${scanResults.items.length} expenses to your list...`);
+      // Finish the scan with success message and a short delay for UI
+      updateProgress(100, "Receipt processed successfully!");
+      setProcessingComplete(true);
       
-      // Format the items for the expenses table
-      const expenses = scanResults.items.map(item => ({
-        user_id: user.id,
-        description: item.description || "Store Purchase",
-        amount: parseFloat(item.amount.toString().replace('$', '')) || 0,
-        date: item.date || new Date().toISOString().split('T')[0],
-        category: item.category || 'Food',
-        is_recurring: false,
-        receipt_url: null,
-        payment: item.paymentMethod || 'Card', // Match the DB column name
-        created_at: new Date().toISOString()
-      }));
-      
-      console.log("Adding expenses to database:", expenses);
-      
-      // Insert all expenses
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert(expenses)
-        .select();
-      
-      if (error) {
-        console.error("Error saving expenses:", error);
-        toast.error(`Failed to save expenses: ${error.message}`);
-        return false;
-      } else {
-        const itemText = expenses.length === 1 ? "expense" : "expenses";
-        toast.success(`Added ${expenses.length} ${itemText} from your receipt`, {
-          description: "Check your expenses list to see them",
-          duration: 5000
-        });
-        console.log("Expenses saved successfully:", data);
-        
-        // Trigger a refresh of the expenses list
-        const event = new CustomEvent('expenses-updated');
-        window.dispatchEvent(event);
-        
-        // Also call the onCapture callback for backward compatibility if needed
-        if (onCapture && scanResults.items.length > 0) {
-          // Use the first item as an example
-          onCapture(scanResults.items[0]);
+      // Close the scan dialog automatically after a short delay
+      setTimeout(() => {
+        endScan();
+        if (onSuccess) {
+          onSuccess();
         }
         
-        // Finish the scan with success message and a short delay for UI
-        updateProgress(100, "Receipt processed successfully!");
-        setProcessingComplete(true);
-        
-        // Close the scan dialog automatically after a short delay
-        setTimeout(() => {
-          endScan();
-          if (onSuccess) {
-            onSuccess();
-          }
-          
-          // Automatically close the dialog after successful processing
-          setOpen(false);
-          onCleanup();
-        }, 1500);
-        
-        return true;
-      }
-    } catch (error) {
-      console.error("Error in addExpensesToDatabase:", error);
-      toast.error("Failed to save expenses");
-      return false;
+        // Automatically close the dialog after successful processing
+        setOpen(false);
+        onCleanup();
+      }, 1500);
+      
+      return true;
     }
-  }, [updateProgress, endScan, onCapture, onSuccess, errorScan, setOpen, onCleanup]);
+    
+    return false;
+  }, [updateProgress, endScan, onCapture, onSuccess, addExpensesToDatabase, setOpen, onCleanup]);
   
   // Handle scan request
   const handleScanReceipt = useCallback(async () => {

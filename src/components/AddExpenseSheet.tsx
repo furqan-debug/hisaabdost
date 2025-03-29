@@ -35,6 +35,7 @@ const AddExpenseSheet = ({
   const [processingError, setProcessingError] = useState<string | null>(null);
   const initialFileProcessed = useRef(false);
   const initialFileFingerprint = useRef<string | null>(null);
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   const {
     formData,
@@ -112,6 +113,7 @@ const AddExpenseSheet = ({
         processingFiles.delete(initialFileFingerprint.current);
         initialFileFingerprint.current = null;
       }
+      setProcessingComplete(false);
     }
   }, [open]);
 
@@ -143,6 +145,20 @@ const AddExpenseSheet = ({
     }
   };
 
+  // Handle scan completion by closing the sheet after a delay
+  const handleScanSuccess = () => {
+    setProcessingComplete(true);
+    // Close the sheet after a delay
+    setTimeout(() => {
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
+      if (onClose) {
+        onClose();
+      }
+    }, 1000);
+  };
+
   // Handle sheet close
   const handleSheetClose = (open: boolean) => {
     if (!open) {
@@ -152,6 +168,11 @@ const AddExpenseSheet = ({
       // Call the parent's onOpenChange if provided
       if (onOpenChange) {
         onOpenChange(false);
+      }
+      
+      // Call onClose if provided
+      if (onClose) {
+        onClose();
       }
     } else if (onOpenChange) {
       onOpenChange(true);
@@ -201,6 +222,7 @@ const AddExpenseSheet = ({
           onCapture={handleScanComplete}
           autoSave={true}
           autoProcess={true}
+          onSuccess={handleScanSuccess}
         />
       )}
     </>

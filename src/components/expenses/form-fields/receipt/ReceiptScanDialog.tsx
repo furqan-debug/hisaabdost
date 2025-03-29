@@ -66,7 +66,10 @@ export function ReceiptScanDialog({
     setOpen,
     onSuccess: () => {
       retryHandler.setProcessing(false);
-      // Auto close handled in the hook now
+      // Close dialog after successful processing
+      setTimeout(() => {
+        setOpen(false);
+      }, 1000);
     },
     processAllItems: true // Always process all items
   });
@@ -118,7 +121,7 @@ export function ReceiptScanDialog({
       
       return () => clearTimeout(timer);
     }
-  }, [open, isScanning, isAutoProcessing, autoProcess, autoProcessStarted]);
+  }, [open, isScanning, isAutoProcessing, autoProcess, autoProcessStarted, retryHandler]);
   
   // Reset state when dialog is closed
   useEffect(() => {
@@ -128,7 +131,18 @@ export function ReceiptScanDialog({
       retryHandler.setAttemptCount(0);
       retryHandler.setProcessing(false);
     }
-  }, [open]);
+  }, [open, retryHandler]);
+
+  // Handle successful processing completion by closing dialog
+  useEffect(() => {
+    if (processingComplete && open && !isScanning && !isAutoProcessing) {
+      // Wait a moment to show the success state before closing
+      const timer = setTimeout(() => {
+        setOpen(false);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [processingComplete, open, isScanning, isAutoProcessing, setOpen]);
 
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {
