@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
 import { saveExpenseFromScan } from '../services/expenseDbService';
@@ -8,8 +9,11 @@ interface ScanResult {
   date?: string;
   total?: string;
   items?: any[];
-  merchant?: string;
+  merchant?: string;  // Add merchant property to the interface
   receiptUrl?: string;
+  success?: boolean;
+  isTimeout?: boolean;
+  error?: string;
 }
 
 interface UseScanReceiptProps {
@@ -103,7 +107,7 @@ export function useScanReceipt({
     const receiptUrl = file ? URL.createObjectURL(file) : undefined;
     
     try {
-      const scanResults = await scanReceipt({
+      const scanResults: ScanResult = await scanReceipt({
         file,
         receiptUrl,
         onProgress: updateProgress,

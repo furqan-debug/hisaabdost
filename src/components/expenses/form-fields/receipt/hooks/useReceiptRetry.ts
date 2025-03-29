@@ -62,7 +62,7 @@ export function useReceiptRetry({
   
   const isMaxAttemptsReached = attemptCount >= 3;
   
-  // Create an explicit method to check if processing is in progress
+  // Fix the function issue - define it as a function that returns a boolean
   const isProcessingInProgress = useCallback(() => {
     return isProcessing;
   }, [isProcessing]);
@@ -97,6 +97,6 @@ export function useReceiptRetry({
     startProcessing,
     isMaxAttemptsReached,
     resetAndClose,
-    isProcessingInProgress  // Add this method to check if processing is happening
+    isProcessingInProgress  // Return the function
   };
 }
