@@ -206,7 +206,6 @@ const AddExpenseSheet = ({
           onCapture={handleScanComplete}
           autoSave={true}
           autoProcess={true}
-          onManualEntry={() => setShowScanDialog(false)}
         />
       )}
     </>
