@@ -1,93 +1,57 @@
 
-import { Button } from "@/components/ui/button";
-import { useState, useEffect, useCallback } from "react";
-import { FileImage, ImageOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 interface ReceiptPreviewProps {
-  receiptUrl: string;
-  onReplace: () => void;
+  receiptUrl: string | null;
+  onReplace?: (() => void) | null;
+  className?: string;
+  disabled?: boolean; // Added disabled prop
 }
 
-export function ReceiptPreview({ receiptUrl, onReplace }: ReceiptPreviewProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  
-  // Reset states when receipt URL changes
-  useEffect(() => {
-    if (receiptUrl) {
-      setImageLoaded(false);
-      setImageError(false);
-    }
-  }, [receiptUrl]);
-  
-  // Define callbacks outside any conditional blocks to ensure consistent hook calls
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-    setImageError(false);
-  }, []);
-  
-  const handleImageError = useCallback(() => {
-    console.error("Image failed to load from URL:", receiptUrl);
-    setImageError(true);
-    setImageLoaded(false);
-  }, [receiptUrl]);
-  
-  if (!receiptUrl) return null;
-  
-  const isImage = !!receiptUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
-                 receiptUrl.startsWith('blob:') || 
-                 receiptUrl.includes('storage.googleapis.com') || 
-                 receiptUrl.includes('supabase');
-  
+export function ReceiptPreview({ 
+  receiptUrl, 
+  onReplace, 
+  className = "",
+  disabled = false // Default to false
+}: ReceiptPreviewProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (!receiptUrl) {
+    return (
+      <div className="rounded-md border bg-muted h-[150px] flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">No receipt uploaded</p>
+      </div>
+    );
+  }
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
+
   return (
-    <div className="relative group overflow-hidden rounded-md">
-      {isImage ? (
-        <>
-          {!imageLoaded && !imageError && (
-            <div className="h-32 w-full rounded-md border flex items-center justify-center bg-muted">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            </div>
-          )}
-          
-          <img
-            src={receiptUrl}
-            alt="Receipt preview"
-            className={cn(
-              "max-h-32 w-full rounded-md border object-cover",
-              !imageLoaded && "hidden"
-            )}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            crossOrigin="anonymous"
-          />
-          
-          {imageError && (
-            <div className="h-32 rounded-md border bg-muted flex flex-col items-center justify-center gap-2">
-              <ImageOff className="h-6 w-6 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Failed to load receipt image
-              </p>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="h-32 rounded-md border bg-muted flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">
-            Receipt document uploaded
-          </p>
+    <div 
+      className={`relative border rounded-md overflow-hidden ${disabled ? 'opacity-75' : 'opacity-100'}`}
+      onClick={!disabled && onReplace ? onReplace : undefined}
+    >
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Skeleton className="h-full w-full" />
         </div>
       )}
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={onReplace}
-        >
-          Replace
-        </Button>
-      </div>
+      <ReceiptPreviewImage 
+        src={receiptUrl} 
+        onLoad={handleImageLoad} 
+        className={`w-full h-auto object-contain ${className}`}
+      />
+      {!disabled && onReplace && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+          <div className="text-xs text-white bg-black/70 px-2 py-1 rounded">
+            Click to replace
+          </div>
+        </div>
+      )}
     </div>
   );
 }
