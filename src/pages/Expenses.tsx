@@ -27,23 +27,18 @@ const Expenses = () => {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Fetch expenses from Supabase using React Query, filtered by selected month
-  const { data: expenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
+  // Fetch expenses using React Query, get all expenses instead of just for selected month
+  const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
+    queryKey: ['all-expenses', refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching expenses for user:", user.id, "and month:", format(selectedMonth, 'yyyy-MM'));
-      
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
+      console.log("Fetching all expenses for user:", user.id);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', monthStart.toISOString().split('T')[0])
-        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
@@ -73,7 +68,7 @@ const Expenses = () => {
     staleTime: 0,
   });
 
-  // Hook for filtering and sorting expenses
+  // Hook for filtering and sorting expenses - now will handle date filtering
   const {
     searchTerm,
     setSearchTerm,
@@ -84,8 +79,9 @@ const Expenses = () => {
     dateRange,
     setDateRange,
     filteredExpenses,
-    totalFilteredAmount
-  } = useExpenseFilter(expenses);
+    totalFilteredAmount,
+    useCustomDateRange
+  } = useExpenseFilter(allExpenses);
 
   // Hook for managing expense selection
   const {
@@ -199,6 +195,8 @@ const Expenses = () => {
         }}
         onDelete={handleSingleDelete}
         totalFilteredAmount={totalFilteredAmount}
+        selectedMonth={selectedMonth}
+        useCustomDateRange={useCustomDateRange}
       />
     </div>
   );

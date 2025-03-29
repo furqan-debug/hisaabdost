@@ -37,6 +37,17 @@ export function useExpenseRefresh() {
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(Date.now());
       refreshTimerRef.current = null;
+      
+      // Show toast for certain events
+      if (eventName === 'receipt-scanned') {
+        toast.success("Receipt processed, expenses added successfully!");
+      } else if (eventName === 'expense-added') {
+        toast.success("Expense added successfully!");
+      } else if (eventName === 'expense-edited') {
+        toast.success("Expense updated successfully!");
+      } else if (eventName === 'expense-deleted') {
+        toast.success("Expense deleted successfully!");
+      }
     }, 300);
   }, []);
   
@@ -50,6 +61,8 @@ export function useExpenseRefresh() {
     window.addEventListener('expense-added', handleExpenseUpdateEvent);
     window.addEventListener('expense-edited', handleExpenseUpdateEvent);
     window.addEventListener('expense-deleted', handleExpenseUpdateEvent);
+    window.addEventListener('expense-refresh', handleExpenseUpdateEvent);
+    window.addEventListener('custom-date-change', handleExpenseUpdateEvent);
     
     // Cleanup listeners on unmount
     return () => {
@@ -59,6 +72,8 @@ export function useExpenseRefresh() {
       window.removeEventListener('expense-added', handleExpenseUpdateEvent);
       window.removeEventListener('expense-edited', handleExpenseUpdateEvent);
       window.removeEventListener('expense-deleted', handleExpenseUpdateEvent);
+      window.removeEventListener('expense-refresh', handleExpenseUpdateEvent);
+      window.removeEventListener('custom-date-change', handleExpenseUpdateEvent);
       
       // Clear any pending timeout
       if (refreshTimerRef.current !== null) {

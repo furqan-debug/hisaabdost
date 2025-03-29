@@ -10,8 +10,10 @@ import {
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Filter } from "lucide-react";
+import { ChevronDown, Filter, Calendar } from "lucide-react";
 import { useState } from "react";
+import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -23,6 +25,8 @@ interface ExpenseFiltersProps {
     end: string;
   };
   setDateRange: (dateRange: { start: string; end: string; }) => void;
+  selectedMonth: Date;
+  useCustomDateRange: boolean;
 }
 
 export function ExpenseFilters({
@@ -32,6 +36,8 @@ export function ExpenseFilters({
   setCategoryFilter,
   dateRange,
   setDateRange,
+  selectedMonth,
+  useCustomDateRange
 }: ExpenseFiltersProps) {
   const isMobile = useIsMobile();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -55,6 +61,16 @@ export function ExpenseFilters({
           </button>
         )}
       </div>
+      
+      {/* Month filter message */}
+      {!useCustomDateRange && (
+        <Alert variant="default" className="bg-muted/40 border-border/40 py-2">
+          <AlertDescription className="flex items-center text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-1 text-primary" />
+            Showing expenses for {format(selectedMonth, 'MMMM yyyy')}. Use a custom range to override.
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Advanced filters for desktop or when expanded on mobile */}
       {(!isMobile || showAdvancedFilters) && (
