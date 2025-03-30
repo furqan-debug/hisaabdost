@@ -2,7 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -13,46 +13,79 @@ const navItems = [
   { icon: Target, label: "Goals", path: "/goals" },
 ];
 
-export function BottomNavigation() {
+// Memoize each nav item to prevent re-renders
+const NavItem = memo(({ 
+  item, 
+  isActive 
+}: { 
+  item: typeof navItems[0], 
+  isActive: boolean 
+}) => (
+  <Link key={item.path} to={item.path} className="w-1/5">
+    <div
+      className={cn(
+        "menu-item flex flex-col items-center justify-center h-12",
+        isActive ? "text-primary" : "text-muted-foreground/60"
+      )}
+    >
+      <item.icon 
+        size={20} 
+        className={isActive ? "text-primary" : "text-muted-foreground/70"} 
+      />
+      <span 
+        className={cn(
+          "text-[10px] font-medium mt-1",
+          isActive ? "text-primary" : ""
+        )}
+      >
+        {item.label}
+      </span>
+    </div>
+  </Link>
+));
+
+export const BottomNavigation = memo(() => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const scrollTimeoutRef = useRef<number | null>(null);
+  
+  // Use ref to prevent excessive render cycles from scroll events
   const lastScrollUpdate = useRef<number>(0);
-
+  const lastScrollY = useRef<number>(0);
+  
   useEffect(() => {
     setMounted(true);
     
-    // Super-optimized throttled scroll handler
+    // Super-optimized passive scroll handler
     const handleScroll = () => {
-      // Skip scroll handling if we've updated recently (300ms)
+      // Skip scroll handling if we've updated recently
       const now = Date.now();
-      if (now - lastScrollUpdate.current < 300) {
+      if (now - lastScrollUpdate.current < 500) {
         return;
       }
       
-      // Clear any existing timeout
-      if (scrollTimeoutRef.current) {
-        window.clearTimeout(scrollTimeoutRef.current);
+      // Only update if scroll position has changed significantly
+      const currentScrollY = window.scrollY;
+      if (Math.abs(currentScrollY - lastScrollY.current) < 10) {
+        return;
       }
       
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        // Only update state if the value would actually change
-        const shouldBeScrolled = window.scrollY > 20;
-        if (isScrolled !== shouldBeScrolled) {
-          setIsScrolled(shouldBeScrolled);
-        }
-        
-        lastScrollUpdate.current = now;
-        scrollTimeoutRef.current = null;
-      }, 300);
+      // Only update state if the value would actually change
+      const shouldBeScrolled = currentScrollY > 20;
+      if (isScrolled !== shouldBeScrolled) {
+        setIsScrolled(shouldBeScrolled);
+      }
+      
+      lastScrollY.current = currentScrollY;
+      lastScrollUpdate.current = now;
     };
     
+    // Use passive event listener for better performance
     window.addEventListener('scroll', handleScroll, { passive: true });
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
     };
   }, [isScrolled]);
 
@@ -66,34 +99,16 @@ export function BottomNavigation() {
         : "border-border/20 bg-black/90 backdrop-blur-lg"
     )}>
       <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          
-          return (
-            <Link key={item.path} to={item.path} className="w-1/5">
-              <div
-                className={cn(
-                  "menu-item flex flex-col items-center justify-center h-12",
-                  isActive ? "text-primary" : "text-muted-foreground/60"
-                )}
-              >
-                <item.icon 
-                  size={20} 
-                  className={isActive ? "text-primary" : "text-muted-foreground/70"} 
-                />
-                <span 
-                  className={cn(
-                    "text-[10px] font-medium mt-1",
-                    isActive ? "text-primary" : ""
-                  )}
-                >
-                  {item.label}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+        {navItems.map((item) => (
+          <NavItem 
+            key={item.path}
+            item={item} 
+            isActive={location.pathname === item.path} 
+          />
+        ))}
       </div>
     </div>
   );
-};
+});
+
+BottomNavigation.displayName = 'BottomNavigation';

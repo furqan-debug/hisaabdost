@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import Navbar from './Navbar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -8,22 +8,28 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Memo the NavBar and BottomNavigation to prevent unnecessary re-renders
+const MemoizedNavbar = memo(Navbar);
+const MemoizedBottomNavigation = memo(BottomNavigation);
+
 const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   
   return (
     <div className="min-h-screen flex w-full bg-background overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
+        <MemoizedNavbar />
         <main className="flex-1 px-3 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-hidden">
-          <div className={isMobile ? "mx-auto w-full max-w-full px-0.5 disable-animations" : "mx-auto w-full max-w-5xl"}>
+          <div 
+            className={isMobile ? "mx-auto w-full max-w-full px-0.5 disable-animations" : "mx-auto w-full max-w-5xl"}
+          >
             {children}
           </div>
         </main>
-        {isMobile && <BottomNavigation />}
+        {isMobile && <MemoizedBottomNavigation />}
       </div>
     </div>
   );
 };
 
-export default Layout;
+export default memo(Layout);

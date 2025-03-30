@@ -21,6 +21,12 @@ Most styles are now organized into component-specific files:
     touch-action: manipulation; /* Prevent double-tap to zoom */
   }
   
+  /* CRITICAL: Container stabilization */
+  body {
+    min-height: 100%;
+    height: 100%;
+  }
+  
   /* Prevent horizontal overflow */
   div, section, nav, main, article, header, footer {
     max-width: 100vw;
@@ -45,11 +51,30 @@ Most styles are now organized into component-specific files:
     min-height: 0; /* Fix flexbox height calculation issues */
   }
   
-  /* IMPORTANT: Disable ALL animations that cause refresh issues */
-  .disable-animations * {
+  /* Prevent text selection for better performance */
+  .dashboard-container {
+    user-select: none;
+  }
+
+  /* Fix for flickering cards */
+  .budget-card,
+  .card {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+  }
+  
+  /* CRITICAL: Completely disable ALL animations and transitions */
+  .disable-animations *,
+  * {
     animation: none !important;
     transition: none !important;
     transform: none !important;
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }
 
@@ -65,30 +90,25 @@ Most styles are now organized into component-specific files:
   }
 }
 
-/* CRITICAL: Complete removal of animations for glitch-prevention */
+/* CRITICAL: Force hardware acceleration on all elements */
 @media (max-width: 640px) {
-  /* Disable all transitions and animations on mobile */
-  .transition-all, 
-  .transition-opacity, 
-  .transition-transform,
-  .transition-colors,
-  .animate-fade-in,
-  .animate-scale-in,
-  .animate-pulse {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
+  .card,
+  .budget-card,
+  .dashboard-container,
+  .menu-item,
+  button,
+  input,
+  select,
+  .stat-card {
     will-change: auto;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: subpixel-antialiased;
   }
   
-  /* Disable framer-motion animations that may cause issues */
-  .framer-motion-div {
-    transform: none !important;
-    transition: none !important;
-  }
-  
-  /* Fix for elements causing reflows */
-  .transform-gpu {
-    transform: none !important;
+  /* Fix for bottom nav z-index issues */
+  .fixed {
+    z-index: 50;
+    transform: translateZ(0);
   }
 }
