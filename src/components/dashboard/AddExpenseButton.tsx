@@ -7,6 +7,7 @@ import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
+import { motion } from "framer-motion";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -30,27 +31,40 @@ export const AddExpenseButton = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [activeButton, setActiveButton] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+
+      // For upload or camera modes, we want to auto-process
       if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
+
       e.target.value = '';
     }
   };
 
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+    setActiveButton(mode);
     setCaptureMode(mode);
-    if (mode === 'manual') {
-      setShowAddExpense(true);
-    } else if (mode === 'upload' && fileInputRef.current) {
-      fileInputRef.current.click();
-    } else if (mode === 'camera' && cameraInputRef.current) {
-      cameraInputRef.current.click();
-    }
+    
+    setTimeout(() => {
+      setActiveButton(null);
+      
+      if (mode === 'manual') {
+        // Just open the manual entry form
+        setShowAddExpense(true);
+      } else if (mode === 'upload' && fileInputRef.current) {
+        // Trigger file upload
+        fileInputRef.current.click();
+      } else if (mode === 'camera' && cameraInputRef.current) {
+        // Trigger camera
+        cameraInputRef.current.click();
+      }
+    }, 300);
   };
 
   const handleSheetClose = () => {
@@ -61,46 +75,87 @@ export const AddExpenseButton = ({
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
-  return (
-    <div className="mt-6">
+  // Animation variants for the buttons
+  const buttonVariants = {
+    initial: { scale: 1 },
+    active: { 
+      scale: 0.95,
+      transition: { duration: 0.2 }
+    },
+    hover: { 
+      scale: 1.03,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  return <div className="mt-4">
       <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
-        <div className="bg-white rounded-xl border shadow-lg p-6 transition-transform transform hover:scale-105">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New Expense</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => handleOpenSheet('manual')} 
-              className="h-24 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-2 hover:bg-blue-100 transition duration-200"
-              aria-label="Add expense manually"
+        <motion.div 
+          className="bg-card rounded-xl border shadow-sm p-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h3 className="text-base font-medium mb-2 flex items-center">
+            <Plus className="h-4 w-4 text-primary mr-1.5" />
+            Add New Expense
+          </h3>
+          <div className="grid grid-cols-3 gap-2">
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'manual' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
             >
-              <Plus className="h-6 w-6 text-blue-600" />
-              <span className="text-sm font-medium">Manual Entry</span>
-              <span className="text-xs text-gray-500">Enter details yourself</span>
-            </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('manual')} 
+                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+              >
+                <Plus className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Manual</span>
+                <span className="text-[10px] text-muted-foreground leading-tight">Enter details</span>
+              </Button>
+            </motion.div>
             
-            <Button 
-              variant="outline" 
-              onClick={() => handleOpenSheet('upload')} 
-              className="h-24 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-2 hover:bg-blue-100 transition duration-200"
-              aria-label="Upload receipt"
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'upload' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
             >
-              <Upload className="h-6 w-6 text-blue-600" />
-              <span className="text-sm font-medium">Upload Receipt</span>
-              <span className="text-xs text-gray-500">Auto-extract expenses</span>
-            </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('upload')} 
+                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+              >
+                <Upload className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Upload</span>
+                <span className="text-[10px] text-muted-foreground leading-tight">Photo receipt</span>
+              </Button>
+            </motion.div>
             
-            <Button 
-              variant="outline" 
-              onClick={() => handleOpenSheet('camera')} 
-              className="h-24 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-2 hover:bg-blue-100 transition duration-200"
-              aria-label="Take photo of receipt"
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'camera' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
             >
-              <Camera className="h-6 w-6 text-blue-600" />
-              <span className="text-sm font-medium">Take Photo</span>
-              <span className="text-xs text-gray-500">Scan receipt with camera</span>
-            </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('camera')} 
+                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+              >
+                <Camera className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Camera</span>
+                <span className="text-[10px] text-muted-foreground leading-tight">Take photo</span>
+              </Button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </OnboardingTooltip>
       
       <ReceiptFileInput 
@@ -126,6 +181,5 @@ export const AddExpenseButton = ({
         initialCaptureMode={captureMode} 
         initialFile={selectedFile} 
       />
-    </div>
-  );
+    </div>;
 };
