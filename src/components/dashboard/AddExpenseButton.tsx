@@ -8,7 +8,7 @@ import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 
 interface AddExpenseButtonProps {
-  isNewUser: boolean;
+  isNew:User  boolean;
   expenseToEdit?: Expense;
   showAddExpense: boolean;
   setExpenseToEdit: (expense?: Expense) => void;
@@ -17,7 +17,7 @@ interface AddExpenseButtonProps {
 }
 
 export const AddExpenseButton = ({
-  isNewUser,
+  isNewUser ,
   expenseToEdit,
   showAddExpense,
   setExpenseToEdit,
@@ -62,9 +62,9 @@ export const AddExpenseButton = ({
 
   return (
     <div className="mt-6">
-      <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
+      <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser }>
         <div className="bg-white rounded-xl border shadow-lg p-6 transition-transform transform hover:scale-105">
-          <h3 className="text-lg font-semibold mb-4">Add New Expense</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add New Expense</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Button 
               variant="outline" 
