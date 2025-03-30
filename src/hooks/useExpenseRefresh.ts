@@ -4,54 +4,60 @@ import { toast } from 'sonner';
 
 /**
  * Custom hook to listen for expense update events
- * and trigger refreshes in the expense list
+ * and trigger refreshes in the expense list - optimized version
  */
 export function useExpenseRefresh() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshTimerRef = useRef<number | null>(null);
+  const isInitialMount = useRef(true);
   
   const triggerRefresh = useCallback(() => {
     // Throttle refreshes to prevent multiple rapid refreshes
     const now = Date.now();
-    if (now - lastRefreshTime > 500) { // Only refresh if more than 500ms has passed
+    if (now - lastRefreshTime > 1000) { // Increased from 500ms to 1000ms
       console.log("Manually triggering refresh");
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(now);
     }
   }, [lastRefreshTime]);
   
-  // Function to handle various expense update events
+  // Function to handle various expense update events with improved throttling
   const handleExpenseUpdateEvent = useCallback((event: Event) => {
     const eventName = event.type;
-    console.log(`${eventName} event received, preparing to refresh data`);
+    console.log(`${eventName} event received`);
     
     // Clear any existing timer
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
     }
     
-    // Set a short timeout to batch potential multiple events
+    // Set a longer timeout to batch potential multiple events
     refreshTimerRef.current = window.setTimeout(() => {
       console.log(`Refreshing expense list from ${eventName} event`);
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(Date.now());
       refreshTimerRef.current = null;
       
-      // Show toast for certain events
-      if (eventName === 'receipt-scanned') {
-        toast.success("Receipt processed, expenses added successfully!");
-      } else if (eventName === 'expense-added') {
-        toast.success("Expense added successfully!");
-      } else if (eventName === 'expense-edited') {
-        toast.success("Expense updated successfully!");
-      } else if (eventName === 'expense-deleted') {
-        toast.success("Expense deleted successfully!");
+      // Only show toast for non-automatic refreshes
+      if (!isInitialMount.current) {
+        if (eventName === 'receipt-scanned') {
+          toast.success("Receipt processed, expenses added successfully!");
+        } else if (eventName === 'expense-added') {
+          toast.success("Expense added successfully!");
+        } else if (eventName === 'expense-edited') {
+          toast.success("Expense updated successfully!");
+        } else if (eventName === 'expense-deleted') {
+          toast.success("Expense deleted successfully!");
+        }
       }
-    }, 300);
+    }, 500); // Increased debounce time
   }, []);
   
   useEffect(() => {
+    // Set initial mount to false after first render
+    isInitialMount.current = false;
+    
     // Listen for all expense-related events
     console.log("Setting up expense refresh event listeners");
     

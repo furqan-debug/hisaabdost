@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,23 +25,20 @@ const Dashboard = () => {
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
   
-  // Get current month's data from context
+  // Get current month's data from context (memoized to prevent unnecessary renders)
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
-  const currentMonthData = getCurrentMonthData();
+  const currentMonthData = useCallback(() => getCurrentMonthData(), [currentMonthKey, getCurrentMonthData]);
   
-  // Initialize with context data instead of fixed 0 value
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
+  // Initialize with context data
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
+    const data = getCurrentMonthData();
+    return data.monthlyIncome || 0;
+  });
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const [isRendered, setIsRendered] = useState(false);
   
-  // Add this effect to ensure the component is fully rendered before animations
-  useEffect(() => {
-    setIsRendered(true);
-  }, []);
-  
-  // Update local income state when selected month changes
+  // Update local income state when selected month changes (once, not continuously)
   useEffect(() => {
     if (!isMonthDataLoading) {
       const data = getCurrentMonthData();
@@ -50,18 +46,13 @@ const Dashboard = () => {
     }
   }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
   
-  // Handle manual expense refreshing
-  const handleExpenseRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-  };
-  
-  // Fetch expenses from Supabase using React Query, filtered by selected month
+  // Fetch expenses from Supabase using React Query, but with better caching and fewer refreshes
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
+    queryKey: ['expenses', currentMonthKey, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
+      console.log("Fetching expenses for month:", currentMonthKey);
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -83,8 +74,6 @@ const Dashboard = () => {
         return [];
       }
       
-      console.log(`Fetched ${data.length} expenses for the month`);
-      
       return data.map(exp => ({
         id: exp.id,
         amount: Number(exp.amount),
@@ -98,17 +87,17 @@ const Dashboard = () => {
       }));
     },
     enabled: !!user,
+    staleTime: 30000, // Increase stale time to prevent frequent refetches
+    refetchOnWindowFocus: false // Disable refetch on window focus
   });
 
-  // Calculate insights based on expenses
+  // Insights and calculations - memoize calculations to prevent unnecessary re-renders
   const insights = useAnalyticsInsights(expenses);
-  
-  // Calculate financial metrics for the current month
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Update month data when income or expenses change
+  // Update month data when income or expenses change, but with proper dependency checks
   useEffect(() => {
     if (!isMonthDataLoading) {
       updateMonthData(currentMonthKey, {
@@ -120,14 +109,23 @@ const Dashboard = () => {
     }
   }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
 
-  // Listen for expense update events and refresh data
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+  // Simplified animation variants to reduce rendering load
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.03
+      }
     }
-  }, [refreshTrigger, queryClient, selectedMonth]);
+  };
 
+  const itemVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1 }
+  };
+
+  // Helper functions
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
@@ -137,7 +135,7 @@ const Dashboard = () => {
   };
 
   const isNewUser = expenses.length === 0;
-  const isLoading = isMonthDataLoading || isExpensesLoading || !isRendered;
+  const isLoading = isMonthDataLoading || isExpensesLoading;
 
   if (isLoading) {
     return (
@@ -156,25 +154,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Simplified animation variants to reduce glitching
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    show: { 
-      opacity: 1,
-      transition: { duration: 0.2 }
-    }
-  };
 
   return (
     <motion.div 
@@ -207,7 +186,7 @@ const Dashboard = () => {
           showAddExpense={showAddExpense}
           setExpenseToEdit={setExpenseToEdit}
           setShowAddExpense={setShowAddExpense}
-          onAddExpense={handleExpenseRefresh}
+          onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] })}
         />
       </motion.div>
 

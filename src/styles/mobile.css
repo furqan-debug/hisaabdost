@@ -9,7 +9,7 @@ Most styles are now organized into component-specific files:
 - mobile-utils.css: General utilities and helpers
 */
 
-/* This file now contains only the base mobile styles */
+/* This file contains only the base mobile styles - OPTIMIZED to prevent rendering issues */
 @media (max-width: 640px) {
   /* Base mobile styles */
   body, html {
@@ -17,6 +17,7 @@ Most styles are now organized into component-specific files:
     width: 100%;
     position: relative;
     -webkit-overflow-scrolling: touch; /* Improve scrolling on iOS */
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh */
   }
   
   /* Prevent horizontal overflow */
@@ -43,13 +44,12 @@ Most styles are now organized into component-specific files:
     min-height: 0; /* Fix flexbox height calculation issues */
   }
   
-  /* Performance optimizations */
+  /* Performance optimizations - SIMPLIFIED to prevent rendering issues */
   .animate-fade-in,
   .animate-scale-in,
   .animate-pulse {
-    will-change: transform, opacity;
+    will-change: auto; /* Changed from transform, opacity to auto */
     backface-visibility: hidden;
-    transform: translateZ(0);
   }
 }
 
@@ -61,19 +61,27 @@ Most styles are now organized into component-specific files:
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: calc(var(--vh, 1vh) * 100);
+    height: calc(var(--vh, 1vh) * 100);
   }
 }
 
-/* Dynamic viewport height fix */
+/* Reduce animation intensity on mobile even more */
 @media (max-width: 640px) {
-  .min-h-screen {
-    min-height: -webkit-fill-available;
+  .transition-all, 
+  .transition-opacity, 
+  .transition-transform,
+  .transition-colors {
+    transition-duration: 100ms !important; /* Reduced from 150ms to 100ms */
   }
-}
-
-/* Reduce animation intensity on mobile */
-@media (max-width: 640px) {
-  .transition-all {
-    transition-duration: 150ms !important;
+  
+  /* Disable animations that might cause performance issues */
+  .motion-reduce {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* Fix for elements causing reflows */
+  .transform-gpu {
+    transform: translateZ(0);
   }
 }
