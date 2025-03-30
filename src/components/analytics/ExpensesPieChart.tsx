@@ -31,8 +31,8 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const ANIMATION_DURATION = 800;
   
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 30 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : "100%"}>
+      <PieChart margin={isMobile ? { top: 5, right: 5, left: 5, bottom: 5 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
         <defs>
           {data.map((entry, index) => (
             <linearGradient key={`gradient-${index}`} id={`colorGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
@@ -47,18 +47,18 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           nameKey="name"
           cx="50%"
           cy="50%"
-          outerRadius={isMobile ? 100 : 150}
-          innerRadius={isMobile ? 50 : 75}
+          outerRadius={isMobile ? 80 : 150}
+          innerRadius={isMobile ? 40 : 75}
           paddingAngle={3}
           isAnimationActive={true}
           animationDuration={ANIMATION_DURATION}
           animationBegin={0}
           animationEasing="ease-out"
           label={({ name, percent }) => isMobile ? 
-            (percent > 0.08 ? `${(percent * 100).toFixed(0)}%` : '') : 
+            (percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : '') : 
             (percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : '')
           }
-          labelLine={false}
+          labelLine={!isMobile}
           startAngle={90}
           endAngle={-270}
         >
@@ -80,12 +80,12 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border bg-background p-3 shadow-md"
+                className="rounded-lg border bg-background p-2 shadow-md"
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
                 </p>
-                <p className="text-base font-bold">
+                <p className="text-sm font-bold">
                   {formatCurrency(Number(data.value))}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -100,11 +100,11 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           align={isMobile ? "center" : "right"}
           layout={isMobile ? "horizontal" : "vertical"}
           iconType="circle"
-          iconSize={10}
-          wrapperStyle={isMobile ? { fontSize: '12px', paddingTop: '10px' } : { fontSize: '13px' }}
+          iconSize={8}
+          wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '5px', maxWidth: '100%', overflow: 'hidden' } : { fontSize: '13px' }}
           formatter={(value, entry: any) => {
             return (
-              <span style={{ color: 'var(--foreground)', marginLeft: '5px' }}>
+              <span style={{ color: 'var(--foreground)', marginLeft: '5px', fontSize: isMobile ? '10px' : '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? '60px' : 'auto', display: 'inline-block' }}>
                 {value}: {formatCurrency(entry.payload.value)}
               </span>
             );
