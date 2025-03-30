@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 
@@ -21,21 +21,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast: uiToast } = useToast();
 
   useEffect(() => {
+    // First set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setUser(user);
+      setLoading(false);
+      
+      // Redirect if user is authenticated and on auth page
+      if (user && location.pathname === "/auth") {
+        navigate("/dashboard");
+      }
+    });
+
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      
+      // Redirect if user is authenticated and on auth page
+      if (session?.user && location.pathname === "/auth") {
+        navigate("/dashboard");
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate, location.pathname]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
@@ -44,7 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
       if (error) throw error;
-      navigate("/");
+      
+      toast.success("Successfully signed in!");
+      navigate("/dashboard");
     } catch (error: any) {
       uiToast({
         variant: "destructive",
@@ -101,6 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       toast.success("Account created! Please check your email to verify your account.");
+      // Don't navigate immediately for signUp as verification may be required
     } catch (error: any) {
       uiToast({
         variant: "destructive",

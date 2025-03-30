@@ -32,12 +32,12 @@ const Index = () => {
           <div className="space-x-2">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/auth')}
             >
               Log in
             </Button>
             <Button 
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/auth')}
             >
               Sign up
             </Button>
@@ -59,7 +59,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="animate-pulse"
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/auth')}
               >
                 Get Started for Free
               </Button>
