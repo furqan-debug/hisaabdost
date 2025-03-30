@@ -27,18 +27,18 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <MonthProvider>
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider defaultOpen={!isMobile}>
         <div className="min-h-screen flex w-full bg-background">
           {!isMobile && <Sidebar />}
           <div className="flex-1 flex flex-col">
             <Navbar />
             <main className={cn(
-              "flex-1 px-2 pt-2 pb-24 md:px-6 md:pt-6 md:pb-6 overflow-x-hidden transition-opacity duration-300",
-              pageTransition ? "opacity-95" : "opacity-100"
+              "flex-1 px-4 pt-3 pb-24 md:px-8 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300",
+              pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
             )}>
               <div className={cn(
                 "mx-auto w-full", 
-                isMobile ? "max-w-full" : "max-w-[480px]",
+                isMobile ? "max-w-full" : "max-w-5xl",
                 pageTransition ? "animate-fade-in" : ""
               )}>
                 {children}

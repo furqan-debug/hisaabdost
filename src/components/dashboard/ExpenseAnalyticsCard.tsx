@@ -5,8 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
 import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChartContainer } from "@/components/ui/chart";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -36,24 +40,50 @@ export const ExpenseAnalyticsCard = ({
     }
   };
 
+  const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
+    acc[key] = { color };
+    return acc;
+  }, {} as Record<string, { color: string }>);
+
   return (
-    <Card className="mt-6">
+    <Card className="mt-6 overflow-hidden">
       <CardHeader className="flex flex-col space-y-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-lg' : ''}>Expense Analytics</CardTitle>
-          <Select value={chartType} onValueChange={(value: 'pie' | 'bar' | 'line') => setChartType(value)}>
-            <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[180px]'}`}>
-              <SelectValue placeholder="Select chart type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pie">Pie Chart</SelectItem>
-              <SelectItem value="bar">Bar Chart</SelectItem>
-              <SelectItem value="line">Line Chart</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center space-x-2">
+            <div className="bg-muted/50 rounded-lg p-1 flex">
+              <button
+                onClick={() => setChartType('pie')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Pie chart"
+              >
+                <PieChartIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setChartType('bar')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Bar chart"
+              >
+                <BarChartIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setChartType('line')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Line chart"
+              >
+                <LineChartIcon className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-4">
+      <CardContent className="px-2 sm:px-4 pb-4">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -63,9 +93,17 @@ export const ExpenseAnalyticsCard = ({
             Add some expenses to see analytics
           </div>
         ) : (
-          <div className="w-full overflow-hidden">
-            {renderChart()}
-          </div>
+          <motion.div 
+            className="w-full overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            key={chartType} // Re-run animation when chart type changes
+          >
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              {renderChart()}
+            </ChartContainer>
+          </motion.div>
         )}
       </CardContent>
     </Card>
