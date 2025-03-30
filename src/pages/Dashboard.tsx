@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
@@ -34,6 +35,12 @@ const Dashboard = () => {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
+  
+  // Add this effect to ensure the component is fully rendered before animations
+  useEffect(() => {
+    setIsRendered(true);
+  }, []);
   
   // Update local income state when selected month changes
   useEffect(() => {
@@ -130,7 +137,7 @@ const Dashboard = () => {
   };
 
   const isNewUser = expenses.length === 0;
-  const isLoading = isMonthDataLoading || isExpensesLoading;
+  const isLoading = isMonthDataLoading || isExpensesLoading || !isRendered;
 
   if (isLoading) {
     return (
@@ -150,23 +157,22 @@ const Dashboard = () => {
     );
   }
 
-  // Animation variants for staggered children
+  // Simplified animation variants to reduce glitching
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0 },
     show: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
+      opacity: 1,
+      transition: { duration: 0.2 }
     }
   };
 

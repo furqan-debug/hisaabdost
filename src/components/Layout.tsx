@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from './Navbar';
-import Sidebar from './Sidebar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocation } from 'react-router-dom';
@@ -16,26 +14,39 @@ const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [pageTransition, setPageTransition] = useState(false);
+  const [isContentReady, setIsContentReady] = useState(false);
   
-  // Add page transition effect when route changes
+  // Add page transition effect when route changes with reduced animation
   useEffect(() => {
+    // Immediately make content ready to avoid blank screens
+    setIsContentReady(true);
+    
+    // Short transition effect
     setPageTransition(true);
-    const timer = setTimeout(() => setPageTransition(false), 300);
+    const timer = setTimeout(() => setPageTransition(false), 200);
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Ensure content is visible even before transitions complete
+  useEffect(() => {
+    if (!isContentReady) {
+      setIsContentReady(true);
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
-      <div className="flex-1 flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex w-full bg-background overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <main className={cn(
-          "flex-1 px-3 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300",
-          pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
+          "flex-1 px-3 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-hidden transition-opacity duration-200",
+          pageTransition ? "opacity-95" : "opacity-100"
         )}>
           <div className={cn(
-            "mx-auto w-full overflow-guard", 
+            "mx-auto w-full", 
             isMobile ? "max-w-full px-0.5" : "max-w-5xl",
-            pageTransition ? "animate-fade-in" : ""
+            isContentReady ? "opacity-100" : "opacity-0",
+            "transition-opacity duration-200"
           )}>
             {children}
           </div>

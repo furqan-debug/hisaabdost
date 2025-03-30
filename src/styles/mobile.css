@@ -16,6 +16,7 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
     width: 100%;
     position: relative;
+    -webkit-overflow-scrolling: touch; /* Improve scrolling on iOS */
   }
   
   /* Prevent horizontal overflow */
@@ -35,5 +36,44 @@ Most styles are now organized into component-specific files:
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  /* Fix for layout glitches */
+  .flex-1 {
+    min-height: 0; /* Fix flexbox height calculation issues */
+  }
+  
+  /* Performance optimizations */
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-pulse {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+}
+
+/* Fix for iOS safari viewport height issues */
+:root {
+  --vh: 1vh;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+/* Dynamic viewport height fix */
+@media (max-width: 640px) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Reduce animation intensity on mobile */
+@media (max-width: 640px) {
+  .transition-all {
+    transition-duration: 150ms !important;
   }
 }

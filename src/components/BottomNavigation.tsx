@@ -22,19 +22,29 @@ export function BottomNavigation() {
   useEffect(() => {
     setMounted(true);
     
+    // Throttled scroll handler to reduce layout thrashing
+    let scrollTimeout: number;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (scrollTimeout) return;
+      
+      scrollTimeout = window.setTimeout(() => {
+        setIsScrolled(window.scrollY > 20);
+        scrollTimeout = 0;
+      }, 100);
     };
     
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+    };
   }, []);
 
   if (!isMobile || !mounted) return null;
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 border-t transition-all duration-300 w-full",
+      "fixed bottom-0 left-0 right-0 z-50 border-t transition-all duration-200 w-full transform-gpu",
       isScrolled 
         ? "border-border/40 bg-black/95 backdrop-blur-xl shadow-lg" 
         : "border-border/20 bg-black/90 backdrop-blur-lg"
@@ -47,25 +57,20 @@ export function BottomNavigation() {
             <Link key={item.path} to={item.path} className="w-1/5">
               <div
                 className={cn(
-                  "menu-item flex flex-col items-center justify-center h-12 transition-colors duration-300",
+                  "menu-item flex flex-col items-center justify-center h-12 transition-colors duration-200",
                   isActive ? "text-primary" : "text-muted-foreground/60"
                 )}
               >
-                <div className="relative">
-                  <item.icon 
-                    size={20} 
-                    className={cn(
-                      "transition-all duration-300",
-                      isActive ? "text-primary scale-110 menu-icon-active" : "text-muted-foreground/70"
-                    )} 
-                  />
-                  {isActive && (
-                    <div className="menu-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-primary rounded-full" />
-                  )}
-                </div>
+                <item.icon 
+                  size={20} 
+                  className={cn(
+                    "transition-transform duration-200",
+                    isActive ? "text-primary scale-105" : "text-muted-foreground/70"
+                  )} 
+                />
                 <span 
                   className={cn(
-                    "text-[10px] font-medium mt-1 transition-colors duration-300",
+                    "text-[10px] font-medium mt-1 transition-colors duration-200",
                     isActive ? "text-primary" : ""
                   )}
                 >
