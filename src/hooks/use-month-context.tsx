@@ -113,20 +113,13 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       setMonthsData(prevData => {
         const currentData = prevData[monthKey] || { ...DEFAULT_MONTH_DATA };
         
-        // Check if data is actually different before updating
-        const isDataDifferent = Object.entries(data).some(([key, value]) => {
-          const typedKey = key as keyof MonthData;
-          return Math.abs(Number(currentData[typedKey]) - Number(value)) > 0.01;
-        });
-        
-        if (!isDataDifferent) return prevData;
-        
+        // Create updated data object
         const updatedData = { 
           ...prevData, 
           [monthKey]: { ...currentData, ...data } 
         };
         
-        // Save to localStorage whenever data changes
+        // Save to localStorage immediately to ensure persistence
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
         
         return updatedData;

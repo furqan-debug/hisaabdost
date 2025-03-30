@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
@@ -30,7 +29,8 @@ const Dashboard = () => {
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
+  // Initialize with context data instead of fixed 0 value
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);

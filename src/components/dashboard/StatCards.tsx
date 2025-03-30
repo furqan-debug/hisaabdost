@@ -10,6 +10,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -63,6 +64,9 @@ export const StatCards = ({
   const saveIncome = () => {
     setMonthlyIncome(tempIncome);
     setIsEditing(false);
+    
+    // Show confirmation toast
+    toast.success("Monthly income updated successfully");
   };
 
   if (isLoading) {
