@@ -74,7 +74,7 @@ export const AddExpenseButton = ({
           <h3 className="text-base font-medium mb-3">Add New Expense</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button variant="outline" onClick={() => handleOpenSheet('manual')} className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30">
-              <Plus className="h-2 w-3 text-primary" />
+              <Plus className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Manual Entry</span>
               <span className="text-xs text-muted-foreground my-0">Enter details yourself</span>
             </Button>
