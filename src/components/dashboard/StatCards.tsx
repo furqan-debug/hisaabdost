@@ -40,6 +40,12 @@ export const StatCards = ({
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
   const prevMonthlyIncomeRef = useRef(monthlyIncome);
   const updateTimerRef = useRef<number | null>(null);
+  const monthKeyRef = useRef(currentMonthKey);
+  
+  // Update month key reference when it changes
+  useEffect(() => {
+    monthKeyRef.current = currentMonthKey;
+  }, [currentMonthKey]);
   
   // Only update temp income when monthly income changes AND it's different from our previous value
   useEffect(() => {
@@ -62,7 +68,7 @@ export const StatCards = ({
         const currentExpenses = monthlyExpenses !== undefined ? monthlyExpenses : 0;
         const currentSavings = savingsRate !== undefined ? savingsRate : 0;
         
-        updateMonthData(currentMonthKey, {
+        updateMonthData(monthKeyRef.current, {
           monthlyIncome: prevMonthlyIncomeRef.current,
           monthlyExpenses: currentExpenses,
           totalBalance: currentBalance,
@@ -96,14 +102,27 @@ export const StatCards = ({
       // Show confirmation toast
       toast.success("Monthly income updated successfully");
       
-      // Update the context data with new income
-      updateMonthData(currentMonthKey, {
+      // Directly and immediately update the context data with new income
+      // This ensures persistence by updating localStorage right away
+      updateMonthData(monthKeyRef.current, {
         monthlyIncome: tempIncome
       });
     }
     
     setIsEditing(false);
   };
+
+  // When component unmounts or income changes, ensure data is saved
+  useEffect(() => {
+    return () => {
+      // Final attempt to save any pending data on unmount
+      if (prevMonthlyIncomeRef.current !== undefined) {
+        updateMonthData(monthKeyRef.current, {
+          monthlyIncome: prevMonthlyIncomeRef.current
+        });
+      }
+    };
+  }, [updateMonthData]);
 
   if (isLoading) {
     return (

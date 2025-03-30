@@ -89,7 +89,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error saving month data to localStorage:', error);
         }
         localStorageWriteTimer.current = null;
-      }, 1000); // 1 second debounce
+      }, 300); // Reduced debounce time for more responsive saving
     }
   }, [monthsData]);
 
@@ -159,15 +159,12 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       // Update ref immediately to keep it in sync
       stableMonthsData.current = updatedData;
       
-      // Schedule a localStorage update with debounce
-      if (localStorageWriteTimer.current) {
-        window.clearTimeout(localStorageWriteTimer.current);
-      }
-      
-      localStorageWriteTimer.current = window.setTimeout(() => {
+      // Immediate localStorage update for critical data like income
+      try {
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
-        localStorageWriteTimer.current = null;
-      }, 1000);
+      } catch (error) {
+        console.error('Error saving immediate data to localStorage:', error);
+      }
       
       // Reset flag after state update
       setTimeout(() => {

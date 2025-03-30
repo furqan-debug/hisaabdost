@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
@@ -19,7 +18,8 @@ export function useBudgetData() {
     totalBudget: 0,
     totalSpent: 0,
     remainingBalance: 0,
-    usagePercentage: 0
+    usagePercentage: 0,
+    monthlyIncome: 0
   });
 
   // Local state to prevent glitching during calculation
@@ -36,6 +36,14 @@ export function useBudgetData() {
   
   // Update isUpdating flag ref
   const isUpdatingRef = useRef(false);
+  
+  // Track the most recent month key
+  const monthKeyRef = useRef(monthKey);
+  
+  // Update month key reference when it changes
+  useEffect(() => {
+    monthKeyRef.current = monthKey;
+  }, [monthKey]);
   
   // Memoize query function
   const fetchBudgets = useCallback(async () => {
@@ -103,6 +111,23 @@ export function useBudgetData() {
     link.click();
   }, [budgets, selectedMonth]);
 
+  // Update the monthly income in stableValues when it changes in context
+  useEffect(() => {
+    if (isMonthDataLoading) return;
+    
+    const currentIncome = currentMonthData.monthlyIncome;
+    
+    // Only update if the income has changed
+    if (currentIncome !== stableValues.monthlyIncome) {
+      setStableValues(prev => ({
+        ...prev,
+        monthlyIncome: currentIncome || 0
+      }));
+      
+      prevValuesRef.current.monthlyIncome = currentIncome || 0;
+    }
+  }, [currentMonthData.monthlyIncome, isMonthDataLoading]);
+
   // Calculate and debounce summary data updates
   useEffect(() => {
     if (isLoading || !budgets || !expenses || isUpdatingRef.current) return;
@@ -125,7 +150,8 @@ export function useBudgetData() {
       Math.abs(totalBudget - prevValuesRef.current.totalBudget) > 0.01 ||
       Math.abs(totalSpent - prevValuesRef.current.totalSpent) > 0.01 ||
       Math.abs(remainingBalance - prevValuesRef.current.remainingBalance) > 0.01 ||
-      Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01;
+      Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01 ||
+      Math.abs(monthlyIncome - prevValuesRef.current.monthlyIncome) > 0.01;
     
     if (!hasChanged) {
       isUpdatingRef.current = false;
@@ -137,7 +163,8 @@ export function useBudgetData() {
       totalBudget,
       totalSpent,
       remainingBalance,
-      usagePercentage
+      usagePercentage,
+      monthlyIncome
     };
     
     // Clear any existing timeout
@@ -145,7 +172,7 @@ export function useBudgetData() {
       window.clearTimeout(updateTimerRef.current);
     }
     
-    // Debounce the state update (wait 500ms before applying)
+    // Debounce the state update (wait 300ms before applying)
     updateTimerRef.current = window.setTimeout(() => {
       setStableValues({
         totalBudget,
@@ -156,17 +183,19 @@ export function useBudgetData() {
       });
       
       // Update monthly context with stable values - but only if the month hasn't changed
-      if (format(selectedMonth, 'yyyy-MM') === monthKey) {
-        updateMonthData(monthKey, {
+      // Make sure to preserve the current monthlyIncome when updating other values
+      if (format(selectedMonth, 'yyyy-MM') === monthKeyRef.current) {
+        updateMonthData(monthKeyRef.current, {
           totalBudget,
           remainingBudget: remainingBalance,
           budgetUsagePercentage: usagePercentage,
+          monthlyIncome: currentMonthData.monthlyIncome
         });
       }
       
       updateTimerRef.current = null;
       isUpdatingRef.current = false;
-    }, 500);
+    }, 300);
     
     // Cleanup timeout on unmount
     return () => {

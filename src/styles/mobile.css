@@ -64,6 +64,7 @@ Most styles are now organized into component-specific files:
     perspective: 1000;
     -webkit-backface-visibility: hidden;
     -webkit-perspective: 1000;
+    will-change: transform;
   }
   
   /* CRITICAL: Completely disable ALL animations and transitions */
@@ -75,6 +76,21 @@ Most styles are now organized into component-specific files:
     animation-duration: 0s !important;
     transition-duration: 0s !important;
     transition-delay: 0s !important;
+  }
+  
+  /* Fix for localStorage persistence issues */
+  input, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent excessive repainting */
+  * {
+    contain: content;
+  }
+  
+  /* Stabilize the text layout */
+  .text-lg, .text-xl, .text-2xl, .font-bold {
+    text-rendering: optimizeSpeed;
   }
 }
 
