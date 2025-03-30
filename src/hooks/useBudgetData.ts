@@ -1,14 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 export function useBudgetData() {
+  const { user } = useAuth();
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
+  const queryClient = useQueryClient();
   
   // Selected month ref to prevent excessive recalculations
   const selectedMonthRef = useRef(selectedMonth);
@@ -47,48 +52,132 @@ export function useBudgetData() {
   
   // Memoize query function
   const fetchBudgets = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('budgets')
-      .select('*')
-      .order('created_at', { ascending: false });
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data as Budget[];
-  }, []);
+      if (error) throw error;
+      
+      // If we have data and it includes monthly_income, update the context
+      if (data && data.length > 0) {
+        // Get the most recent budget with monthly_income set
+        const budgetWithIncome = data.find(budget => budget.monthly_income !== null && budget.monthly_income > 0);
+        
+        if (budgetWithIncome) {
+          updateMonthData(monthKeyRef.current, {
+            monthlyIncome: budgetWithIncome.monthly_income
+          });
+        }
+      }
+      
+      return data as Budget[];
+    } catch (error) {
+      console.error('Error fetching budgets:', error);
+      return [];
+    }
+  }, [user, updateMonthData]);
   
   const fetchExpenses = useCallback(async () => {
+    if (!user) return [];
+    
     const monthStart = startOfMonth(selectedMonth);
     const monthEnd = endOfMonth(selectedMonth);
     
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .gte('date', monthStart.toISOString().split('T')[0])
-      .lte('date', monthEnd.toISOString().split('T')[0]);
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0]);
 
-    if (error) throw error;
-    return data;
-  }, [selectedMonth]);
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      return [];
+    }
+  }, [selectedMonth, user]);
   
   // Optimized queries with stale time and caching
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', monthKey],
+    queryKey: ['budgets', monthKey, user?.id],
     queryFn: fetchBudgets,
     staleTime: 300000, // 5 minutes
     gcTime: 600000, // 10 minutes
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', monthKey],
+    queryKey: ['expenses', monthKey, user?.id],
     queryFn: fetchExpenses,
     staleTime: 300000, // 5 minutes
     gcTime: 600000, // 10 minutes
     refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 
   // Define isLoading variable before it's used
   const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading;
+
+  // Update monthly income in Supabase
+  const updateMonthlyIncome = async (incomeValue: number) => {
+    if (!user) return false;
+    
+    try {
+      // Check if user has any budget entries already
+      const { data: existingBudgets, error: fetchError } = await supabase
+        .from('budgets')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+        
+      if (fetchError) throw fetchError;
+      
+      if (existingBudgets && existingBudgets.length > 0) {
+        // Update monthly_income on all user's budget entries
+        const { error: updateError } = await supabase
+          .from('budgets')
+          .update({ monthly_income: incomeValue })
+          .eq('user_id', user.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Create a new budget entry with monthly_income
+        const { error: insertError } = await supabase
+          .from('budgets')
+          .insert({
+            user_id: user.id,
+            category: 'Income',
+            amount: 0,
+            period: 'monthly',
+            monthly_income: incomeValue
+          });
+          
+        if (insertError) throw insertError;
+      }
+      
+      // Update local state and context
+      updateMonthData(monthKeyRef.current, {
+        monthlyIncome: incomeValue
+      });
+      
+      // Invalidate budgets query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user.id] });
+      
+      toast.success("Monthly income updated in database");
+      return true;
+    } catch (error) {
+      console.error('Error updating monthly income:', error);
+      toast.error("Failed to save monthly income to database");
+      return false;
+    }
+  };
 
   const exportBudgetData = useCallback(() => {
     if (!budgets) return;
@@ -189,7 +278,7 @@ export function useBudgetData() {
           totalBudget,
           remainingBudget: remainingBalance,
           budgetUsagePercentage: usagePercentage,
-          monthlyIncome: currentMonthData.monthlyIncome
+          monthlyIncome
         });
       }
       
@@ -218,6 +307,7 @@ export function useBudgetData() {
     expenses,
     isLoading,
     exportBudgetData,
+    updateMonthlyIncome,
     ...stableValues
   };
 }
