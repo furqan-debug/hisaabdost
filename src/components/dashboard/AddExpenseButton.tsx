@@ -68,7 +68,7 @@ export const AddExpenseButton = ({
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
-  return <div className="mt-4">
+  return <div className="mt-6">
       <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
         <div className="bg-card rounded-xl border shadow-sm p-4">
           <h3 className="text-base font-medium mb-3">Add New Expense</h3>
