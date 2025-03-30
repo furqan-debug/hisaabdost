@@ -74,19 +74,19 @@ export const AddExpenseButton = ({
           <h3 className="text-base font-medium mb-3">Add New Expense</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button variant="outline" onClick={() => handleOpenSheet('manual')} className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30">
-              <Plus className="h-7 w-5 text-primary" />
+              <Plus className="h-7 w-6 text-primary" />
               <span className="text-xs font-medium">Manual Entry</span>
               <span className="text-xs text-muted-foreground my-0">Enter details yourself</span>
             </Button>
             
             <Button variant="outline" onClick={() => handleOpenSheet('upload')} className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30">
-              <Upload className="h-7 w-5 text-primary" />
+              <Upload className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Upload Receipt</span>
               <span className="text-xs text-muted-foreground my-0">Auto-extract expenses</span>
             </Button>
             
             <Button variant="outline" onClick={() => handleOpenSheet('camera')} className="h-20 w-full flex flex-col items-center justify-center rounded-xl border-dashed space-y-1 hover:bg-accent/30">
-              <Camera className="h-7 w-5 text-primary" />
+              <Camera className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Take Photo</span>
               <span className="text-muted-foreground my-0 mx-0 px-0 py-0 text-xs">Scan receipt with camera</span>
             </Button>
