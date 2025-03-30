@@ -3,20 +3,22 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 interface ReceiptPreviewImageProps {
-  previewUrl: string | null;
+  url: string | null;
   className?: string;
+  onLoad?: () => void;
 }
 
 export function ReceiptPreviewImage({ 
-  previewUrl, 
-  className 
+  url, 
+  className,
+  onLoad 
 }: ReceiptPreviewImageProps) {
   const [hasError, setHasError] = useState(false);
   
-  if (!previewUrl) return null;
+  if (!url) return null;
   
   // Handle blob URL formatting
-  const isBlobUrl = previewUrl.startsWith('blob:');
+  const isBlobUrl = url.startsWith('blob:');
   
   return (
     <div className={cn("w-full flex justify-center", className)}>
@@ -26,10 +28,11 @@ export function ReceiptPreviewImage({
         </div>
       ) : (
         <img 
-          src={previewUrl} 
+          src={url} 
           alt="Receipt preview" 
           className="max-h-52 rounded-md object-contain border bg-background" 
           onError={() => setHasError(true)}
+          onLoad={onLoad}
           loading="lazy"
         />
       )}

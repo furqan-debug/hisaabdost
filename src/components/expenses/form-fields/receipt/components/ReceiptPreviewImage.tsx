@@ -9,6 +9,7 @@ interface ReceiptPreviewImageProps {
   alt?: string;
   className?: string;
   isProcessing?: boolean;
+  onLoad?: () => void;
 }
 
 export function ReceiptPreviewImage({
@@ -16,9 +17,17 @@ export function ReceiptPreviewImage({
   alt = "Receipt preview",
   className,
   isProcessing = false,
+  onLoad,
 }: ReceiptPreviewImageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [hasError, setHasError] = React.useState(false);
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    if (onLoad) {
+      onLoad();
+    }
+  };
 
   return (
     <div className="relative rounded-md overflow-hidden">
@@ -43,7 +52,7 @@ export function ReceiptPreviewImage({
             "w-full h-auto object-contain rounded-md",
             isLoading && "hidden"
           )}
-          onLoad={() => setIsLoading(false)}
+          onLoad={handleImageLoad}
           onError={() => {
             setIsLoading(false);
             setHasError(true);
