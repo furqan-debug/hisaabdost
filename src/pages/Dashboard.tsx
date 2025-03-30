@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,7 +17,6 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -25,9 +25,8 @@ const Dashboard = () => {
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
   
-  // Get current month's data from context (memoized to prevent unnecessary renders)
+  // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
-  const currentMonthData = useCallback(() => getCurrentMonthData(), [currentMonthKey, getCurrentMonthData]);
   
   // Initialize with context data
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
@@ -38,7 +37,7 @@ const Dashboard = () => {
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Update local income state when selected month changes (once, not continuously)
+  // Update local income state when selected month changes
   useEffect(() => {
     if (!isMonthDataLoading) {
       const data = getCurrentMonthData();
@@ -46,13 +45,11 @@ const Dashboard = () => {
     }
   }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
   
-  // Fetch expenses from Supabase using React Query, but with better caching and fewer refreshes
+  // Fetch expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ['expenses', currentMonthKey, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
-      
-      console.log("Fetching expenses for month:", currentMonthKey);
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -87,17 +84,20 @@ const Dashboard = () => {
       }));
     },
     enabled: !!user,
-    staleTime: 30000, // Increase stale time to prevent frequent refetches
-    refetchOnWindowFocus: false // Disable refetch on window focus
+    staleTime: 60000, // Increase stale time to 1 minute
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchOnMount: false, // Only fetch on first mount
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    retry: false, // Don't retry failed requests automatically
   });
 
-  // Insights and calculations - memoize calculations to prevent unnecessary re-renders
+  // Insights and calculations
   const insights = useAnalyticsInsights(expenses);
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Update month data when income or expenses change, but with proper dependency checks
+  // Update month data when income or expenses change
   useEffect(() => {
     if (!isMonthDataLoading) {
       updateMonthData(currentMonthKey, {
@@ -108,22 +108,6 @@ const Dashboard = () => {
       });
     }
   }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
-
-  // Simplified animation variants to reduce rendering load
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.03
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1 }
-  };
 
   // Helper functions
   const formatPercentage = (value: number) => {
@@ -156,59 +140,44 @@ const Dashboard = () => {
   }
 
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={itemVariants}>
-        <DashboardHeader isNewUser={isNewUser} />
-      </motion.div>
+    <div className="space-y-6">
+      <DashboardHeader isNewUser={isNewUser} />
       
-      <motion.div variants={itemVariants}>
-        <StatCards 
-          totalBalance={totalBalance}
-          monthlyExpenses={monthlyExpenses}
-          monthlyIncome={monthlyIncome}
-          setMonthlyIncome={setMonthlyIncome}
-          savingsRate={savingsRate}
-          formatPercentage={formatPercentage}
-          isNewUser={isNewUser}
-          isLoading={isLoading}
-        />
-      </motion.div>
+      <StatCards 
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        isNewUser={isNewUser}
+        isLoading={isLoading}
+      />
 
-      <motion.div variants={itemVariants}>
-        <AddExpenseButton 
-          isNewUser={isNewUser}
-          expenseToEdit={expenseToEdit}
-          showAddExpense={showAddExpense}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-          onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] })}
-        />
-      </motion.div>
+      <AddExpenseButton 
+        isNewUser={isNewUser}
+        expenseToEdit={expenseToEdit}
+        showAddExpense={showAddExpense}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] })}
+      />
 
-      <motion.div variants={itemVariants}>
-        <RecentExpensesCard 
-          expenses={expenses}
-          isNewUser={isNewUser}
-          isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-        />
-      </motion.div>
+      <RecentExpensesCard 
+        expenses={expenses}
+        isNewUser={isNewUser}
+        isLoading={isExpensesLoading}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+      />
 
-      <motion.div variants={itemVariants}>
-        <ExpenseAnalyticsCard 
-          expenses={expenses}
-          isLoading={isExpensesLoading}
-          chartType={chartType}
-          setChartType={setChartType}
-        />
-      </motion.div>
-    </motion.div>
+      <ExpenseAnalyticsCard 
+        expenses={expenses}
+        isLoading={isExpensesLoading}
+        chartType={chartType}
+        setChartType={setChartType}
+      />
+    </div>
   );
 };
 

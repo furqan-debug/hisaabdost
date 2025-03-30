@@ -18,6 +18,7 @@ Most styles are now organized into component-specific files:
     position: relative;
     -webkit-overflow-scrolling: touch; /* Improve scrolling on iOS */
     overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+    touch-action: manipulation; /* Prevent double-tap to zoom */
   }
   
   /* Prevent horizontal overflow */
@@ -44,12 +45,11 @@ Most styles are now organized into component-specific files:
     min-height: 0; /* Fix flexbox height calculation issues */
   }
   
-  /* Performance optimizations - SIMPLIFIED to prevent rendering issues */
-  .animate-fade-in,
-  .animate-scale-in,
-  .animate-pulse {
-    will-change: auto; /* Changed from transform, opacity to auto */
-    backface-visibility: hidden;
+  /* IMPORTANT: Disable ALL animations that cause refresh issues */
+  .disable-animations * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 }
 
@@ -65,23 +65,30 @@ Most styles are now organized into component-specific files:
   }
 }
 
-/* Reduce animation intensity on mobile even more */
+/* CRITICAL: Complete removal of animations for glitch-prevention */
 @media (max-width: 640px) {
+  /* Disable all transitions and animations on mobile */
   .transition-all, 
   .transition-opacity, 
   .transition-transform,
-  .transition-colors {
-    transition-duration: 100ms !important; /* Reduced from 150ms to 100ms */
-  }
-  
-  /* Disable animations that might cause performance issues */
-  .motion-reduce {
+  .transition-colors,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-pulse {
     transition: none !important;
     animation: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+  
+  /* Disable framer-motion animations that may cause issues */
+  .framer-motion-div {
+    transform: none !important;
+    transition: none !important;
   }
   
   /* Fix for elements causing reflows */
   .transform-gpu {
-    transform: translateZ(0);
+    transform: none !important;
   }
 }

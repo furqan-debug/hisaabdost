@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 /**
  * Custom hook to listen for expense update events
- * and trigger refreshes in the expense list - optimized version
+ * and trigger refreshes in the expense list - performance optimized version
  */
 export function useExpenseRefresh() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -15,7 +15,7 @@ export function useExpenseRefresh() {
   const triggerRefresh = useCallback(() => {
     // Throttle refreshes to prevent multiple rapid refreshes
     const now = Date.now();
-    if (now - lastRefreshTime > 1000) { // Increased from 500ms to 1000ms
+    if (now - lastRefreshTime > 2000) { // Increased to 2 seconds
       console.log("Manually triggering refresh");
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(now);
@@ -30,6 +30,14 @@ export function useExpenseRefresh() {
     // Clear any existing timer
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+    
+    // Don't refresh if the last refresh was within 2 seconds
+    const now = Date.now();
+    if (now - lastRefreshTime < 2000) {
+      console.log("Skipping refresh - too soon after previous refresh");
+      return;
     }
     
     // Set a longer timeout to batch potential multiple events
@@ -51,8 +59,8 @@ export function useExpenseRefresh() {
           toast.success("Expense deleted successfully!");
         }
       }
-    }, 500); // Increased debounce time
-  }, []);
+    }, 1000); // Increased debounce time to 1 second
+  }, [lastRefreshTime]);
   
   useEffect(() => {
     // Set initial mount to false after first render

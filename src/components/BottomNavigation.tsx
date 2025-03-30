@@ -19,18 +19,34 @@ export function BottomNavigation() {
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollTimeoutRef = useRef<number | null>(null);
+  const lastScrollUpdate = useRef<number>(0);
 
   useEffect(() => {
     setMounted(true);
     
-    // Optimized throttled scroll handler
+    // Super-optimized throttled scroll handler
     const handleScroll = () => {
-      if (scrollTimeoutRef.current) return;
+      // Skip scroll handling if we've updated recently (300ms)
+      const now = Date.now();
+      if (now - lastScrollUpdate.current < 300) {
+        return;
+      }
+      
+      // Clear any existing timeout
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
+      }
       
       scrollTimeoutRef.current = window.setTimeout(() => {
-        setIsScrolled(window.scrollY > 20);
+        // Only update state if the value would actually change
+        const shouldBeScrolled = window.scrollY > 20;
+        if (isScrolled !== shouldBeScrolled) {
+          setIsScrolled(shouldBeScrolled);
+        }
+        
+        lastScrollUpdate.current = now;
         scrollTimeoutRef.current = null;
-      }, 200); // Increased from 100ms to 200ms
+      }, 300);
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -38,14 +54,13 @@ export function BottomNavigation() {
       window.removeEventListener('scroll', handleScroll);
       if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
     };
-  }, []);
+  }, [isScrolled]);
 
   if (!isMobile || !mounted) return null;
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 border-t w-full transform-gpu",
-      "transition-colors duration-100", // Reduced duration
+      "fixed bottom-0 left-0 right-0 z-50 border-t w-full",
       isScrolled 
         ? "border-border/40 bg-black/95 backdrop-blur-xl" 
         : "border-border/20 bg-black/90 backdrop-blur-lg"
