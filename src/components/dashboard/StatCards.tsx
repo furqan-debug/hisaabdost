@@ -1,14 +1,15 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { formatCurrency } from "@/utils/chartUtils";
-import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Edit, Save } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -34,6 +35,8 @@ export const StatCards = ({
   const isMobile = useIsMobile();
   const { selectedMonth, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempIncome, setTempIncome] = useState(monthlyIncome);
   
   // Update month data when values change
   useEffect(() => {
@@ -47,9 +50,19 @@ export const StatCards = ({
     }
   }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
 
+  // Reset temp income when monthly income changes
+  useEffect(() => {
+    setTempIncome(monthlyIncome);
+  }, [monthlyIncome]);
+
   // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
-    setMonthlyIncome(value);
+    setTempIncome(value);
+  };
+
+  const saveIncome = () => {
+    setMonthlyIncome(tempIncome);
+    setIsEditing(false);
   };
 
   if (isLoading) {
@@ -101,25 +114,50 @@ export const StatCards = ({
       <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Income</CardTitle>
-          <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
+          {!isEditing ? (
+            <Edit 
+              className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground cursor-pointer hover:text-primary transition-colors`} 
+              onClick={() => setIsEditing(true)}
+            />
+          ) : (
+            <Save 
+              className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-primary cursor-pointer hover:text-primary/80 transition-colors`} 
+              onClick={saveIncome}
+            />
+          )}
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className="relative">
-            <Input
-              type="number"
-              value={monthlyIncome || 0}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                handleIncomeChange(value ? parseInt(value, 10) : 0);
-              }}
-              className={`pl-6 pr-2 h-9 text-${isMobile ? 'sm' : 'base'}`}
-              min={0}
-            />
-          </div>
-          <div className="flex items-center text-expense-low text-xs mt-1">
-            <ArrowUpRight className="h-3 w-3 mr-1" />
-            8% from last month
-          </div>
+          {!isEditing ? (
+            <>
+              <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
+                {formatCurrency(monthlyIncome)}
+              </div>
+              <div className="flex items-center text-expense-low text-xs mt-1">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                8% from last month
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                type="number"
+                value={tempIncome || 0}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  handleIncomeChange(value ? parseInt(value, 10) : 0);
+                }}
+                className={`h-8 text-${isMobile ? 'sm' : 'base'} pr-2`}
+                min={0}
+              />
+              <Button 
+                size="sm" 
+                className="w-full h-7 text-xs" 
+                onClick={saveIncome}
+              >
+                Save
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
