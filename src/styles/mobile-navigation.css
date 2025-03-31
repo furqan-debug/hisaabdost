@@ -46,6 +46,23 @@
   .nav-panel {
     @apply fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col;
   }
+  
+  /* Ensure bottom navigation is always visible */
+  .fixed.bottom-0 {
+    position: fixed !important;
+    bottom: 0 !important;
+    z-index: 999 !important;
+  }
+  
+  /* Adjust main content padding to prevent overlap with fixed navigation */
+  main {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom)) !important;
+  }
+  
+  /* Fix for iOS safe area */
+  .bottom-nav-shadow {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* Enhanced bottom navigation */

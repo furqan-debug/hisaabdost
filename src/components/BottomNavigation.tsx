@@ -83,7 +83,7 @@ export const BottomNavigation = memo(() => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border/40 shadow-lg bottom-nav-shadow">
+    <div className="fixed bottom-0 left-0 right-0 z-[999] bg-background/95 backdrop-blur-lg border-t border-border/40 bottom-nav-shadow">
       <div className="flex h-16 items-center justify-around px-1 max-w-[480px] mx-auto">
         <AnimatePresence>
           {navItems.map((item) => (
