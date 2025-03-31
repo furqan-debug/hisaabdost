@@ -53,6 +53,8 @@
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
+  position: fixed !important;
+  bottom: 0 !important;
 }
 
 /* Bottom navigation animations */
