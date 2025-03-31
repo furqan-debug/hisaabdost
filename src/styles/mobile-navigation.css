@@ -50,14 +50,9 @@
 
 /* Enhanced bottom navigation */
 .fixed.bottom-0 {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000; /* Ensures it's always on top */
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.95); /* Adjust for visibility */
-  backdrop-filter: blur(10px); /* Smooth blur effect */
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Bottom navigation animations */
