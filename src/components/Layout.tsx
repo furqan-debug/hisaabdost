@@ -17,9 +17,9 @@ const Layout = ({ children }: LayoutProps) => {
   
   return (
     <div className="min-h-screen flex w-full bg-background overflow-hidden">
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <MemoizedNavbar />
-        <main className="flex-1 px-3 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-hidden">
+        <main className={`flex-1 px-3 pt-3 overflow-y-auto ${isMobile ? 'pb-20' : 'pb-8'} md:px-8 md:pt-6`}>
           <div 
             className={isMobile ? "mx-auto w-full max-w-full px-0.5 disable-animations" : "mx-auto w-full max-w-5xl"}
           >

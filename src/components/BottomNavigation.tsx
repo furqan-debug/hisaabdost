@@ -93,7 +93,7 @@ export const BottomNavigation = memo(() => {
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 border-t w-full",
+      "fixed bottom-0 left-0 right-0 z-50 border-t w-full bottom-nav-shadow",
       isScrolled 
         ? "border-border/40 bg-black/95 backdrop-blur-xl" 
         : "border-border/20 bg-black/90 backdrop-blur-lg"
