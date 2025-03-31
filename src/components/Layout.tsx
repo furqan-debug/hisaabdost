@@ -21,7 +21,7 @@ const Layout = ({ children }: LayoutProps) => {
         <MemoizedNavbar />
         <main className="flex-1 px-3 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-hidden">
           <div 
-            className={isMobile ? "mx-auto w-full max-w-full px-0.5 disable-animations" : "mx-auto w-full max-w-5xl"}
+            className={isMobile ? "mx-auto w-full max-w-full px-0.5 pb-16" : "mx-auto w-full max-w-5xl"}
           >
             {children}
           </div>
