@@ -6,3 +6,7 @@
 #root {
   @apply w-full min-h-screen;
 }
+
+.main-content {
+  padding-bottom: 5rem; /* Adjust if needed */
+}
