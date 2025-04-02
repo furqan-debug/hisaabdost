@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { startOfMonth, format } from 'date-fns';
 
@@ -43,17 +42,24 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   const [monthsData, setMonthsData] = useState<Record<string, MonthData>>({});
   const [isLoading, setIsLoading] = useState(true);
   
-  // Update debounce ref
-  const updateDebounceRef = useRef<Record<string, number>>({});
+  // Create stable reference to prevent unnecessary re-renders
+  const stableMonthsData = useRef(monthsData);
+  
+  // Flag to prevent localStorage read-write loops  
+  const isUpdatingRef = useRef(false);
+  // Debounce timer for localStorage writes
+  const localStorageWriteTimer = useRef<number | null>(null);
 
-  // Load stored data from localStorage on initial render
+  // Load stored data from localStorage on initial render only
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         const savedData = localStorage.getItem('monthsData');
         if (savedData) {
-          setMonthsData(JSON.parse(savedData));
+          const parsedData = JSON.parse(savedData);
+          setMonthsData(parsedData);
+          stableMonthsData.current = parsedData;
         }
       } catch (error) {
         console.error('Error loading month data:', error);
@@ -65,32 +71,51 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
     loadData();
   }, []);
 
+  // Whenever monthsData state changes, update the ref but don't trigger re-renders
+  useEffect(() => {
+    // Only update if not in the middle of a controlled update
+    if (!isUpdatingRef.current) {
+      stableMonthsData.current = monthsData;
+      
+      // Debounce localStorage writes
+      if (localStorageWriteTimer.current) {
+        window.clearTimeout(localStorageWriteTimer.current);
+      }
+      
+      localStorageWriteTimer.current = window.setTimeout(() => {
+        try {
+          localStorage.setItem('monthsData', JSON.stringify(monthsData));
+        } catch (error) {
+          console.error('Error saving month data to localStorage:', error);
+        }
+        localStorageWriteTimer.current = null;
+      }, 300); // Reduced debounce time for more responsive saving
+    }
+  }, [monthsData]);
+
   // Whenever selectedMonth changes, ensure we have a default entry for it
   useEffect(() => {
     const currentMonthKey = format(selectedMonth, 'yyyy-MM');
     
-    if (!monthsData[currentMonthKey]) {
+    if (!stableMonthsData.current[currentMonthKey]) {
       setMonthsData(prev => {
         const updated = { 
           ...prev, 
           [currentMonthKey]: { ...DEFAULT_MONTH_DATA }
         };
-        // Save to storage with slight delay to avoid rapid writes
-        setTimeout(() => {
-          localStorage.setItem('monthsData', JSON.stringify(updated));
-        }, 100);
+        stableMonthsData.current = updated;
         return updated;
       });
     }
     
-    // Reset loading state when month changes to indicate data is ready
+    // Reset loading state when month changes
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 150);
     
     return () => clearTimeout(timer);
-  }, [selectedMonth, monthsData]);
+  }, [selectedMonth]);
 
   // Format current month as a key (e.g., "2023-01")
   const getCurrentMonthKey = useCallback(() => format(selectedMonth, 'yyyy-MM'), [selectedMonth]);
@@ -98,40 +123,56 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   // Get data for current month with fallback to default values
   const getCurrentMonthData = useCallback((): MonthData => {
     const monthKey = getCurrentMonthKey();
-    return monthsData[monthKey] || { ...DEFAULT_MONTH_DATA };
-  }, [getCurrentMonthKey, monthsData]);
+    return stableMonthsData.current[monthKey] || { ...DEFAULT_MONTH_DATA };
+  }, [getCurrentMonthKey]);
 
-  // Update data for a specific month with debouncing
+  // Update data for a specific month with optimized reactivity and debouncing
   const updateMonthData = useCallback((monthKey: string, data: Partial<MonthData>) => {
-    // Clear any existing timeout for this month
-    if (updateDebounceRef.current[monthKey]) {
-      window.clearTimeout(updateDebounceRef.current[monthKey]);
+    // Prevent potential update loops
+    if (isUpdatingRef.current) {
+      return;
     }
     
-    // Debounce the update (reduce frequency of state changes)
-    updateDebounceRef.current[monthKey] = window.setTimeout(() => {
-      setMonthsData(prevData => {
-        const currentData = prevData[monthKey] || { ...DEFAULT_MONTH_DATA };
-        
-        // Check if data is actually different before updating
-        const isDataDifferent = Object.entries(data).some(([key, value]) => {
-          const typedKey = key as keyof MonthData;
-          return Math.abs(Number(currentData[typedKey]) - Number(value)) > 0.01;
-        });
-        
-        if (!isDataDifferent) return prevData;
-        
-        const updatedData = { 
-          ...prevData, 
-          [monthKey]: { ...currentData, ...data } 
-        };
-        
-        // Save to localStorage whenever data changes
+    // Set flag to prevent loop
+    isUpdatingRef.current = true;
+    
+    setMonthsData(prevData => {
+      const currentData = prevData[monthKey] || { ...DEFAULT_MONTH_DATA };
+      const updatedMonthData = { ...currentData, ...data };
+      
+      // Only update if something actually changed
+      const hasChanges = Object.keys(data).some(key => 
+        data[key as keyof MonthData] !== currentData[key as keyof MonthData]
+      );
+      
+      if (!hasChanges) {
+        isUpdatingRef.current = false;
+        return prevData; // No changes, return previous state
+      }
+      
+      // Create updated data object with the new month data
+      const updatedData = { 
+        ...prevData, 
+        [monthKey]: updatedMonthData 
+      };
+      
+      // Update ref immediately to keep it in sync
+      stableMonthsData.current = updatedData;
+      
+      // Immediate localStorage update for critical data like income
+      try {
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
-        
-        return updatedData;
-      });
-    }, 150); // Debounce for 150ms
+      } catch (error) {
+        console.error('Error saving immediate data to localStorage:', error);
+      }
+      
+      // Reset flag after state update
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 0);
+      
+      return updatedData;
+    });
   }, []);
 
   return (

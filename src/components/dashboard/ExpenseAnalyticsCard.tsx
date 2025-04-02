@@ -1,14 +1,12 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
 import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
-import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 
@@ -54,7 +52,7 @@ export const ExpenseAnalyticsCard = ({
             <div className="bg-muted/50 rounded-lg p-1 flex">
               <button
                 onClick={() => setChartType('pie')}
-                className={`p-1.5 rounded-md transition-all ${
+                className={`p-1.5 rounded-md ${
                   chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'
                 }`}
                 aria-label="Pie chart"
@@ -63,7 +61,7 @@ export const ExpenseAnalyticsCard = ({
               </button>
               <button
                 onClick={() => setChartType('bar')}
-                className={`p-1.5 rounded-md transition-all ${
+                className={`p-1.5 rounded-md ${
                   chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'
                 }`}
                 aria-label="Bar chart"
@@ -72,7 +70,7 @@ export const ExpenseAnalyticsCard = ({
               </button>
               <button
                 onClick={() => setChartType('line')}
-                className={`p-1.5 rounded-md transition-all ${
+                className={`p-1.5 rounded-md ${
                   chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'
                 }`}
                 aria-label="Line chart"
@@ -93,17 +91,11 @@ export const ExpenseAnalyticsCard = ({
             Add some expenses to see analytics
           </div>
         ) : (
-          <motion.div 
-            className="w-full overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            key={chartType} // Re-run animation when chart type changes
-          >
+          <div className="w-full overflow-hidden" key={chartType}>
             <ChartContainer config={chartConfig} className={isMobile ? "h-[300px]" : "h-[400px]"}>
               {renderChart()}
             </ChartContainer>
-          </motion.div>
+          </div>
         )}
       </CardContent>
     </Card>

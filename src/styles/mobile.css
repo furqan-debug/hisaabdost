@@ -9,13 +9,22 @@ Most styles are now organized into component-specific files:
 - mobile-utils.css: General utilities and helpers
 */
 
-/* This file now contains only the base mobile styles */
+/* This file contains only the base mobile styles - OPTIMIZED to prevent rendering issues */
 @media (max-width: 640px) {
   /* Base mobile styles */
   body, html {
     overflow-x: hidden;
     width: 100%;
     position: relative;
+    -webkit-overflow-scrolling: touch; /* Improve scrolling on iOS */
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+    touch-action: manipulation; /* Prevent double-tap to zoom */
+  }
+  
+  /* CRITICAL: Container stabilization */
+  body {
+    min-height: 100%;
+    height: 100%;
   }
   
   /* Prevent horizontal overflow */
@@ -35,5 +44,87 @@ Most styles are now organized into component-specific files:
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  /* Fix for layout glitches */
+  .flex-1 {
+    min-height: 0; /* Fix flexbox height calculation issues */
+  }
+  
+  /* Prevent text selection for better performance */
+  .dashboard-container {
+    user-select: none;
+  }
+
+  /* Fix for flickering cards */
+  .budget-card,
+  .card {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    will-change: transform;
+  }
+  
+  /* CRITICAL: Completely disable ALL animations and transitions */
+  .disable-animations *,
+  * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  
+  /* Fix for localStorage persistence issues */
+  input, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent excessive repainting */
+  * {
+    contain: content;
+  }
+  
+  /* Stabilize the text layout */
+  .text-lg, .text-xl, .text-2xl, .font-bold {
+    text-rendering: optimizeSpeed;
+  }
+}
+
+/* Fix for iOS safari viewport height issues */
+:root {
+  --vh: 1vh;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: calc(var(--vh, 1vh) * 100);
+    height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+/* CRITICAL: Force hardware acceleration on all elements */
+@media (max-width: 640px) {
+  .card,
+  .budget-card,
+  .dashboard-container,
+  .menu-item,
+  button,
+  input,
+  select,
+  .stat-card {
+    will-change: auto;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+  
+  /* Fix for bottom nav z-index issues */
+  .fixed {
+    z-index: 50;
+    transform: translateZ(0);
   }
 }

@@ -1,94 +1,77 @@
 
+import React from "react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useRef } from "react";
-import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
+import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface ReceiptPreviewImageProps {
-  previewUrl: string;
+  url: string;
+  alt?: string;
   className?: string;
+  isProcessing?: boolean;
   onLoad?: () => void;
 }
 
-export function ReceiptPreviewImage({ 
-  previewUrl, 
+export function ReceiptPreviewImage({
+  url,
+  alt = "Receipt preview",
   className,
-  onLoad
+  isProcessing = false,
+  onLoad,
 }: ReceiptPreviewImageProps) {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const previousUrlRef = useRef<string | null>(null);
-  
-  // Handle URL reference counting
-  useEffect(() => {
-    if (previewUrl && previewUrl.startsWith('blob:')) {
-      // Add reference when URL is set or changes
-      addBlobUrlReference(previewUrl);
-      
-      // Mark old URL for cleanup
-      if (previousUrlRef.current && previousUrlRef.current !== previewUrl) {
-        markBlobUrlForCleanup(previousUrlRef.current);
-      }
-      
-      // Update previous URL ref
-      previousUrlRef.current = previewUrl;
-      
-      // Clean up when component unmounts
-      return () => {
-        if (previousUrlRef.current) {
-          markBlobUrlForCleanup(previousUrlRef.current);
-        }
-      };
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    if (onLoad) {
+      onLoad();
     }
-  }, [previewUrl]);
-  
-  // Reset states when the URL changes
-  useEffect(() => {
-    if (previewUrl) {
-      setHasError(false);
-      setIsLoading(true);
-    }
-  }, [previewUrl]);
-  
-  if (!previewUrl) return null;
-  
-  // Handle blob URL formatting
-  const isBlobUrl = previewUrl.startsWith('blob:');
-  
+  };
+
   return (
-    <div className={cn("w-full flex justify-center relative", className)}>
+    <div className="relative rounded-md overflow-hidden">
       {isLoading && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/30 z-10">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        </div>
+        <Skeleton className="w-full aspect-[3/4] rounded-md" />
       )}
       
-      {hasError ? (
-        <div className="bg-muted p-4 rounded-md flex items-center justify-center h-32 w-full max-w-[240px]">
-          <p className="text-sm text-muted-foreground">Receipt image unavailable</p>
-        </div>
-      ) : (
-        <img 
-          src={previewUrl}
-          alt="Receipt preview" 
-          className="max-h-52 rounded-md object-contain border bg-background" 
+      <motion.div 
+        className={cn(
+          "relative rounded-md overflow-hidden",
+          isProcessing && "animate-scan-line border-2 border-primary",
+          className
+        )}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <img
+          src={url}
+          alt={alt}
+          className={cn(
+            "w-full h-auto object-contain rounded-md",
+            isLoading && "hidden"
+          )}
+          onLoad={handleImageLoad}
           onError={() => {
-            console.log("Image failed to load:", previewUrl);
+            setIsLoading(false);
             setHasError(true);
-            setIsLoading(false);
           }}
-          onLoad={() => {
-            console.log("Image loaded successfully:", previewUrl);
-            setIsLoading(false);
-            if (onLoad) onLoad();
-          }}
-          loading="lazy"
-          crossOrigin="anonymous"
         />
-      )}
+        
+        {isProcessing && (
+          <motion.div 
+            className="absolute inset-0 bg-primary/5 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.1, 0, 0.1, 0] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+          />
+        )}
+      </motion.div>
       
-      {!hasError && isBlobUrl && (
-        <div className="absolute bottom-0 left-0 right-0 text-center text-xs text-muted-foreground p-1 bg-black/20 rounded-b-md">
-          Preview only
+      {hasError && (
+        <div className="w-full aspect-[3/4] bg-muted rounded-md flex items-center justify-center">
+          <p className="text-xs text-muted-foreground">Failed to load image</p>
         </div>
       )}
     </div>

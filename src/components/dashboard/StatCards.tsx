@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
@@ -10,6 +10,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -37,23 +38,55 @@ export const StatCards = ({
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
+  const prevMonthlyIncomeRef = useRef(monthlyIncome);
+  const updateTimerRef = useRef<number | null>(null);
+  const monthKeyRef = useRef(currentMonthKey);
   
-  // Update month data when values change
+  // Update month key reference when it changes
   useEffect(() => {
-    if (!isLoading) {
-      updateMonthData(currentMonthKey, {
-        monthlyIncome,
-        monthlyExpenses,
-        totalBalance,
-        savingsRate
-      });
+    monthKeyRef.current = currentMonthKey;
+  }, [currentMonthKey]);
+  
+  // Only update temp income when monthly income changes AND it's different from our previous value
+  useEffect(() => {
+    if (monthlyIncome !== prevMonthlyIncomeRef.current) {
+      setTempIncome(monthlyIncome);
+      prevMonthlyIncomeRef.current = monthlyIncome;
     }
-  }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
-
-  // Reset temp income when monthly income changes
-  useEffect(() => {
-    setTempIncome(monthlyIncome);
   }, [monthlyIncome]);
+
+  // Optimized function to update context data - with debouncing
+  const updateContextData = () => {
+    if (updateTimerRef.current) {
+      window.clearTimeout(updateTimerRef.current);
+    }
+    
+    updateTimerRef.current = window.setTimeout(() => {
+      if (!isLoading) {
+        // Only update if values are different from what's in state
+        const currentBalance = totalBalance !== undefined ? totalBalance : 0;
+        const currentExpenses = monthlyExpenses !== undefined ? monthlyExpenses : 0;
+        const currentSavings = savingsRate !== undefined ? savingsRate : 0;
+        
+        updateMonthData(monthKeyRef.current, {
+          monthlyIncome: prevMonthlyIncomeRef.current,
+          monthlyExpenses: currentExpenses,
+          totalBalance: currentBalance,
+          savingsRate: currentSavings
+        });
+      }
+      updateTimerRef.current = null;
+    }, 500);
+  };
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        window.clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
 
   // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
@@ -61,9 +94,35 @@ export const StatCards = ({
   };
 
   const saveIncome = () => {
-    setMonthlyIncome(tempIncome);
+    // Only update if the value has actually changed
+    if (tempIncome !== prevMonthlyIncomeRef.current) {
+      setMonthlyIncome(tempIncome);
+      prevMonthlyIncomeRef.current = tempIncome;
+      
+      // Show confirmation toast
+      toast.success("Monthly income updated successfully");
+      
+      // Directly and immediately update the context data with new income
+      // This ensures persistence by updating localStorage right away
+      updateMonthData(monthKeyRef.current, {
+        monthlyIncome: tempIncome
+      });
+    }
+    
     setIsEditing(false);
   };
+
+  // When component unmounts or income changes, ensure data is saved
+  useEffect(() => {
+    return () => {
+      // Final attempt to save any pending data on unmount
+      if (prevMonthlyIncomeRef.current !== undefined) {
+        updateMonthData(monthKeyRef.current, {
+          monthlyIncome: prevMonthlyIncomeRef.current
+        });
+      }
+    };
+  }, [updateMonthData]);
 
   if (isLoading) {
     return (

@@ -5,6 +5,7 @@ import { formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { memo } from "react";
 
 interface BudgetSummaryCardsProps {
   totalBudget: number;
@@ -14,7 +15,7 @@ interface BudgetSummaryCardsProps {
   isLoading?: boolean;
 }
 
-export const BudgetSummaryCards = ({ 
+export const BudgetSummaryCards = memo(({ 
   totalBudget, 
   remainingBalance, 
   usagePercentage,
@@ -87,4 +88,6 @@ export const BudgetSummaryCards = ({
       </div>
     </div>
   );
-};
+});
+
+BudgetSummaryCards.displayName = 'BudgetSummaryCards';
