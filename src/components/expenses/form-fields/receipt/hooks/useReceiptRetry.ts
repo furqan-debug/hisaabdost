@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
 interface UseReceiptRetryProps {
@@ -32,78 +32,71 @@ export function useReceiptRetry({
   setOpen
 }: UseReceiptRetryProps) {
   const [attemptCount, setAttemptCount] = useState(0);
-  const processingRef = useRef(false);
-
-  // Retry logic for failed scans with exponential backoff
-  // Limit to 1 retry (2 total attempts) and add more delay between retries
-  useEffect(() => {
-    // Only retry if:
-    // 1. We have an error or timeout
-    // 2. We're on the first attempt
-    // 3. No processing is currently in progress
-    if ((scanTimedOut || scanError) && 
-        attemptCount === 1 && 
-        !processingComplete && 
-        !processingRef.current) {
-      
-      console.log(`Retry trigger fired. Attempt count: ${attemptCount}`);
-      processingRef.current = true; // Mark as processing
-      
-      // Use a longer backoff delay (3 seconds)
-      const backoffDelay = 3000;
-      
-      // Auto-retry with backoff
-      const retryTimer = setTimeout(() => {
-        console.log(`Auto-retrying receipt scan (attempt ${attemptCount + 1} of 2)`);
-        resetScanState();
-        autoProcessReceipt();
-        setAttemptCount(prev => prev + 1);
-      }, backoffDelay);
-      
-      return () => clearTimeout(retryTimer);
+  const [isProcessing, setProcessing] = useState(false);
+  
+  const startProcessing = useCallback(() => {
+    if (isScanning || isAutoProcessing) {
+      console.log("Cannot retry while processing is in progress");
+      return;
     }
     
-    // If we've reached max retries and still have errors, show a message
-    if ((scanTimedOut || scanError) && attemptCount >= 2 && !processingComplete) {
-      toast.error("Receipt processing failed. Using basic information only.");
-      processingRef.current = false; // Mark as not processing
-      
-      // Try to get at least basic info from the image
-      if (onCapture) {
-        onCapture({
-          description: "Store Purchase",
-          amount: "0.00",
-          date: new Date().toISOString().split('T')[0],
-          category: "Other",
-          paymentMethod: "Card"
-        });
-      }
-      
-      // Close dialog after showing error, but with a delay
-      const closeTimer = setTimeout(() => {
-        setOpen(false);
-      }, 2000);
-      
-      return () => clearTimeout(closeTimer);
-    }
-  }, [scanTimedOut, scanError, attemptCount, processingComplete, resetScanState, autoProcessReceipt, onCapture, setOpen]);
-
-  const startProcessing = () => {
-    processingRef.current = true;
-    setAttemptCount(1);
+    setProcessing(true);
+    setAttemptCount(prev => prev + 1);
+    resetScanState();
+    
+    console.log(`Starting receipt processing (attempt ${attemptCount + 1})`);
     autoProcessReceipt();
+  }, [isScanning, isAutoProcessing, attemptCount, resetScanState, autoProcessReceipt]);
+  
+  const handleRetry = useCallback(() => {
+    if (scanTimedOut || scanError) {
+      if (attemptCount < 3) {
+        toast.info("Retrying receipt scan...");
+        startProcessing();
+      } else {
+        toast.error("Maximum retry attempts reached. Please try uploading the receipt again.");
+        setOpen(false);
+      }
+    }
+  }, [scanTimedOut, scanError, attemptCount, startProcessing, setOpen]);
+  
+  const isMaxAttemptsReached = attemptCount >= 3;
+  
+  // Fix the function issue - define it as a function that returns a boolean
+  const isProcessingInProgress = useCallback(() => {
+    return isProcessing;
+  }, [isProcessing]);
+  
+  const resetAndClose = () => {
+    resetScanState();
+    setProcessing(false);
+    setAttemptCount(0);
+    setOpen(false);
+    
+    // Dispatch an event to notify that a receipt was scanned
+    if (processingComplete) {
+      const event = new CustomEvent('receipt-scanned', { 
+        detail: { timestamp: Date.now() } 
+      });
+      window.dispatchEvent(event);
+      
+      // Also dispatch the general expenses-updated event
+      const updateEvent = new CustomEvent('expenses-updated', { 
+        detail: { timestamp: Date.now() } 
+      });
+      window.dispatchEvent(updateEvent);
+    }
   };
-
-  const isProcessing = () => processingRef.current;
-  const setProcessing = (value: boolean) => {
-    processingRef.current = value;
-  };
-
+  
   return {
     attemptCount,
-    startProcessing,
+    setAttemptCount,
     isProcessing,
     setProcessing,
-    setAttemptCount
+    handleRetry,
+    startProcessing,
+    isMaxAttemptsReached,
+    resetAndClose,
+    isProcessingInProgress  // Return the function
   };
 }

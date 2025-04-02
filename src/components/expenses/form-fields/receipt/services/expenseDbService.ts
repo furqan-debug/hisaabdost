@@ -44,6 +44,9 @@ export async function saveExpenseFromScan(receiptData: ReceiptData): Promise<boo
       created_at: new Date().toISOString()
     }));
     
+    console.log("Inserting expenses with user_id:", user.id);
+    console.log("Expense data:", formattedItems);
+    
     // Insert all items at once
     const { data, error } = await supabase
       .from('expenses')
@@ -51,20 +54,23 @@ export async function saveExpenseFromScan(receiptData: ReceiptData): Promise<boo
     
     if (error) {
       console.error("Error saving expenses to database:", error);
+      toast.error("Failed to save expenses: " + error.message);
       return false;
     }
     
     console.log("Successfully saved expenses from receipt");
+    toast.success("Expenses added successfully");
     
     // Dispatch custom event to trigger expense list refresh
     const event = new CustomEvent('expenses-updated', { 
-      detail: { timestamp: Date.now() }
+      detail: { timestamp: Date.now() } 
     });
     window.dispatchEvent(event);
     
     return true;
   } catch (error) {
     console.error("Error in saveExpenseFromScan:", error);
+    toast.error("An unexpected error occurred");
     return false;
   }
 }
@@ -84,6 +90,10 @@ export async function deleteExpense(expenseId: string): Promise<boolean> {
       return false;
     }
     
+    // Dispatch event for expense update
+    const event = new CustomEvent('expenses-updated');
+    window.dispatchEvent(event);
+    
     return true;
   } catch (error) {
     console.error("Error in deleteExpense:", error);
@@ -96,9 +106,15 @@ export async function deleteExpense(expenseId: string): Promise<boolean> {
  */
 export async function getUserExpenses(limit: number = 20): Promise<any[]> {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('expenses')
       .select('*')
+      .eq('user_id', user.id)
       .order('date', { ascending: false })
       .limit(limit);
     

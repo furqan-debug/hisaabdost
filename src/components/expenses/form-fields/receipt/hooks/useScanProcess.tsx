@@ -35,7 +35,7 @@ export function useScanProcess() {
       const expenses = items.map(item => ({
         user_id: user.id,
         description: item.description || "Store Purchase",
-        amount: parseFloat(item.amount) || 0,
+        amount: parseFloat(item.amount.replace(/[^0-9.]/g, '')) || 0,
         date: item.date || new Date().toISOString().split('T')[0],
         category: item.category || 'Food',
         is_recurring: false,
@@ -57,16 +57,21 @@ export function useScanProcess() {
         toast.error(`Failed to save expenses: ${error.message}`);
         return false;
       } else {
+        console.log("Expenses saved successfully:", data);
         const itemText = expenses.length === 1 ? "expense" : "expenses";
         toast.success(`Added ${expenses.length} ${itemText} from your receipt`, {
           description: "Check your expenses list to see them",
           duration: 5000
         });
-        console.log("Expenses saved successfully:", data);
         
-        // Trigger a refresh of the expenses list
-        const event = new CustomEvent('expenses-updated');
-        window.dispatchEvent(event);
+        // Trigger a refresh of the expenses list - dispatch event with a delay
+        setTimeout(() => {
+          const event = new CustomEvent('expenses-updated', {
+            detail: { timestamp: Date.now(), count: expenses.length }
+          });
+          window.dispatchEvent(event);
+          console.log("Dispatched expenses-updated event after database insert");
+        }, 500);
         
         return true;
       }

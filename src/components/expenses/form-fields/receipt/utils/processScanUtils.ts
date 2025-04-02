@@ -29,11 +29,11 @@ export async function processScanResults(
   
   // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
-    description: item.name || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
+    description: item.name || item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
     date: formatDate(scanResult.date || item.date || new Date().toISOString().split('T')[0]),
     category: item.category || "Food", // Default to Food if no category
-    paymentMethod: "Card", // Default assumption for receipts
+    paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
     receiptUrl: scanResult.receiptUrl || null
   }));
   
@@ -89,14 +89,25 @@ export async function processScanResults(
           return false;
         }
         
-        console.log("Successfully saved expenses to database");
+        console.log("Successfully saved expenses to database:", formattedItems.length, "items");
         toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
         
-        // Dispatch custom event to trigger expense list refresh
-        const event = new CustomEvent('expenses-updated', { 
-          detail: { timestamp: Date.now() }
+        // IMPORTANT: Dispatch multiple events to ensure all components refresh
+        // First, dispatch a receipt-scanned event
+        const receiptEvent = new CustomEvent('receipt-scanned', { 
+          detail: { timestamp: Date.now(), count: formattedItems.length }
         });
-        window.dispatchEvent(event);
+        window.dispatchEvent(receiptEvent);
+        console.log("Dispatched receipt-scanned event after database insert");
+        
+        // Then dispatch an expenses-updated event with a small delay to ensure it's processed separately
+        setTimeout(() => {
+          const updateEvent = new CustomEvent('expenses-updated', { 
+            detail: { timestamp: Date.now(), count: formattedItems.length }
+          });
+          window.dispatchEvent(updateEvent);
+          console.log("Dispatched expenses-updated event after database insert");
+        }, 100);
         
         // If onCapture is provided, also update the form with the first item
         if (onCapture && formattedItems.length > 0) {
