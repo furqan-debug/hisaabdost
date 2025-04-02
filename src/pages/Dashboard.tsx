@@ -17,6 +17,7 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
+import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -140,54 +141,89 @@ const Dashboard = () => {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
-        <Skeleton className="h-36" />
-        <Skeleton className="h-64" />
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
+  // Animation variants for staggered children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut" }
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <DashboardHeader isNewUser={isNewUser} />
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={itemVariants}>
+        <DashboardHeader isNewUser={isNewUser} />
+      </motion.div>
       
-      <StatCards 
-        totalBalance={totalBalance}
-        monthlyExpenses={monthlyExpenses}
-        monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
-        savingsRate={savingsRate}
-        formatPercentage={formatPercentage}
-        isNewUser={isNewUser}
-        isLoading={isLoading}
-      />
+      <motion.div variants={itemVariants}>
+        <StatCards 
+          totalBalance={totalBalance}
+          monthlyExpenses={monthlyExpenses}
+          monthlyIncome={monthlyIncome}
+          setMonthlyIncome={setMonthlyIncome}
+          savingsRate={savingsRate}
+          formatPercentage={formatPercentage}
+          isNewUser={isNewUser}
+          isLoading={isLoading}
+        />
+      </motion.div>
 
-      <AddExpenseButton 
-        isNewUser={isNewUser}
-        expenseToEdit={expenseToEdit}
-        showAddExpense={showAddExpense}
-        setExpenseToEdit={setExpenseToEdit}
-        setShowAddExpense={setShowAddExpense}
-        onAddExpense={handleExpenseRefresh}
-      />
+      <motion.div variants={itemVariants}>
+        <AddExpenseButton 
+          isNewUser={isNewUser}
+          expenseToEdit={expenseToEdit}
+          showAddExpense={showAddExpense}
+          setExpenseToEdit={setExpenseToEdit}
+          setShowAddExpense={setShowAddExpense}
+          onAddExpense={handleExpenseRefresh}
+        />
+      </motion.div>
 
-      <RecentExpensesCard 
-        expenses={expenses}
-        isNewUser={isNewUser}
-        isLoading={isExpensesLoading}
-        setExpenseToEdit={setExpenseToEdit}
-        setShowAddExpense={setShowAddExpense}
-      />
+      <motion.div variants={itemVariants}>
+        <RecentExpensesCard 
+          expenses={expenses}
+          isNewUser={isNewUser}
+          isLoading={isExpensesLoading}
+          setExpenseToEdit={setExpenseToEdit}
+          setShowAddExpense={setShowAddExpense}
+        />
+      </motion.div>
 
-      <ExpenseAnalyticsCard 
-        expenses={expenses}
-        isLoading={isExpensesLoading}
-        chartType={chartType}
-        setChartType={setChartType}
-      />
-    </div>
+      <motion.div variants={itemVariants}>
+        <ExpenseAnalyticsCard 
+          expenses={expenses}
+          isLoading={isExpensesLoading}
+          chartType={chartType}
+          setChartType={setChartType}
+        />
+      </motion.div>
+    </motion.div>
   );
 };
 

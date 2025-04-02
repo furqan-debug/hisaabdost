@@ -19,19 +19,28 @@ import Analytics from "./pages/Analytics";
 import Goals from "./pages/Goals";
 import { toast } from "sonner";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const hashParams = new URLSearchParams(location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
-    
     const handleAuthCallback = async () => {
       try {
+        // Check for hash params (for OAuth login)
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get("access_token");
+        
         if (accessToken) {
+          // Handle OAuth login
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: hashParams.get("refresh_token") || "",
@@ -45,11 +54,13 @@ const AuthCallback = () => {
           }
           
           toast.success("Successfully authenticated!");
-          navigate("/");
+          navigate("/dashboard");
         } else {
+          // Handle email verification or other auth callbacks
           const { data } = await supabase.auth.getSession();
           if (data.session) {
-            navigate("/");
+            toast.success("Successfully authenticated!");
+            navigate("/dashboard");
           } else {
             navigate("/auth");
           }
@@ -76,16 +87,23 @@ const AuthCallback = () => {
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return children;
+  return user ? <>{children}</> : null;
 };
 
 const AppWithProviders = () => (
