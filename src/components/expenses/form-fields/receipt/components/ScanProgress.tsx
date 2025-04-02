@@ -96,10 +96,7 @@ export function ScanProgress({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <ScanProgressBar 
-              progress={progress} 
-              isScanning={true}
-            />
+            <ScanProgressBar progress={progress} />
           </motion.div>
         )}
 

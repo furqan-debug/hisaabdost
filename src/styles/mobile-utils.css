@@ -81,26 +81,6 @@
   .mobile-truncate {
     @apply truncate max-w-[180px];
   }
-  
-  /* CRITICAL: Disable animations for improved performance */
-  * {
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight */
-    -webkit-touch-callout: none; /* Disable callout */
-  }
-  
-  /* Disable all animations */
-  .disable-all-animations,
-  .disable-all-animations * {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-  }
-  
-  /* Disable text selection to prevent accidental selection */
-  .no-select {
-    user-select: none;
-    -webkit-user-select: none;
-  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -142,10 +122,4 @@
 
 .responsive-text-lg {
   font-size: clamp(1rem, 2.5vw, 1.2rem);
-}
-
-/* Add stabilizing class to prevent layout shifts */
-.stable-layout {
-  contain: layout;
-  content-visibility: auto;
 }

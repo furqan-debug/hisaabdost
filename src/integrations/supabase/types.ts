@@ -54,7 +54,6 @@ export type Database = {
           category: string
           created_at: string
           id: string
-          monthly_income: number
           period: string
           user_id: string
         }
@@ -64,7 +63,6 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
-          monthly_income?: number
           period: string
           user_id: string
         }
@@ -74,7 +72,6 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
-          monthly_income?: number
           period?: string
           user_id?: string
         }

@@ -5,10 +5,10 @@ import { motion } from 'framer-motion';
 
 interface ScanProgressBarProps {
   progress: number;
-  isScanning?: boolean;
+  isScanning: boolean;
 }
 
-export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBarProps) {
+export function ScanProgressBar({ progress, isScanning }: ScanProgressBarProps) {
   // Get the appropriate color class based on the progress value
   const getIndicatorClassName = () => {
     if (progress < 30) return 'bg-amber-500';

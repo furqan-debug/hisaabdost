@@ -41,7 +41,7 @@ export function ReceiptPreview({
         </div>
       )}
       <ReceiptPreviewImage 
-        url={receiptUrl} 
+        previewUrl={receiptUrl} 
         onLoad={handleImageLoad} 
         className={`w-full h-auto object-contain ${className}`}
       />

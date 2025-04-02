@@ -3,20 +3,20 @@
 @media (max-width: 640px) {
   /* Sidebar optimizations */
   [data-sidebar="sidebar"] {
-    @apply backdrop-blur-xl bg-background/95;
+    @apply backdrop-blur-2xl bg-background/95;
   }
   
   [data-sidebar="menu-button"] {
     @apply py-3;
   }
   
-  /* Improved mobile menu transitions with reduced animation */
+  /* Improved mobile menu transitions */
   .mobile-menu-enter {
     @apply transform translate-x-full;
   }
   
   .mobile-menu-enter-active {
-    @apply transform translate-x-0 transition-transform duration-200 ease-out;
+    @apply transform translate-x-0 transition-transform duration-300 ease-out;
   }
   
   .mobile-menu-exit {
@@ -24,7 +24,7 @@
   }
   
   .mobile-menu-exit-active {
-    @apply transform translate-x-full transition-transform duration-200 ease-in;
+    @apply transform translate-x-full transition-transform duration-300 ease-in;
   }
   
   /* Prevent scrolling when menu is open */
@@ -48,43 +48,68 @@
   }
 }
 
-/* Enhanced bottom navigation */
-.fixed.bottom-0 {
-  transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
+/* Enhanced floating action button */
+.floating-action-button {
+  @apply fixed z-50 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
 }
 
-/* Bottom navigation animations */
-@keyframes slideUp {
+@media (min-width: 768px) {
+  .floating-action-button {
+    @apply bottom-8;
+  }
+}
+
+/* Menu item animations */
+.menu-item {
+  @apply transition-all duration-300 hover:text-primary/80;
+}
+
+.menu-item:active .menu-icon-active {
+  @apply scale-90;
+}
+
+.menu-icon-active {
+  animation: pulse 2s infinite;
+}
+
+.menu-indicator {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    width: 0;
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
+    width: 5px;
   }
 }
 
-.fixed.bottom-0 {
-  animation: slideUp 0.3s ease-out;
+/* Nested navigation indicator */
+.nested-nav-indicator {
+  @apply w-1.5 h-1.5 rounded-full bg-muted-foreground/50;
 }
 
-/* Active indicator animation */
-@keyframes pulse {
-  0% {
-    transform: translateX(-50%) scale(1);
-  }
-  50% {
-    transform: translateX(-50%) scale(1.2);
-  }
-  100% {
-    transform: translateX(-50%) scale(1);
-  }
+/* Active navigation states */
+.nav-active {
+  @apply relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 
+         before:h-4/5 before:w-1 before:bg-primary before:rounded-r-md;
+}
+
+/* Mobile navbar animations */
+.navbar-scroll-hidden {
+  @apply -translate-y-full;
+}
+
+.navbar-scroll-visible {
+  @apply translate-y-0;
 }
 
 /* Bottom navigation bar shadow effect */
 .bottom-nav-shadow {
-  @apply shadow-[0_-2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.15)];
+  @apply shadow-[0_-1px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_10px_rgba(0,0,0,0.25)];
 }
 
 /* Mobile tabs design */
@@ -96,4 +121,22 @@
   @apply flex-shrink-0 whitespace-nowrap py-1.5 px-3 text-sm font-medium rounded-md
          data-[state=active]:bg-background data-[state=active]:text-foreground
          data-[state=active]:shadow-sm;
+}
+
+/* Swipeable navigation areas */
+.swipe-area {
+  @apply touch-pan-y;
+}
+
+/* Mobile drawer-style menu */
+.mobile-drawer {
+  @apply fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-xl shadow-2xl transform transition-transform duration-300;
+}
+
+.mobile-drawer-open {
+  @apply translate-y-0;
+}
+
+.mobile-drawer-closed {
+  @apply translate-y-full;
 }
