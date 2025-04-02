@@ -1,3 +1,4 @@
+
 /* Mobile Navigation Styles */
 @media (max-width: 640px) {
   /* Sidebar optimizations */
@@ -45,49 +46,79 @@
   .nav-panel {
     @apply fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col;
   }
+  
+  /* Bottom navigation specific styles */
+  .fixed.bottom-0 {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100 !important;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  
+  /* Fix position for Safari */
+  @supports (-webkit-touch-callout: none) {
+    .fixed.bottom-0 {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+    }
+  }
 }
 
-/* Enhanced bottom navigation */
-.fixed.bottom-0 {
-  position: fixed; /* Ensure it's fixed */
-  left: 0; /* Align to the left */
-  right: 0; /* Align to the right */
-  bottom: 0; /* Stick to the bottom */
-  transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
+/* Enhanced floating action button */
+.floating-action-button {
+  @apply fixed z-50 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
 }
 
-/* Bottom navigation animations */
-@keyframes slideUp {
+@media (min-width: 768px) {
+  .floating-action-button {
+    @apply bottom-8;
+  }
+}
+
+/* Menu item animations - simplified to reduce glitching */
+.menu-item {
+  @apply transition-colors duration-200 hover:text-primary/80;
+}
+
+.menu-item:active .menu-icon-active {
+  @apply scale-95;
+}
+
+.menu-icon-active {
+  /* Removed animation to reduce glitching */
+  @apply text-primary;
+}
+
+.menu-indicator {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    width: 0;
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
+    width: 4px;
   }
 }
 
-.fixed.bottom-0 {
-  animation: slideUp 0.3s ease-out;
-}
-
-/* Active indicator animation */
-@keyframes pulse {
-  0% {
-    transform: translateX(-50%) scale(1);
-  }
-  50% {
-    transform: translateX(-50%) scale(1.2);
-  }
-  100% {
-    transform: translateX(-50%) scale(1);
-  }
+/* Active navigation states */
+.nav-active {
+  @apply relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 
+         before:h-4/5 before:w-1 before:bg-primary before:rounded-r-md;
 }
 
 /* Bottom navigation bar shadow effect */
 .bottom-nav-shadow {
-  @apply shadow-[0_-2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.15)];
+  @apply shadow-[0_-1px_3px_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_3px_rgba(0,0,0,0.25)];
 }
 
 /* Mobile tabs design */

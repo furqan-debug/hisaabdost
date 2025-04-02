@@ -1,105 +1,114 @@
 
-import React, { memo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Home, ReceiptText, PieChart, Target, Wallet } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useLocation, Link } from "react-router-dom";
+import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect, useRef, memo } from "react";
+import { cn } from "@/lib/utils";
 
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-  isActive: boolean;
-  onClick: () => void;
-}
+const navItems = [
+  { icon: Home, label: "Home", path: "/" },
+  { icon: Receipt, label: "Expenses", path: "/expenses" },
+  { icon: Wallet, label: "Budget", path: "/budget" },
+  { icon: BarChart2, label: "Analytics", path: "/analytics" },
+  { icon: Target, label: "Goals", path: "/goals" },
+];
 
-const NavItem = memo(({ icon, label, isActive, onClick }: NavItemProps) => {
-  return (
-    <button
-      onClick={onClick}
+// Memoize each nav item to prevent re-renders
+const NavItem = memo(({ 
+  item, 
+  isActive 
+}: { 
+  item: typeof navItems[0], 
+  isActive: boolean 
+}) => (
+  <Link key={item.path} to={item.path} className="w-1/5">
+    <div
       className={cn(
-        "relative flex flex-col items-center justify-center w-full rounded-md py-1.5 transition-all duration-200",
-        isActive ? "text-primary" : "text-muted-foreground"
+        "menu-item flex flex-col items-center justify-center h-12",
+        isActive ? "text-primary" : "text-muted-foreground/60"
       )}
     >
-      <div className="relative">
-        {icon}
-        {isActive && (
-          <motion.div
-            layoutId="activeIndicator"
-            className="absolute -bottom-1 left-1/2 h-1 w-1 rounded-full bg-primary -translate-x-1/2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          />
+      <item.icon 
+        size={20} 
+        className={isActive ? "text-primary" : "text-muted-foreground/70"} 
+      />
+      <span 
+        className={cn(
+          "text-[10px] font-medium mt-1",
+          isActive ? "text-primary" : ""
         )}
-      </div>
-      <span className="text-[10px] mt-1 font-medium">{label}</span>
-    </button>
-  );
-});
-
-NavItem.displayName = "NavItem";
+      >
+        {item.label}
+      </span>
+    </div>
+  </Link>
+));
 
 export const BottomNavigation = memo(() => {
-  const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   
-  const currentPath = location.pathname;
+  // Use ref to prevent excessive render cycles from scroll events
+  const lastScrollUpdate = useRef<number>(0);
+  const lastScrollY = useRef<number>(0);
   
-  const navItems = [
-    {
-      path: "/dashboard",
-      label: "Home",
-      icon: <Home className="h-5 w-5" />,
-    },
-    {
-      path: "/expenses",
-      label: "Expenses",
-      icon: <ReceiptText className="h-5 w-5" />,
-    },
-    {
-      path: "/budget",
-      label: "Budget",
-      icon: <Wallet className="h-5 w-5" />,
-    },
-    {
-      path: "/analytics",
-      label: "Analytics",
-      icon: <PieChart className="h-5 w-5" />,
-    },
-    {
-      path: "/goals",
-      label: "Goals",
-      icon: <Target className="h-5 w-5" />,
-    },
-  ];
+  useEffect(() => {
+    setMounted(true);
+    
+    // Super-optimized passive scroll handler
+    const handleScroll = () => {
+      // Skip scroll handling if we've updated recently
+      const now = Date.now();
+      if (now - lastScrollUpdate.current < 500) {
+        return;
+      }
+      
+      // Only update if scroll position has changed significantly
+      const currentScrollY = window.scrollY;
+      if (Math.abs(currentScrollY - lastScrollY.current) < 10) {
+        return;
+      }
+      
+      // Only update state if the value would actually change
+      const shouldBeScrolled = currentScrollY > 20;
+      if (isScrolled !== shouldBeScrolled) {
+        setIsScrolled(shouldBeScrolled);
+      }
+      
+      lastScrollY.current = currentScrollY;
+      lastScrollUpdate.current = now;
+    };
+    
+    // Use passive event listener for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isScrolled]);
 
-  if (!isMobile) {
-    return null;
-  }
+  if (!isMobile || !mounted) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[999] bg-background/95 backdrop-blur-lg border-t border-border/40 bottom-nav-shadow">
-      <div className="flex h-16 items-center justify-around px-1 max-w-[480px] mx-auto">
-        <AnimatePresence>
-          {navItems.map((item) => (
-            <NavItem
-              key={item.path}
-              icon={item.icon}
-              label={item.label}
-              path={item.path}
-              isActive={currentPath.includes(item.path)}
-              onClick={() => navigate(item.path)}
-            />
-          ))}
-        </AnimatePresence>
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 border-t w-full bottom-nav-shadow",
+      isScrolled 
+        ? "border-border/40 bg-black/95 backdrop-blur-xl" 
+        : "border-border/20 bg-black/90 backdrop-blur-lg"
+    )}>
+      <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
+        {navItems.map((item) => (
+          <NavItem 
+            key={item.path}
+            item={item} 
+            isActive={location.pathname === item.path} 
+          />
+        ))}
       </div>
     </div>
   );
 });
 
-BottomNavigation.displayName = "BottomNavigation";
+BottomNavigation.displayName = 'BottomNavigation';
