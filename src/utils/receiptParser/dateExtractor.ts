@@ -2,7 +2,12 @@
 /**
  * Extracts the date from receipt text
  */
-export function extractDate(text: string, lines: string[]): string {
+export function extractDate(text: string, lines: string[] = []): string {
+  // If lines aren't provided, split the text
+  if (lines.length === 0 && text) {
+    lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  }
+  
   // Common date patterns
   const datePatterns = [
     // MM/DD/YYYY or DD/MM/YYYY

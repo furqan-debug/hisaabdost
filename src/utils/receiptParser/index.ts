@@ -1,4 +1,3 @@
-
 import { isNonItemText, cleanItemText, extractPotentialItems, extractPriceFromLine } from './utils';
 
 interface ReceiptItem {
@@ -52,7 +51,6 @@ export function parseReceiptText(text: string): ParsedReceipt {
   
   let dateFound = false;
   
-  // Try all date patterns
   for (const pattern of datePatterns) {
     for (const line of lines) {
       const match = line.match(pattern);
