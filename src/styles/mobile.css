@@ -109,7 +109,6 @@ Most styles are now organized into component-specific files:
   }
   
   /* Fix for iOS bottom bar */
-  nav.fixed,
   .bottom-navigation-wrapper nav {
     bottom: 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
@@ -131,7 +130,6 @@ Most styles are now organized into component-specific files:
   input,
   select,
   .stat-card,
-  nav.fixed,
   .bottom-navigation-wrapper nav {
     will-change: transform;
     backface-visibility: hidden;

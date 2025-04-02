@@ -26,7 +26,7 @@ const Layout = ({ children }: LayoutProps) => {
             {children}
           </div>
         </main>
-        <MemoizedBottomNavigation />
+        {isMobile && <MemoizedBottomNavigation />}
       </div>
     </div>
   );

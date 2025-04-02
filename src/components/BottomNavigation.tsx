@@ -47,17 +47,16 @@ export const BottomNavigation = memo(() => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!isMobile || !mounted) return null;
+  if (!mounted) return null;
 
   return (
     <div className="bottom-navigation-wrapper">
-      <nav className="fixed bottom-0 left-0 right-0 w-full z-[9999] border-t bg-background/95 backdrop-blur-xl bottom-nav-shadow">
+      <nav className="fixed bottom-0 left-0 right-0 w-full z-[999] border-t bg-background/95 backdrop-blur-xl bottom-nav-shadow">
         <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
           {navItems.map((item) => (
             <NavItem 

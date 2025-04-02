@@ -48,7 +48,6 @@
   }
   
   /* Bottom navigation fixed position - CRITICAL */
-  nav.fixed,
   .bottom-navigation-wrapper nav {
     position: fixed !important;
     bottom: 0 !important;
@@ -64,7 +63,6 @@
   
   /* Fix position for Safari */
   @supports (-webkit-touch-callout: none) {
-    nav.fixed,
     .bottom-navigation-wrapper nav {
       position: fixed !important;
       bottom: 0 !important;
