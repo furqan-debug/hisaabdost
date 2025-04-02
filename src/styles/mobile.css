@@ -94,6 +94,19 @@ Most styles are now organized into component-specific files:
   .text-lg, .text-xl, .text-2xl, .font-bold {
     text-rendering: optimizeSpeed;
   }
+  
+  /* CRITICAL: Bottom navigation fixes */
+  nav.fixed, 
+  nav.bottom-0 {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    transform: translateZ(0);
+    will-change: transform;
+  }
 }
 
 /* Fix for iOS safari viewport height issues */
@@ -109,7 +122,8 @@ Most styles are now organized into component-specific files:
   }
   
   /* Fix for iOS bottom bar */
-  .bottom-navigation-wrapper nav {
+  nav.fixed,
+  nav.bottom-0 {
     bottom: 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
@@ -130,7 +144,8 @@ Most styles are now organized into component-specific files:
   input,
   select,
   .stat-card,
-  .bottom-navigation-wrapper nav {
+  nav.fixed,
+  nav.bottom-0 {
     will-change: transform;
     backface-visibility: hidden;
     transform: translateZ(0);

@@ -47,27 +47,60 @@ export const BottomNavigation = memo(() => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  const lastScrollUpdate = useRef<number>(0);
+  const lastScrollY = useRef<number>(0);
   
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    const handleScroll = () => {
+      const now = Date.now();
+      if (now - lastScrollUpdate.current < 500) {
+        return;
+      }
+      
+      const currentScrollY = window.scrollY;
+      if (Math.abs(currentScrollY - lastScrollY.current) < 10) {
+        return;
+      }
+      
+      const shouldBeScrolled = currentScrollY > 20;
+      if (isScrolled !== shouldBeScrolled) {
+        setIsScrolled(shouldBeScrolled);
+      }
+      
+      lastScrollY.current = currentScrollY;
+      lastScrollUpdate.current = now;
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isScrolled]);
 
-  if (!mounted) return null;
+  if (!isMobile || !mounted) return null;
 
   return (
-    <div className="bottom-navigation-wrapper">
-      <nav className="fixed bottom-0 left-0 right-0 w-full z-[999] border-t bg-background/95 backdrop-blur-xl bottom-nav-shadow">
-        <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
-          {navItems.map((item) => (
-            <NavItem 
-              key={item.path}
-              item={item} 
-              isActive={location.pathname === item.path} 
-            />
-          ))}
-        </div>
-      </nav>
-    </div>
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 w-full z-[9999] border-t bottom-nav-shadow",
+      isScrolled 
+        ? "border-border/40 bg-background/95 backdrop-blur-xl" 
+        : "border-border/20 bg-background/90 backdrop-blur-lg"
+    )}>
+      <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
+        {navItems.map((item) => (
+          <NavItem 
+            key={item.path}
+            item={item} 
+            isActive={location.pathname === item.path} 
+          />
+        ))}
+      </div>
+    </nav>
   );
 });
 
