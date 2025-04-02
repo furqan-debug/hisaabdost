@@ -1,4 +1,3 @@
-
 import { useLocation, Link } from "react-router-dom";
 import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,7 +12,6 @@ const navItems = [
   { icon: Target, label: "Goals", path: "/goals" },
 ];
 
-// Memoize each nav item to prevent re-renders
 const NavItem = memo(({ 
   item, 
   isActive 
@@ -50,28 +48,23 @@ export const BottomNavigation = memo(() => {
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
-  // Use ref to prevent excessive render cycles from scroll events
   const lastScrollUpdate = useRef<number>(0);
   const lastScrollY = useRef<number>(0);
   
   useEffect(() => {
     setMounted(true);
     
-    // Super-optimized passive scroll handler
     const handleScroll = () => {
-      // Skip scroll handling if we've updated recently
       const now = Date.now();
       if (now - lastScrollUpdate.current < 500) {
         return;
       }
       
-      // Only update if scroll position has changed significantly
       const currentScrollY = window.scrollY;
       if (Math.abs(currentScrollY - lastScrollY.current) < 10) {
         return;
       }
       
-      // Only update state if the value would actually change
       const shouldBeScrolled = currentScrollY > 20;
       if (isScrolled !== shouldBeScrolled) {
         setIsScrolled(shouldBeScrolled);
@@ -81,7 +74,6 @@ export const BottomNavigation = memo(() => {
       lastScrollUpdate.current = now;
     };
     
-    // Use passive event listener for better performance
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     return () => {
@@ -93,10 +85,10 @@ export const BottomNavigation = memo(() => {
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 border-t w-full bottom-nav-shadow",
+      "fixed-bottom-nav bottom-0 left-0 right-0 z-[9999] border-t w-full bottom-nav-shadow",
       isScrolled 
-        ? "border-border/40 bg-black/95 backdrop-blur-xl" 
-        : "border-border/20 bg-black/90 backdrop-blur-lg"
+        ? "border-border/40 bg-background/95 backdrop-blur-xl" 
+        : "border-border/20 bg-background/90 backdrop-blur-lg"
     )}>
       <div className="flex h-14 items-center justify-around px-1 max-w-[480px] mx-auto">
         {navItems.map((item) => (

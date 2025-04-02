@@ -68,6 +68,13 @@ Most styles are now organized into component-specific files:
     will-change: transform;
   }
   
+  /* Fix for iOS safari viewport height issues */
+  .min-h-screen {
+    min-height: 100vh;
+    /* Use fallback for browsers that don't support css vars */
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+  
   /* CRITICAL: Completely disable ALL animations and transitions */
   .disable-animations *,
   * {
@@ -94,16 +101,18 @@ Most styles are now organized into component-specific files:
     text-rendering: optimizeSpeed;
   }
   
-  /* Fix for bottom navigation */
+  /* Fix for bottom navigation - CRITICAL padding */
   main {
-    padding-bottom: 70px !important; /* Ensure content doesn't get hidden behind nav */
+    padding-bottom: 80px !important; /* Ensure content doesn't get hidden behind nav */
   }
   
-  /* CRITICAL: Ensure bottom navigation stays fixed */
-  .fixed.bottom-0 {
+  /* CRITICAL: Ensure bottom navigation stays fixed - use !important for all properties */
+  .fixed-bottom-nav {
     position: fixed !important;
     bottom: 0 !important;
-    z-index: 100 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
     width: 100% !important;
   }
 }
@@ -120,9 +129,9 @@ Most styles are now organized into component-specific files:
   }
   
   /* Fix for iOS bottom bar */
-  .fixed.bottom-0 {
+  .fixed-bottom-nav {
     bottom: 0 !important;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
 }
 
@@ -143,8 +152,10 @@ Most styles are now organized into component-specific files:
   }
   
   /* Fix for bottom nav z-index issues */
-  .fixed {
-    z-index: 50;
+  .fixed-bottom-nav {
+    z-index: 9999 !important;
     transform: translateZ(0);
+    position: fixed !important;
+    bottom: 0 !important;
   }
 }
