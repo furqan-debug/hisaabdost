@@ -47,13 +47,14 @@
     @apply fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex flex-col;
   }
   
-  /* Bottom navigation specific styles - CRITICALLY IMPORTANT */
-  .fixed-bottom-nav {
+  /* Bottom navigation fixed position - CRITICAL */
+  nav.fixed {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    z-index: 9999 !important; /* Highest z-index to ensure visibility */
+    z-index: 9999 !important;
+    width: 100% !important;
     transform: translateZ(0);
     will-change: transform;
     backface-visibility: hidden;
@@ -62,12 +63,17 @@
   
   /* Fix position for Safari */
   @supports (-webkit-touch-callout: none) {
-    .fixed-bottom-nav {
+    nav.fixed {
       position: fixed !important;
       bottom: 0 !important;
       left: 0 !important;
       right: 0 !important;
       padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    }
+    
+    /* Add padding to main content in iOS */
+    main {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0)) !important;
     }
   }
 }

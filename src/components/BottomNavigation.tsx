@@ -1,3 +1,4 @@
+
 import { useLocation, Link } from "react-router-dom";
 import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -84,8 +85,8 @@ export const BottomNavigation = memo(() => {
   if (!isMobile || !mounted) return null;
 
   return (
-    <div className={cn(
-      "fixed-bottom-nav bottom-0 left-0 right-0 z-[9999] border-t w-full bottom-nav-shadow",
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 w-full z-[9999] border-t bottom-nav-shadow",
       isScrolled 
         ? "border-border/40 bg-background/95 backdrop-blur-xl" 
         : "border-border/20 bg-background/90 backdrop-blur-lg"
@@ -99,7 +100,7 @@ export const BottomNavigation = memo(() => {
           />
         ))}
       </div>
-    </div>
+    </nav>
   );
 });
 

@@ -31,7 +31,12 @@ Most styles are now organized into component-specific files:
   /* Prevent horizontal overflow */
   div, section, nav, main, article, header, footer {
     max-width: 100vw;
+  }
+  
+  main {
     overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 80px !important; /* Ensure content doesn't get hidden behind nav */
   }
 
   /* Adjust padding for main content */
@@ -75,17 +80,6 @@ Most styles are now organized into component-specific files:
     min-height: calc(var(--vh, 1vh) * 100);
   }
   
-  /* CRITICAL: Completely disable ALL animations and transitions */
-  .disable-animations *,
-  * {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    animation-duration: 0s !important;
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-  }
-  
   /* Fix for localStorage persistence issues */
   input, button {
     -webkit-tap-highlight-color: transparent;
@@ -101,19 +95,17 @@ Most styles are now organized into component-specific files:
     text-rendering: optimizeSpeed;
   }
   
-  /* Fix for bottom navigation - CRITICAL padding */
-  main {
-    padding-bottom: 80px !important; /* Ensure content doesn't get hidden behind nav */
-  }
-  
-  /* CRITICAL: Ensure bottom navigation stays fixed - use !important for all properties */
-  .fixed-bottom-nav {
+  /* CRITICAL: Bottom navigation fixes */
+  nav.fixed, 
+  nav.bottom-0 {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 9999 !important;
     width: 100% !important;
+    transform: translateZ(0);
+    will-change: transform;
   }
 }
 
@@ -122,6 +114,7 @@ Most styles are now organized into component-specific files:
   --vh: 1vh;
 }
 
+/* Script to fix mobile viewport height */
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: calc(var(--vh, 1vh) * 100);
@@ -129,9 +122,15 @@ Most styles are now organized into component-specific files:
   }
   
   /* Fix for iOS bottom bar */
-  .fixed-bottom-nav {
+  nav.fixed,
+  nav.bottom-0 {
     bottom: 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+  
+  /* Add padding for iOS safe area */
+  main {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0)) !important;
   }
 }
 
@@ -144,18 +143,12 @@ Most styles are now organized into component-specific files:
   button,
   input,
   select,
-  .stat-card {
-    will-change: auto;
+  .stat-card,
+  nav.fixed,
+  nav.bottom-0 {
+    will-change: transform;
     backface-visibility: hidden;
     transform: translateZ(0);
     -webkit-font-smoothing: subpixel-antialiased;
-  }
-  
-  /* Fix for bottom nav z-index issues */
-  .fixed-bottom-nav {
-    z-index: 9999 !important;
-    transform: translateZ(0);
-    position: fixed !important;
-    bottom: 0 !important;
   }
 }
