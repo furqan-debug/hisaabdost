@@ -9,7 +9,6 @@ import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -17,14 +16,12 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
-  const { refreshTrigger } = useExpenseRefresh();
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
@@ -43,18 +40,11 @@ const Dashboard = () => {
     }
   }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
   
-  // Handle manual expense refreshing
-  const handleExpenseRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-  };
-  
   // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
-      
-      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -75,8 +65,6 @@ const Dashboard = () => {
         });
         return [];
       }
-      
-      console.log(`Fetched ${data.length} expenses for the month`);
       
       return data.map(exp => ({
         id: exp.id,
@@ -113,14 +101,6 @@ const Dashboard = () => {
     }
   }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
 
-  // Listen for expense update events and refresh data
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-    }
-  }, [refreshTrigger, queryClient, selectedMonth]);
-
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
@@ -141,89 +121,54 @@ const Dashboard = () => {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="h-32" />
           ))}
         </div>
-        <Skeleton className="h-36 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-36" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
-  // Animation variants for staggered children
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
-    }
-  };
-
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={itemVariants}>
-        <DashboardHeader isNewUser={isNewUser} />
-      </motion.div>
+    <div className="space-y-6">
+      <DashboardHeader isNewUser={isNewUser} />
       
-      <motion.div variants={itemVariants}>
-        <StatCards 
-          totalBalance={totalBalance}
-          monthlyExpenses={monthlyExpenses}
-          monthlyIncome={monthlyIncome}
-          setMonthlyIncome={setMonthlyIncome}
-          savingsRate={savingsRate}
-          formatPercentage={formatPercentage}
-          isNewUser={isNewUser}
-          isLoading={isLoading}
-        />
-      </motion.div>
+      <StatCards 
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        isNewUser={isNewUser}
+        isLoading={isLoading}
+      />
 
-      <motion.div variants={itemVariants}>
-        <AddExpenseButton 
-          isNewUser={isNewUser}
-          expenseToEdit={expenseToEdit}
-          showAddExpense={showAddExpense}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-          onAddExpense={handleExpenseRefresh}
-        />
-      </motion.div>
+      <AddExpenseButton 
+        isNewUser={isNewUser}
+        expenseToEdit={expenseToEdit}
+        showAddExpense={showAddExpense}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] })}
+      />
 
-      <motion.div variants={itemVariants}>
-        <RecentExpensesCard 
-          expenses={expenses}
-          isNewUser={isNewUser}
-          isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-        />
-      </motion.div>
+      <RecentExpensesCard 
+        expenses={expenses}
+        isNewUser={isNewUser}
+        isLoading={isExpensesLoading}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+      />
 
-      <motion.div variants={itemVariants}>
-        <ExpenseAnalyticsCard 
-          expenses={expenses}
-          isLoading={isExpensesLoading}
-          chartType={chartType}
-          setChartType={setChartType}
-        />
-      </motion.div>
-    </motion.div>
+      <ExpenseAnalyticsCard 
+        expenses={expenses}
+        isLoading={isExpensesLoading}
+        chartType={chartType}
+        setChartType={setChartType}
+      />
+    </div>
   );
 };
 

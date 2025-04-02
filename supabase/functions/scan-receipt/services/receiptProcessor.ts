@@ -1,4 +1,3 @@
-
 import { preprocessImage } from "../utils/imageProcessor.ts";
 import { processReceiptWithOCR, processReceiptWithOpenRouter, processReceiptWithTesseract } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
@@ -23,7 +22,6 @@ export async function processReceipt(file: File, apiKey: string): Promise<any> {
     
     // Choose OCR method based on API key availability
     let extractedText = "";
-    // Default to current date
     let receiptDate = new Date().toISOString().split('T')[0];
     let storeName = "Store";
     

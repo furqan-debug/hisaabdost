@@ -45,18 +45,6 @@ export function useScanResults({
               .then(success => {
                 console.log("Scan processing result:", success);
                 
-                // If processing was successful, dispatch events to update the expense list
-                if (success) {
-                  // Dispatch the custom event with a delay to ensure DB operations are complete
-                  setTimeout(() => {
-                    const event = new CustomEvent('expenses-updated', { 
-                      detail: { timestamp: Date.now() }
-                    });
-                    window.dispatchEvent(event);
-                    console.log("Dispatched expenses-updated event after processing scan results");
-                  }, 1000);
-                }
-                
                 // Clear the stored result after processing
                 setTimeout(() => {
                   sessionStorage.removeItem('lastScanResult');

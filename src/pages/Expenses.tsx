@@ -14,40 +14,41 @@ import { exportExpensesToCSV } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 
 const Expenses = () => {
   const { user } = useAuth();
-  const { toast: uiToast } = useToast();
+  const { toast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { refreshTrigger, triggerRefresh } = useExpenseRefresh();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Fetch expenses using React Query, get all expenses instead of just for selected month
-  const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['all-expenses', refreshTrigger],
+  // Fetch expenses from Supabase using React Query, filtered by selected month
+  const { data: expenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching all expenses for user:", user.id);
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
         console.error('Error fetching expenses:', error);
-        toast.error("Failed to load expenses. Please try again.");
+        toast({
+          title: "Error",
+          description: "Failed to load expenses. Please try again.",
+          variant: "destructive",
+        });
         return [];
       }
-      
-      console.log("Fetched expenses:", data);
       
       return data.map(exp => ({
         id: exp.id,
@@ -62,13 +63,13 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
-    refetchInterval: 5000,
-    refetchOnMount: true,
+    // Set a shorter refetch interval to ensure scanned expenses appear quickly
+    refetchInterval: 3000, // Refetch every 3 seconds
+    // Refetch when window regains focus
     refetchOnWindowFocus: true,
-    staleTime: 0,
   });
 
-  // Hook for filtering and sorting expenses - now will handle date filtering
+  // Hook for filtering and sorting expenses
   const {
     searchTerm,
     setSearchTerm,
@@ -79,9 +80,8 @@ const Expenses = () => {
     dateRange,
     setDateRange,
     filteredExpenses,
-    totalFilteredAmount,
-    useCustomDateRange
-  } = useExpenseFilter(allExpenses);
+    totalFilteredAmount
+  } = useExpenseFilter(expenses);
 
   // Hook for managing expense selection
   const {
@@ -120,34 +120,14 @@ const Expenses = () => {
     const handleReceiptScan = () => {
       console.log("Receipt scan detected, refreshing expenses list");
       refetch();
-      // Force a refresh after a delay to ensure DB has been updated
-      setTimeout(() => {
-        refetch();
-        triggerRefresh();
-      }, 1000);
-    };
-    
-    const handleExpensesUpdated = () => {
-      console.log("Expenses updated event detected, refreshing list");
-      refetch();
-      // Force a refresh after a delay to ensure DB has been updated
-      setTimeout(() => {
-        refetch();
-        triggerRefresh();
-      }, 1000);
     };
     
     window.addEventListener('receipt-scanned', handleReceiptScan);
-    window.addEventListener('expenses-updated', handleExpensesUpdated);
-    
-    // Initial refetch when component mounts
-    refetch();
     
     return () => {
       window.removeEventListener('receipt-scanned', handleReceiptScan);
-      window.removeEventListener('expenses-updated', handleExpensesUpdated);
     };
-  }, [refetch, triggerRefresh]);
+  }, [refetch]);
 
   const isLoading = isMonthDataLoading || isExpensesLoading;
 
@@ -195,8 +175,6 @@ const Expenses = () => {
         }}
         onDelete={handleSingleDelete}
         totalFilteredAmount={totalFilteredAmount}
-        selectedMonth={selectedMonth}
-        useCustomDateRange={useCustomDateRange}
       />
     </div>
   );

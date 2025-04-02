@@ -21,7 +21,7 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
-  onSuccess?: () => void; // Added prop
+  onSuccess?: () => void; // Added missing prop
 }
 
 export function ReceiptScanDialog({
@@ -105,7 +105,7 @@ export function ReceiptScanDialog({
         !isAutoProcessing && 
         autoProcess && 
         !autoProcessStarted &&
-        !retryHandler.isProcessingInProgress()) {
+        !retryHandler.isProcessing()) {
       
       console.log(`Auto-processing starting for: ${fileFingerprint.current}`);
       setAutoProcessStarted(true);

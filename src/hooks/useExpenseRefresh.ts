@@ -1,6 +1,5 @@
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
 
 /**
  * Custom hook to listen for expense update events
@@ -8,79 +7,30 @@ import { toast } from 'sonner';
  */
 export function useExpenseRefresh() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [lastRefreshTime, setLastRefreshTime] = useState(0);
-  const refreshTimerRef = useRef<number | null>(null);
-  
-  const triggerRefresh = useCallback(() => {
-    // Throttle refreshes to prevent multiple rapid refreshes
-    const now = Date.now();
-    if (now - lastRefreshTime > 500) { // Only refresh if more than 500ms has passed
-      console.log("Manually triggering refresh");
-      setRefreshTrigger(prev => prev + 1);
-      setLastRefreshTime(now);
-    }
-  }, [lastRefreshTime]);
-  
-  // Function to handle various expense update events
-  const handleExpenseUpdateEvent = useCallback((event: Event) => {
-    const eventName = event.type;
-    console.log(`${eventName} event received, preparing to refresh data`);
-    
-    // Clear any existing timer
-    if (refreshTimerRef.current !== null) {
-      window.clearTimeout(refreshTimerRef.current);
-    }
-    
-    // Set a short timeout to batch potential multiple events
-    refreshTimerRef.current = window.setTimeout(() => {
-      console.log(`Refreshing expense list from ${eventName} event`);
-      setRefreshTrigger(prev => prev + 1);
-      setLastRefreshTime(Date.now());
-      refreshTimerRef.current = null;
-      
-      // Show toast for certain events
-      if (eventName === 'receipt-scanned') {
-        toast.success("Receipt processed, expenses added successfully!");
-      } else if (eventName === 'expense-added') {
-        toast.success("Expense added successfully!");
-      } else if (eventName === 'expense-edited') {
-        toast.success("Expense updated successfully!");
-      } else if (eventName === 'expense-deleted') {
-        toast.success("Expense deleted successfully!");
-      }
-    }, 300);
-  }, []);
   
   useEffect(() => {
-    // Listen for all expense-related events
-    console.log("Setting up expense refresh event listeners");
+    // Listen for the custom expense-updated event
+    const handleExpensesUpdated = (event: Event) => {
+      console.log("Expense updated event received, triggering refresh");
+      setRefreshTrigger(prev => prev + 1);
+    };
     
-    // Add event listeners for various expense update events
-    window.addEventListener('expenses-updated', handleExpenseUpdateEvent);
-    window.addEventListener('receipt-scanned', handleExpenseUpdateEvent);
-    window.addEventListener('expense-added', handleExpenseUpdateEvent);
-    window.addEventListener('expense-edited', handleExpenseUpdateEvent);
-    window.addEventListener('expense-deleted', handleExpenseUpdateEvent);
-    window.addEventListener('expense-refresh', handleExpenseUpdateEvent);
-    window.addEventListener('custom-date-change', handleExpenseUpdateEvent);
+    // Listen for receipt-scanned event
+    const handleReceiptScanned = (event: Event) => {
+      console.log("Receipt scanned event received, triggering refresh");
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
+    // Add event listeners
+    window.addEventListener('expenses-updated', handleExpensesUpdated);
+    window.addEventListener('receipt-scanned', handleReceiptScanned);
     
     // Cleanup listeners on unmount
     return () => {
-      console.log("Removing expense refresh event listeners");
-      window.removeEventListener('expenses-updated', handleExpenseUpdateEvent);
-      window.removeEventListener('receipt-scanned', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-added', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-edited', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-deleted', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-refresh', handleExpenseUpdateEvent);
-      window.removeEventListener('custom-date-change', handleExpenseUpdateEvent);
-      
-      // Clear any pending timeout
-      if (refreshTimerRef.current !== null) {
-        window.clearTimeout(refreshTimerRef.current);
-      }
+      window.removeEventListener('expenses-updated', handleExpensesUpdated);
+      window.removeEventListener('receipt-scanned', handleReceiptScanned);
     };
-  }, [handleExpenseUpdateEvent]);
+  }, []);
   
-  return { refreshTrigger, triggerRefresh };
+  return { refreshTrigger };
 }

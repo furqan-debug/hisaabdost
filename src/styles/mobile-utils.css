@@ -2,19 +2,16 @@
 /* Mobile Utility Styles */
 @media (max-width: 640px) {
   h1 {
-    @apply text-xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
   h2 {
-    @apply text-lg font-semibold;
+    @apply text-xl font-semibold;
   }
   h3 {
-    @apply text-base font-medium;
-  }
-  p {
-    @apply text-sm;
+    @apply text-lg font-medium;
   }
   input, select, textarea, button {
-    @apply text-sm;
+    @apply text-base;
   }
   
   /* Fix centering for mobile elements */
@@ -24,7 +21,7 @@
   
   /* Adjust touch targets */
   .touch-target {
-    @apply min-h-10 min-w-10;
+    @apply min-h-12 min-w-12;
   }
   
   /* Ensure all content stays within container */
@@ -41,46 +38,6 @@
     overflow-x: hidden !important;
     width: 100%;
   }
-  
-  /* Optimize for small screens */
-  .mobile-text-xs {
-    @apply text-xs;
-  }
-  
-  .mobile-text-sm {
-    @apply text-sm;
-  }
-  
-  .mobile-p-1 {
-    @apply p-1;
-  }
-  
-  .mobile-p-2 {
-    @apply p-2;
-  }
-  
-  .mobile-gap-1 {
-    @apply gap-1;
-  }
-  
-  .mobile-h-auto {
-    @apply h-auto;
-  }
-  
-  /* Fix form inputs for mobile */
-  .mobile-input {
-    @apply text-sm py-1.5 px-2;
-  }
-  
-  /* Responsive spacing */
-  .sm-spacing {
-    @apply p-2 gap-2;
-  }
-  
-  /* Responsive text truncation */
-  .mobile-truncate {
-    @apply truncate max-w-[180px];
-  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -91,35 +48,4 @@
 
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
-}
-
-/* Make sure all content is visible */
-.overflow-guard {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-/* Prevent horizontal scrolling */
-.prevent-x-overflow {
-  overflow-x: hidden;
-  max-width: 100vw;
-  width: 100%;
-}
-
-/* Responsive font sizes */
-.responsive-text-xs {
-  font-size: clamp(0.7rem, 2.5vw, 0.8rem);
-}
-
-.responsive-text-sm {
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-}
-
-.responsive-text-base {
-  font-size: clamp(0.9rem, 2.5vw, 1rem);
-}
-
-.responsive-text-lg {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
 }

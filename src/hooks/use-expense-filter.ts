@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useMonthContext } from "./use-month-context";
 import { startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
@@ -22,9 +22,6 @@ export function useExpenseFilter(expenses: Expense[]) {
     start: '',
     end: '',
   });
-  
-  // New state to track if custom date range is active
-  const [useCustomDateRange, setUseCustomDateRange] = useState(false);
 
   const handleSort = (field: SortField) => {
     setSortConfig({
@@ -35,11 +32,6 @@ export function useExpenseFilter(expenses: Expense[]) {
           : 'asc'
     });
   };
-  
-  // Update useCustomDateRange whenever dateRange changes
-  useEffect(() => {
-    setUseCustomDateRange(!!dateRange.start && !!dateRange.end);
-  }, [dateRange]);
 
   const filteredExpenses = useMemo(() => {
     return expenses
@@ -48,23 +40,22 @@ export function useExpenseFilter(expenses: Expense[]) {
                             expense.category.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
         
-        // Date filtering logic
-        let matchesTimeframe = true;
+        // Filter by the selected month
         const expenseDate = new Date(expense.date);
+        const monthStart = startOfMonth(selectedMonth);
+        const monthEnd = endOfMonth(selectedMonth);
+        const isInSelectedMonth = isWithinInterval(expenseDate, {
+          start: monthStart,
+          end: monthEnd
+        });
         
-        if (useCustomDateRange && dateRange.start && dateRange.end) {
-          // Use custom date range if active
-          matchesTimeframe = expenseDate >= new Date(dateRange.start) && 
-                            expenseDate <= new Date(dateRange.end);
-        } else {
-          // Fall back to selected month
-          const monthStart = startOfMonth(selectedMonth);
-          const monthEnd = endOfMonth(selectedMonth);
-          matchesTimeframe = isWithinInterval(expenseDate, {
-            start: monthStart,
-            end: monthEnd
-          });
-        }
+        // Use custom date range if set, otherwise use selected month
+        const isInCustomDateRange = dateRange.start && dateRange.end ? 
+          (expenseDate >= new Date(dateRange.start) && expenseDate <= new Date(dateRange.end)) : 
+          true;
+        
+        const matchesTimeframe = dateRange.start && dateRange.end ? 
+          isInCustomDateRange : isInSelectedMonth;
         
         return matchesSearch && matchesCategory && matchesTimeframe;
       })
@@ -84,21 +75,20 @@ export function useExpenseFilter(expenses: Expense[]) {
             return 0;
         }
       });
-  }, [expenses, searchTerm, categoryFilter, dateRange, sortConfig, selectedMonth, useCustomDateRange]);
+  }, [expenses, searchTerm, categoryFilter, dateRange, sortConfig, selectedMonth]);
 
   const totalFilteredAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   }, [filteredExpenses]);
 
-  // Clear custom date range when month changes, but only if not manually set
-  useEffect(() => {
-    if (!useCustomDateRange) {
-      setDateRange({
-        start: '',
-        end: ''
-      });
-    }
-  }, [selectedMonth, useCustomDateRange]);
+  // Automatically clear custom date range when month changes
+  // to default to the month-based filtering
+  useMemo(() => {
+    setDateRange({
+      start: '',
+      end: ''
+    });
+  }, [selectedMonth]);
 
   return {
     searchTerm,
@@ -111,7 +101,6 @@ export function useExpenseFilter(expenses: Expense[]) {
     setDateRange,
     filteredExpenses,
     totalFilteredAmount,
-    selectedMonth,
-    useCustomDateRange
+    selectedMonth
   };
 }

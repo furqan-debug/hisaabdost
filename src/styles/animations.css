@@ -1,3 +1,4 @@
+
 /* Base Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -54,24 +55,6 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes scanLine {
-  0% { transform: translateY(-100%); opacity: 0.3; }
-  30% { opacity: 0.7; }
-  70% { opacity: 0.7; }
-  100% { transform: translateY(100%); opacity: 0.3; }
-}
-
-@keyframes pulse-border {
-  0% { border-color: var(--primary); }
-  50% { border-color: transparent; }
-  100% { border-color: var(--primary); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 /* Applied Animation Classes */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
@@ -115,40 +98,6 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
-}
-
-.animate-scan-line {
-  position: relative;
-  overflow: hidden;
-}
-
-.animate-scan-line::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 10px;
-  width: 100%;
-  background: linear-gradient(to bottom, 
-    rgba(155, 135, 245, 0) 0%,
-    rgba(155, 135, 245, 0.6) 50%,
-    rgba(155, 135, 245, 0) 100%);
-  animation: scanLine 2s ease-in-out infinite;
-}
-
-.animate-pulse-border {
-  animation: pulse-border 2s infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
 }
 
 /* Animation Delays */
@@ -212,6 +161,7 @@
     animation: slideUp 0.2s ease-out forwards;
   }
   
+  /* Reduce motion for better performance */
   @media (prefers-reduced-motion) {
     .animate-fade-in,
     .animate-fade-out,
@@ -243,38 +193,3 @@
 .stagger-item:nth-child(8) { animation-delay: 350ms; }
 .stagger-item:nth-child(9) { animation-delay: 400ms; }
 .stagger-item:nth-child(10) { animation-delay: 450ms; }
-
-/* New animation classes */
-.animation-slide-up {
-  animation: slideUp 0.5s ease-out forwards;
-}
-
-.animation-scale-in {
-  animation: scaleIn 0.4s ease-out forwards;
-}
-
-.animation-delay-100 {
-  animation-delay: 100ms;
-}
-
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.elastic-hover {
-  transition: transform 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.elastic-hover:hover {
-  transform: scale(1.03);
-}
-.elastic-hover:active {
-  transform: scale(0.98);
-}
-
-/* Gradient text effect */
-.gradient-text {
-  background: linear-gradient(135deg, #9b87f5 0%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}

@@ -27,8 +27,6 @@ interface ExpenseListProps {
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
   totalFilteredAmount: number;
-  selectedMonth: Date;
-  useCustomDateRange: boolean;
 }
 
 export function ExpenseList({
@@ -48,9 +46,7 @@ export function ExpenseList({
   onAddExpense,
   onEdit,
   onDelete,
-  totalFilteredAmount,
-  selectedMonth,
-  useCustomDateRange
+  totalFilteredAmount
 }: ExpenseListProps) {
   return (
     <Card>
@@ -71,8 +67,6 @@ export function ExpenseList({
             setCategoryFilter={setCategoryFilter}
             dateRange={dateRange}
             setDateRange={setDateRange}
-            selectedMonth={selectedMonth}
-            useCustomDateRange={useCustomDateRange}
           />
 
           <div className="rounded-lg border border-border/40 overflow-hidden">

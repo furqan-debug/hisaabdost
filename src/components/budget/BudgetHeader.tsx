@@ -15,13 +15,13 @@ export const BudgetHeader = ({ onAddBudget, onExport }: BudgetHeaderProps) => {
   return (
     <header className={cn(
       "space-y-3 mb-4",
-      isMobile ? "px-1" : "flex justify-between items-center space-y-0"
+      isMobile ? "px-2" : "flex justify-between items-center space-y-0"
     )}>
       <div className="space-y-1">
-        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           Budget
         </h1>
-        <p className="text-muted-foreground text-xs md:text-sm">
+        <p className="text-muted-foreground text-sm md:text-base">
           Manage and track your budget allocations
         </p>
       </div>
@@ -31,17 +31,17 @@ export const BudgetHeader = ({ onAddBudget, onExport }: BudgetHeaderProps) => {
             variant="outline"
             onClick={onExport}
             size="sm"
-            className="flex-1 rounded-lg text-xs py-1.5 h-auto"
+            className="flex-1 rounded-lg"
           >
-            <Download className="h-3 w-3 mr-1" />
+            <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
           <Button 
             size="sm" 
-            className="flex-1 rounded-lg text-xs py-1.5 h-auto"
+            className="flex-1 rounded-lg"
             onClick={onAddBudget}
           >
-            <Plus className="h-3 w-3 mr-1" />
+            <Plus className="h-4 w-4 mr-2" />
             Add Budget
           </Button>
         </div>

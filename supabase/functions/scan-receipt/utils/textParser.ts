@@ -10,8 +10,8 @@ export function parseReceiptText(text: string) {
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   console.log(`Parsing ${lines.length} lines of text`);
   
-  // Extract date from receipt or use current date as fallback
-  const date = extractDate(text) || new Date().toISOString().split('T')[0];
+  // Extract date from receipt
+  const date = extractDate(text) || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   console.log("Extracted date:", date);
   
   // Try to extract store name
