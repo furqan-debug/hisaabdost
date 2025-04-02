@@ -7,6 +7,7 @@ import { Plus, Upload, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -26,6 +27,7 @@ export const AddExpenseButton = ({
   onAddExpense
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,22 +36,26 @@ export const AddExpenseButton = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log(`File selected for auto-processing: ${file.name}`);
       setSelectedFile(file);
 
-      // For upload or camera modes, we want to auto-process
+      // For upload or camera modes, we want to auto-process immediately
       if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
 
+      // Reset the input value
       e.target.value = '';
     }
   };
 
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+    console.log(`Opening expense sheet in ${mode} mode`);
     setCaptureMode(mode);
 
     if (mode === 'manual') {
       // Just open the manual entry form
+      setSelectedFile(null);
       setShowAddExpense(true);
     } else if (mode === 'upload' && fileInputRef.current) {
       // Trigger file upload
@@ -66,6 +72,15 @@ export const AddExpenseButton = ({
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+  
+  // Handle successful expense addition
+  const handleSuccessfulAddExpense = () => {
+    console.log("Expense(s) added successfully, refreshing data");
+    // Force invalidate queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
+    onAddExpense();
   };
 
   return <div className="mt-6">
@@ -109,7 +124,7 @@ export const AddExpenseButton = ({
       />
       
       <AddExpenseSheet 
-        onAddExpense={onAddExpense} 
+        onAddExpense={handleSuccessfulAddExpense} 
         expenseToEdit={expenseToEdit} 
         onClose={handleSheetClose} 
         open={showAddExpense || expenseToEdit !== undefined} 
