@@ -48,7 +48,8 @@
   }
   
   /* Bottom navigation fixed position - CRITICAL */
-  nav.fixed {
+  nav.fixed,
+  .bottom-navigation-wrapper nav {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -63,7 +64,8 @@
   
   /* Fix position for Safari */
   @supports (-webkit-touch-callout: none) {
-    nav.fixed {
+    nav.fixed,
+    .bottom-navigation-wrapper nav {
       position: fixed !important;
       bottom: 0 !important;
       left: 0 !important;
@@ -75,6 +77,13 @@
     main {
       padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0)) !important;
     }
+  }
+  
+  /* Ensure the bottom navigation wrapper takes up no space */
+  .bottom-navigation-wrapper {
+    height: 0;
+    position: relative;
+    z-index: 9999;
   }
 }
 
