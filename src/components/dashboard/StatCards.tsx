@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useBudgetData } from "@/hooks/useBudgetData";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -35,6 +36,7 @@ export const StatCards = ({
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
   const { selectedMonth, updateMonthData } = useMonthContext();
+  const { updateMonthlyIncome } = useBudgetData();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
@@ -93,20 +95,25 @@ export const StatCards = ({
     setTempIncome(value);
   };
 
-  const saveIncome = () => {
+  const saveIncome = async () => {
     // Only update if the value has actually changed
     if (tempIncome !== prevMonthlyIncomeRef.current) {
+      // First update local state to make UI responsive
       setMonthlyIncome(tempIncome);
       prevMonthlyIncomeRef.current = tempIncome;
       
-      // Show confirmation toast
-      toast.success("Monthly income updated successfully");
+      // Now save to Supabase
+      const success = await updateMonthlyIncome(tempIncome);
       
-      // Directly and immediately update the context data with new income
-      // This ensures persistence by updating localStorage right away
-      updateMonthData(monthKeyRef.current, {
-        monthlyIncome: tempIncome
-      });
+      if (success) {
+        // Show confirmation toast
+        toast.success("Monthly income updated successfully");
+        
+        // Update the context data with new income
+        updateMonthData(monthKeyRef.current, {
+          monthlyIncome: tempIncome
+        });
+      }
     }
     
     setIsEditing(false);

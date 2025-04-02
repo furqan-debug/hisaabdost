@@ -10,6 +10,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
+import { useBudgetData } from "@/hooks/useBudgetData";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
+  const { monthlyIncome: dbMonthlyIncome, updateMonthlyIncome } = useBudgetData();
   
   // Prevent excessive renders with refs
   const selectedMonthRef = useRef(selectedMonth);
@@ -36,10 +38,10 @@ const Dashboard = () => {
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Initialize with context data
+  // Initialize with context data or data from useBudgetData
   const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
     const data = getCurrentMonthData();
-    return data.monthlyIncome || 0;
+    return data.monthlyIncome || dbMonthlyIncome || 0;
   });
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
@@ -51,15 +53,19 @@ const Dashboard = () => {
   
   // Update local income state when selected month changes - only if different
   useEffect(() => {
-    if (!isMonthDataLoading && selectedMonth !== selectedMonthRef.current) {
+    if (!isMonthDataLoading) {
       selectedMonthRef.current = selectedMonth;
       const data = getCurrentMonthData();
-      if (data.monthlyIncome !== prevMonthlyIncomeRef.current) {
-        setMonthlyIncome(data.monthlyIncome || 0);
-        prevMonthlyIncomeRef.current = data.monthlyIncome || 0;
+      
+      // Prioritize context data, but use DB data if context is empty
+      const newIncome = data.monthlyIncome || dbMonthlyIncome || 0;
+      
+      if (newIncome !== prevMonthlyIncomeRef.current) {
+        setMonthlyIncome(newIncome);
+        prevMonthlyIncomeRef.current = newIncome;
       }
     }
-  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
+  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading, dbMonthlyIncome]);
   
   // Update refresh trigger ref
   useEffect(() => {
@@ -77,6 +83,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
@@ -110,7 +117,7 @@ const Dashboard = () => {
   
   // Fetch expenses with highly optimized React Query settings
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', currentMonthKey, refreshTrigger],
+    queryKey: ['expenses', currentMonthKey, refreshTrigger, user?.id],
     queryFn: fetchExpenses,
     enabled: !!user,
     staleTime: 300000, // 5 minutes - prevent frequent refetches
@@ -184,7 +191,7 @@ const Dashboard = () => {
   const isLoading = isMonthDataLoading || isExpensesLoading;
 
   // Handle monthly income changes
-  const handleMonthlyIncomeChange = useCallback((newIncome: number) => {
+  const handleMonthlyIncomeChange = useCallback(async (newIncome: number) => {
     setMonthlyIncome(prevIncome => {
       // Only update if value has actually changed
       if (prevIncome !== newIncome) {
@@ -193,7 +200,10 @@ const Dashboard = () => {
       }
       return prevIncome;
     });
-  }, []);
+    
+    // Update the database with new income
+    await updateMonthlyIncome(newIncome);
+  }, [updateMonthlyIncome]);
 
   if (isLoading) {
     return (
