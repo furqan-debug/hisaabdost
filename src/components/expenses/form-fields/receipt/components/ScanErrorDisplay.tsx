@@ -1,35 +1,41 @@
 
 import React from 'react';
-import { AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AlertTriangle } from 'lucide-react';
 
 interface ScanErrorDisplayProps {
   scanError: string | null;
   scanTimedOut: boolean;
 }
 
-export function ScanErrorDisplay({ scanError, scanTimedOut }: ScanErrorDisplayProps) {
+export function ScanErrorDisplay({
+  scanError,
+  scanTimedOut
+}: ScanErrorDisplayProps) {
+  const errorMessage = scanError || 
+    (scanTimedOut ? "Scan timed out. Please try again." : "An error occurred during scanning.");
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 5 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="my-2 p-3 rounded-md bg-red-50 border border-red-200 text-red-700"
+      transition={{ duration: 0.3 }}
+      className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
     >
-      <div className="flex items-start gap-2">
-        {scanTimedOut ? (
-          <Clock className="h-5 w-5 text-red-500 mt-0.5" />
-        ) : (
-          <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-        )}
-        <div>
-          <h4 className="text-sm font-medium mb-1">
-            {scanTimedOut ? "Processing Timed Out" : "Processing Error"}
-          </h4>
-          <p className="text-xs">
-            {scanTimedOut
-              ? "The receipt processing took too long. Please try again or enter details manually."
-              : scanError || "Failed to process receipt. Please try again or enter details manually."}
-          </p>
+      <div className="flex items-start">
+        <div className="flex-shrink-0">
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+        </div>
+        <div className="ml-3">
+          <h3 className="text-sm font-medium">Processing Error</h3>
+          <div className="mt-2 text-sm">
+            <p>{errorMessage}</p>
+          </div>
+          <div className="mt-3">
+            <p className="text-xs">
+              Try uploading a clearer image or manually enter your expense details.
+            </p>
+          </div>
         </div>
       </div>
     </motion.div>

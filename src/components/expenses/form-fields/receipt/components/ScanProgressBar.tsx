@@ -22,12 +22,30 @@ export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBar
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="space-y-1"
       >
         <Progress 
           value={progress} 
-          className="h-2 bg-secondary"
-          indicatorClassName={getIndicatorClassName()}
+          className="h-3 bg-secondary/50 rounded-full overflow-hidden"
+          indicatorClassName={`${getIndicatorClassName()} transition-all duration-700 ease-out relative`}
         />
+        
+        {/* Add subtle pulse effect to the progress bar */}
+        {isScanning && progress < 100 && (
+          <motion.div 
+            className="h-3 absolute top-0 left-0 rounded-full bg-white/30"
+            style={{ width: `${progress * 0.7}%` }}
+            animate={{ 
+              opacity: [0, 0.5, 0],
+              x: [`${progress * 0.3}%`, `${progress}%`] 
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              ease: "easeInOut" 
+            }}
+          />
+        )}
       </motion.div>
     </div>
   );
