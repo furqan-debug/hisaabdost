@@ -1,12 +1,13 @@
 
 import { Label } from "@/components/ui/label";
-import { useState, useRef, useEffect } from "react";
+import { useRef } from "react";
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
-import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
 import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
-import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
+import { ReceiptScanManager } from "./receipt/ReceiptScanManager";
+import { useReceiptFileHandler } from "@/hooks/useReceiptFileHandler";
+import { useAuth } from "@/lib/auth";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -23,9 +24,6 @@ interface ReceiptFieldProps {
   autoProcess?: boolean;
 }
 
-// Track processing events to prevent duplicates across instances
-const processingCache = new Map<string, boolean>();
-
 export function ReceiptField({ 
   receiptUrl, 
   onFileChange,
@@ -34,19 +32,31 @@ export function ReceiptField({
   onCapture,
   autoProcess = true
 }: ReceiptFieldProps) {
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   
-  // State for receipt scanning dialog
-  const [scanDialogOpen, setScanDialogOpen] = useState(false);
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
-  const [processingStarted, setProcessingStarted] = useState(false);
-  const currentFileFingerprint = useRef<string | null>(null);
+  // Use our new custom hook
+  const {
+    scanDialogOpen,
+    setScanDialogOpen,
+    receiptFile,
+    filePreviewUrl,
+    processingStarted,
+    handleFileSelection,
+    handleRetryScan,
+    handleCleanup
+  } = useReceiptFileHandler({
+    userId: user?.id,
+    receiptUrl,
+    autoProcess,
+    updateField: () => {}, // We don't need this in this component
+    onCapture
+  });
   
   // Expose the refs to the parent component if needed
-  useEffect(() => {
+  React.useEffect(() => {
     if (setFileInputRef && fileInputRef.current) {
       setFileInputRef(fileInputRef.current);
     }
@@ -70,86 +80,12 @@ export function ReceiptField({
     }
   };
   
-  // Handle file selection and open scan dialog
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      console.log("No file selected");
-      return;
-    }
-    
-    // Generate fingerprint for the file
-    const fingerprint = generateFileFingerprint(file);
-    console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint})`);
-    
-    // Check if this file is already being processed in any component
-    if (processingCache.has(fingerprint)) {
-      console.log(`File is already being processed: ${fingerprint}`);
-      return;
-    }
-    
-    // Record that we're processing this file
-    processingCache.set(fingerprint, true);
-    currentFileFingerprint.current = fingerprint;
-    
-    // Flag that we've started processing to prevent reopening
-    setProcessingStarted(true);
-    
-    // Create a preview URL for the file
-    const previewUrl = URL.createObjectURL(file);
-    setFilePreviewUrl(previewUrl);
-    setReceiptFile(file);
-    
-    // Only open scan dialog for auto-processing
-    if (autoProcess) {
-      setScanDialogOpen(true);
-    }
-    
+  // Wrapper for file selection handler
+  const handleLocalFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(e);
     // Call the original onFileChange to handle storage
     onFileChange(e);
-    
-    // Reset the file input so the same file can be selected again later
-    if (e.target) {
-      e.target.value = '';
-    }
   };
-  
-  // Handle retrying the scan with the existing file
-  const handleRetryScan = () => {
-    if (receiptFile && filePreviewUrl) {
-      setScanDialogOpen(true);
-    }
-  };
-  
-  // Clean up resources when dialog is closed
-  const handleCleanup = () => {
-    console.log("Cleaning up resources for file:", currentFileFingerprint.current);
-    // Remove from processing cache
-    if (currentFileFingerprint.current) {
-      processingCache.delete(currentFileFingerprint.current);
-      currentFileFingerprint.current = null;
-    }
-    
-    if (filePreviewUrl) {
-      URL.revokeObjectURL(filePreviewUrl);
-      setFilePreviewUrl(null);
-    }
-    setReceiptFile(null);
-    setProcessingStarted(false); // Allow new uploads after cleanup
-  };
-  
-  // Clean up resources when component unmounts
-  useEffect(() => {
-    return () => {
-      if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-      }
-      // Clean up processing cache
-      if (currentFileFingerprint.current) {
-        processingCache.delete(currentFileFingerprint.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="space-y-2">
@@ -163,7 +99,7 @@ export function ReceiptField({
         {/* Hidden file inputs */}
         <ReceiptFileInput
           id="expense-receipt"
-          onChange={handleFileSelection}
+          onChange={handleLocalFileSelection}
           inputRef={fileInputRef}
           useCamera={false}
           accept="image/*"
@@ -171,7 +107,7 @@ export function ReceiptField({
         
         <ReceiptFileInput
           id="camera-capture"
-          onChange={handleFileSelection}
+          onChange={handleLocalFileSelection}
           inputRef={cameraInputRef}
           useCamera={true}
           accept="image/*"
@@ -188,9 +124,9 @@ export function ReceiptField({
         />
       </div>
       
-      {/* Scan Dialog - only shown when scanDialogOpen is true and autoProcess is enabled */}
-      {receiptFile && autoProcess && (
-        <ReceiptScanDialog
+      {/* Use our new scan manager component */}
+      {autoProcess && (
+        <ReceiptScanManager
           file={receiptFile}
           previewUrl={filePreviewUrl}
           open={scanDialogOpen}
