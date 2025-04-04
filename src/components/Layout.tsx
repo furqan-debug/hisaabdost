@@ -1,11 +1,12 @@
 
 import React, { memo } from 'react';
+import { Outlet } from 'react-router-dom'; // Added Outlet for nested routes
 import Navbar from './Navbar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode; // Made children optional
 }
 
 // Memo the NavBar and BottomNavigation to prevent unnecessary re-renders
@@ -23,6 +24,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div 
             className={isMobile ? "mx-auto w-full max-w-full px-0.5 disable-animations" : "mx-auto w-full max-w-5xl"}
           >
+            <Outlet /> {/* Added Outlet for nested routes */}
             {children}
           </div>
         </main>

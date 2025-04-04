@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 type AuthContextType = {
   user: User | null;
-  loading: boolean;
+  loading: boolean; // Changed from 'loading' to match what's used in App.tsx
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
