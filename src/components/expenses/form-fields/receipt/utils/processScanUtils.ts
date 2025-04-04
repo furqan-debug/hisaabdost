@@ -96,22 +96,29 @@ export async function processScanResults(
         console.log("Successfully saved expenses to database:", formattedItems.length, "items");
         toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
         
-        // IMPORTANT: Dispatch multiple events to ensure all components refresh
+        // CRUCIAL! Dispatch multiple events to ensure all components refresh
         // First, dispatch a receipt-scanned event
-        const receiptEvent = new CustomEvent('receipt-scanned', { 
+        window.dispatchEvent(new CustomEvent('receipt-scanned', { 
           detail: { timestamp: Date.now(), count: formattedItems.length }
-        });
-        window.dispatchEvent(receiptEvent);
-        console.log("Dispatched receipt-scanned event after database insert");
+        }));
+        console.log("Dispatched receipt-scanned event");
         
-        // Then dispatch an expenses-updated event with a small delay to ensure it's processed separately
-        setTimeout(() => {
-          const updateEvent = new CustomEvent('expenses-updated', { 
-            detail: { timestamp: Date.now(), count: formattedItems.length }
+        // Then dispatch an expenses-updated event for specific components
+        window.dispatchEvent(new CustomEvent('expenses-updated', { 
+          detail: { timestamp: Date.now(), count: formattedItems.length }
+        }));
+        console.log("Dispatched expenses-updated event");
+        
+        // Force update the queries for components that use React Query
+        try {
+          const event = new CustomEvent('force-query-invalidation', {
+            detail: { queryKeys: ['expenses', 'all-expenses'] }
           });
-          window.dispatchEvent(updateEvent);
-          console.log("Dispatched expenses-updated event after database insert");
-        }, 100);
+          window.dispatchEvent(event);
+          console.log("Dispatched force-query-invalidation event");
+        } catch (e) {
+          console.error("Error dispatching force-query-invalidation event:", e);
+        }
         
         // If onCapture is provided, also update the form with the first item
         if (onCapture && formattedItems.length > 0) {
@@ -120,10 +127,22 @@ export async function processScanResults(
         
         // Close the dialog after a short delay
         if (setOpen) {
-          setTimeout(() => setOpen(false), 1000);
+          setTimeout(() => {
+            console.log("Closing dialog after successful processing");
+            setOpen(false);
+          }, 1000);
         }
-        return true;
         
+        // Call any onSuccess callback provided
+        if (window.onReceiptProcessSuccess) {
+          try {
+            window.onReceiptProcessSuccess(formattedItems.length);
+          } catch (e) {
+            console.error("Error in onReceiptProcessSuccess callback:", e);
+          }
+        }
+        
+        return true;
       } catch (error) {
         console.error("Error saving expense from scan:", error);
         toast.error("Error processing receipt");

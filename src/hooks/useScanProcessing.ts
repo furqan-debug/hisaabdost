@@ -65,17 +65,22 @@ export function useScanProcessing({
         
         // Process the file for form - with small delay to avoid race conditions
         setTimeout(() => {
-          processReceiptFile(initialFile).catch(err => {
-            console.error("Error processing receipt file:", err);
-            setProcessingError("Failed to process receipt image");
-            processingFiles.delete(fingerprint);
-          });
+          processReceiptFile(initialFile)
+            .then((result) => {
+              console.log("Initial file processing result:", result);
+              // For non-manual entry mode, always show the scan dialog
+              if (initialCaptureMode !== 'manual') {
+                console.log("Setting scan dialog to open for auto-processing");
+                setShowScanDialog(true);
+              }
+            })
+            .catch(err => {
+              console.error("Error processing receipt file:", err);
+              setProcessingError("Failed to process receipt image");
+              toast.error("Error processing receipt");
+              processingFiles.delete(fingerprint);
+            });
         }, 100);
-        
-        // Only show scan dialog for auto-processing modes (upload, camera)
-        if (initialCaptureMode !== 'manual') {
-          setShowScanDialog(true);
-        }
       } catch (error) {
         console.error("Error setting up initial file:", error);
         toast.error("Failed to process the receipt image");

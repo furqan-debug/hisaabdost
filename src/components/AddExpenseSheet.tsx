@@ -42,7 +42,7 @@ const AddExpenseSheet = ({
     onAddExpense
   });
 
-  // Use our new custom hook for scan processing
+  // Use our scan processing hook
   const {
     showScanDialog,
     setShowScanDialog,
@@ -60,6 +60,16 @@ const AddExpenseSheet = ({
     onOpenChange,
     onAddExpense,
     processReceiptFile
+  });
+
+  // Debug logging to track sheet and dialog state
+  console.log("AddExpenseSheet render state:", {
+    open,
+    initialCaptureMode,
+    isManualEntry,
+    showScanDialog,
+    hasInitialFile: !!initialFile,
+    hasFilePreviewUrl: !!filePreviewUrl
   });
 
   return (
@@ -94,7 +104,7 @@ const AddExpenseSheet = ({
         </SheetContent>
       </Sheet>
 
-      {/* Use our new ExpenseScanDialog component */}
+      {/* Render the scan dialog component */}
       <ExpenseScanDialog
         initialFile={initialFile}
         filePreviewUrl={filePreviewUrl}

@@ -41,6 +41,7 @@ export const AddExpenseButton = ({
 
       // For upload or camera modes, we want to auto-process immediately
       if (captureMode !== 'manual') {
+        console.log("Opening expense sheet in auto-process mode");
         setShowAddExpense(true);
       }
 

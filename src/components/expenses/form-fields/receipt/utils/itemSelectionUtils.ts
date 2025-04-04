@@ -1,58 +1,40 @@
 
-// Utility functions for selecting the most relevant items from receipt scan results
-
 /**
- * Selects the most relevant item from a list of items
- * This is typically the main purchase or the most expensive item
+ * Selects the main item from an array of receipt items
+ * Typically chooses the most expensive item or the first item if amounts are equal
  */
 export function selectMainItem(items: any[]): any {
-  if (!items || items.length === 0) return {};
+  if (!items || items.length === 0) {
+    console.log("No items to select from");
+    return {
+      description: "Store Purchase",
+      amount: "0.00",
+      date: new Date().toISOString().split('T')[0],
+      category: "Other",
+      paymentMethod: "Card"
+    };
+  }
   
-  // If there's only one item, use it
-  if (items.length === 1) return items[0];
+  console.log(`Selecting main item from ${items.length} items:`, items);
   
-  // Try to find the item with the highest amount (likely the main purchase)
-  return items.reduce((highest, current) => {
-    const highestAmount = parseFloat(highest.amount || '0');
-    const currentAmount = parseFloat(current.amount || '0');
-    return currentAmount > highestAmount ? current : highest;
-  }, items[0]);
-}
-
-/**
- * Format receipt items for display or storage
- * Converts the items to a standardized format
- */
-export function formatReceiptItems(items: any[], receiptUrl?: string): Array<{
-  description: string;
-  amount: string;
-  category: string;
-  date: string;
-  paymentMethod: string;
-  receiptUrl?: string;
-}> {
-  if (!items || items.length === 0) return [];
+  // If we only have one item, return it
+  if (items.length === 1) {
+    console.log("Only one item, returning it", items[0]);
+    return items[0];
+  }
   
-  return items.map(item => ({
-    description: item.description || item.name || "Store Item",
-    amount: item.amount || "0.00",
-    category: item.category || "Other",
-    date: item.date || new Date().toISOString().split('T')[0],
-    paymentMethod: item.paymentMethod || "Card",
-    receiptUrl: receiptUrl
-  }));
-}
-
-/**
- * Calculate the total amount from all items
- */
-export function calculateTotalAmount(items: any[]): string {
-  if (!items || items.length === 0) return "0.00";
+  // Find the item with the highest amount
+  let highestItem = items[0];
+  let highestAmount = parseFloat(String(items[0].amount || 0).replace(/[^0-9.]/g, '')) || 0;
   
-  const total = items.reduce((sum, item) => {
-    const amount = parseFloat(item.amount || '0');
-    return sum + (isNaN(amount) ? 0 : amount);
-  }, 0);
+  for (const item of items) {
+    const amount = parseFloat(String(item.amount || 0).replace(/[^0-9.]/g, '')) || 0;
+    if (amount > highestAmount) {
+      highestAmount = amount;
+      highestItem = item;
+    }
+  }
   
-  return total.toFixed(2);
+  console.log("Selected main item:", highestItem);
+  return highestItem;
 }

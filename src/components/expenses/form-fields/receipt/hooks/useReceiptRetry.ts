@@ -1,6 +1,5 @@
 
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
 
 interface UseReceiptRetryProps {
   scanTimedOut: boolean;
@@ -10,13 +9,7 @@ interface UseReceiptRetryProps {
   processingComplete: boolean;
   resetScanState: () => void;
   autoProcessReceipt: () => void;
-  onCapture?: (expenseDetails: {
-    description: string;
-    amount: string;
-    date: string;
-    category: string;
-    paymentMethod: string;
-  }) => void;
+  onCapture?: (expenseDetails: any) => void;
   setOpen: (open: boolean) => void;
 }
 
@@ -32,71 +25,64 @@ export function useReceiptRetry({
   setOpen
 }: UseReceiptRetryProps) {
   const [attemptCount, setAttemptCount] = useState(0);
-  const [isProcessing, setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  
+  const isProcessingInProgress = useCallback(() => {
+    return isScanning || isAutoProcessing || processing;
+  }, [isScanning, isAutoProcessing, processing]);
   
   const startProcessing = useCallback(() => {
-    if (isScanning || isAutoProcessing) {
-      console.log("Cannot retry while processing is in progress");
+    // If we're already processing or completed, don't start again
+    if (isProcessingInProgress() || processingComplete) {
+      console.log("Not starting processing, already in progress or completed");
       return;
     }
     
+    console.log("Starting processing attempt:", attemptCount + 1);
     setProcessing(true);
-    setAttemptCount(prev => prev + 1);
+    
+    // Reset any previous scan state
     resetScanState();
     
-    console.log(`Starting receipt processing (attempt ${attemptCount + 1})`);
+    // Increment the attempt counter
+    setAttemptCount((prev) => prev + 1);
+    
+    // Start the automatic processing
+    console.log("Calling autoProcessReceipt");
     autoProcessReceipt();
-  }, [isScanning, isAutoProcessing, attemptCount, resetScanState, autoProcessReceipt]);
+  }, [
+    attemptCount,
+    isProcessingInProgress,
+    processingComplete,
+    resetScanState,
+    autoProcessReceipt
+  ]);
   
   const handleRetry = useCallback(() => {
+    // Only retry if we're not already processing and we have an error or timeout
+    if (!isProcessingInProgress() && (scanTimedOut || scanError)) {
+      console.log("Retrying scan after error or timeout");
+      startProcessing();
+    }
+  }, [scanTimedOut, scanError, isProcessingInProgress, startProcessing]);
+  
+  // Handle error resolution
+  const handleErrorResolution = useCallback(() => {
+    // If we have a scan error or timeout but want to continue manually
     if (scanTimedOut || scanError) {
-      if (attemptCount < 3) {
-        toast.info("Retrying receipt scan...");
-        startProcessing();
-      } else {
-        toast.error("Maximum retry attempts reached. Please try uploading the receipt again.");
-        setOpen(false);
-      }
+      console.log("Resolving error, closing dialog");
+      setOpen(false);
     }
-  }, [scanTimedOut, scanError, attemptCount, startProcessing, setOpen]);
-  
-  const isMaxAttemptsReached = attemptCount >= 3;
-  
-  // Fix the function issue - define it as a function that returns a boolean
-  const isProcessingInProgress = useCallback(() => {
-    return isProcessing;
-  }, [isProcessing]);
-  
-  const resetAndClose = () => {
-    resetScanState();
-    setProcessing(false);
-    setAttemptCount(0);
-    setOpen(false);
-    
-    // Dispatch an event to notify that a receipt was scanned
-    if (processingComplete) {
-      const event = new CustomEvent('receipt-scanned', { 
-        detail: { timestamp: Date.now() } 
-      });
-      window.dispatchEvent(event);
-      
-      // Also dispatch the general expenses-updated event
-      const updateEvent = new CustomEvent('expenses-updated', { 
-        detail: { timestamp: Date.now() } 
-      });
-      window.dispatchEvent(updateEvent);
-    }
-  };
+  }, [scanTimedOut, scanError, setOpen]);
   
   return {
     attemptCount,
-    setAttemptCount,
-    isProcessing,
-    setProcessing,
-    handleRetry,
+    processing,
+    isProcessingInProgress,
     startProcessing,
-    isMaxAttemptsReached,
-    resetAndClose,
-    isProcessingInProgress  // Return the function
+    handleRetry,
+    handleErrorResolution,
+    setAttemptCount,
+    setProcessing
   };
 }

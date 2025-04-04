@@ -116,6 +116,7 @@ export function ReceiptScanDialog({
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
+        console.log("Starting auto-processing...");
         retryHandler.startProcessing();
       }, 100);
       
@@ -138,11 +139,15 @@ export function ReceiptScanDialog({
     if (processingComplete && open && !isScanning && !isAutoProcessing) {
       // Wait a moment to show the success state before closing
       const timer = setTimeout(() => {
-        setOpen(false);
+        console.log("Processing complete, calling onSuccess and closing dialog");
         // If there's a success callback, call it
         if (onSuccess) {
           onSuccess();
         }
+        
+        setTimeout(() => {
+          setOpen(false);
+        }, 1000); // Small additional delay to allow callback to complete
       }, 2000); // Increased delay to show success state
       return () => clearTimeout(timer);
     }
@@ -158,6 +163,32 @@ export function ReceiptScanDialog({
       setOpen(true);
     }
   };
+
+  // Debug logs
+  useEffect(() => {
+    console.log("ReceiptScanDialog render state:", { 
+      open, 
+      hasFile: !!fileRef.current,
+      autoProcess,
+      autoProcessStarted,
+      isScanning,
+      isAutoProcessing,
+      processingComplete,
+      scanTimedOut,
+      scanError,
+      scanProgress
+    });
+  }, [
+    open, 
+    autoProcess,
+    autoProcessStarted,
+    isScanning,
+    isAutoProcessing,
+    processingComplete,
+    scanTimedOut,
+    scanError,
+    scanProgress
+  ]);
 
   return (
     <AnimatePresence>

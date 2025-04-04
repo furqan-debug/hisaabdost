@@ -28,7 +28,19 @@ export function ExpenseScanDialog({
   onCapture,
   onSuccess
 }: ExpenseScanDialogProps) {
+  // Debug logging to track dialog visibility
+  console.log("ExpenseScanDialog render:", {
+    initialFile: initialFile ? `${initialFile.name} (${initialFile.size} bytes)` : null,
+    filePreviewUrl: filePreviewUrl ? "exists" : null,
+    showScanDialog,
+    isManualEntry
+  });
+
   if (isManualEntry || !initialFile || !filePreviewUrl) {
+    console.log("ExpenseScanDialog not rendering due to:", 
+      isManualEntry ? "manual entry mode" : 
+      !initialFile ? "no file" : 
+      "no preview URL");
     return null;
   }
 
