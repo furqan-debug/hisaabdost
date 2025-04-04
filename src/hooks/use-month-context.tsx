@@ -55,9 +55,6 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
         if (savedData) {
           setMonthsData(JSON.parse(savedData));
         }
-        
-        // Add console log to verify data is loaded correctly
-        console.log('Loaded months data from localStorage:', savedData);
       } catch (error) {
         console.error('Error loading month data:', error);
       } finally {
@@ -78,9 +75,10 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
           ...prev, 
           [currentMonthKey]: { ...DEFAULT_MONTH_DATA }
         };
-        // Save to storage immediately to ensure persistence
-        localStorage.setItem('monthsData', JSON.stringify(updated));
-        console.log('Created new month data entry for:', currentMonthKey);
+        // Save to storage with slight delay to avoid rapid writes
+        setTimeout(() => {
+          localStorage.setItem('monthsData', JSON.stringify(updated));
+        }, 100);
         return updated;
       });
     }
@@ -100,12 +98,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   // Get data for current month with fallback to default values
   const getCurrentMonthData = useCallback((): MonthData => {
     const monthKey = getCurrentMonthKey();
-    const data = monthsData[monthKey] || { ...DEFAULT_MONTH_DATA };
-    
-    // Add debug logging
-    console.log('Getting current month data for:', monthKey, data);
-    
-    return data;
+    return monthsData[monthKey] || { ...DEFAULT_MONTH_DATA };
   }, [getCurrentMonthKey, monthsData]);
 
   // Update data for a specific month with debouncing
@@ -120,32 +113,25 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       setMonthsData(prevData => {
         const currentData = prevData[monthKey] || { ...DEFAULT_MONTH_DATA };
         
-        // Create updated data
+        // Check if data is actually different before updating
+        const isDataDifferent = Object.entries(data).some(([key, value]) => {
+          const typedKey = key as keyof MonthData;
+          return Math.abs(Number(currentData[typedKey]) - Number(value)) > 0.01;
+        });
+        
+        if (!isDataDifferent) return prevData;
+        
         const updatedData = { 
           ...prevData, 
           [monthKey]: { ...currentData, ...data } 
         };
         
-        // Debug logging
-        console.log('Updating month data for:', monthKey, {
-          previous: currentData,
-          changes: data,
-          new: updatedData[monthKey]
-        });
-        
-        // Save to localStorage immediately
+        // Save to localStorage whenever data changes
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
         
         return updatedData;
       });
-    }, 50); // Reduced debounce time to 50ms for more immediate updates
-    
-    return () => {
-      // Clear any pending timeouts when component unmounts
-      if (updateDebounceRef.current[monthKey]) {
-        window.clearTimeout(updateDebounceRef.current[monthKey]);
-      }
-    };
+    }, 150); // Debounce for 150ms
   }, []);
 
   return (

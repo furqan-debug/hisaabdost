@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from './Navbar';
+import Sidebar from './Sidebar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MonthProvider } from '@/hooks/use-month-context';

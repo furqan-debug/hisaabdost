@@ -10,7 +10,6 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -34,8 +33,7 @@ export const StatCards = ({
   isLoading = false,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const { selectedMonth, updateMonthData, getCurrentMonthData } = useMonthContext();
+  const { selectedMonth, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
@@ -52,12 +50,10 @@ export const StatCards = ({
     }
   }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
 
-  // Reset temp income when monthly income changes or selected month changes
+  // Reset temp income when monthly income changes
   useEffect(() => {
-    // Get the most up-to-date value from context to ensure we're using the stored value
-    const currentData = getCurrentMonthData();
-    setTempIncome(currentData.monthlyIncome || 0);
-  }, [monthlyIncome, selectedMonth, getCurrentMonthData]);
+    setTempIncome(monthlyIncome);
+  }, [monthlyIncome]);
 
   // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
@@ -65,22 +61,8 @@ export const StatCards = ({
   };
 
   const saveIncome = () => {
-    // Update both the component state and the month context
     setMonthlyIncome(tempIncome);
-    
-    // Directly update the month context to ensure immediate persistence
-    updateMonthData(currentMonthKey, {
-      monthlyIncome: tempIncome
-    });
-    
     setIsEditing(false);
-    
-    // Show confirmation toast
-    toast({
-      title: "Income saved",
-      description: `Monthly income updated to ${formatCurrency(tempIncome)}`,
-      duration: 3000,
-    });
   };
 
   if (isLoading) {
@@ -166,11 +148,6 @@ export const StatCards = ({
                 }}
                 className={`h-8 text-${isMobile ? 'sm' : 'base'} pr-2`}
                 min={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    saveIncome();
-                  }
-                }}
               />
               <Button 
                 size="sm" 
