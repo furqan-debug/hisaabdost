@@ -30,7 +30,8 @@ const Dashboard = () => {
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
+  // Use state for income but initialize from context data
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -39,9 +40,21 @@ const Dashboard = () => {
   useEffect(() => {
     if (!isMonthDataLoading) {
       const data = getCurrentMonthData();
+      console.log("Setting income from month data:", data.monthlyIncome);
       setMonthlyIncome(data.monthlyIncome || 0);
     }
   }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
+  
+  // Handle income updates
+  const handleIncomeUpdate = (newIncome: number) => {
+    console.log("Updating income to:", newIncome);
+    setMonthlyIncome(newIncome);
+    
+    // Also update in the month context to ensure persistence
+    updateMonthData(currentMonthKey, {
+      monthlyIncome: newIncome
+    });
+  };
   
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
@@ -170,6 +183,8 @@ const Dashboard = () => {
     }
   };
 
+  console.log("Dashboard rendering with income:", monthlyIncome);
+
   return (
     <motion.div 
       className="space-y-6"
@@ -186,7 +201,7 @@ const Dashboard = () => {
           totalBalance={totalBalance}
           monthlyExpenses={monthlyExpenses}
           monthlyIncome={monthlyIncome}
-          setMonthlyIncome={setMonthlyIncome}
+          setMonthlyIncome={handleIncomeUpdate}
           savingsRate={savingsRate}
           formatPercentage={formatPercentage}
           isNewUser={isNewUser}
