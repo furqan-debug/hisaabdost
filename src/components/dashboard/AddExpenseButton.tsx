@@ -8,7 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -41,9 +40,7 @@ export const AddExpenseButton = ({
       setSelectedFile(file);
 
       // For upload or camera modes, we want to auto-process immediately
-      if (captureMode === 'upload' || captureMode === 'camera') {
-        console.log("Opening expense sheet in auto-process mode");
-        toast.info("Processing receipt...");
+      if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
 
@@ -78,7 +75,7 @@ export const AddExpenseButton = ({
   };
   
   // Handle successful expense addition
-  const handleSuccessfulAddExpense = (expense?: Expense) => {
+  const handleSuccessfulAddExpense = () => {
     console.log("Expense(s) added successfully, refreshing data");
     // Force invalidate queries to refresh data
     queryClient.invalidateQueries({ queryKey: ['expenses'] });

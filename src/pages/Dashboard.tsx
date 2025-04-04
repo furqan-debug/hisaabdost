@@ -1,53 +1,102 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/components/expenses/types";
-import { useExpenseFilter } from "@/hooks/use-expense-filter";
-import { useExpenseSelection } from "@/hooks/use-expense-selection";
-import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
-import { ExpenseHeader } from "@/components/expenses/ExpenseHeader";
-import { ExpenseList } from "@/components/expenses/ExpenseList";
-import { exportExpensesToCSV } from "@/utils/exportUtils";
-import { useMonthContext } from "@/hooks/use-month-context";
+import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
-import { useQueryInvalidation } from "@/hooks/useQueryInvalidation";
+import { useBudgetData } from "@/hooks/useBudgetData";
 
-const Expenses = () => {
+// Import the component files
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { StatCards } from "@/components/dashboard/StatCards";
+import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
+import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
+import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
+
+// Memoize expensive components
+const MemoizedRecentExpensesCard = memo(RecentExpensesCard);
+const MemoizedExpenseAnalyticsCard = memo(ExpenseAnalyticsCard);
+
+const Dashboard = () => {
   const { user } = useAuth();
-  const { toast: uiToast } = useToast();
-  const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
-  const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { refreshTrigger, triggerRefresh } = useExpenseRefresh();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
+  const { refreshTrigger } = useExpenseRefresh();
+  const { monthlyIncome: dbMonthlyIncome, updateMonthlyIncome } = useBudgetData();
+  
+  // Prevent excessive renders with refs
+  const selectedMonthRef = useRef(selectedMonth);
+  const refreshTriggerRef = useRef(refreshTrigger);
+  
+  // Get current month's data from context
+  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+  
+  // Initialize with context data or data from useBudgetData
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
+    const data = getCurrentMonthData();
+    return data.monthlyIncome || dbMonthlyIncome || 0;
+  });
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
+  const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
-
-  // Fetch expenses using React Query, get all expenses instead of just for selected month
-  const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['all-expenses', refreshTrigger],
-    queryFn: async () => {
-      if (!user) return [];
+  
+  // Use refs to track previous values to prevent unnecessary updates
+  const prevMonthlyIncomeRef = useRef(monthlyIncome);
+  
+  // Update local income state when selected month changes - only if different
+  useEffect(() => {
+    if (!isMonthDataLoading) {
+      selectedMonthRef.current = selectedMonth;
+      const data = getCurrentMonthData();
       
-      console.log("Fetching all expenses for user:", user.id);
+      // Prioritize context data, but use DB data if context is empty
+      const newIncome = data.monthlyIncome || dbMonthlyIncome || 0;
       
+      if (newIncome !== prevMonthlyIncomeRef.current) {
+        setMonthlyIncome(newIncome);
+        prevMonthlyIncomeRef.current = newIncome;
+      }
+    }
+  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading, dbMonthlyIncome]);
+  
+  // Update refresh trigger ref
+  useEffect(() => {
+    refreshTriggerRef.current = refreshTrigger;
+  }, [refreshTrigger]);
+  
+  // Memoize query function to prevent recreations
+  const fetchExpenses = useCallback(async () => {
+    if (!user) return [];
+    
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    
+    try {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
         console.error('Error fetching expenses:', error);
-        toast.error("Failed to load expenses. Please try again.");
+        toast({
+          title: "Error",
+          description: "Failed to load expenses. Please try again.",
+          variant: "destructive",
+        });
         return [];
       }
-      
-      console.log("Fetched expenses:", data);
       
       return data.map(exp => ({
         id: exp.id,
@@ -60,148 +109,160 @@ const Expenses = () => {
         isRecurring: exp.is_recurring || false,
         receiptUrl: exp.receipt_url || undefined,
       }));
-    },
+    } catch (err) {
+      console.error('Unexpected error fetching expenses:', err);
+      return [];
+    }
+  }, [user, selectedMonth, toast]);
+  
+  // Fetch expenses with highly optimized React Query settings
+  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
+    queryKey: ['expenses', currentMonthKey, refreshTrigger, user?.id],
+    queryFn: fetchExpenses,
     enabled: !!user,
-    refetchInterval: 5000,
+    staleTime: 300000, // 5 minutes - prevent frequent refetches
+    gcTime: 600000, // 10 minutes
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
+    refetchOnReconnect: false, 
+    retry: false,
   });
 
-  // Hook for filtering and sorting expenses - now will handle date filtering
-  const {
-    searchTerm,
-    setSearchTerm,
-    categoryFilter,
-    setCategoryFilter,
-    sortConfig,
-    handleSort,
-    dateRange,
-    setDateRange,
-    filteredExpenses,
-    totalFilteredAmount,
-    useCustomDateRange
-  } = useExpenseFilter(allExpenses);
-
-  // Hook for managing expense selection
-  const {
-    selectedExpenses,
-    toggleSelectAll,
-    toggleExpenseSelection,
-    clearSelection
-  } = useExpenseSelection();
-
-  const handleAddExpense = () => {
-    setShowAddExpense(true);
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedExpenses.size === 0) return;
-    
-    const success = await deleteMultipleExpenses(Array.from(selectedExpenses));
-    if (success) {
-      clearSelection();
-    }
-  };
-
-  const handleSingleDelete = async (id: string) => {
-    await deleteExpense(id);
-    if (selectedExpenses.has(id)) {
-      toggleExpenseSelection(id);
-    }
-  };
-
-  const exportToCSV = () => {
-    exportExpensesToCSV(filteredExpenses);
-  };
-
-  // Listen for receipt scan event to trigger a refetch
+  // Update refs to prevent calculation loops
+  const expensesRef = useRef(expenses);
   useEffect(() => {
-    const handleReceiptScan = () => {
-      console.log("Receipt scan detected, refreshing expenses list");
-      refetch();
-      // Force a refresh after a delay to ensure DB has been updated
-      setTimeout(() => {
-        refetch();
-        triggerRefresh();
-      }, 1000);
-    };
+    expensesRef.current = expenses;
+  }, [expenses]);
+  
+  // Insights and calculations
+  const insights = useAnalyticsInsights(expenses);
+  const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+  const totalBalance = monthlyIncome - monthlyExpenses;
+  const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+
+  // Debounce context updates to prevent render loops
+  const updateContextTimer = useRef<number | null>(null);
+  
+  // Update month data when income or expenses change - with debouncing
+  useEffect(() => {
+    if (isMonthDataLoading) return;
     
-    const handleExpensesUpdated = () => {
-      console.log("Expenses updated event detected, refreshing list");
-      refetch();
-      // Force a refresh after a delay to ensure DB has been updated
-      setTimeout(() => {
-        refetch();
-        triggerRefresh();
-      }, 1000);
-    };
+    // Clear any existing timeout
+    if (updateContextTimer.current) {
+      window.clearTimeout(updateContextTimer.current);
+    }
     
-    window.addEventListener('receipt-scanned', handleReceiptScan);
-    window.addEventListener('expenses-updated', handleExpensesUpdated);
-    
-    // Initial refetch when component mounts
-    refetch();
+    // Debounce updates to context
+    updateContextTimer.current = window.setTimeout(() => {
+      updateMonthData(currentMonthKey, {
+        monthlyIncome,
+        monthlyExpenses,
+        totalBalance,
+        savingsRate
+      });
+      updateContextTimer.current = null;
+    }, 500); // Half-second debounce
     
     return () => {
-      window.removeEventListener('receipt-scanned', handleReceiptScan);
-      window.removeEventListener('expenses-updated', handleExpensesUpdated);
+      if (updateContextTimer.current) {
+        window.clearTimeout(updateContextTimer.current);
+      }
     };
-  }, [refetch, triggerRefresh]);
+  }, [
+    monthlyIncome, 
+    monthlyExpenses,
+    currentMonthKey, 
+    updateMonthData, 
+    isMonthDataLoading,
+    totalBalance,
+    savingsRate
+  ]);
 
+  // Memoize formatting function
+  const formatPercentage = useCallback((value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value / 100);
+  }, []);
+
+  const isNewUser = expenses.length === 0;
   const isLoading = isMonthDataLoading || isExpensesLoading;
 
-  useQueryInvalidation();
+  // Handle monthly income changes
+  const handleMonthlyIncomeChange = useCallback(async (newIncome: number) => {
+    setMonthlyIncome(prevIncome => {
+      // Only update if value has actually changed
+      if (prevIncome !== newIncome) {
+        prevMonthlyIncomeRef.current = newIncome;
+        return newIncome;
+      }
+      return prevIncome;
+    });
+    
+    // Update the database with new income
+    await updateMonthlyIncome(newIncome);
+  }, [updateMonthlyIncome]);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-96 w-full" />
+        <div className="h-14">
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-36 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      <ExpenseHeader 
-        selectedExpenses={selectedExpenses}
-        onDeleteSelected={handleDeleteSelected}
-        onAddExpense={handleAddExpense}
-        expenseToEdit={expenseToEdit}
-        onExpenseEditClose={() => setExpenseToEdit(undefined)}
-        showAddExpense={showAddExpense}
-        setShowAddExpense={setShowAddExpense}
-        exportToCSV={exportToCSV}
+    <div className="space-y-6 dashboard-container">
+      <DashboardHeader isNewUser={isNewUser} />
+      
+      <StatCards 
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={handleMonthlyIncomeChange}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        isNewUser={isNewUser}
+        isLoading={isLoading}
       />
 
-      <ExpenseList
-        filteredExpenses={filteredExpenses}
-        isLoading={isLoading}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        sortConfig={sortConfig}
-        handleSort={handleSort}
-        selectedExpenses={selectedExpenses}
-        toggleSelectAll={() => toggleSelectAll(filteredExpenses.map(exp => exp.id))}
-        toggleExpenseSelection={toggleExpenseSelection}
-        onAddExpense={handleAddExpense}
-        onEdit={(expense) => {
-          setExpenseToEdit(expense);
-          setShowAddExpense(true);
-        }}
-        onDelete={handleSingleDelete}
-        totalFilteredAmount={totalFilteredAmount}
-        selectedMonth={selectedMonth}
-        useCustomDateRange={useCustomDateRange}
+      <AddExpenseButton 
+        isNewUser={isNewUser}
+        expenseToEdit={expenseToEdit}
+        showAddExpense={showAddExpense}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] })}
+      />
+
+      <MemoizedRecentExpensesCard 
+        expenses={expenses}
+        isNewUser={isNewUser}
+        isLoading={isExpensesLoading}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+      />
+
+      <MemoizedExpenseAnalyticsCard 
+        expenses={expenses}
+        isLoading={isExpensesLoading}
+        chartType={chartType}
+        setChartType={setChartType}
       />
     </div>
   );
 };
 
-export default Expenses;
+export default Dashboard;

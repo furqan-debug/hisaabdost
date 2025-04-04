@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
-import { AnimatePresence, motion } from "framer-motion";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -116,7 +115,6 @@ export function ReceiptScanDialog({
       
       // Start processing after a small delay to allow UI to render
       const timer = setTimeout(() => {
-        console.log("Starting auto-processing...");
         retryHandler.startProcessing();
       }, 100);
       
@@ -139,16 +137,12 @@ export function ReceiptScanDialog({
     if (processingComplete && open && !isScanning && !isAutoProcessing) {
       // Wait a moment to show the success state before closing
       const timer = setTimeout(() => {
-        console.log("Processing complete, calling onSuccess and closing dialog");
+        setOpen(false);
         // If there's a success callback, call it
         if (onSuccess) {
           onSuccess();
         }
-        
-        setTimeout(() => {
-          setOpen(false);
-        }, 1000); // Small additional delay to allow callback to complete
-      }, 2000); // Increased delay to show success state
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [processingComplete, open, isScanning, isAutoProcessing, setOpen, onSuccess]);
@@ -164,62 +158,24 @@ export function ReceiptScanDialog({
     }
   };
 
-  // Debug logs
-  useEffect(() => {
-    console.log("ReceiptScanDialog render state:", { 
-      open, 
-      hasFile: !!fileRef.current,
-      autoProcess,
-      autoProcessStarted,
-      isScanning,
-      isAutoProcessing,
-      processingComplete,
-      scanTimedOut,
-      scanError,
-      scanProgress
-    });
-  }, [
-    open, 
-    autoProcess,
-    autoProcessStarted,
-    isScanning,
-    isAutoProcessing,
-    processingComplete,
-    scanTimedOut,
-    scanError,
-    scanProgress
-  ]);
-
   return (
-    <AnimatePresence>
-      {open && (
-        <Dialog open={open} onOpenChange={handleDialogClose}>
-          <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl overflow-hidden p-0">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="p-6"
-            >
-              <ScanDialogContent
-                previewUrl={previewUrl}
-                isScanning={isScanning}
-                isAutoProcessing={isAutoProcessing}
-                scanProgress={scanProgress}
-                statusMessage={statusMessage}
-                scanTimedOut={scanTimedOut}
-                scanError={scanError}
-                handleScanReceipt={handleScanReceipt}
-                onCleanup={() => handleClose(isScanning, isAutoProcessing)}
-                fileExists={!!fileRef.current}
-                processingComplete={processingComplete}
-                autoProcess={autoProcess}
-              />
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </AnimatePresence>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+        <ScanDialogContent
+          previewUrl={previewUrl}
+          isScanning={isScanning}
+          isAutoProcessing={isAutoProcessing}
+          scanProgress={scanProgress}
+          statusMessage={statusMessage}
+          scanTimedOut={scanTimedOut}
+          scanError={scanError}
+          handleScanReceipt={handleScanReceipt}
+          onCleanup={() => handleClose(isScanning, isAutoProcessing)}
+          fileExists={!!fileRef.current}
+          processingComplete={processingComplete}
+          autoProcess={autoProcess}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

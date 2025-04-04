@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -193,14 +194,13 @@ export async function scanReceipt({
           items: Array.isArray(data.items) ? data.items : [],
           date: data.date || new Date().toISOString().split('T')[0],
           total: data.total || "0.00",
-          merchant: data.merchant || "Store",
           receiptUrl: sanitizedReceiptUrl
         };
         
         // Create fallback item if no items were found
         if (!processedData.items || processedData.items.length === 0) {
           processedData.items = [{ 
-            description: processedData.merchant || "Store Purchase", 
+            description: "Store Purchase", 
             amount: processedData.total || "0.00",
             date: processedData.date,
             category: "Other",
@@ -208,21 +208,9 @@ export async function scanReceipt({
           }];
         }
         
-        // Store for potential later use - IMPORTANT FOR DIALOG COMMUNICATION
+        // Store for potential later use
         try {
-          console.log("Storing scan result in session storage for dialog to use");
           sessionStorage.setItem('lastScanResult', JSON.stringify(processedData));
-          
-          // Dispatch a scan completed event for other components to listen for
-          console.log("Dispatching receipt-scan-completed event");
-          const event = new CustomEvent('receipt-scan-completed', { 
-            detail: { 
-              timestamp: Date.now(),
-              items: processedData.items.length,
-              success: true
-            } 
-          });
-          window.dispatchEvent(event);
         } catch (storageError) {
           console.warn("Could not store scan result in session storage:", storageError);
         }
