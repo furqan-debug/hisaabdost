@@ -29,3 +29,18 @@ export function formatDate(dateString: string): string {
     return new Date().toISOString().split('T')[0];
   }
 }
+
+/**
+ * Formats a date for display to the user
+ */
+export function formatDateForDisplay(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    return date.toLocaleDateString();
+  } catch (error) {
+    return dateString;
+  }
+}

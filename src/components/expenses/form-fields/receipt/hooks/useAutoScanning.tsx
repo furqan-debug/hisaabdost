@@ -10,6 +10,7 @@ export function useAutoScanning({
   handleScanReceipt: () => Promise<boolean | undefined>;
 }) {
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+  const [processingTriggered, setProcessingTriggered] = useState(false);
 
   // Auto-process receipt without requiring user to click scan button
   const autoProcessReceipt = useCallback(() => {
@@ -18,25 +19,44 @@ export function useAutoScanning({
       return;
     }
     
+    if (processingTriggered) {
+      console.log("Auto-processing already triggered for this file, skipping");
+      return;
+    }
+    
     setIsAutoProcessing(true);
+    setProcessingTriggered(true);
+    
+    console.log(`Auto-processing receipt: ${file.name}`);
     
     // Slight delay to allow UI to update
     setTimeout(async () => {
       try {
         const success = await handleScanReceipt();
-        // Process all receipt items and add them to expenses, 
-        // no need for manual processing option
-        if (!success) {
+        if (success) {
+          console.log("Auto-processing succeeded");
+        } else {
           console.error("Auto-processing failed");
         }
+      } catch (error) {
+        console.error("Error during auto-processing:", error);
       } finally {
         setIsAutoProcessing(false);
       }
     }, 100);
-  }, [file, handleScanReceipt]);
+  }, [file, handleScanReceipt, processingTriggered]);
+
+  // Automatically start processing when a file is provided
+  useEffect(() => {
+    if (file && !processingTriggered) {
+      console.log("File detected, triggering auto-processing");
+      autoProcessReceipt();
+    }
+  }, [file, autoProcessReceipt, processingTriggered]);
 
   return {
     isAutoProcessing,
-    autoProcessReceipt
+    autoProcessReceipt,
+    resetProcessingState: () => setProcessingTriggered(false)
   };
 }

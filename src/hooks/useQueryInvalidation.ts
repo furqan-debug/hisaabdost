@@ -22,12 +22,28 @@ export function useQueryInvalidation() {
       }
     };
     
-    // Listen for the custom event
+    const handleReceiptScan = () => {
+      console.log('Receipt scanned, invalidating expense queries');
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
+    };
+    
+    const handleExpensesUpdated = () => {
+      console.log('Expenses updated, invalidating expense queries');
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
+    };
+    
+    // Listen for the custom events
     window.addEventListener('force-query-invalidation', handleForceInvalidation);
+    window.addEventListener('receipt-scanned', handleReceiptScan);
+    window.addEventListener('expenses-updated', handleExpensesUpdated);
     
     // Cleanup function
     return () => {
       window.removeEventListener('force-query-invalidation', handleForceInvalidation);
+      window.removeEventListener('receipt-scanned', handleReceiptScan);
+      window.removeEventListener('expenses-updated', handleExpensesUpdated);
     };
   }, [queryClient]);
 }

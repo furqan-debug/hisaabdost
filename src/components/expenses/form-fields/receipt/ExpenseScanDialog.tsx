@@ -1,5 +1,6 @@
 
 import { ReceiptScanDialog } from "./ReceiptScanDialog";
+import { useEffect } from "react";
 
 interface ExpenseScanDialogProps {
   initialFile: File | null;
@@ -36,11 +37,18 @@ export function ExpenseScanDialog({
     isManualEntry
   });
 
-  if (isManualEntry || !initialFile || !filePreviewUrl) {
-    console.log("ExpenseScanDialog not rendering due to:", 
-      isManualEntry ? "manual entry mode" : 
-      !initialFile ? "no file" : 
-      "no preview URL");
+  // Auto open dialog when needed
+  useEffect(() => {
+    if (!isManualEntry && initialFile && filePreviewUrl && !showScanDialog) {
+      console.log("Auto-opening scan dialog due to file being present");
+      setTimeout(() => {
+        setShowScanDialog(true);
+      }, 100);
+    }
+  }, [initialFile, filePreviewUrl, showScanDialog, setShowScanDialog, isManualEntry]);
+
+  if (isManualEntry) {
+    console.log("ExpenseScanDialog not rendering: manual entry mode");
     return null;
   }
 

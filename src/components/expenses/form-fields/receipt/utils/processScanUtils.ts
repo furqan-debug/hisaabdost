@@ -1,6 +1,5 @@
 
 import { formatDate } from './dateUtils';
-import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -96,7 +95,7 @@ export async function processScanResults(
         console.log("Successfully saved expenses to database:", formattedItems.length, "items");
         toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
         
-        // CRUCIAL! Dispatch multiple events to ensure all components refresh
+        // Dispatch multiple events to ensure all components refresh
         // First, dispatch a receipt-scanned event
         window.dispatchEvent(new CustomEvent('receipt-scanned', { 
           detail: { timestamp: Date.now(), count: formattedItems.length }
@@ -109,7 +108,7 @@ export async function processScanResults(
         }));
         console.log("Dispatched expenses-updated event");
         
-        // Force update the queries for components that use React Query
+        // Forcefully invalidate queries for components that use React Query
         try {
           const event = new CustomEvent('force-query-invalidation', {
             detail: { queryKeys: ['expenses', 'all-expenses'] }
@@ -118,19 +117,6 @@ export async function processScanResults(
           console.log("Dispatched force-query-invalidation event");
         } catch (e) {
           console.error("Error dispatching force-query-invalidation event:", e);
-        }
-        
-        // If onCapture is provided, also update the form with the first item
-        if (onCapture && formattedItems.length > 0) {
-          onCapture(formattedItems[0]);
-        }
-        
-        // Close the dialog after a short delay
-        if (setOpen) {
-          setTimeout(() => {
-            console.log("Closing dialog after successful processing");
-            setOpen(false);
-          }, 1000);
         }
         
         // Call any onSuccess callback provided
@@ -142,15 +128,18 @@ export async function processScanResults(
           }
         }
         
+        // Close the dialog after a short delay
+        if (setOpen) {
+          setTimeout(() => {
+            console.log("Closing dialog after successful processing");
+            setOpen(false);
+          }, 500);
+        }
+        
         return true;
       } catch (error) {
         console.error("Error saving expense from scan:", error);
         toast.error("Error processing receipt");
-        
-        // Even if an error occurred, still update the form if onCapture is provided
-        if (onCapture && formattedItems.length > 0) {
-          onCapture(formattedItems[0]);
-        }
         return false;
       }
     } else {
