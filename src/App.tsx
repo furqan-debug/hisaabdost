@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { MonthProvider } from "@/hooks/use-month-context";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -124,11 +123,9 @@ const AppWithProviders = () => (
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <MonthProvider>
-                      <Layout>
-                        <Dashboard />
-                      </Layout>
-                    </MonthProvider>
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -136,11 +133,9 @@ const AppWithProviders = () => (
                 path="/expenses"
                 element={
                   <ProtectedRoute>
-                    <MonthProvider>
-                      <Layout>
-                        <Expenses />
-                      </Layout>
-                    </MonthProvider>
+                    <Layout>
+                      <Expenses />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -148,11 +143,9 @@ const AppWithProviders = () => (
                 path="/budget"
                 element={
                   <ProtectedRoute>
-                    <MonthProvider>
-                      <Layout>
-                        <Budget />
-                      </Layout>
-                    </MonthProvider>
+                    <Layout>
+                      <Budget />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -160,11 +153,9 @@ const AppWithProviders = () => (
                 path="/analytics"
                 element={
                   <ProtectedRoute>
-                    <MonthProvider>
-                      <Layout>
-                        <Analytics />
-                      </Layout>
-                    </MonthProvider>
+                    <Layout>
+                      <Analytics />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -172,11 +163,9 @@ const AppWithProviders = () => (
                 path="/goals"
                 element={
                   <ProtectedRoute>
-                    <MonthProvider>
-                      <Layout>
-                        <Goals />
-                      </Layout>
-                    </MonthProvider>
+                    <Layout>
+                      <Goals />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />

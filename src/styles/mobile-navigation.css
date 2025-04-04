@@ -3,20 +3,20 @@
 @media (max-width: 640px) {
   /* Sidebar optimizations */
   [data-sidebar="sidebar"] {
-    @apply backdrop-blur-xl bg-background/95;
+    @apply backdrop-blur-2xl bg-background/95;
   }
   
   [data-sidebar="menu-button"] {
     @apply py-3;
   }
   
-  /* Improved mobile menu transitions with reduced animation */
+  /* Improved mobile menu transitions */
   .mobile-menu-enter {
     @apply transform translate-x-full;
   }
   
   .mobile-menu-enter-active {
-    @apply transform translate-x-0 transition-transform duration-200 ease-out;
+    @apply transform translate-x-0 transition-transform duration-300 ease-out;
   }
   
   .mobile-menu-exit {
@@ -24,7 +24,7 @@
   }
   
   .mobile-menu-exit-active {
-    @apply transform translate-x-full transition-transform duration-200 ease-in;
+    @apply transform translate-x-full transition-transform duration-300 ease-in;
   }
   
   /* Prevent scrolling when menu is open */
@@ -59,22 +59,21 @@
   }
 }
 
-/* Menu item animations - simplified to reduce glitching */
+/* Menu item animations */
 .menu-item {
-  @apply transition-colors duration-200 hover:text-primary/80;
+  @apply transition-all duration-300 hover:text-primary/80;
 }
 
 .menu-item:active .menu-icon-active {
-  @apply scale-95;
+  @apply scale-90;
 }
 
 .menu-icon-active {
-  /* Removed animation to reduce glitching */
-  @apply text-primary;
+  animation: pulse 2s infinite;
 }
 
 .menu-indicator {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -84,8 +83,13 @@
   }
   to {
     opacity: 1;
-    width: 4px;
+    width: 5px;
   }
+}
+
+/* Nested navigation indicator */
+.nested-nav-indicator {
+  @apply w-1.5 h-1.5 rounded-full bg-muted-foreground/50;
 }
 
 /* Active navigation states */
@@ -94,9 +98,18 @@
          before:h-4/5 before:w-1 before:bg-primary before:rounded-r-md;
 }
 
+/* Mobile navbar animations */
+.navbar-scroll-hidden {
+  @apply -translate-y-full;
+}
+
+.navbar-scroll-visible {
+  @apply translate-y-0;
+}
+
 /* Bottom navigation bar shadow effect */
 .bottom-nav-shadow {
-  @apply shadow-[0_-1px_3px_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_3px_rgba(0,0,0,0.25)];
+  @apply shadow-[0_-1px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_10px_rgba(0,0,0,0.25)];
 }
 
 /* Mobile tabs design */
@@ -110,11 +123,20 @@
          data-[state=active]:shadow-sm;
 }
 
-/* Optimize bottom navigation rendering */
-@media (max-width: 640px) {
-  .fixed.bottom-0 {
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-  }
+/* Swipeable navigation areas */
+.swipe-area {
+  @apply touch-pan-y;
+}
+
+/* Mobile drawer-style menu */
+.mobile-drawer {
+  @apply fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-xl shadow-2xl transform transition-transform duration-300;
+}
+
+.mobile-drawer-open {
+  @apply translate-y-0;
+}
+
+.mobile-drawer-closed {
+  @apply translate-y-full;
 }

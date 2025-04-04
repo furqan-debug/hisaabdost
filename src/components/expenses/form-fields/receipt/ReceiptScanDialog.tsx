@@ -21,7 +21,7 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
-  onSuccess?: () => void;
+  onSuccess?: () => void; // Added prop
 }
 
 export function ReceiptScanDialog({
@@ -46,9 +46,6 @@ export function ReceiptScanDialog({
       // Create a fingerprint to track if we've processed this file
       fileFingerprint.current = `${file.name}-${file.size}-${file.lastModified}`;
       console.log(`New file assigned to dialog: ${file.name} (fingerprint: ${fileFingerprint.current})`);
-      
-      // Reset auto-process state when a new file is assigned
-      setAutoProcessStarted(false);
     }
   }, [file]);
   
@@ -138,14 +135,10 @@ export function ReceiptScanDialog({
       // Wait a moment to show the success state before closing
       const timer = setTimeout(() => {
         setOpen(false);
-        // If there's a success callback, call it
-        if (onSuccess) {
-          onSuccess();
-        }
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [processingComplete, open, isScanning, isAutoProcessing, setOpen, onSuccess]);
+  }, [processingComplete, open, isScanning, isAutoProcessing, setOpen]);
 
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {

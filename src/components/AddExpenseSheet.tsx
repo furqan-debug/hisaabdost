@@ -7,7 +7,6 @@ import { useEffect, useState, useRef } from "react";
 import { ReceiptScanDialog } from "./expenses/form-fields/receipt/ReceiptScanDialog";
 import { toast } from "sonner";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface AddExpenseSheetProps {
   onAddExpense: (expense?: Expense) => void;
@@ -31,7 +30,6 @@ const AddExpenseSheet = ({
   initialCaptureMode = 'manual', // Default to manual mode
   initialFile = null
 }: AddExpenseSheetProps) => {
-  const queryClient = useQueryClient();
   const [showScanDialog, setShowScanDialog] = useState(false);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -149,12 +147,7 @@ const AddExpenseSheet = ({
 
   // Handle scan completion by closing the sheet after a delay
   const handleScanSuccess = () => {
-    console.log("Scan completed successfully");
     setProcessingComplete(true);
-    
-    // Force invalidate the query cache to refresh expense list
-    queryClient.invalidateQueries({ queryKey: ['expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
     
     // Notify parent about the expense addition
     if (onAddExpense) {

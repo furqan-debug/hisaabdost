@@ -65,7 +65,7 @@ export async function processScanResults(
       user_id: user.id
     }));
     
-    // Always save all expenses automatically
+    // Always save all expenses automatically regardless of autoSave flag
     if (formattedItems.length > 0) {
       try {
         // Insert expenses directly into the database
