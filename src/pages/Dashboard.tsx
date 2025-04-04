@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
+import { useBudgetData } from "@/hooks/useBudgetData";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -17,7 +18,10 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { motion } from "framer-motion";
+
+// Memoize expensive components
+const MemoizedRecentExpensesCard = memo(RecentExpensesCard);
+const MemoizedExpenseAnalyticsCard = memo(ExpenseAnalyticsCard);
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -25,56 +29,61 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData, isLoading: isMonthDataLoading } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
+  const { monthlyIncome: dbMonthlyIncome, updateMonthlyIncome } = useBudgetData();
+  
+  // Prevent excessive renders with refs
+  const selectedMonthRef = useRef(selectedMonth);
+  const refreshTriggerRef = useRef(refreshTrigger);
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
-  const currentMonthData = getCurrentMonthData();
   
-  // Use state for income but initialize from context data
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
+  // Initialize with context data or data from useBudgetData
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(() => {
+    const data = getCurrentMonthData();
+    return data.monthlyIncome || dbMonthlyIncome || 0;
+  });
+  
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Update local income state when selected month changes
+  // Use refs to track previous values to prevent unnecessary updates
+  const prevMonthlyIncomeRef = useRef(monthlyIncome);
+  
+  // Update local income state when selected month changes - only if different
   useEffect(() => {
     if (!isMonthDataLoading) {
+      selectedMonthRef.current = selectedMonth;
       const data = getCurrentMonthData();
-      console.log("Setting income from month data:", data.monthlyIncome);
-      setMonthlyIncome(data.monthlyIncome || 0);
+      
+      // Prioritize context data, but use DB data if context is empty
+      const newIncome = data.monthlyIncome || dbMonthlyIncome || 0;
+      
+      if (newIncome !== prevMonthlyIncomeRef.current) {
+        setMonthlyIncome(newIncome);
+        prevMonthlyIncomeRef.current = newIncome;
+      }
     }
-  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
+  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading, dbMonthlyIncome]);
   
-  // Handle income updates
-  const handleIncomeUpdate = (newIncome: number) => {
-    console.log("Updating income to:", newIncome);
-    setMonthlyIncome(newIncome);
+  // Update refresh trigger ref
+  useEffect(() => {
+    refreshTriggerRef.current = refreshTrigger;
+  }, [refreshTrigger]);
+  
+  // Memoize query function to prevent recreations
+  const fetchExpenses = useCallback(async () => {
+    if (!user) return [];
     
-    // Also update in the month context to ensure persistence
-    updateMonthData(currentMonthKey, {
-      monthlyIncome: newIncome
-    });
-  };
-  
-  // Handle manual expense refreshing
-  const handleExpenseRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-  };
-  
-  // Fetch expenses from Supabase using React Query, filtered by selected month
-  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
-      
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
-      
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
+    
+    try {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
@@ -89,8 +98,6 @@ const Dashboard = () => {
         return [];
       }
       
-      console.log(`Fetched ${data.length} expenses for the month`);
-      
       return data.map(exp => ({
         id: exp.id,
         amount: Number(exp.amount),
@@ -102,48 +109,101 @@ const Dashboard = () => {
         isRecurring: exp.is_recurring || false,
         receiptUrl: exp.receipt_url || undefined,
       }));
-    },
+    } catch (err) {
+      console.error('Unexpected error fetching expenses:', err);
+      return [];
+    }
+  }, [user, selectedMonth, toast]);
+  
+  // Fetch expenses with highly optimized React Query settings
+  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
+    queryKey: ['expenses', currentMonthKey, refreshTrigger, user?.id],
+    queryFn: fetchExpenses,
     enabled: !!user,
+    staleTime: 300000, // 5 minutes - prevent frequent refetches
+    gcTime: 600000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false, 
+    retry: false,
   });
 
-  // Calculate insights based on expenses
-  const insights = useAnalyticsInsights(expenses);
+  // Update refs to prevent calculation loops
+  const expensesRef = useRef(expenses);
+  useEffect(() => {
+    expensesRef.current = expenses;
+  }, [expenses]);
   
-  // Calculate financial metrics for the current month
+  // Insights and calculations
+  const insights = useAnalyticsInsights(expenses);
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Update month data when income or expenses change
+  // Debounce context updates to prevent render loops
+  const updateContextTimer = useRef<number | null>(null);
+  
+  // Update month data when income or expenses change - with debouncing
   useEffect(() => {
-    if (!isMonthDataLoading) {
+    if (isMonthDataLoading) return;
+    
+    // Clear any existing timeout
+    if (updateContextTimer.current) {
+      window.clearTimeout(updateContextTimer.current);
+    }
+    
+    // Debounce updates to context
+    updateContextTimer.current = window.setTimeout(() => {
       updateMonthData(currentMonthKey, {
         monthlyIncome,
         monthlyExpenses,
         totalBalance,
         savingsRate
       });
-    }
-  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
+      updateContextTimer.current = null;
+    }, 500); // Half-second debounce
+    
+    return () => {
+      if (updateContextTimer.current) {
+        window.clearTimeout(updateContextTimer.current);
+      }
+    };
+  }, [
+    monthlyIncome, 
+    monthlyExpenses,
+    currentMonthKey, 
+    updateMonthData, 
+    isMonthDataLoading,
+    totalBalance,
+    savingsRate
+  ]);
 
-  // Listen for expense update events and refresh data
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-    }
-  }, [refreshTrigger, queryClient, selectedMonth]);
-
-  const formatPercentage = (value: number) => {
+  // Memoize formatting function
+  const formatPercentage = useCallback((value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value / 100);
-  };
+  }, []);
 
   const isNewUser = expenses.length === 0;
   const isLoading = isMonthDataLoading || isExpensesLoading;
+
+  // Handle monthly income changes
+  const handleMonthlyIncomeChange = useCallback(async (newIncome: number) => {
+    setMonthlyIncome(prevIncome => {
+      // Only update if value has actually changed
+      if (prevIncome !== newIncome) {
+        prevMonthlyIncomeRef.current = newIncome;
+        return newIncome;
+      }
+      return prevIncome;
+    });
+    
+    // Update the database with new income
+    await updateMonthlyIncome(newIncome);
+  }, [updateMonthlyIncome]);
 
   if (isLoading) {
     return (
@@ -163,82 +223,45 @@ const Dashboard = () => {
     );
   }
 
-  // Animation variants for staggered children
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
-    }
-  };
-
-  console.log("Dashboard rendering with income:", monthlyIncome);
-
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={itemVariants}>
-        <DashboardHeader isNewUser={isNewUser} />
-      </motion.div>
+    <div className="space-y-6 dashboard-container">
+      <DashboardHeader isNewUser={isNewUser} />
       
-      <motion.div variants={itemVariants}>
-        <StatCards 
-          totalBalance={totalBalance}
-          monthlyExpenses={monthlyExpenses}
-          monthlyIncome={monthlyIncome}
-          setMonthlyIncome={handleIncomeUpdate}
-          savingsRate={savingsRate}
-          formatPercentage={formatPercentage}
-          isNewUser={isNewUser}
-          isLoading={isLoading}
-        />
-      </motion.div>
+      <StatCards 
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={handleMonthlyIncomeChange}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        isNewUser={isNewUser}
+        isLoading={isLoading}
+      />
 
-      <motion.div variants={itemVariants}>
-        <AddExpenseButton 
-          isNewUser={isNewUser}
-          expenseToEdit={expenseToEdit}
-          showAddExpense={showAddExpense}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-          onAddExpense={handleExpenseRefresh}
-        />
-      </motion.div>
+      <AddExpenseButton 
+        isNewUser={isNewUser}
+        expenseToEdit={expenseToEdit}
+        showAddExpense={showAddExpense}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+        onAddExpense={() => queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] })}
+      />
 
-      <motion.div variants={itemVariants}>
-        <RecentExpensesCard 
-          expenses={expenses}
-          isNewUser={isNewUser}
-          isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-        />
-      </motion.div>
+      <MemoizedRecentExpensesCard 
+        expenses={expenses}
+        isNewUser={isNewUser}
+        isLoading={isExpensesLoading}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+      />
 
-      <motion.div variants={itemVariants}>
-        <ExpenseAnalyticsCard 
-          expenses={expenses}
-          isLoading={isExpensesLoading}
-          chartType={chartType}
-          setChartType={setChartType}
-        />
-      </motion.div>
-    </motion.div>
+      <MemoizedExpenseAnalyticsCard 
+        expenses={expenses}
+        isLoading={isExpensesLoading}
+        chartType={chartType}
+        setChartType={setChartType}
+      />
+    </div>
   );
 };
 

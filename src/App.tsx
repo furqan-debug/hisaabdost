@@ -1,8 +1,11 @@
 
+import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { MonthProvider } from "@/hooks/use-month-context";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -10,11 +13,21 @@ import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeProvider } from "next-themes";
 import Expenses from "./pages/Expenses";
 import Budget from "./pages/Budget";
 import Analytics from "./pages/Analytics";
 import Goals from "./pages/Goals";
 import { toast } from "sonner";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -94,71 +107,86 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : null;
 };
 
-const App = () => {
-  return (
-    <AuthProvider>
-      <TooltipProvider>
-        <Sonner />
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/auth/verify" element={<AuthCallback />} />
-          <Route path="/" element={<Index />} />
-          <Route 
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/expenses"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Expenses />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/budget"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Budget />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Analytics />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/goals"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Goals />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </AuthProvider>
-  );
-};
+const AppWithProviders = () => (
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/verify" element={<AuthCallback />} />
+              <Route path="/" element={<Index />} />
+              <Route 
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <MonthProvider>
+                      <Layout>
+                        <Dashboard />
+                      </Layout>
+                    </MonthProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/expenses"
+                element={
+                  <ProtectedRoute>
+                    <MonthProvider>
+                      <Layout>
+                        <Expenses />
+                      </Layout>
+                    </MonthProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/budget"
+                element={
+                  <ProtectedRoute>
+                    <MonthProvider>
+                      <Layout>
+                        <Budget />
+                      </Layout>
+                    </MonthProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <MonthProvider>
+                      <Layout>
+                        <Analytics />
+                      </Layout>
+                    </MonthProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/goals"
+                element={
+                  <ProtectedRoute>
+                    <MonthProvider>
+                      <Layout>
+                        <Goals />
+                      </Layout>
+                    </MonthProvider>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
 
-export default App;
+export default AppWithProviders;
