@@ -1,6 +1,6 @@
 
 import { Label } from "@/components/ui/label";
-import { useRef } from "react";
+import { useRef, useEffect } from "react"; // Fixed import - added 'useEffect'
 import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -56,7 +56,7 @@ export function ReceiptField({
   });
   
   // Expose the refs to the parent component if needed
-  React.useEffect(() => {
+  useEffect(() => {
     if (setFileInputRef && fileInputRef.current) {
       setFileInputRef(fileInputRef.current);
     }
