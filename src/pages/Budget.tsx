@@ -20,7 +20,6 @@ export interface Budget {
   period: 'monthly' | 'quarterly' | 'yearly';
   carry_forward: boolean;
   created_at: string;
-  monthly_income?: number;
 }
 
 const Budget = () => {
@@ -41,8 +40,7 @@ const Budget = () => {
     totalSpent,
     remainingBalance,
     usagePercentage,
-    monthlyIncome,
-    updateMonthlyIncome
+    monthlyIncome
   } = useBudgetData();
 
   // Save budget data to month context when it changes
@@ -52,10 +50,9 @@ const Budget = () => {
         totalBudget,
         remainingBudget: remainingBalance,
         budgetUsagePercentage: usagePercentage,
-        monthlyIncome: monthlyIncome
       });
     }
-  }, [totalBudget, remainingBalance, usagePercentage, monthlyIncome, currentMonthKey, updateMonthData, isLoading]);
+  }, [totalBudget, remainingBalance, usagePercentage, currentMonthKey, updateMonthData, isLoading]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -76,14 +73,6 @@ const Budget = () => {
 
   // Get active tab from month data
   const activeTab = currentMonthData.activeTab || 'overview';
-
-  // Handle income change
-  const handleIncomeChange = async (income: number) => {
-    await updateMonthlyIncome(income);
-    
-    // Invalidate budgets query to refresh data
-    queryClient.invalidateQueries({ queryKey: ['budgets'] });
-  };
 
   if (isLoading) {
     return <div className="p-4 flex justify-center">
@@ -106,7 +95,6 @@ const Budget = () => {
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
         isLoading={isLoading}
-        onIncomeChange={handleIncomeChange}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
