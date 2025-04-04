@@ -53,6 +53,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       try {
         const savedData = localStorage.getItem('monthsData');
         if (savedData) {
+          console.log("Loading cached month data from localStorage");
           setMonthsData(JSON.parse(savedData));
         }
       } catch (error) {
@@ -103,6 +104,8 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
 
   // Update data for a specific month with debouncing
   const updateMonthData = useCallback((monthKey: string, data: Partial<MonthData>) => {
+    console.log(`Updating month data for ${monthKey}:`, data);
+    
     // Clear any existing timeout for this month
     if (updateDebounceRef.current[monthKey]) {
       window.clearTimeout(updateDebounceRef.current[monthKey]);
@@ -127,6 +130,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
         };
         
         // Save to localStorage whenever data changes
+        console.log("Saving updated month data to localStorage:", updatedData);
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
         
         return updatedData;

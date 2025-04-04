@@ -10,6 +10,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
+import { toast } from "sonner";
 
 // Import the component files
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -30,18 +31,45 @@ const Dashboard = () => {
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Update local income state when selected month changes
+  // Fetch monthly income from Supabase
+  const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
+    queryKey: ['monthly_income', user?.id],
+    queryFn: async () => {
+      if (!user) return { monthlyIncome: 0 };
+      
+      try {
+        const { data, error } = await supabase
+          .from('budgets')
+          .select('monthly_income')
+          .eq('user_id', user.id)
+          .limit(1);
+          
+        if (error) throw error;
+        return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+      } catch (error) {
+        console.error("Error fetching monthly income:", error);
+        return { monthlyIncome: 0 };
+      }
+    },
+    enabled: !!user,
+  });
+  
+  // Update local income state when data is fetched from Supabase
   useEffect(() => {
-    if (!isMonthDataLoading) {
-      const data = getCurrentMonthData();
-      setMonthlyIncome(data.monthlyIncome || 0);
+    if (incomeData && !isIncomeLoading) {
+      setMonthlyIncome(incomeData.monthlyIncome);
+      
+      // Also update the month context
+      updateMonthData(currentMonthKey, {
+        monthlyIncome: incomeData.monthlyIncome
+      });
     }
-  }, [selectedMonth, getCurrentMonthData, isMonthDataLoading]);
+  }, [incomeData, isIncomeLoading, updateMonthData, currentMonthKey]);
   
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
@@ -50,7 +78,7 @@ const Dashboard = () => {
   
   // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
@@ -62,6 +90,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
@@ -130,7 +159,7 @@ const Dashboard = () => {
   };
 
   const isNewUser = expenses.length === 0;
-  const isLoading = isMonthDataLoading || isExpensesLoading;
+  const isLoading = isMonthDataLoading || isExpensesLoading || isIncomeLoading;
 
   if (isLoading) {
     return (

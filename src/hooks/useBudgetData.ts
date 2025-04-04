@@ -5,9 +5,11 @@ import { Budget } from "@/pages/Budget";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth";
 
 export function useBudgetData() {
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
+  const { user } = useAuth();
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
@@ -31,38 +33,65 @@ export function useBudgetData() {
   // Update debounce timer ref
   const updateTimerRef = useRef<number | null>(null);
   
+  // Query budgets with the monthly income
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', monthKey],
+    queryKey: ['budgets', monthKey, user?.id],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as Budget[];
     },
+    enabled: !!user,
+  });
+  
+  // Query to get monthly income specifically
+  const { data: incomeData, isLoading: incomeLoading } = useQuery({
+    queryKey: ['monthly_income', user?.id],
+    queryFn: async () => {
+      if (!user) return { monthlyIncome: 0 };
+      
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('monthly_income')
+        .eq('user_id', user.id)
+        .limit(1);
+        
+      if (error) throw error;
+      return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+    },
+    enabled: !!user,
   });
 
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', monthKey],
+    queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
+      if (!user) return [];
+      
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0]);
 
       if (error) throw error;
       return data;
     },
+    enabled: !!user,
   });
 
   // Define isLoading variable before it's used
-  const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading;
+  const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading || incomeLoading;
 
   const exportBudgetData = () => {
     if (!budgets) return;
@@ -87,14 +116,16 @@ export function useBudgetData() {
 
   // Calculate and debounce summary data updates
   useEffect(() => {
-    if (isLoading || !budgets || !expenses) return;
+    if (isLoading || !budgets || !expenses || !incomeData) return;
+    
+    // Get monthly income from Supabase data
+    const monthlyIncome = incomeData.monthlyIncome || 0;
     
     // Calculate new values
     const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
     const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
     const remainingBalance = totalBudget - totalSpent;
     const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-    const monthlyIncome = currentMonthData.monthlyIncome || 0;
     
     // Check if values have meaningfully changed (prevent tiny floating point differences)
     const hasChanged = 
@@ -103,7 +134,7 @@ export function useBudgetData() {
       Math.abs(remainingBalance - prevValuesRef.current.remainingBalance) > 0.01 ||
       Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01;
     
-    if (!hasChanged) return;
+    if (!hasChanged && monthlyIncome === stableValues.monthlyIncome) return;
     
     // Store new values in ref
     prevValuesRef.current = {
@@ -133,6 +164,7 @@ export function useBudgetData() {
         totalBudget,
         remainingBudget: remainingBalance,
         budgetUsagePercentage: usagePercentage,
+        monthlyIncome,
       });
     }, 200);
     
@@ -142,7 +174,7 @@ export function useBudgetData() {
         window.clearTimeout(updateTimerRef.current);
       }
     };
-  }, [budgets, expenses, currentMonthData, monthKey, updateMonthData, isLoading]);
+  }, [budgets, expenses, incomeData, currentMonthData, monthKey, updateMonthData, isLoading, stableValues.monthlyIncome]);
 
   return {
     budgets,

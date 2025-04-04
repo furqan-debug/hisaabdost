@@ -10,6 +10,9 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -33,6 +36,7 @@ export const StatCards = ({
   isLoading = false,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const { selectedMonth, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
@@ -60,9 +64,51 @@ export const StatCards = ({
     setTempIncome(value);
   };
 
-  const saveIncome = () => {
-    setMonthlyIncome(tempIncome);
-    setIsEditing(false);
+  const saveIncome = async () => {
+    try {
+      if (!user) return;
+      
+      // Save to Supabase - check if there's already a budget record for this month
+      const { data: existingBudgets, error: fetchError } = await supabase
+        .from('budgets')
+        .select('id, monthly_income')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (fetchError) throw fetchError;
+      
+      if (existingBudgets && existingBudgets.length > 0) {
+        // Update existing budget record(s) with new monthly income
+        const { error } = await supabase
+          .from('budgets')
+          .update({ monthly_income: tempIncome })
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+      } else {
+        // Create a new budget record with the monthly income
+        const { error } = await supabase
+          .from('budgets')
+          .insert({
+            user_id: user.id,
+            category: 'General', // Default category
+            amount: 0, // Default amount
+            period: 'monthly', // Default period
+            monthly_income: tempIncome
+          });
+          
+        if (error) throw error;
+      }
+      
+      // Update local state
+      setMonthlyIncome(tempIncome);
+      setIsEditing(false);
+      
+      toast.success("Monthly income updated successfully");
+    } catch (error) {
+      console.error("Error saving monthly income:", error);
+      toast.error("Failed to save monthly income");
+    }
   };
 
   if (isLoading) {

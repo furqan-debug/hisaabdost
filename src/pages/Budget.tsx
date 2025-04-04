@@ -20,6 +20,7 @@ export interface Budget {
   period: 'monthly' | 'quarterly' | 'yearly';
   carry_forward: boolean;
   created_at: string;
+  monthly_income?: number;
 }
 
 const Budget = () => {
@@ -50,9 +51,10 @@ const Budget = () => {
         totalBudget,
         remainingBudget: remainingBalance,
         budgetUsagePercentage: usagePercentage,
+        monthlyIncome: monthlyIncome
       });
     }
-  }, [totalBudget, remainingBalance, usagePercentage, currentMonthKey, updateMonthData, isLoading]);
+  }, [totalBudget, remainingBalance, usagePercentage, monthlyIncome, currentMonthKey, updateMonthData, isLoading]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
