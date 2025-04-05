@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
@@ -40,7 +40,11 @@ export default function Goals() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching goals:", error);
+        throw error;
+      }
+      
       return data as Goal[];
     },
     enabled: !!user,
@@ -68,13 +72,18 @@ export default function Goals() {
   });
 
   const calculateProgress = (goal: Goal) => {
-    return Math.min((goal.current_amount / goal.target_amount) * 100, 100);
+    // Ensure we're dealing with numbers and not strings
+    const current = typeof goal.current_amount === 'string' ? parseFloat(goal.current_amount) : goal.current_amount;
+    const target = typeof goal.target_amount === 'string' ? parseFloat(goal.target_amount) : goal.target_amount;
+    
+    if (target === 0) return 0; // Avoid division by zero
+    return Math.min((current / target) * 100, 100);
   };
 
   const generateTip = (goal: Goal) => {
     const progress = calculateProgress(goal);
     const monthlyExpenses = expenses?.filter(e => e.category === goal.category)
-      .reduce((sum, exp) => sum + exp.amount, 0) || 0;
+      .reduce((sum, exp) => sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0) || 0;
 
     if (progress < 25) {
       return monthlyExpenses > 0 
@@ -119,6 +128,31 @@ export default function Goals() {
     }
   };
 
+  // Function to update a goal progress
+  const handleUpdateProgress = async (goalId: string, newAmount: number) => {
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .update({ current_amount: newAmount })
+        .eq('id', goalId);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Progress updated",
+        description: "Your goal progress has been updated.",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update the goal progress. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -150,7 +184,8 @@ export default function Goals() {
               const progress = calculateProgress(goal);
               const isOffTrack = progress < 30;
               const tip = generateTip(goal);
-
+              const formattedProgress = Math.round(progress);
+              
               return (
                 <Card key={goal.id} className="relative">
                   <CardHeader>
@@ -171,16 +206,41 @@ export default function Goals() {
                     <CardDescription>
                       Target: ${goal.target_amount.toLocaleString()}
                       <br />
-                      Deadline: {format(new Date(goal.deadline), 'MMM dd, yyyy')}
+                      Deadline: {format(parseISO(goal.deadline), 'MMM dd, yyyy')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Progress ({Math.round(progress)}%)</span>
+                        <span>Progress ({formattedProgress}%)</span>
                         <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
                       </div>
-                      <Progress value={progress} />
+                      <Progress 
+                        value={progress} 
+                        indicatorClassName={progress >= 100 
+                          ? "bg-green-500" 
+                          : progress > 50 
+                            ? "bg-primary" 
+                            : progress > 25 
+                              ? "bg-amber-500" 
+                              : "bg-red-500"
+                        } 
+                      />
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const currentAmount = parseFloat(goal.current_amount.toString());
+                            // Add 10% of target amount
+                            const increment = Math.round(goal.target_amount * 0.1);
+                            handleUpdateProgress(goal.id, currentAmount + increment);
+                          }}
+                        >
+                          Add Progress
+                        </Button>
+                      </div>
                     </div>
 
                     {isOffTrack && (
@@ -197,7 +257,7 @@ export default function Goals() {
                     </Alert>
                   </CardContent>
                 </Card>
-              )
+              );
             })
           )}
         </div>
