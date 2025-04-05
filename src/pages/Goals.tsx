@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format, startOfMonth, endOfMonth, parseISO, isAfter } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, isAfter, isSameMonth, isBefore, subMonths, subDays } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
@@ -50,12 +50,11 @@ export default function Goals() {
     enabled: !!user,
   });
 
-  // Fetch all expenses to calculate savings per category
+  // Fetch all expenses for use in savings calculations
   const { data: expenses } = useQuery({
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      // Get all expenses for calculation, not just current month
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
@@ -89,67 +88,78 @@ export default function Goals() {
     
     // Get budget for this category
     const categoryBudget = budgets.find(b => b.category === goal.category);
-    if (!categoryBudget) return 0;
+    if (!categoryBudget) return 0; // No budget for this category
     
-    // Calculate total expenses for this category since goal creation
-    const goalStartDate = new Date(goal.created_at);
-    const expensesInCategory = expenses.filter(e => 
+    // Get current month's start and end
+    const now = new Date();
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+    
+    // Get expenses for this category in the current month
+    const currentMonthExpenses = expenses.filter(e => 
       e.category === goal.category && 
-      isAfter(new Date(e.date), goalStartDate)
+      isSameMonth(new Date(e.date), now)
     );
     
-    const totalExpenses = expensesInCategory.reduce((sum, exp) => 
+    // Calculate total expenses for this category in the current month
+    const totalExpenses = currentMonthExpenses.reduce((sum, exp) => 
       sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0);
     
-    // Calculate months since goal creation for budget calculation
-    const today = new Date();
-    const monthsSinceCreation = 
-      (today.getFullYear() - goalStartDate.getFullYear()) * 12 + 
-      (today.getMonth() - goalStartDate.getMonth());
+    // Calculate monthly budget
+    const monthlyBudget = categoryBudget.amount;
     
-    // Calculate total budget allocation for this period
-    const totalBudget = (monthsSinceCreation + 1) * categoryBudget.amount;
+    // Calculate savings = Budget - Expenses (can be negative if overspent)
+    const savings = monthlyBudget - totalExpenses;
     
-    // Savings = Budget allocation - Actual expenses
-    const savings = totalBudget - totalExpenses;
-    return Math.max(0, savings); // Ensure we don't return negative savings
+    // Return savings (which can be negative if overspent)
+    return savings;
   };
 
   const calculateProgress = (goal: Goal) => {
     // Get savings for this category
     const savings = calculateCategorySavings(goal);
     
-    // Use the greater of the manually entered amount or calculated savings
-    // as the current progress
-    const savingsToUse = Math.max(savings, goal.current_amount);
+    // If savings is negative (overspent), return 0% progress
+    if (savings <= 0) return 0;
     
-    // Ensure we're dealing with numbers
+    // Calculate progress as (savings / target_amount) * 100
     const target = typeof goal.target_amount === 'string' 
       ? parseFloat(goal.target_amount) 
       : goal.target_amount;
     
     if (target === 0) return 0; // Avoid division by zero
-    return Math.min((savingsToUse / target) * 100, 100);
+    
+    // Cap progress at 100%
+    return Math.min((savings / target) * 100, 100);
   };
 
   const generateTip = (goal: Goal) => {
     const savings = calculateCategorySavings(goal);
     const progress = calculateProgress(goal);
-    const monthlyExpenses = expenses?.filter(e => e.category === goal.category)
-      .reduce((sum, exp) => sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0) || 0;
-
+    const categoryBudget = budgets?.find(b => b.category === goal.category);
+    const monthlyBudget = categoryBudget ? categoryBudget.amount : 0;
+    
+    // Handle case where there's no budget set for this category
+    if (!categoryBudget || monthlyBudget === 0) {
+      return "Set a monthly budget for this category to start tracking your savings progress.";
+    }
+    
+    // If savings are negative (overspent)
+    if (savings < 0) {
+      return `You've overspent your ${goal.category} budget by $${Math.abs(savings).toFixed(2)}. Try to reduce spending to get back on track.`;
+    }
+    
+    // Progress tips based on percentage
     if (progress < 25) {
-      return monthlyExpenses > 0 
-        ? `Consider reducing ${goal.category} expenses by ${Math.round((monthlyExpenses * 0.2))}$ to reach your goal faster.`
-        : `Start by saving a small amount each month for your ${goal.category} goal.`;
+      return `Focus on reducing your ${goal.category} spending to increase your savings. Try to save at least $${(goal.target_amount * 0.25).toFixed(2)} this month.`;
     } else if (progress < 50) {
-      return "You're making progress! Keep up the momentum by setting aside a fixed amount each month.";
+      return "You're making progress! Keep reducing expenses to reach your goal faster.";
     } else if (progress < 75) {
-      return "You're well on your way! Consider automating your savings to reach your goal even faster.";
+      return "Great progress! You're well on your way to reaching your goal.";
+    } else if (progress < 100) {
+      return "Almost there! Just a little more savings to reach your target.";
     } else {
-      return progress === 100 
-        ? "Congratulations! You've reached your goal!" 
-        : "Almost there! Make one final push to reach your goal.";
+      return "Congratulations! You've reached your savings goal!";
     }
   };
 
@@ -181,17 +191,19 @@ export default function Goals() {
     }
   };
 
-  // This function will now update goal progress with the calculated savings
-  // This ensures the database reflects the automatic calculation
+  // This function will update goal progress in the database based on actual savings
   const syncGoalProgress = async (goal: Goal) => {
     try {
       const savings = calculateCategorySavings(goal);
       
-      // Only update if calculated savings are greater than current stored amount
-      if (savings > goal.current_amount) {
+      // We don't store negative values in the database
+      const savingsToStore = Math.max(0, savings);
+      
+      // Update only if savings are different from what's stored
+      if (Math.abs(savingsToStore - goal.current_amount) > 0.01) {
         const { error } = await supabase
           .from('goals')
-          .update({ current_amount: savings })
+          .update({ current_amount: savingsToStore })
           .eq('id', goal.id);
 
         if (error) throw error;
@@ -235,11 +247,12 @@ export default function Goals() {
               // Sync goal progress with calculated savings
               syncGoalProgress(goal);
               
-              const progress = calculateProgress(goal);
-              const isOffTrack = progress < 30;
-              const tip = generateTip(goal);
-              const formattedProgress = Math.round(progress);
               const savings = calculateCategorySavings(goal);
+              const progress = calculateProgress(goal);
+              const formattedProgress = Math.round(progress);
+              const tip = generateTip(goal);
+              const isOverspent = savings < 0;
+              const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
               
               return (
                 <Card key={goal.id} className="relative">
@@ -282,30 +295,48 @@ export default function Goals() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Progress ({formattedProgress}%)</span>
-                        <span>${Math.max(savings, goal.current_amount).toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+                        <span>
+                          {isOverspent ? (
+                            <span className="text-destructive">-${Math.abs(savings).toFixed(2)}</span>
+                          ) : (
+                            `$${Math.max(0, savings).toFixed(2)} of $${goal.target_amount.toLocaleString()}`
+                          )}
+                        </span>
                       </div>
-                      <Progress 
-                        value={progress} 
-                        indicatorClassName={progress >= 100 
-                          ? "bg-green-500" 
-                          : progress > 50 
-                            ? "bg-primary" 
-                            : progress > 25 
-                              ? "bg-amber-500" 
-                              : "bg-red-500"
-                        } 
-                      />
+                      
+                      {!hasBudget ? (
+                        <Alert>
+                          <AlertDescription className="text-amber-500">
+                            No budget set for {goal.category}. Set a budget to track progress.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Progress 
+                          value={progress} 
+                          indicatorClassName={
+                            isOverspent 
+                              ? "bg-destructive" 
+                              : progress >= 100 
+                                ? "bg-green-500" 
+                                : progress > 50 
+                                  ? "bg-primary" 
+                                  : progress > 25 
+                                    ? "bg-amber-500" 
+                                    : "bg-red-500"
+                          } 
+                        />
+                      )}
                       
                       <div className="mt-2 text-xs text-muted-foreground">
-                        <p>Based on your {goal.category} category savings since {format(new Date(goal.created_at), 'MMM dd, yyyy')}</p>
+                        <p>Based on {goal.category} budget savings this month</p>
                       </div>
                     </div>
 
-                    {isOffTrack && (
+                    {isOverspent && (
                       <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                          You're falling behind on this goal. Consider adjusting your spending habits.
+                          You've overspent your {goal.category} budget. Progress is on hold until you start saving.
                         </AlertDescription>
                       </Alert>
                     )}

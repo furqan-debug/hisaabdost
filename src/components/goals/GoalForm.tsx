@@ -25,6 +25,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useQueryClient } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const goalSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -84,7 +86,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
         category: formData.category,
         deadline: formData.deadline,
         user_id: user.id,
-        // Progress starts at 0 and will be automatically updated based on savings
+        // Progress always starts at 0 and will be calculated automatically
         current_amount: goal?.current_amount || 0,
       };
 
@@ -188,11 +190,13 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
             )}
           </div>
 
-          <div className="pt-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Goal progress will be automatically calculated based on your savings in the selected category.
-            </p>
-          </div>
+          <Alert className="bg-muted/50 border-muted">
+            <InfoIcon className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Goal progress is automatically calculated based on your monthly savings (Budget - Expenses) in the selected category. 
+              Progress starts at 0% each month and increases as you save money by staying under budget.
+            </AlertDescription>
+          </Alert>
 
           <div className="flex justify-end gap-2">
             <SheetClose asChild>
