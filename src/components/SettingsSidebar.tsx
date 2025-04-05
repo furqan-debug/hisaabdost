@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -63,7 +62,10 @@ export function SettingsSidebar({
       </div>
 
       <div className="flex-1 py-4 overflow-auto">
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 mb-2">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent mb-4">
+            Expensify AI
+          </h2>
           <h3 className="text-sm font-medium text-muted-foreground mb-2">Date Range</h3>
           <MonthSelector
             selectedMonth={selectedMonth}
