@@ -2,14 +2,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trophy, AlertTriangle, Trash2 } from "lucide-react";
+import { Plus, Trophy, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, isAfter } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
@@ -50,20 +50,16 @@ export default function Goals() {
     enabled: !!user,
   });
 
+  // Fetch all expenses to calculate savings per category
   const { data: expenses } = useQuery({
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
-
+      // Get all expenses for calculation, not just current month
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
-        .gte('date', monthStart.toISOString())
-        .lte('date', monthEnd.toISOString());
+        .eq('user_id', user.id);
 
       if (error) throw error;
       return data;
@@ -71,16 +67,73 @@ export default function Goals() {
     enabled: !!user,
   });
 
+  // Fetch budgets to calculate savings (budget amount - expenses)
+  const { data: budgets } = useQuery({
+    queryKey: ['budgets', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Calculate category savings since goal creation
+  const calculateCategorySavings = (goal: Goal) => {
+    if (!expenses || !budgets) return 0;
+    
+    // Get budget for this category
+    const categoryBudget = budgets.find(b => b.category === goal.category);
+    if (!categoryBudget) return 0;
+    
+    // Calculate total expenses for this category since goal creation
+    const goalStartDate = new Date(goal.created_at);
+    const expensesInCategory = expenses.filter(e => 
+      e.category === goal.category && 
+      isAfter(new Date(e.date), goalStartDate)
+    );
+    
+    const totalExpenses = expensesInCategory.reduce((sum, exp) => 
+      sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0);
+    
+    // Calculate months since goal creation for budget calculation
+    const today = new Date();
+    const monthsSinceCreation = 
+      (today.getFullYear() - goalStartDate.getFullYear()) * 12 + 
+      (today.getMonth() - goalStartDate.getMonth());
+    
+    // Calculate total budget allocation for this period
+    const totalBudget = (monthsSinceCreation + 1) * categoryBudget.amount;
+    
+    // Savings = Budget allocation - Actual expenses
+    const savings = totalBudget - totalExpenses;
+    return Math.max(0, savings); // Ensure we don't return negative savings
+  };
+
   const calculateProgress = (goal: Goal) => {
-    // Ensure we're dealing with numbers and not strings
-    const current = typeof goal.current_amount === 'string' ? parseFloat(goal.current_amount) : goal.current_amount;
-    const target = typeof goal.target_amount === 'string' ? parseFloat(goal.target_amount) : goal.target_amount;
+    // Get savings for this category
+    const savings = calculateCategorySavings(goal);
+    
+    // Use the greater of the manually entered amount or calculated savings
+    // as the current progress
+    const savingsToUse = Math.max(savings, goal.current_amount);
+    
+    // Ensure we're dealing with numbers
+    const target = typeof goal.target_amount === 'string' 
+      ? parseFloat(goal.target_amount) 
+      : goal.target_amount;
     
     if (target === 0) return 0; // Avoid division by zero
-    return Math.min((current / target) * 100, 100);
+    return Math.min((savingsToUse / target) * 100, 100);
   };
 
   const generateTip = (goal: Goal) => {
+    const savings = calculateCategorySavings(goal);
     const progress = calculateProgress(goal);
     const monthlyExpenses = expenses?.filter(e => e.category === goal.category)
       .reduce((sum, exp) => sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0) || 0;
@@ -128,28 +181,26 @@ export default function Goals() {
     }
   };
 
-  // Function to update a goal progress
-  const handleUpdateProgress = async (goalId: string, newAmount: number) => {
+  // This function will now update goal progress with the calculated savings
+  // This ensures the database reflects the automatic calculation
+  const syncGoalProgress = async (goal: Goal) => {
     try {
-      const { error } = await supabase
-        .from('goals')
-        .update({ current_amount: newAmount })
-        .eq('id', goalId);
+      const savings = calculateCategorySavings(goal);
+      
+      // Only update if calculated savings are greater than current stored amount
+      if (savings > goal.current_amount) {
+        const { error } = await supabase
+          .from('goals')
+          .update({ current_amount: savings })
+          .eq('id', goal.id);
 
-      if (error) throw error;
-      
-      toast({
-        title: "Progress updated",
-        description: "Your goal progress has been updated.",
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ["goals"] });
+        if (error) throw error;
+        
+        // Quietly refresh data
+        queryClient.invalidateQueries({ queryKey: ["goals"] });
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update the goal progress. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Failed to sync goal progress:", error);
     }
   };
 
@@ -181,10 +232,14 @@ export default function Goals() {
             </div>
           ) : (
             goals?.map((goal) => {
+              // Sync goal progress with calculated savings
+              syncGoalProgress(goal);
+              
               const progress = calculateProgress(goal);
               const isOffTrack = progress < 30;
               const tip = generateTip(goal);
               const formattedProgress = Math.round(progress);
+              const savings = calculateCategorySavings(goal);
               
               return (
                 <Card key={goal.id} className="relative">
@@ -200,7 +255,21 @@ export default function Goals() {
                         className="h-8 w-8 text-destructive hover:bg-destructive/10"
                         onClick={() => handleDeleteGoal(goal.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M3 6h18"></path>
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
                       </Button>
                     </div>
                     <CardDescription>
@@ -213,7 +282,7 @@ export default function Goals() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Progress ({formattedProgress}%)</span>
-                        <span>${goal.current_amount.toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
+                        <span>${Math.max(savings, goal.current_amount).toLocaleString()} of ${goal.target_amount.toLocaleString()}</span>
                       </div>
                       <Progress 
                         value={progress} 
@@ -227,19 +296,8 @@ export default function Goals() {
                         } 
                       />
                       
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            const currentAmount = parseFloat(goal.current_amount.toString());
-                            // Add 10% of target amount
-                            const increment = Math.round(goal.target_amount * 0.1);
-                            handleUpdateProgress(goal.id, currentAmount + increment);
-                          }}
-                        >
-                          Add Progress
-                        </Button>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <p>Based on your {goal.category} category savings since {format(new Date(goal.created_at), 'MMM dd, yyyy')}</p>
                       </div>
                     </div>
 

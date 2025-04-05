@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -83,6 +84,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
         category: formData.category,
         deadline: formData.deadline,
         user_id: user.id,
+        // Progress starts at 0 and will be automatically updated based on savings
         current_amount: goal?.current_amount || 0,
       };
 
@@ -184,6 +186,12 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
             {errors.deadline && (
               <p className="text-sm text-destructive">{errors.deadline.message}</p>
             )}
+          </div>
+
+          <div className="pt-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              Goal progress will be automatically calculated based on your savings in the selected category.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">
