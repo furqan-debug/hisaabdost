@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -27,18 +26,26 @@ const Expenses = () => {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Fetch expenses using React Query, get all expenses instead of just for selected month
-  const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['all-expenses', refreshTrigger],
+  // Define month boundaries for filtering
+  const monthStart = startOfMonth(selectedMonth);
+  const monthEnd = endOfMonth(selectedMonth);
+  const formattedMonthStart = format(monthStart, 'yyyy-MM-dd');
+  const formattedMonthEnd = format(monthEnd, 'yyyy-MM-dd');
+
+  // Fetch expenses using React Query, now filtering by the selected month
+  const { data: expenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching all expenses for user:", user.id);
+      console.log(`Fetching expenses for month: ${format(selectedMonth, 'MMMM yyyy')}`);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
+        .gte('date', formattedMonthStart)
+        .lte('date', formattedMonthEnd)
         .order('date', { ascending: false });
       
       if (error) {
@@ -47,7 +54,7 @@ const Expenses = () => {
         return [];
       }
       
-      console.log("Fetched expenses:", data);
+      console.log(`Fetched ${data?.length || 0} expenses for ${format(selectedMonth, 'MMMM yyyy')}`);
       
       return data.map(exp => ({
         id: exp.id,
@@ -81,7 +88,7 @@ const Expenses = () => {
     filteredExpenses,
     totalFilteredAmount,
     useCustomDateRange
-  } = useExpenseFilter(allExpenses);
+  } = useExpenseFilter(expenses);
 
   // Hook for managing expense selection
   const {
@@ -90,6 +97,14 @@ const Expenses = () => {
     toggleExpenseSelection,
     clearSelection
   } = useExpenseSelection();
+
+  // Update date range when selectedMonth changes
+  useEffect(() => {
+    setDateRange({
+      start: formattedMonthStart,
+      end: formattedMonthEnd
+    });
+  }, [selectedMonth, formattedMonthStart, formattedMonthEnd]);
 
   const handleAddExpense = () => {
     setShowAddExpense(true);

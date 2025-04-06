@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -9,11 +10,13 @@ import {
   User, 
   Moon, 
   Sun, 
-  LogOut 
+  LogOut,
+  CalendarDays
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth";
+import { format } from "date-fns";
 
 interface SettingsSidebarProps {
   selectedMonth: Date;
@@ -45,6 +48,10 @@ export function SettingsSidebar({
     onClose();
     signOut();
   };
+  
+  const formattedMonth = useMemo(() => {
+    return format(selectedMonth, 'MMMM yyyy');
+  }, [selectedMonth]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -66,12 +73,32 @@ export function SettingsSidebar({
           <h2 className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent mb-4">
             Expensify AI
           </h2>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Date Range</h3>
-          <MonthSelector
-            selectedMonth={selectedMonth}
-            onChange={onMonthChange}
-            className="w-full"
-          />
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Month</h3>
+            <div className="bg-muted/40 p-3 rounded-lg border border-border/50 mb-3">
+              <div className="flex items-center gap-2 text-lg font-medium">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                {formattedMonth}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                All data shown is filtered for this month
+              </p>
+            </div>
+            
+            <h3 className="text-sm font-medium text-muted-foreground">Change Month</h3>
+            <MonthSelector
+              selectedMonth={selectedMonth}
+              onChange={(date) => {
+                onMonthChange(date);
+                // Flash a notification to the user that the month has changed
+                const event = new CustomEvent('month-changed-manual', { 
+                  detail: { month: date, monthKey: format(date, 'yyyy-MM') }
+                });
+                window.dispatchEvent(event);
+              }}
+              className="w-full"
+            />
+          </div>
         </div>
 
         <Separator className="my-2" />
