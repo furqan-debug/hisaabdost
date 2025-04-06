@@ -3,15 +3,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trophy, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format, startOfMonth, endOfMonth, parseISO, isAfter, isBefore, isSameMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, isAfter, isSameMonth, isBefore, subMonths, subDays } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
-import { useMonthContext } from "@/hooks/use-month-context";
 
 interface Goal {
   id: string;
@@ -30,17 +29,9 @@ export default function Goals() {
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const queryClient = useQueryClient();
-  const { selectedMonth } = useMonthContext();
-  
-  // Define month boundaries for filtering
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
-  const formattedMonthStart = format(monthStart, 'yyyy-MM-dd');
-  const formattedMonthEnd = format(monthEnd, 'yyyy-MM-dd');
-  const monthKey = format(selectedMonth, 'yyyy-MM');
 
   const { data: goals, isLoading } = useQuery({
-    queryKey: ['goals', user?.id, monthKey],
+    queryKey: ['goals', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
@@ -59,28 +50,25 @@ export default function Goals() {
     enabled: !!user,
   });
 
-  // Fetch expenses for the selected month for use in savings calculations
+  // Fetch all expenses for use in savings calculations
   const { data: expenses } = useQuery({
-    queryKey: ['expenses', monthKey, user?.id],
+    queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
-        .gte('date', formattedMonthStart)
-        .lte('date', formattedMonthEnd);
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      console.log(`Fetched ${data?.length || 0} expenses for goals calculation: ${format(selectedMonth, 'MMMM yyyy')}`);
       return data;
     },
     enabled: !!user,
   });
 
-  // Fetch budgets for the selected month to calculate savings
+  // Fetch budgets to calculate savings (budget amount - expenses)
   const { data: budgets } = useQuery({
-    queryKey: ['budgets', monthKey, user?.id],
+    queryKey: ['budgets', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
@@ -93,15 +81,8 @@ export default function Goals() {
     },
     enabled: !!user,
   });
-  
-  // Force a refresh when selected month changes
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['goals', user?.id, monthKey] });
-    queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user?.id] });
-    queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user?.id] });
-  }, [selectedMonth, monthKey, queryClient, user?.id]);
 
-  // Calculate category savings for the selected month
+  // Calculate category savings since goal creation
   const calculateCategorySavings = (goal: Goal) => {
     if (!expenses || !budgets) return 0;
     
@@ -109,11 +90,19 @@ export default function Goals() {
     const categoryBudget = budgets.find(b => b.category === goal.category);
     if (!categoryBudget) return 0; // No budget for this category
     
-    // Get expenses for this category in the current month (already filtered by month)
-    const categoryExpenses = expenses.filter(e => e.category === goal.category);
+    // Get current month's start and end
+    const now = new Date();
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+    
+    // Get expenses for this category in the current month
+    const currentMonthExpenses = expenses.filter(e => 
+      e.category === goal.category && 
+      isSameMonth(new Date(e.date), now)
+    );
     
     // Calculate total expenses for this category in the current month
-    const totalExpenses = categoryExpenses.reduce((sum, exp) => 
+    const totalExpenses = currentMonthExpenses.reduce((sum, exp) => 
       sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0);
     
     // Calculate monthly budget
@@ -228,7 +217,7 @@ export default function Goals() {
   };
 
   if (isLoading) {
-    return <div className="animate-pulse p-8 text-center">Loading your financial goals...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
@@ -237,9 +226,7 @@ export default function Goals() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Financial Goals</h1>
-            <p className="text-muted-foreground">
-              Track and manage your financial targets for {format(selectedMonth, 'MMMM yyyy')}
-            </p>
+            <p className="text-muted-foreground">Track and manage your financial targets</p>
           </div>
           <Button onClick={() => {
             setSelectedGoal(null);
@@ -257,7 +244,9 @@ export default function Goals() {
             </div>
           ) : (
             goals?.map((goal) => {
-              // Use calculations based on selected month data
+              // Sync goal progress with calculated savings
+              syncGoalProgress(goal);
+              
               const savings = calculateCategorySavings(goal);
               const progress = calculateProgress(goal);
               const formattedProgress = Math.round(progress);
@@ -265,15 +254,9 @@ export default function Goals() {
               const isOverspent = savings < 0;
               const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
               
-              // Update goal progress in UI only (no DB write for performance)
-              const currentProgress = Math.max(0, savings);
-              
               return (
                 <Card key={goal.id} className="relative">
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-primary/10 text-xs rounded text-primary">
-                    {format(selectedMonth, 'MMM yyyy')}
-                  </div>
-                  <CardHeader className="pt-6">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
@@ -345,7 +328,7 @@ export default function Goals() {
                       )}
                       
                       <div className="mt-2 text-xs text-muted-foreground">
-                        <p>Based on {goal.category} budget savings for {format(selectedMonth, 'MMMM yyyy')}</p>
+                        <p>Based on {goal.category} budget savings this month</p>
                       </div>
                     </div>
 

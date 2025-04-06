@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { formatCurrency } from "@/utils/chartUtils";
-import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Edit, Save, CalendarDays } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Edit, Save } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
@@ -41,7 +41,6 @@ export const StatCards = ({
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
-  const formattedMonth = format(selectedMonth, 'MMM yyyy');
   
   // Update month data when values change
   useEffect(() => {
@@ -105,22 +104,12 @@ export const StatCards = ({
       setMonthlyIncome(tempIncome);
       setIsEditing(false);
       
-      toast.success(`Monthly income for ${formattedMonth} updated`, {
-        description: "Your income has been saved successfully."
-      });
+      toast.success("Monthly income updated successfully");
     } catch (error) {
       console.error("Error saving monthly income:", error);
       toast.error("Failed to save monthly income");
     }
   };
-
-  // Add a month indicator badge to the cards
-  const MonthBadge = () => (
-    <div className="flex items-center gap-1 text-xs text-muted-foreground absolute top-2 right-3">
-      <CalendarDays className="h-3 w-3" />
-      {formattedMonth}
-    </div>
-  );
 
   if (isLoading) {
     return (
@@ -138,8 +127,7 @@ export const StatCards = ({
         content="Track your remaining balance after expenses"
         defaultOpen={isNewUser}
       >
-        <Card className="transition-all duration-300 hover:shadow-md relative">
-          <MonthBadge />
+        <Card className="transition-all duration-300 hover:shadow-md">
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
             <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Total Balance</CardTitle>
             <Wallet className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
@@ -155,8 +143,7 @@ export const StatCards = ({
         </Card>
       </OnboardingTooltip>
       
-      <Card className="transition-all duration-300 hover:shadow-md relative">
-        <MonthBadge />
+      <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Expenses</CardTitle>
           <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
@@ -170,8 +157,7 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md relative">
-        <MonthBadge />
+      <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Income</CardTitle>
           {!isEditing ? (
@@ -221,8 +207,7 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md relative">
-        <MonthBadge />
+      <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Savings Rate</CardTitle>
           <ArrowUpRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />

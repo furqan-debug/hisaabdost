@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/ui/use-toast";
@@ -30,12 +31,6 @@ const Dashboard = () => {
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
-  // Define month boundaries for filtering
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
-  const formattedMonthStart = format(monthStart, 'yyyy-MM-dd');
-  const formattedMonthEnd = format(monthEnd, 'yyyy-MM-dd');
-  
   const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
@@ -43,13 +38,11 @@ const Dashboard = () => {
   
   // Fetch monthly income from Supabase
   const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id, currentMonthKey],
+    queryKey: ['monthly_income', user?.id],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
       try {
-        console.log(`Fetching income data for: ${format(selectedMonth, 'MMMM yyyy')}`);
-        
         const { data, error } = await supabase
           .from('budgets')
           .select('monthly_income')
@@ -57,11 +50,7 @@ const Dashboard = () => {
           .limit(1);
           
         if (error) throw error;
-        
-        const fetchedIncome = data?.[0]?.monthly_income || 0;
-        console.log(`Fetched monthly income: ${fetchedIncome} for ${format(selectedMonth, 'MMMM yyyy')}`);
-        
-        return { monthlyIncome: fetchedIncome };
+        return { monthlyIncome: data?.[0]?.monthly_income || 0 };
       } catch (error) {
         console.error("Error fetching monthly income:", error);
         return { monthlyIncome: 0 };
@@ -82,31 +71,28 @@ const Dashboard = () => {
     }
   }, [incomeData, isIncomeLoading, updateMonthData, currentMonthKey]);
   
-  // Force a refresh when the selected month changes
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] });
-    queryClient.invalidateQueries({ queryKey: ['monthly_income', currentMonthKey] });
-  }, [selectedMonth, queryClient, currentMonthKey]);
-  
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] });
+    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
   };
   
   // Fetch expenses from Supabase using React Query, filtered by selected month
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', currentMonthKey, refreshTrigger, user?.id],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`Fetching expenses for dashboard: ${format(selectedMonth, 'MMMM yyyy')}`);
+      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
+      
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', formattedMonthStart)
-        .lte('date', formattedMonthEnd)
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (error) {
@@ -119,7 +105,7 @@ const Dashboard = () => {
         return [];
       }
       
-      console.log(`Fetched ${data?.length || 0} expenses for dashboard: ${format(selectedMonth, 'MMMM yyyy')}`);
+      console.log(`Fetched ${data.length} expenses for the month`);
       
       return data.map(exp => ({
         id: exp.id,
@@ -154,15 +140,15 @@ const Dashboard = () => {
         savingsRate
       });
     }
-  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading, totalBalance, savingsRate]);
+  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData, isMonthDataLoading]);
 
   // Listen for expense update events and refresh data
   useEffect(() => {
     if (refreshTrigger > 0) {
       console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] });
+      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
     }
-  }, [refreshTrigger, queryClient, currentMonthKey]);
+  }, [refreshTrigger, queryClient, selectedMonth]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
