@@ -1,10 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -28,6 +31,60 @@ export function ExpenseHeader({
   exportToCSV
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
+  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [expandAddOptions, setExpandAddOptions] = useState(false);
+  const [activeButton, setActiveButton] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+
+      // For upload or camera modes, we want to auto-process
+      if (captureMode !== 'manual') {
+        setShowAddExpense(true);
+      }
+
+      e.target.value = '';
+    }
+  };
+
+  const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+    setActiveButton(mode);
+    setCaptureMode(mode);
+    
+    setTimeout(() => {
+      setActiveButton(null);
+      setExpandAddOptions(false);
+      
+      if (mode === 'manual') {
+        // Just open the manual entry form
+        setShowAddExpense(true);
+      } else if (mode === 'upload' && fileInputRef.current) {
+        // Trigger file upload
+        fileInputRef.current.click();
+      } else if (mode === 'camera' && cameraInputRef.current) {
+        // Trigger camera
+        cameraInputRef.current.click();
+      }
+    }, 300);
+  };
+
+  // Animation variants for the buttons
+  const buttonVariants = {
+    initial: { scale: 1 },
+    active: { 
+      scale: 0.95,
+      transition: { duration: 0.2 }
+    },
+    hover: { 
+      scale: 1.03,
+      transition: { duration: 0.2 }
+    }
+  };
 
   return (
     <header className={cn(
@@ -47,13 +104,73 @@ export function ExpenseHeader({
         "flex items-center gap-2",
         isMobile ? "justify-between w-full" : "w-auto justify-end"
       )}>
-        <AddExpenseSheet 
-          onAddExpense={onAddExpense}
-          expenseToEdit={expenseToEdit}
-          onClose={onExpenseEditClose}
-          open={showAddExpense || expenseToEdit !== undefined}
-          onOpenChange={setShowAddExpense}
-        />
+        {expandAddOptions ? (
+          <div className="grid grid-cols-3 gap-2">
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'manual' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
+            >
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('manual')} 
+                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Manual</span>
+              </Button>
+            </motion.div>
+            
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'upload' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
+            >
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('upload')} 
+                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+                size={isMobile ? "sm" : "default"}
+              >
+                <Upload className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Upload</span>
+              </Button>
+            </motion.div>
+            
+            <motion.div
+              variants={buttonVariants}
+              initial="initial"
+              animate={activeButton === 'camera' ? 'active' : 'initial'}
+              whileHover="hover"
+              whileTap="active"
+            >
+              <Button 
+                variant="outline" 
+                onClick={() => handleOpenSheet('camera')} 
+                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
+                size={isMobile ? "sm" : "default"}
+              >
+                <Camera className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium">Camera</span>
+              </Button>
+            </motion.div>
+          </div>
+        ) : (
+          <Button 
+            variant="default" 
+            onClick={() => setExpandAddOptions(true)}
+            className="rounded-lg"
+            size={isMobile ? "sm" : "default"}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Expense
+          </Button>
+        )}
         
         {isMobile ? (
           <>
@@ -100,15 +217,31 @@ export function ExpenseHeader({
             </Button>
           </>
         )}
+        
+        <ReceiptFileInput 
+          onChange={handleFileChange} 
+          inputRef={fileInputRef} 
+          id="receipt-upload-button" 
+          useCamera={false} 
+        />
+        
+        <ReceiptFileInput 
+          onChange={handleFileChange} 
+          inputRef={cameraInputRef} 
+          id="camera-capture-button" 
+          useCamera={true} 
+        />
+        
+        <AddExpenseSheet 
+          onAddExpense={onAddExpense}
+          expenseToEdit={expenseToEdit}
+          onClose={onExpenseEditClose}
+          open={showAddExpense || expenseToEdit !== undefined}
+          onOpenChange={setShowAddExpense}
+          initialCaptureMode={captureMode}
+          initialFile={selectedFile}
+        />
       </div>
-      
-      <AddExpenseSheet 
-        onAddExpense={onAddExpense}
-        expenseToEdit={expenseToEdit}
-        onClose={onExpenseEditClose}
-        open={showAddExpense || expenseToEdit !== undefined}
-        onOpenChange={setShowAddExpense}
-      />
     </header>
   );
 }
