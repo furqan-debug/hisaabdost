@@ -2,6 +2,8 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { format, parseISO } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "framer-motion";
 
 interface Expense {
   amount: number;
@@ -14,6 +16,8 @@ interface ExpensesBarChartProps {
 }
 
 export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
+  const isMobile = useIsMobile();
+
   const data = expenses.reduce((acc, expense) => {
     const month = format(parseISO(expense.date), 'MMM yyyy');
     if (!acc[month]) {
@@ -28,38 +32,124 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     ...categories
   }));
 
+  // Get active categories (ones that have values)
+  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => 
+    chartData.some(item => item[category] !== undefined && item[category] > 0)
+  );
+
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-        <XAxis dataKey="month" />
-        <YAxis tickFormatter={(value) => formatCurrency(value)} />
+    <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
+      <BarChart 
+        data={chartData}
+        margin={isMobile ? { top: 10, right: 0, left: -15, bottom: 0 } : { top: 20, right: 15, left: 0, bottom: 5 }}
+        barCategoryGap={isMobile ? "25%" : "30%"}
+        barGap={isMobile ? 2 : 4}
+      >
+        <CartesianGrid 
+          strokeDasharray="3 3" 
+          vertical={false} 
+          horizontal={true}
+          opacity={0.15} 
+        />
+        <XAxis 
+          dataKey="month" 
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--muted-foreground)' }}
+          dy={10}
+        />
+        <YAxis 
+          tickFormatter={(value) => `$${Number(value)/1000}k`}
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--muted-foreground)' }}
+          width={isMobile ? 35 : 45}
+        />
         <Tooltip
+          cursor={{ fillOpacity: 0.05 }}
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
+            
+            // Filter out categories with no expenses (value === 0 or undefined)
+            const validData = payload.filter(p => p.value && Number(p.value) > 0);
+            
             return (
-              <div className="rounded-lg border bg-background p-2 shadow-sm">
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-md"
+              >
                 <p className="text-sm font-semibold">{label}</p>
-                {payload.map((entry) => (
-                  <p
-                    key={entry.name}
-                    className="text-sm"
-                    style={{ color: entry.color }}
+                <div className="space-y-1.5 mt-1.5">
+                  {validData.map((entry) => (
+                    <div 
+                      key={entry.name}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full mr-1.5" 
+                          style={{ backgroundColor: entry.color }} 
+                        />
+                        <span className="text-xs font-medium">{entry.name}:</span>
+                      </div>
+                      <span className="text-xs font-semibold">{formatCurrency(Number(entry.value))}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          }}
+        />
+        <Legend
+          content={(props) => {
+            const { payload } = props;
+            if (!payload || !payload.length) return null;
+            
+            // Only show legends for categories that have values
+            const activeLegends = payload.filter(p => 
+              activeCategories.includes(p.value)
+            );
+            
+            // Limit display on mobile
+            const displayedItems = isMobile ? activeLegends.slice(0, 5) : activeLegends;
+            const hasMore = isMobile && activeLegends.length > 5;
+            
+            return (
+              <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-2">
+                {displayedItems.map((entry: any, index: number) => (
+                  <div 
+                    key={`legend-${index}`}
+                    className="flex items-center bg-background/40 rounded-full px-2.5 py-1 border border-border/30 shadow-sm"
                   >
-                    {entry.name}: {formatCurrency(entry.value as number)}
-                  </p>
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full mr-1.5" 
+                      style={{ backgroundColor: entry.color }} 
+                    />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {entry.value}
+                    </span>
+                  </div>
                 ))}
+                {hasMore && (
+                  <div className="text-xs text-muted-foreground font-medium">
+                    +{activeLegends.length - 5} more
+                  </div>
+                )}
               </div>
             );
           }}
         />
-        <Legend />
-        {Object.keys(CATEGORY_COLORS).map((category) => (
+        {activeCategories.map((category) => (
           <Bar
             key={category}
             dataKey={category}
-            stackId="a"
+            fillOpacity={0.85}
+            barSize={isMobile ? 8 : 14}
+            radius={[4, 4, 0, 0]}
             fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            className="hover:brightness-105 transition-all duration-300"
           />
         ))}
       </BarChart>

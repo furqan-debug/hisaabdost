@@ -45,12 +45,12 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className="mt-4 overflow-hidden">
-      <CardHeader className="flex flex-col space-y-2 p-4">
+    <Card className="mt-4 overflow-hidden shadow-sm border-border/60">
+      <CardHeader className="flex flex-col space-y-2 p-4 pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className="text-lg font-semibold">Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
-            <div className="bg-muted/50 rounded-lg p-1 flex">
+            <div className="bg-muted/40 rounded-lg p-1 flex border border-border/30 shadow-sm">
               <button
                 onClick={() => setChartType('pie')}
                 className={`p-1.5 rounded-md transition-all ${
@@ -82,7 +82,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-4 pb-6">
+      <CardContent className="px-2 sm:px-4 pb-4 pt-2">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
