@@ -68,7 +68,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-6"
+      className="space-y-6 pb-16 sm:pb-0"
       variants={containerVariants}
       initial="hidden"
       animate="show"

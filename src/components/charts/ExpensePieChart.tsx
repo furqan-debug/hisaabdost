@@ -23,27 +23,39 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   });
 
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
-      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 35 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 360 : 400}>
+      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 50 } : { top: 20, right: 30, left: 30, bottom: 50 }}>
         <Pie
           data={pieChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
-          cy="50%"
+          cy="45%"
           outerRadius={isMobile ? 90 : 140}
           innerRadius={isMobile ? 45 : 70}
-          paddingAngle={3}
+          paddingAngle={2}
           labelLine={false}
           label={({ percent }) => {
             // Only show percentage for segments > 5%
             if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
+            const percentLabel = (percent * 100).toFixed(0) + '%';
+            return (
+              <text 
+                x={0} 
+                y={0}
+                fill="var(--foreground)"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="font-medium text-xs"
+              >
+                {percentLabel}
+              </text>
+            );
           }}
         >
-          {pieChartData.map((entry) => (
+          {pieChartData.map((entry, index) => (
             <Cell 
-              key={entry.name} 
+              key={`cell-${index}`} 
               fill={entry.color} 
               stroke="var(--background)" 
               strokeWidth={2} 
@@ -70,34 +82,45 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           }}
         />
         <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ 
-            fontSize: isMobile ? '11px' : '13px',
-            paddingTop: '10px',
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '8px'
-          }}
-          formatter={(value, entry: any) => {
-            // Extract just the category name to avoid overlapping
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
+          content={(props) => {
+            const { payload } = props;
+            
+            if (!payload || !payload.length) return null;
+            
+            // Limit to top 5 items on mobile to prevent overcrowding
+            const displayedItems = isMobile ? payload.slice(0, 5) : payload;
+            const hasMore = isMobile && payload.length > 5;
             
             return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                display: 'inline-block',
-                padding: '2px 4px',
-                whiteSpace: 'nowrap'
-              }}>
-                {displayName}: {amount}
-              </span>
+              <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-2">
+                {displayedItems.map((entry: any, index: number) => {
+                  const amount = formatCurrency(entry.payload.value);
+                  const name = entry.value;
+                  // Truncate long category names
+                  const displayName = name.length > 12 ? 
+                    name.slice(0, 10) + '...' : name;
+                  
+                  return (
+                    <div 
+                      key={`legend-${index}`}
+                      className="flex items-center bg-background/50 rounded-full px-2 py-0.5 border border-border/40"
+                    >
+                      <div 
+                        className="w-2 h-2 rounded-full mr-1.5" 
+                        style={{ backgroundColor: entry.color }} 
+                      />
+                      <span className="text-xs whitespace-nowrap">
+                        {displayName}: {amount}
+                      </span>
+                    </div>
+                  );
+                })}
+                {hasMore && (
+                  <div className="text-xs text-muted-foreground">
+                    +{payload.length - 5} more
+                  </div>
+                )}
+              </div>
             );
           }}
         />
