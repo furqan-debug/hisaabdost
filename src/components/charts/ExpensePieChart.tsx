@@ -1,3 +1,4 @@
+
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
@@ -22,17 +23,22 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
     item.percent = total > 0 ? (item.value / total) : 0;
   });
 
+  // Adjust chart dimensions based on mobile or desktop
+  const outerRadius = isMobile ? 80 : 150;
+  const innerRadius = isMobile ? 40 : 90;
+  const chartHeight = isMobile ? 280 : 400;
+
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 340 : 400}>
-      <PieChart margin={isMobile ? { top: 5, right: 5, left: 5, bottom: 40 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
+    <ResponsiveContainer width="100%" height={chartHeight} className="pie-chart-container">
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 20 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
         <Pie
           data={pieChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
           cy="50%"
-          outerRadius={isMobile ? 100 : 150}
-          innerRadius={isMobile ? 60 : 90}
+          outerRadius={outerRadius}
+          innerRadius={innerRadius}
           paddingAngle={3}
           strokeWidth={0}
           labelLine={false}
@@ -48,6 +54,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="text-xs font-medium"
+                style={{ fontSize: isMobile ? '9px' : '12px' }}
               >
                 {percentLabel}
               </text>
@@ -73,7 +80,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-md"
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
+                style={{ maxWidth: isMobile ? '180px' : '240px' }}
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
@@ -95,36 +103,37 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             if (!payload || !payload.length) return null;
             
             // Limit to top categories on mobile to prevent overcrowding
-            const displayedItems = isMobile ? payload.slice(0, 6) : payload;
-            const hasMore = isMobile && payload.length > 6;
+            const displayItems = isMobile ? 3 : 6;
+            const displayedItems = payload.slice(0, displayItems);
+            const hasMore = payload.length > displayItems;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-2">
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-2 px-1">
                 {displayedItems.map((entry: any, index: number) => {
                   const amount = formatCurrency(entry.payload.value);
                   const name = entry.value;
-                  // Truncate long category names
-                  const displayName = name.length > 12 ? 
-                    name.slice(0, 10) + '...' : name;
+                  // Truncate long category names even more on mobile
+                  const displayName = name.length > (isMobile ? 8 : 12) ? 
+                    name.slice(0, isMobile ? 6 : 10) + '...' : name;
                   
                   return (
                     <div 
                       key={`legend-${index}`}
-                      className="flex items-center bg-background/40 rounded-full px-2.5 py-1 border border-border/30 shadow-sm"
+                      className="flex items-center bg-background/40 rounded-full px-2 py-0.5 border border-border/30 shadow-sm"
                     >
                       <div 
-                        className="w-2.5 h-2.5 rounded-full mr-1.5" 
+                        className="w-2 h-2 rounded-full mr-1" 
                         style={{ backgroundColor: entry.color }} 
                       />
-                      <span className="text-xs font-medium whitespace-nowrap">
+                      <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
                         {displayName}: {amount}
                       </span>
                     </div>
                   );
                 })}
                 {hasMore && (
-                  <div className="text-xs text-muted-foreground font-medium">
-                    +{payload.length - 6} more
+                  <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-muted-foreground font-medium`}>
+                    +{payload.length - displayItems} more
                   </div>
                 )}
               </div>

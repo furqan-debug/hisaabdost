@@ -15,6 +15,13 @@
     max-width: 95% !important;
   }
   
+  .pie-chart-container {
+    max-height: 280px !important;
+    height: 280px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
   /* Better tooltip on mobile */
   .recharts-tooltip-wrapper {
     @apply z-50;
@@ -41,7 +48,7 @@
   }
   
   .recharts-pie-label-text {
-    font-size: 11px !important;
+    font-size: 10px !important;
     fill: var(--foreground) !important;
   }
   
@@ -53,15 +60,18 @@
   /* Fix legend spacing and layout */
   .recharts-legend-wrapper {
     position: relative !important;
-    padding-top: 15px !important;
+    padding-top: 8px !important;
     bottom: 0 !important;
     height: auto !important;
-    margin-top: 10px !important;
+    margin-top: 5px !important;
+    width: 100% !important;
+    left: 0 !important;
   }
   
   /* Better axis labels */
   .recharts-cartesian-axis-tick-value {
     @apply font-light text-xs opacity-80;
+    font-size: 9px !important;
   }
   
   /* Smooth lines for line charts */
@@ -93,7 +103,14 @@
   
   /* Better positioning for pie percentages */
   .recharts-layer.recharts-pie-labels text {
-    @apply font-medium text-xs !important;
+    @apply font-medium !important;
+    font-size: 10px !important;
+  }
+  
+  /* Enhance mobile chart containers */
+  .card-content-chart {
+    padding: 0.5rem !important;
+    overflow: visible !important;
   }
 }
 
@@ -102,8 +119,8 @@
   display: flex !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  gap: 8px !important;
-  padding-top: 12px !important;
+  gap: 6px !important;
+  padding-top: 8px !important;
 }
 
 /* Stylish pill-style legend items */
