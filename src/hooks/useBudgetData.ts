@@ -13,12 +13,6 @@ export function useBudgetData() {
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Define month boundaries for filtering
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
-  const formattedMonthStart = format(monthStart, 'yyyy-MM-dd');
-  const formattedMonthEnd = format(monthEnd, 'yyyy-MM-dd');
-  
   // Refs to store previous values to prevent unnecessary updates
   const prevValuesRef = useRef({
     totalBudget: 0,
@@ -45,8 +39,6 @@ export function useBudgetData() {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`Fetching budgets for month: ${format(selectedMonth, 'MMMM yyyy')}`);
-      
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
@@ -54,7 +46,6 @@ export function useBudgetData() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log(`Fetched ${data?.length || 0} budgets for ${format(selectedMonth, 'MMMM yyyy')}`);
       return data as Budget[];
     },
     enabled: !!user,
@@ -62,11 +53,9 @@ export function useBudgetData() {
   
   // Query to get monthly income specifically
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id, monthKey],
+    queryKey: ['monthly_income', user?.id],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
-      
-      console.log(`Fetching monthly income for: ${format(selectedMonth, 'MMMM yyyy')}`);
       
       const { data, error } = await supabase
         .from('budgets')
@@ -75,33 +64,27 @@ export function useBudgetData() {
         .limit(1);
         
       if (error) throw error;
-      
-      const monthlyIncome = data?.[0]?.monthly_income || 0;
-      console.log(`Fetched monthly income: ${monthlyIncome} for ${format(selectedMonth, 'MMMM yyyy')}`);
-      
-      return { monthlyIncome };
+      return { monthlyIncome: data?.[0]?.monthly_income || 0 };
     },
     enabled: !!user,
   });
 
-  // Query expenses filtered by the selected month
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log(`Fetching expenses for budget calculations: ${format(selectedMonth, 'MMMM yyyy')}`);
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', formattedMonthStart)
-        .lte('date', formattedMonthEnd);
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0]);
 
       if (error) throw error;
-      
-      console.log(`Fetched ${data?.length || 0} expenses for budget calculations: ${format(selectedMonth, 'MMMM yyyy')}`);
       return data;
     },
     enabled: !!user,
@@ -182,9 +165,6 @@ export function useBudgetData() {
         remainingBudget: remainingBalance,
         budgetUsagePercentage: usagePercentage,
         monthlyIncome,
-        monthlyExpenses: totalSpent,
-        totalBalance: monthlyIncome - totalSpent,
-        savingsRate: monthlyIncome > 0 ? ((monthlyIncome - totalSpent) / monthlyIncome) * 100 : 0
       });
     }, 200);
     
@@ -194,7 +174,7 @@ export function useBudgetData() {
         window.clearTimeout(updateTimerRef.current);
       }
     };
-  }, [budgets, expenses, incomeData, currentMonthData, monthKey, updateMonthData, isLoading, stableValues.monthlyIncome, selectedMonth]);
+  }, [budgets, expenses, incomeData, currentMonthData, monthKey, updateMonthData, isLoading, stableValues.monthlyIncome]);
 
   return {
     budgets,
