@@ -5,6 +5,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
+import "@/styles/mobile-charts.css";
 
 /**
  * Dashboard page component that displays financial overview
