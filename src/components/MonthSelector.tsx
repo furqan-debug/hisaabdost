@@ -59,6 +59,7 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
           "bg-accent/20 hover:bg-accent/30 focus:ring-1 border-border/40 hover:border-border/70",
           className
         )}
+        aria-label="Select month"
       >
         <Calendar className="h-4 w-4 text-primary" />
         <SelectValue placeholder={format(selectedMonth, 'MMMM yyyy')}>
@@ -67,7 +68,7 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
       </SelectTrigger>
       <SelectContent
         align="center"
-        className="w-auto min-w-[180px] p-1 animate-scale-in"
+        className="w-auto min-w-[180px] p-1 animate-scale-in max-h-[300px]"
       >
         {groupedMonths.map(([year, yearMonths]) => (
           <SelectGroup key={year}>

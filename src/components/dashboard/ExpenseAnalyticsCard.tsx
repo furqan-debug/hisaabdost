@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
 import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
@@ -49,7 +48,7 @@ export const ExpenseAnalyticsCard = ({
     <Card className="mt-4 overflow-hidden">
       <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
+          <CardTitle className="text-lg font-semibold">Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
             <div className="bg-muted/50 rounded-lg p-1 flex">
               <button
@@ -83,7 +82,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-4 pb-4">
+      <CardContent className="px-2 sm:px-4 pb-6">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -100,7 +99,7 @@ export const ExpenseAnalyticsCard = ({
             transition={{ duration: 0.5 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className={isMobile ? "h-[300px]" : "h-[400px]"}>
+            <ChartContainer config={chartConfig} className="h-[400px]">
               {renderChart()}
             </ChartContainer>
           </motion.div>

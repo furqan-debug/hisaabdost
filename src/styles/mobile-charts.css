@@ -16,6 +16,7 @@
   /* Better tooltip on mobile */
   .recharts-tooltip-wrapper {
     @apply z-50;
+    pointer-events: auto !important;
   }
   
   /* Improve chart margins for better display */
@@ -27,13 +28,27 @@
   }
   
   /* Ensure legend is readable */
+  .recharts-legend-item {
+    @apply whitespace-nowrap overflow-hidden text-ellipsis;
+    display: inline-flex !important;
+    align-items: center;
+    margin-right: 8px !important;
+    margin-bottom: 6px !important;
+    max-width: 120px;
+  }
+  
   .recharts-legend-item-text {
     @apply text-xs font-medium;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
   }
   
   /* Better axis labels */
   .recharts-cartesian-axis-tick-value {
-    @apply font-light text-xs;
+    @apply font-light text-xs opacity-80;
   }
   
   /* Smooth lines for line charts */
@@ -61,4 +76,75 @@
   .recharts-active-dot {
     @apply stroke-background stroke-2;
   }
+  
+  /* Fix legend spacing and layout */
+  .recharts-legend-wrapper {
+    position: relative !important;
+    padding-top: 20px !important;
+    bottom: 0 !important;
+    height: auto !important;
+    margin-top: 15px !important;
+  }
+  
+  /* Fix pie chart label display */
+  .recharts-pie-label-line {
+    stroke: var(--muted-foreground) !important;
+    stroke-width: 0.5 !important;
+  }
+  
+  .recharts-pie-label-text {
+    font-size: 11px !important;
+    fill: var(--foreground) !important;
+  }
+  
+  /* Improve chart container margins */
+  .recharts-responsive-container {
+    margin: 0 auto !important;
+    max-width: 95% !important;
+  }
+  
+  /* Better positioning for pie percentages */
+  .recharts-layer.recharts-pie-labels text {
+    @apply font-semibold !important;
+  }
+  
+  /* Fix label positioning in pie charts */
+  .recharts-sector {
+    @apply drop-shadow-sm;
+  }
+  
+  /* Fix bottom navigation overlap with chart content */
+  .card .recharts-legend-wrapper {
+    margin-bottom: 12px !important;
+  }
+  
+  /* Fix overflow issues */
+  .recharts-responsive-container {
+    overflow: visible !important;
+  }
+}
+
+/* Legend improvements for all screen sizes */
+.recharts-default-legend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding-top: 15px !important;
+}
+
+/* Stylish pill-style legend items */
+.legend-pill {
+  @apply flex items-center text-xs rounded-full px-2 py-0.5 border border-border/30 bg-card/50;
+}
+
+/* Make pie labels more visible */
+.recharts-layer.recharts-pie-labels text {
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+/* Fix tooltip z-index */
+.recharts-tooltip-wrapper {
+  z-index: 50 !important;
 }
