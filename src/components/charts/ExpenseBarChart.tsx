@@ -1,7 +1,7 @@
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 
