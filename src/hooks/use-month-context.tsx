@@ -69,6 +69,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   // Whenever selectedMonth changes, ensure we have a default entry for it
   useEffect(() => {
     const currentMonthKey = format(selectedMonth, 'yyyy-MM');
+    console.log(`Month changed to: ${format(selectedMonth, 'MMMM yyyy')}`);
     
     if (!monthsData[currentMonthKey]) {
       setMonthsData(prev => {
@@ -84,11 +85,11 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       });
     }
     
-    // Reset loading state when month changes to indicate data is ready
+    // Reset loading state when month changes to indicate data is loading
     setIsLoading(true);
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 150);
+    }, 300); // Increased to 300ms to allow for data loading
     
     return () => clearTimeout(timer);
   }, [selectedMonth, monthsData]);
@@ -119,7 +120,8 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
         // Check if data is actually different before updating
         const isDataDifferent = Object.entries(data).some(([key, value]) => {
           const typedKey = key as keyof MonthData;
-          return Math.abs(Number(currentData[typedKey]) - Number(value)) > 0.01;
+          return value !== undefined && 
+                Math.abs(Number(currentData[typedKey]) - Number(value)) > 0.01;
         });
         
         if (!isDataDifferent) return prevData;
@@ -130,13 +132,31 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
         };
         
         // Save to localStorage whenever data changes
-        console.log("Saving updated month data to localStorage:", updatedData);
+        console.log("Saving updated month data to localStorage:", updatedData[monthKey]);
         localStorage.setItem('monthsData', JSON.stringify(updatedData));
         
         return updatedData;
       });
     }, 150); // Debounce for 150ms
   }, []);
+
+  // Listen for changes to selectedMonth and update loading state accordingly
+  useEffect(() => {
+    const monthKey = format(selectedMonth, 'yyyy-MM');
+    // Dispatch a custom event when month changes to allow components to react
+    window.dispatchEvent(new CustomEvent('month-changed', { 
+      detail: { month: selectedMonth, monthKey } 
+    }));
+
+    setIsLoading(true); // Set loading state when month changes
+    
+    // Reset the loading state after all components have had a chance to refetch
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [selectedMonth]);
 
   return (
     <MonthContext.Provider value={{ 

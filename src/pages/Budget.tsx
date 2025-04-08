@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +53,13 @@ const Budget = () => {
       });
     }
   }, [totalBudget, remainingBalance, usagePercentage, monthlyIncome, currentMonthKey, updateMonthData, isLoading]);
+
+  // Force a refresh when the selected month changes
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['budgets', currentMonthKey] });
+    queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthKey] });
+    queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+  }, [selectedMonth, queryClient, currentMonthKey]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -114,7 +120,7 @@ const Budget = () => {
         onSuccess={() => {
           setShowBudgetForm(false);
           setSelectedBudget(null);
-          queryClient.invalidateQueries({ queryKey: ['budgets'] });
+          queryClient.invalidateQueries({ queryKey: ['budgets', currentMonthKey] });
           toast({
             title: "Success",
             description: `Budget ${selectedBudget ? 'updated' : 'created'} successfully.`,

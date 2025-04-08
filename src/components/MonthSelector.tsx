@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface MonthSelectorProps {
   selectedMonth: Date;
@@ -46,6 +47,12 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
   const handleChange = (value: string) => {
     const selectedDate = new Date(value);
     onChange(selectedDate);
+    
+    // Show a toast notification to inform the user that data will be filtered
+    toast.success(`Data filtered for ${format(selectedDate, 'MMMM yyyy')}`, {
+      description: "All data now displays information for this month only.",
+      duration: 3000,
+    });
   };
 
   return (
@@ -56,19 +63,19 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
       <SelectTrigger 
         className={cn(
           "w-full h-9 px-2 gap-1 py-1 transition-all duration-300",
-          "bg-accent/20 hover:bg-accent/30 focus:ring-1 border-border/40 hover:border-border/70",
+          "bg-accent/40 hover:bg-accent/60 focus:ring-1 border-border/40 hover:border-border/70",
+          "text-primary font-medium",
           className
         )}
-        aria-label="Select month"
       >
         <Calendar className="h-4 w-4 text-primary" />
         <SelectValue placeholder={format(selectedMonth, 'MMMM yyyy')}>
-          {format(selectedMonth, 'MMM yyyy')}
+          {format(selectedMonth, 'MMMM yyyy')}
         </SelectValue>
       </SelectTrigger>
       <SelectContent
         align="center"
-        className="w-auto min-w-[180px] p-1 animate-scale-in max-h-[300px]"
+        className="w-auto min-w-[180px] p-1 animate-scale-in"
       >
         {groupedMonths.map(([year, yearMonths]) => (
           <SelectGroup key={year}>
@@ -85,7 +92,7 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
                   value={month.toISOString()}
                   className={cn(
                     "cursor-pointer transition-colors duration-150 hover:bg-accent rounded-sm px-3",
-                    isSelected && "bg-primary/10 text-primary font-bold border-l-2 border-primary pl-2"
+                    isSelected && "bg-primary/15 text-primary font-bold border-l-2 border-primary pl-2"
                   )}
                 >
                   {format(month, 'MMMM')}

@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 
@@ -9,13 +8,6 @@ export const CATEGORY_COLORS = {
   'Transportation': '#FF8042',
   'Entertainment': '#8884D8',
   'Shopping': '#82CA9D',
-  'Healthcare': '#FF6B6B',
-  'Education': '#6A7FDB',
-  'Travel': '#FF9D5C',
-  'Groceries': '#4BC0C0',
-  'Restaurants': '#9966FF',
-  'Clothing': '#FF99CC',
-  'Bills': '#FF6B6B',
   'Other': '#A4DE6C'
 } as const;
 
@@ -97,7 +89,6 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   return Object.entries(categoryTotals).map(([name, value]) => ({
     name,
     value,
-    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C',
-    percent: 0 // Will be calculated later when needed
+    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C'
   }));
 };

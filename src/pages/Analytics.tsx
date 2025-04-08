@@ -19,7 +19,6 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -31,7 +30,6 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd'),
   });
   const useCustomDateRange = true;
-  const isMobile = useIsMobile();
 
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
@@ -109,15 +107,13 @@ export default function Analytics() {
 
   return (
     <motion.div 
-      className="space-y-6 pb-16 sm:pb-0"
+      className="space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
-        <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold tracking-tight gradient-text`}>
-          Analytics Dashboard
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
         <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
         <ExpenseFilters
           searchTerm={searchTerm}
@@ -138,26 +134,18 @@ export default function Analytics() {
       <motion.div variants={itemVariants}>
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Trends
-            </TabsTrigger>
-            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              Comparison
-            </TabsTrigger>
+            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
+            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
+            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-2">
             <Card className="overflow-hidden">
-              <CardHeader className={isMobile ? "p-3" : ""}>
-                <CardTitle className={isMobile ? "text-base" : ""}>Category Breakdown</CardTitle>
-                <CardDescription className={isMobile ? "text-xs" : ""}>
-                  Your expenses by category
-                </CardDescription>
+              <CardHeader>
+                <CardTitle>Category Breakdown</CardTitle>
+                <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className="h-[400px]">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -167,13 +155,11 @@ export default function Analytics() {
 
           <TabsContent value="trends" className="space-y-4 mt-2">
             <Card className="overflow-hidden">
-              <CardHeader className={isMobile ? "p-3" : ""}>
-                <CardTitle className={isMobile ? "text-base" : ""}>Monthly Trends</CardTitle>
-                <CardDescription className={isMobile ? "text-xs" : ""}>
-                  Your spending patterns over time
-                </CardDescription>
+              <CardHeader>
+                <CardTitle>Monthly Trends</CardTitle>
+                <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className="h-[400px]">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -181,13 +167,11 @@ export default function Analytics() {
             </Card>
 
             <Card className="overflow-hidden">
-              <CardHeader className={isMobile ? "p-3" : ""}>
-                <CardTitle className={isMobile ? "text-base" : ""}>Category Trends</CardTitle>
-                <CardDescription className={isMobile ? "text-xs" : ""}>
-                  How your spending evolves by category
-                </CardDescription>
+              <CardHeader>
+                <CardTitle>Category Trends</CardTitle>
+                <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className="h-[400px]">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -197,13 +181,11 @@ export default function Analytics() {
 
           <TabsContent value="comparison" className="space-y-4 mt-2">
             <Card>
-              <CardHeader className={isMobile ? "p-3" : ""}>
-                <CardTitle className={isMobile ? "text-base" : ""}>Period Comparison</CardTitle>
-                <CardDescription className={isMobile ? "text-xs" : ""}>
-                  Compare your spending across different periods
-                </CardDescription>
+              <CardHeader>
+                <CardTitle>Period Comparison</CardTitle>
+                <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent className={isMobile ? "p-2" : ""}>
+              <CardContent>
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>
