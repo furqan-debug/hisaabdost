@@ -19,13 +19,18 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   );
 
   // Chart height based on device
-  const chartHeight = isMobile ? 280 : 400;
+  const chartHeight = isMobile ? 260 : 400;
+  
+  // Limit the number of months to display on mobile
+  const limitedData = isMobile && chartData.length > 4 
+    ? chartData.slice(-4) // Show only the last 4 months on mobile
+    : chartData;
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight} className="line-chart-container">
       <LineChart 
-        data={chartData}
-        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 0 } : { top: 20, right: 15, left: 0, bottom: 5 }}
+        data={limitedData}
+        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 10 } : { top: 20, right: 15, left: 0, bottom: 5 }}
       >
         <CartesianGrid 
           strokeDasharray="3 3" 
@@ -47,6 +52,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
           tickLine={false}
           tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
           width={isMobile ? 25 : 45}
+          tickCount={5}
         />
         <Tooltip
           cursor={{ stroke: 'var(--muted-foreground)', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -101,12 +107,12 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
             );
             
             // Limit display on mobile
-            const displayItems = isMobile ? 3 : 5;
+            const displayItems = isMobile ? 4 : 5;
             const displayedItems = activeLegends.slice(0, displayItems);
             const hasMore = activeLegends.length > displayItems;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1">
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1 pb-3">
                 {displayedItems.map((entry: any, index: number) => (
                   <div 
                     key={`legend-${index}`}

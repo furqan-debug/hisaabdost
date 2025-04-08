@@ -43,25 +43,27 @@ const Dashboard = () => {
 
   // Render dashboard content
   return (
-    <DashboardContent 
-      isNewUser={isNewUser}
-      isLoading={isLoading}
-      totalBalance={totalBalance}
-      monthlyExpenses={monthlyExpenses}
-      monthlyIncome={monthlyIncome}
-      setMonthlyIncome={setMonthlyIncome}
-      savingsRate={savingsRate}
-      formatPercentage={formatPercentage}
-      expenses={expenses}
-      isExpensesLoading={isExpensesLoading}
-      expenseToEdit={expenseToEdit}
-      setExpenseToEdit={setExpenseToEdit}
-      showAddExpense={showAddExpense}
-      setShowAddExpense={setShowAddExpense}
-      handleExpenseRefresh={handleExpenseRefresh}
-      chartType={chartType}
-      setChartType={setChartType}
-    />
+    <div className="pb-6">
+      <DashboardContent 
+        isNewUser={isNewUser}
+        isLoading={isLoading}
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        expenses={expenses}
+        isExpensesLoading={isExpensesLoading}
+        expenseToEdit={expenseToEdit}
+        setExpenseToEdit={setExpenseToEdit}
+        showAddExpense={showAddExpense}
+        setShowAddExpense={setShowAddExpense}
+        handleExpenseRefresh={handleExpenseRefresh}
+        chartType={chartType}
+        setChartType={setChartType}
+      />
+    </div>
   );
 };
 

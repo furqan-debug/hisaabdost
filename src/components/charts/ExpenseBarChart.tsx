@@ -18,16 +18,21 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
     chartData.some(item => item[category] !== null && item[category] > 0)
   );
 
-  // Chart height based on device
-  const chartHeight = isMobile ? 280 : 400;
-  const barSize = isMobile ? 6 : 14;
+  // Chart height based on device and number of data points
+  const chartHeight = isMobile ? 260 : 400;
+  const barSize = isMobile ? 5 : 14;
+  
+  // Limit the number of months to display on mobile
+  const limitedData = isMobile && chartData.length > 4 
+    ? chartData.slice(-4) // Show only the last 4 months on mobile
+    : chartData;
   
   return (
     <ResponsiveContainer width="100%" height={chartHeight} className="bar-chart-container">
       <BarChart 
-        data={chartData}
-        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 0 } : { top: 20, right: 15, left: 0, bottom: 5 }}
-        barCategoryGap={isMobile ? "20%" : "30%"}
+        data={limitedData}
+        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 10 } : { top: 20, right: 15, left: 0, bottom: 5 }}
+        barCategoryGap={isMobile ? "15%" : "30%"}
         barGap={isMobile ? 1 : 4}
       >
         <CartesianGrid 
@@ -50,6 +55,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
           tickLine={false}
           tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
           width={isMobile ? 25 : 45}
+          tickCount={5}
         />
         <Tooltip
           cursor={{ fillOpacity: 0.05 }}
@@ -104,12 +110,12 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             );
             
             // Limit display on mobile
-            const displayItems = isMobile ? 3 : 5;
+            const displayItems = isMobile ? 4 : 5;
             const displayedItems = activeLegends.slice(0, displayItems);
             const hasMore = activeLegends.length > displayItems;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1">
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1 pb-3">
                 {displayedItems.map((entry: any, index: number) => (
                   <div 
                     key={`legend-${index}`}
