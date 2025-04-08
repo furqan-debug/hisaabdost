@@ -71,7 +71,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-6 pb-20 sm:pb-4"
+      className="space-y-6 pb-16 sm:pb-0"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -114,7 +114,10 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="pb-6">
+      <motion.div 
+        variants={itemVariants} 
+        className={`pb-${isMobile ? '16' : '4'}`} // Add bottom padding to prevent overlap with bottom navigation
+      >
         <ExpenseAnalyticsCard 
           expenses={expenses}
           isLoading={isExpensesLoading}

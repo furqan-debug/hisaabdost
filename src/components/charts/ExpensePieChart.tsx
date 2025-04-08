@@ -24,19 +24,19 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   });
 
   // Adjust chart dimensions based on mobile or desktop
-  const outerRadius = isMobile ? 70 : 150;
-  const innerRadius = isMobile ? 35 : 90;
-  const chartHeight = isMobile ? 260 : 400;
+  const outerRadius = isMobile ? 80 : 150;
+  const innerRadius = isMobile ? 40 : 90;
+  const chartHeight = isMobile ? 280 : 400;
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight} className="pie-chart-container">
-      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 30 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 20 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
         <Pie
           data={pieChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
-          cy="45%"
+          cy="50%"
           outerRadius={outerRadius}
           innerRadius={innerRadius}
           paddingAngle={3}
@@ -103,12 +103,12 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             if (!payload || !payload.length) return null;
             
             // Limit to top categories on mobile to prevent overcrowding
-            const displayItems = isMobile ? 4 : 6;
+            const displayItems = isMobile ? 3 : 6;
             const displayedItems = payload.slice(0, displayItems);
             const hasMore = payload.length > displayItems;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 mt-2 px-1 pb-3">
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-2 px-1">
                 {displayedItems.map((entry: any, index: number) => {
                   const amount = formatCurrency(entry.payload.value);
                   const name = entry.value;
