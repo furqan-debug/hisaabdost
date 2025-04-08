@@ -28,54 +28,60 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     percent: 0 // This will be calculated below
   }));
   
+  // Sort data by value in descending order for better visualization
+  data.sort((a, b) => b.value - a.value);
+  
   // Calculate percentages based on total
   const total = data.reduce((sum, item) => sum + item.value, 0);
   data.forEach(item => {
     item.percent = total > 0 ? (item.value / total) : 0;
   });
   
-  // Animation for pie chart segments
-  const ANIMATION_DURATION = 800;
+  // Adjust chart dimensions based on mobile or desktop
+  const outerRadius = isMobile ? 80 : 150;
+  const innerRadius = isMobile ? 40 : 90;
+  const chartHeight = isMobile ? 260 : 400;
   
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : "100%"}>
-      <PieChart margin={isMobile ? { top: 25, right: 10, left: 10, bottom: 35 } : { top: 20, right: 40, left: 40, bottom: 40 }}>
-        <defs>
-          {data.map((entry, index) => (
-            <linearGradient key={`colorGradient-${index}`} id={`colorGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
-              <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
-            </linearGradient>
-          ))}
-        </defs>
+    <ResponsiveContainer width="100%" height={chartHeight} className="pie-chart-container">
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 10 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
         <Pie
           data={data}
           dataKey="value"
           nameKey="name"
           cx="50%"
           cy="50%"
-          outerRadius={isMobile ? 80 : 150}
-          innerRadius={isMobile ? 40 : 75}
+          outerRadius={outerRadius}
+          innerRadius={innerRadius}
           paddingAngle={3}
-          isAnimationActive={true}
-          animationDuration={ANIMATION_DURATION}
-          animationBegin={0}
-          animationEasing="ease-out"
+          strokeWidth={0}
           labelLine={false}
-          label={({ name, percent }) => {
+          label={({ percent }) => {
             // Only show percentage for segments > 5%
             if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
+            const percentLabel = (percent * 100).toFixed(0) + '%';
+            return (
+              <text 
+                x={0} 
+                y={0}
+                fill="var(--foreground)"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="text-xs font-medium"
+                style={{ fontSize: isMobile ? '9px' : '12px' }}
+              >
+                {percentLabel}
+              </text>
+            );
           }}
-          startAngle={90}
-          endAngle={-270}
         >
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`} 
-              fill={`url(#colorGradient-${index})`} 
+              fill={entry.color} 
               stroke="var(--background)" 
-              strokeWidth={2} 
+              strokeWidth={2}
+              className="filter drop-shadow-sm hover:brightness-105 transition-all duration-300"
             />
           ))}
         </Pie>
@@ -86,9 +92,11 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
             const data = payload[0];
             return (
               <motion.div 
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border bg-background p-3 shadow-md"
+                transition={{ duration: 0.2 }}
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
+                style={{ maxWidth: isMobile ? '180px' : '240px' }}
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
@@ -104,31 +112,46 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           }}
         />
         <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{
-            fontSize: isMobile ? '11px' : '13px',
-            paddingTop: '10px', 
-            width: '100%',
-            bottom: isMobile ? 0 : 10
-          }}
-          formatter={(value, entry: any) => {
-            // Extract just the category name to avoid overlapping
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
+          content={(props) => {
+            const { payload } = props;
+            
+            if (!payload || !payload.length) return null;
+            
+            // Limit to top categories on mobile to prevent overcrowding
+            const displayItems = isMobile ? 3 : 6;
+            const displayedItems = payload.slice(0, displayItems);
+            const hasMore = payload.length > displayItems;
             
             return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                marginLeft: '4px',
-                marginRight: isMobile ? '8px' : '12px',
-                display: 'inline-block'
-              }}>
-                {displayName}: {amount}
-              </span>
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-2 px-1 mt-1">
+                {displayedItems.map((entry: any, index: number) => {
+                  const amount = formatCurrency(entry.payload.value);
+                  const name = entry.value;
+                  // Truncate long category names even more on mobile
+                  const displayName = name.length > (isMobile ? 8 : 12) ? 
+                    name.slice(0, isMobile ? 6 : 10) + '...' : name;
+                  
+                  return (
+                    <div 
+                      key={`legend-${index}`}
+                      className="flex items-center bg-background/40 rounded-full px-2 py-0.5 border border-border/30 shadow-sm"
+                    >
+                      <div 
+                        className="w-2 h-2 rounded-full mr-1" 
+                        style={{ backgroundColor: entry.color }} 
+                      />
+                      <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
+                        {displayName}: {amount}
+                      </span>
+                    </div>
+                  );
+                })}
+                {hasMore && (
+                  <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-muted-foreground font-medium`}>
+                    +{payload.length - displayItems} more
+                  </div>
+                )}
+              </div>
             );
           }}
         />
