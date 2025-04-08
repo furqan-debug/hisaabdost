@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { format, startOfMonth, endOfMonth, parseISO, isAfter, isSameMonth, isBefore, subMonths, subDays } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
 
 interface Goal {
@@ -50,15 +50,23 @@ export default function Goals() {
     enabled: !!user,
   });
 
-  // Fetch all expenses for use in savings calculations
+  // Fetch all expenses for the current month to calculate savings
   const { data: expenses } = useQuery({
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
+      // Get current month's start and end dates
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0]);
 
       if (error) throw error;
       return data;
@@ -82,42 +90,35 @@ export default function Goals() {
     enabled: !!user,
   });
 
-  // Calculate category savings since goal creation
-  const calculateCategorySavings = (goal: Goal) => {
+  // Calculate actual savings for a specific category in the current month
+  const calculateCategorySavings = (category: string) => {
     if (!expenses || !budgets) return 0;
     
     // Get budget for this category
-    const categoryBudget = budgets.find(b => b.category === goal.category);
+    const categoryBudget = budgets.find(b => b.category === category);
     if (!categoryBudget) return 0; // No budget for this category
     
-    // Get current month's start and end
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const currentMonthEnd = endOfMonth(now);
+    // Calculate budget amount
+    const budgetAmount = categoryBudget.amount;
     
     // Get expenses for this category in the current month
-    const currentMonthExpenses = expenses.filter(e => 
-      e.category === goal.category && 
-      isSameMonth(new Date(e.date), now)
-    );
+    const categoryExpenses = expenses.filter(e => e.category === category);
     
-    // Calculate total expenses for this category in the current month
-    const totalExpenses = currentMonthExpenses.reduce((sum, exp) => 
+    // Calculate total expenses for this category
+    const totalExpenses = categoryExpenses.reduce((sum, exp) => 
       sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0);
     
-    // Calculate monthly budget
-    const monthlyBudget = categoryBudget.amount;
+    // Actual savings = Budget - Expenses (can be negative if overspent)
+    const savings = budgetAmount - totalExpenses;
     
-    // Calculate savings = Budget - Expenses (can be negative if overspent)
-    const savings = monthlyBudget - totalExpenses;
-    
-    // Return savings (which can be negative if overspent)
+    // Return actual savings (which can be negative if overspent)
     return savings;
   };
 
+  // Calculate goal progress as a percentage based on actual savings
   const calculateProgress = (goal: Goal) => {
-    // Get savings for this category
-    const savings = calculateCategorySavings(goal);
+    // Get actual savings for this category
+    const savings = calculateCategorySavings(goal.category);
     
     // If savings is negative (overspent), return 0% progress
     if (savings <= 0) return 0;
@@ -127,20 +128,21 @@ export default function Goals() {
       ? parseFloat(goal.target_amount) 
       : goal.target_amount;
     
-    if (target === 0) return 0; // Avoid division by zero
+    if (target <= 0) return 0; // Avoid division by zero or negative targets
     
     // Cap progress at 100%
     return Math.min((savings / target) * 100, 100);
   };
 
+  // Generate tips based on goal progress and savings
   const generateTip = (goal: Goal) => {
-    const savings = calculateCategorySavings(goal);
+    const savings = calculateCategorySavings(goal.category);
     const progress = calculateProgress(goal);
     const categoryBudget = budgets?.find(b => b.category === goal.category);
-    const monthlyBudget = categoryBudget ? categoryBudget.amount : 0;
+    const budgetAmount = categoryBudget ? categoryBudget.amount : 0;
     
     // Handle case where there's no budget set for this category
-    if (!categoryBudget || monthlyBudget === 0) {
+    if (!categoryBudget || budgetAmount === 0) {
       return "Set a monthly budget for this category to start tracking your savings progress.";
     }
     
@@ -191,31 +193,6 @@ export default function Goals() {
     }
   };
 
-  // This function will update goal progress in the database based on actual savings
-  const syncGoalProgress = async (goal: Goal) => {
-    try {
-      const savings = calculateCategorySavings(goal);
-      
-      // We don't store negative values in the database
-      const savingsToStore = Math.max(0, savings);
-      
-      // Update only if savings are different from what's stored
-      if (Math.abs(savingsToStore - goal.current_amount) > 0.01) {
-        const { error } = await supabase
-          .from('goals')
-          .update({ current_amount: savingsToStore })
-          .eq('id', goal.id);
-
-        if (error) throw error;
-        
-        // Quietly refresh data
-        queryClient.invalidateQueries({ queryKey: ["goals"] });
-      }
-    } catch (error) {
-      console.error("Failed to sync goal progress:", error);
-    }
-  };
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -244,15 +221,17 @@ export default function Goals() {
             </div>
           ) : (
             goals?.map((goal) => {
-              // Sync goal progress with calculated savings
-              syncGoalProgress(goal);
+              // Calculate actual savings for this category
+              const savings = calculateCategorySavings(goal.category);
               
-              const savings = calculateCategorySavings(goal);
+              // Calculate progress as percentage of target amount
               const progress = calculateProgress(goal);
               const formattedProgress = Math.round(progress);
+              
               const tip = generateTip(goal);
               const isOverspent = savings < 0;
               const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
+              const actualSavingsAmount = Math.max(0, savings);
               
               return (
                 <Card key={goal.id} className="relative">
@@ -297,9 +276,9 @@ export default function Goals() {
                         <span>Progress ({formattedProgress}%)</span>
                         <span>
                           {isOverspent ? (
-                            <span className="text-destructive">-${Math.abs(savings).toFixed(2)}</span>
+                            <span className="text-destructive">$0.00 of ${goal.target_amount.toLocaleString()}</span>
                           ) : (
-                            `$${Math.max(0, savings).toFixed(2)} of $${goal.target_amount.toLocaleString()}`
+                            `$${actualSavingsAmount.toFixed(2)} of $${goal.target_amount.toLocaleString()}`
                           )}
                         </span>
                       </div>
