@@ -10,7 +10,6 @@ import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { cn } from "@/lib/utils";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -46,7 +45,7 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className="mt-4 overflow-hidden shadow-sm border-border/60 analytics-card">
+    <Card className="mt-4 overflow-hidden shadow-sm border-border/60">
       <CardHeader className="flex flex-col space-y-2 p-4 pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>Expense Analytics</CardTitle>
@@ -54,45 +53,36 @@ export const ExpenseAnalyticsCard = ({
             <div className="bg-muted/40 rounded-lg p-1 flex border border-border/30 shadow-sm">
               <button
                 onClick={() => setChartType('pie')}
-                className={cn(
-                  "p-1.5 rounded-md transition-all flex items-center justify-center",
+                className={`p-1.5 rounded-md transition-all ${
                   chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                )}
+                }`}
                 aria-label="Pie chart"
-                style={{ minHeight: isMobile ? '28px' : '32px', minWidth: isMobile ? '28px' : '32px' }}
               >
-                <PieChartIcon className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+                <PieChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
               </button>
               <button
                 onClick={() => setChartType('bar')}
-                className={cn(
-                  "p-1.5 rounded-md transition-all flex items-center justify-center",
+                className={`p-1.5 rounded-md transition-all ${
                   chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                )}
+                }`}
                 aria-label="Bar chart"
-                style={{ minHeight: isMobile ? '28px' : '32px', minWidth: isMobile ? '28px' : '32px' }}
               >
-                <BarChartIcon className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+                <BarChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
               </button>
               <button
                 onClick={() => setChartType('line')}
-                className={cn(
-                  "p-1.5 rounded-md transition-all flex items-center justify-center",
+                className={`p-1.5 rounded-md transition-all ${
                   chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                )}
+                }`}
                 aria-label="Line chart"
-                style={{ minHeight: isMobile ? '28px' : '32px', minWidth: isMobile ? '28px' : '32px' }}
               >
-                <LineChartIcon className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+                <LineChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
               </button>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className={cn(
-        "card-content-chart w-full",
-        isMobile ? "p-0" : "px-4 pb-4 pt-2"
-      )}>
+      <CardContent className={`${isMobile ? 'p-0' : 'px-4 pb-4 pt-2'} card-content-chart`}>
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -103,13 +93,13 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="w-full overflow-hidden dashboard-chart-container chart-container"
+            className="w-full overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className="fixed-height-chart chart-centering-wrapper">
+            <ChartContainer config={chartConfig} className={`${isMobile ? 'h-[280px]' : 'h-[400px]'}`}>
               {renderChart()}
             </ChartContainer>
           </motion.div>

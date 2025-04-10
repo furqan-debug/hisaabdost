@@ -1,10 +1,9 @@
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
-import { Expense } from "@/components/expenses/types";
+import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 interface ExpenseBarChartProps {
   expenses: Expense[];
@@ -20,8 +19,8 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
   );
 
   // Chart height based on device and number of data points
-  const chartHeight = isMobile ? 290 : 400;
-  const barSize = isMobile ? 6 : 14;
+  const chartHeight = isMobile ? 260 : 400;
+  const barSize = isMobile ? 5 : 14;
   
   // Limit the number of months to display on mobile
   const limitedData = isMobile && chartData.length > 4 
@@ -32,10 +31,9 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
     <ResponsiveContainer width="100%" height={chartHeight} className="bar-chart-container">
       <BarChart 
         data={limitedData}
-        margin={isMobile ? { top: 10, right: 5, left: -18, bottom: 5 } : { top: 20, right: 15, left: 0, bottom: 5 }}
+        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 10 } : { top: 20, right: 15, left: 0, bottom: 5 }}
         barCategoryGap={isMobile ? "15%" : "30%"}
         barGap={isMobile ? 1 : 4}
-        className="overflow-visible"
       >
         <CartesianGrid 
           strokeDasharray="3 3" 
@@ -72,11 +70,8 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className={cn(
-                  "rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md chart-tooltip",
-                  "z-50"
-                )}
-                style={{ maxWidth: isMobile ? '150px' : '240px' }}
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
+                style={{ maxWidth: isMobile ? '160px' : '240px' }}
               >
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold`}>{label}</p>
                 <div className="space-y-1 mt-1">
@@ -90,7 +85,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                           className={`w-2 h-2 rounded-full mr-1`} 
                           style={{ backgroundColor: entry.color }} 
                         />
-                        <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium truncate max-w-[70px]`}>
+                        <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium`}>
                           {entry.name}:
                         </span>
                       </div>
@@ -120,7 +115,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             const hasMore = activeLegends.length > displayItems;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1 mt-2">
+              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1 pb-3">
                 {displayedItems.map((entry: any, index: number) => (
                   <div 
                     key={`legend-${index}`}

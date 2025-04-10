@@ -16,7 +16,6 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
     width: 100%;
     position: relative;
-    -webkit-tap-highlight-color: transparent;
   }
   
   /* Prevent horizontal overflow */
@@ -27,9 +26,8 @@ Most styles are now organized into component-specific files:
 
   /* Adjust padding for main content */
   .max-w-full {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    box-sizing: border-box;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
   
   /* Ensure content doesn't cause horizontal scrolling */
@@ -37,7 +35,6 @@ Most styles are now organized into component-specific files:
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
-    box-sizing: border-box;
   }
   
   /* Ensure layouts always fit within viewport */
@@ -45,80 +42,12 @@ Most styles are now organized into component-specific files:
     max-width: 100vw;
     width: 100%;
     overflow-x: hidden;
-    box-sizing: border-box;
-  }
-  
-  /* Better touch targets for interactive elements */
-  button, a, input[type="button"], input[type="submit"], input[type="reset"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Universal container fix */
-  .mobile-container {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    overflow-x: hidden !important;
   }
   
   /* Fix mobile padding issues */
   .mobile-chart-container {
     padding: 0 !important;
     overflow: visible !important;
-    margin: 0 auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Chart container fixes */
-  .recharts-responsive-container {
-    width: 100% !important;
-    min-height: 290px !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* Fix line chart overflow issues */
-  .recharts-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* Ensure chart content is always visible */
-  .chart-content {
-    overflow: visible !important;
-    min-height: 290px !important;
-    width: 100% !important;
-  }
-
-  /* Prevent content from being cut off */
-  .chart-wrapper {
-    width: 100% !important;
-    overflow: visible !important;
-    height: auto !important;
-    min-height: 290px !important;
-  }
-  
-  /* Fix font sizes for better mobile readability */
-  h1 {
-    font-size: 1.5rem !important;
-    line-height: 2rem !important;
-  }
-  
-  h2 {
-    font-size: 1.25rem !important;
-    line-height: 1.75rem !important;
-  }
-  
-  h3 {
-    font-size: 1.125rem !important;
-    line-height: 1.5rem !important;
-  }
-  
-  p, span, button, input, select, textarea {
-    font-size: 0.875rem !important;
   }
 }
 
@@ -127,7 +56,6 @@ Most styles are now organized into component-specific files:
   overflow: hidden !important;
   max-width: 100% !important;
   width: 100% !important;
-  box-sizing: border-box !important;
 }
 
 /* Force UI elements to respect container width */
@@ -135,21 +63,4 @@ Most styles are now organized into component-specific files:
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-}
-
-/* Chart specific fixes */
-.chart-container {
-  width: 100% !important;
-  min-height: 290px !important;
-  height: auto !important;
-  overflow: visible !important;
-  margin: 0 auto !important;
-}
-
-/* Mobile Safari fix */
-@supports (-webkit-touch-callout: none) {
-  /* Mobile Safari specific fixes */
-  .safari-fix {
-    -webkit-overflow-scrolling: touch;
-  }
 }

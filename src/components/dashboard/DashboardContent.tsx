@@ -7,7 +7,6 @@ import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -72,10 +71,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className={cn(
-        "space-y-4 mobile-container",
-        isMobile ? "pb-20" : "pb-8"
-      )}
+      className="space-y-6 pb-16 sm:pb-0"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -118,7 +114,10 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="pb-6">
+      <motion.div 
+        variants={itemVariants} 
+        className={`pb-${isMobile ? '16' : '4'}`} // Add bottom padding to prevent overlap with bottom navigation
+      >
         <ExpenseAnalyticsCard 
           expenses={expenses}
           isLoading={isExpensesLoading}
