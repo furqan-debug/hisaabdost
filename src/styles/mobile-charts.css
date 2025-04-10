@@ -6,6 +6,7 @@
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     width: 100% !important;
+    margin: 0 auto !important;
   }
   
   /* Make chart containers more elegant */
@@ -13,6 +14,7 @@
     overflow: visible !important;
     margin: 0 auto !important;
     max-width: 95% !important;
+    height: auto !important;
   }
   
   .pie-chart-container {
@@ -20,6 +22,7 @@
     height: 280px !important;
     max-width: 100% !important;
     width: 100% !important;
+    margin-bottom: 0 !important;
   }
   
   /* Better tooltip on mobile */
@@ -30,9 +33,9 @@
   
   /* Improve chart margins for better display */
   .budget-chart-container {
-    margin: 0 -5px !important;
-    width: calc(100% + 10px) !important;
-    max-width: calc(100% + 10px) !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
     padding: 0.5rem;
   }
   
@@ -98,7 +101,7 @@
   
   /* Fix bottom navigation overlap with chart content */
   .card .recharts-legend-wrapper {
-    margin-bottom: 12px !important;
+    margin-bottom: 16px !important;
   }
   
   /* Better positioning for pie percentages */
@@ -111,6 +114,21 @@
   .card-content-chart {
     padding: 0.5rem !important;
     overflow: visible !important;
+  }
+
+  /* Fix chart alignment issues */
+  .line-chart-container,
+  .bar-chart-container {
+    height: auto !important;
+    min-height: 280px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Ensure legends are fully visible */
+  .recharts-default-legend {
+    overflow: visible !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 5px !important;
   }
 }
 
@@ -180,4 +198,9 @@
 .recharts-line-curve,
 .recharts-bar-rectangle {
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Add proper spacing at the bottom to avoid navigation overlap */
+.chart-bottom-padding {
+  padding-bottom: 16px !important;
 }
