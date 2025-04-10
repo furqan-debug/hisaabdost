@@ -1,6 +1,6 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
+import { formatCurrencyWithSymbol } from "@/utils/formatters";
 
 export const CATEGORY_COLORS = {
   'Food': '#0088FE',
@@ -19,14 +19,13 @@ export const CATEGORY_COLORS = {
   'Other': '#A4DE6C'
 } as const;
 
-export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+export function formatCurrencyWithCurrentSymbol(amount: number, symbol: string): string {
+  return formatCurrencyWithSymbol(amount, symbol);
+}
+
+export function formatCurrency(amount: number, symbol = "$"): string {
+  return formatCurrencyWithSymbol(amount, symbol);
+}
 
 // Helper to get all months between two dates
 const getMonthsBetween = (startDate: Date, endDate: Date): string[] => {

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -41,8 +41,8 @@ export const StatCards = ({
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
+  const { format: formatCurrency } = useFormattedCurrency();
   
-  // Update month data when values change
   useEffect(() => {
     if (!isLoading) {
       updateMonthData(currentMonthKey, {
@@ -54,12 +54,10 @@ export const StatCards = ({
     }
   }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
 
-  // Reset temp income when monthly income changes
   useEffect(() => {
     setTempIncome(monthlyIncome);
   }, [monthlyIncome]);
 
-  // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
     setTempIncome(value);
   };
@@ -68,7 +66,6 @@ export const StatCards = ({
     try {
       if (!user) return;
       
-      // Save to Supabase - check if there's already a budget record for this month
       const { data: existingBudgets, error: fetchError } = await supabase
         .from('budgets')
         .select('id, monthly_income')
@@ -78,7 +75,6 @@ export const StatCards = ({
       if (fetchError) throw fetchError;
       
       if (existingBudgets && existingBudgets.length > 0) {
-        // Update existing budget record(s) with new monthly income
         const { error } = await supabase
           .from('budgets')
           .update({ monthly_income: tempIncome })
@@ -86,21 +82,19 @@ export const StatCards = ({
           
         if (error) throw error;
       } else {
-        // Create a new budget record with the monthly income
         const { error } = await supabase
           .from('budgets')
           .insert({
             user_id: user.id,
-            category: 'General', // Default category
-            amount: 0, // Default amount
-            period: 'monthly', // Default period
+            category: 'General',
+            amount: 0,
+            period: 'monthly',
             monthly_income: tempIncome
           });
           
         if (error) throw error;
       }
       
-      // Update local state
       setMonthlyIncome(tempIncome);
       setIsEditing(false);
       

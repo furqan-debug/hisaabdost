@@ -1,8 +1,10 @@
+
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface Expense {
   amount: number;
@@ -19,6 +21,7 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   const currentMonthStart = startOfMonth(now);
   const lastMonthStart = startOfMonth(subMonths(now, 1));
   const lastMonthEnd = endOfMonth(lastMonthStart);
+  const { format: formatCurrency } = useFormattedCurrency();
 
   const currentMonthExpenses = expenses.filter(
     expense => new Date(expense.date) >= currentMonthStart

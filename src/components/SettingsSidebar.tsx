@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,11 +10,21 @@ import {
   User, 
   Moon, 
   Sun, 
-  LogOut 
+  LogOut,
+  Globe
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth";
+import { 
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useCurrency, currencies } from "@/hooks/use-currency";
 
 interface SettingsSidebarProps {
   selectedMonth: Date;
@@ -28,6 +39,7 @@ export function SettingsSidebar({
 }: SettingsSidebarProps) {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
     // Remove existing color classes
@@ -38,6 +50,13 @@ export function SettingsSidebar({
       document.documentElement.classList.add("pink");
     } else if (newColor === "blue") {
       document.documentElement.classList.add("blue");
+    }
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    const currency = currencies.find(c => c.code === value);
+    if (currency) {
+      setSelectedCurrency(currency);
     }
   };
 
@@ -72,6 +91,32 @@ export function SettingsSidebar({
             onChange={onMonthChange}
             className="w-full"
           />
+        </div>
+
+        <Separator className="my-2" />
+
+        <div className="px-4 py-3">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
+          <Select 
+            value={selectedCurrency.code} 
+            onValueChange={handleCurrencyChange}
+          >
+            <SelectTrigger className="w-full mb-1">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <SelectValue placeholder="Select currency" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {currencies.map((currency) => (
+                  <SelectItem key={currency.code} value={currency.code}>
+                    {currency.name} ({currency.code}) {currency.symbol}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
 
         <Separator className="my-2" />

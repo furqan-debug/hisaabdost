@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Edit, Trash2, FileImage, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface ExpenseRowProps {
   expense: Expense;
@@ -23,7 +23,6 @@ interface ExpenseRowProps {
   onDelete: (id: string) => void;
 }
 
-// Use memo to prevent unnecessary re-renders of rows
 export const ExpenseRow = memo(function ExpenseRow({
   expense,
   selectedExpenses,
@@ -33,6 +32,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 }: ExpenseRowProps) {
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const { format } = useFormattedCurrency();
   
   const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +72,7 @@ export const ExpenseRow = memo(function ExpenseRow({
       </TableCell>
       <TableCell>
         <span className="font-mono">
-          {formatCurrency(expense.amount)}
+          {format(expense.amount)}
         </span>
       </TableCell>
       <TableCell className="hidden md:table-cell">
