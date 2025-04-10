@@ -1,121 +1,128 @@
 
-import React from 'react';
-import { format as formatDate } from 'date-fns';
-import { IconButton } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Receipt } from "lucide-react";
-import { Expense } from "./types";
-import { cn } from "@/lib/utils";
-import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
+import { format } from "date-fns";
+import { Edit, Trash2, FileImage, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Expense } from "@/components/expenses/types";
+import { formatCurrency } from "@/utils/chartUtils";
+import { ViewReceiptDialog } from "./ViewReceiptDialog";
+import { useState, useCallback, memo } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ExpenseRowProps {
   expense: Expense;
-  isSelected?: boolean;
-  onSelect?: (id: string) => void;
-  onEdit?: (expense: Expense) => void;
-  onDelete?: (id: string) => void;
-  onViewReceipt?: (receiptUrl: string) => void;
+  selectedExpenses: Set<string>;
+  toggleExpenseSelection: (id: string) => void;
+  onEdit: (expense: Expense) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ExpenseRow({
+// Use memo to prevent unnecessary re-renders of rows
+export const ExpenseRow = memo(function ExpenseRow({
   expense,
-  isSelected = false,
-  onSelect,
+  selectedExpenses,
+  toggleExpenseSelection,
   onEdit,
-  onDelete,
-  onViewReceipt
+  onDelete
 }: ExpenseRowProps) {
-  const { format } = useFormattedCurrency();
+  const isSelected = selectedExpenses.has(expense.id);
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'food': return 'bg-green-500';
-      case 'transportation': return 'bg-blue-500';
-      case 'housing': return 'bg-purple-500';
-      case 'utilities': return 'bg-yellow-500';
-      case 'entertainment': return 'bg-pink-500';
-      case 'healthcare': return 'bg-red-500';
-      case 'personal': return 'bg-indigo-500';
-      case 'education': return 'bg-cyan-500';
-      case 'shopping': return 'bg-amber-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const handleSelect = () => {
-    if (onSelect) {
-      onSelect(expense.id);
-    }
-  };
-
-  const formattedDate = expense.date 
-    ? formatDate(new Date(expense.date), 'MMM d, yyyy')
-    : 'Unknown date';
-
-  const hasReceipt = !!expense.receiptUrl;
-
+  const handleViewReceipt = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setReceiptDialogOpen(true);
+  }, []);
+  
+  const handleReceiptDialogChange = useCallback((open: boolean) => {
+    setReceiptDialogOpen(open);
+  }, []);
+  
+  const handleEdit = useCallback(() => {
+    onEdit(expense);
+  }, [expense, onEdit]);
+  
+  const handleDelete = useCallback(() => {
+    onDelete(expense.id);
+  }, [expense.id, onDelete]);
+  
+  const handleCheckboxChange = useCallback(() => {
+    toggleExpenseSelection(expense.id);
+  }, [expense.id, toggleExpenseSelection]);
+  
   return (
-    <tr className={cn(
-      "border-b hover:bg-muted/40 transition-colors group",
-      isSelected && "bg-primary/10"
-    )}>
-      <td className="p-2">
-        <input 
-          type="checkbox" 
-          checked={isSelected} 
-          onChange={handleSelect}
-          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+    <TableRow>
+      <TableCell className="w-[30px]">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={handleCheckboxChange}
         />
-      </td>
-      <td className="p-2 pl-0">
-        <div className="flex items-center gap-2">
-          <div className={`w-1 h-5 rounded-full ${getCategoryColor(expense.category)}`} />
-          <span className="font-medium overflow-hidden text-ellipsis whitespace-nowrap max-w-[180px]">
-            {expense.description}
-          </span>
-        </div>
-      </td>
-      <td className="p-2 whitespace-nowrap">{formattedDate}</td>
-      <td className="p-2">
-        <Badge variant="outline" className="bg-muted/40">
+      </TableCell>
+      <TableCell className="font-medium">
+        {format(new Date(expense.date), "MMM dd, yyyy")}
+      </TableCell>
+      <TableCell>
+        {expense.description}
+      </TableCell>
+      <TableCell>
+        <span className="font-mono">
+          {formatCurrency(expense.amount)}
+        </span>
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">
           {expense.category}
-        </Badge>
-      </td>
-      <td className="p-2 text-right font-medium">
-        {format(expense.amount)}
-      </td>
-      <td className="p-2">
-        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {hasReceipt && (
-            <IconButton 
-              variant="ghost" 
-              size="icon-sm" 
-              onClick={() => onViewReceipt?.(expense.receiptUrl as string)}
-              aria-label="View receipt"
-            >
-              <Receipt className="h-4 w-4" />
-            </IconButton>
-          )}
-          
-          <IconButton 
-            variant="ghost" 
-            size="icon-sm" 
-            onClick={() => onEdit?.(expense)}
-            aria-label="Edit expense"
-          >
-            <Edit className="h-4 w-4" />
-          </IconButton>
-          
-          <IconButton 
-            variant="ghost" 
-            size="icon-sm" 
-            onClick={() => onDelete?.(expense.id)}
-            aria-label="Delete expense"
-          >
-            <Trash2 className="h-4 w-4" />
-          </IconButton>
+        </span>
+      </TableCell>
+      <TableCell className="hidden lg:table-cell">
+        <span className="text-muted-foreground">
+          {expense.paymentMethod || "N/A"}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2 justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {expense.receiptUrl && (
+                <DropdownMenuItem onClick={handleViewReceipt}>
+                  <FileImage className="h-4 w-4 mr-2" />
+                  View Receipt
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </td>
-    </tr>
+
+        {expense.receiptUrl && (
+          <ViewReceiptDialog 
+            receiptUrl={expense.receiptUrl} 
+            open={receiptDialogOpen}
+            onOpenChange={handleReceiptDialogChange}
+          />
+        )}
+      </TableCell>
+    </TableRow>
   );
-}
+});

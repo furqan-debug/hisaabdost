@@ -1,10 +1,9 @@
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
+import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface ExpenseBarChartProps {
   expenses: Expense[];
@@ -13,7 +12,6 @@ interface ExpenseBarChartProps {
 export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
   const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
-  const { format, currencySymbol } = useFormattedCurrency();
   
   // Get active categories (ones that have values)
   const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => 
@@ -47,7 +45,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
           height={isMobile ? 15 : 30}
         />
         <YAxis 
-          tickFormatter={(value) => `${currencySymbol}${(Number(value)/1000).toFixed(0)}k`}
+          tickFormatter={(value) => `$${(Number(value)/1000).toFixed(0)}k`}
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
@@ -86,7 +84,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                         </span>
                       </div>
                       <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-semibold`}>
-                        {format(Number(entry.value))}
+                        {formatCurrency(Number(entry.value))}
                       </span>
                     </div>
                   ))}

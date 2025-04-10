@@ -2,10 +2,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tag } from "lucide-react";
-import { formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface ExpenseCardProps {
   description: string;
@@ -23,7 +22,6 @@ export function ExpenseCard({
   onClick 
 }: ExpenseCardProps) {
   const isMobile = useIsMobile();
-  const { format } = useFormattedCurrency();
   
   // Get category color based on category name
   const getCategoryColor = () => {
@@ -76,7 +74,7 @@ export function ExpenseCard({
                 "font-semibold",
                 isMobile ? "text-xs" : "text-sm"
               )}>
-                {format(amount)}
+                {formatCurrency(amount)}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-2">

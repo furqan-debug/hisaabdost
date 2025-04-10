@@ -6,27 +6,30 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md active:scale-[0.98]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md active:scale-[0.98]",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md active:scale-[0.98]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        glass: "bg-primary/10 hover:bg-primary/20 text-foreground"
+        purple: "bg-[#9b87f5] text-white hover:bg-[#7E69AB] shadow-md hover:shadow-lg active:scale-[0.98]",
+        glass: "bg-background/80 backdrop-blur-md border border-border/30 shadow-sm hover:shadow-md hover:bg-background/90 active:scale-[0.98]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
-        "icon-sm": "h-7 w-7 rounded-md",
+        default: "h-11 px-5 py-2.5",
+        sm: "h-9 rounded-lg px-3.5",
+        lg: "h-12 rounded-xl px-6 text-base",
+        icon: "h-11 w-11 rounded-full p-0 [&_svg]:size-5",
+        "icon-sm": "h-9 w-9 rounded-full p-0 [&_svg]:size-4",
+        "icon-lg": "h-14 w-14 rounded-full p-0 [&_svg]:size-6",
+        pill: "h-11 px-6 rounded-full",
       },
     },
     defaultVariants: {
@@ -56,15 +59,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export interface IconButtonProps extends ButtonProps {
-  "aria-label": string;
-}
-
-const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  (props, ref) => {
-    return <Button ref={ref} {...props} />
-  }
-)
-IconButton.displayName = "IconButton"
-
-export { Button, IconButton, buttonVariants }
+export { Button, buttonVariants }

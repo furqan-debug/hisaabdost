@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFormattedCurrency } from "@/hooks/use-formatted-currency";
 
 interface BudgetSummaryCardsProps {
   totalBudget: number;
@@ -22,7 +22,6 @@ export const BudgetSummaryCards = ({
   isLoading = false
 }: BudgetSummaryCardsProps) => {
   const isMobile = useIsMobile();
-  const { format } = useFormattedCurrency();
   const exceedsBudget = totalBudget > monthlyIncome && monthlyIncome > 0;
 
   if (isLoading) {
@@ -44,7 +43,7 @@ export const BudgetSummaryCards = ({
         <Alert variant="destructive" className="mb-3">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Warning: Your total budget exceeds your monthly income by {format(totalBudget - monthlyIncome)}
+            Warning: Your total budget exceeds your monthly income by {formatCurrency(totalBudget - monthlyIncome)}
           </AlertDescription>
         </Alert>
       )}
@@ -55,7 +54,7 @@ export const BudgetSummaryCards = ({
             <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="text-xl font-bold">{format(totalBudget)}</div>
+            <div className="text-xl font-bold">{formatCurrency(totalBudget)}</div>
           </CardContent>
         </Card>
         
@@ -64,7 +63,7 @@ export const BudgetSummaryCards = ({
             <CardTitle className="text-sm font-medium">Remaining Balance</CardTitle>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="text-xl font-bold">{format(remainingBalance)}</div>
+            <div className="text-xl font-bold">{formatCurrency(remainingBalance)}</div>
           </CardContent>
         </Card>
         
@@ -82,7 +81,7 @@ export const BudgetSummaryCards = ({
             <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="text-xl font-bold">{format(monthlyIncome)}</div>
+            <div className="text-xl font-bold">{formatCurrency(monthlyIncome)}</div>
           </CardContent>
         </Card>
       </div>
