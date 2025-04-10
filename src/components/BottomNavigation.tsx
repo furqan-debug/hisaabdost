@@ -52,6 +52,7 @@ export function BottomNavigation() {
                   "menu-item flex flex-col items-center justify-center h-14 transition-colors duration-300",
                   isActive ? "text-primary" : "text-muted-foreground/60"
                 )}
+                style={{ minHeight: '56px' }}
               >
                 <div className="relative">
                   <item.icon 

@@ -5,6 +5,7 @@ import { Expense } from "@/components/expenses/types";
 import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
@@ -24,13 +25,13 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   });
 
   // Adjust chart dimensions based on mobile or desktop
-  const outerRadius = isMobile ? 80 : 150;
+  const outerRadius = isMobile ? 85 : 150;
   const innerRadius = isMobile ? 40 : 90;
 
   return (
     <div className="pie-wrapper w-full h-full flex items-center justify-center">
-      <ResponsiveContainer width="100%" height={280} className="pie-chart-container">
-        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 20 }}>
+      <ResponsiveContainer width="100%" height={290} className="pie-chart-container">
+        <PieChart margin={{ top: 5, right: 5, left: 5, bottom: 15 }}>
           <Pie
             data={pieChartData}
             dataKey="value"
@@ -80,8 +81,11 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md chart-tooltip"
-                  style={{ maxWidth: '180px' }}
+                  className={cn(
+                    "rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md chart-tooltip",
+                    "z-50"
+                  )}
+                  style={{ maxWidth: isMobile ? '160px' : '180px' }}
                 >
                   <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                     {data.name}
@@ -108,7 +112,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               const hasMore = payload.length > displayItems;
               
               return (
-                <div className="flex flex-wrap justify-center items-center gap-1.5 pt-2 px-1">
+                <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1 mt-2">
                   {displayedItems.map((entry: any, index: number) => {
                     const amount = formatCurrency(entry.payload.value);
                     const name = entry.value;

@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import "@/styles/mobile-charts.css";
+import "@/styles/mobile-cards.css";
+import "@/styles/mobile-utils.css";
 
 /**
  * Dashboard page component that displays financial overview
@@ -35,6 +37,17 @@ const Dashboard = () => {
 
   // Calculate insights based on expenses
   const insights = useAnalyticsInsights(expenses);
+  
+  // Prevent horizontal scroll
+  useEffect(() => {
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+    
+    return () => {
+      document.documentElement.style.overflowX = '';
+      document.body.style.overflowX = '';
+    };
+  }, []);
 
   // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {

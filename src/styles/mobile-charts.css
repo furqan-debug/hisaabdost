@@ -1,69 +1,98 @@
 
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
-  /* Fix chart overflow issues */
-  .recharts-wrapper {
-    @apply max-w-full rounded-lg;
-    max-height: 100% !important;
-    overflow: visible !important;
+  /* Core chart fixes */
+  .recharts-wrapper,
+  .recharts-responsive-container,
+  .recharts-surface,
+  .recharts-legend-wrapper {
+    max-width: 100% !important;
     width: 100% !important;
-    min-height: auto !important;
+    overflow: visible !important;
   }
   
-  /* Improve pie chart appearance */
+  /* Wrapper and container fixes */
+  .recharts-wrapper {
+    @apply max-w-full rounded-lg;
+    height: auto !important;
+    min-height: 290px !important;
+  }
+  
+  .recharts-responsive-container {
+    margin: 0 auto !important;
+    min-height: 290px !important;
+  }
+  
+  /* Better tooltip visibility */
+  .recharts-tooltip-wrapper {
+    @apply z-50;
+    max-width: 85vw !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Chart containers */
+  .pie-chart-container,
+  .bar-chart-container,
+  .line-chart-container {
+    min-height: 290px !important;
+    height: 290px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Chart element optimizations */
   .recharts-pie {
     @apply drop-shadow-sm;
   }
   
-  /* Make chart containers more elegant */
-  .recharts-responsive-container {
-    overflow: visible !important;
-    margin: 0 auto !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 280px !important;
-  }
-  
-  .pie-chart-container {
-    min-height: 280px !important;
-    height: 280px !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-  }
-  
-  /* Better tooltip on mobile */
-  .recharts-tooltip-wrapper {
-    @apply z-50;
-    pointer-events: auto !important;
-    max-width: 80% !important;
-  }
-  
-  /* Improve chart margins for better display */
-  .budget-chart-container {
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-  }
-  
-  /* Fix pie chart label display */
   .recharts-pie-label-line {
     stroke: var(--muted-foreground) !important;
     stroke-width: 0.5 !important;
   }
   
   .recharts-pie-label-text {
-    font-size: 10px !important;
+    font-size: 9px !important;
     fill: var(--foreground) !important;
   }
   
-  /* Make active elements more visible */
+  .recharts-layer.recharts-pie-labels text {
+    @apply font-medium !important;
+    font-size: 10px !important;
+  }
+  
+  /* Axis and grid */
+  .recharts-cartesian-axis-tick-value {
+    @apply font-light text-xs opacity-80;
+    font-size: 9px !important;
+  }
+  
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    @apply stroke-muted/20;
+  }
+  
+  /* Active elements */
   .recharts-active-dot {
     @apply stroke-background stroke-2;
   }
   
-  /* Fix legend spacing and layout */
+  .recharts-curve.recharts-line-curve {
+    @apply stroke-2;
+  }
+  
+  .recharts-dot {
+    @apply stroke-1;
+  }
+  
+  /* Bars styling */
+  .recharts-bar-rectangle {
+    @apply opacity-95 shadow-sm;
+    transition: all 0.3s ease;
+  }
+  
+  /* Legend adjustments */
   .recharts-legend-wrapper {
     position: relative !important;
     padding-top: 8px !important;
@@ -74,144 +103,85 @@
     left: 0 !important;
   }
   
-  /* Better axis labels */
-  .recharts-cartesian-axis-tick-value {
-    @apply font-light text-xs opacity-80;
-    font-size: 9px !important;
-  }
-  
-  /* Smooth lines for line charts */
-  .recharts-curve.recharts-line-curve {
-    @apply stroke-2;
-  }
-  
-  /* Better dots for line charts */
-  .recharts-dot {
-    @apply stroke-1;
-  }
-  
-  /* Improve grid appearance */
-  .recharts-cartesian-grid-horizontal line,
-  .recharts-cartesian-grid-vertical line {
-    @apply stroke-muted/20;
-  }
-  
-  /* Make bars more elegant */
-  .recharts-bar-rectangle {
-    @apply opacity-95 shadow-sm;
-    transition: all 0.3s ease;
-  }
-  
-  /* Fix bottom navigation overlap with chart content */
-  .card .recharts-legend-wrapper {
-    margin-bottom: 12px !important;
-  }
-  
-  /* Better positioning for pie percentages */
-  .recharts-layer.recharts-pie-labels text {
-    @apply font-medium !important;
-    font-size: 10px !important;
-  }
-  
-  /* Enhance mobile chart containers */
-  .card-content-chart {
-    padding: 0 !important;
-    overflow: visible !important;
-    height: auto !important;
-    min-height: 280px !important;
-  }
-  
-  /* Fix chart label overflow */
-  .recharts-text.recharts-label {
-    font-size: 10px !important;
-  }
-  
-  /* Ensure tooltips don't overflow */
-  .chart-tooltip {
-    max-width: 85vw !important;
-    overflow: hidden !important;
-    word-break: break-word !important;
-  }
-  
-  /* Fix padding in chart cards */
-  .card-header {
-    padding: 0.75rem !important;
-  }
-  
-  /* Ensure tabs don't overflow */
-  .tabs-container .tab {
-    padding: 0.5rem 0.75rem !important;
-    font-size: 0.875rem !important;
-  }
-
-  /* Fix missing charts or empty space issues */
+  /* Fix chart layout issues */ 
   .analytics-card {
     min-height: 360px !important;
     height: auto !important;
+    overflow: visible !important;
   }
-
-  /* Fix the specific chart container on dashboard */
+  
   .dashboard-chart-container {
-    min-height: 280px !important;
+    min-height: 290px !important;
     height: auto !important;
     overflow: visible !important;
     margin: 0 auto !important;
     width: 100% !important;
     padding: 0 !important;
   }
-
-  /* Force dimensions on pie chart */
+  
+  /* Properly center pie chart */
   .pie-wrapper {
-    min-height: 280px !important;
-    height: 280px !important;
+    min-height: 290px !important;
+    height: 290px !important;
     margin: 0 auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
+  
+  /* Card content fixes */
+  .card-content-chart {
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 290px !important;
+  }
+  
+  /* Fix chart labels */
+  .recharts-text.recharts-label {
+    font-size: 9px !important;
+  }
+  
+  /* Headers in chart cards */
+  .card-header {
+    padding: 0.75rem !important;
+  }
 }
 
-/* Legend improvements for all screen sizes */
+/* Legends for all screen sizes */
 .recharts-default-legend {
   display: flex !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   padding-top: 8px !important;
   margin: 0 auto !important;
   width: 100% !important;
 }
 
-/* Stylish pill-style legend items */
+/* Legend pill style */
 .legend-pill {
   @apply flex items-center text-xs rounded-full px-2 py-0.5 border border-border/30 bg-card/50;
 }
 
-/* Make pie labels more visible */
-.recharts-layer.recharts-pie-labels text {
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
-
-/* Fix tooltip z-index */
-.recharts-tooltip-wrapper {
-  z-index: 50 !important;
-}
-
-/* Ensure charts are centered in their containers */
+/* Chart centering wrappers */
 .chart-centering-wrapper {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 280px !important;
+  min-height: 290px !important;
 }
 
-/* Force dimensions on pie chart container */
+/* Fixed dimensions */
 .fixed-height-chart {
-  height: 280px !important; 
-  min-height: 280px !important;
+  height: 290px !important; 
+  min-height: 290px !important;
   width: 100% !important;
 }
 
+/* Tooltip styling */
+.chart-tooltip {
+  @apply z-50 text-xs max-w-xs overflow-hidden break-words;
+}
