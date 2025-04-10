@@ -109,7 +109,7 @@ export default function Analytics() {
 
   return (
     <motion.div 
-      className="space-y-6 pb-16 sm:pb-0 overflow-x-hidden max-w-full"
+      className="space-y-6 pb-16 sm:pb-0"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -118,7 +118,7 @@ export default function Analytics() {
         <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold tracking-tight gradient-text`}>
           Analytics Dashboard
         </h1>
-        <p className="text-muted-foreground text-sm">Track your spending patterns and financial trends</p>
+        <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
         <ExpenseFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -136,28 +136,28 @@ export default function Analytics() {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Tabs defaultValue="overview" className="space-y-4 tabs-container">
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm tab">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm tab">
+            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
               Trends
             </TabsTrigger>
-            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm tab">
+            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
               Comparison
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-2">
-            <Card className="overflow-hidden card">
-              <CardHeader className={`card-header ${isMobile ? "p-3" : ""}`}>
+            <Card className="overflow-hidden">
+              <CardHeader className={isMobile ? "p-3" : ""}>
                 <CardTitle className={isMobile ? "text-base" : ""}>Category Breakdown</CardTitle>
                 <CardDescription className={isMobile ? "text-xs" : ""}>
                   Your expenses by category
                 </CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[260px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -166,28 +166,28 @@ export default function Analytics() {
           </TabsContent>
 
           <TabsContent value="trends" className="space-y-4 mt-2">
-            <Card className="overflow-hidden card">
-              <CardHeader className={`card-header ${isMobile ? "p-3" : ""}`}>
+            <Card className="overflow-hidden">
+              <CardHeader className={isMobile ? "p-3" : ""}>
                 <CardTitle className={isMobile ? "text-base" : ""}>Monthly Trends</CardTitle>
                 <CardDescription className={isMobile ? "text-xs" : ""}>
                   Your spending patterns over time
                 </CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[260px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden card">
-              <CardHeader className={`card-header ${isMobile ? "p-3" : ""}`}>
+            <Card className="overflow-hidden">
+              <CardHeader className={isMobile ? "p-3" : ""}>
                 <CardTitle className={isMobile ? "text-base" : ""}>Category Trends</CardTitle>
                 <CardDescription className={isMobile ? "text-xs" : ""}>
                   How your spending evolves by category
                 </CardDescription>
               </CardHeader>
-              <CardContent className={`${isMobile ? 'p-0 h-[260px]' : 'h-[400px]'} card-content-chart`}>
+              <CardContent className={`${isMobile ? 'p-0 h-[280px]' : 'h-[400px]'} card-content-chart`}>
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -196,8 +196,8 @@ export default function Analytics() {
           </TabsContent>
 
           <TabsContent value="comparison" className="space-y-4 mt-2">
-            <Card className="card">
-              <CardHeader className={`card-header ${isMobile ? "p-3" : ""}`}>
+            <Card>
+              <CardHeader className={isMobile ? "p-3" : ""}>
                 <CardTitle className={isMobile ? "text-base" : ""}>Period Comparison</CardTitle>
                 <CardDescription className={isMobile ? "text-xs" : ""}>
                   Compare your spending across different periods

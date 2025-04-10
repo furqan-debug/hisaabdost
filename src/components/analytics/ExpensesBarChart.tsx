@@ -38,20 +38,15 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   );
 
   // Chart height and bar size based on device
-  const chartHeight = isMobile ? 260 : 400;
-  const barSize = isMobile ? 5 : 14;
-
-  // Limit months on mobile
-  const limitedData = isMobile && chartData.length > 4 
-    ? chartData.slice(-4) // Show only the last 4 months on mobile
-    : chartData;
+  const chartHeight = isMobile ? 280 : 400;
+  const barSize = isMobile ? 6 : 14;
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight} className="bar-chart-container">
       <BarChart 
-        data={limitedData}
+        data={chartData}
         margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 0 } : { top: 20, right: 15, left: 0, bottom: 5 }}
-        barCategoryGap={isMobile ? "15%" : "30%"}
+        barCategoryGap={isMobile ? "20%" : "30%"}
         barGap={isMobile ? 1 : 4}
       >
         <CartesianGrid 
@@ -74,7 +69,6 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
           tickLine={false}
           tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
           width={isMobile ? 25 : 45}
-          tickCount={5}
         />
         <Tooltip
           cursor={{ fillOpacity: 0.05 }}
@@ -89,7 +83,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md chart-tooltip"
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
                 style={{ maxWidth: isMobile ? '160px' : '240px' }}
               >
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold`}>{label}</p>
