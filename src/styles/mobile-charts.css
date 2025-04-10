@@ -4,22 +4,32 @@
   /* Fix chart overflow issues */
   .recharts-wrapper {
     @apply max-w-full rounded-lg;
+    max-height: 100% !important;
     overflow: visible !important;
     width: 100% !important;
+    min-height: auto !important;
+  }
+  
+  /* Improve pie chart appearance */
+  .recharts-pie {
+    @apply drop-shadow-sm;
   }
   
   /* Make chart containers more elegant */
   .recharts-responsive-container {
     overflow: visible !important;
     margin: 0 auto !important;
-    max-width: 95% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 280px !important;
   }
   
   .pie-chart-container {
-    max-height: 280px !important;
+    min-height: 280px !important;
     height: 280px !important;
     max-width: 100% !important;
     width: 100% !important;
+    margin: 0 auto !important;
   }
   
   /* Better tooltip on mobile */
@@ -31,15 +41,10 @@
   
   /* Improve chart margins for better display */
   .budget-chart-container {
-    margin: 0 -5px !important;
-    width: calc(100% + 10px) !important;
-    max-width: calc(100% + 10px) !important;
-    padding: 0.5rem;
-  }
-  
-  /* Enhance pie chart appearance */
-  .recharts-pie {
-    @apply drop-shadow-sm;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
   }
   
   /* Fix pie chart label display */
@@ -110,8 +115,10 @@
   
   /* Enhance mobile chart containers */
   .card-content-chart {
-    padding: 0.5rem !important;
+    padding: 0 !important;
     overflow: visible !important;
+    height: auto !important;
+    min-height: 280px !important;
   }
   
   /* Fix chart label overflow */
@@ -136,6 +143,32 @@
     padding: 0.5rem 0.75rem !important;
     font-size: 0.875rem !important;
   }
+
+  /* Fix missing charts or empty space issues */
+  .analytics-card {
+    min-height: 360px !important;
+    height: auto !important;
+  }
+
+  /* Fix the specific chart container on dashboard */
+  .dashboard-chart-container {
+    min-height: 280px !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Force dimensions on pie chart */
+  .pie-wrapper {
+    min-height: 280px !important;
+    height: 280px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
 }
 
 /* Legend improvements for all screen sizes */
@@ -145,6 +178,8 @@
   justify-content: center !important;
   gap: 6px !important;
   padding-top: 8px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
 }
 
 /* Stylish pill-style legend items */
@@ -163,45 +198,20 @@
   z-index: 50 !important;
 }
 
-/* Enhance tooltips and dropdowns */
-.recharts-tooltip-cursor {
-  fill: hsl(var(--foreground)/0.05) !important;
-  filter: blur(2px);
+/* Ensure charts are centered in their containers */
+.chart-centering-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 280px !important;
 }
 
-/* Make the chart areas more elegant */
-.recharts-cartesian-axis-line,
-.recharts-reference-line line {
-  stroke: var(--border) !important;
-  stroke-width: 1 !important;
+/* Force dimensions on pie chart container */
+.fixed-height-chart {
+  height: 280px !important; 
+  min-height: 280px !important;
+  width: 100% !important;
 }
 
-/* Add smooth transitions to all chart elements */
-.recharts-bar,
-.recharts-line,
-.recharts-pie {
-  transition: all 0.3s ease-in-out;
-}
-
-/* Style active legend items */
-.recharts-legend-item.inactive {
-  opacity: 0.5;
-}
-
-/* Better spacing between legend pills */
-.recharts-legend-item {
-  margin-right: 6px !important;
-  margin-bottom: 6px !important;
-}
-
-/* Fix pie chart sector transitions */
-.recharts-sector {
-  transition: all 0.3s ease;
-}
-
-/* Make the hover effects smoother */
-.recharts-area-curve,
-.recharts-line-curve,
-.recharts-bar-rectangle {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}

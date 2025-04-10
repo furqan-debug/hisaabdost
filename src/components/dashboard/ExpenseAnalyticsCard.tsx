@@ -45,7 +45,7 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className="mt-4 overflow-hidden shadow-sm border-border/60">
+    <Card className="mt-4 overflow-hidden shadow-sm border-border/60 analytics-card">
       <CardHeader className="flex flex-col space-y-2 p-4 pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>Expense Analytics</CardTitle>
@@ -93,13 +93,13 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="w-full overflow-hidden"
+            className="w-full overflow-hidden dashboard-chart-container"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className={`${isMobile ? 'h-[280px]' : 'h-[400px]'}`}>
+            <ChartContainer config={chartConfig} className="fixed-height-chart chart-centering-wrapper">
               {renderChart()}
             </ChartContainer>
           </motion.div>

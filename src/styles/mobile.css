@@ -49,6 +49,26 @@ Most styles are now organized into component-specific files:
     padding: 0 !important;
     overflow: visible !important;
   }
+
+  /* Chart container fixes */
+  .recharts-responsive-container {
+    min-height: 280px !important;
+    height: auto !important;
+  }
+
+  /* Ensure chart content is always visible */
+  .chart-content {
+    overflow: visible !important;
+    min-height: 280px !important;
+  }
+
+  /* Prevent content from being cut off */
+  .chart-wrapper {
+    width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 280px !important;
+  }
 }
 
 /* Add these global fixes */
@@ -63,4 +83,12 @@ Most styles are now organized into component-specific files:
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* Chart specific fixes */
+.chart-container {
+  width: 100% !important;
+  min-height: 280px !important;
+  height: auto !important;
+  overflow: visible !important;
 }

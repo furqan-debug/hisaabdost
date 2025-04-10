@@ -1,8 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from './Navbar';
-import Sidebar from './Sidebar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocation } from 'react-router-dom';
