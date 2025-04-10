@@ -15,19 +15,20 @@ import { CurrencyProvider } from "@/hooks/use-currency";
 function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <CurrencyProvider>
-        <AuthProvider>
-          <MonthProvider>
-            <Router>
+      {/* Router must be outside of components that use router hooks */}
+      <Router>
+        <CurrencyProvider>
+          <AuthProvider>
+            <MonthProvider>
               <Routes>
                 <Route path="/" element={<Layout><Dashboard /></Layout>} />
                 <Route path="/expenses" element={<Layout><Expenses /></Layout>} />
                 <Route path="/budget" element={<Layout><Budget /></Layout>} />
               </Routes>
-            </Router>
-          </MonthProvider>
-        </AuthProvider>
-      </CurrencyProvider>
+            </MonthProvider>
+          </AuthProvider>
+        </CurrencyProvider>
+      </Router>
     </ThemeProvider>
   );
 }
