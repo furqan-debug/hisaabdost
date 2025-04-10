@@ -38,8 +38,8 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   });
   
   // Adjust chart dimensions based on mobile or desktop
-  const outerRadius = isMobile ? 80 : 150;
-  const innerRadius = isMobile ? 40 : 90;
+  const outerRadius = isMobile ? 75 : 150;
+  const innerRadius = isMobile ? 35 : 90;
   const chartHeight = isMobile ? 260 : 400;
   
   return (
@@ -95,8 +95,8 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
-                style={{ maxWidth: isMobile ? '180px' : '240px' }}
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md chart-tooltip"
+                style={{ maxWidth: isMobile ? '160px' : '240px' }}
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
@@ -118,7 +118,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
             if (!payload || !payload.length) return null;
             
             // Limit to top categories on mobile to prevent overcrowding
-            const displayItems = isMobile ? 3 : 6;
+            const displayItems = isMobile ? 4 : 6;
             const displayedItems = payload.slice(0, displayItems);
             const hasMore = payload.length > displayItems;
             

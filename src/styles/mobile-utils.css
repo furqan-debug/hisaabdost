@@ -81,6 +81,21 @@
   .mobile-truncate {
     @apply truncate max-w-[180px];
   }
+  
+  /* Fix card content on mobile */
+  .card {
+    @apply overflow-hidden border-border/50;
+  }
+  
+  /* Better spacing for card headers */
+  .card-header {
+    @apply p-3;
+  }
+  
+  /* Tabs improvements */
+  .tabs-container .tab {
+    @apply px-2 py-1 text-xs;
+  }
 }
 
 /* Remove scrollbar but keep functionality */

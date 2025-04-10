@@ -26,6 +26,7 @@
   .recharts-tooltip-wrapper {
     @apply z-50;
     pointer-events: auto !important;
+    max-width: 80% !important;
   }
   
   /* Improve chart margins for better display */
@@ -111,6 +112,29 @@
   .card-content-chart {
     padding: 0.5rem !important;
     overflow: visible !important;
+  }
+  
+  /* Fix chart label overflow */
+  .recharts-text.recharts-label {
+    font-size: 10px !important;
+  }
+  
+  /* Ensure tooltips don't overflow */
+  .chart-tooltip {
+    max-width: 85vw !important;
+    overflow: hidden !important;
+    word-break: break-word !important;
+  }
+  
+  /* Fix padding in chart cards */
+  .card-header {
+    padding: 0.75rem !important;
+  }
+  
+  /* Ensure tabs don't overflow */
+  .tabs-container .tab {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
   }
 }
 
