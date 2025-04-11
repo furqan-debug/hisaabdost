@@ -1,7 +1,7 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
-import { Expense } from "@/components/expenses/types";
+import { Expense } from "@/components/AddExpenseSheet";
 import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
