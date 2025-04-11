@@ -1,8 +1,8 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
@@ -95,16 +95,6 @@ const Expenses = () => {
     setShowAddExpense(true);
   };
 
-  const handleExpenseAdded = () => {
-    // Refresh expenses when a new expense is added
-    refetch();
-    // Force a refresh after a delay to ensure DB has been updated
-    setTimeout(() => {
-      refetch();
-      triggerRefresh();
-    }, 1000);
-  };
-
   const handleDeleteSelected = async () => {
     if (selectedExpenses.size === 0) return;
     
@@ -176,7 +166,7 @@ const Expenses = () => {
       <ExpenseHeader 
         selectedExpenses={selectedExpenses}
         onDeleteSelected={handleDeleteSelected}
-        onAddExpense={handleExpenseAdded}
+        onAddExpense={handleAddExpense}
         expenseToEdit={expenseToEdit}
         onExpenseEditClose={() => setExpenseToEdit(undefined)}
         showAddExpense={showAddExpense}

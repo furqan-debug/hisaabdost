@@ -87,11 +87,6 @@
   .card-description {
     @apply text-xs text-muted-foreground;
   }
-  
-  /* Prevent card overflow */
-  .card-content-chart {
-    @apply overflow-visible;
-  }
 }
 
 /* Optimized for larger touch targets on mobile */

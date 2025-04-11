@@ -19,21 +19,19 @@
   
   /* Make tab items snap when scrolling */
   .budget-tabs-trigger {
-    @apply flex-shrink-0 px-3 py-2 text-sm;
+    @apply flex-shrink-0 px-2 py-1;
     scroll-snap-align: start;
     white-space: nowrap;
     min-width: auto;
     width: auto;
-    position: relative;
   }
   
   /* Container for scrollable tabs */
   .scrollable-tabs-container {
-    @apply w-full overflow-x-auto no-scrollbar border-b border-border/30;
+    @apply w-full overflow-x-auto no-scrollbar;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 0; /* Prevents content jump */
-    margin-bottom: 0.5rem;
+    padding-bottom: 2px; /* Prevents content jump */
   }
   
   /* Prevent horizontal overflow issues */
@@ -48,7 +46,6 @@
     @apply px-0 max-w-full;
     overflow-x: hidden !important;
     width: 100%;
-    min-height: 300px; /* Ensure there's always space for content */
   }
   
   /* Fixed budget content height to avoid jumpy layout */
@@ -57,7 +54,6 @@
     width: 100%;
     max-width: 100%;
     overflow-x: hidden !important;
-    overflow-y: visible !important;
   }
   
   /* Add padding for mobile budget section */
@@ -65,7 +61,6 @@
     @apply py-2 px-1 max-w-full;
     overflow-x: hidden !important;
     width: 100%;
-    min-height: 200px; /* Ensure content area is always visible */
   }
   
   /* Progress bar height for budget */
@@ -116,34 +111,5 @@
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
-  }
-
-  /* Tab content fixes for empty state or missing content */
-  [data-state="active"] {
-    display: block !important;
-    visibility: visible !important;
-    height: auto !important;
-    min-height: 200px;
-  }
-
-  /* Fixed height charts with fallback for empty states */
-  .chart-container {
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* Analytics tabs fixes */
-  .tabs-container {
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .responsive-tab-content {
-    width: 100%;
-    display: block;
-    min-height: 300px;
   }
 }
