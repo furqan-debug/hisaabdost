@@ -10,7 +10,8 @@ import {
   User, 
   Moon, 
   Sun, 
-  LogOut 
+  LogOut,
+  Globe 
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
@@ -29,6 +30,7 @@ export function SettingsSidebar({
 }: SettingsSidebarProps) {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const [language, setLanguage] = React.useState("english");
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
     // Remove existing color classes
@@ -135,6 +137,38 @@ export function SettingsSidebar({
             >
               <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
               Blue
+            </Button>
+          </div>
+        </div>
+
+        <Separator className="my-2" />
+
+        <div className="px-4 py-3">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Language</h3>
+          <div className="flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${language === 'english' ? 'bg-accent' : ''}`}
+              onClick={() => setLanguage('english')}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              English
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${language === 'spanish' ? 'bg-accent' : ''}`}
+              onClick={() => setLanguage('spanish')}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Spanish
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${language === 'french' ? 'bg-accent' : ''}`}
+              onClick={() => setLanguage('french')}
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              French
             </Button>
           </div>
         </div>
