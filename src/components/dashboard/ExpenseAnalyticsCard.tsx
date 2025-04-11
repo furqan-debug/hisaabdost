@@ -45,12 +45,12 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className="mt-4 overflow-hidden shadow-sm border-border/60">
-      <CardHeader className="flex flex-col space-y-2 p-4 pb-2">
+    <Card className="mt-4 overflow-hidden">
+      <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>Expense Analytics</CardTitle>
+          <CardTitle className="text-lg font-semibold">Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
-            <div className="bg-muted/40 rounded-lg p-1 flex border border-border/30 shadow-sm">
+            <div className="bg-muted/50 rounded-lg p-1 flex">
               <button
                 onClick={() => setChartType('pie')}
                 className={`p-1.5 rounded-md transition-all ${
@@ -58,7 +58,7 @@ export const ExpenseAnalyticsCard = ({
                 }`}
                 aria-label="Pie chart"
               >
-                <PieChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <PieChartIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setChartType('bar')}
@@ -67,7 +67,7 @@ export const ExpenseAnalyticsCard = ({
                 }`}
                 aria-label="Bar chart"
               >
-                <BarChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <BarChartIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setChartType('line')}
@@ -76,13 +76,13 @@ export const ExpenseAnalyticsCard = ({
                 }`}
                 aria-label="Line chart"
               >
-                <LineChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <LineChartIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className={`${isMobile ? 'p-0' : 'px-4 pb-4 pt-2'} card-content-chart`}>
+      <CardContent className="px-2 sm:px-4 pb-6">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -99,7 +99,7 @@ export const ExpenseAnalyticsCard = ({
             transition={{ duration: 0.5 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className={`${isMobile ? 'h-[280px]' : 'h-[400px]'}`}>
+            <ChartContainer config={chartConfig} className="h-[400px]">
               {renderChart()}
             </ChartContainer>
           </motion.div>

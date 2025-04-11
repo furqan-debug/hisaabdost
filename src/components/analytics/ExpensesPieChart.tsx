@@ -37,24 +37,18 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     item.percent = total > 0 ? (item.value / total) : 0;
   });
   
-  // Adjust chart dimensions based on mobile or desktop
-  const outerRadius = isMobile ? 80 : 150;
-  const innerRadius = isMobile ? 40 : 90;
-  const chartHeight = isMobile ? 260 : 400;
-  
   return (
-    <ResponsiveContainer width="100%" height={chartHeight} className="pie-chart-container">
-      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 10 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 360 : 400}>
+      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 50 } : { top: 20, right: 30, left: 30, bottom: 50 }}>
         <Pie
           data={data}
           dataKey="value"
           nameKey="name"
           cx="50%"
-          cy="50%"
-          outerRadius={outerRadius}
-          innerRadius={innerRadius}
-          paddingAngle={3}
-          strokeWidth={0}
+          cy="45%"
+          outerRadius={isMobile ? 90 : 140}
+          innerRadius={isMobile ? 45 : 70}
+          paddingAngle={2}
           labelLine={false}
           label={({ percent }) => {
             // Only show percentage for segments > 5%
@@ -67,8 +61,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
                 fill="var(--foreground)"
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="text-xs font-medium"
-                style={{ fontSize: isMobile ? '9px' : '12px' }}
+                className="font-medium text-xs"
               >
                 {percentLabel}
               </text>
@@ -80,8 +73,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               key={`cell-${index}`} 
               fill={entry.color} 
               stroke="var(--background)" 
-              strokeWidth={2}
-              className="filter drop-shadow-sm hover:brightness-105 transition-all duration-300"
+              strokeWidth={2} 
             />
           ))}
         </Pie>
@@ -92,11 +84,9 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
             const data = payload[0];
             return (
               <motion.div 
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
-                style={{ maxWidth: isMobile ? '180px' : '240px' }}
+                className="rounded-lg border bg-background p-3 shadow-md"
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
@@ -112,43 +102,54 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           }}
         />
         <Legend
+          layout="horizontal"
+          verticalAlign="bottom"
+          align="center"
+          wrapperStyle={{
+            paddingTop: '20px',
+            fontSize: isMobile ? '11px' : '13px',
+            width: '100%',
+            maxWidth: '100%',
+            paddingBottom: '10px',
+            position: 'relative',
+            bottom: isMobile ? -10 : 0
+          }}
           content={(props) => {
             const { payload } = props;
             
             if (!payload || !payload.length) return null;
             
-            // Limit to top categories on mobile to prevent overcrowding
-            const displayItems = isMobile ? 3 : 6;
-            const displayedItems = payload.slice(0, displayItems);
-            const hasMore = payload.length > displayItems;
+            // Limit to top 5 items on mobile to prevent overcrowding
+            const displayedItems = isMobile ? payload.slice(0, 5) : payload;
+            const hasMore = isMobile && payload.length > 5;
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-2 px-1 mt-1">
+              <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-2">
                 {displayedItems.map((entry: any, index: number) => {
                   const amount = formatCurrency(entry.payload.value);
                   const name = entry.value;
-                  // Truncate long category names even more on mobile
-                  const displayName = name.length > (isMobile ? 8 : 12) ? 
-                    name.slice(0, isMobile ? 6 : 10) + '...' : name;
+                  // Truncate long category names
+                  const displayName = name.length > 12 ? 
+                    name.slice(0, 10) + '...' : name;
                   
                   return (
                     <div 
                       key={`legend-${index}`}
-                      className="flex items-center bg-background/40 rounded-full px-2 py-0.5 border border-border/30 shadow-sm"
+                      className="flex items-center bg-background/50 rounded-full px-2 py-0.5 border border-border/40"
                     >
                       <div 
-                        className="w-2 h-2 rounded-full mr-1" 
+                        className="w-2 h-2 rounded-full mr-1.5" 
                         style={{ backgroundColor: entry.color }} 
                       />
-                      <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
+                      <span className="text-xs whitespace-nowrap">
                         {displayName}: {amount}
                       </span>
                     </div>
                   );
                 })}
                 {hasMore && (
-                  <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-muted-foreground font-medium`}>
-                    +{payload.length - displayItems} more
+                  <div className="text-xs text-muted-foreground">
+                    +{payload.length - 5} more
                   </div>
                 )}
               </div>

@@ -8,18 +8,9 @@
     width: 100% !important;
   }
   
-  /* Make chart containers more elegant */
-  .recharts-responsive-container {
-    overflow: visible !important;
-    margin: 0 auto !important;
-    max-width: 95% !important;
-  }
-  
-  .pie-chart-container {
-    max-height: 280px !important;
-    height: 280px !important;
-    max-width: 100% !important;
-    width: 100% !important;
+  /* Make bars thinner and more elegant on mobile */
+  .recharts-bar-rectangle {
+    @apply opacity-95 shadow-sm;
   }
   
   /* Better tooltip on mobile */
@@ -36,20 +27,49 @@
     padding: 0.5rem;
   }
   
+  /* Ensure legend is readable */
+  .recharts-legend-item {
+    @apply whitespace-nowrap overflow-hidden text-ellipsis;
+    display: inline-flex !important;
+    align-items: center;
+    margin-right: 8px !important;
+    margin-bottom: 6px !important;
+    max-width: 120px;
+  }
+  
+  .recharts-legend-item-text {
+    @apply text-xs font-medium;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  
+  /* Better axis labels */
+  .recharts-cartesian-axis-tick-value {
+    @apply font-light text-xs opacity-80;
+  }
+  
+  /* Smooth lines for line charts */
+  .recharts-curve.recharts-line-curve {
+    @apply stroke-2;
+  }
+  
+  /* Better dots for line charts */
+  .recharts-dot {
+    @apply stroke-2;
+  }
+  
+  /* Improve grid appearance */
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    @apply stroke-muted/20;
+  }
+  
   /* Enhance pie chart appearance */
   .recharts-pie {
     @apply drop-shadow-sm;
-  }
-  
-  /* Fix pie chart label display */
-  .recharts-pie-label-line {
-    stroke: var(--muted-foreground) !important;
-    stroke-width: 0.5 !important;
-  }
-  
-  .recharts-pie-label-text {
-    font-size: 10px !important;
-    fill: var(--foreground) !important;
   }
   
   /* Make active elements more visible */
@@ -60,40 +80,37 @@
   /* Fix legend spacing and layout */
   .recharts-legend-wrapper {
     position: relative !important;
-    padding-top: 8px !important;
+    padding-top: 20px !important;
     bottom: 0 !important;
     height: auto !important;
-    margin-top: 5px !important;
-    width: 100% !important;
-    left: 0 !important;
+    margin-top: 15px !important;
   }
   
-  /* Better axis labels */
-  .recharts-cartesian-axis-tick-value {
-    @apply font-light text-xs opacity-80;
-    font-size: 9px !important;
+  /* Fix pie chart label display */
+  .recharts-pie-label-line {
+    stroke: var(--muted-foreground) !important;
+    stroke-width: 0.5 !important;
   }
   
-  /* Smooth lines for line charts */
-  .recharts-curve.recharts-line-curve {
-    @apply stroke-2;
+  .recharts-pie-label-text {
+    font-size: 11px !important;
+    fill: var(--foreground) !important;
   }
   
-  /* Better dots for line charts */
-  .recharts-dot {
-    @apply stroke-1;
+  /* Improve chart container margins */
+  .recharts-responsive-container {
+    margin: 0 auto !important;
+    max-width: 95% !important;
   }
   
-  /* Improve grid appearance */
-  .recharts-cartesian-grid-horizontal line,
-  .recharts-cartesian-grid-vertical line {
-    @apply stroke-muted/20;
+  /* Better positioning for pie percentages */
+  .recharts-layer.recharts-pie-labels text {
+    @apply font-semibold !important;
   }
   
-  /* Make bars more elegant */
-  .recharts-bar-rectangle {
-    @apply opacity-95 shadow-sm;
-    transition: all 0.3s ease;
+  /* Fix label positioning in pie charts */
+  .recharts-sector {
+    @apply drop-shadow-sm;
   }
   
   /* Fix bottom navigation overlap with chart content */
@@ -101,15 +118,8 @@
     margin-bottom: 12px !important;
   }
   
-  /* Better positioning for pie percentages */
-  .recharts-layer.recharts-pie-labels text {
-    @apply font-medium !important;
-    font-size: 10px !important;
-  }
-  
-  /* Enhance mobile chart containers */
-  .card-content-chart {
-    padding: 0.5rem !important;
+  /* Fix overflow issues */
+  .recharts-responsive-container {
     overflow: visible !important;
   }
 }
@@ -119,8 +129,8 @@
   display: flex !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  gap: 6px !important;
-  padding-top: 8px !important;
+  gap: 8px !important;
+  padding-top: 15px !important;
 }
 
 /* Stylish pill-style legend items */
@@ -137,47 +147,4 @@
 /* Fix tooltip z-index */
 .recharts-tooltip-wrapper {
   z-index: 50 !important;
-}
-
-/* Enhance tooltips and dropdowns */
-.recharts-tooltip-cursor {
-  fill: hsl(var(--foreground)/0.05) !important;
-  filter: blur(2px);
-}
-
-/* Make the chart areas more elegant */
-.recharts-cartesian-axis-line,
-.recharts-reference-line line {
-  stroke: var(--border) !important;
-  stroke-width: 1 !important;
-}
-
-/* Add smooth transitions to all chart elements */
-.recharts-bar,
-.recharts-line,
-.recharts-pie {
-  transition: all 0.3s ease-in-out;
-}
-
-/* Style active legend items */
-.recharts-legend-item.inactive {
-  opacity: 0.5;
-}
-
-/* Better spacing between legend pills */
-.recharts-legend-item {
-  margin-right: 6px !important;
-  margin-bottom: 6px !important;
-}
-
-/* Fix pie chart sector transitions */
-.recharts-sector {
-  transition: all 0.3s ease;
-}
-
-/* Make the hover effects smoother */
-.recharts-area-curve,
-.recharts-line-curve,
-.recharts-bar-rectangle {
-  transition: opacity 0.3s ease, transform 0.3s ease;
 }
