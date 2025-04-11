@@ -26,16 +26,19 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        // Look for currency preference in the budgets table
         const { data, error } = await supabase
-          .from('user_preferences')
-          .select('currency_symbol')
+          .from('budgets')
+          .select('monthly_income, period')
           .eq('user_id', user.id)
-          .single();
+          .eq('category', 'CurrencyPreference')
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error("Error loading currency preference:", error);
-        } else if (data && data.currency_symbol) {
-          setCurrencySymbolState(data.currency_symbol as CurrencySymbol);
+        } else if (data && data.period) {
+          // We're using the 'period' field to store the currency symbol
+          setCurrencySymbolState(data.period as CurrencySymbol);
         }
       } catch (error) {
         console.error("Error loading currency:", error);
@@ -54,31 +57,37 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     setCurrencySymbolState(symbol);
     
     try {
-      // Check if record exists
+      // Check if currency preference record exists
       const { data, error: checkError } = await supabase
-        .from('user_preferences')
+        .from('budgets')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .eq('category', 'CurrencyPreference')
+        .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error("Error checking preferences:", checkError);
+      if (checkError) {
+        console.error("Error checking currency preference:", checkError);
         return;
       }
 
       if (data) {
         // Update existing record
         const { error } = await supabase
-          .from('user_preferences')
-          .update({ currency_symbol: symbol })
-          .eq('user_id', user.id);
+          .from('budgets')
+          .update({ period: symbol })
+          .eq('id', data.id);
 
         if (error) throw error;
       } else {
         // Insert new record
         const { error } = await supabase
-          .from('user_preferences')
-          .insert({ user_id: user.id, currency_symbol: symbol });
+          .from('budgets')
+          .insert({ 
+            user_id: user.id, 
+            category: 'CurrencyPreference',
+            period: symbol,
+            amount: 0  // Required field, but not used for our purpose
+          });
 
         if (error) throw error;
       }

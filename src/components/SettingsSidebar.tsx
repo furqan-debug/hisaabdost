@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,7 +15,7 @@ import {
   IndianRupee,
   Euro,
   PoundSterling,
-  Yen
+  JapaneseYen
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
@@ -40,10 +39,7 @@ export function SettingsSidebar({
   const { currencySymbol, setCurrencySymbol } = useCurrency();
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
-    // Remove existing color classes
     document.documentElement.classList.remove("pink", "blue");
-    
-    // Add new color class if needed
     if (newColor === "pink") {
       document.documentElement.classList.add("pink");
     } else if (newColor === "blue") {
@@ -136,7 +132,7 @@ export function SettingsSidebar({
               className={`justify-start h-9 ${currencySymbol === '¥' ? 'bg-accent' : ''}`}
               onClick={() => handleCurrencyChange('¥')}
             >
-              <Yen className="mr-2 h-4 w-4" />
+              <JapaneseYen className="mr-2 h-4 w-4" />
               Japanese Yen (¥)
             </Button>
           </div>
