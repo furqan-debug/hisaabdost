@@ -42,7 +42,7 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, {
     color: string;
   }>);
-  return <Card className="mt-4 overflow-hidden">
+  return <Card className="mt-4 overflow-hidden my-[17px] py-0">
       <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
@@ -61,7 +61,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-4 pb-6">
+      <CardContent className="px-2 sm:px-4 pb-6 py-0 my-[20px]">
         {isLoading ? <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
           </div> : expenses.length === 0 ? <div className="text-center text-muted-foreground py-8">
