@@ -10,6 +10,9 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export interface Budget {
   id: string;
@@ -98,14 +101,28 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
-        <BudgetTabs 
-          budgets={budgets || []} 
-          onEditBudget={handleEditBudget}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      </div>
+      {budgets && budgets.length > 0 ? (
+        <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
+          <BudgetTabs 
+            budgets={budgets || []} 
+            onEditBudget={handleEditBudget}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      ) : (
+        <div className="mx-2 md:mx-0">
+          <EmptyState
+            title="No budget categories set up"
+            description="Add your first budget category to start tracking your spending"
+            action={
+              <Button onClick={handleAddBudget} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" /> Add Budget
+              </Button>
+            }
+          />
+        </div>
+      )}
 
       <BudgetForm
         open={showBudgetForm}

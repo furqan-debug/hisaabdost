@@ -42,7 +42,7 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className={`w-full ${isMobile ? 'justify-start' : 'justify-center'} px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto`}>
+            <TabsList className={`w-full ${isMobile ? 'justify-start tabs-list-scroll' : 'justify-center'} px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto`}>
               <TabsTrigger 
                 value="overview" 
                 className="budget-tabs-trigger flex-shrink-0 whitespace-nowrap"
