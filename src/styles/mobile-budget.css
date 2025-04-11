@@ -19,19 +19,21 @@
   
   /* Make tab items snap when scrolling */
   .budget-tabs-trigger {
-    @apply flex-shrink-0 px-2 py-1;
+    @apply flex-shrink-0 px-3 py-2 text-sm;
     scroll-snap-align: start;
     white-space: nowrap;
     min-width: auto;
     width: auto;
+    position: relative;
   }
   
   /* Container for scrollable tabs */
   .scrollable-tabs-container {
-    @apply w-full overflow-x-auto no-scrollbar;
+    @apply w-full overflow-x-auto no-scrollbar border-b border-border/30;
     -webkit-overflow-scrolling: touch;
     position: relative;
-    padding-bottom: 2px; /* Prevents content jump */
+    padding-bottom: 0; /* Prevents content jump */
+    margin-bottom: 1rem;
   }
   
   /* Prevent horizontal overflow issues */

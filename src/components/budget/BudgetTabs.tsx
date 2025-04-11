@@ -7,6 +7,7 @@ import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
 import { BudgetComparison } from "@/components/budget/BudgetComparison";
 import { Budget } from "@/pages/Budget";
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BudgetTabsProps {
   budgets: Budget[];
@@ -18,6 +19,7 @@ interface BudgetTabsProps {
 export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: BudgetTabsProps) => {
   // Local state to prevent tab flickering
   const [stableActiveTab, setStableActiveTab] = useState(activeTab);
+  const isMobile = useIsMobile();
   
   // Update local tab state when prop changes, but only if it's different
   useEffect(() => {
@@ -40,11 +42,31 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison">Comparison</TabsTrigger>
+            <TabsList className={`w-full ${isMobile ? 'justify-start' : 'justify-center'} px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto`}>
+              <TabsTrigger 
+                value="overview" 
+                className="budget-tabs-trigger flex-shrink-0 whitespace-nowrap"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="categories" 
+                className="budget-tabs-trigger flex-shrink-0 whitespace-nowrap"
+              >
+                Categories
+              </TabsTrigger>
+              <TabsTrigger 
+                value="transactions" 
+                className="budget-tabs-trigger flex-shrink-0 whitespace-nowrap"
+              >
+                Transactions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="comparison" 
+                className="budget-tabs-trigger flex-shrink-0 whitespace-nowrap"
+              >
+                Comparison
+              </TabsTrigger>
             </TabsList>
           </div>
 

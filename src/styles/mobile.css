@@ -49,6 +49,28 @@ Most styles are now organized into component-specific files:
     padding: 0 !important;
     overflow: visible !important;
   }
+
+  /* Fix for tabs on mobile */
+  .tabs-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Radix UI tabs fixes */
+  [role="tablist"] {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  
+  [role="tablist"]::-webkit-scrollbar {
+    display: none !important;
+  }
+  
+  [role="tab"] {
+    flex-shrink: 0 !important;
+  }
 }
 
 /* Add these global fixes */
