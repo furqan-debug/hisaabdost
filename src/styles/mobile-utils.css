@@ -42,20 +42,6 @@
     width: 100%;
   }
   
-  /* Fix tab content visibility - critical fix */
-  .analytics-tab-content,
-  [role="tabpanel"] {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    min-height: 50px !important;
-    position: relative !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-  
   /* Optimize for small screens */
   .mobile-text-xs {
     @apply text-xs;
