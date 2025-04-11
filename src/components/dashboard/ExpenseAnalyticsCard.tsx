@@ -42,9 +42,9 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, {
     color: string;
   }>);
-  return <Card className="mt-4 overflow-hidden my-[17px] py-0">
+  return <Card className="mt-4 overflow-hidden my-[21px] py-[14px]">
       <CardHeader className="flex flex-col space-y-2 p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2 p my-[-3px]">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
             <div className="bg-muted/50 rounded-lg p-1 flex">
