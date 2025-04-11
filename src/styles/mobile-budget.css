@@ -51,9 +51,24 @@
   /* Fix tab content visibility on mobile */
   .tab-content-wrapper {
     min-height: 300px !important;
-    display: block;
+    display: block !important;
     width: 100%;
     overflow-x: hidden;
+    position: relative !important;
+  }
+  
+  /* Force display for tab content */
+  .analytics-tab-content,
+  .budget-section {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 50px !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
   
   /* Fixed budget content height to avoid jumpy layout */
@@ -135,11 +150,16 @@
   [data-state="active"] {
     display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
   }
   
   /* Ensure Radix TabsContent is always visible */
   [role="tabpanel"] {
     display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 100px !important;
+    position: relative !important;
   }
 }

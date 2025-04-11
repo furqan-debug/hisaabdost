@@ -41,19 +41,24 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
   }
   
-  /* Fix content overflow in tabs */
+  /* Critical fix for tab content visibility on mobile */
   [role="tabpanel"] {
     display: block !important;
     visibility: visible !important;
-    max-width: 100%;
-    overflow-x: hidden;
-    width: 100%;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100px !important;
+    position: relative !important;
+    opacity: 1 !important;
   }
   
   /* Force tabs to show content */
   [data-state="active"] {
     display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
   }
   
   /* Ensure all mobile charts are constrained */

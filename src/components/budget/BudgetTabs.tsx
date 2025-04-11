@@ -61,22 +61,22 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           </div>
 
           <div className="tab-content-wrapper w-full overflow-x-hidden">
-            <TabsContent value="overview" className="budget-section overflow-hidden w-full">
+            <TabsContent value="overview" className="budget-section overflow-hidden w-full" forceMount>
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="budget-section overflow-hidden w-full">
+            <TabsContent value="categories" className="budget-section overflow-hidden w-full" forceMount>
               <CategoryBudgets 
                 budgets={budgets || []}
                 onEditBudget={onEditBudget}
               />
             </TabsContent>
 
-            <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
+            <TabsContent value="transactions" className="budget-section overflow-hidden w-full" forceMount>
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
+            <TabsContent value="comparison" className="budget-section overflow-hidden w-full" forceMount>
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </div>
