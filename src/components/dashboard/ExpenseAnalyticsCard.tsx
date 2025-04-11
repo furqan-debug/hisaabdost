@@ -74,7 +74,7 @@ export const ExpenseAnalyticsCard = ({
         duration: 0.5
       }} key={chartType} // Re-run animation when chart type changes
       >
-            <ChartContainer config={chartConfig} className="mx-[-12px] my-0 py-[18px]">
+            <ChartContainer config={chartConfig} className="mx-[-12px] my-0 py-0">
               {renderChart()}
             </ChartContainer>
           </motion.div>}
