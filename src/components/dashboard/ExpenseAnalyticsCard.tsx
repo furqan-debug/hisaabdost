@@ -61,7 +61,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="sm:px-4 pb-6">
+      <CardContent className="sm:px-5 pb-6 my-0">
         {isLoading ? <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
           </div> : expenses.length === 0 ? <div className="text-center text-muted-foreground py-8">
