@@ -14,23 +14,48 @@ export function formatCurrency(amount: number, currencySymbol: CurrencySymbol = 
     currencySymbol === "₹" ? "INR" :
     currencySymbol === "€" ? "EUR" :
     currencySymbol === "£" ? "GBP" :
-    currencySymbol === "¥" ? "JPY" : "USD";
+    currencySymbol === "¥" ? "JPY" :
+    currencySymbol === "₽" ? "RUB" :
+    currencySymbol === "₩" ? "KRW" :
+    currencySymbol === "A$" ? "AUD" :
+    currencySymbol === "C$" ? "CAD" :
+    currencySymbol === "Fr" ? "CHF" :
+    currencySymbol === "₺" ? "TRY" :
+    currencySymbol === "R" ? "ZAR" :
+    currencySymbol === "₴" ? "UAH" :
+    currencySymbol === "₪" ? "ILS" :
+    currencySymbol === "Rs" ? "PKR" : "USD";
 
-  // For ₹ (Indian Rupee), we'll want to place the symbol before the number
-  if (currencySymbol === "₹") {
-    return `${currencySymbol}${new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 2,
+  // Special formatting for certain currencies
+  if (currencySymbol === "₹" || currencySymbol === "Rs") {
+    return `${currencySymbol} ${new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).format(amount)}`;
   }
 
+  // Currencies that typically don't show decimals
+  const noDecimalCurrencies = ["JPY", "KRW"];
+  const fractionDigits = noDecimalCurrencies.includes(currencyCode) ? 0 : 2;
+
+  // For specific symbols that need to be displayed differently than Intl formatter
+  if (currencySymbol === "A$" || currencySymbol === "C$" || currencySymbol === "Fr" || 
+      currencySymbol === "₽" || currencySymbol === "₩" || currencySymbol === "₺" || 
+      currencySymbol === "R" || currencySymbol === "₴" || currencySymbol === "₪" || 
+      currencySymbol === "Rs") {
+    return `${currencySymbol} ${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    }).format(amount)}`;
+  }
+
+  // Use standard Intl formatter for other currencies
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyCode,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    // Use currencyDisplay 'narrowSymbol' only for JPY to get the correct ¥ symbol
-    currencyDisplay: currencyCode === 'JPY' ? 'narrowSymbol' : 'symbol'
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+    currencyDisplay: 'symbol'
   }).format(amount);
 }
 

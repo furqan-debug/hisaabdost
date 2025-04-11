@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
-export type CurrencySymbol = "$" | "₹" | "€" | "£" | "¥";
+export type CurrencySymbol = "$" | "₹" | "€" | "£" | "¥" | "₽" | "₩" | "A$" | "C$" | "Fr" | "₺" | "R" | "₴" | "₪" | "Rs";
 
 interface CurrencyContextType {
   currencySymbol: CurrencySymbol;

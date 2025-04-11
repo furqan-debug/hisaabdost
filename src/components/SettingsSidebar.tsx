@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,25 +10,47 @@ import {
   User, 
   Moon, 
   Sun, 
-  LogOut,
-  DollarSign,
-  CircleDollarSign,
-  IndianRupee,
-  Euro,
-  PoundSterling,
-  JapaneseYen
+  LogOut
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth";
 import { useCurrency, CurrencySymbol } from "@/hooks/use-currency-context";
 import { toast } from "sonner";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 
 interface SettingsSidebarProps {
   selectedMonth: Date;
   onMonthChange: (date: Date) => void;
   onClose: () => void;
 }
+
+// Currency options with symbols and names
+const currencyOptions = [
+  { symbol: "$", name: "USD - US Dollar" },
+  { symbol: "₹", name: "INR - Indian Rupee" },
+  { symbol: "€", name: "EUR - Euro" },
+  { symbol: "£", name: "GBP - British Pound" },
+  { symbol: "¥", name: "JPY - Japanese Yen" },
+  { symbol: "₽", name: "RUB - Russian Ruble" },
+  { symbol: "₩", name: "KRW - South Korean Won" },
+  { symbol: "A$", name: "AUD - Australian Dollar" },
+  { symbol: "C$", name: "CAD - Canadian Dollar" },
+  { symbol: "Fr", name: "CHF - Swiss Franc" },
+  { symbol: "¥", name: "CNY - Chinese Yuan" },
+  { symbol: "₺", name: "TRY - Turkish Lira" },
+  { symbol: "R", name: "ZAR - South African Rand" },
+  { symbol: "₴", name: "UAH - Ukrainian Hryvnia" },
+  { symbol: "₪", name: "ILS - Israeli Shekel" },
+  { symbol: "Rs", name: "PKR - Pakistani Rupee" }
+];
 
 export function SettingsSidebar({ 
   selectedMonth, 
@@ -62,6 +85,9 @@ export function SettingsSidebar({
     signOut();
   };
 
+  // Find the currently selected currency name
+  const selectedCurrency = currencyOptions.find(c => c.symbol === currencySymbol) || currencyOptions[0];
+
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center gap-2 px-4 py-4 border-b">
@@ -94,48 +120,28 @@ export function SettingsSidebar({
 
         <div className="px-4 py-3">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
-          <div className="flex flex-col gap-2">
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${currencySymbol === '$' ? 'bg-accent' : ''}`}
-              onClick={() => handleCurrencyChange('$')}
-            >
-              <DollarSign className="mr-2 h-4 w-4" />
-              US Dollar ($)
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${currencySymbol === '₹' ? 'bg-accent' : ''}`}
-              onClick={() => handleCurrencyChange('₹')}
-            >
-              <IndianRupee className="mr-2 h-4 w-4" />
-              Indian Rupee (₹)
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${currencySymbol === '€' ? 'bg-accent' : ''}`}
-              onClick={() => handleCurrencyChange('€')}
-            >
-              <Euro className="mr-2 h-4 w-4" />
-              Euro (€)
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${currencySymbol === '£' ? 'bg-accent' : ''}`}
-              onClick={() => handleCurrencyChange('£')}
-            >
-              <PoundSterling className="mr-2 h-4 w-4" />
-              British Pound (£)
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${currencySymbol === '¥' ? 'bg-accent' : ''}`}
-              onClick={() => handleCurrencyChange('¥')}
-            >
-              <JapaneseYen className="mr-2 h-4 w-4" />
-              Japanese Yen (¥)
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                <span>{selectedCurrency.symbol} {selectedCurrency.name}</span>
+                <span className="ml-2 opacity-70">↓</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Select Currency</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {currencyOptions.map((currency) => (
+                <DropdownMenuItem 
+                  key={currency.name}
+                  onClick={() => handleCurrencyChange(currency.symbol as CurrencySymbol)}
+                  className={currencySymbol === currency.symbol ? "bg-accent" : ""}
+                >
+                  <span className="font-medium mr-2">{currency.symbol}</span>
+                  {currency.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <Separator className="my-2" />

@@ -27,11 +27,35 @@ export const formatCurrency = (amount: number, currencySymbol: CurrencySymbol = 
     currencySymbol === "₹" ? "INR" :
     currencySymbol === "€" ? "EUR" :
     currencySymbol === "£" ? "GBP" :
-    currencySymbol === "¥" ? "JPY" : "USD";
+    currencySymbol === "¥" ? "JPY" :
+    currencySymbol === "₽" ? "RUB" :
+    currencySymbol === "₩" ? "KRW" :
+    currencySymbol === "A$" ? "AUD" :
+    currencySymbol === "C$" ? "CAD" :
+    currencySymbol === "Fr" ? "CHF" :
+    currencySymbol === "₺" ? "TRY" :
+    currencySymbol === "R" ? "ZAR" :
+    currencySymbol === "₴" ? "UAH" :
+    currencySymbol === "₪" ? "ILS" :
+    currencySymbol === "Rs" ? "PKR" : "USD";
 
-  // For ₹ (Indian Rupee), we'll want to place the symbol before the number with no space
-  if (currencySymbol === "₹") {
+  // Special formatting for certain currencies
+  if (currencySymbol === "₹" || currencySymbol === "Rs") {
     return `${currencySymbol}${new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)}`;
+  }
+
+  // Currencies that typically don't show decimals
+  const noDecimalCurrencies = ["JPY", "KRW"];
+  
+  // For specific symbols that need to be displayed differently than Intl formatter
+  if (currencySymbol === "A$" || currencySymbol === "C$" || currencySymbol === "Fr" || 
+      currencySymbol === "₽" || currencySymbol === "₩" || currencySymbol === "₺" || 
+      currencySymbol === "R" || currencySymbol === "₴" || currencySymbol === "₪" || 
+      currencySymbol === "Rs") {
+    return `${currencySymbol}${new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount)}`;
@@ -42,7 +66,7 @@ export const formatCurrency = (amount: number, currencySymbol: CurrencySymbol = 
     currency: currencyCode,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-    currencyDisplay: currencyCode === 'JPY' ? 'narrowSymbol' : 'symbol'
+    currencyDisplay: noDecimalCurrencies.includes(currencyCode) ? 'narrowSymbol' : 'symbol'
   }).format(amount);
 };
 
