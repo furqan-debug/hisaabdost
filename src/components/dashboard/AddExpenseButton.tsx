@@ -94,14 +94,14 @@ export const AddExpenseButton = ({
         y: 0
       }} transition={{
         duration: 0.3
-      }} className="bg-card rounded-xl border shadow-sm p-3 py-[27px] my-[8px]">
-          <h3 className="text-base font-medium mb-2 flex items-center">
+      }} className="bg-card rounded-xl border shadow-sm p-3 my-0 py-[19px]">
+          <h3 className="text-base font-medium mb-2 flex items-center my-px py-0">
             <Plus className="h-4 w-4 text-primary mr-1.5" />
             Add New Expense
           </h3>
           <div className="grid grid-cols-3 gap-2">
             <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'manual' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
-              <Button variant="outline" onClick={() => handleOpenSheet('manual')} className="h-16 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all my-0 rounded-lg font-normal py-[41px]">
+              <Button variant="outline" onClick={() => handleOpenSheet('manual')} className="h-16 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all my-0 rounded-lg font-normal py-[35px]">
                 <Plus className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Manual</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Enter details</span>
@@ -109,7 +109,7 @@ export const AddExpenseButton = ({
             </motion.div>
             
             <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'upload' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
-              <Button variant="outline" onClick={() => handleOpenSheet('upload')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[40px]">
+              <Button variant="outline" onClick={() => handleOpenSheet('upload')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[35px]">
                 <Upload className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Upload</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Photo receipt</span>
@@ -117,7 +117,7 @@ export const AddExpenseButton = ({
             </motion.div>
             
             <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'camera' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
-              <Button variant="outline" onClick={() => handleOpenSheet('camera')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[40px]">
+              <Button variant="outline" onClick={() => handleOpenSheet('camera')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[35px]">
                 <Camera className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Camera</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Take photo</span>
