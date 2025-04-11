@@ -31,11 +31,11 @@ export const BudgetTabs = ({
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
-  return <Card className="budget-card overflow-hidden px-0 mx-0 my-[11px]">
+  return <Card className="budget-card overflow-hidden mx-0 px-0">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start rounded-none md:rounded-md max-w-full overflow-x-auto mx-px px-[8px] my-0 py-0 bg-white">
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
