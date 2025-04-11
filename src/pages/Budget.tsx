@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
-import { Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -124,12 +123,6 @@ const Budget = () => {
         monthlyIncome={monthlyIncome}
         totalBudget={totalBudget}
       />
-      
-      {isMobile && (
-        <div className="floating-action-button" onClick={handleAddBudget}>
-          <Plus className="h-6 w-6" />
-        </div>
-      )}
     </div>
   );
 };
