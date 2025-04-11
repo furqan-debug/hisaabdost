@@ -94,7 +94,7 @@ export const AddExpenseButton = ({
         y: 0
       }} transition={{
         duration: 0.3
-      }} className="bg-card rounded-xl border shadow-sm p-3 my-[19px] py-[27px]">
+      }} className="bg-card rounded-xl border shadow-sm p-3 py-[27px] my-[8px]">
           <h3 className="text-base font-medium mb-2 flex items-center">
             <Plus className="h-4 w-4 text-primary mr-1.5" />
             Add New Expense
