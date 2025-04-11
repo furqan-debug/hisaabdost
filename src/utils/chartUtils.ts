@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 
@@ -19,7 +18,8 @@ export const CATEGORY_COLORS = {
   'Other': '#A4DE6C'
 } as const;
 
-export const formatCurrency = (amount: number) => {
+// Add or update the formatCurrency function to always use USD
+export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
