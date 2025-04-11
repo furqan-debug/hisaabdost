@@ -26,12 +26,15 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
     }
-  }, [activeTab]);
+  }, [activeTab, stableActiveTab]);
   
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
+
+  // Add console logs to debug tab rendering
+  console.log("Rendering BudgetTabs with:", { stableActiveTab, budgets: budgets.length });
 
   return (
     <Card className="budget-card overflow-hidden">
@@ -40,6 +43,7 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           value={stableActiveTab} 
           onValueChange={handleValueChange} 
           className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
+          defaultValue="overview"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
             <TabsList className={`w-full ${isMobile ? 'justify-start tabs-list-scroll' : 'justify-center'} px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto`}>
@@ -70,22 +74,22 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="budget-section overflow-hidden w-full">
+          <TabsContent value="overview" className="budget-section overflow-hidden w-full" forceMount>
             <BudgetOverview budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="categories" className="budget-section overflow-hidden w-full">
+          <TabsContent value="categories" className="budget-section overflow-hidden w-full" forceMount>
             <CategoryBudgets 
               budgets={budgets || []}
               onEditBudget={onEditBudget}
             />
           </TabsContent>
 
-          <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
+          <TabsContent value="transactions" className="budget-section overflow-hidden w-full" forceMount>
             <BudgetTransactions budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
+          <TabsContent value="comparison" className="budget-section overflow-hidden w-full" forceMount>
             <BudgetComparison budgets={budgets || []} />
           </TabsContent>
         </Tabs>

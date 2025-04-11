@@ -33,7 +33,7 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
     padding-bottom: 0; /* Prevents content jump */
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
   
   /* Prevent horizontal overflow issues */
@@ -116,5 +116,34 @@
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
+  }
+
+  /* Tab content fixes for empty state or missing content */
+  [data-state="active"] {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: 200px;
+  }
+
+  /* Fixed height charts with fallback for empty states */
+  .chart-container {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Analytics tabs fixes */
+  .tabs-container {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .responsive-tab-content {
+    width: 100%;
+    display: block;
+    min-height: 300px;
   }
 }
