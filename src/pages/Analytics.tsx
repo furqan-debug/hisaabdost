@@ -9,7 +9,7 @@ import { ExpensesLineChart } from "@/components/analytics/ExpensesLineChart";
 import { ExpensesComparison } from "@/components/analytics/ExpensesComparison";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { subMonths, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
@@ -19,9 +19,6 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { EmptyState } from "@/components/ui/empty-state";
-import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -33,18 +30,6 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd'),
   });
   const useCustomDateRange = true;
-  const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // For debugging
-  useEffect(() => {
-    console.log("Analytics page rendering:", { 
-      activeTab, 
-      isMobile, 
-      dateRange,
-      selectedMonth
-    });
-  }, [activeTab, isMobile, dateRange, selectedMonth]);
 
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
@@ -60,7 +45,6 @@ export default function Analytics() {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      console.log("Fetched expenses:", data?.length || 0);
       return data || [];
     },
     enabled: !!user,
@@ -79,11 +63,6 @@ export default function Analytics() {
     acc[key] = { color };
     return acc;
   }, {} as Record<string, { color: string }>);
-
-  const handleTabChange = (value: string) => {
-    console.log("Analytics tab changed to:", value);
-    setActiveTab(value);
-  };
 
   if (error) {
     return (
@@ -105,8 +84,6 @@ export default function Analytics() {
       </div>
     );
   }
-
-  const hasExpenses = filteredExpenses && filteredExpenses.length > 0;
 
   // Animation variants
   const containerVariants = {
@@ -150,104 +127,69 @@ export default function Analytics() {
         />
       </motion.div>
 
-      {insights.length > 0 && (
-        <motion.div variants={itemVariants}>
-          <InsightsDisplay insights={insights} />
-        </motion.div>
-      )}
+      <motion.div variants={itemVariants}>
+        <InsightsDisplay insights={insights} />
+      </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Tabs 
-          defaultValue="overview" 
-          value={activeTab} 
-          onValueChange={handleTabChange} 
-          className="space-y-4"
-        >
-          <TabsList className="bg-muted/50 p-1 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
+            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
+            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
           </TabsList>
 
-          <div className="tab-content-wrapper w-full overflow-hidden">
-            <TabsContent value="overview" className="space-y-4 mt-2 analytics-tab-content">
-              {!hasExpenses ? (
-                <EmptyState 
-                  title="No expense data available" 
-                  description="Add some expenses or adjust your filters to see your spending analytics."
-                  icon={<PieChartIcon className="h-6 w-6 text-muted-foreground" />}
-                />
-              ) : (
-                <Card className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>Category Breakdown</CardTitle>
-                    <CardDescription>Your expenses by category</CardDescription>
-                  </CardHeader>
-                  <CardContent className={isMobile ? "h-[300px]" : "h-[400px]"}>
-                    <ChartContainer config={chartConfig} className="h-full">
-                      <ExpensesPieChart expenses={filteredExpenses} />
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
+          <TabsContent value="overview" className="space-y-4 mt-2">
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle>Category Breakdown</CardTitle>
+                <CardDescription>Your expenses by category</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full">
+                  <ExpensesPieChart expenses={filteredExpenses} />
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="trends" className="space-y-4 mt-2 analytics-tab-content">
-              {!hasExpenses ? (
-                <EmptyState 
-                  title="No trend data available" 
-                  description="Add expenses across multiple periods to see your spending trends."
-                  icon={<LineChartIcon className="h-6 w-6 text-muted-foreground" />}
-                />
-              ) : (
-                <>
-                  <Card className="overflow-hidden">
-                    <CardHeader>
-                      <CardTitle>Monthly Trends</CardTitle>
-                      <CardDescription>Your spending patterns over time</CardDescription>
-                    </CardHeader>
-                    <CardContent className={isMobile ? "h-[300px]" : "h-[400px]"}>
-                      <ChartContainer config={chartConfig} className="h-full">
-                        <ExpensesBarChart expenses={filteredExpenses} />
-                      </ChartContainer>
-                    </CardContent>
-                  </Card>
+          <TabsContent value="trends" className="space-y-4 mt-2">
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle>Monthly Trends</CardTitle>
+                <CardDescription>Your spending patterns over time</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full">
+                  <ExpensesBarChart expenses={filteredExpenses} />
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
-                  <Card className="overflow-hidden">
-                    <CardHeader>
-                      <CardTitle>Category Trends</CardTitle>
-                      <CardDescription>How your spending evolves by category</CardDescription>
-                    </CardHeader>
-                    <CardContent className={isMobile ? "h-[300px]" : "h-[400px]"}>
-                      <ChartContainer config={chartConfig} className="h-full">
-                        <ExpensesLineChart expenses={filteredExpenses} />
-                      </ChartContainer>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-            </TabsContent>
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle>Category Trends</CardTitle>
+                <CardDescription>How your spending evolves by category</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full">
+                  <ExpensesLineChart expenses={filteredExpenses} />
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="comparison" className="space-y-4 mt-2 analytics-tab-content">
-              {!hasExpenses ? (
-                <EmptyState 
-                  title="No comparison data available" 
-                  description="Add expenses across multiple periods to compare your spending."
-                  icon={<BarChartIcon className="h-6 w-6 text-muted-foreground" />}
-                />
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Period Comparison</CardTitle>
-                    <CardDescription>Compare your spending across different periods</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ExpensesComparison expenses={filteredExpenses} />
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </div>
+          <TabsContent value="comparison" className="space-y-4 mt-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Period Comparison</CardTitle>
+                <CardDescription>Compare your spending across different periods</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ExpensesComparison expenses={filteredExpenses} />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </motion.div>
     </motion.div>
