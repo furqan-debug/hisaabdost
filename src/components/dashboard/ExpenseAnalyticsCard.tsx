@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
@@ -9,19 +10,22 @@ import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
+
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
   isLoading: boolean;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
 }
+
 export const ExpenseAnalyticsCard = ({
   expenses,
   isLoading,
   chartType,
-  setChartType
+  setChartType,
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
+
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -34,27 +38,44 @@ export const ExpenseAnalyticsCard = ({
         return null;
     }
   };
+
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = {
-      color
-    };
+    acc[key] = { color };
     return acc;
-  }, {} as Record<string, {
-    color: string;
-  }>);
-  return <Card className="mt-4 overflow-hidden">
+  }, {} as Record<string, { color: string }>);
+
+  return (
+    <Card className="mt-4 overflow-hidden">
       <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
             <div className="bg-muted/50 rounded-lg p-1 flex">
-              <button onClick={() => setChartType('pie')} className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} aria-label="Pie chart">
+              <button
+                onClick={() => setChartType('pie')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Pie chart"
+              >
                 <PieChartIcon className="h-4 w-4" />
               </button>
-              <button onClick={() => setChartType('bar')} className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} aria-label="Bar chart">
+              <button
+                onClick={() => setChartType('bar')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Bar chart"
+              >
                 <BarChartIcon className="h-4 w-4" />
               </button>
-              <button onClick={() => setChartType('line')} className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} aria-label="Line chart">
+              <button
+                onClick={() => setChartType('line')}
+                className={`p-1.5 rounded-md transition-all ${
+                  chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'
+                }`}
+                aria-label="Line chart"
+              >
                 <LineChartIcon className="h-4 w-4" />
               </button>
             </div>
@@ -62,22 +83,28 @@ export const ExpenseAnalyticsCard = ({
         </div>
       </CardHeader>
       <CardContent className="px-2 sm:px-4 pb-6">
-        {isLoading ? <div className="flex justify-center p-6">
+        {isLoading ? (
+          <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
-          </div> : expenses.length === 0 ? <div className="text-center text-muted-foreground py-8">
+          </div>
+        ) : expenses.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
             Add some expenses to see analytics
-          </div> : <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} transition={{
-        duration: 0.5
-      }} key={chartType} // Re-run animation when chart type changes
-      className="w-full overflow-hidden my-[10px] py-0 mx-0 px-0 rounded-none">
-            <ChartContainer config={chartConfig} className="bg-white rounded-none my-[25px] mx-[16px] px-0 py-[4px]">
+          </div>
+        ) : (
+          <motion.div 
+            className="w-full overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            key={chartType} // Re-run animation when chart type changes
+          >
+            <ChartContainer config={chartConfig} className={isMobile ? "h-[320px]" : "h-[400px]"}>
               {renderChart()}
             </ChartContainer>
-          </motion.div>}
+          </motion.div>
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
