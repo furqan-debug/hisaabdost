@@ -48,6 +48,14 @@
     width: 100%;
   }
   
+  /* Fix tab content visibility on mobile */
+  .tab-content-wrapper {
+    min-height: 300px !important;
+    display: block;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
     height: 300px;
@@ -61,6 +69,9 @@
     @apply py-2 px-1 max-w-full;
     overflow-x: hidden !important;
     width: 100%;
+    display: block !important; /* Force display */
+    visibility: visible !important; /* Force visibility */
+    min-height: 50px;
   }
   
   /* Progress bar height for budget */
@@ -111,5 +122,24 @@
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
+  }
+  
+  /* Fix for recharts on mobile */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 250px !important;
+  }
+  
+  /* Ensure tab content is always visible */
+  [data-state="active"] {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Ensure Radix TabsContent is always visible */
+  [role="tabpanel"] {
+    display: block !important;
+    visibility: visible !important;
   }
 }
