@@ -12,19 +12,10 @@ interface ExpensePieChartProps {
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const pieChartData = calculatePieChartData(expenses);
   const isMobile = useIsMobile();
-  
-  // Sort data by value in descending order for better visualization
-  pieChartData.sort((a, b) => b.value - a.value);
-  
-  // Calculate percentages
-  const total = pieChartData.reduce((sum, item) => sum + item.value, 0);
-  pieChartData.forEach(item => {
-    item.percent = total > 0 ? (item.value / total) : 0;
-  });
 
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
-      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 35 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 30, left: 30, bottom: 0 }}>
         <Pie
           data={pieChartData}
           dataKey="value"
@@ -34,20 +25,14 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           outerRadius={isMobile ? 90 : 140}
           innerRadius={isMobile ? 45 : 70}
           paddingAngle={3}
-          labelLine={false}
-          label={({ percent }) => {
-            // Only show percentage for segments > 5%
-            if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
-          }}
+          label={({ name, percent }) => isMobile ? 
+            (percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '') : 
+            (percent > 0.03 ? `${name} (${(percent * 100).toFixed(0)}%)` : '')
+          }
+          labelLine={false} // Changed from a function to boolean false
         >
           {pieChartData.map((entry) => (
-            <Cell 
-              key={entry.name} 
-              fill={entry.color} 
-              stroke="var(--background)" 
-              strokeWidth={2} 
-            />
+            <Cell key={entry.name} fill={entry.color} stroke="var(--background)" strokeWidth={1} />
           ))}
         </Pie>
         <Tooltip 
@@ -55,12 +40,9 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             if (!active || !payload || !payload.length) return null;
             const data = payload[0];
             return (
-              <div className="rounded-lg border bg-background p-3 shadow-md">
+              <div className="rounded-lg border bg-background p-2 shadow-sm">
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
-                  {data.name}
-                </p>
-                <p className="text-sm font-bold">
-                  {formatCurrency(Number(data.value))}
+                  {data.name}: {formatCurrency(Number(data.value))}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {(data.payload.percent * 100).toFixed(1)}% of total
@@ -70,38 +52,16 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           }}
         />
         <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ 
-            fontSize: isMobile ? '11px' : '13px',
-            paddingTop: '10px',
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '8px'
-          }}
-          formatter={(value, entry: any) => {
-            // Extract just the category name to avoid overlapping
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
-            
-            return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                display: 'inline-block',
-                padding: '2px 4px',
-                whiteSpace: 'nowrap'
-              }}>
-                {displayName}: {amount}
-              </span>
-            );
+          verticalAlign={isMobile ? "bottom" : "middle"}
+          align={isMobile ? "center" : "right"}
+          layout={isMobile ? "horizontal" : "vertical"}
+          wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '10px' } : undefined}
+          formatter={(value, entry) => {
+            const { payload } = entry as any;
+            return `${value}: ${formatCurrency(Number(payload.value))}`;
           }}
         />
       </PieChart>
     </ResponsiveContainer>
   );
-}
+};
