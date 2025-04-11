@@ -28,50 +28,52 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     percent: 0 // This will be calculated below
   }));
   
-  // Sort data by value in descending order for better visualization
-  data.sort((a, b) => b.value - a.value);
-  
   // Calculate percentages based on total
   const total = data.reduce((sum, item) => sum + item.value, 0);
   data.forEach(item => {
     item.percent = total > 0 ? (item.value / total) : 0;
   });
   
+  // Animation for pie chart segments
+  const ANIMATION_DURATION = 800;
+  
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 360 : 400}>
-      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 50 } : { top: 20, right: 30, left: 30, bottom: 50 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 320 : "100%"}>
+      <PieChart margin={isMobile ? { top: 25, right: 10, left: 10, bottom: 35 } : { top: 20, right: 40, left: 40, bottom: 40 }}>
+        <defs>
+          {data.map((entry, index) => (
+            <linearGradient key={`colorGradient-${index}`} id={`colorGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+              <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+            </linearGradient>
+          ))}
+        </defs>
         <Pie
           data={data}
           dataKey="value"
           nameKey="name"
           cx="50%"
-          cy="45%"
-          outerRadius={isMobile ? 90 : 140}
-          innerRadius={isMobile ? 45 : 70}
-          paddingAngle={2}
+          cy="50%"
+          outerRadius={isMobile ? 80 : 150}
+          innerRadius={isMobile ? 40 : 75}
+          paddingAngle={3}
+          isAnimationActive={true}
+          animationDuration={ANIMATION_DURATION}
+          animationBegin={0}
+          animationEasing="ease-out"
           labelLine={false}
-          label={({ percent }) => {
+          label={({ name, percent }) => {
             // Only show percentage for segments > 5%
             if (percent < 0.05) return null;
-            const percentLabel = (percent * 100).toFixed(0) + '%';
-            return (
-              <text 
-                x={0} 
-                y={0}
-                fill="var(--foreground)"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="font-medium text-xs"
-              >
-                {percentLabel}
-              </text>
-            );
+            return `${(percent * 100).toFixed(0)}%`;
           }}
+          startAngle={90}
+          endAngle={-270}
         >
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`} 
-              fill={entry.color} 
+              fill={`url(#colorGradient-${index})`} 
               stroke="var(--background)" 
               strokeWidth={2} 
             />
@@ -102,57 +104,31 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           }}
         />
         <Legend
-          layout="horizontal"
           verticalAlign="bottom"
           align="center"
+          layout="horizontal"
+          iconType="circle"
+          iconSize={8}
           wrapperStyle={{
-            paddingTop: '20px',
             fontSize: isMobile ? '11px' : '13px',
+            paddingTop: '10px', 
             width: '100%',
-            maxWidth: '100%',
-            paddingBottom: '10px',
-            position: 'relative',
-            bottom: isMobile ? -10 : 0
+            bottom: isMobile ? 0 : 10
           }}
-          content={(props) => {
-            const { payload } = props;
-            
-            if (!payload || !payload.length) return null;
-            
-            // Limit to top 5 items on mobile to prevent overcrowding
-            const displayedItems = isMobile ? payload.slice(0, 5) : payload;
-            const hasMore = isMobile && payload.length > 5;
+          formatter={(value, entry: any) => {
+            // Extract just the category name to avoid overlapping
+            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
+            const amount = formatCurrency(entry.payload.value);
             
             return (
-              <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-2">
-                {displayedItems.map((entry: any, index: number) => {
-                  const amount = formatCurrency(entry.payload.value);
-                  const name = entry.value;
-                  // Truncate long category names
-                  const displayName = name.length > 12 ? 
-                    name.slice(0, 10) + '...' : name;
-                  
-                  return (
-                    <div 
-                      key={`legend-${index}`}
-                      className="flex items-center bg-background/50 rounded-full px-2 py-0.5 border border-border/40"
-                    >
-                      <div 
-                        className="w-2 h-2 rounded-full mr-1.5" 
-                        style={{ backgroundColor: entry.color }} 
-                      />
-                      <span className="text-xs whitespace-nowrap">
-                        {displayName}: {amount}
-                      </span>
-                    </div>
-                  );
-                })}
-                {hasMore && (
-                  <div className="text-xs text-muted-foreground">
-                    +{payload.length - 5} more
-                  </div>
-                )}
-              </div>
+              <span style={{ 
+                color: 'var(--foreground)', 
+                marginLeft: '4px',
+                marginRight: isMobile ? '8px' : '12px',
+                display: 'inline-block'
+              }}>
+                {displayName}: {amount}
+              </span>
             );
           }}
         />

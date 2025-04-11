@@ -48,7 +48,7 @@ export const ExpenseAnalyticsCard = ({
     <Card className="mt-4 overflow-hidden">
       <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className="text-lg font-semibold">Expense Analytics</CardTitle>
+          <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
           <div className="flex items-center space-x-2">
             <div className="bg-muted/50 rounded-lg p-1 flex">
               <button
@@ -99,7 +99,7 @@ export const ExpenseAnalyticsCard = ({
             transition={{ duration: 0.5 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className="h-[400px]">
+            <ChartContainer config={chartConfig} className={isMobile ? "h-[320px]" : "h-[400px]"}>
               {renderChart()}
             </ChartContainer>
           </motion.div>
