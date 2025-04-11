@@ -1,7 +1,5 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
-import { CurrencySymbol } from "@/hooks/use-currency-context";
 
 export const CATEGORY_COLORS = {
   'Food': '#0088FE',
@@ -10,63 +8,15 @@ export const CATEGORY_COLORS = {
   'Transportation': '#FF8042',
   'Entertainment': '#8884D8',
   'Shopping': '#82CA9D',
-  'Healthcare': '#FF6B6B',
-  'Education': '#6A7FDB',
-  'Travel': '#FF9D5C',
-  'Groceries': '#4BC0C0',
-  'Restaurants': '#9966FF',
-  'Clothing': '#FF99CC',
-  'Bills': '#FF6B6B',
   'Other': '#A4DE6C'
 } as const;
 
-export const formatCurrency = (amount: number, currencySymbol: CurrencySymbol = "$") => {
-  // Define currency code based on symbol
-  const currencyCode = 
-    currencySymbol === "$" ? "USD" :
-    currencySymbol === "₹" ? "INR" :
-    currencySymbol === "€" ? "EUR" :
-    currencySymbol === "£" ? "GBP" :
-    currencySymbol === "¥" ? "JPY" :
-    currencySymbol === "₽" ? "RUB" :
-    currencySymbol === "₩" ? "KRW" :
-    currencySymbol === "A$" ? "AUD" :
-    currencySymbol === "C$" ? "CAD" :
-    currencySymbol === "Fr" ? "CHF" :
-    currencySymbol === "₺" ? "TRY" :
-    currencySymbol === "R" ? "ZAR" :
-    currencySymbol === "₴" ? "UAH" :
-    currencySymbol === "₪" ? "ILS" :
-    currencySymbol === "Rs" ? "PKR" : "USD";
-
-  // Special formatting for certain currencies
-  if (currencySymbol === "₹" || currencySymbol === "Rs") {
-    return `${currencySymbol}${new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)}`;
-  }
-
-  // Currencies that typically don't show decimals
-  const noDecimalCurrencies = ["JPY", "KRW"];
-  
-  // For specific symbols that need to be displayed differently than Intl formatter
-  if (currencySymbol === "A$" || currencySymbol === "C$" || currencySymbol === "Fr" || 
-      currencySymbol === "₽" || currencySymbol === "₩" || currencySymbol === "₺" || 
-      currencySymbol === "R" || currencySymbol === "₴" || currencySymbol === "₪" || 
-      currencySymbol === "Rs") {
-    return `${currencySymbol}${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)}`;
-  }
-
+export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currencyCode,
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-    currencyDisplay: noDecimalCurrencies.includes(currencyCode) ? 'narrowSymbol' : 'symbol'
   }).format(amount);
 };
 
@@ -139,7 +89,6 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   return Object.entries(categoryTotals).map(([name, value]) => ({
     name,
     value,
-    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C',
-    percent: 0 // Will be calculated later when needed
+    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C'
   }));
 };

@@ -32,6 +32,15 @@ const Budget = () => {
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
   
+  // Get active tab from month data with fallback to overview
+  const [activeTab, setActiveTab] = useState(currentMonthData.activeTab || 'overview');
+  
+  console.log('Budget page rendering', { 
+    activeTab,
+    currentMonthKey, 
+    isMobile
+  });
+  
   const { 
     budgets, 
     isLoading, 
@@ -42,6 +51,13 @@ const Budget = () => {
     usagePercentage,
     monthlyIncome
   } = useBudgetData();
+  
+  // Save active tab to month context when it changes
+  useEffect(() => {
+    updateMonthData(currentMonthKey, {
+      activeTab: activeTab
+    });
+  }, [activeTab, currentMonthKey, updateMonthData]);
 
   // Save budget data to month context when it changes
   useEffect(() => {
@@ -52,8 +68,24 @@ const Budget = () => {
         budgetUsagePercentage: usagePercentage,
         monthlyIncome: monthlyIncome
       });
+      
+      console.log('Budget data updated', {
+        totalBudget,
+        remainingBudget: remainingBalance,
+        budgetUsagePercentage: usagePercentage,
+        monthlyIncome
+      });
     }
   }, [totalBudget, remainingBalance, usagePercentage, monthlyIncome, currentMonthKey, updateMonthData, isLoading]);
+
+  // Load active tab from month data on initial render
+  useEffect(() => {
+    const savedTab = currentMonthData.activeTab;
+    if (savedTab) {
+      setActiveTab(savedTab);
+      console.log('Loaded active tab from month context:', savedTab);
+    }
+  }, [currentMonthData.activeTab]);
 
   const handleAddBudget = () => {
     setSelectedBudget(null);
@@ -67,13 +99,12 @@ const Budget = () => {
 
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
+    console.log('Tab changed to:', tabValue);
+    setActiveTab(tabValue);
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
-
-  // Get active tab from month data
-  const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
     return <div className="p-4 flex justify-center">
@@ -82,6 +113,12 @@ const Budget = () => {
       </div>
     </div>;
   }
+  
+  console.log('Budget data loaded', { 
+    budgetsCount: budgets?.length || 0,
+    totalBudget,
+    remainingBalance
+  });
 
   return (
     <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
@@ -98,7 +135,7 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
+      <div className="mx-0 md:mx-0 mobile-container-fix overflow-hidden w-full">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}

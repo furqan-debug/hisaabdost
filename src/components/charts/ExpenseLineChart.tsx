@@ -3,7 +3,6 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useCurrency } from "@/hooks/use-currency-context";
 
 interface ExpenseLineChartProps {
   expenses: Expense[];
@@ -12,7 +11,6 @@ interface ExpenseLineChartProps {
 export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
-  const { currencySymbol } = useCurrency();
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
@@ -28,7 +26,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
           tick={{ fontSize: isMobile ? 10 : 12 }}
         />
         <YAxis 
-          tickFormatter={(value) => `${currencySymbol}${Number(value)/1000}k`}
+          tickFormatter={(value) => `$${Number(value)/1000}k`}
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: isMobile ? 10 : 12 }}
@@ -50,7 +48,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
                     className="text-sm"
                     style={{ color: entry.color }}
                   >
-                    {entry.name}: {formatCurrency(Number(entry.value), currencySymbol)}
+                    {entry.name}: {formatCurrency(Number(entry.value))}
                   </p>
                 ))}
               </div>

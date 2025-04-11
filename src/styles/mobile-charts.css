@@ -16,7 +16,6 @@
   /* Better tooltip on mobile */
   .recharts-tooltip-wrapper {
     @apply z-50;
-    pointer-events: auto !important;
   }
   
   /* Improve chart margins for better display */
@@ -28,20 +27,8 @@
   }
   
   /* Ensure legend is readable */
-  .recharts-legend-item {
-    @apply whitespace-nowrap overflow-hidden;
-    display: inline-flex !important;
-    align-items: center;
-    margin-right: 10px !important;
-    margin-bottom: 6px !important;
-  }
-  
   .recharts-legend-item-text {
     @apply text-xs font-medium;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   
   /* Better axis labels */
@@ -74,44 +61,4 @@
   .recharts-active-dot {
     @apply stroke-background stroke-2;
   }
-  
-  /* Fix legend spacing and layout */
-  .recharts-legend-wrapper {
-    padding-top: 20px !important;
-    padding-bottom: 10px !important;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  /* Fix pie chart label display */
-  .recharts-pie-label-line {
-    stroke: var(--muted-foreground) !important;
-    stroke-width: 0.5 !important;
-  }
-  
-  .recharts-pie-label-text {
-    font-size: 11px !important;
-    fill: var(--foreground) !important;
-  }
-  
-  /* Improve chart container margins */
-  .recharts-responsive-container {
-    margin: 0 auto !important;
-    max-width: 95% !important;
-  }
-}
-
-/* Legend improvements for all screen sizes */
-.recharts-default-legend {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 8px !important;
-}
-
-/* Make pie labels more visible */
-.recharts-layer.recharts-pie-labels text {
-  font-weight: 600 !important;
-  font-size: 12px !important;
 }

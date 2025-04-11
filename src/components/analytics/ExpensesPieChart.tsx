@@ -25,24 +25,17 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     name,
     value,
     color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C',
-    percent: 0 // This will be calculated below
   }));
-  
-  // Calculate percentages based on total
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  data.forEach(item => {
-    item.percent = total > 0 ? (item.value / total) : 0;
-  });
-  
+
   // Animation for pie chart segments
   const ANIMATION_DURATION = 800;
   
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : "100%"}>
-      <PieChart margin={isMobile ? { top: 25, right: 10, left: 10, bottom: 35 } : { top: 20, right: 40, left: 40, bottom: 40 }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : "100%"}>
+      <PieChart margin={isMobile ? { top: 5, right: 5, left: 5, bottom: 5 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
         <defs>
           {data.map((entry, index) => (
-            <linearGradient key={`colorGradient-${index}`} id={`colorGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+            <linearGradient key={`gradient-${index}`} id={`colorGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
               <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
             </linearGradient>
@@ -61,12 +54,11 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           animationDuration={ANIMATION_DURATION}
           animationBegin={0}
           animationEasing="ease-out"
-          labelLine={false}
-          label={({ name, percent }) => {
-            // Only show percentage for segments > 5%
-            if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
-          }}
+          label={({ name, percent }) => isMobile ? 
+            (percent > 0.1 ? `${(percent * 100).toFixed(0)}%` : '') : 
+            (percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : '')
+          }
+          labelLine={!isMobile}
           startAngle={90}
           endAngle={-270}
         >
@@ -88,7 +80,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border bg-background p-3 shadow-md"
+                className="rounded-lg border bg-background p-2 shadow-md"
               >
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
@@ -104,30 +96,16 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           }}
         />
         <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
+          verticalAlign={isMobile ? "bottom" : "middle"}
+          align={isMobile ? "center" : "right"}
+          layout={isMobile ? "horizontal" : "vertical"}
           iconType="circle"
           iconSize={8}
-          wrapperStyle={{
-            fontSize: isMobile ? '11px' : '13px',
-            paddingTop: '10px', 
-            width: '100%',
-            bottom: isMobile ? 0 : 10
-          }}
+          wrapperStyle={isMobile ? { fontSize: '10px', paddingTop: '5px', maxWidth: '100%', overflow: 'hidden' } : { fontSize: '13px' }}
           formatter={(value, entry: any) => {
-            // Extract just the category name to avoid overlapping
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
-            
             return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                marginLeft: '4px',
-                marginRight: isMobile ? '8px' : '12px',
-                display: 'inline-block'
-              }}>
-                {displayName}: {amount}
+              <span style={{ color: 'var(--foreground)', marginLeft: '5px', fontSize: isMobile ? '10px' : '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? '60px' : 'auto', display: 'inline-block' }}>
+                {value}: {formatCurrency(entry.payload.value)}
               </span>
             );
           }}
