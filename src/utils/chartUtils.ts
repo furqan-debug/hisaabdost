@@ -1,6 +1,7 @@
 
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
+import { CurrencySymbol } from "@/hooks/use-currency-context";
 
 export const CATEGORY_COLORS = {
   'Food': '#0088FE',
@@ -19,12 +20,29 @@ export const CATEGORY_COLORS = {
   'Other': '#A4DE6C'
 } as const;
 
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number, currencySymbol: CurrencySymbol = "$") => {
+  // Define currency code based on symbol
+  const currencyCode = 
+    currencySymbol === "$" ? "USD" :
+    currencySymbol === "₹" ? "INR" :
+    currencySymbol === "€" ? "EUR" :
+    currencySymbol === "£" ? "GBP" :
+    currencySymbol === "¥" ? "JPY" : "USD";
+
+  // For ₹ (Indian Rupee), we'll want to place the symbol before the number with no space
+  if (currencySymbol === "₹") {
+    return `${currencySymbol}${new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)}`;
+  }
+
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currencyCode,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+    currencyDisplay: currencyCode === 'JPY' ? 'narrowSymbol' : 'symbol'
   }).format(amount);
 };
 

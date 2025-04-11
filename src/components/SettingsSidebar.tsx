@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,11 +10,19 @@ import {
   User, 
   Moon, 
   Sun, 
-  LogOut 
+  LogOut,
+  DollarSign,
+  CircleDollarSign,
+  IndianRupee,
+  Euro,
+  PoundSterling,
+  Yen
 } from "lucide-react";
 import { MonthSelector } from "./MonthSelector";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth";
+import { useCurrency, CurrencySymbol } from "@/hooks/use-currency-context";
+import { toast } from "sonner";
 
 interface SettingsSidebarProps {
   selectedMonth: Date;
@@ -28,6 +37,7 @@ export function SettingsSidebar({
 }: SettingsSidebarProps) {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { currencySymbol, setCurrencySymbol } = useCurrency();
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
     // Remove existing color classes
@@ -38,6 +48,16 @@ export function SettingsSidebar({
       document.documentElement.classList.add("pink");
     } else if (newColor === "blue") {
       document.documentElement.classList.add("blue");
+    }
+  };
+
+  const handleCurrencyChange = async (symbol: CurrencySymbol) => {
+    try {
+      await setCurrencySymbol(symbol);
+      toast.success(`Currency updated to ${symbol}`);
+    } catch (error) {
+      toast.error("Failed to update currency");
+      console.error("Error updating currency:", error);
     }
   };
 
@@ -72,6 +92,54 @@ export function SettingsSidebar({
             onChange={onMonthChange}
             className="w-full"
           />
+        </div>
+
+        <Separator className="my-2" />
+
+        <div className="px-4 py-3">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
+          <div className="flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${currencySymbol === '$' ? 'bg-accent' : ''}`}
+              onClick={() => handleCurrencyChange('$')}
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              US Dollar ($)
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${currencySymbol === '₹' ? 'bg-accent' : ''}`}
+              onClick={() => handleCurrencyChange('₹')}
+            >
+              <IndianRupee className="mr-2 h-4 w-4" />
+              Indian Rupee (₹)
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${currencySymbol === '€' ? 'bg-accent' : ''}`}
+              onClick={() => handleCurrencyChange('€')}
+            >
+              <Euro className="mr-2 h-4 w-4" />
+              Euro (€)
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${currencySymbol === '£' ? 'bg-accent' : ''}`}
+              onClick={() => handleCurrencyChange('£')}
+            >
+              <PoundSterling className="mr-2 h-4 w-4" />
+              British Pound (£)
+            </Button>
+            <Button 
+              variant="outline" 
+              className={`justify-start h-9 ${currencySymbol === '¥' ? 'bg-accent' : ''}`}
+              onClick={() => handleCurrencyChange('¥')}
+            >
+              <Yen className="mr-2 h-4 w-4" />
+              Japanese Yen (¥)
+            </Button>
+          </div>
         </div>
 
         <Separator className="my-2" />

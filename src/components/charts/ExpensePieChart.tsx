@@ -4,6 +4,7 @@ import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrency } from "@/hooks/use-currency-context";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
@@ -12,6 +13,7 @@ interface ExpensePieChartProps {
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const pieChartData = calculatePieChartData(expenses);
   const isMobile = useIsMobile();
+  const { currencySymbol } = useCurrency();
   
   // Sort data by value in descending order for better visualization
   pieChartData.sort((a, b) => b.value - a.value);
@@ -60,7 +62,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                   {data.name}
                 </p>
                 <p className="text-sm font-bold">
-                  {formatCurrency(Number(data.value))}
+                  {formatCurrency(Number(data.value), currencySymbol)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {(data.payload.percent * 100).toFixed(1)}% of total
@@ -87,7 +89,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           formatter={(value, entry: any) => {
             // Extract just the category name to avoid overlapping
             const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
+            const amount = formatCurrency(entry.payload.value, currencySymbol);
             
             return (
               <span style={{ 
