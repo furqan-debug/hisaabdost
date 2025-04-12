@@ -98,7 +98,6 @@ const Budget = () => {
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
         isLoading={isLoading}
-        currencyCode={currencyCode}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
@@ -107,7 +106,6 @@ const Budget = () => {
           onEditBudget={handleEditBudget}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          currencyCode={currencyCode}
         />
       </div>
 
@@ -126,7 +124,6 @@ const Budget = () => {
         }}
         monthlyIncome={monthlyIncome}
         totalBudget={totalBudget}
-        currencyCode={currencyCode}
       />
     </div>
   );

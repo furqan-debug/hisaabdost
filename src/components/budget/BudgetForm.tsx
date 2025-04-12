@@ -27,7 +27,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AlertCircle } from "lucide-react";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -57,6 +58,7 @@ export function BudgetForm({
 }: BudgetFormProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: budget || {
@@ -125,7 +127,7 @@ export function BudgetForm({
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Warning: Your total budget will exceed your monthly income by {formatCurrency(exceedAmount)}
+                Warning: Your total budget will exceed your monthly income by {formatCurrency(exceedAmount, currencyCode)}
               </AlertDescription>
             </Alert>
           )}
