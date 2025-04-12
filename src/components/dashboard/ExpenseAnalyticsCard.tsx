@@ -31,11 +31,11 @@ export const ExpenseAnalyticsCard = ({
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
-        return <ExpensePieChart expenses={expenses} currencyCode={currencyCode} />;
+        return <ExpensePieChart expenses={expenses} />;
       case 'bar':
-        return <ExpenseBarChart expenses={expenses} currencyCode={currencyCode} />;
+        return <ExpenseBarChart expenses={expenses} />;
       case 'line':
-        return <ExpenseLineChart expenses={expenses} currencyCode={currencyCode} />;
+        return <ExpenseLineChart expenses={expenses} />;
       default:
         return null;
     }

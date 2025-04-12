@@ -11,8 +11,16 @@ interface ExpensePieChartProps {
   expenses: Expense[];
 }
 
+// Define the type for pie chart data items
+interface PieChartDataItem {
+  name: string;
+  value: number;
+  color: string;
+  percent: number; // Added percent property
+}
+
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
-  const pieChartData = calculatePieChartData(expenses);
+  const pieChartData = calculatePieChartData(expenses) as PieChartDataItem[];
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   
