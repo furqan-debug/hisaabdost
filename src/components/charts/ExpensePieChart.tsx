@@ -5,16 +5,16 @@ import { Expense } from "@/components/AddExpenseSheet";
 import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
-import { CurrencyCode } from "@/utils/currencyUtils";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
-  currencyCode?: CurrencyCode;
 }
 
-export const ExpensePieChart = ({ expenses, currencyCode = 'USD' }: ExpensePieChartProps) => {
+export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const pieChartData = calculatePieChartData(expenses);
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   // Sort data by value in descending order for better visualization
   pieChartData.sort((a, b) => b.value - a.value);

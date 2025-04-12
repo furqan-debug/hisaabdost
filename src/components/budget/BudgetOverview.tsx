@@ -1,15 +1,21 @@
+
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
+
 interface BudgetOverviewProps {
   budgets: Budget[];
 }
+
 export function BudgetOverview({
   budgets
 }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
   const data = budgets.map(budget => ({
     name: budget.category,
@@ -52,7 +58,7 @@ export function BudgetOverview({
               const data = payload[0];
               return <div className="rounded-lg border bg-background p-2 shadow-sm">
                       <p className="text-sm font-semibold">
-                        {data.name}: {formatCurrency(Number(data.value))}
+                        {data.name}: {formatCurrency(Number(data.value), currencyCode)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {data.payload.percentage}% of total
@@ -76,7 +82,7 @@ export function BudgetOverview({
                 <span className="font-medium text-sm truncate max-w-[120px]">{item.name}</span>
               </div>
               <div className="text-right flex-shrink-0">
-                <span className="text-sm font-semibold">{formatCurrency(item.value)}</span>
+                <span className="text-sm font-semibold">{formatCurrency(item.value, currencyCode)}</span>
                 <span className="text-xs text-muted-foreground ml-2">({item.percentage}%)</span>
               </div>
             </div>)}

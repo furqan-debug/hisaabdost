@@ -4,16 +4,16 @@ import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
-import { CurrencyCode } from "@/utils/currencyUtils";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseLineChartProps {
   expenses: Expense[];
-  currencyCode?: CurrencyCode;
 }
 
-export const ExpenseLineChart = ({ expenses, currencyCode = 'USD' }: ExpenseLineChartProps) => {
+export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>

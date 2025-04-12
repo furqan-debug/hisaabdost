@@ -7,7 +7,8 @@ import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
 import { Expense } from "@/components/expenses/types";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseListProps {
   filteredExpenses: Expense[];
@@ -52,13 +53,15 @@ export function ExpenseList({
   selectedMonth,
   useCustomDateRange
 }: ExpenseListProps) {
+  const { currencyCode } = useCurrency();
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Expense List</CardTitle>
           <p className="text-sm font-medium">
-            Total: {formatCurrency(totalFilteredAmount)}
+            Total: {formatCurrency(totalFilteredAmount, currencyCode)}
           </p>
         </div>
       </CardHeader>

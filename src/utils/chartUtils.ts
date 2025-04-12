@@ -1,103 +1,78 @@
-import { format } from "date-fns";
+
+import { format, parseISO } from "date-fns";
 import { Expense } from "@/components/expenses/types";
+import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
+import { CurrencyCode } from "./currencyUtils";
 
-export const CATEGORY_COLORS = {
-  'Food': '#0088FE',
-  'Rent': '#00C49F',
-  'Utilities': '#FFBB28',
-  'Transportation': '#FF8042',
-  'Entertainment': '#8884D8',
-  'Shopping': '#82CA9D',
-  'Healthcare': '#FF6B6B',
-  'Education': '#6A7FDB',
-  'Travel': '#FF9D5C',
-  'Groceries': '#4BC0C0',
-  'Restaurants': '#9966FF',
-  'Clothing': '#FF99CC',
-  'Bills': '#FF6B6B',
-  'Other': '#A4DE6C'
-} as const;
-
-// Add or update the formatCurrency function to always use USD
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
+// Re-export formatCurrency so existing components don't break
+export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
+  return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Helper to get all months between two dates
-const getMonthsBetween = (startDate: Date, endDate: Date): string[] => {
-  const months: string[] = [];
-  const currentDate = new Date(startDate);
-  
-  while (currentDate <= endDate) {
-    months.push(format(currentDate, 'MMM yyyy'));
-    currentDate.setMonth(currentDate.getMonth() + 1);
-  }
-  
-  return months;
+// Define category colors
+export const CATEGORY_COLORS: Record<string, string> = {
+  "Food": "#4CAF50",
+  "Groceries": "#8BC34A", 
+  "Housing": "#673AB7",
+  "Utilities": "#FFC107",
+  "Transportation": "#2196F3",
+  "Healthcare": "#F44336",
+  "Entertainment": "#FF4081",
+  "Shopping": "#FF9800",
+  "Personal": "#3F51B5",
+  "Education": "#00BCD4",
+  "Travel": "#607D8B",
+  "Insurance": "#795548",
+  "Debt": "#9C27B0",
+  "Savings": "#009688",
+  "Other": "#9E9E9E",
 };
 
+// Process monthly data for charts
 export const processMonthlyData = (expenses: Expense[]) => {
-  if (expenses.length === 0) return [];
-
-  // Get date range
-  const dates = expenses.map(e => new Date(e.date));
-  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
-  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  
-  // Get all months in range
-  const allMonths = getMonthsBetween(startDate, endDate);
-
-  // Group expenses by category and month
-  const expensesByCategory = Object.keys(CATEGORY_COLORS).reduce((acc, category) => {
-    const categoryExpenses = expenses.filter(e => e.category === category);
+  // Group expenses by month
+  const monthlyData = expenses.reduce((acc, expense) => {
+    const month = format(new Date(expense.date), 'MMM yyyy');
+    if (!acc[month]) {
+      acc[month] = {};
+      Object.keys(CATEGORY_COLORS).forEach(category => {
+        acc[month][category] = 0;
+      });
+    }
     
-    // For each month, sum the expenses for this category
-    const monthlyData = allMonths.map(month => {
-      const monthExpenses = categoryExpenses.filter(
-        e => format(new Date(e.date), 'MMM yyyy') === month
-      );
-      
-      // If there are expenses this month, sum them. Otherwise, return null
-      const total = monthExpenses.length > 0
-        ? monthExpenses.reduce((sum, e) => sum + e.amount, 0)
-        : null;
-      
-      return {
-        month,
-        [category]: total
-      };
-    });
-    
-    acc[category] = monthlyData;
+    acc[month][expense.category] = (acc[month][expense.category] || 0) + Number(expense.amount);
     return acc;
-  }, {} as Record<string, Array<{ month: string; [key: string]: string | number | null }>>);
+  }, {} as Record<string, Record<string, number>>);
 
-  // Merge all categories into a single array of data points
-  return allMonths.map(month => {
-    const monthData = { month };
-    Object.keys(CATEGORY_COLORS).forEach(category => {
-      const categoryData = expensesByCategory[category].find(d => d.month === month);
-      monthData[category] = categoryData ? categoryData[category] : null;
-    });
-    return monthData;
-  });
+  // Convert to array format for charts
+  return Object.entries(monthlyData)
+    .sort(([monthA], [monthB]) => {
+      const dateA = new Date(monthA);
+      const dateB = new Date(monthB);
+      return dateA.getTime() - dateB.getTime();
+    })
+    .map(([month, categories]) => ({
+      month,
+      ...categories
+    }));
 };
 
+// Calculate data for pie charts
 export const calculatePieChartData = (expenses: Expense[]) => {
+  // Group by category
   const categoryTotals = expenses.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    if (!acc[expense.category]) {
+      acc[expense.category] = 0;
+    }
+    acc[expense.category] += Number(expense.amount);
     return acc;
   }, {} as Record<string, number>);
 
+  // Convert to array format for pie chart
   return Object.entries(categoryTotals).map(([name, value]) => ({
     name,
     value,
-    color: CATEGORY_COLORS[name as keyof typeof CATEGORY_COLORS] || '#A4DE6C',
-    percent: 0 // Will be calculated later when needed
+    color: CATEGORY_COLORS[name] || "#9E9E9E",
   }));
 };
+
