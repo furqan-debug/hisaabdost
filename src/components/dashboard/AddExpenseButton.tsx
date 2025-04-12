@@ -7,6 +7,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/hooks/use-currency";
+
 interface AddExpenseButtonProps {
   isNewUser: boolean;
   expenseToEdit?: Expense;
@@ -15,6 +17,7 @@ interface AddExpenseButtonProps {
   setShowAddExpense: (show: boolean) => void;
   onAddExpense: () => void;
 }
+
 export const AddExpenseButton = ({
   isNewUser,
   expenseToEdit,
@@ -24,11 +27,13 @@ export const AddExpenseButton = ({
   onAddExpense
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -41,6 +46,7 @@ export const AddExpenseButton = ({
       e.target.value = '';
     }
   };
+
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
     setCaptureMode(mode);
@@ -58,6 +64,7 @@ export const AddExpenseButton = ({
       }
     }, 300);
   };
+
   const handleSheetClose = () => {
     setExpenseToEdit(undefined);
     setShowAddExpense(false);
@@ -84,6 +91,7 @@ export const AddExpenseButton = ({
       }
     }
   };
+
   return <div className="mt-4">
       <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
         <motion.div initial={{
@@ -131,6 +139,15 @@ export const AddExpenseButton = ({
       
       <ReceiptFileInput onChange={handleFileChange} inputRef={cameraInputRef} id="camera-capture-button" useCamera={true} />
       
-      <AddExpenseSheet onAddExpense={onAddExpense} expenseToEdit={expenseToEdit} onClose={handleSheetClose} open={showAddExpense || expenseToEdit !== undefined} onOpenChange={setShowAddExpense} initialCaptureMode={captureMode} initialFile={selectedFile} />
+      <AddExpenseSheet 
+        onAddExpense={onAddExpense} 
+        expenseToEdit={expenseToEdit} 
+        onClose={handleSheetClose} 
+        open={showAddExpense || expenseToEdit !== undefined} 
+        onOpenChange={setShowAddExpense} 
+        initialCaptureMode={captureMode} 
+        initialFile={selectedFile}
+        currencyCode={currencyCode}
+      />
     </div>;
 };

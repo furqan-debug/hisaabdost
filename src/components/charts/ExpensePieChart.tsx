@@ -1,15 +1,18 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
+  currencyCode?: CurrencyCode;
 }
 
-export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
+export const ExpensePieChart = ({ expenses, currencyCode = 'USD' }: ExpensePieChartProps) => {
   const pieChartData = calculatePieChartData(expenses);
   const isMobile = useIsMobile();
   
@@ -60,7 +63,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                   {data.name}
                 </p>
                 <p className="text-sm font-bold">
-                  {formatCurrency(Number(data.value))}
+                  {formatCurrency(Number(data.value), currencyCode)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {(data.payload.percent * 100).toFixed(1)}% of total
@@ -87,7 +90,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           formatter={(value, entry: any) => {
             // Extract just the category name to avoid overlapping
             const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            const amount = formatCurrency(entry.payload.value);
+            const amount = formatCurrency(entry.payload.value, currencyCode);
             
             return (
               <span style={{ 

@@ -1,14 +1,17 @@
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
+import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface ExpenseBarChartProps {
   expenses: Expense[];
+  currencyCode?: CurrencyCode;
 }
 
-export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
+export const ExpenseBarChart = ({ expenses, currencyCode = 'USD' }: ExpenseBarChartProps) => {
   const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
 
@@ -28,7 +31,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
           tick={{ fontSize: isMobile ? 10 : 12 }}
         />
         <YAxis 
-          tickFormatter={(value) => `$${Number(value)/1000}k`}
+          tickFormatter={(value) => `${formatCurrency(Number(value)/1000, currencyCode).split('.')[0]}k`}
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: isMobile ? 10 : 12 }}
@@ -52,7 +55,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                       className="text-sm"
                       style={{ color: entry.color }}
                     >
-                      {entry.name}: {formatCurrency(Number(entry.value))}
+                      {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
                     </p>
                   ))}
                 </div>
