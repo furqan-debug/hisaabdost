@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -147,7 +148,6 @@ export const AddExpenseButton = ({
         onOpenChange={setShowAddExpense} 
         initialCaptureMode={captureMode} 
         initialFile={selectedFile}
-        currencyCode={currencyCode}
       />
     </div>;
 };
