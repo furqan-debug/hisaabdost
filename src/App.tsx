@@ -35,12 +35,12 @@ function App() {
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/app" element={<Layout />}>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/expenses" element={<Expenses />} />
-                    <Route path="/budget" element={<Budget />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/goals" element={<Goals />} />
+                    <Route index element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="expenses" element={<Expenses />} />
+                    <Route path="budget" element={<Budget />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="goals" element={<Goals />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>

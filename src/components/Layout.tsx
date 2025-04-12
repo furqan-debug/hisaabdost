@@ -5,14 +5,10 @@ import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout = ({ children }: LayoutProps) => {
+const Layout = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [pageTransition, setPageTransition] = useState(false);
@@ -37,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
             isMobile ? "max-w-full px-0.5" : "max-w-5xl",
             pageTransition ? "animate-fade-in" : ""
           )}>
-            {children}
+            <Outlet />
           </div>
         </main>
         {isMobile && <BottomNavigation />}
