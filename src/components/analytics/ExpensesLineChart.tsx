@@ -1,7 +1,9 @@
 
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { format, parseISO } from "date-fns";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface Expense {
   amount: number;
@@ -14,6 +16,7 @@ interface ExpensesLineChartProps {
 }
 
 export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
+  const { currencyCode } = useCurrency();
   const data = expenses.reduce((acc, expense) => {
     const month = format(parseISO(expense.date), 'MMM yyyy');
     if (!acc[month]) {
@@ -35,7 +38,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
       <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
         <XAxis dataKey="month" />
-        <YAxis tickFormatter={(value) => formatCurrency(value)} />
+        <YAxis tickFormatter={(value) => formatCurrency(value, currencyCode)} />
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
@@ -48,7 +51,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
                     className="text-sm"
                     style={{ color: entry.color }}
                   >
-                    {entry.name}: {formatCurrency(entry.value as number)}
+                    {entry.name}: {formatCurrency(entry.value as number, currencyCode)}
                   </p>
                 ))}
               </div>

@@ -10,6 +10,7 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
+import { useCurrency } from "@/hooks/use-currency";
 
 export interface Budget {
   id: string;
@@ -28,6 +29,7 @@ const Budget = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
@@ -96,6 +98,7 @@ const Budget = () => {
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
         isLoading={isLoading}
+        currencyCode={currencyCode}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
@@ -104,6 +107,7 @@ const Budget = () => {
           onEditBudget={handleEditBudget}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          currencyCode={currencyCode}
         />
       </div>
 
@@ -122,6 +126,7 @@ const Budget = () => {
         }}
         monthlyIncome={monthlyIncome}
         totalBudget={totalBudget}
+        currencyCode={currencyCode}
       />
     </div>
   );

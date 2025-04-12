@@ -1,8 +1,11 @@
+
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface Expense {
   amount: number;
@@ -15,6 +18,7 @@ interface ExpensesComparisonProps {
 }
 
 export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
+  const { currencyCode } = useCurrency();
   const now = new Date();
   const currentMonthStart = startOfMonth(now);
   const lastMonthStart = startOfMonth(subMonths(now, 1));
@@ -85,11 +89,11 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
             <div className="grid gap-2 grid-cols-2">
               <div>
                 <div className="text-sm text-muted-foreground">Current</div>
-                <div className="font-medium">{formatCurrency(currentAmount)}</div>
+                <div className="font-medium">{formatCurrency(currentAmount, currencyCode)}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Previous</div>
-                <div className="font-medium">{formatCurrency(lastAmount)}</div>
+                <div className="font-medium">{formatCurrency(lastAmount, currencyCode)}</div>
               </div>
             </div>
             <Progress 
