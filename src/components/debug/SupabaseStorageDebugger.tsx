@@ -147,7 +147,7 @@ export function SupabaseStorageDebugger() {
     try {
       const result = await deleteAllFiles();
       setDeletionStats(result);
-      toast.success(`Deleted ${result.deleted} files successfully`);
+      toast.success(`Permanently deleted ${result.deleted} files`);
       
       if (result.failed > 0) {
         toast.error(`Failed to delete ${result.failed} files`);
@@ -159,7 +159,7 @@ export function SupabaseStorageDebugger() {
         setUserFiles([]);
       }
     } catch (error) {
-      toast.error("Error deleting files");
+      toast.error("Error permanently deleting files");
       console.error("Error deleting files:", error);
     } finally {
       setLoading(false);
@@ -230,21 +230,21 @@ export function SupabaseStorageDebugger() {
                     size="sm"
                     disabled={loading}
                   >
-                    Delete All Files
+                    Permanently Delete All Files
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete All Files</AlertDialogTitle>
+                    <AlertDialogTitle>Permanently Delete All Files</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete all files in all folders of the receipts bucket.
-                      This action cannot be undone.
+                      This will <strong>permanently delete</strong> all files in all folders of the receipts bucket.
+                      This action cannot be undone. Are you absolutely sure?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteAllFiles}>
-                      Yes, Delete All Files
+                      Yes, Permanently Delete All Files
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -261,7 +261,7 @@ export function SupabaseStorageDebugger() {
               <div className={`p-2 text-sm rounded ${
                 deletionStats.failed > 0 ? 'bg-amber-100 dark:bg-amber-950' : 'bg-green-100 dark:bg-green-950'
               }`}>
-                {deletionStats.deleted} files deleted successfully.
+                {deletionStats.deleted} files permanently deleted.
                 {deletionStats.failed > 0 && ` ${deletionStats.failed} files failed to delete.`}
               </div>
             )}

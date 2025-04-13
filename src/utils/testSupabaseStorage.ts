@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { FileObject } from "@supabase/storage-js";
 
@@ -286,11 +285,12 @@ async function listFolderRecursively(folderPath: string): Promise<{name: string,
 }
 
 /**
- * Deletes all files in the bucket across all folders
+ * Permanently deletes all files in the bucket across all folders
+ * No confirmation needed - this is a permanent operation
  * @returns Object with counts of deleted and failed files
  */
 export async function deleteAllFiles() {
-  console.log(`Starting deletion of all files in "${bucketName}" bucket...`);
+  console.log(`Starting permanent deletion of all files in "${bucketName}" bucket...`);
   
   try {
     // First check if bucket exists
@@ -307,7 +307,7 @@ export async function deleteAllFiles() {
       return { deleted: 0, failed: 0 };
     }
     
-    console.log(`Found ${allFiles.length} files to delete`);
+    console.log(`Found ${allFiles.length} files to permanently delete`);
     
     // Batch files in groups to avoid overwhelming the API
     const batchSize = 100;
@@ -356,7 +356,7 @@ export async function deleteAllFiles() {
       }
     }
     
-    console.log(`Deletion complete. ${deletedCount} files deleted, ${failedCount} files failed`);
+    console.log(`Deletion complete. ${deletedCount} files permanently deleted, ${failedCount} files failed`);
     return { deleted: deletedCount, failed: failedCount };
   } catch (error) {
     console.error("Error in deleteAllFiles:", error);
