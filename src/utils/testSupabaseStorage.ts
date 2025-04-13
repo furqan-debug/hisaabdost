@@ -363,3 +363,19 @@ export async function deleteAllFiles() {
     return { deleted: 0, failed: 0, error: error.message };
   }
 }
+
+/**
+ * Immediately executes deletion of all files in Supabase storage
+ * This function runs as soon as this module is imported
+ */
+(async function executeImmediateStorageCleanup() {
+  console.log("EXECUTING IMMEDIATE STORAGE CLEANUP: Deleting all files from Supabase storage...");
+  try {
+    const result = await deleteAllFiles();
+    console.log(`Storage cleanup complete: Permanently deleted ${result.deleted} files. Failed: ${result.failed}`);
+    return result;
+  } catch (error) {
+    console.error("ERROR during storage cleanup:", error);
+    return { deleted: 0, failed: 0, error: error.message };
+  }
+})();
