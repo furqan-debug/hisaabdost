@@ -43,6 +43,8 @@ function App() {
                     <Route path="goals" element={<Goals />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
+                  {/* Catch all route for the "Home" page issue */}
+                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                 </Routes>
                 <Toaster />
               </MonthProvider>

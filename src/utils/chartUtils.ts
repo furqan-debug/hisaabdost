@@ -9,23 +9,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Define category colors
+// Define category colors with improved contrast
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#4CAF50",
-  "Groceries": "#8BC34A", 
-  "Housing": "#673AB7",
-  "Utilities": "#FFC107",
-  "Transportation": "#2196F3",
-  "Healthcare": "#F44336",
-  "Entertainment": "#FF4081",
-  "Shopping": "#FF9800",
-  "Personal": "#3F51B5",
-  "Education": "#00BCD4",
-  "Travel": "#607D8B",
-  "Insurance": "#795548",
-  "Debt": "#9C27B0",
-  "Savings": "#009688",
-  "Other": "#9E9E9E",
+  "Food": "#2E7D32", // Darker green
+  "Groceries": "#558B2F", 
+  "Housing": "#512DA8", // Darker purple
+  "Utilities": "#EF6C00", // Darker orange
+  "Transportation": "#1565C0", // Darker blue
+  "Healthcare": "#D32F2F", // Darker red
+  "Entertainment": "#C2185B", // Darker pink
+  "Shopping": "#E65100", // Darker orange
+  "Personal": "#303F9F", // Darker indigo
+  "Education": "#0097A7", // Darker teal
+  "Travel": "#455A64", // Darker blue-grey
+  "Insurance": "#5D4037", // Darker brown
+  "Debt": "#7B1FA2", // Darker purple
+  "Savings": "#00796B", // Darker teal
+  "Other": "#616161", // Darker grey
 };
 
 // Process monthly data for charts

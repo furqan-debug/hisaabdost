@@ -2,7 +2,6 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
-import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
@@ -66,7 +65,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             if (!active || !payload || !payload.length) return null;
             const data = payload[0];
             return (
-              <div className="rounded-lg border bg-background p-3 shadow-md">
+              <div className="rounded-lg border bg-background p-3 shadow-md custom-tooltip">
                 <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
                   {data.name}
                 </p>
@@ -105,7 +104,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                 color: 'var(--foreground)', 
                 display: 'inline-block',
                 padding: '2px 4px',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                fontWeight: '500'
               }}>
                 {displayName}: {amount}
               </span>
@@ -116,3 +116,23 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
     </ResponsiveContainer>
   );
 }
+
+// Helper function to calculate pie chart data
+const calculatePieChartData = (expenses: Expense[]) => {
+  // Group by category
+  const categoryTotals = expenses.reduce((acc, expense) => {
+    if (!acc[expense.category]) {
+      acc[expense.category] = 0;
+    }
+    acc[expense.category] += Number(expense.amount);
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Convert to array format for pie chart
+  return Object.entries(categoryTotals).map(([name, value]) => ({
+    name,
+    value,
+    color: CATEGORY_COLORS[name] || "#616161", // Default to a dark gray if category not found
+    percent: 0, // Will be calculated later
+  }));
+};
