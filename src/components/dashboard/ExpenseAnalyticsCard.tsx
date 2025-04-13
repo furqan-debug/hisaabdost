@@ -82,7 +82,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-6">
+      <CardContent className="pt-4 pb-8 min-h-[400px]"> {/* Increased height and padding */}
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -93,13 +93,13 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="w-full overflow-hidden" 
+            className="w-full h-full" 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType} // Re-run animation when chart type changes
           >
-            <ChartContainer config={chartConfig} className="mx-0 my-0">
+            <ChartContainer config={chartConfig} className="mx-0 my-0 h-full">
               {renderChart()}
             </ChartContainer>
           </motion.div>
@@ -108,3 +108,4 @@ export const ExpenseAnalyticsCard = ({
     </Card>
   );
 };
+
