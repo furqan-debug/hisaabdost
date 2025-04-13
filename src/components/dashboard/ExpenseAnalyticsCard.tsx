@@ -10,7 +10,6 @@ import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -26,7 +25,6 @@ export const ExpenseAnalyticsCard = ({
   setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   
   const renderChart = () => {
     switch (chartType) {
