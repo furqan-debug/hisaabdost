@@ -8,11 +8,6 @@
     width: 100% !important;
   }
   
-  /* Make bars thinner and more elegant on mobile */
-  .recharts-bar-rectangle {
-    @apply opacity-95 shadow-sm;
-  }
-  
   /* Better tooltip on mobile */
   .recharts-tooltip-wrapper {
     @apply z-50;
@@ -32,13 +27,13 @@
     @apply whitespace-nowrap overflow-hidden;
     display: inline-flex !important;
     align-items: center;
-    margin-right: 10px !important;
-    margin-bottom: 6px !important;
+    margin-right: 8px !important;
+    margin-bottom: 4px !important;
   }
   
   .recharts-legend-item-text {
     @apply text-xs font-medium;
-    max-width: 120px;
+    max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -50,41 +45,6 @@
     fill: var(--foreground) !important; 
   }
   
-  /* Smooth lines for line charts */
-  .recharts-curve.recharts-line-curve {
-    @apply stroke-2;
-  }
-  
-  /* Better dots for line charts */
-  .recharts-dot {
-    @apply stroke-2;
-  }
-  
-  /* Improve grid appearance */
-  .recharts-cartesian-grid-horizontal line,
-  .recharts-cartesian-grid-vertical line {
-    @apply stroke-muted/40;
-  }
-  
-  /* Enhance pie chart appearance */
-  .recharts-pie {
-    @apply drop-shadow-md;
-  }
-  
-  /* Make active elements more visible */
-  .recharts-active-dot {
-    @apply stroke-background stroke-2;
-  }
-  
-  /* Fix legend spacing and layout */
-  .recharts-legend-wrapper {
-    padding-top: 20px !important;
-    padding-bottom: 10px !important;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
   /* Fix pie chart label display */
   .recharts-pie-label-line {
     stroke: var(--foreground) !important;
@@ -92,7 +52,7 @@
   }
   
   .recharts-pie-label-text {
-    font-size: 11px !important;
+    font-size: 10px !important;
     fill: var(--foreground) !important;
     font-weight: 600 !important;
   }
@@ -102,15 +62,6 @@
     margin: 0 auto !important;
     max-width: 95% !important;
   }
-  
-  /* Tooltip styling */
-  .custom-tooltip {
-    background-color: var(--background) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 6px !important;
-    padding: 8px 12px !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
-  }
 }
 
 /* Legend improvements for all screen sizes */
@@ -118,25 +69,20 @@
   display: flex !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
 }
 
 /* Make pie labels more visible */
 .recharts-layer.recharts-pie-labels text {
-  font-weight: 700 !important;
-  font-size: 12px !important;
-  text-shadow: 0px 0px 3px var(--background) !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  fill: var(--foreground) !important;
 }
 
 /* Tooltip improvements for all screen sizes */
 .recharts-tooltip-wrapper {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2)) !important;
-}
-
-.recharts-tooltip-item-name,
-.recharts-tooltip-item-value {
-  color: var(--foreground) !important;
-  font-weight: 600 !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) !important;
 }
 
 /* Improve chart text legibility */
@@ -144,14 +90,37 @@
   fill: var(--foreground) !important;
 }
 
-/* Add glow effect to chart elements for better visibility */
-.recharts-sector,
-.recharts-bar,
-.recharts-line {
-  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.2));
-}
-
 /* Fix legend item color indicators */
 .recharts-legend-icon {
-  filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.15));
+  margin-right: 4px !important;
+}
+
+/* Enhance bar opacity for better visibility */
+.recharts-bar-rectangle {
+  opacity: 0.85;
+}
+
+/* Clean up chart grid */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--muted) !important;
+  stroke-opacity: 0.2 !important;
+  stroke-width: 0.5 !important;
+}
+
+/* Better styled pie chart */
+.recharts-sector {
+  stroke-width: 1px !important;
+  stroke: var(--background) !important;
+}
+
+/* Give some space between legend items */
+.recharts-legend-wrapper {
+  padding-top: 8px !important;
+}
+
+/* Make active elements more visible */
+.recharts-active-dot {
+  stroke: var(--background) !important;
+  stroke-width: 1px !important;
 }
