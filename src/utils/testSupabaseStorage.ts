@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { FileObject } from "@supabase/storage-js";
 
 // The bucket name your project is using for receipts
 const bucketName = "receipts";
@@ -336,8 +337,13 @@ export async function deleteAllFiles() {
       
       // Check individual results if returned
       if (data && Array.isArray(data)) {
-        const successCount = data.filter(result => !result.error).length;
-        const errorCount = data.filter(result => result.error).length;
+        // With the updated Supabase SDK, we need to check the returned data structure
+        // The data is now an array of objects, each representing a file operation result
+        
+        // Count successful deletions (files without errors)
+        const successCount = data.filter(result => !('error' in result)).length;
+        // Count failed deletions (files with errors)
+        const errorCount = data.length - successCount;
         
         deletedCount += successCount;
         failedCount += errorCount;
