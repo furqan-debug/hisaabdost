@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
@@ -10,12 +11,14 @@ import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useCurrency } from "@/hooks/use-currency";
+
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
   isLoading: boolean;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
 }
+
 export const ExpenseAnalyticsCard = ({
   expenses,
   isLoading,
@@ -23,9 +26,8 @@ export const ExpenseAnalyticsCard = ({
   setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-  const {
-    currencyCode
-  } = useCurrency();
+  const { currencyCode } = useCurrency();
+  
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -38,6 +40,7 @@ export const ExpenseAnalyticsCard = ({
         return null;
     }
   };
+  
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
     acc[key] = {
       color
@@ -46,7 +49,8 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, {
     color: string;
   }>);
-  return <Card className="mt-4 overflow-hidden px- mx-0 px-px my-0 py-[24px]">
+  
+  return <Card className="mt-4 overflow-hidden px- my-[14px] mx-0 px-px py-[17px]">
       <CardHeader className="flex flex-col space-y-2 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2 p my-[-3px]">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
@@ -65,7 +69,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="sm:px-4 pb-6 mx-0 px-0 my-[3px] py-[8px]">
+      <CardContent className="sm:px-4 pb-6 my-[7px] mx-0 px-0 py-px">
         {isLoading ? <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
           </div> : expenses.length === 0 ? <div className="text-center text-muted-foreground py-8">
