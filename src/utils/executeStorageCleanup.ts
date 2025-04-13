@@ -1,5 +1,5 @@
 
-import { deleteAllFiles } from "./testSupabaseStorage";
+import { deleteAllFiles } from "./supabase/storage/deleteOperations";
 
 /**
  * Execute immediate cleanup of all files in Supabase storage

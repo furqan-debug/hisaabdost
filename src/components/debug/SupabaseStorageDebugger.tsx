@@ -12,8 +12,9 @@ import {
   checkReceiptsBucketExists, 
   createReceiptsBucket,
   deleteAllFiles,
-  listAllFiles
-} from "@/utils/testSupabaseStorage";
+  listAllFiles,
+  bucketName
+} from "@/utils/supabase/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
