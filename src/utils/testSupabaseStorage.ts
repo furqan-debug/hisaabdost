@@ -182,3 +182,178 @@ export async function createReceiptsBucket() {
     return false;
   }
 }
+
+/**
+ * Lists all files in the entire bucket (across all folders)
+ * @returns Array of file objects with their full paths
+ */
+export async function listAllFiles() {
+  console.log(`Listing all files in "${bucketName}" bucket...`);
+  
+  try {
+    // First check if bucket exists
+    const bucketExists = await checkReceiptsBucketExists();
+    if (!bucketExists) {
+      console.log(`Bucket "${bucketName}" does not exist, nothing to list`);
+      return [];
+    }
+    
+    // Start with root level
+    const { data: rootItems, error: rootError } = await supabase.storage
+      .from(bucketName)
+      .list('');
+      
+    if (rootError) {
+      console.error("Error listing root files:", rootError);
+      return [];
+    }
+    
+    // Process all folders and files
+    const allFiles: {name: string, fullPath: string, size: number}[] = [];
+    
+    // Process files at root level
+    const rootFiles = rootItems.filter(item => !item.id.endsWith('/'));
+    rootFiles.forEach(file => {
+      allFiles.push({
+        name: file.name,
+        fullPath: file.name,
+        size: file.metadata?.size || 0
+      });
+    });
+    
+    // Process folders (recursively)
+    const rootFolders = rootItems
+      .filter(item => item.id.endsWith('/'))
+      .map(folder => folder.name);
+      
+    for (const folder of rootFolders) {
+      const folderFiles = await listFolderRecursively(folder);
+      allFiles.push(...folderFiles);
+    }
+    
+    console.log(`Found ${allFiles.length} total files across all folders`);
+    return allFiles;
+  } catch (error) {
+    console.error("Error listing all files:", error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to recursively list files in a folder and its subfolders
+ */
+async function listFolderRecursively(folderPath: string): Promise<{name: string, fullPath: string, size: number}[]> {
+  const allFiles: {name: string, fullPath: string, size: number}[] = [];
+  console.log(`Listing files in folder: ${folderPath}`);
+  
+  try {
+    const { data: items, error } = await supabase.storage
+      .from(bucketName)
+      .list(folderPath);
+      
+    if (error) {
+      console.error(`Error listing files in folder ${folderPath}:`, error);
+      return allFiles;
+    }
+    
+    // Process files in this folder
+    const files = items.filter(item => !item.id.endsWith('/'));
+    files.forEach(file => {
+      allFiles.push({
+        name: file.name,
+        fullPath: `${folderPath}/${file.name}`,
+        size: file.metadata?.size || 0
+      });
+    });
+    
+    // Process subfolders recursively
+    const subfolders = items
+      .filter(item => item.id.endsWith('/'))
+      .map(folder => folder.name);
+      
+    for (const subfolder of subfolders) {
+      const subfolderPath = `${folderPath}/${subfolder}`;
+      const subfolderFiles = await listFolderRecursively(subfolderPath);
+      allFiles.push(...subfolderFiles);
+    }
+    
+    return allFiles;
+  } catch (error) {
+    console.error(`Error in recursive listing for ${folderPath}:`, error);
+    return allFiles;
+  }
+}
+
+/**
+ * Deletes all files in the bucket across all folders
+ * @returns Object with counts of deleted and failed files
+ */
+export async function deleteAllFiles() {
+  console.log(`Starting deletion of all files in "${bucketName}" bucket...`);
+  
+  try {
+    // First check if bucket exists
+    const bucketExists = await checkReceiptsBucketExists();
+    if (!bucketExists) {
+      console.log(`Bucket "${bucketName}" does not exist, nothing to delete`);
+      return { deleted: 0, failed: 0 };
+    }
+    
+    // Get list of all files
+    const allFiles = await listAllFiles();
+    if (allFiles.length === 0) {
+      console.log("No files found to delete");
+      return { deleted: 0, failed: 0 };
+    }
+    
+    console.log(`Found ${allFiles.length} files to delete`);
+    
+    // Batch files in groups to avoid overwhelming the API
+    const batchSize = 100;
+    const batches = [];
+    for (let i = 0; i < allFiles.length; i += batchSize) {
+      batches.push(allFiles.slice(i, i + batchSize));
+    }
+    
+    let deletedCount = 0;
+    let failedCount = 0;
+    
+    // Process each batch
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`Processing deletion batch ${i+1}/${batches.length} (${batch.length} files)`);
+      
+      const filePaths = batch.map(file => file.fullPath);
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .remove(filePaths);
+        
+      if (error) {
+        console.error(`Error in batch ${i+1} deletion:`, error);
+        failedCount += batch.length;
+        continue;
+      }
+      
+      // Check individual results if returned
+      if (data && Array.isArray(data)) {
+        const successCount = data.filter(result => !result.error).length;
+        const errorCount = data.filter(result => result.error).length;
+        
+        deletedCount += successCount;
+        failedCount += errorCount;
+        
+        console.log(`Batch ${i+1} results: ${successCount} deleted, ${errorCount} failed`);
+      } else {
+        // If no detailed results, assume all succeeded
+        deletedCount += batch.length;
+        console.log(`Batch ${i+1}: Assuming all ${batch.length} files were deleted`);
+      }
+    }
+    
+    console.log(`Deletion complete. ${deletedCount} files deleted, ${failedCount} files failed`);
+    return { deleted: deletedCount, failed: failedCount };
+  } catch (error) {
+    console.error("Error in deleteAllFiles:", error);
+    return { deleted: 0, failed: 0, error: error.message };
+  }
+}

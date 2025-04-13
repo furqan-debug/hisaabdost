@@ -5,8 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
-import { listUserReceipts, checkFileExists, getFileUrl, checkReceiptsBucketExists, createReceiptsBucket } from "@/utils/testSupabaseStorage";
+import { 
+  listUserReceipts, 
+  checkFileExists, 
+  getFileUrl, 
+  checkReceiptsBucketExists, 
+  createReceiptsBucket,
+  deleteAllFiles,
+  listAllFiles
+} from "@/utils/testSupabaseStorage";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export function SupabaseStorageDebugger() {
   const { user } = useAuth();
@@ -18,6 +28,8 @@ export function SupabaseStorageDebugger() {
   const [testFile, setTestFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<string | null>(null);
   const [bucketStatus, setBucketStatus] = useState<boolean | null>(null);
+  const [allFilesCount, setAllFilesCount] = useState<number | null>(null);
+  const [deletionStats, setDeletionStats] = useState<{deleted: number, failed: number} | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -121,6 +133,39 @@ export function SupabaseStorageDebugger() {
     setLoading(false);
   };
 
+  const handleCountAllFiles = async () => {
+    setLoading(true);
+    const files = await listAllFiles();
+    setAllFilesCount(files.length);
+    setLoading(false);
+  };
+
+  const handleDeleteAllFiles = async () => {
+    setLoading(true);
+    setDeletionStats(null);
+    
+    try {
+      const result = await deleteAllFiles();
+      setDeletionStats(result);
+      toast.success(`Deleted ${result.deleted} files successfully`);
+      
+      if (result.failed > 0) {
+        toast.error(`Failed to delete ${result.failed} files`);
+      }
+      
+      // Refresh file lists
+      setAllFilesCount(0);
+      if (user) {
+        setUserFiles([]);
+      }
+    } catch (error) {
+      toast.error("Error deleting files");
+      console.error("Error deleting files:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto my-4">
       <CardHeader>
@@ -161,6 +206,65 @@ export function SupabaseStorageDebugger() {
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-medium mb-4">Storage Administration</h3>
+          
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCountAllFiles} 
+                disabled={loading}
+              >
+                Count All Files
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={loading}
+                  >
+                    Delete All Files
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete All Files</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete all files in all folders of the receipts bucket.
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAllFiles}>
+                      Yes, Delete All Files
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            
+            {allFilesCount !== null && (
+              <div className="p-2 text-sm bg-muted rounded">
+                {allFilesCount} total files found in storage
+              </div>
+            )}
+            
+            {deletionStats && (
+              <div className={`p-2 text-sm rounded ${
+                deletionStats.failed > 0 ? 'bg-amber-100 dark:bg-amber-950' : 'bg-green-100 dark:bg-green-950'
+              }`}>
+                {deletionStats.deleted} files deleted successfully.
+                {deletionStats.failed > 0 && ` ${deletionStats.failed} files failed to delete.`}
+              </div>
+            )}
           </div>
         </div>
 
