@@ -16,7 +16,7 @@ interface PieChartDataItem {
   name: string;
   value: number;
   color: string;
-  percent: number;
+  percent: number; // Added percent property
 }
 
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
@@ -26,6 +26,12 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   
   // Sort data by value in descending order for better visualization
   pieChartData.sort((a, b) => b.value - a.value);
+  
+  // Calculate percentages
+  const total = pieChartData.reduce((sum, item) => sum + item.value, 0);
+  pieChartData.forEach(item => {
+    item.percent = total > 0 ? (item.value / total) : 0;
+  });
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
