@@ -51,12 +51,13 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             return `${(percent * 100).toFixed(0)}%`;
           }}
         >
-          {pieChartData.map((entry) => (
+          {pieChartData.map((entry, index) => (
             <Cell 
-              key={entry.name} 
+              key={`${entry.name}-${index}`} 
               fill={entry.color} 
               stroke="var(--background)" 
-              strokeWidth={2} 
+              strokeWidth={2}
+              style={{ filter: 'drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15))' }}
             />
           ))}
         </Pie>
@@ -87,7 +88,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
           iconSize={8}
           wrapperStyle={{ 
             fontSize: isMobile ? '11px' : '13px',
-            paddingTop: '10px',
+            paddingTop: '16px',
             width: '100%',
             display: 'flex',
             flexWrap: 'wrap',
@@ -103,7 +104,10 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               <span style={{ 
                 color: 'var(--foreground)', 
                 display: 'inline-block',
-                padding: '2px 4px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                backgroundColor: `${entry.payload.color}15`, // Very light background of the category color
+                border: `1px solid ${entry.payload.color}30`,
                 whiteSpace: 'nowrap',
                 fontWeight: '500'
               }}>
@@ -132,7 +136,7 @@ const calculatePieChartData = (expenses: Expense[]) => {
   return Object.entries(categoryTotals).map(([name, value]) => ({
     name,
     value,
-    color: CATEGORY_COLORS[name] || "#616161", // Default to a dark gray if category not found
+    color: CATEGORY_COLORS[name] || "#64748B", // Default to slate if category not found
     percent: 0, // Will be calculated later
   }));
 };

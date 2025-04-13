@@ -1,4 +1,3 @@
-
 import { format, parseISO } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
@@ -9,23 +8,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Define category colors with improved contrast
+// Define category colors with vibrant palette and improved contrast
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#2E7D32", // Darker green
-  "Groceries": "#558B2F", 
-  "Housing": "#512DA8", // Darker purple
-  "Utilities": "#EF6C00", // Darker orange
-  "Transportation": "#1565C0", // Darker blue
-  "Healthcare": "#D32F2F", // Darker red
-  "Entertainment": "#C2185B", // Darker pink
-  "Shopping": "#E65100", // Darker orange
-  "Personal": "#303F9F", // Darker indigo
-  "Education": "#0097A7", // Darker teal
-  "Travel": "#455A64", // Darker blue-grey
-  "Insurance": "#5D4037", // Darker brown
-  "Debt": "#7B1FA2", // Darker purple
-  "Savings": "#00796B", // Darker teal
-  "Other": "#616161", // Darker grey
+  "Food": "#0EA5E9", // Bright blue
+  "Groceries": "#3B82F6", // Royal blue
+  "Housing": "#6366F1", // Indigo
+  "Utilities": "#8B5CF6", // Violet
+  "Transportation": "#A855F7", // Purple
+  "Healthcare": "#D946EF", // Magenta
+  "Entertainment": "#EC4899", // Pink
+  "Shopping": "#F43F5E", // Rose
+  "Personal": "#EF4444", // Red
+  "Education": "#F97316", // Orange
+  "Travel": "#F59E0B", // Amber
+  "Insurance": "#10B981", // Emerald
+  "Debt": "#14B8A6", // Teal
+  "Savings": "#06B6D4", // Cyan
+  "Other": "#64748B", // Slate
 };
 
 // Process monthly data for charts
