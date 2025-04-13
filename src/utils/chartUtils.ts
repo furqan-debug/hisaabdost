@@ -76,6 +76,6 @@ export const calculatePieChartData = (expenses: Expense[]) => {
     name,
     value,
     color: CATEGORY_COLORS[name] || "#9E9E9E",
-    percent: total > 0 ? value / total : 0, // Add percent property
+    percent: total > 0 ? value / total : 0, // Ensure percent property is included
   }));
 };
