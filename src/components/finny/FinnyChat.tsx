@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface FinnyConfig {
 
 const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistant. I can help you track expenses, set budgets, manage goals, and more. How can I help you today?";
 const FINNY_AUTH_PROMPT = "I'll need you to log in first so I can access your personal financial information.";
+const FINNY_CONNECTING = "Connecting to your financial data...";
 
 const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: FinnyConfig }> = ({ 
   isOpen, 
@@ -32,21 +34,73 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnectingToData, setIsConnectingToData] = useState(false);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const initialGreeting = {
-      id: '1',
-      content: user ? FINNY_GREETING : FINNY_AUTH_PROMPT,
-      isUser: false,
-      timestamp: new Date(),
-    };
-
-    if (config?.initialMessages) {
+    if (user) {
+      setIsConnectingToData(true);
+      
+      // Fetch user's financial data to provide context for Finny
+      const fetchUserData = async () => {
+        try {
+          const { data: expenses, error: expensesError } = await supabase
+            .from('expenses')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('date', { ascending: false })
+            .limit(5);
+            
+          if (expensesError) throw expensesError;
+          
+          const { data: budgets, error: budgetsError } = await supabase
+            .from('budgets')
+            .select('*')
+            .eq('user_id', user.id);
+            
+          if (budgetsError) throw budgetsError;
+          
+          // Prepare a personalized greeting based on user's data
+          let personalizedGreeting = FINNY_GREETING;
+          
+          if (expenses && expenses.length > 0) {
+            const lastExpense = expenses[0];
+            const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+            
+            personalizedGreeting = `Hi there! 👋 I'm Finny, your personal finance assistant. I see you've spent $${totalExpenses.toFixed(2)} recently, with your latest expense being $${Number(lastExpense.amount).toFixed(2)} for ${lastExpense.category}. How can I help you manage your finances today?`;
+          }
+          
+          setMessages([{
+            id: '1',
+            content: personalizedGreeting,
+            isUser: false,
+            timestamp: new Date(),
+          }]);
+          
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setMessages([{
+            id: '1',
+            content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
+            isUser: false,
+            timestamp: new Date(),
+          }]);
+        } finally {
+          setIsConnectingToData(false);
+        }
+      };
+      
+      fetchUserData();
+    } else if (config?.initialMessages) {
       setMessages(config.initialMessages);
     } else {
-      setMessages([initialGreeting]);
+      setMessages([{
+        id: '1',
+        content: FINNY_AUTH_PROMPT,
+        isUser: false,
+        timestamp: new Date(),
+      }]);
     }
   }, [user, config]);
 
@@ -148,6 +202,13 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
                 </Alert>
               )}
               
+              {isConnectingToData && user && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
+                  <span className="text-sm text-muted-foreground">{FINNY_CONNECTING}</span>
+                </div>
+              )}
+              
               {messages.map((message) => (
                 <FinnyMessage
                   key={message.id}
@@ -175,13 +236,13 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="flex-1"
-                  disabled={isLoading || !user}
+                  disabled={isLoading || !user || isConnectingToData}
                 />
                 <Button
                   type="submit"
                   size="icon"
                   className="finny-button-animate"
-                  disabled={!newMessage.trim() || isLoading || !user}
+                  disabled={!newMessage.trim() || isLoading || !user || isConnectingToData}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
