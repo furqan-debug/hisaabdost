@@ -31,3 +31,13 @@ html, body {
   overflow-x: hidden;
   overflow-y: visible;
 }
+
+/* Add scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

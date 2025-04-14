@@ -1,13 +1,16 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
+import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth';
 
 interface FinnyContextType {
   isOpen: boolean;
   openChat: () => void;
   closeChat: () => void;
   toggleChat: () => void;
+  triggerChat: (message: string) => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -15,16 +18,39 @@ const FinnyContext = createContext<FinnyContextType>({
   openChat: () => {},
   closeChat: () => {},
   toggleChat: () => {},
+  triggerChat: () => {},
 });
 
 export const useFinny = () => useContext(FinnyContext);
 
 export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [initialMessage, setInitialMessage] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
   const toggleChat = () => setIsOpen((prev) => !prev);
+  
+  // Method to open chat with a specific message
+  const triggerChat = (message: string) => {
+    if (!user) {
+      toast.error("Please log in to use Finny");
+      return;
+    }
+    
+    setInitialMessage(message);
+    setIsOpen(true);
+  };
+  
+  // If there's an initial message, set it then clear it
+  useEffect(() => {
+    if (initialMessage && isOpen) {
+      // We'll handle this in a future step
+      // when we implement command processing
+      setInitialMessage(null);
+    }
+  }, [initialMessage, isOpen]);
 
   return (
     <FinnyContext.Provider
@@ -33,6 +59,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         openChat,
         closeChat,
         toggleChat,
+        triggerChat,
       }}
     >
       {children}
