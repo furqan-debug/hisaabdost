@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Loader2 } from 'lucide-react';
@@ -123,42 +122,42 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed bottom-20 right-4 md:bottom-24 md:right-8 z-40 w-[90vw] sm:w-96 shadow-lg"
+          className="fixed bottom-20 right-4 md:bottom-24 md:right-8 z-40 w-[90vw] sm:w-[400px] shadow-lg"
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
-          <Card className="border-primary/10 overflow-hidden">
-            <CardHeader className="px-4 py-3 bg-primary/5">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg font-medium flex items-center gap-2">
-                  <span className="text-primary">Finny</span>
-                  <span className="text-xs bg-primary/10 rounded-full px-2 py-0.5 text-primary">Assistant</span>
-                </CardTitle>
+          <Card className="finny-chat-card">
+            <div className="finny-chat-header">
+              <div className="finny-chat-title">
+                <span className="text-primary font-semibold">Finny</span>
+                <span className="finny-chat-badge">Assistant</span>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[50vh] overflow-y-auto p-4 flex flex-col">
-                {messages.map((message) => (
-                  <FinnyMessage
-                    key={message.id}
-                    content={message.content}
-                    isUser={message.isUser}
-                    timestamp={message.timestamp}
-                  />
-                ))}
-                <div ref={messagesEndRef} />
-                {isLoading && (
-                  <div className="flex justify-center my-2">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  </div>
-                )}
-              </div>
-              <form
-                onSubmit={handleSendMessage}
-                className="p-3 border-t flex gap-2 bg-background"
-              >
+            </div>
+            
+            <div className="h-[50vh] overflow-y-auto p-4 space-y-4">
+              {messages.map((message) => (
+                <FinnyMessage
+                  key={message.id}
+                  content={message.content}
+                  isUser={message.isUser}
+                  timestamp={message.timestamp}
+                />
+              ))}
+              <div ref={messagesEndRef} />
+              {isLoading && (
+                <div className="flex justify-center my-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+
+            <form
+              onSubmit={handleSendMessage}
+              className="finny-chat-input"
+            >
+              <div className="finny-chat-input-container">
                 <Input
                   type="text"
                   placeholder="Message Finny..."
@@ -170,12 +169,13 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
                 <Button
                   type="submit"
                   size="icon"
+                  className="finny-button-animate"
                   disabled={!newMessage.trim() || isLoading}
                 >
-                  <Send size={18} />
+                  <Send className="h-4 w-4" />
                 </Button>
-              </form>
-            </CardContent>
+              </div>
+            </form>
           </Card>
         </motion.div>
       )}
