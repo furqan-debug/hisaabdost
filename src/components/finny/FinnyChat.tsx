@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,6 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize messages based on authentication status
   useEffect(() => {
     const initialGreeting = {
       id: '1',
@@ -52,7 +50,6 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
     }
   }, [user, config]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -64,7 +61,6 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
     
     if (!newMessage.trim() || isLoading) return;
     
-    // Check if user is logged in
     if (!user) {
       toast.error("Please log in to chat with Finny");
       return;
@@ -82,10 +78,8 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
     setIsLoading(true);
 
     try {
-      // Get the last few messages for context (up to 5)
       const recentMessages = [...messages.slice(-5), userMessage];
 
-      // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('finny-chat', {
         body: {
           message: newMessage,
@@ -99,7 +93,6 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
         throw new Error(`Failed to get response: ${error.message}`);
       }
 
-      // Add Finny's response to the chat
       setMessages((prev) => [
         ...prev,
         {
@@ -113,7 +106,6 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
       console.error('Error in chat:', error);
       toast.error(`Sorry, I couldn't process that request: ${error.message}`);
       
-      // Add an error message
       setMessages((prev) => [
         ...prev,
         {
@@ -148,7 +140,7 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
             
             <div className="h-[50vh] overflow-y-auto p-4 space-y-4">
               {!user && (
-                <Alert variant="info" className="mb-4 bg-muted/50 border-primary/20">
+                <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20">
                   <Info className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-sm">
                     You need to log in to use Finny's personalized features.
