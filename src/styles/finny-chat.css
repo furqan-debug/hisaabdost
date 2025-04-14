@@ -1,0 +1,91 @@
+
+/* Finny Chat Styles */
+.finny-chat-card {
+  @apply border-primary/10 overflow-hidden;
+  backdrop-filter: blur(10px);
+}
+
+.finny-chat-header {
+  @apply px-4 py-3 bg-primary/5;
+}
+
+.finny-chat-title {
+  @apply text-lg font-medium flex items-center gap-2;
+}
+
+.finny-chat-badge {
+  @apply text-xs bg-primary/10 rounded-full px-2 py-0.5 text-primary;
+}
+
+/* Message bubbles */
+.finny-message-user {
+  @apply bg-primary text-primary-foreground rounded-tr-none;
+}
+
+.finny-message-bot {
+  @apply bg-muted rounded-tl-none;
+}
+
+.finny-message-time {
+  @apply text-[10px] opacity-70 mt-1 text-right;
+}
+
+/* Button animations */
+.finny-button-animate {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0);
+  }
+}
+
+/* Improve mobile experience */
+@media (max-width: 640px) {
+  .finny-chat-container {
+    width: 90vw !important;
+    max-height: 80vh !important;
+  }
+  
+  .finny-messages-container {
+    max-height: 60vh !important;
+  }
+}
+
+/* Chat window entrance and exit animations */
+.finny-chat-enter {
+  animation: slideUp 0.3s forwards;
+}
+
+.finny-chat-exit {
+  animation: slideDown 0.3s forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}
