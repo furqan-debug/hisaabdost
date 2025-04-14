@@ -10,6 +10,7 @@ interface FinnyMessageProps {
 }
 
 const FinnyMessage = ({ content, isUser, timestamp }: FinnyMessageProps) => {
+  // Remove any action markers from the message content for display
   const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
 
   return (

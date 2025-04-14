@@ -1,13 +1,15 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FinnyMessage from './FinnyMessage';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface Message {
   id: string;
@@ -21,26 +23,34 @@ interface FinnyConfig {
 }
 
 const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistant. I can help you track expenses, set budgets, manage goals, and more. How can I help you today?";
+const FINNY_AUTH_PROMPT = "I'll need you to log in first so I can access your personal financial information.";
 
 const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: FinnyConfig }> = ({ 
   isOpen, 
   onClose,
   config
 }) => {
-  const [messages, setMessages] = useState<Message[]>(
-    config?.initialMessages || [
-      {
-        id: '1',
-        content: FINNY_GREETING,
-        isUser: false,
-        timestamp: new Date(),
-      },
-    ]
-  );
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize messages based on authentication status
+  useEffect(() => {
+    const initialGreeting = {
+      id: '1',
+      content: user ? FINNY_GREETING : FINNY_AUTH_PROMPT,
+      isUser: false,
+      timestamp: new Date(),
+    };
+
+    if (config?.initialMessages) {
+      setMessages(config.initialMessages);
+    } else {
+      setMessages([initialGreeting]);
+    }
+  }, [user, config]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -137,6 +147,15 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
             </div>
             
             <div className="h-[50vh] overflow-y-auto p-4 space-y-4">
+              {!user && (
+                <Alert variant="info" className="mb-4 bg-muted/50 border-primary/20">
+                  <Info className="h-4 w-4 text-primary" />
+                  <AlertDescription className="text-sm">
+                    You need to log in to use Finny's personalized features.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               {messages.map((message) => (
                 <FinnyMessage
                   key={message.id}
@@ -160,17 +179,17 @@ const FinnyChat: React.FC<{ isOpen: boolean; onClose: () => void; config?: Finny
               <div className="finny-chat-input-container">
                 <Input
                   type="text"
-                  placeholder="Message Finny..."
+                  placeholder={user ? "Message Finny..." : "Log in to chat with Finny"}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="flex-1"
-                  disabled={isLoading}
+                  disabled={isLoading || !user}
                 />
                 <Button
                   type="submit"
                   size="icon"
                   className="finny-button-animate"
-                  disabled={!newMessage.trim() || isLoading}
+                  disabled={!newMessage.trim() || isLoading || !user}
                 >
                   <Send className="h-4 w-4" />
                 </Button>

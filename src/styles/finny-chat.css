@@ -23,11 +23,11 @@
 
 /* Message bubbles */
 .finny-message-user {
-  @apply bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm;
+  @apply bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm max-w-[85%];
 }
 
 .finny-message-bot {
-  @apply bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3;
+  @apply bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%];
 }
 
 .finny-message-time {
