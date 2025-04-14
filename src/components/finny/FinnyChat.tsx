@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar } from '@/components/ui/avatar'; // Added missing import for Avatar
 import { Send, Loader2, Info, MessageCircleHeart, HelpCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FinnyMessage from './FinnyMessage';
