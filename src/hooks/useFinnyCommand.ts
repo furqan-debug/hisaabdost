@@ -7,40 +7,62 @@ import { toast } from 'sonner';
  * Hook to send commands to Finny programmatically
  */
 export function useFinnyCommand() {
-  const { openChat } = useFinny();
+  const { addExpense, setBudget, askFinny, openChat } = useFinny();
   const { user } = useAuth();
 
   /**
    * Send a command to Finny to add an expense
    */
-  const addExpense = (amount: number, category: string, description?: string) => {
+  const recordExpense = (amount: number, category: string, description?: string, date?: string) => {
     if (!user) {
       toast.error('Please log in to use Finny');
       return;
     }
-
-    // Format the message for Finny
-    const message = `Add expense of ${amount} for ${category}${description ? ` for ${description}` : ''}`;
     
-    // Open Finny chat with the message
-    openChat();
-    
-    // This simulates a user typing the message
-    // In a real implementation, you might want to send this directly to the Finny API
-    const input = document.querySelector('input[placeholder="Message Finny..."]') as HTMLInputElement;
-    const sendButton = input?.parentElement?.querySelector('button[type="submit"]') as HTMLButtonElement;
-    
-    if (input && sendButton) {
-      input.value = message;
-      // Trigger input event to update React state
-      const event = new Event('input', { bubbles: true });
-      input.dispatchEvent(event);
-      // Click the send button
-      setTimeout(() => sendButton.click(), 100);
+    addExpense(amount, category, description, date);
+  };
+  
+  /**
+   * Send a command to Finny to set a budget
+   */
+  const createBudget = (amount: number, category: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
     }
+    
+    setBudget(amount, category);
+  };
+  
+  /**
+   * Send a custom query to Finny
+   */
+  const askQuestion = (question: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    askFinny(question);
+  };
+  
+  /**
+   * Request a spending summary
+   */
+  const requestSpendingSummary = () => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    askFinny("Show me a summary of my spending for this month");
   };
 
   return {
-    addExpense
+    recordExpense,
+    createBudget,
+    askQuestion,
+    requestSpendingSummary,
+    openChat
   };
 }

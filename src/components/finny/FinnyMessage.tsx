@@ -5,14 +5,18 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { PieChart, BarChart3, Check, AlertCircle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface FinnyMessageProps {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  hasAction?: boolean;
+  visualData?: any;
 }
 
-const FinnyMessage = ({ content, isUser, timestamp }: FinnyMessageProps) => {
+const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: FinnyMessageProps) => {
   // Remove any action markers from the message content for display
   const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
   
@@ -21,6 +25,10 @@ const FinnyMessage = ({ content, isUser, timestamp }: FinnyMessageProps) => {
   
   // Format the timestamp
   const timeAgo = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+
+  // Check for success/error indicators
+  const isSuccess = formattedContent.includes('✅');
+  const isError = formattedContent.includes('❌');
 
   return (
     <motion.div
@@ -55,11 +63,47 @@ const FinnyMessage = ({ content, isUser, timestamp }: FinnyMessageProps) => {
           ? 'bg-primary text-primary-foreground rounded-tr-sm finny-message-user' 
           : 'bg-[#f8f5ff] dark:bg-[#2a2438] rounded-tl-sm finny-message-bot'
         }
-        ${hasLinks ? 'space-y-2' : ''}
+        ${hasLinks || hasAction || visualData ? 'space-y-2' : ''}
       `}>
         <div className="text-sm whitespace-pre-wrap break-words">
           {formattedContent}
         </div>
+        
+        {/* Visual Data - Renders charts or other visualizations */}
+        {visualData && (
+          <Card className="p-3 mt-2 bg-background/70 dark:bg-background/30 border border-muted">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
+              {visualData.type === 'spending-chart' ? <PieChart size={14} /> : <BarChart3 size={14} />}
+              <span>Finance Visualization</span>
+            </div>
+            <div className="w-full h-24 flex items-center justify-center bg-muted/30 rounded-md">
+              {/* Placeholder for actual chart, will be implemented in future */}
+              <span className="text-xs text-muted-foreground">
+                (Visualization Preview)
+              </span>
+            </div>
+          </Card>
+        )}
+
+        {/* Action result indicators */}
+        {hasAction && (
+          <div className="flex gap-1.5 items-center mt-1">
+            <Badge variant="outline" className={`
+              text-[10px] py-0 px-1.5 
+              ${isSuccess 
+                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300' 
+                : isError 
+                  ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                  : 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'}
+            `}>
+              <span className="flex items-center gap-1">
+                {isSuccess && <Check size={10} />}
+                {isError && <AlertCircle size={10} />}
+                {isSuccess ? 'Action completed' : isError ? 'Action failed' : 'Action'}
+              </span>
+            </Badge>
+          </div>
+        )}
         
         <div className="flex justify-between items-center mt-1">
           <div className="flex gap-1.5">
@@ -71,6 +115,16 @@ const FinnyMessage = ({ content, isUser, timestamp }: FinnyMessageProps) => {
             {!isUser && content.toLowerCase().includes('expense') && (
               <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                 expense
+              </Badge>
+            )}
+            {!isUser && content.toLowerCase().includes('goal') && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                goal
+              </Badge>
+            )}
+            {!isUser && (content.toLowerCase().includes('save') || content.toLowerCase().includes('saving')) && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
+                savings
               </Badge>
             )}
           </div>

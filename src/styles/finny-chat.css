@@ -101,7 +101,8 @@
 .quick-reply-button {
   @apply inline-flex items-center justify-center rounded-full text-xs py-1.5 px-3
     bg-[#f8f5ff] dark:bg-[#2a2438] text-[#9b87f5] transition-all duration-200
-    hover:bg-[#9b87f5] hover:text-white hover:shadow-md;
+    hover:bg-[#9b87f5] hover:text-white hover:shadow-md
+    disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed;
 }
 
 /* Chat window animations */
@@ -125,6 +126,35 @@
   }
 }
 
+/* Rich Message Content */
+.finny-data-visualization {
+  @apply mt-2 p-3 bg-muted/20 rounded-lg border border-muted/50;
+}
+
+.finny-success-message {
+  @apply border-l-4 border-green-500 pl-2;
+}
+
+.finny-error-message {
+  @apply border-l-4 border-red-500 pl-2;
+}
+
+.finny-action-badge {
+  @apply inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium;
+}
+
+.finny-action-badge-success {
+  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+}
+
+.finny-action-badge-error {
+  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+}
+
+.finny-action-badge-pending {
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
+}
+
 /* Improved mobile experience */
 @media (max-width: 640px) {
   .finny-chat-card {
@@ -137,5 +167,13 @@
   
   .finny-chat-input {
     @apply px-4;
+  }
+  
+  .quick-reply-container {
+    @apply grid grid-cols-2 gap-1.5;
+  }
+  
+  .quick-reply-button {
+    @apply text-[10px] px-2 py-1;
   }
 }

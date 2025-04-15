@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
@@ -65,6 +66,56 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY || ""
     );
 
+    // Get user's financial data to provide context
+    let userContext = "";
+    try {
+      // Fetch recent expenses for context
+      const { data: expenses } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false })
+        .limit(10);
+        
+      // Fetch budget information
+      const { data: budgets } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', userId);
+        
+      // Fetch goals
+      const { data: goals } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId);
+        
+      // Calculate total spending this month
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      
+      const { data: monthlyExpenses } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('user_id', userId)
+        .gte('date', firstDayOfMonth)
+        .lte('date', lastDayOfMonth);
+      
+      const monthlyTotal = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+      
+      // Format context for the AI
+      userContext = `
+User's financial context:
+- Total spending this month: $${monthlyTotal.toFixed(2)}
+- Recent expenses: ${expenses ? JSON.stringify(expenses.slice(0, 5)) : "No recent expenses"}
+- Active budgets: ${budgets ? JSON.stringify(budgets) : "No budgets set"}
+- Financial goals: ${goals ? JSON.stringify(goals) : "No goals set"}
+`;
+    } catch (error) {
+      console.error("Error fetching user context:", error);
+      userContext = "Unable to retrieve user's financial context.";
+    }
+
     // Format chat history for OpenAI
     const formattedHistory = chatHistory?.map((msg: any) => ({
       role: msg.isUser ? 'user' : 'assistant',
@@ -81,7 +132,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: FINNY_SYSTEM_MESSAGE },
+          { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + userContext },
           ...formattedHistory,
           { role: 'user', content: message }
         ],
