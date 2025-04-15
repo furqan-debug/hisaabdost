@@ -19,7 +19,8 @@ export function useFinnyCommand() {
       return;
     }
     
-    addExpense(amount, category, description, date);
+    const message = `Add an expense of ${amount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ' today'}`;
+    askFinny(message);
   };
   
   /**
@@ -31,19 +32,8 @@ export function useFinnyCommand() {
       return;
     }
     
-    setBudget(amount, category);
-  };
-  
-  /**
-   * Send a custom query to Finny
-   */
-  const askQuestion = (question: string) => {
-    if (!user) {
-      toast.error('Please log in to use Finny');
-      return;
-    }
-    
-    askFinny(question);
+    const message = `Set a budget of ${amount} for ${category}`;
+    askFinny(message);
   };
   
   /**
@@ -55,14 +45,42 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny("Show me a summary of my spending for this month");
+    askFinny("Show me a summary of my spending for this month. Include my savings rate and compare it to last month.");
+  };
+  
+  /**
+   * Create or update a financial goal
+   */
+  const setFinancialGoal = (title: string, amount: number, deadline?: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    const message = `Set a financial goal named "${title}" with a target amount of ${amount}${deadline ? ` and deadline of ${deadline}` : ''}`;
+    askFinny(message);
+  };
+  
+  /**
+   * Delete an expense by category and optionally date
+   */
+  const deleteExpense = (category: string, date?: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    const message = `Delete my ${category} expense${date ? ` from ${date}` : ''}`;
+    askFinny(message);
   };
 
   return {
     recordExpense,
     createBudget,
-    askQuestion,
+    askFinny,
     requestSpendingSummary,
+    setFinancialGoal,
+    deleteExpense,
     openChat
   };
 }

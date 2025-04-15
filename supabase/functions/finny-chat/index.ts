@@ -20,6 +20,7 @@ Your role is to help users manage their expenses, budgets, and financial goals t
 
 You should:
 - Be friendly, professional, and encouraging
+- Always use the user's name when greeting them
 - Keep responses short, useful, and motivational
 - Offer helpful follow-ups after performing tasks
 - Confirm actions before saving
@@ -32,7 +33,6 @@ You can perform these actions:
 4. Track and manage goals
 5. Give spending summaries
 6. Offer smart suggestions
-7. Answer personal finance queries
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
@@ -65,6 +65,19 @@ serve(async (req) => {
       SUPABASE_URL || "",
       SUPABASE_SERVICE_ROLE_KEY || ""
     );
+
+    // Get user's profile information for personalized responses
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+    }
+
+    const userName = userProfile?.full_name || 'there';
 
     // Get user's financial data to provide context
     let userContext = "";
@@ -157,34 +170,50 @@ serve(async (req) => {
       const monthlyTotal = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
       const prevMonthTotal = prevMonthExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
       
+      // Get monthly income from budgets if available
+      const monthlyIncome = budgets?.[0]?.monthly_income || 0;
+      
+      // Calculate savings rate if income is available
+      const savingsRate = monthlyIncome > 0 
+        ? ((monthlyIncome - monthlyTotal) / monthlyIncome) * 100 
+        : null;
+      
       // Format context for the AI
       userContext = `
-User's financial context:
+Hi ${userName}! Here's your financial context:
+
+Monthly Overview:
+- Income: $${monthlyIncome.toFixed(2)}
 - Total spending this month: $${monthlyTotal.toFixed(2)}
 - Total spending last month: $${prevMonthTotal.toFixed(2)}
+${savingsRate !== null ? `- Current savings rate: ${savingsRate.toFixed(1)}%` : ''}
 - Monthly change: ${monthlyTotal > prevMonthTotal ? 'Increased by ' : 'Decreased by '}$${Math.abs(monthlyTotal - prevMonthTotal).toFixed(2)} (${((Math.abs(monthlyTotal - prevMonthTotal) / (prevMonthTotal || 1)) * 100).toFixed(1)}%)
 
-- Spending by category this month:
+Spending Categories (This Month):
 ${Object.entries(categorySpending)
   .sort((a, b) => b[1] - a[1])
   .map(([category, amount]) => `  * ${category}: $${Number(amount).toFixed(2)}`)
   .join('\n')}
 
-- Spending by category last month:
+Previous Month Categories:
 ${Object.entries(prevCategorySpending)
   .sort((a, b) => b[1] - a[1])
   .map(([category, amount]) => `  * ${category}: $${Number(amount).toFixed(2)}`)
   .join('\n')}
 
-- All expense categories used: ${uniqueCategories.join(', ')}
+Recent Activity:
+- Latest Expenses: ${expenses ? expenses.slice(0, 5).map(exp => `${exp.category} ($${exp.amount})`).join(', ') : "No recent expenses"}
+- Active Budgets: ${budgets ? budgets.map(b => `${b.category} ($${b.amount})`).join(', ') : "No budgets set"}
+- Financial Goals: ${goals ? goals.map(g => `${g.title} ($${g.target_amount})`).join(', ') : "No goals set"}
 
-- Recent expenses: ${expenses ? JSON.stringify(expenses.slice(0, 7)) : "No recent expenses"}
-- Active budgets: ${budgets ? JSON.stringify(budgets) : "No budgets set"}
-- Financial goals: ${goals ? JSON.stringify(goals) : "No goals set"}
+All expense categories used: ${uniqueCategories.join(', ')}
 
-When the user asks about expenses or spending, include category breakdowns in your response.
-Use the category information to make your responses more detailed and helpful.
-`;
+When responding to the user:
+1. Use their name (${userName}) occasionally to make interactions personal
+2. Include relevant financial data in your responses
+3. Offer specific suggestions based on their spending patterns
+4. Highlight both positive trends and areas for improvement`;
+
     } catch (error) {
       console.error("Error fetching user context:", error);
       userContext = "Unable to retrieve user's financial context completely.";
@@ -204,7 +233,7 @@ Use the category information to make your responses more detailed and helpful.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + userContext },
           ...formattedHistory,
@@ -609,3 +638,4 @@ async function updateGoal(action: any, userId: string, supabase: any) {
 
   return `I've updated your goal "${data[0].title}"`;
 }
+
