@@ -106,7 +106,7 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
         )}
         
         <div className="flex justify-between items-center mt-1">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-wrap">
             {!isUser && content.toLowerCase().includes('budget') && (
               <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
                 budget
@@ -125,6 +125,16 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
             {!isUser && (content.toLowerCase().includes('save') || content.toLowerCase().includes('saving')) && (
               <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">
                 savings
+              </Badge>
+            )}
+            {!isUser && content.toLowerCase().includes('this month') && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-300">
+                this month
+              </Badge>
+            )}
+            {!isUser && content.toLowerCase().includes('last month') && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300">
+                last month
               </Badge>
             )}
           </div>

@@ -69,51 +69,125 @@ serve(async (req) => {
     // Get user's financial data to provide context
     let userContext = "";
     try {
-      // Fetch recent expenses for context
-      const { data: expenses } = await supabase
+      // Get current month range
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      
+      // First day of current month
+      const firstDayOfMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
+      // Last day of current month
+      const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
+      
+      // First day of previous month
+      const firstDayOfPrevMonth = new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0];
+      // Last day of previous month
+      const lastDayOfPrevMonth = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0];
+      
+      // Fetch ALL expense categories for better context
+      const { data: allCategories, error: categoriesError } = await supabase
+        .from('expenses')
+        .select('category')
+        .eq('user_id', userId)
+        .order('category', { ascending: true });
+      
+      if (categoriesError) throw categoriesError;
+      
+      // Get unique categories
+      const uniqueCategories = [...new Set(allCategories?.map(item => item.category))];
+        
+      // Fetch recent expenses for context (more than before)
+      const { data: expenses, error: expensesError } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', userId)
         .order('date', { ascending: false })
-        .limit(10);
+        .limit(15);
+        
+      if (expensesError) throw expensesError;
         
       // Fetch budget information
-      const { data: budgets } = await supabase
+      const { data: budgets, error: budgetsError } = await supabase
         .from('budgets')
         .select('*')
         .eq('user_id', userId);
         
+      if (budgetsError) throw budgetsError;
+        
       // Fetch goals
-      const { data: goals } = await supabase
+      const { data: goals, error: goalsError } = await supabase
         .from('goals')
         .select('*')
         .eq('user_id', userId);
         
-      // Calculate total spending this month
-      const now = new Date();
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      if (goalsError) throw goalsError;
       
-      const { data: monthlyExpenses } = await supabase
+      // Calculate total spending this month
+      const { data: monthlyExpenses, error: monthlyError } = await supabase
         .from('expenses')
-        .select('amount')
+        .select('amount, category')
         .eq('user_id', userId)
         .gte('date', firstDayOfMonth)
         .lte('date', lastDayOfMonth);
       
+      if (monthlyError) throw monthlyError;
+      
+      // Calculate last month's spending
+      const { data: prevMonthExpenses, error: prevMonthError } = await supabase
+        .from('expenses')
+        .select('amount, category')
+        .eq('user_id', userId)
+        .gte('date', firstDayOfPrevMonth)
+        .lte('date', lastDayOfPrevMonth);
+      
+      if (prevMonthError) throw prevMonthError;
+      
+      // Calculate spending by category for this month
+      const categorySpending = {};
+      monthlyExpenses?.forEach(exp => {
+        categorySpending[exp.category] = (categorySpending[exp.category] || 0) + Number(exp.amount);
+      });
+      
+      // Calculate spending by category for previous month
+      const prevCategorySpending = {};
+      prevMonthExpenses?.forEach(exp => {
+        prevCategorySpending[exp.category] = (prevCategorySpending[exp.category] || 0) + Number(exp.amount);
+      });
+      
       const monthlyTotal = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+      const prevMonthTotal = prevMonthExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
       
       // Format context for the AI
       userContext = `
 User's financial context:
 - Total spending this month: $${monthlyTotal.toFixed(2)}
-- Recent expenses: ${expenses ? JSON.stringify(expenses.slice(0, 5)) : "No recent expenses"}
+- Total spending last month: $${prevMonthTotal.toFixed(2)}
+- Monthly change: ${monthlyTotal > prevMonthTotal ? 'Increased by ' : 'Decreased by '}$${Math.abs(monthlyTotal - prevMonthTotal).toFixed(2)} (${((Math.abs(monthlyTotal - prevMonthTotal) / (prevMonthTotal || 1)) * 100).toFixed(1)}%)
+
+- Spending by category this month:
+${Object.entries(categorySpending)
+  .sort((a, b) => b[1] - a[1])
+  .map(([category, amount]) => `  * ${category}: $${Number(amount).toFixed(2)}`)
+  .join('\n')}
+
+- Spending by category last month:
+${Object.entries(prevCategorySpending)
+  .sort((a, b) => b[1] - a[1])
+  .map(([category, amount]) => `  * ${category}: $${Number(amount).toFixed(2)}`)
+  .join('\n')}
+
+- All expense categories used: ${uniqueCategories.join(', ')}
+
+- Recent expenses: ${expenses ? JSON.stringify(expenses.slice(0, 7)) : "No recent expenses"}
 - Active budgets: ${budgets ? JSON.stringify(budgets) : "No budgets set"}
 - Financial goals: ${goals ? JSON.stringify(goals) : "No goals set"}
+
+When the user asks about expenses or spending, include category breakdowns in your response.
+Use the category information to make your responses more detailed and helpful.
 `;
     } catch (error) {
       console.error("Error fetching user context:", error);
-      userContext = "Unable to retrieve user's financial context.";
+      userContext = "Unable to retrieve user's financial context completely.";
     }
 
     // Format chat history for OpenAI
