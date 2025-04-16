@@ -1,84 +1,146 @@
 
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
+  /* Fix chart overflow issues */
   .recharts-wrapper {
     @apply max-w-full rounded-lg;
     overflow: visible !important;
-  }
-  
-  .recharts-tooltip-wrapper {
-    @apply z-50;
-  }
-  
-  .budget-chart-container {
-    @apply p-2 mx-0;
     width: 100% !important;
   }
   
+  /* Better tooltip on mobile */
+  .recharts-tooltip-wrapper {
+    @apply z-50;
+    pointer-events: auto !important;
+  }
+  
+  /* Improve chart margins for better display */
+  .budget-chart-container {
+    margin: 0 -5px !important;
+    width: calc(100% + 10px) !important;
+    max-width: calc(100% + 10px) !important;
+    padding: 0.5rem;
+  }
+  
+  /* Ensure legend is readable */
   .recharts-legend-item {
-    @apply text-xs whitespace-nowrap overflow-hidden;
+    @apply whitespace-nowrap overflow-hidden;
+    display: inline-flex !important;
+    align-items: center;
     margin-right: 8px !important;
     margin-bottom: 4px !important;
   }
   
   .recharts-legend-item-text {
-    @apply text-xs font-medium max-w-[80px] truncate;
+    @apply text-xs font-medium;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
+  /* Better axis labels */
   .recharts-cartesian-axis-tick-value {
-    @apply text-xs font-medium;
-    fill: var(--foreground) !important;
+    @apply font-medium text-[0.675rem];
+    fill: var(--foreground) !important; 
+  }
+  
+  /* Remove pie chart label display for cleaner look */
+  .recharts-pie-label-line {
+    display: none !important;
+  }
+  
+  .recharts-pie-label-text {
+    display: none !important;
+  }
+  
+  /* Improve chart container margins */
+  .recharts-responsive-container {
+    margin: 0 auto !important;
+    max-width: 95% !important;
   }
 }
 
-/* Chart improvements for all screen sizes */
+/* Legend improvements for all screen sizes */
 .recharts-default-legend {
-  @apply flex flex-wrap justify-center gap-2 mt-4 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
 }
 
+/* Make pie labels more visible */
 .recharts-layer.recharts-pie-labels text {
-  @apply font-semibold text-xs !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
   fill: var(--foreground) !important;
 }
 
-.recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-2 shadow-sm text-left;
+/* Tooltip improvements for all screen sizes */
+.recharts-tooltip-wrapper {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) !important;
 }
 
-.recharts-sector {
-  @apply transition-all duration-200;
+/* Improve chart text legibility */
+.recharts-text {
+  fill: var(--foreground) !important;
 }
 
-.recharts-sector:hover {
-  @apply opacity-90;
+/* Fix legend item color indicators */
+.recharts-legend-icon {
+  margin-right: 4px !important;
 }
 
-.chart-center-total {
-  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10;
+/* Enhance bar opacity for better visibility */
+.recharts-bar-rectangle {
+  opacity: 0.85;
 }
 
-.chart-center-total-amount {
-  @apply text-2xl font-bold;
-}
-
-.chart-center-total-label {
-  @apply text-sm text-muted-foreground;
-}
-
+/* Clean up chart grid */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  @apply stroke-muted/20 stroke-[0.5];
+  stroke: var(--muted) !important;
+  stroke-opacity: 0.2 !important;
+  stroke-width: 0.5 !important;
 }
 
-.expense-chart-legend {
-  @apply flex flex-wrap justify-center gap-2 mt-4;
+/* Better styled pie chart */
+.recharts-sector {
+  stroke-width: 0px !important; /* Remove stroke for cleaner appearance */
 }
 
-.expense-chart-legend-item {
-  @apply flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-muted/10;
+/* Give some space between legend items */
+.recharts-legend-wrapper {
+  padding-top: 8px !important;
 }
 
-.expense-chart-legend-dot {
-  @apply w-2 h-2 rounded-full;
+/* Make active elements more visible */
+.recharts-active-dot {
+  stroke: var(--background) !important;
+  stroke-width: 1px !important;
 }
 
+/* Modernize the pie chart appearance */
+.modern-donut-chart .recharts-sector {
+  transition: opacity 0.3s, filter 0.3s !important;
+}
+
+.modern-donut-chart .recharts-sector:hover {
+  opacity: 0.85 !important;
+  filter: brightness(1.1) !important;
+}
+
+/* Center percentage style */
+.chart-center-percentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--foreground);
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+}
