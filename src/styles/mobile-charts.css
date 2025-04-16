@@ -3,22 +3,20 @@
 @media (max-width: 640px) {
   .recharts-wrapper {
     @apply max-w-full rounded-lg;
-    min-height: 280px !important;
-    height: 280px !important;
+    overflow: visible !important;
   }
   
   .recharts-tooltip-wrapper {
     @apply z-50;
   }
   
-  .chart-container {
+  .budget-chart-container {
     @apply p-2 mx-0;
-    max-width: 100vw !important;
-    overflow: hidden !important;
+    width: 100% !important;
   }
   
   .recharts-legend-item {
-    @apply text-xs whitespace-nowrap;
+    @apply text-xs whitespace-nowrap overflow-hidden;
     margin-right: 8px !important;
     margin-bottom: 4px !important;
   }
@@ -28,27 +26,8 @@
   }
   
   .recharts-cartesian-axis-tick-value {
-    @apply text-[10px] font-medium;
+    @apply text-xs font-medium;
     fill: var(--foreground) !important;
-  }
-
-  /* Adjust chart dimensions for mobile */
-  .mobile-chart {
-    height: 280px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Optimize legend display */
-  .recharts-default-legend {
-    @apply flex flex-wrap justify-center gap-1 mt-2 !important;
-    font-size: 10px !important;
-  }
-
-  /* Improve tick label visibility */
-  .recharts-xAxis .recharts-cartesian-axis-tick-value {
-    @apply -rotate-45 origin-top-left translate-y-3;
   }
 }
 
@@ -58,12 +37,12 @@
 }
 
 .recharts-layer.recharts-pie-labels text {
-  @apply font-semibold text-sm !important;
+  @apply font-semibold text-xs !important;
   fill: var(--foreground) !important;
 }
 
 .recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-3 shadow-md text-left;
+  @apply rounded-lg border bg-background/95 p-2 shadow-sm text-left;
 }
 
 .recharts-sector {
@@ -79,33 +58,27 @@
 }
 
 .chart-center-total-amount {
-  @apply text-xl font-bold;
+  @apply text-2xl font-bold;
 }
 
 .chart-center-total-label {
-  @apply text-xs text-muted-foreground;
+  @apply text-sm text-muted-foreground;
 }
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  @apply stroke-muted/30 stroke-1;
+  @apply stroke-muted/20 stroke-[0.5];
 }
 
-/* Improve chart readability */
-.recharts-cartesian-axis-tick text {
-  @apply fill-foreground font-medium;
+.expense-chart-legend {
+  @apply flex flex-wrap justify-center gap-2 mt-4;
 }
 
-/* Better tooltip contrast */
-.chart-tooltip {
-  @apply bg-background border border-border shadow-lg rounded-lg p-3;
-  min-width: 150px;
+.expense-chart-legend-item {
+  @apply flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-muted/10;
 }
 
-.chart-tooltip-label {
-  @apply font-medium text-sm mb-1;
+.expense-chart-legend-dot {
+  @apply w-2 h-2 rounded-full;
 }
 
-.chart-tooltip-value {
-  @apply text-sm text-muted-foreground;
-}

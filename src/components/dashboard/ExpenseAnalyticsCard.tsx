@@ -10,6 +10,7 @@ import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -25,12 +26,8 @@ export const ExpenseAnalyticsCard = ({
   setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-
-  const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = { color };
-    return acc;
-  }, {} as Record<string, { color: string; }>);
-
+  const { currencyCode } = useCurrency();
+  
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -43,9 +40,18 @@ export const ExpenseAnalyticsCard = ({
         return null;
     }
   };
-
+  
+  const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
+    acc[key] = {
+      color
+    };
+    return acc;
+  }, {} as Record<string, {
+    color: string;
+  }>);
+  
   return (
-    <Card className="overflow-hidden shadow-sm border-border/50">
+    <Card className="overflow-hidden shadow-sm border-border/50 dark:bg-[#1a1f2c]">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
@@ -53,21 +59,21 @@ export const ExpenseAnalyticsCard = ({
             <div className="bg-muted/30 rounded-lg p-1 flex">
               <button 
                 onClick={() => setChartType('pie')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
+                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Pie chart"
               >
                 <PieChart className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('bar')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
+                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Bar chart"
               >
                 <BarChart3 className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('line')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
+                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Line chart"
               >
                 <LineChart className="h-4 w-4" />
@@ -76,7 +82,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className={`pt-2 pb-6 ${isMobile ? 'px-2' : ''}`}>
+      <CardContent className="pt-2 pb-6 min-h-[350px]">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -87,13 +93,13 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className={`w-full ${isMobile ? 'mobile-chart' : 'h-[350px]'}`}
+            className="w-full h-full modern-donut-chart" 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType}
           >
-            <ChartContainer config={chartConfig} className="h-full">
+            <ChartContainer config={chartConfig} className="mx-0 my-0 h-full">
               {renderChart()}
             </ChartContainer>
           </motion.div>
