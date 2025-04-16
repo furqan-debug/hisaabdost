@@ -82,7 +82,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-6 min-h-[350px]">
+      <CardContent className="pt-2 pb-6">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -93,15 +93,17 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="w-full h-full modern-donut-chart" 
+            className="w-full chart-scroll-container" 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType}
           >
-            <ChartContainer config={chartConfig} className="mx-0 my-0 h-full">
-              {renderChart()}
-            </ChartContainer>
+            <div className={`${isMobile ? 'mobile-chart-width' : 'h-[350px]'}`}>
+              <ChartContainer config={chartConfig} className="mx-0 my-0 h-full">
+                {renderChart()}
+              </ChartContainer>
+            </div>
           </motion.div>
         )}
       </CardContent>

@@ -7,23 +7,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Updated modern, soft color palette
+// Updated modern color palette with better contrast
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#06B6D4", // Cyan
-  "Groceries": "#10B981", // Emerald
-  "Housing": "#A855F7", // Purple
-  "Utilities": "#64748B", // Slate
-  "Transportation": "#F43F5E", // Rose
-  "Healthcare": "#EC4899", // Pink
-  "Entertainment": "#F59E0B", // Amber
-  "Shopping": "#EF4444", // Red
-  "Personal": "#8B5CF6", // Violet
-  "Education": "#0EA5E9", // Sky
-  "Travel": "#14B8A6", // Teal
-  "Insurance": "#6366F1", // Indigo
-  "Debt": "#F97316", // Orange
-  "Savings": "#22C55E", // Green
-  "Other": "#94A3B8", // Cool Gray
+  "Food": "#3B82F6",          // Bright Blue
+  "Groceries": "#10B981",     // Emerald
+  "Housing": "#8B5CF6",       // Purple
+  "Utilities": "#64748B",     // Slate
+  "Transportation": "#EF4444", // Red
+  "Healthcare": "#EC4899",     // Pink
+  "Entertainment": "#F59E0B",  // Amber
+  "Shopping": "#6366F1",      // Indigo
+  "Personal": "#8B5CF6",      // Violet
+  "Education": "#0EA5E9",     // Sky
+  "Travel": "#14B8A6",        // Teal
+  "Insurance": "#6366F1",     // Indigo
+  "Debt": "#F97316",          // Orange
+  "Savings": "#22C55E",       // Green
+  "Other": "#94A3B8",         // Cool Gray
 };
 
 // Process monthly data for charts

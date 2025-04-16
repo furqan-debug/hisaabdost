@@ -2,7 +2,7 @@
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg;
+    @apply max-w-full rounded-lg min-h-[300px];
     overflow: visible !important;
   }
   
@@ -11,23 +11,35 @@
   }
   
   .budget-chart-container {
-    @apply p-2 mx-0;
+    @apply p-2 mx-0 overflow-x-auto;
     width: 100% !important;
   }
   
   .recharts-legend-item {
     @apply text-xs whitespace-nowrap overflow-hidden;
-    margin-right: 8px !important;
-    margin-bottom: 4px !important;
+    margin-right: 12px !important;
+    margin-bottom: 6px !important;
   }
   
   .recharts-legend-item-text {
-    @apply text-xs font-medium max-w-[80px] truncate;
+    @apply text-xs font-medium max-w-[100px] truncate;
   }
   
   .recharts-cartesian-axis-tick-value {
     @apply text-xs font-medium;
     fill: var(--foreground) !important;
+  }
+
+  /* Improve mobile scrolling */
+  .chart-scroll-container {
+    @apply overflow-x-auto overflow-y-hidden pb-4;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure charts are wide enough on mobile */
+  .mobile-chart-width {
+    min-width: 400px;
+    height: 300px;
   }
 }
 
@@ -37,12 +49,12 @@
 }
 
 .recharts-layer.recharts-pie-labels text {
-  @apply font-semibold text-xs !important;
+  @apply font-semibold text-sm !important;
   fill: var(--foreground) !important;
 }
 
 .recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-2 shadow-sm text-left;
+  @apply rounded-lg border bg-background/95 p-3 shadow-md text-left;
 }
 
 .recharts-sector {
@@ -67,18 +79,17 @@
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  @apply stroke-muted/20 stroke-[0.5];
+  @apply stroke-muted/30 stroke-1;
 }
 
 .expense-chart-legend {
-  @apply flex flex-wrap justify-center gap-2 mt-4;
+  @apply flex flex-wrap justify-center gap-3 mt-6;
 }
 
 .expense-chart-legend-item {
-  @apply flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-muted/10;
+  @apply flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-muted/20;
 }
 
 .expense-chart-legend-dot {
-  @apply w-2 h-2 rounded-full;
+  @apply w-2.5 h-2.5 rounded-full;
 }
-
