@@ -7,23 +7,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Updated modern color palette with better contrast
+// Updated color palette with better contrast ratios
 export const CATEGORY_COLORS: Record<string, string> = {
   "Food": "#3B82F6",          // Bright Blue
-  "Groceries": "#10B981",     // Emerald
+  "Groceries": "#22C55E",     // Green
   "Housing": "#8B5CF6",       // Purple
-  "Utilities": "#64748B",     // Slate
+  "Utilities": "#475569",     // Slate
   "Transportation": "#EF4444", // Red
-  "Healthcare": "#EC4899",     // Pink
+  "Healthcare": "#EC4899",    // Pink
   "Entertainment": "#F59E0B",  // Amber
   "Shopping": "#6366F1",      // Indigo
-  "Personal": "#8B5CF6",      // Violet
+  "Personal": "#9333EA",      // Violet
   "Education": "#0EA5E9",     // Sky
   "Travel": "#14B8A6",        // Teal
-  "Insurance": "#6366F1",     // Indigo
-  "Debt": "#F97316",          // Orange
-  "Savings": "#22C55E",       // Green
-  "Other": "#94A3B8",         // Cool Gray
+  "Insurance": "#4F46E5",     // Indigo
+  "Debt": "#F97316",         // Orange
+  "Savings": "#16A34A",      // Green
+  "Other": "#64748B",        // Cool Gray
 };
 
 // Process monthly data for charts
