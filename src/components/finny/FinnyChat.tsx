@@ -60,7 +60,7 @@ const FinnyChat = ({
           <Card className="finny-chat-card h-full flex flex-col shadow-lg my--5 py-10 ">
             <ChatHeader />
             
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide px-[8px] mx-0 my-5 py-[18px]">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide mx-0 px-1 my-[26px] py-[42px]">
               {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
                   <Info className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-sm">
