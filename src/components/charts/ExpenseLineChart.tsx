@@ -1,5 +1,5 @@
 
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,77 +15,76 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   
-  // Get top 5 categories by total expense
+  // Get top categories for the line chart
   const topCategories = getTopCategories(expenses, 5);
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-      <LineChart 
+      <LineChart
         data={chartData}
-        margin={isMobile ? { top: 15, right: 10, left: 0, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+        margin={isMobile ? { top: 20, right: 0, left: -15, bottom: 5 } : { top: 20, right: 30, left: 0, bottom: 5 }}
       >
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
-        <XAxis 
-          dataKey="month" 
-          axisLine={false}
-          tickLine={false}
-          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+        <CartesianGrid 
+          strokeDasharray="3 3"
+          horizontal={true}
+          vertical={false}
         />
-        <YAxis 
-          tickFormatter={(value) => `${formatCurrency(Number(value)/1000, currencyCode).split('.')[0]}k`}
+        <XAxis
+          dataKey="month"
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
-          width={isMobile ? 30 : 40}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+        />
+        <YAxis
+          tickFormatter={(value) => `${formatCurrency(value, currencyCode)}`}
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+          width={isMobile ? 60 : 80}
         />
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
-            // Only show categories that have actual values (not null)
-            const validData = payload.filter(p => p.value !== null && Number(p.value) > 0);
-            
             return (
-              <div className="rounded-lg border bg-background/95 p-2 shadow-sm text-left">
-                <p className="text-sm font-medium mb-1">{label}</p>
-                {validData.map((entry) => (
-                  <p 
-                    key={entry.name}
-                    className="text-xs flex justify-between gap-2"
-                  >
-                    <span style={{ color: entry.color }}>{entry.name}:</span>
-                    <span className="font-medium">{formatCurrency(Number(entry.value), currencyCode)}</span>
-                  </p>
+              <div className="tooltip-card">
+                <div className="text-sm font-medium mb-1">{label}</div>
+                {payload.map((entry: any) => (
+                  entry.value > 0 && (
+                    <div 
+                      key={entry.name}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span style={{ color: entry.color }}>{entry.name}</span>
+                      <span className="font-medium">
+                        {formatCurrency(entry.value, currencyCode)}
+                      </span>
+                    </div>
+                  )
                 ))}
               </div>
             );
           }}
-        />
-        <Legend 
-          wrapperStyle={isMobile ? { fontSize: '10px', marginTop: '10px' } : { marginTop: '10px' }}
-          iconSize={8}
-          iconType="circle"
         />
         {topCategories.map((category) => (
           <Line
             key={category}
             type="monotone"
             dataKey={category}
-            name={category}
             stroke={CATEGORY_COLORS[category]}
             strokeWidth={2}
-            dot={{ 
-              fill: CATEGORY_COLORS[category],
+            dot={{
               r: 3,
-              strokeWidth: 0
+              strokeWidth: 2,
+              fill: "var(--background)",
+              stroke: CATEGORY_COLORS[category]
             }}
-            activeDot={{ 
+            activeDot={{
               r: 5,
-              stroke: CATEGORY_COLORS[category],
-              strokeWidth: 1,
-              fill: 'var(--background)'
+              strokeWidth: 2,
+              fill: "var(--background)",
+              stroke: CATEGORY_COLORS[category]
             }}
-            connectNulls={true}
           />
         ))}
       </LineChart>
@@ -108,3 +107,4 @@ const getTopCategories = (expenses: Expense[], limit: number): string[] => {
     .slice(0, limit)
     .map(([category]) => category);
 };
+
