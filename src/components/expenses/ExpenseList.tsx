@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -102,7 +102,7 @@ export function ExpenseList({
                       <div className="flex flex-col items-center gap-2">
                         <p className="text-muted-foreground">No expenses found</p>
                         <Button 
-                          variant="purple" 
+                          variant="teal" 
                           onClick={onAddExpense}
                           className="mt-2"
                         >
