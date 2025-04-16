@@ -43,12 +43,12 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }
 
   return (
-    <Card className="budget-card overflow-hidden w-full max-w-full">
+    <Card className="budget-card overflow-visible w-full max-w-full">
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
-        <ResponsiveContainer width="99%" height="100%">
+      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-visible">
+        <ResponsiveContainer width="99%" height={isMobile ? 280 : 300} minHeight={280}>
           <BarChart 
             data={data} 
             margin={
@@ -58,7 +58,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
             }
             barCategoryGap={isMobile ? "30%" : "40%"}
             barGap={isMobile ? 1 : 3}
-            style={{ maxWidth: '100%', overflow: 'hidden' }}
+            className="budget-comparison-chart"
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
             <XAxis 
@@ -103,6 +103,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 fillOpacity={0.85}
                 stackId="a"
                 radius={[4, 4, 0, 0]}
+                isAnimationActive={false} // Disable animation for better mobile rendering
               />
             ))}
           </BarChart>

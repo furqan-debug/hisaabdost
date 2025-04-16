@@ -31,8 +31,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className={`w-full ${isMobile ? 'pie-chart-container h-[220px]' : 'h-[300px]'}`}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className={`w-full ${isMobile ? 'pie-chart-container' : 'h-[300px]'}`}>
+        <ResponsiveContainer width="100%" height={isMobile ? 280 : 300} minHeight={280}>
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie
               data={data}
@@ -46,6 +46,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               cornerRadius={4}
               labelLine={false}
               label={false} // Remove labels to prevent overlapping
+              isAnimationActive={false} // Disable animation for better mobile rendering
             >
               {data.map((entry, index) => (
                 <Cell 

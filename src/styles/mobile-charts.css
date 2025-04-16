@@ -2,9 +2,11 @@
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg min-h-[300px];
+    @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
+    height: auto !important; /* Allow height to adjust naturally */
+    min-height: 250px !important; /* Ensure minimum height */
   }
   
   .recharts-tooltip-wrapper {
@@ -12,8 +14,10 @@
   }
   
   .budget-chart-container {
-    @apply p-2 mx-0 overflow-x-auto;
+    @apply p-2 mx-0 overflow-visible;
     width: 100% !important;
+    min-height: 280px !important; /* Ensure minimum height */
+    height: auto !important; /* Allow height to adjust */
   }
   
   .recharts-legend-item {
@@ -33,12 +37,16 @@
 
   /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-[320px] relative overflow-hidden;
+    @apply w-full relative overflow-visible;
+    min-height: 300px !important;
+    height: auto !important;
   }
 
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
-    @apply max-w-[280px] mx-auto;
+    @apply max-w-full mx-auto;
+    min-height: 280px !important;
+    height: auto !important;
   }
 
   /* Make legend more compact on mobile */
@@ -66,15 +74,16 @@
     @apply text-xs;
   }
 
-  /* Remove labels on pie chart for mobile */
+  /* Adjust label visibility for better mobile experience */
   .recharts-pie-label-text {
-    display: none !important;
+    font-size: 9px !important;
   }
 
   /* Fix scrolling issues by containing the chart */
   .recharts-responsive-container {
     width: 100% !important;
-    height: 100% !important;
+    min-height: 280px !important;
+    height: auto !important;
   }
   
   /* Prevent tooltips from causing scrolling */
@@ -93,20 +102,22 @@
     overflow: visible !important;
   }
   
-  /* Hide text that would overflow */
+  /* Mobile-friendly text sizing */
   .recharts-text.recharts-label {
-    display: none !important;
-  }
-  
-  /* Hide detailed legend for simplicity */
-  .recharts-default-legend {
-    max-width: 100% !important;
-    display: none !important;
+    font-size: 9px !important;
   }
   
   /* Simplify axis ticks */
   .recharts-cartesian-axis-tick text {
     font-size: 9px !important;
+  }
+
+  /* Budget comparison specific adjustments */
+  .budget-comparison-chart {
+    min-height: 280px !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
   }
 }
 
@@ -176,12 +187,12 @@
   touch-action: pan-y !important;
 }
 
-/* Prevent scroll within chart container */
-.chart-container {
-  overflow: hidden !important;
-}
-
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
+}
+
+/* Ensure chart visibility */
+.recharts-responsive-container {
+  min-height: 280px;
 }

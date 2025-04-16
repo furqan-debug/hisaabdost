@@ -31,23 +31,32 @@ export function BudgetOverview({
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>;
   }
-  return <div className="space-y-4 w-full overflow-hidden max-w-full">
+  return <div className="space-y-4 w-full overflow-visible max-w-full">
       <Card className="budget-card w-full max-w-full my-0 py-0">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
         <CardContent className="budget-chart-container p-0 pb-2 max-w-full my-0">
-          <ResponsiveContainer width="99%" height={300}>
+          <ResponsiveContainer width="99%" height={isMobile ? 280 : 300} minHeight={280}>
             <PieChart margin={{
             top: 0,
             right: 0,
             bottom: 0,
             left: 0
           }}>
-              <Pie data={data} cx="50%" cy="50%" outerRadius={isMobile ? 80 : 150} dataKey="value" label={({
-              name,
-              percentage
-            }) => isMobile ? `${percentage}%` : `${name}: ${percentage}%`} labelLine={!isMobile}>
+              <Pie 
+                data={data} 
+                cx="50%" 
+                cy="50%" 
+                outerRadius={isMobile ? 80 : 150} 
+                dataKey="value" 
+                label={({
+                  name,
+                  percentage
+                }) => isMobile ? `${percentage}%` : `${name}: ${percentage}%`} 
+                labelLine={!isMobile}
+                isAnimationActive={false} // Disable animation for better mobile rendering
+              >
                 {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
               </Pie>
               <Tooltip content={({
