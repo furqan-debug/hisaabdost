@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';

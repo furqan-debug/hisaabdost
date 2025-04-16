@@ -1,5 +1,5 @@
 
-import { LucideIcon } from 'lucide-react';
+import { ReactNode } from 'react';
 
 export interface Message {
   id: string;
@@ -13,5 +13,5 @@ export interface Message {
 export interface QuickReply {
   text: string;
   action: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }
