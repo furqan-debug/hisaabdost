@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 const ChatHeader = () => {
-  return <div className="finny-chat-header my--5 mx--2">
+  return <div className="finny-chat-header my--11 mx--5  py-[11px]">
       <div className="finny-chat-title">
         <MessageSquareText size={18} className="text-primary" />
         <span className="text-primary font-medium">Finny</span>
