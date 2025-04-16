@@ -10,7 +10,6 @@ import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -26,7 +25,6 @@ export const ExpenseAnalyticsCard = ({
   setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   
   const renderChart = () => {
     switch (chartType) {
@@ -59,21 +57,21 @@ export const ExpenseAnalyticsCard = ({
             <div className="bg-muted/30 rounded-lg p-1 flex">
               <button 
                 onClick={() => setChartType('pie')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Pie chart"
               >
                 <PieChart className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('bar')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Bar chart"
               >
                 <BarChart3 className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('line')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Line chart"
               >
                 <LineChart className="h-4 w-4" />

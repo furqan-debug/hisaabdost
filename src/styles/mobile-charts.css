@@ -38,28 +38,27 @@
 
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
-    @apply max-w-[320px] mx-auto;
+    @apply max-w-[280px] mx-auto;
   }
 
   /* Make legend more compact on mobile */
   .expense-chart-legend {
-    @apply flex flex-wrap justify-center gap-2 my-2;
+    @apply flex flex-wrap justify-center gap-2 mt-2;
   }
 
   .expense-chart-legend-item {
-    @apply text-xs px-2 py-1;
+    @apply text-xs px-1.5 py-0.5 rounded-full;
   }
 
   /* Center text properly */
   .chart-center-total {
-    width: 85% !important;
+    width: 75% !important;
     text-align: center !important;
+    transform: translate(-50%, -50%) !important;
   }
   
   .chart-center-total-amount {
     @apply text-xl font-bold;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
   
@@ -67,9 +66,9 @@
     @apply text-xs;
   }
 
-  /* Improve label visibility */
+  /* Remove labels on pie chart for mobile */
   .recharts-pie-label-text {
-    @apply text-xs !important;
+    display: none !important;
   }
 
   /* Fix scrolling issues by containing the chart */
@@ -80,7 +79,7 @@
   
   /* Prevent tooltips from causing scrolling */
   .tooltip-card {
-    max-width: 220px !important;
+    max-width: 200px !important;
     overflow: hidden !important;
   }
   
@@ -92,6 +91,22 @@
   /* Better label positioning for small screens */
   .recharts-layer.recharts-cartesian-axis-tick {
     overflow: visible !important;
+  }
+  
+  /* Hide text that would overflow */
+  .recharts-text.recharts-label {
+    display: none !important;
+  }
+  
+  /* Hide detailed legend for simplicity */
+  .recharts-default-legend {
+    max-width: 100% !important;
+    display: none !important;
+  }
+  
+  /* Simplify axis ticks */
+  .recharts-cartesian-axis-tick text {
+    font-size: 9px !important;
   }
 }
 
@@ -135,11 +150,11 @@
 }
 
 .expense-chart-legend {
-  @apply flex flex-wrap justify-center gap-3 mt-6;
+  @apply flex flex-wrap justify-center gap-3 mt-4;
 }
 
 .expense-chart-legend-item {
-  @apply flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-muted/20;
+  @apply flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-muted/20;
 }
 
 .expense-chart-legend-dot {
@@ -159,4 +174,14 @@
 /* Improve mobile chart interactions */
 .chart-container .recharts-wrapper {
   touch-action: pan-y !important;
+}
+
+/* Prevent scroll within chart container */
+.chart-container {
+  overflow: hidden !important;
+}
+
+/* Make sure all tooltip text fits */
+.tooltip-card p {
+  @apply truncate max-w-full;
 }

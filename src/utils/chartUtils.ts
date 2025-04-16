@@ -8,26 +8,26 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Updated modern color palette with better contrast
+// Updated modern color palette with better contrast 
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#3B82F6",          // Bright Blue
-  "Groceries": "#10B981",     // Emerald
-  "Housing": "#8B5CF6",       // Purple
-  "Utilities": "#64748B",     // Slate
-  "Transportation": "#EF4444", // Red
-  "Healthcare": "#EC4899",     // Pink
-  "Entertainment": "#F59E0B",  // Amber
-  "Shopping": "#6366F1",      // Indigo
-  "Personal": "#8B5CF6",      // Violet
-  "Education": "#0EA5E9",     // Sky
-  "Travel": "#14B8A6",        // Teal
-  "Insurance": "#6366F1",     // Indigo
-  "Debt": "#F97316",          // Orange
-  "Savings": "#22C55E",       // Green
-  "Other": "#94A3B8",         // Cool Gray
+  "Food": "#4287f5",         // Bright Blue
+  "Groceries": "#22c55e",    // Bright Green
+  "Housing": "#9046cf",      // Purple
+  "Utilities": "#64748b",    // Slate
+  "Transportation": "#ef4444", // Red
+  "Healthcare": "#d946ef",    // Pink
+  "Entertainment": "#f59e0b", // Amber
+  "Shopping": "#6366f1",     // Indigo
+  "Personal": "#8b5cf6",     // Violet
+  "Education": "#0ea5e9",    // Sky
+  "Travel": "#14b8a6",       // Teal
+  "Insurance": "#8b5cf6",    // Violet
+  "Debt": "#f97316",         // Orange
+  "Savings": "#22c55e",      // Green
+  "Other": "#94a3b8",        // Cool Gray
 };
 
-// Process monthly data for charts
+// Process monthly data for charts with optimization for mobile
 export const processMonthlyData = (expenses: Expense[]) => {
   // Group expenses by month
   const monthlyData = expenses.reduce((acc, expense) => {
@@ -56,7 +56,7 @@ export const processMonthlyData = (expenses: Expense[]) => {
     }));
 };
 
-// Enhanced pie chart data calculation
+// Enhanced pie chart data calculation with better optimization
 export const calculatePieChartData = (expenses: Expense[]) => {
   const categoryTotals = expenses.reduce((acc, expense) => {
     if (!acc[expense.category]) {
@@ -68,8 +68,10 @@ export const calculatePieChartData = (expenses: Expense[]) => {
 
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
+  // Sort by value and limit to top categories for cleaner display
   return Object.entries(categoryTotals)
     .sort(([, valueA], [, valueB]) => valueB - valueA)
+    .slice(0, 5) // Limit to top 5 categories for cleaner display
     .map(([name, value]) => ({
       name,
       value,

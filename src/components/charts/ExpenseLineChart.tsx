@@ -22,16 +22,14 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
     return data.some(item => item[category] > 0);
   });
   
-  // For mobile, limit to top 5 categories by total amount
+  // For mobile, limit to top 3 categories by total amount
   const getCategoryTotal = (category: string) => {
     return data.reduce((sum, item) => sum + (item[category] || 0), 0);
   };
   
-  const topCategories = isMobile ? 
-    activeCategories
-      .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
-      .slice(0, 5) : 
-    activeCategories;
+  const topCategories = activeCategories
+    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
+    .slice(0, isMobile ? 3 : 5);
   
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -72,26 +70,26 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
               // Convert ValueType to number for safe comparison
               const value = entry.value !== undefined ? Number(entry.value) : 0;
               return value > 0;
-            });
+            }).slice(0, 3); // Limit to top 3 for cleaner mobile display
             
             return (
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="tooltip-card max-h-[200px] overflow-y-auto"
+                className="tooltip-card"
               >
-                <div className="text-sm font-medium mb-2">{label}</div>
-                <div className="space-y-1.5">
+                <div className="text-sm font-medium mb-1">{label}</div>
+                <div className="space-y-1">
                   {filteredPayload.map((entry: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
+                    <div key={index} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
                         <div 
-                          className="w-2.5 h-2.5 rounded-full" 
+                          className="w-2 h-2 rounded-full" 
                           style={{ backgroundColor: entry.stroke }}
                         />
-                        <span className="text-sm">{entry.name}</span>
+                        <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                       </div>
-                      <span className="text-sm font-medium">
+                      <span className="text-xs font-medium">
                         {formatCurrency(Number(entry.value), currencyCode)}
                       </span>
                     </div>

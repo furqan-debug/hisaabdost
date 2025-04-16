@@ -31,7 +31,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className={`w-full ${isMobile ? 'pie-chart-container h-[260px]' : 'h-[300px]'}`}>
+      <div className={`w-full ${isMobile ? 'pie-chart-container h-[220px]' : 'h-[300px]'}`}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie
@@ -40,11 +40,12 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={isMobile ? 55 : 75}
-              outerRadius={isMobile ? 80 : 100}
+              innerRadius={isMobile ? 50 : 75}
+              outerRadius={isMobile ? 70 : 100}
               paddingAngle={2}
               cornerRadius={4}
               labelLine={false}
+              label={false} // Remove labels to prevent overlapping
             >
               {data.map((entry, index) => (
                 <Cell 
@@ -77,7 +78,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </ResponsiveContainer>
       </div>
       
-      {/* Mobile-friendly legend */}
+      {/* Simplified mobile-friendly legend */}
       <div className="expense-chart-legend">
         {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
           <div key={index} className="expense-chart-legend-item">
