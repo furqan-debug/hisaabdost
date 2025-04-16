@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { MessageSquareText, X } from 'lucide-react';
+import { X, MessageSquareText, ChevronDown } from 'lucide-react';
 
 interface FinnyButtonProps {
   onClick: () => void;
@@ -32,9 +32,9 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           transition={{ duration: 0.2 }}
         >
           {isOpen ? (
-            <X size={22} className="text-white" />
+            <ChevronDown className="w-6 h-6 text-white" />
           ) : (
-            <MessageSquareText size={22} className="text-white" />
+            <MessageSquareText className="w-6 h-6 text-white" />
           )}
         </motion.div>
       </Button>
