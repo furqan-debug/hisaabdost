@@ -45,13 +45,16 @@
     fill: var(--foreground) !important; 
   }
   
-  /* Remove pie chart label display for cleaner look */
+  /* Fix pie chart label display */
   .recharts-pie-label-line {
-    display: none !important;
+    stroke: var(--foreground) !important;
+    stroke-width: 0.5 !important;
   }
   
   .recharts-pie-label-text {
-    display: none !important;
+    font-size: 10px !important;
+    fill: var(--foreground) !important;
+    font-weight: 600 !important;
   }
   
   /* Improve chart container margins */
@@ -107,7 +110,8 @@
 
 /* Better styled pie chart */
 .recharts-sector {
-  stroke-width: 0px !important; /* Remove stroke for cleaner appearance */
+  stroke-width: 1px !important;
+  stroke: var(--background) !important;
 }
 
 /* Give some space between legend items */
@@ -119,28 +123,4 @@
 .recharts-active-dot {
   stroke: var(--background) !important;
   stroke-width: 1px !important;
-}
-
-/* Modernize the pie chart appearance */
-.modern-donut-chart .recharts-sector {
-  transition: opacity 0.3s, filter 0.3s !important;
-}
-
-.modern-donut-chart .recharts-sector:hover {
-  opacity: 0.85 !important;
-  filter: brightness(1.1) !important;
-}
-
-/* Center percentage style */
-.chart-center-percentage {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--foreground);
-  text-align: center;
-  pointer-events: none;
-  z-index: 10;
 }
