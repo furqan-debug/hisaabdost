@@ -1,24 +1,24 @@
 
 /* Finny Chat Styles */
 .finny-chat-card {
-  @apply bg-background/95 backdrop-blur-md border rounded-2xl shadow-lg overflow-hidden;
+  @apply bg-background/95 backdrop-blur-md border rounded-none sm:rounded-2xl shadow-lg overflow-hidden;
 }
 
 .finny-chat-header {
-  @apply px-6 py-4 border-b bg-muted/30 flex items-center justify-between;
+  @apply px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30 flex items-center justify-between;
 }
 
 .finny-chat-title {
-  @apply text-lg font-medium flex items-center gap-2;
+  @apply text-base sm:text-lg font-medium flex items-center gap-2;
 }
 
 .finny-chat-badge {
-  @apply text-xs bg-[#9b87f5]/10 text-[#9b87f5] rounded-full px-3 py-1;
+  @apply text-xs bg-[#9b87f5]/10 text-[#9b87f5] rounded-full px-2 sm:px-3 py-1;
 }
 
 /* Message containers */
 .finny-messages-container {
-  @apply px-6 py-4 space-y-4 scrollbar-hide;
+  @apply px-4 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 scrollbar-hide;
 }
 
 /* Message bubbles */
@@ -36,7 +36,7 @@
 
 /* Input area */
 .finny-chat-input {
-  @apply px-6 py-4 border-t bg-background/50 backdrop-blur-sm;
+  @apply px-3 sm:px-6 py-3 sm:py-4 border-t bg-background/50 backdrop-blur-sm;
 }
 
 .finny-chat-input-container {
@@ -44,43 +44,30 @@
 }
 
 .finny-chat-input input {
-  @apply flex-1 bg-muted/30 border-0 focus-visible:ring-1 transition-all duration-300;
+  @apply flex-1 bg-muted/30 border-0 focus-visible:ring-1 transition-all duration-300
+    text-base sm:text-sm py-3 sm:py-2 px-4;
 }
 
 .finny-chat-input input:focus {
   @apply ring-[#9b87f5] border-[#9b87f5];
 }
 
-/* Button animations */
-.finny-button-animate {
-  @apply transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-[#9b87f5] focus:bg-[#9b87f5];
+/* Quick Reply Buttons */
+.quick-reply-container {
+  @apply flex flex-wrap gap-2 mt-2;
 }
 
-/* Typing indicator animation */
-.typing-indicator {
-  @apply flex space-x-1 items-center justify-center;
+.quick-reply-button {
+  @apply inline-flex items-center justify-center rounded-full text-sm py-2 px-4
+    bg-[#f8f5ff] dark:bg-[#2a2438] text-[#9b87f5] transition-all duration-200
+    hover:bg-[#9b87f5] hover:text-white hover:shadow-md active:scale-95
+    disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed
+    touch-target;
 }
 
-.typing-indicator-dot {
-  @apply w-1.5 h-1.5 rounded-full bg-current opacity-70;
-  animation: typing-animation 1.4s infinite both;
-}
-
-.typing-indicator-dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-indicator-dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes typing-animation {
-  0%, 60%, 100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-4px);
-  }
+/* Touch target optimization */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
 }
 
 /* Enhanced scrollbar */
@@ -93,87 +80,17 @@
   display: none;
 }
 
-/* Quick Reply Buttons */
-.quick-reply-container {
-  @apply flex flex-wrap gap-2 mt-2;
-}
-
-.quick-reply-button {
-  @apply inline-flex items-center justify-center rounded-full text-xs py-1.5 px-3
-    bg-[#f8f5ff] dark:bg-[#2a2438] text-[#9b87f5] transition-all duration-200
-    hover:bg-[#9b87f5] hover:text-white hover:shadow-md
-    disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed;
-}
-
-/* Chat window animations */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-/* Rich Message Content */
-.finny-data-visualization {
-  @apply mt-2 p-3 bg-muted/20 rounded-lg border border-muted/50;
-}
-
-.finny-success-message {
-  @apply border-l-4 border-green-500 pl-2;
-}
-
-.finny-error-message {
-  @apply border-l-4 border-red-500 pl-2;
-}
-
-.finny-action-badge {
-  @apply inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium;
-}
-
-.finny-action-badge-success {
-  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
-}
-
-.finny-action-badge-error {
-  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
-}
-
-.finny-action-badge-pending {
-  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
-}
-
-/* Improved mobile experience */
+/* Mobile optimizations */
 @media (max-width: 640px) {
   .finny-chat-card {
-    @apply w-[95vw] max-h-[85vh];
+    @apply h-[100dvh];
   }
   
-  .finny-chat-header {
-    @apply px-4 py-3;
-  }
-  
-  .finny-chat-input {
-    @apply px-4;
-  }
-  
-  .quick-reply-container {
-    @apply grid grid-cols-2 gap-1.5;
+  .finny-message-user, .finny-message-bot {
+    @apply max-w-[90%];
   }
   
   .quick-reply-button {
-    @apply text-[10px] px-2 py-1;
+    @apply text-sm py-2.5 px-4;
   }
 }

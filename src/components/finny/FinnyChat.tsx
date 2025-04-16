@@ -11,6 +11,7 @@ import FinnyMessage from './chat/FinnyMessage';
 import QuickReplies from './chat/QuickReplies';
 import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FinnyChatProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface FinnyChatProps {
 
 const FinnyChat = ({ isOpen, onClose, config }: FinnyChatProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const {
     messages,
     newMessage,
@@ -39,16 +41,20 @@ const FinnyChat = ({ isOpen, onClose, config }: FinnyChatProps) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed bottom-20 right-4 md:bottom-24 md:right-8 z-40 w-[90vw] sm:w-[400px] shadow-lg"
+          className={`fixed z-40 shadow-lg ${
+            isMobile 
+              ? 'inset-0 m-0' 
+              : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'
+          }`}
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
-          <Card className="finny-chat-card">
+          <Card className="finny-chat-card h-full flex flex-col">
             <ChatHeader />
             
-            <div className="h-[50vh] overflow-y-auto p-4 space-y-4 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide">
               {!user && (
                 <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20">
                   <Info className="h-4 w-4 text-primary" />
@@ -59,12 +65,12 @@ const FinnyChat = ({ isOpen, onClose, config }: FinnyChatProps) => {
               )}
               
               {isConnectingToData && user && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                  <div className="relative w-12 h-12">
+                <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                  <div className="relative w-10 h-10">
                     <div className="absolute inset-0 rounded-full animate-pulse bg-[#9b87f5]/20" />
-                    <Loader2 className="absolute inset-0 w-12 h-12 animate-spin text-[#9b87f5]" />
+                    <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-[#9b87f5]" />
                   </div>
-                  <span className="text-sm text-muted-foreground">Connecting to your financial data...</span>
+                  <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
                 </div>
               )}
               
