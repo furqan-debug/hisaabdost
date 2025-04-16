@@ -1,18 +1,10 @@
-
 import React from 'react';
 import { MessageSquareText, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 const ChatHeader = () => {
-  return (
-    <div className="finny-chat-header">
+  return <div className="finny-chat-header my--5 mx--2">
       <div className="finny-chat-title">
         <MessageSquareText size={18} className="text-primary" />
         <span className="text-primary font-medium">Finny</span>
@@ -21,12 +13,7 @@ const ChatHeader = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon-sm" 
-              className="rounded-lg hover:bg-muted/80"
-              aria-label="Finny Help"
-            >
+            <Button variant="ghost" size="icon-sm" className="rounded-lg hover:bg-muted/80" aria-label="Finny Help">
               <HelpCircle size={16} className="text-muted-foreground" />
             </Button>
           </TooltipTrigger>
@@ -35,8 +22,6 @@ const ChatHeader = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    </div>
-  );
+    </div>;
 };
-
 export default ChatHeader;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,17 +11,21 @@ import QuickReplies from './chat/QuickReplies';
 import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface FinnyChatProps {
   isOpen: boolean;
   onClose: () => void;
   config?: {
     initialMessages?: Message[];
-  }
+  };
 }
-
-const FinnyChat = ({ isOpen, onClose, config }: FinnyChatProps) => {
-  const { user } = useAuth();
+const FinnyChat = ({
+  isOpen,
+  onClose,
+  config
+}: FinnyChatProps) => {
+  const {
+    user
+  } = useAuth();
   const isMobile = useIsMobile();
   const {
     messages,
@@ -36,80 +39,53 @@ const FinnyChat = ({ isOpen, onClose, config }: FinnyChatProps) => {
     handleSendMessage,
     handleQuickReply
   } = useChatLogic(null);
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className={`fixed z-40 ${
-            isMobile 
-              ? 'inset-0 m-0' 
-              : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'
-          }`}
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        >
-          <Card className="finny-chat-card h-full flex flex-col shadow-lg">
+  return <AnimatePresence>
+      {isOpen && <motion.div className={`fixed z-40 ${isMobile ? 'inset-0 m-0' : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'}`} initial={{
+      opacity: 0,
+      y: 20,
+      scale: 0.95
+    }} animate={{
+      opacity: 1,
+      y: 0,
+      scale: 1
+    }} exit={{
+      opacity: 0,
+      y: 20,
+      scale: 0.95
+    }} transition={{
+      type: 'spring',
+      damping: 25,
+      stiffness: 300
+    }}>
+          <Card className="finny-chat-card h-full flex flex-col shadow-lg my--5 py-10 ">
             <ChatHeader />
             
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide">
-              {!user && (
-                <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide px-[8px] mx-0 my-5 py-[18px]">
+              {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
                   <Info className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-sm">
                     You need to log in to use Finny's personalized features.
                   </AlertDescription>
-                </Alert>
-              )}
+                </Alert>}
               
-              {isConnectingToData && user && (
-                <div className="flex flex-col items-center justify-center py-6 space-y-3">
+              {isConnectingToData && user && <div className="flex flex-col items-center justify-center py-6 space-y-3">
                   <div className="relative w-10 h-10">
                     <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
                     <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
                   </div>
                   <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
-                </div>
-              )}
+                </div>}
               
-              {messages.map((message) => (
-                <FinnyMessage
-                  key={message.id}
-                  content={message.content}
-                  isUser={message.isUser}
-                  timestamp={message.timestamp}
-                  hasAction={message.hasAction}
-                  visualData={message.visualData}
-                />
-              ))}
+              {messages.map(message => <FinnyMessage key={message.id} content={message.content} isUser={message.isUser} timestamp={message.timestamp} hasAction={message.hasAction} visualData={message.visualData} />)}
               
-              {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && (
-                <QuickReplies
-                  replies={quickReplies}
-                  onSelect={handleQuickReply}
-                  isLoading={isLoading}
-                  isAuthenticated={!!user}
-                />
-              )}
+              {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && <QuickReplies replies={quickReplies} onSelect={handleQuickReply} isLoading={isLoading} isAuthenticated={!!user} />}
               
               <div ref={messagesEndRef} />
             </div>
 
-            <ChatInput
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onSubmit={handleSendMessage}
-              isLoading={isLoading}
-              isAuthenticated={!!user}
-              isConnecting={isConnectingToData}
-            />
+            <ChatInput value={newMessage} onChange={e => setNewMessage(e.target.value)} onSubmit={handleSendMessage} isLoading={isLoading} isAuthenticated={!!user} isConnecting={isConnectingToData} />
           </Card>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+        </motion.div>}
+    </AnimatePresence>;
 };
-
 export default FinnyChat;
