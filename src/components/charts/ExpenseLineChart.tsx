@@ -32,8 +32,8 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
     .slice(0, isMobile ? 3 : 5);
   
   return (
-    <div style={{ width: '100%', height: '300px' }}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-[300px] overflow-visible">
+      <ResponsiveContainer width="100%" height={300}>
         <LineChart
           data={data}
           margin={isMobile ? { top: 20, right: 0, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}

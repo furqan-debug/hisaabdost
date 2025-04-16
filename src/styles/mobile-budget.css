@@ -3,113 +3,160 @@
 @media (max-width: 640px) {
   /* Budget specific mobile optimizations */
   .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl w-full max-w-full overflow-visible;
+    background: var(--card);
+    background-opacity: 0.8;
+    backdrop-filter: blur(4px);
+    border-color: rgba(var(--border), 0.4);
+    margin: 8px 0;
+    border-radius: 12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
   .tabs-list-scroll {
-    @apply flex overflow-x-auto space-x-1 pb-1 no-scrollbar;
-    max-width: 100%;
-    width: 100%;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    padding-right: 0;
-    padding-left: 0;
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 4px !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+  
+  /* Hide scrollbar */
+  .tabs-list-scroll::-webkit-scrollbar {
+    display: none !important;
   }
   
   /* Make tab items snap when scrolling */
   .budget-tabs-trigger {
-    @apply flex-shrink-0 px-2 py-1;
-    scroll-snap-align: start;
-    white-space: nowrap;
-    min-width: auto;
-    width: auto;
+    flex-shrink: 0 !important;
+    padding: 4px 8px !important;
+    scroll-snap-align: start !important;
+    white-space: nowrap !important;
+    min-width: auto !important;
+    width: auto !important;
   }
   
   /* Container for scrollable tabs */
   .scrollable-tabs-container {
-    @apply w-full overflow-x-auto no-scrollbar;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-    padding-bottom: 2px; /* Prevents content jump */
+    width: 100% !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+    padding-bottom: 2px !important; /* Prevents content jump */
+  }
+  
+  /* Hide scrollbar */
+  .scrollable-tabs-container::-webkit-scrollbar {
+    display: none !important;
   }
   
   /* Prevent horizontal overflow issues */
   .budget-container {
-    @apply w-full px-0 max-w-full;
-    overflow-x: hidden !important;
-    max-width: 100vw;
+    width: 100% !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
   
   /* Tab content padding for mobile */
   .tab-content-mobile {
-    @apply px-0 max-w-full;
-    overflow-x: hidden !important;
-    width: 100%;
+    padding: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    width: 100% !important;
   }
   
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
     height: 300px !important;
-    width: 100%;
-    max-width: 100%;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow: visible !important;
   }
   
   /* Add padding for mobile budget section */
   .budget-section {
-    @apply py-2 px-1 max-w-full;
+    padding: 8px 4px !important;
+    max-width: 100% !important;
     overflow: visible !important;
-    width: 100%;
+    width: 100% !important;
   }
   
   /* Progress bar height for budget */
   .budget-progress-bar {
-    @apply h-2;
+    height: 8px !important;
   }
   
   /* Budget tab mobile cards for better UX */
   .budget-stat-card {
-    @apply p-3 rounded-xl flex items-center justify-between bg-background/50 border border-border/30;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: var(--background) !important;
+    background-opacity: 0.5 !important;
+    border: 1px solid !important;
+    border-color: var(--border) !important;
+    border-opacity: 0.3 !important;
   }
   
   /* Mobile budget form improvements */
   .budget-form-container {
-    @apply space-y-4 mt-3;
+    gap: 16px !important;
+    margin-top: 12px !important;
   }
   
   /* Make budget content fit properly on mobile */
   .budget-content {
-    @apply w-full px-1 max-w-full;
-    max-width: 100%;
+    width: 100% !important;
+    padding: 0 4px !important;
+    max-width: 100% !important;
     overflow: visible !important;
-    width: 100%;
   }
   
   /* Category budget cards for better display */
   .category-budget-card {
-    @apply p-3 rounded-xl bg-card/70 border border-border/30 mb-3;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    background: var(--card) !important;
+    background-opacity: 0.7 !important;
+    border: 1px solid !important;
+    border-color: var(--border) !important;
+    border-opacity: 0.3 !important;
+    margin-bottom: 12px !important;
   }
   
   /* Budget info row layout */
   .budget-info-row {
-    @apply grid grid-cols-2 gap-2 mb-2;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
   }
   
   /* Budget value display */
   .budget-value {
-    @apply text-lg font-semibold;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
   }
   
   /* Budget label display */
   .budget-label {
-    @apply text-xs text-muted-foreground;
-  }
-  
-  /* Budget comparison chart container */
-  .budget-comparison-chart {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
+    font-size: 0.75rem !important;
+    color: var(--muted-foreground) !important;
   }
 }

@@ -18,7 +18,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <div className="relative w-full flex flex-col items-center" style={{ height: '300px' }}>
+    <div className="w-full h-[300px] flex flex-col items-center relative overflow-visible">
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
           {formatCurrency(totalAmount, currencyCode)}

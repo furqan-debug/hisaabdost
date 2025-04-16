@@ -1,8 +1,9 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
+import { formatCurrency } from "@/utils/formatters";
 
 interface Expense {
   amount: number;
@@ -33,7 +34,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   // Calculate percentages based on total
   const total = data.reduce((sum, item) => sum + item.value, 0);
   data.forEach(item => {
-    item.percent = total > 0 ? (item.value / total) : 0;
+    item.percent = total > 0 ? (item.value / total) * 100 : 0;
   });
   
   // Get main percentage (for the largest category)
@@ -42,7 +43,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="relative w-full flex flex-col items-center" style={{ minHeight: '300px', height: '300px' }}>
+    <div className="w-full h-[300px] flex flex-col items-center relative overflow-visible">
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
@@ -64,7 +65,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               endAngle={-270}
               cornerRadius={4}
               labelLine={false}
-              label={false} // Remove labels for cleaner appearance
+              label={false}
             >
               {data.map((entry, index) => (
                 <Cell 

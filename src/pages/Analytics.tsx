@@ -21,12 +21,8 @@ import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 
 export default function Analytics() {
-  const {
-    user
-  } = useAuth();
-  const {
-    selectedMonth
-  } = useMonthContext();
+  const { user } = useAuth();
+  const { selectedMonth } = useMonthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
@@ -34,6 +30,7 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd')
   });
   const useCustomDateRange = true;
+  
   const {
     data: expenses,
     isLoading,
@@ -53,67 +50,74 @@ export default function Analytics() {
     },
     enabled: !!user
   });
+  
   const filteredExpenses = expenses?.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || expense.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
     return matchesSearch && matchesCategory;
   }) || [];
+  
   const insights = useAnalyticsInsights(filteredExpenses);
+  
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = {
-      color
-    };
+    acc[key] = { color };
     return acc;
-  }, {} as Record<string, {
-    color: string;
-  }>);
+  }, {} as Record<string, { color: string; }>);
+  
   if (error) {
-    return <Alert variant="destructive">
+    return (
+      <Alert variant="destructive">
         <AlertDescription>Error loading expenses data. Please try again later.</AlertDescription>
-      </Alert>;
+      </Alert>
+    );
   }
+  
   if (isLoading) {
-    return <div className="space-y-4">
+    return (
+      <div className="space-y-4">
         <Skeleton className="h-8 w-[200px]" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Skeleton className="h-[200px] rounded-xl" />
           <Skeleton className="h-[200px] rounded-xl" />
           <Skeleton className="h-[200px] rounded-xl" />
         </div>
-      </div>;
+      </div>
+    );
   }
 
   // Animation variants
   const containerVariants = {
-    hidden: {
-      opacity: 0
-    },
+    hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { staggerChildren: 0.1 }
     }
   };
+  
   const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 15
-    },
+    hidden: { opacity: 0, y: 15 },
     show: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
+      transition: { duration: 0.3, ease: "easeOut" }
     }
   };
-  return <motion.div className="space-y-6 overflow-visible" variants={containerVariants} initial="hidden" animate="show">
+  
+  return (
+    <motion.div className="space-y-6 overflow-visible" variants={containerVariants} initial="hidden" animate="show">
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
         <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
-        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} />
+        <ExpenseFilters 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          categoryFilter={categoryFilter} 
+          setCategoryFilter={setCategoryFilter} 
+          dateRange={dateRange} 
+          setDateRange={setDateRange} 
+          selectedMonth={selectedMonth} 
+          useCustomDateRange={useCustomDateRange} 
+        />
       </motion.div>
 
       <motion.div variants={itemVariants}>
@@ -121,7 +125,7 @@ export default function Analytics() {
       </motion.div>
 
       <motion.div variants={itemVariants} className="overflow-visible">
-        <Tabs defaultValue="overview" className="space-y-4 mx--12">
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
             <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
@@ -134,7 +138,7 @@ export default function Analytics() {
                 <CardTitle>Category Breakdown</CardTitle>
                 <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] overflow-visible">
+              <CardContent className="h-[300px] p-0 md:p-4 overflow-visible">
                 <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -148,7 +152,7 @@ export default function Analytics() {
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] overflow-visible">
+              <CardContent className="h-[300px] p-0 md:p-4 overflow-visible">
                 <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -160,7 +164,7 @@ export default function Analytics() {
                 <CardTitle>Category Trends</CardTitle>
                 <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] overflow-visible">
+              <CardContent className="h-[300px] p-0 md:p-4 overflow-visible">
                 <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -174,12 +178,13 @@ export default function Analytics() {
                 <CardTitle>Period Comparison</CardTitle>
                 <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] overflow-visible">
+              <CardContent className="h-[300px] md:h-auto p-0 md:p-4 overflow-visible">
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </motion.div>
-    </motion.div>;
+    </motion.div>
+  );
 }
