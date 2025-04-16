@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { X, MessageSquareText, ChevronDown } from 'lucide-react';
+import { MessageSquareText, ChevronDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FinnyButtonProps {
   onClick: () => void;
@@ -10,9 +11,13 @@ interface FinnyButtonProps {
 }
 
 const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <motion.div
-      className="fixed right-4 bottom-20 md:bottom-8 z-50"
+      className={`fixed right-4 bottom-20 md:bottom-8 z-50 ${
+        isMobile ? 'bottom-24' : ''
+      }`}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}

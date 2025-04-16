@@ -1,8 +1,6 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
@@ -11,6 +9,7 @@ import QuickReplies from './chat/QuickReplies';
 import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 interface FinnyChatProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,6 +17,7 @@ interface FinnyChatProps {
     initialMessages?: Message[];
   };
 }
+
 const FinnyChat = ({
   isOpen,
   onClose,
@@ -27,6 +27,8 @@ const FinnyChat = ({
     user
   } = useAuth();
   const isMobile = useIsMobile();
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
   const {
     messages,
     newMessage,
@@ -39,26 +41,79 @@ const FinnyChat = ({
     handleSendMessage,
     handleQuickReply
   } = useChatLogic(null);
-  return <AnimatePresence>
-      {isOpen && <motion.div className={`fixed z-40 ${isMobile ? 'inset-0 m-0' : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'}`} initial={{
-      opacity: 0,
-      y: 20,
-      scale: 0.95
-    }} animate={{
-      opacity: 1,
-      y: 0,
-      scale: 1
-    }} exit={{
-      opacity: 0,
-      y: 20,
-      scale: 0.95
-    }} transition={{
-      type: 'spring',
-      damping: 25,
-      stiffness: 300
-    }}>
-          <Card className="finny-chat-card h-full flex flex-col shadow-lg my--5 py-10 ">
-            <ChatHeader />
+
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    
+    if (!isMobile || !chatContainer || !isOpen) return;
+
+    let startY = 0;
+    let isDragging = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      isDragging = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      
+      if (deltaY > 50) {
+        isDragging = true;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (isDragging) {
+        onClose();
+      }
+    };
+
+    chatContainer.addEventListener('touchstart', handleTouchStart);
+    chatContainer.addEventListener('touchmove', handleTouchMove);
+    chatContainer.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      chatContainer.removeEventListener('touchstart', handleTouchStart);
+      chatContainer.removeEventListener('touchmove', handleTouchMove);
+      chatContainer.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, isOpen, onClose]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          ref={chatContainerRef}
+          className={`fixed z-40 ${
+            isMobile 
+              ? 'inset-0 m-0 flex flex-col' 
+              : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'
+          }`}
+          initial={{
+            opacity: 0,
+            y: 20,
+            scale: 0.95
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1
+          }}
+          exit={{
+            opacity: 0,
+            y: 20,
+            scale: 0.95
+          }}
+          transition={{
+            type: 'spring',
+            damping: 25,
+            stiffness: 300
+          }}
+        >
+          <Card className="finny-chat-card h-full flex flex-col shadow-lg">
+            <ChatHeader onClose={isMobile ? onClose : undefined} />
             
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide mx-0 px-1 my-[26px] py-[42px]">
               {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
@@ -85,7 +140,10 @@ const FinnyChat = ({
 
             <ChatInput value={newMessage} onChange={e => setNewMessage(e.target.value)} onSubmit={handleSendMessage} isLoading={isLoading} isAuthenticated={!!user} isConnecting={isConnectingToData} />
           </Card>
-        </motion.div>}
-    </AnimatePresence>;
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 };
+
 export default FinnyChat;
