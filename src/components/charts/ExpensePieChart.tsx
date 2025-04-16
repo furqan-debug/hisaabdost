@@ -5,6 +5,7 @@ import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { motion } from "framer-motion";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
@@ -23,93 +24,90 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   
+  // Get total amount
+  const totalAmount = pieChartData.reduce((sum, item) => sum + item.value, 0);
+  
+  // Get main percentage (for the largest category)
+  const mainPercentage = pieChartData.length > 0 
+    ? Math.round(pieChartData[0].percent * 100) 
+    : 0;
+  
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
-      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 35 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
-        <Pie
-          data={pieChartData}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          outerRadius={isMobile ? 90 : 140}
-          innerRadius={isMobile ? 50 : 80}
-          paddingAngle={2}
-          labelLine={false}
-          label={({ percent }) => {
-            // Only show percentage for segments > 5%
-            if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
-          }}
-        >
-          {pieChartData.map((entry, index) => (
-            <Cell 
-              key={`${entry.name}-${index}`} 
-              fill={entry.color} 
-              stroke="var(--background)" 
-              strokeWidth={1}
+    <div className="relative w-full h-full flex flex-col items-center">
+      {/* Display the center percentage */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
+        <span className="text-4xl font-bold">{mainPercentage}%</span>
+      </div>
+      
+      <ResponsiveContainer width="100%" height={isMobile ? 280 : 340}>
+        <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <Pie
+            data={pieChartData}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={isMobile ? 110 : 130}
+            innerRadius={isMobile ? 75 : 90}
+            paddingAngle={2}
+            startAngle={90}
+            endAngle={-270}
+            cornerRadius={4}
+            labelLine={false}
+            // Disable labels for a cleaner appearance matching the reference image
+            label={false}
+          >
+            {pieChartData.map((entry, index) => (
+              <Cell 
+                key={`${entry.name}-${index}`} 
+                fill={entry.color} 
+                stroke="transparent"
+              />
+            ))}
+          </Pie>
+          <Tooltip 
+            content={({ active, payload }) => {
+              if (!active || !payload || !payload.length) return null;
+              const data = payload[0];
+              return (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-lg border bg-background/95 p-2 shadow-sm text-left"
+                >
+                  <p className="text-sm font-medium mb-1">
+                    {data.name}
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {formatCurrency(Number(data.value), currencyCode)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(data.payload.percent * 100).toFixed(1)}% of total
+                  </p>
+                </motion.div>
+              );
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      
+      {/* Simple legend below the chart */}
+      <div className="flex flex-wrap justify-center mt-2 gap-3">
+        {pieChartData.slice(0, 5).map((entry, index) => (
+          <div key={index} className="flex items-center gap-1.5 text-sm">
+            <div 
+              className="w-3 h-3 rounded" 
+              style={{ backgroundColor: entry.color }}
             />
-          ))}
-        </Pie>
-        <Tooltip 
-          content={({ active, payload }) => {
-            if (!active || !payload || !payload.length) return null;
-            const data = payload[0];
-            return (
-              <div className="rounded-lg border bg-background/95 p-2 shadow-sm text-left">
-                <p className="text-sm font-medium mb-1">
-                  {data.name}
-                </p>
-                <p className="text-sm font-semibold">
-                  {formatCurrency(Number(data.value), currencyCode)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {(data.payload.percent * 100).toFixed(1)}% of total
-                </p>
-              </div>
-            );
-          }}
-        />
-        <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ 
-            fontSize: isMobile ? '11px' : '12px',
-            paddingTop: '16px',
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '4px'
-          }}
-          formatter={(value, entry: any) => {
-            // Show minimalist legend entries
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            
-            return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                display: 'inline-block',
-                padding: '2px 5px',
-                margin: '0 2px',
-                fontSize: isMobile ? '10px' : '11px',
-                fontWeight: '500',
-                borderRadius: '3px',
-                border: `1px solid ${entry.payload.color}30`,
-                backgroundColor: 'transparent'
-              }}>
-                {displayName}
-              </span>
-            );
-          }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
+            <span className="text-xs font-medium">
+              {entry.name.length > 10 ? entry.name.slice(0, 10) + "..." : entry.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
-}
+};
 
 // Helper function to calculate pie chart data
 const calculatePieChartData = (expenses: Expense[]) => {

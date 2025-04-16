@@ -9,23 +9,24 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Define category colors with a clean, minimalist palette with good contrast
+// Define category colors with a modern, minimalist palette with good contrast
+// Updated to match the reference image style with softer, more vibrant colors
 export const CATEGORY_COLORS: Record<string, string> = {
   "Food": "#3B82F6", // Blue
   "Groceries": "#10B981", // Emerald
-  "Housing": "#6366F1", // Indigo
-  "Utilities": "#8B5CF6", // Violet
+  "Housing": "#8B5CF6", // Violet
+  "Utilities": "#64748B", // Slate
   "Transportation": "#EC4899", // Pink
   "Healthcare": "#F43F5E", // Rose
   "Entertainment": "#F59E0B", // Amber
   "Shopping": "#EF4444", // Red
-  "Personal": "#64748B", // Slate
+  "Personal": "#94A3B8", // Gray
   "Education": "#0EA5E9", // Sky
   "Travel": "#14B8A6", // Teal
   "Insurance": "#A855F7", // Purple
   "Debt": "#F97316", // Orange
   "Savings": "#06B6D4", // Cyan
-  "Other": "#94A3B8", // Gray
+  "Other": "#9CA3AF", // Light Gray
 };
 
 // Process monthly data for charts
@@ -71,7 +72,7 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   // Calculate total for percentages
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
-  // Convert to array format for pie chart
+  // Convert to array format for pie chart, sorted by value in descending order
   return Object.entries(categoryTotals)
     .sort(([, valueA], [, valueB]) => valueB - valueA)
     .map(([name, value]) => ({
