@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { IconComponent } from 'lucide-react';
 import { QuickReply } from './types';
 
 interface QuickRepliesProps {

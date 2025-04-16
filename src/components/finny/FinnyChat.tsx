@@ -10,6 +10,7 @@ import ChatInput from './chat/ChatInput';
 import FinnyMessage from './chat/FinnyMessage';
 import QuickReplies from './chat/QuickReplies';
 import { useChatLogic } from './chat/useChatLogic';
+import { Message } from './chat/types';
 
 interface FinnyChatProps {
   isOpen: boolean;
