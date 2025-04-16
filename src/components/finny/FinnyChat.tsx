@@ -1,7 +1,10 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
+import { Info, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
 import FinnyMessage from './chat/FinnyMessage';
