@@ -1,7 +1,7 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
@@ -31,52 +31,55 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <ResponsiveContainer width="100%" height={isMobile ? 280 : 340}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            innerRadius={isMobile ? 70 : 85}
-            outerRadius={isMobile ? 90 : 110}
-            paddingAngle={2}
-            cornerRadius={4}
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.color}
-                stroke="transparent"
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            content={({ active, payload }) => {
-              if (!active || !payload || !payload.length) return null;
-              const data = payload[0].payload;
-              return (
-                <motion.div 
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="tooltip-card"
-                >
-                  <div className="text-sm font-medium mb-1">{data.name}</div>
-                  <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {data.percent.toFixed(1)}% of total
-                  </div>
-                </motion.div>
-              );
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      <div className={`w-full ${isMobile ? 'pie-chart-container h-[260px]' : 'h-[300px]'}`}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={isMobile ? 55 : 75}
+              outerRadius={isMobile ? 80 : 100}
+              paddingAngle={2}
+              cornerRadius={4}
+              labelLine={false}
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color}
+                  stroke="transparent"
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload.length) return null;
+                const data = payload[0].payload;
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="tooltip-card"
+                  >
+                    <div className="text-sm font-medium mb-1">{data.name}</div>
+                    <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {data.percent.toFixed(1)}% of total
+                    </div>
+                  </motion.div>
+                );
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
       
-      {/* Custom legend */}
+      {/* Mobile-friendly legend */}
       <div className="expense-chart-legend">
-        {data.slice(0, 5).map((entry, index) => (
+        {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
           <div key={index} className="expense-chart-legend-item">
             <div 
               className="expense-chart-legend-dot"
@@ -92,4 +95,3 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
     </div>
   );
 };
-

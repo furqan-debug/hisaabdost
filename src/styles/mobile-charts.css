@@ -4,6 +4,7 @@
   .recharts-wrapper {
     @apply max-w-full rounded-lg min-h-[300px];
     overflow: visible !important;
+    margin: 0 auto !important;
   }
   
   .recharts-tooltip-wrapper {
@@ -30,16 +31,51 @@
     fill: var(--foreground) !important;
   }
 
-  /* Improve mobile scrolling */
-  .chart-scroll-container {
-    @apply overflow-x-auto overflow-y-hidden pb-4;
-    -webkit-overflow-scrolling: touch;
+  /* Fixed container to prevent overflow */
+  .chart-container {
+    @apply w-full h-[320px] relative overflow-hidden;
   }
 
-  /* Ensure charts are wide enough on mobile */
-  .mobile-chart-width {
-    min-width: 400px;
-    height: 300px;
+  /* Enhance layout for pie chart on mobile */
+  .pie-chart-container {
+    @apply max-w-[320px] mx-auto;
+  }
+
+  /* Make legend more compact on mobile */
+  .expense-chart-legend {
+    @apply flex flex-wrap justify-center gap-2 my-2;
+  }
+
+  .expense-chart-legend-item {
+    @apply text-xs px-2 py-1;
+  }
+
+  /* Center text properly */
+  .chart-center-total {
+    width: 85% !important;
+    text-align: center !important;
+  }
+  
+  .chart-center-total-amount {
+    @apply text-xl font-bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .chart-center-total-label {
+    @apply text-xs;
+  }
+
+  /* Improve label visibility */
+  .recharts-pie-label-text {
+    @apply text-xs !important;
+  }
+
+  /* Fix scrolling issues by containing the chart */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
   }
 }
 

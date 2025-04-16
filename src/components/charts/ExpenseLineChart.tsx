@@ -15,79 +15,107 @@ interface ExpenseLineChartProps {
 export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const data = processMonthlyData(expenses);
+  
+  // Filter out zero-value categories to reduce clutter
+  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => {
+    return data.some(item => item[category] > 0);
+  });
+  
+  // For mobile, limit to top 5 categories by total amount
+  const getCategoryTotal = (category: string) => {
+    return data.reduce((sum, item) => sum + (item[category] || 0), 0);
+  };
+  
+  const topCategories = isMobile ? 
+    activeCategories
+      .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
+      .slice(0, 5) : 
+    activeCategories;
   
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
-        data={processMonthlyData(expenses)}
-        margin={isMobile ? { top: 20, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
+        data={data}
+        margin={isMobile ? { top: 20, right: 0, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
         <XAxis 
           dataKey="month" 
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 11 : 12, fill: 'var(--foreground)' }}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
           dy={8}
+          interval={isMobile ? 1 : 0}
+          height={isMobile ? 30 : 40}
         />
         <YAxis 
-          tickFormatter={(value) => formatCurrency(value, currencyCode)}
+          tickFormatter={(value) => {
+            if (isMobile) {
+              // Simplified formatter for mobile to save space
+              if (value >= 1000) return `${Math.floor(value / 1000)}k`;
+              return value.toString();
+            }
+            return formatCurrency(value, currencyCode);
+          }}
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 11 : 12, fill: 'var(--foreground)' }}
-          width={isMobile ? 65 : 80}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+          width={isMobile ? 30 : 60}
         />
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
+            // Filter out items with zero value to reduce tooltip size
+            const filteredPayload = payload.filter(entry => entry.value > 0);
+            
             return (
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="tooltip-card"
+                className="tooltip-card max-h-[200px] overflow-y-auto"
               >
                 <div className="text-sm font-medium mb-2">{label}</div>
                 <div className="space-y-1.5">
-                  {payload.map((entry: any, index: number) => (
-                    entry.value > 0 && (
-                      <div key={index} className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full" 
-                            style={{ backgroundColor: entry.stroke }}
-                          />
-                          <span className="text-sm">{entry.name}</span>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {formatCurrency(entry.value, currencyCode)}
-                        </span>
+                  {filteredPayload.map((entry: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full" 
+                          style={{ backgroundColor: entry.stroke }}
+                        />
+                        <span className="text-sm">{entry.name}</span>
                       </div>
-                    )
+                      <span className="text-sm font-medium">
+                        {formatCurrency(entry.value, currencyCode)}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </motion.div>
             );
           }}
         />
-        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+        {/* Only render lines for top categories */}
+        {topCategories.map(category => (
           <Line
             key={category}
             type="monotone"
             dataKey={category}
-            stroke={color}
-            strokeWidth={2}
+            stroke={CATEGORY_COLORS[category]}
+            strokeWidth={isMobile ? 1.5 : 2}
             dot={{
-              r: 3,
-              strokeWidth: 2,
+              r: isMobile ? 2 : 3,
+              strokeWidth: isMobile ? 1 : 2,
               fill: "var(--background)",
-              stroke: color
+              stroke: CATEGORY_COLORS[category]
             }}
             activeDot={{
-              r: 5,
+              r: isMobile ? 4 : 5,
               strokeWidth: 2,
               fill: "var(--background)",
-              stroke: color
+              stroke: CATEGORY_COLORS[category]
             }}
           />
         ))}
