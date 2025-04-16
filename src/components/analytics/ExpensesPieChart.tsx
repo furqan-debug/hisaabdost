@@ -42,64 +42,64 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="relative w-full h-full flex flex-col items-center overflow-visible">
+    <div className="relative w-full h-full flex flex-col items-center overflow-visible" style={{ minHeight: '250px' }}>
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
       </div>
       
-      <ResponsiveContainer width="100%" height={isMobile ? 280 : 300} minHeight={280}>
-        <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 0, left: 0, bottom: 0 }}>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={isMobile ? 110 : 130}
-            innerRadius={isMobile ? 75 : 90}
-            paddingAngle={2}
-            startAngle={90}
-            endAngle={-270}
-            cornerRadius={4}
-            labelLine={false}
-            label={false} // Remove labels for cleaner appearance
-            isAnimationActive={false} // Disable animation for better mobile rendering
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.color} 
-                stroke="transparent" 
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            animationDuration={200}
-            content={({ active, payload }) => {
-              if (!active || !payload || !payload.length) return null;
-              const data = payload[0];
-              return (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg border bg-background p-3 shadow-md"
-                >
-                  <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
-                    {data.name}
-                  </p>
-                  <p className="text-sm font-bold">
-                    {formatCurrency(Number(data.value))}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {(data.payload.percent * 100).toFixed(1)}% of total
-                  </p>
-                </motion.div>
-              );
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      <div className="w-full h-full" style={{ minHeight: '250px' }}>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={isMobile ? 110 : 130}
+              innerRadius={isMobile ? 75 : 90}
+              paddingAngle={2}
+              startAngle={90}
+              endAngle={-270}
+              cornerRadius={4}
+              labelLine={false}
+              label={false} // Remove labels for cleaner appearance
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color} 
+                  stroke="transparent" 
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload || !payload.length) return null;
+                const data = payload[0];
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg border bg-background p-3 shadow-md"
+                  >
+                    <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
+                      {data.name}
+                    </p>
+                    <p className="text-sm font-bold">
+                      {formatCurrency(Number(data.value))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(data.payload.percent * 100).toFixed(1)}% of total
+                    </p>
+                  </motion.div>
+                );
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
       
       {/* Simple legend below the chart */}
       <div className="flex flex-wrap justify-center mt-2 gap-3">

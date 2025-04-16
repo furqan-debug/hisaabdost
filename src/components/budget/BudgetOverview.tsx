@@ -35,9 +35,9 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 pb-2 min-h-[280px]">
-          <div className="w-full" style={{ minHeight: '280px', height: 'auto' }}>
-            <ResponsiveContainer width="100%" height={300} minHeight={280}>
+        <CardContent className="p-0 pb-2" style={{ minHeight: '250px' }}>
+          <div className="w-full h-full" style={{ minHeight: '250px' }}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={data}
@@ -49,7 +49,6 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                     isMobile ? `${percentage}%` : `${name}: ${percentage}%`
                   }
                   labelLine={!isMobile}
-                  isAnimationActive={false}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

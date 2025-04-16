@@ -49,7 +49,7 @@ export const ExpenseAnalyticsCard = ({
   }>);
   
   return (
-    <Card className="overflow-hidden shadow-sm border-border/50 dark:bg-[#1a1f2c]">
+    <Card className="overflow-visible shadow-sm border-border/50 dark:bg-[#1a1f2c]">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
@@ -80,7 +80,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-4">
+      <CardContent className="pt-2 pb-4" style={{ minHeight: '250px' }}>
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -96,6 +96,7 @@ export const ExpenseAnalyticsCard = ({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType}
+            style={{ minHeight: '250px', height: '100%' }}
           >
             <ChartContainer config={chartConfig} className="h-full w-full">
               {renderChart()}
