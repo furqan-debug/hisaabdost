@@ -15,13 +15,10 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const data = calculatePieChartData(expenses);
-  
-  // Calculate total amount
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <div className="relative w-full h-full flex flex-col items-center">
-      {/* Center total display */}
+    <div className="relative w-full flex flex-col items-center min-h-[280px]">
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
           {formatCurrency(totalAmount, currencyCode)}
@@ -31,9 +28,9 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className={`w-full ${isMobile ? 'pie-chart-container' : 'h-[300px]'}`}>
-        <ResponsiveContainer width="100%" height={isMobile ? 280 : 300} minHeight={280}>
-          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+      <div className="w-full" style={{ minHeight: '280px', height: 'auto' }}>
+        <ResponsiveContainer width="100%" height={300} minHeight={280}>
+          <PieChart>
             <Pie
               data={data}
               dataKey="value"
@@ -45,8 +42,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               paddingAngle={2}
               cornerRadius={4}
               labelLine={false}
-              label={false} // Remove labels to prevent overlapping
-              isAnimationActive={false} // Disable animation for better mobile rendering
+              label={false}
+              isAnimationActive={false}
             >
               {data.map((entry, index) => (
                 <Cell 
@@ -79,7 +76,6 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </ResponsiveContainer>
       </div>
       
-      {/* Simplified mobile-friendly legend */}
       <div className="expense-chart-legend">
         {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
           <div key={index} className="expense-chart-legend-item">

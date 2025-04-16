@@ -1,12 +1,18 @@
-
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
-    height: auto !important; /* Allow height to adjust naturally */
-    min-height: 250px !important; /* Ensure minimum height */
+    height: auto !important;
+    min-height: 280px !important;
+  }
+  
+  .recharts-responsive-container {
+    width: 100% !important;
+    min-height: 280px !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   
   .recharts-tooltip-wrapper {
@@ -14,10 +20,26 @@
   }
   
   .budget-chart-container {
-    @apply p-2 mx-0 overflow-visible;
+    @apply p-2 mx-0;
     width: 100% !important;
-    min-height: 280px !important; /* Ensure minimum height */
-    height: auto !important; /* Allow height to adjust */
+    min-height: 280px !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .budget-card {
+    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl;
+    min-height: 280px !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+  
+  .chart-container {
+    @apply w-full relative;
+    min-height: 280px !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   
   .recharts-legend-item {
@@ -121,7 +143,7 @@
   }
 }
 
-/* Chart improvements for all screen sizes */
+/* General chart improvements */
 .recharts-default-legend {
   @apply flex flex-wrap justify-center gap-2 mt-4 !important;
 }
