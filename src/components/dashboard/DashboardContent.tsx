@@ -58,17 +58,17 @@ export function DashboardContent({
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     show: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
+      transition: { duration: 0.3, ease: "easeOut" }
     }
   };
 
   return (
     <motion.div 
-      className="space-y-6"
+      className="space-y-5"
       variants={containerVariants}
       initial="hidden"
       animate="show"

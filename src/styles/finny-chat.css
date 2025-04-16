@@ -1,24 +1,24 @@
 
-/* Finny Chat Styles */
+/* Finny Chat Styles - Updated for clean, minimal design */
 .finny-chat-card {
-  @apply bg-background/95 backdrop-blur-md border rounded-none sm:rounded-2xl shadow-lg overflow-hidden;
+  @apply bg-background/95 backdrop-blur-md border rounded-xl sm:rounded-xl shadow-sm overflow-hidden;
 }
 
 .finny-chat-header {
-  @apply px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30 flex items-center justify-between;
+  @apply px-4 sm:px-5 py-3 border-b bg-muted/30 flex items-center justify-between;
 }
 
 .finny-chat-title {
-  @apply text-base sm:text-lg font-medium flex items-center gap-2;
+  @apply text-base font-medium flex items-center gap-2;
 }
 
 .finny-chat-badge {
-  @apply text-xs bg-[#9b87f5]/10 text-[#9b87f5] rounded-full px-2 sm:px-3 py-1;
+  @apply text-xs bg-primary/10 text-primary rounded-full px-2 sm:px-3 py-1;
 }
 
 /* Message containers */
 .finny-messages-container {
-  @apply px-4 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 scrollbar-hide;
+  @apply px-4 sm:px-5 py-3 space-y-3 scrollbar-hide;
 }
 
 /* Message bubbles */
@@ -31,12 +31,12 @@
 .finny-message-bot {
   @apply relative transition-all duration-200
     before:content-[''] before:absolute before:left-[-8px] before:bottom-[8px]
-    before:w-4 before:h-4 before:bg-[#f8f5ff] dark:before:bg-[#2a2438] before:rounded-br-lg;
+    before:w-4 before:h-4 before:bg-muted before:rounded-br-lg;
 }
 
 /* Input area */
 .finny-chat-input {
-  @apply px-3 sm:px-6 py-3 sm:py-4 border-t bg-background/50 backdrop-blur-sm;
+  @apply px-3 sm:px-5 py-3 border-t bg-background/50 backdrop-blur-sm;
 }
 
 .finny-chat-input-container {
@@ -45,11 +45,11 @@
 
 .finny-chat-input input {
   @apply flex-1 bg-muted/30 border-0 focus-visible:ring-1 transition-all duration-300
-    text-base sm:text-sm py-3 sm:py-2 px-4;
+    text-base sm:text-sm py-2 px-4 rounded-lg;
 }
 
 .finny-chat-input input:focus {
-  @apply ring-[#9b87f5] border-[#9b87f5];
+  @apply ring-primary border-primary;
 }
 
 /* Quick Reply Buttons */
@@ -58,10 +58,10 @@
 }
 
 .quick-reply-button {
-  @apply inline-flex items-center justify-center rounded-full text-sm py-2 px-4
-    bg-[#f8f5ff] dark:bg-[#2a2438] text-[#9b87f5] transition-all duration-200
-    hover:bg-[#9b87f5] hover:text-white hover:shadow-md active:scale-95
-    disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed
+  @apply inline-flex items-center justify-center rounded-lg text-sm py-2 px-4
+    bg-muted text-foreground transition-all duration-200
+    hover:bg-primary hover:text-white active:scale-95
+    disabled:opacity-50 disabled:pointer-events-none
     touch-target;
 }
 
@@ -91,6 +91,6 @@
   }
   
   .quick-reply-button {
-    @apply text-sm py-2.5 px-4;
+    @apply text-sm py-2 px-4;
   }
 }

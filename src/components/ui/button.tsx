@@ -6,30 +6,30 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2.5 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md active:scale-[0.98]",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-[0.98]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md active:scale-[0.98]",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm active:scale-[0.98]",
         outline:
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md active:scale-[0.98]",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm active:scale-[0.98]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        purple: "bg-[#9b87f5] text-white hover:bg-[#7E69AB] shadow-md hover:shadow-lg active:scale-[0.98]",
-        glass: "bg-background/80 backdrop-blur-md border border-border/30 shadow-sm hover:shadow-md hover:bg-background/90 active:scale-[0.98]",
+        teal: "bg-primary text-white hover:bg-primary/90 shadow-sm active:scale-[0.98]",
+        glass: "bg-background/80 backdrop-blur-md border border-border/30 shadow-sm hover:bg-background/90 active:scale-[0.98]",
       },
       size: {
-        default: "h-11 px-5 py-2.5",
-        sm: "h-9 rounded-lg px-3.5",
-        lg: "h-12 rounded-xl px-6 text-base",
-        icon: "h-11 w-11 rounded-full p-0 [&_svg]:size-5",
-        "icon-sm": "h-9 w-9 rounded-full p-0 [&_svg]:size-4",
-        "icon-lg": "h-14 w-14 rounded-full p-0 [&_svg]:size-6",
-        pill: "h-11 px-6 rounded-full",
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-lg px-6 text-base",
+        icon: "h-10 w-10 rounded-lg",
+        "icon-sm": "h-8 w-8 rounded-md",
+        "icon-lg": "h-12 w-12 rounded-lg",
+        pill: "h-10 px-5 rounded-full",
       },
     },
     defaultVariants: {

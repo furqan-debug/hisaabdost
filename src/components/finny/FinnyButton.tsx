@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { MessageCircleHeart, X } from 'lucide-react';
+import { MessageSquareText, X } from 'lucide-react';
 
 interface FinnyButtonProps {
   onClick: () => void;
@@ -20,10 +20,10 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
     >
       <Button
         onClick={onClick}
-        className={`w-14 h-14 rounded-full shadow-lg ${
+        className={`w-14 h-14 rounded-full shadow-md ${
           isOpen 
             ? 'bg-destructive hover:bg-destructive/90' 
-            : 'bg-[#9b87f5] hover:bg-[#8674d6]'
+            : 'bg-primary hover:bg-primary/90'
         }`}
         aria-label={isOpen ? "Close Finny Chat" : "Open Finny Chat"}
       >
@@ -32,9 +32,9 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           transition={{ duration: 0.2 }}
         >
           {isOpen ? (
-            <X size={24} className="text-white" />
+            <X size={22} className="text-white" />
           ) : (
-            <MessageCircleHeart size={24} className="text-white" />
+            <MessageSquareText size={22} className="text-white" />
           )}
         </motion.div>
       </Button>

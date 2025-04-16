@@ -18,7 +18,7 @@ const QuickReplies = ({ replies, onSelect, isLoading, isAuthenticated }: QuickRe
       {replies.map((reply, index) => (
         <button 
           key={index} 
-          className={`quick-reply-button ${isMobile ? 'py-2 px-4 text-sm touch-target' : ''}`}
+          className="quick-reply-button"
           onClick={() => onSelect(reply)}
           disabled={isLoading || !isAuthenticated}
         >

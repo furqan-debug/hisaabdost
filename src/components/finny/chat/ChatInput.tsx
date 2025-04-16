@@ -32,21 +32,19 @@ const ChatInput = ({
           placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny"}
           value={value}
           onChange={onChange}
-          className={`flex-1 ${isMobile ? 'h-12 text-base px-4' : ''}`}
+          className="flex-1 rounded-lg"
           disabled={isLoading || !isAuthenticated || isConnecting}
         />
         <Button
           type="submit"
-          size={isMobile ? "lg" : "icon"}
-          className={`finny-button-animate bg-[#9b87f5] hover:bg-[#8674d6] ${
-            isMobile ? 'h-12 px-6' : ''
-          }`}
+          size={isMobile ? "default" : "icon"}
+          className="bg-primary hover:bg-primary/90"
           disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}
         >
           {isLoading ? (
-            <Loader2 className={`animate-spin ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+            <Loader2 className="animate-spin h-4 w-4" />
           ) : (
-            <Send className={isMobile ? 'h-5 w-5' : 'h-4 w-4'} />
+            <Send className="h-4 w-4" />
           )}
         </Button>
       </div>

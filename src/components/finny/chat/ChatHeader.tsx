@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageCircleHeart, HelpCircle } from 'lucide-react';
+import { MessageSquareText, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,8 +14,8 @@ const ChatHeader = () => {
   return (
     <div className="finny-chat-header">
       <div className="finny-chat-title">
-        <MessageCircleHeart size={20} className="text-[#9b87f5]" />
-        <span className="text-[#9b87f5] font-semibold">Finny</span>
+        <MessageSquareText size={18} className="text-primary" />
+        <span className="text-primary font-medium">Finny</span>
         <Badge className="finny-chat-badge ml-1">Finance Assistant</Badge>
       </div>
       <TooltipProvider>
@@ -24,7 +24,7 @@ const ChatHeader = () => {
             <Button 
               variant="ghost" 
               size="icon-sm" 
-              className="rounded-full hover:bg-muted/80"
+              className="rounded-lg hover:bg-muted/80"
               aria-label="Finny Help"
             >
               <HelpCircle size={16} className="text-muted-foreground" />

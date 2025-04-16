@@ -6,7 +6,7 @@ import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
+import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
@@ -51,7 +51,7 @@ export const ExpenseAnalyticsCard = ({
   }>);
   
   return (
-    <Card className="mt-4 overflow-hidden">
+    <Card className="overflow-hidden shadow-sm border-border/50">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
@@ -59,30 +59,30 @@ export const ExpenseAnalyticsCard = ({
             <div className="bg-muted/30 rounded-lg p-1 flex">
               <button 
                 onClick={() => setChartType('pie')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Pie chart"
               >
-                <PieChartIcon className="h-4 w-4" />
+                <PieChart className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('bar')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Bar chart"
               >
-                <BarChartIcon className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4" />
               </button>
               <button 
                 onClick={() => setChartType('line')} 
-                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'}`} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} 
                 aria-label="Line chart"
               >
-                <LineChartIcon className="h-4 w-4" />
+                <LineChart className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-4 pb-8 min-h-[400px]"> {/* Increased height and padding */}
+      <CardContent className="pt-4 pb-6 min-h-[350px]">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -97,7 +97,7 @@ export const ExpenseAnalyticsCard = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            key={chartType} // Re-run animation when chart type changes
+            key={chartType}
           >
             <ChartContainer config={chartConfig} className="mx-0 my-0 h-full">
               {renderChart()}
@@ -108,4 +108,3 @@ export const ExpenseAnalyticsCard = ({
     </Card>
   );
 };
-
