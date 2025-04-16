@@ -80,7 +80,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-4" style={{ minHeight: '250px' }}>
+      <CardContent className="pt-2 pb-4" style={{ height: '300px' }}>
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -96,7 +96,7 @@ export const ExpenseAnalyticsCard = ({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType}
-            style={{ minHeight: '250px', height: '100%' }}
+            style={{ height: '100%', width: '100%' }}
           >
             <ChartContainer config={chartConfig} className="h-full w-full">
               {renderChart()}

@@ -18,7 +18,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <div className="relative w-full flex flex-col items-center" style={{ minHeight: '250px' }}>
+    <div className="relative w-full flex flex-col items-center" style={{ height: '300px' }}>
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
           {formatCurrency(totalAmount, currencyCode)}
@@ -28,8 +28,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className="w-full h-full" style={{ minHeight: '250px' }}>
-        <ResponsiveContainer width="100%" height={280}>
+      <div className="w-full h-full">
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={data}

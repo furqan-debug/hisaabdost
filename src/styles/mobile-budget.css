@@ -3,7 +3,7 @@
 @media (max-width: 640px) {
   /* Budget specific mobile optimizations */
   .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl w-full max-w-full overflow-hidden;
+    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl w-full max-w-full overflow-visible;
   }
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
@@ -50,16 +50,16 @@
   
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
-    height: 300px;
+    height: 300px !important;
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden !important;
+    overflow: visible !important;
   }
   
   /* Add padding for mobile budget section */
   .budget-section {
     @apply py-2 px-1 max-w-full;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     width: 100%;
   }
   
@@ -82,7 +82,7 @@
   .budget-content {
     @apply w-full px-1 max-w-full;
     max-width: 100%;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     width: 100%;
   }
   
@@ -110,6 +110,6 @@
   .budget-comparison-chart {
     width: 100% !important;
     max-width: 100% !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
   }
 }

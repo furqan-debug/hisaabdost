@@ -42,14 +42,14 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="relative w-full h-full flex flex-col items-center overflow-visible" style={{ minHeight: '250px' }}>
+    <div className="relative w-full flex flex-col items-center" style={{ minHeight: '300px', height: '300px' }}>
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
       </div>
       
-      <div className="w-full h-full" style={{ minHeight: '250px' }}>
-        <ResponsiveContainer width="100%" height={280}>
+      <div className="w-full h-full">
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={data}

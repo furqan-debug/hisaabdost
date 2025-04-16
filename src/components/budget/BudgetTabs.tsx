@@ -41,7 +41,7 @@ export const BudgetTabs = ({
       <CardContent className="p-0 md:p-6 overflow-visible">
         <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full overflow-visible">
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start rounded-none md:rounded-md overflow-x-auto py-[11px] px-[39px]">
+            <TabsList className="w-full justify-start rounded-none md:rounded-md overflow-x-auto py-[11px] px-4 md:px-[39px]">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
