@@ -72,10 +72,12 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
   // Convert to array format for pie chart
-  return Object.entries(categoryTotals).map(([name, value]) => ({
-    name,
-    value,
-    color: CATEGORY_COLORS[name] || "#9E9E9E",
-    percent: total > 0 ? value / total : 0, // Add percent property
-  }));
+  return Object.entries(categoryTotals)
+    .sort(([, valueA], [, valueB]) => valueB - valueA)
+    .map(([name, value]) => ({
+      name,
+      value,
+      color: CATEGORY_COLORS[name] || "#94A3B8", // Default to gray if category not found
+      percent: total > 0 ? value / total : 0, // Add percent property
+    }));
 };
