@@ -1,9 +1,8 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-import { formatCurrency } from "@/utils/formatters";
 
 interface Expense {
   amount: number;
@@ -34,7 +33,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   // Calculate percentages based on total
   const total = data.reduce((sum, item) => sum + item.value, 0);
   data.forEach(item => {
-    item.percent = total > 0 ? (item.value / total) * 100 : 0;
+    item.percent = total > 0 ? (item.value / total) : 0;
   });
   
   // Get main percentage (for the largest category)
@@ -43,14 +42,14 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="w-full h-[300px] flex flex-col items-center relative overflow-visible">
+    <div className="relative w-full h-full flex flex-col items-center overflow-visible" style={{ minHeight: '250px' }}>
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
       </div>
       
-      <div className="w-full h-full">
-        <ResponsiveContainer width="100%" height={300}>
+      <div className="w-full h-full" style={{ minHeight: '250px' }}>
+        <ResponsiveContainer width="100%" height={280}>
           <PieChart>
             <Pie
               data={data}
@@ -65,7 +64,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               endAngle={-270}
               cornerRadius={4}
               labelLine={false}
-              label={false}
+              label={false} // Remove labels for cleaner appearance
             >
               {data.map((entry, index) => (
                 <Cell 

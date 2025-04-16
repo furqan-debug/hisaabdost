@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/use-currency";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Expense {
   amount: number;
@@ -20,7 +19,6 @@ interface ExpensesComparisonProps {
 
 export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   const { currencyCode } = useCurrency();
-  const isMobile = useIsMobile();
   const now = new Date();
   const currentMonthStart = startOfMonth(now);
   const lastMonthStart = startOfMonth(subMonths(now, 1));
@@ -54,17 +52,12 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
       currentAmount,
       lastAmount,
       percentageChange,
-      color: CATEGORY_COLORS[category],
+      color: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
     };
-  })
-  .filter(comparison => comparison.currentAmount > 0 || comparison.lastAmount > 0)
-  .sort((a, b) => Math.abs(b.percentageChange) - Math.abs(a.percentageChange));
-
-  // Limit to top categories on mobile
-  const displayComparisons = isMobile ? comparisons.slice(0, 6) : comparisons;
+  }).filter(comparison => comparison.currentAmount > 0 || comparison.lastAmount > 0);
 
   return (
-    <div className="space-y-6 overflow-visible w-full h-full">
+    <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardContent className="pt-6">
@@ -84,8 +77,8 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
         </Card>
       </div>
 
-      <div className="space-y-4 overflow-visible w-full">
-        {displayComparisons.map(({ category, currentAmount, lastAmount, percentageChange, color }) => (
+      <div className="space-y-4">
+        {comparisons.map(({ category, currentAmount, lastAmount, percentageChange, color }) => (
           <div key={category} className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-medium" style={{ color }}>{category}</span>

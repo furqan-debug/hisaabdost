@@ -80,24 +80,25 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-4 h-[300px] overflow-visible">
+      <CardContent className="pt-2 pb-4" style={{ minHeight: '250px' }}>
         {isLoading ? (
-          <div className="flex justify-center p-6 h-full items-center">
+          <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
           </div>
         ) : expenses.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 h-full flex items-center justify-center">
+          <div className="text-center text-muted-foreground py-8">
             Add some expenses to see analytics
           </div>
         ) : (
           <motion.div 
-            className="chart-container w-full h-full" 
+            className="chart-container" 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
             key={chartType}
+            style={{ minHeight: '250px', height: '100%' }}
           >
-            <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
+            <ChartContainer config={chartConfig} className="h-full w-full">
               {renderChart()}
             </ChartContainer>
           </motion.div>
