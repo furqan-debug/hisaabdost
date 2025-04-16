@@ -68,7 +68,11 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
             if (!active || !payload || !payload.length) return null;
             
             // Filter out items with zero value to reduce tooltip size
-            const filteredPayload = payload.filter(entry => entry.value > 0);
+            const filteredPayload = payload.filter(entry => {
+              // Convert ValueType to number for safe comparison
+              const value = entry.value !== undefined ? Number(entry.value) : 0;
+              return value > 0;
+            });
             
             return (
               <motion.div 
@@ -88,7 +92,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
                         <span className="text-sm">{entry.name}</span>
                       </div>
                       <span className="text-sm font-medium">
-                        {formatCurrency(entry.value, currencyCode)}
+                        {formatCurrency(Number(entry.value), currencyCode)}
                       </span>
                     </div>
                   ))}

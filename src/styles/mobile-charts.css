@@ -77,6 +77,22 @@
     width: 100% !important;
     height: 100% !important;
   }
+  
+  /* Prevent tooltips from causing scrolling */
+  .tooltip-card {
+    max-width: 220px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Adjust axis spacing */
+  .recharts-cartesian-axis {
+    overflow: visible !important;
+  }
+  
+  /* Better label positioning for small screens */
+  .recharts-layer.recharts-cartesian-axis-tick {
+    overflow: visible !important;
+  }
 }
 
 /* Chart improvements for all screen sizes */
@@ -128,4 +144,19 @@
 
 .expense-chart-legend-dot {
   @apply w-2.5 h-2.5 rounded-full;
+}
+
+/* Fix for overflow issues */
+.recharts-surface {
+  overflow: visible !important;
+}
+
+/* Fix for tooltip positioning */
+.recharts-tooltip-wrapper {
+  pointer-events: none !important;
+}
+
+/* Improve mobile chart interactions */
+.chart-container .recharts-wrapper {
+  touch-action: pan-y !important;
 }
