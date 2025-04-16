@@ -1,31 +1,29 @@
-
 import { format, parseISO } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Re-export formatCurrency so existing components don't break
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Define category colors with a clean, minimalist palette with good contrast
+// Updated modern color palette with better contrast
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#3B82F6", // Blue
-  "Groceries": "#10B981", // Emerald
-  "Housing": "#6366F1", // Indigo
-  "Utilities": "#8B5CF6", // Violet
-  "Transportation": "#EC4899", // Pink
-  "Healthcare": "#F43F5E", // Rose
-  "Entertainment": "#F59E0B", // Amber
-  "Shopping": "#EF4444", // Red
-  "Personal": "#64748B", // Slate
-  "Education": "#0EA5E9", // Sky
-  "Travel": "#14B8A6", // Teal
-  "Insurance": "#A855F7", // Purple
-  "Debt": "#F97316", // Orange
-  "Savings": "#06B6D4", // Cyan
-  "Other": "#94A3B8", // Gray
+  "Food": "#3B82F6",          // Bright Blue
+  "Groceries": "#10B981",     // Emerald
+  "Housing": "#8B5CF6",       // Purple
+  "Utilities": "#64748B",     // Slate
+  "Transportation": "#EF4444", // Red
+  "Healthcare": "#EC4899",     // Pink
+  "Entertainment": "#F59E0B",  // Amber
+  "Shopping": "#6366F1",      // Indigo
+  "Personal": "#8B5CF6",      // Violet
+  "Education": "#0EA5E9",     // Sky
+  "Travel": "#14B8A6",        // Teal
+  "Insurance": "#6366F1",     // Indigo
+  "Debt": "#F97316",          // Orange
+  "Savings": "#22C55E",       // Green
+  "Other": "#94A3B8",         // Cool Gray
 };
 
 // Process monthly data for charts
@@ -57,9 +55,8 @@ export const processMonthlyData = (expenses: Expense[]) => {
     }));
 };
 
-// Calculate data for pie charts
+// Enhanced pie chart data calculation
 export const calculatePieChartData = (expenses: Expense[]) => {
-  // Group by category
   const categoryTotals = expenses.reduce((acc, expense) => {
     if (!acc[expense.category]) {
       acc[expense.category] = 0;
@@ -68,16 +65,14 @@ export const calculatePieChartData = (expenses: Expense[]) => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Calculate total for percentages
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
-  // Convert to array format for pie chart
   return Object.entries(categoryTotals)
     .sort(([, valueA], [, valueB]) => valueB - valueA)
     .map(([name, value]) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || "#94A3B8", // Default to gray if category not found
-      percent: total > 0 ? value / total : 0, // Add percent property
+      color: CATEGORY_COLORS[name] || "#94A3B8",
+      percent: total > 0 ? (value / total) * 100 : 0,
     }));
 };

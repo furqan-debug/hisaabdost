@@ -1,110 +1,97 @@
 
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import React from 'react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
-import { Expense } from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { motion } from "framer-motion";
 
 interface ExpenseLineChartProps {
   expenses: Expense[];
 }
 
 export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
-  const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   
-  // Get top 5 categories by total expense
-  const topCategories = getTopCategories(expenses, 5);
-
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
-      <LineChart 
-        data={chartData}
-        margin={isMobile ? { top: 15, right: 10, left: 0, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart
+        data={processMonthlyData(expenses)}
+        margin={isMobile ? { top: 20, right: 10, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
       >
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
         <XAxis 
           dataKey="month" 
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+          tick={{ fontSize: isMobile ? 11 : 12, fill: 'var(--foreground)' }}
+          dy={8}
         />
         <YAxis 
-          tickFormatter={(value) => `${formatCurrency(Number(value)/1000, currencyCode).split('.')[0]}k`}
+          tickFormatter={(value) => formatCurrency(value, currencyCode)}
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
-          width={isMobile ? 30 : 40}
+          tick={{ fontSize: isMobile ? 11 : 12, fill: 'var(--foreground)' }}
+          width={isMobile ? 65 : 80}
         />
         <Tooltip
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
-            // Only show categories that have actual values (not null)
-            const validData = payload.filter(p => p.value !== null && Number(p.value) > 0);
-            
             return (
-              <div className="rounded-lg border bg-background/95 p-2 shadow-sm text-left">
-                <p className="text-sm font-medium mb-1">{label}</p>
-                {validData.map((entry) => (
-                  <p 
-                    key={entry.name}
-                    className="text-xs flex justify-between gap-2"
-                  >
-                    <span style={{ color: entry.color }}>{entry.name}:</span>
-                    <span className="font-medium">{formatCurrency(Number(entry.value), currencyCode)}</span>
-                  </p>
-                ))}
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="tooltip-card"
+              >
+                <div className="text-sm font-medium mb-2">{label}</div>
+                <div className="space-y-1.5">
+                  {payload.map((entry: any, index: number) => (
+                    entry.value > 0 && (
+                      <div key={index} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2.5 h-2.5 rounded-full" 
+                            style={{ backgroundColor: entry.stroke }}
+                          />
+                          <span className="text-sm">{entry.name}</span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(entry.value, currencyCode)}
+                        </span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </motion.div>
             );
           }}
         />
-        <Legend 
-          wrapperStyle={isMobile ? { fontSize: '10px', marginTop: '10px' } : { marginTop: '10px' }}
-          iconSize={8}
-          iconType="circle"
-        />
-        {topCategories.map((category) => (
+        {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
           <Line
             key={category}
             type="monotone"
             dataKey={category}
-            name={category}
-            stroke={CATEGORY_COLORS[category]}
+            stroke={color}
             strokeWidth={2}
-            dot={{ 
-              fill: CATEGORY_COLORS[category],
+            dot={{
               r: 3,
-              strokeWidth: 0
+              strokeWidth: 2,
+              fill: "var(--background)",
+              stroke: color
             }}
-            activeDot={{ 
+            activeDot={{
               r: 5,
-              stroke: CATEGORY_COLORS[category],
-              strokeWidth: 1,
-              fill: 'var(--background)'
+              strokeWidth: 2,
+              fill: "var(--background)",
+              stroke: color
             }}
-            connectNulls={true}
           />
         ))}
       </LineChart>
     </ResponsiveContainer>
   );
-};
-
-// Helper function to get top spending categories
-const getTopCategories = (expenses: Expense[], limit: number): string[] => {
-  const categoryTotals = expenses.reduce((acc, expense) => {
-    if (!acc[expense.category]) {
-      acc[expense.category] = 0;
-    }
-    acc[expense.category] += Number(expense.amount);
-    return acc;
-  }, {} as Record<string, number>);
-
-  return Object.entries(categoryTotals)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, limit)
-    .map(([category]) => category);
 };

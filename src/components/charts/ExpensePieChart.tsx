@@ -1,139 +1,95 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { Expense } from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { motion } from "framer-motion";
 
 interface ExpensePieChartProps {
   expenses: Expense[];
 }
 
-// Define the type for pie chart data items
-interface PieChartDataItem {
-  name: string;
-  value: number;
-  color: string;
-  percent: number;
-}
-
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
-  const pieChartData = calculatePieChartData(expenses) as PieChartDataItem[];
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const data = calculatePieChartData(expenses);
+  
+  // Calculate total amount
+  const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 320 : 400}>
-      <PieChart margin={isMobile ? { top: 20, right: 10, left: 10, bottom: 35 } : { top: 10, right: 30, left: 30, bottom: 30 }}>
-        <Pie
-          data={pieChartData}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="50%"
-          outerRadius={isMobile ? 90 : 140}
-          innerRadius={isMobile ? 50 : 80}
-          paddingAngle={2}
-          labelLine={false}
-          label={({ percent }) => {
-            // Only show percentage for segments > 5%
-            if (percent < 0.05) return null;
-            return `${(percent * 100).toFixed(0)}%`;
-          }}
-        >
-          {pieChartData.map((entry, index) => (
-            <Cell 
-              key={`${entry.name}-${index}`} 
-              fill={entry.color} 
-              stroke="var(--background)" 
-              strokeWidth={1}
+    <div className="relative w-full h-full flex flex-col items-center">
+      {/* Center total display */}
+      <div className="chart-center-total">
+        <div className="chart-center-total-amount">
+          {formatCurrency(totalAmount, currencyCode)}
+        </div>
+        <div className="chart-center-total-label">
+          Total Expenses
+        </div>
+      </div>
+      
+      <ResponsiveContainer width="100%" height={isMobile ? 280 : 340}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={isMobile ? 70 : 85}
+            outerRadius={isMobile ? 90 : 110}
+            paddingAngle={2}
+            cornerRadius={4}
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color}
+                stroke="transparent"
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            content={({ active, payload }) => {
+              if (!active || !payload || !payload.length) return null;
+              const data = payload[0].payload;
+              return (
+                <motion.div 
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="tooltip-card"
+                >
+                  <div className="text-sm font-medium mb-1">{data.name}</div>
+                  <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {data.percent.toFixed(1)}% of total
+                  </div>
+                </motion.div>
+              );
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      
+      {/* Custom legend */}
+      <div className="expense-chart-legend">
+        {data.slice(0, 5).map((entry, index) => (
+          <div key={index} className="expense-chart-legend-item">
+            <div 
+              className="expense-chart-legend-dot"
+              style={{ backgroundColor: entry.color }}
             />
-          ))}
-        </Pie>
-        <Tooltip 
-          content={({ active, payload }) => {
-            if (!active || !payload || !payload.length) return null;
-            const data = payload[0];
-            return (
-              <div className="rounded-lg border bg-background/95 p-2 shadow-sm text-left">
-                <p className="text-sm font-medium mb-1">
-                  {data.name}
-                </p>
-                <p className="text-sm font-semibold">
-                  {formatCurrency(Number(data.value), currencyCode)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {(data.payload.percent * 100).toFixed(1)}% of total
-                </p>
-              </div>
-            );
-          }}
-        />
-        <Legend
-          verticalAlign="bottom"
-          align="center"
-          layout="horizontal"
-          iconType="circle"
-          iconSize={8}
-          wrapperStyle={{ 
-            fontSize: isMobile ? '11px' : '12px',
-            paddingTop: '16px',
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '4px'
-          }}
-          formatter={(value, entry: any) => {
-            // Show minimalist legend entries
-            const displayName = value.length > 10 ? `${value.slice(0, 10)}...` : value;
-            
-            return (
-              <span style={{ 
-                color: 'var(--foreground)', 
-                display: 'inline-block',
-                padding: '2px 5px',
-                margin: '0 2px',
-                fontSize: isMobile ? '10px' : '11px',
-                fontWeight: '500',
-                borderRadius: '3px',
-                border: `1px solid ${entry.payload.color}30`,
-                backgroundColor: 'transparent'
-              }}>
-                {displayName}
-              </span>
-            );
-          }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
+            <span>{entry.name}</span>
+            <span className="font-medium ml-1">
+              {entry.percent.toFixed(0)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
-}
-
-// Helper function to calculate pie chart data
-const calculatePieChartData = (expenses: Expense[]) => {
-  // Group by category
-  const categoryTotals = expenses.reduce((acc, expense) => {
-    if (!acc[expense.category]) {
-      acc[expense.category] = 0;
-    }
-    acc[expense.category] += Number(expense.amount);
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Sort by value in descending order
-  const sortedEntries = Object.entries(categoryTotals)
-    .sort(([, valueA], [, valueB]) => valueB - valueA);
-
-  // Calculate total for percentages
-  const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
-
-  // Convert to array format for pie chart
-  return sortedEntries.map(([name, value]) => ({
-    name,
-    value,
-    color: CATEGORY_COLORS[name] || "#94A3B8", // Default to gray if category not found
-    percent: total > 0 ? value / total : 0, // Add percent property
-  }));
 };
+
