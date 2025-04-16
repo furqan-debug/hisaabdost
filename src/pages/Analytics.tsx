@@ -134,8 +134,8 @@ export default function Analytics() {
                 <CardTitle>Category Breakdown</CardTitle>
                 <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-auto overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full px-0 py-0 my-0 mx--11 overflow-visible">
+              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
+                <ChartContainer config={chartConfig} className="h-full w-full px-0 py-0 overflow-visible">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
@@ -148,8 +148,8 @@ export default function Analytics() {
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-auto overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full overflow-visible">
+              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
+                <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
@@ -160,8 +160,8 @@ export default function Analytics() {
                 <CardTitle>Category Trends</CardTitle>
                 <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-auto overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full overflow-visible">
+              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
+                <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
@@ -174,7 +174,7 @@ export default function Analytics() {
                 <CardTitle>Period Comparison</CardTitle>
                 <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent className="overflow-visible">
+              <CardContent className="overflow-visible min-h-[300px]">
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>

@@ -32,40 +32,42 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-        <XAxis dataKey="month" />
-        <YAxis tickFormatter={(value) => formatCurrency(value, currencyCode)} />
-        <Tooltip
-          content={({ active, payload, label }) => {
-            if (!active || !payload || !payload.length) return null;
-            return (
-              <div className="rounded-lg border bg-background p-2 shadow-sm">
-                <p className="text-sm font-semibold">{label}</p>
-                {payload.map((entry) => (
-                  <p
-                    key={entry.name}
-                    className="text-sm"
-                    style={{ color: entry.color }}
-                  >
-                    {entry.name}: {formatCurrency(entry.value as number, currencyCode)}
-                  </p>
-                ))}
-              </div>
-            );
-          }}
-        />
-        <Legend />
-        {Object.keys(CATEGORY_COLORS).map((category) => (
-          <Bar
-            key={category}
-            dataKey={category}
-            stackId="a"
-            fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+    <div className="w-full h-full" style={{ minHeight: "300px", height: "100%" }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+          <XAxis dataKey="month" />
+          <YAxis tickFormatter={(value) => formatCurrency(value, currencyCode)} />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload || !payload.length) return null;
+              return (
+                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                  <p className="text-sm font-semibold">{label}</p>
+                  {payload.map((entry) => (
+                    <p
+                      key={entry.name}
+                      className="text-sm"
+                      style={{ color: entry.color }}
+                    >
+                      {entry.name}: {formatCurrency(entry.value as number, currencyCode)}
+                    </p>
+                  ))}
+                </div>
+              );
+            }}
           />
-        ))}
-      </BarChart>
-    </ResponsiveContainer>
+          <Legend />
+          {Object.keys(CATEGORY_COLORS).map((category) => (
+            <Bar
+              key={category}
+              dataKey={category}
+              stackId="a"
+              fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

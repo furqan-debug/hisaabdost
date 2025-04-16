@@ -29,7 +29,7 @@ export const BudgetTabs = ({
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
     }
-  }, [activeTab]);
+  }, [activeTab, stableActiveTab]);
 
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
@@ -49,19 +49,19 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="budget-section overflow-visible w-full">
+          <TabsContent value="overview" className="budget-section overflow-visible w-full min-h-[300px]">
             <BudgetOverview budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="categories" className="budget-section overflow-visible w-full">
+          <TabsContent value="categories" className="budget-section overflow-visible w-full min-h-[300px]">
             <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
           </TabsContent>
 
-          <TabsContent value="transactions" className="budget-section overflow-visible w-full">
+          <TabsContent value="transactions" className="budget-section overflow-visible w-full min-h-[300px]">
             <BudgetTransactions budgets={budgets || []} />
           </TabsContent>
 
-          <TabsContent value="comparison" className="budget-section overflow-visible w-full">
+          <TabsContent value="comparison" className="budget-section overflow-visible w-full min-h-[300px]">
             <BudgetComparison budgets={budgets || []} />
           </TabsContent>
         </Tabs>

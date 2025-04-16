@@ -1,8 +1,10 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface Expense {
   amount: number;
@@ -15,6 +17,7 @@ interface ExpensesPieChartProps {
 
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   const data = Object.entries(
     expenses.reduce((acc, expense) => {
@@ -42,13 +45,13 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="relative w-full h-full flex flex-col items-center overflow-visible" style={{ minHeight: '250px' }}>
+    <div className="relative w-full h-full flex flex-col items-center" style={{ minHeight: "300px" }}>
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
       </div>
       
-      <div className="w-full h-full" style={{ minHeight: '250px' }}>
+      <div className="w-full h-full" style={{ minHeight: "300px" }}>
         <ResponsiveContainer width="100%" height={280}>
           <PieChart>
             <Pie
@@ -88,7 +91,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
                       {data.name}
                     </p>
                     <p className="text-sm font-bold">
-                      {formatCurrency(Number(data.value))}
+                      {formatCurrency(Number(data.value), currencyCode)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {(data.payload.percent * 100).toFixed(1)}% of total

@@ -47,8 +47,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="p-0 pb-2 overflow-visible" style={{ minHeight: '250px' }}>
-        <div className="w-full h-full" style={{ minHeight: '250px' }}>
+      <CardContent className="p-0 pb-2 overflow-visible" style={{ minHeight: "300px" }}>
+        <div className="w-full h-full" style={{ minHeight: "300px", height: "300px" }}>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart 
               data={data} 
