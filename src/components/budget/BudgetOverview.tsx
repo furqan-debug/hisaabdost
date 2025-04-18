@@ -26,7 +26,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (budgets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center h-full min-h-[300px]">
         <p className="text-muted-foreground mb-2">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>
@@ -35,16 +35,16 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   return (
     <div className="w-full h-full min-h-[300px] flex flex-col">
-      <Card className="flex-1 min-h-[300px]">
+      <Card className="flex-1">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="p-0 flex-1 min-h-[300px]">
-          <div className="relative w-full h-full min-h-[300px]">
+        <CardContent className="p-0 flex-1 card-content-chart">
+          <div className="relative w-full h-full chart-container">
             {/* Center total display */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none">
-              <p className="text-2xl font-bold">{formatCurrency(totalBudget, currencyCode)}</p>
-              <p className="text-sm text-muted-foreground">Total Budget</p>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none chart-center-total">
+              <p className="text-2xl font-bold chart-center-total-amount">{formatCurrency(totalBudget, currencyCode)}</p>
+              <p className="text-sm text-muted-foreground chart-center-total-label">Total Budget</p>
             </div>
             
             <ResponsiveContainer width="100%" height="100%" minHeight={300}>
@@ -55,8 +55,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={isMobile ? 60 : 80}
-                  outerRadius={isMobile ? 90 : 120}
+                  innerRadius={isMobile ? 65 : 80}
+                  outerRadius={isMobile ? 95 : 120}
                   paddingAngle={2}
                   cornerRadius={4}
                 >
@@ -73,7 +73,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                     if (!active || !payload || !payload.length) return null;
                     const data = payload[0].payload;
                     return (
-                      <div className="rounded-lg border bg-background p-2 shadow-sm">
+                      <div className="rounded-lg border bg-background p-2 shadow-sm tooltip-card">
                         <p className="text-sm font-semibold">{data.name}</p>
                         <p className="text-sm">{formatCurrency(data.value, currencyCode)}</p>
                         <p className="text-xs text-muted-foreground">
@@ -89,15 +89,15 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
         </CardContent>
       </Card>
       
-      {/* Legend */}
-      <div className="mt-4 grid grid-cols-2 gap-2 px-2">
+      {/* Legend - improved for mobile */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 px-2 expense-chart-legend">
         {data.map((entry, index) => (
-          <div key={index} className="flex items-center space-x-2">
+          <div key={index} className="flex items-center space-x-2 expense-chart-legend-item">
             <div 
-              className="w-3 h-3 rounded-sm flex-shrink-0"
+              className="w-3 h-3 rounded-sm flex-shrink-0 expense-chart-legend-dot"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm truncate">{entry.name}</span>
+            <span className="text-sm truncate mobile-truncate">{entry.name}</span>
             <span className="text-sm font-medium">{entry.percentage}%</span>
           </div>
         ))}

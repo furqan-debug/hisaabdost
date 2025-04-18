@@ -7,6 +7,7 @@ import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
 import { BudgetComparison } from "@/components/budget/BudgetComparison";
 import { Budget } from "@/pages/Budget";
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BudgetTabsProps {
   budgets: Budget[];
@@ -22,6 +23,7 @@ export const BudgetTabs = ({
   onTabChange
 }: BudgetTabsProps) => {
   const [stableActiveTab, setStableActiveTab] = useState(activeTab);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (activeTab !== stableActiveTab) {
@@ -44,38 +46,38 @@ export const BudgetTabs = ({
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar flex-shrink-0">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison">Comparison</TabsTrigger>
+              <TabsTrigger value="overview" className="budget-tabs-trigger">Overview</TabsTrigger>
+              <TabsTrigger value="categories" className="budget-tabs-trigger">Categories</TabsTrigger>
+              <TabsTrigger value="transactions" className="budget-tabs-trigger">Transactions</TabsTrigger>
+              <TabsTrigger value="comparison" className="budget-tabs-trigger">Comparison</TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden p-4 min-h-[500px]">
+          <div className="flex-1 min-h-0 overflow-hidden p-4 budget-section">
             <TabsContent 
               value="overview" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden budget-chart-container"
             >
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="categories" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden budget-chart-container"
             >
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
             <TabsContent 
               value="transactions" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden budget-chart-container"
             >
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="comparison" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden budget-chart-container"
             >
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
