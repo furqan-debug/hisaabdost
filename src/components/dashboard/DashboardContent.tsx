@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -46,7 +45,6 @@ export function DashboardContent({
   chartType,
   setChartType
 }: DashboardContentProps) {
-  // Animation variants for staggered children
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -68,7 +66,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-5"
+      className="space-y-4 md:space-y-5 px-2 md:px-0"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -90,7 +88,7 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="px-2 md:px-0">
         <AddExpenseButton 
           isNewUser={isNewUser}
           expenseToEdit={expenseToEdit}
@@ -111,7 +109,7 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="mb-16 md:mb-0">
         <ExpenseAnalyticsCard 
           expenses={expenses}
           isLoading={isExpensesLoading}
