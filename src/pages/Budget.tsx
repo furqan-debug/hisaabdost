@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -82,7 +83,7 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container h-full min-h-[calc(100vh-200px)]">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container h-full flex flex-col min-h-[calc(100vh-200px)]">
       <BudgetHeader 
         onAddBudget={handleAddBudget}
         onExport={exportBudgetData}

@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
@@ -20,10 +21,8 @@ export const BudgetTabs = ({
   activeTab,
   onTabChange
 }: BudgetTabsProps) => {
-  // Local state to prevent tab flickering
   const [stableActiveTab, setStableActiveTab] = useState(activeTab);
 
-  // Update local tab state when prop changes, but only if it's different
   useEffect(() => {
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
@@ -31,17 +30,17 @@ export const BudgetTabs = ({
   }, [activeTab]);
 
   const handleValueChange = (value: string) => {
-    setStableActiveTab(value); // Update local state immediately
-    onTabChange(value); // Notify parent about the change
+    setStableActiveTab(value);
+    onTabChange(value);
   };
 
   return (
-    <Card className="budget-card overflow-hidden mx-0 px-0 min-h-[500px]">
-      <CardContent className="p-0 md:p-6 max-w-full h-full">
+    <Card className="budget-card overflow-hidden mx-0 px-0 w-full h-full min-h-[500px] flex flex-col">
+      <CardContent className="p-0 md:p-6 w-full h-full flex flex-col flex-1">
         <Tabs 
           value={stableActiveTab} 
           onValueChange={handleValueChange} 
-          className="space-y-4 md:space-y-6 w-full h-full flex flex-col"
+          className="w-full h-full flex flex-col flex-1"
         >
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar flex-shrink-0">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
@@ -52,20 +51,32 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <TabsContent value="overview" className="h-full">
+          <div className="flex-1 min-h-0 overflow-hidden p-4">
+            <TabsContent 
+              value="overview" 
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+            >
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="h-full">
+            <TabsContent 
+              value="categories" 
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+            >
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="h-full">
+            <TabsContent 
+              value="transactions" 
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+            >
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="h-full">
+            <TabsContent 
+              value="comparison" 
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+            >
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </div>

@@ -1,9 +1,11 @@
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg min-h-[250px] !important;
+    @apply max-w-full rounded-lg !important;
     overflow: visible !important;
     margin: 0 auto !important;
+    min-height: 300px !important;
+    height: 100% !important;
   }
   
   .recharts-tooltip-wrapper {
@@ -35,8 +37,8 @@
   /* Fixed container to prevent overflow */
   .chart-container {
     @apply w-full relative overflow-hidden !important;
-    min-height: 250px !important;
-    height: 300px !important;
+    min-height: 300px !important;
+    height: 100% !important;
   }
 
   /* Enhance layout for pie chart on mobile */
@@ -150,8 +152,23 @@
     height: 100% !important;
   }
 
-  /* Ensure tab panels maintain height */
+  /* Container sizing fixes */
+  .budget-card {
+    min-height: 500px !important;
+    height: 100% !important;
+  }
+
   .tabs-content {
+    height: 100% !important;
+    min-height: 300px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  [data-state="active"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
     height: 100% !important;
     min-height: 300px !important;
   }
@@ -252,4 +269,7 @@
 .card-content,
 .cardcontent {
   min-height: 300px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
