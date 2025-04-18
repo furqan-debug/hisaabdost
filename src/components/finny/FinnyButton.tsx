@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { MessageSquareText, ChevronDown } from 'lucide-react';
+import { MessageSquareText, ChevronDown, Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FinnyButtonProps {
@@ -39,7 +39,7 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           {isOpen ? (
             <ChevronDown className="w-6 h-6 text-white" />
           ) : (
-            <MessageSquareText className="w-6 h-6 text-white" />
+            <Bot className="w-6 h-6 text-white" />  // Changed from MessageSquareText to Bot
           )}
         </motion.div>
       </Button>
@@ -48,3 +48,4 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 };
 
 export default FinnyButton;
+
