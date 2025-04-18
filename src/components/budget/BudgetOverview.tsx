@@ -26,45 +26,47 @@ export function BudgetOverview({
 
   // If no budgets, show message
   if (budgets.length === 0) {
-    return <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
-      </div>;
+      </div>
+    );
   }
   return <div className="space-y-4 w-full overflow-hidden max-w-full">
       <Card className="budget-card w-full max-w-full my-0 py-0">
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2 max-w-full my-0">
-          <ResponsiveContainer width="99%" height={300}>
+        <CardContent className="budget-chart-container p-0 pb-2 max-w-full my-0 h-[300px] min-h-[250px]">
+          <ResponsiveContainer width="99%" height="100%" minHeight={250}>
             <PieChart margin={{
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-          }}>
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0
+            }}>
               <Pie data={data} cx="50%" cy="50%" outerRadius={isMobile ? 80 : 150} dataKey="value" label={({
-              name,
-              percentage
-            }) => isMobile ? `${percentage}%` : `${name}: ${percentage}%`} labelLine={!isMobile}>
+                name,
+                percentage
+              }) => isMobile ? `${percentage}%` : `${name}: ${percentage}%`} labelLine={!isMobile}>
                 {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
               </Pie>
               <Tooltip content={({
-              active,
-              payload
-            }) => {
-              if (!active || !payload || !payload.length) return null;
-              const data = payload[0];
-              return <div className="rounded-lg border bg-background p-2 shadow-sm">
-                      <p className="text-sm font-semibold">
-                        {data.name}: {formatCurrency(Number(data.value), currencyCode)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {data.payload.percentage}% of total
-                      </p>
-                    </div>;
-            }} />
+                active,
+                payload
+              }) => {
+                if (!active || !payload || !payload.length) return null;
+                const data = payload[0];
+                return <div className="rounded-lg border bg-background p-2 shadow-sm">
+                        <p className="text-sm font-semibold">
+                          {data.name}: {formatCurrency(Number(data.value), currencyCode)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {data.payload.percentage}% of total
+                        </p>
+                      </div>;
+              }} />
               {!isMobile && <Legend />}
             </PieChart>
           </ResponsiveContainer>

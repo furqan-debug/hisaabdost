@@ -31,8 +31,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className={`w-full ${isMobile ? 'pie-chart-container h-[220px]' : 'h-[300px]'}`}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className={`w-full h-full ${isMobile ? 'pie-chart-container' : ''}`}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie
               data={data}

@@ -2,7 +2,7 @@
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg min-h-[300px];
+    @apply max-w-full rounded-lg min-h-[250px] !important;
     overflow: visible !important;
     margin: 0 auto !important;
   }
@@ -14,6 +14,8 @@
   .budget-chart-container {
     @apply p-2 mx-0 overflow-x-auto;
     width: 100% !important;
+    min-height: 250px !important;
+    height: auto !important;
   }
   
   .recharts-legend-item {
@@ -33,12 +35,15 @@
 
   /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-[320px] relative overflow-hidden;
+    @apply w-full relative overflow-hidden !important;
+    min-height: 250px !important;
+    height: 300px !important;
   }
 
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
     @apply max-w-[280px] mx-auto;
+    min-height: 250px !important;
   }
 
   /* Make legend more compact on mobile */
@@ -75,6 +80,7 @@
   .recharts-responsive-container {
     width: 100% !important;
     height: 100% !important;
+    min-height: 250px !important;
   }
   
   /* Prevent tooltips from causing scrolling */
@@ -98,15 +104,23 @@
     display: none !important;
   }
   
-  /* Hide detailed legend for simplicity */
-  .recharts-default-legend {
-    max-width: 100% !important;
-    display: none !important;
-  }
-  
   /* Simplify axis ticks */
   .recharts-cartesian-axis-tick text {
     font-size: 9px !important;
+  }
+  
+  /* Tab content should have explicit height */
+  .budget-section, 
+  .tabs-content,
+  [data-state="active"] {
+    min-height: 300px !important;
+    height: auto !important;
+  }
+
+  /* Chart container wrapper needs explicit height */
+  .card-content-chart {
+    min-height: 300px !important;
+    height: auto !important;
   }
 }
 
@@ -179,9 +193,16 @@
 /* Prevent scroll within chart container */
 .chart-container {
   overflow: hidden !important;
+  min-height: 250px;
 }
 
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
+}
+
+/* Ensure charts are displayed with minimum height */
+.card-content,
+.cardcontent {
+  min-height: 300px !important;
 }
