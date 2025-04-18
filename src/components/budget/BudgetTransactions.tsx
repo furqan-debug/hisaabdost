@@ -1,6 +1,5 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +7,8 @@ import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -16,9 +17,7 @@ interface BudgetTransactionsProps {
 export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  
-  // Ensure budgets is array
-  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+  const { currencyCode } = useCurrency();
   
   // Fetch real expenses from Supabase
   const { data: expenses = [], isLoading } = useQuery({
@@ -26,29 +25,24 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
     queryFn: async () => {
       if (!user) return [];
       
-      try {
-        const { data, error } = await supabase
-          .from('expenses')
-          .select('*')
-          .order('date', { ascending: false })
-          .limit(20); // Limit to latest 20 for better mobile performance
-        
-        if (error) {
-          console.error('Error fetching expenses:', error);
-          return [];
-        }
-        
-        return data || [];
-      } catch (error) {
-        console.error('Error in expense query:', error);
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(20); // Limit to latest 20 for better mobile performance
+      
+      if (error) {
+        console.error('Error fetching expenses:', error);
         return [];
       }
+      
+      return data;
     },
     enabled: !!user,
   });
 
   // Check if there are any budgets set
-  const hasBudgets = safeBudgets.length > 0 && safeBudgets.some(budget => Number(budget.amount) > 0);
+  const hasBudgets = budgets.length > 0 && budgets.some(budget => Number(budget.amount) > 0);
 
   if (isLoading) {
     return (
@@ -67,7 +61,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
     );
   }
 
-  if (!expenses || expenses.length === 0) {
+  if (expenses.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">No transactions found.</p>
@@ -78,8 +72,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   // Find relevant budget for each expense
   const getBudgetForExpense = (expense: any) => {
-    if (!expense || !expense.category) return null;
-    return safeBudgets.find(budget => budget.category === expense.category) || null;
+    return budgets.find(budget => budget.category === expense.category) || null;
   };
 
   return (
@@ -88,29 +81,26 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
         // Mobile card view - simplified for better mobile experience
         <div className="space-y-2 w-full overflow-hidden">
           {expenses.map((transaction) => {
-            if (!transaction || !transaction.id) return null;
-            
             const relatedBudget = getBudgetForExpense(transaction);
             const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
-            const transactionDate = transaction.date ? new Date(transaction.date) : new Date();
             
             return (
               <Card key={transaction.id} className="overflow-hidden border-border/40 shadow-sm w-full">
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start w-full">
                     <div className="space-y-1 overflow-hidden max-w-[60%]">
-                      <div className="font-medium truncate">{transaction.description || 'Unnamed expense'}</div>
+                      <div className="font-medium truncate">{transaction.description}</div>
                       <div className="flex gap-1 text-xs text-muted-foreground flex-wrap">
-                        <span className="truncate">{format(transactionDate, 'MMM dd')}</span>
+                        <span className="truncate">{format(new Date(transaction.date), 'MMM dd')}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span className="capitalize truncate">{transaction.category || 'Uncategorized'}</span>
+                        <span className="capitalize truncate">{transaction.category}</span>
                       </div>
                     </div>
                     <div className="text-right font-semibold min-w-[80px] flex-shrink-0">
-                      {formatCurrency(Number(transaction.amount) || 0)}
+                      {formatCurrency(Number(transaction.amount), currencyCode)}
                       {relatedBudget && (
                         <div className="text-xs text-muted-foreground">
-                          Budget: {formatCurrency(budgetAmount)}
+                          Budget: {formatCurrency(budgetAmount, currencyCode)}
                         </div>
                       )}
                     </div>
@@ -134,24 +124,21 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
           </TableHeader>
           <TableBody>
             {expenses.map((transaction) => {
-              if (!transaction || !transaction.id) return null;
-              
               const relatedBudget = getBudgetForExpense(transaction);
               const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
-              const transactionDate = transaction.date ? new Date(transaction.date) : new Date();
               
               return (
                 <TableRow key={transaction.id}>
-                  <TableCell>{format(transactionDate, 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{transaction.category || 'Uncategorized'}</TableCell>
-                  <TableCell>{transaction.description || 'Unnamed expense'}</TableCell>
-                  <TableCell>{formatCurrency(Number(transaction.amount) || 0)}</TableCell>
+                  <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
+                  <TableCell>{transaction.category}</TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>{formatCurrency(Number(transaction.amount), currencyCode)}</TableCell>
                   <TableCell>
                     {relatedBudget ? (
                       <div className="flex flex-col">
-                        <span>{formatCurrency(budgetAmount)}</span>
+                        <span>{formatCurrency(budgetAmount, currencyCode)}</span>
                         <span className="text-xs text-muted-foreground capitalize">
-                          {relatedBudget.period || 'monthly'}
+                          {relatedBudget.period}
                         </span>
                       </div>
                     ) : (

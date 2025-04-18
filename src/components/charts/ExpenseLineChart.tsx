@@ -1,8 +1,11 @@
 
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency, processMonthlyData } from "@/utils/chartUtils";
+import React from 'react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpenseLineChartProps {
@@ -10,78 +13,84 @@ interface ExpenseLineChartProps {
 }
 
 export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
-  const chartData = processMonthlyData(expenses);
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
+  const data = processMonthlyData(expenses);
   
-  // Get active categories (ones that have values)
-  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => 
-    chartData.some(item => item[category] !== null && item[category] > 0)
-  );
-
-  // Chart height based on device
-  const chartHeight = isMobile ? 280 : 400;
-
+  // Filter out zero-value categories to reduce clutter
+  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => {
+    return data.some(item => item[category] > 0);
+  });
+  
+  // For mobile, limit to top 3 categories by total amount
+  const getCategoryTotal = (category: string) => {
+    return data.reduce((sum, item) => sum + (item[category] || 0), 0);
+  };
+  
+  const topCategories = activeCategories
+    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
+    .slice(0, isMobile ? 3 : 5);
+  
   return (
-    <ResponsiveContainer width="100%" height={chartHeight} className="line-chart-container">
-      <LineChart 
-        data={chartData}
-        margin={isMobile ? { top: 5, right: 0, left: -20, bottom: 0 } : { top: 20, right: 15, left: 0, bottom: 5 }}
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart
+        data={data}
+        margin={isMobile ? { top: 20, right: 0, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
       >
-        <CartesianGrid 
-          strokeDasharray="3 3" 
-          vertical={false}
-          horizontal={true}
-          opacity={0.15}
-        />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
         <XAxis 
           dataKey="month" 
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
           dy={8}
-          height={isMobile ? 15 : 30}
+          interval={isMobile ? 1 : 0}
+          height={isMobile ? 30 : 40}
         />
         <YAxis 
-          tickFormatter={(value) => `$${(Number(value)/1000).toFixed(0)}k`}
+          tickFormatter={(value) => {
+            if (isMobile) {
+              // Simplified formatter for mobile to save space
+              if (value >= 1000) return `${Math.floor(value / 1000)}k`;
+              return value.toString();
+            }
+            return formatCurrency(value, currencyCode);
+          }}
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: isMobile ? 8 : 12, fill: 'var(--muted-foreground)' }}
-          width={isMobile ? 25 : 45}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+          width={isMobile ? 30 : 60}
         />
         <Tooltip
-          cursor={{ stroke: 'var(--muted-foreground)', strokeWidth: 1, strokeDasharray: '3 3' }}
           content={({ active, payload, label }) => {
             if (!active || !payload || !payload.length) return null;
             
-            // Only show categories that have actual values (not null)
-            const validData = payload.filter(p => p.value !== null && p.value !== 0);
+            // Filter out items with zero value to reduce tooltip size
+            const filteredPayload = payload.filter(entry => {
+              // Convert ValueType to number for safe comparison
+              const value = entry.value !== undefined ? Number(entry.value) : 0;
+              return value > 0;
+            }).slice(0, 3); // Limit to top 3 for cleaner mobile display
             
             return (
               <motion.div 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
-                style={{ maxWidth: isMobile ? '160px' : '240px' }}
+                className="tooltip-card"
               >
-                <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold`}>{label}</p>
-                <div className="space-y-1 mt-1">
-                  {validData.map((entry) => (
-                    <div 
-                      key={entry.name}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center">
+                <div className="text-sm font-medium mb-1">{label}</div>
+                <div className="space-y-1">
+                  {filteredPayload.map((entry: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
                         <div 
-                          className="w-2 h-2 rounded-full mr-1" 
-                          style={{ backgroundColor: entry.color }} 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: entry.stroke }}
                         />
-                        <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium`}>
-                          {entry.name}:
-                        </span>
+                        <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                       </div>
-                      <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-semibold`}>
-                        {formatCurrency(Number(entry.value))}
+                      <span className="text-xs font-medium">
+                        {formatCurrency(Number(entry.value), currencyCode)}
                       </span>
                     </div>
                   ))}
@@ -90,67 +99,26 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
             );
           }}
         />
-        <Legend
-          content={(props) => {
-            const { payload } = props;
-            if (!payload || !payload.length) return null;
-            
-            // Only show legends for categories that have values
-            const activeLegends = payload.filter(p => 
-              activeCategories.includes(p.value)
-            );
-            
-            // Limit display on mobile
-            const displayItems = isMobile ? 3 : 5;
-            const displayedItems = activeLegends.slice(0, displayItems);
-            const hasMore = activeLegends.length > displayItems;
-            
-            return (
-              <div className="flex flex-wrap justify-center items-center gap-1.5 pt-1 px-1">
-                {displayedItems.map((entry: any, index: number) => (
-                  <div 
-                    key={`legend-${index}`}
-                    className="flex items-center bg-background/40 rounded-full px-1.5 py-0.5 border border-border/30 shadow-sm"
-                  >
-                    <div 
-                      className="w-2 h-2 rounded-full mr-1" 
-                      style={{ backgroundColor: entry.color }} 
-                    />
-                    <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
-                      {entry.value}
-                    </span>
-                  </div>
-                ))}
-                {hasMore && (
-                  <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-muted-foreground font-medium`}>
-                    +{activeLegends.length - displayItems} more
-                  </div>
-                )}
-              </div>
-            );
-          }}
-        />
-        {activeCategories.map((category) => (
+        {/* Only render lines for top categories */}
+        {topCategories.map(category => (
           <Line
             key={category}
             type="monotone"
             dataKey={category}
-            name={category}
-            stroke={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+            stroke={CATEGORY_COLORS[category]}
             strokeWidth={isMobile ? 1.5 : 2}
-            dot={{ 
-              fill: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
-              r: isMobile ? 2 : 4,
-              strokeWidth: 1,
-              stroke: 'var(--background)'
+            dot={{
+              r: isMobile ? 2 : 3,
+              strokeWidth: isMobile ? 1 : 2,
+              fill: "var(--background)",
+              stroke: CATEGORY_COLORS[category]
             }}
-            activeDot={{ 
-              r: isMobile ? 4 : 6,
-              stroke: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
-              strokeWidth: 1.5,
-              fill: 'var(--background)'
+            activeDot={{
+              r: isMobile ? 4 : 5,
+              strokeWidth: 2,
+              fill: "var(--background)",
+              stroke: CATEGORY_COLORS[category]
             }}
-            connectNulls={true}
           />
         ))}
       </LineChart>

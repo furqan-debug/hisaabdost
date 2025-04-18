@@ -1,16 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
-import { BottomNavigation } from './BottomNavigation';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { BottomNavigation } from './BottomNavigation';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout = ({ children }: LayoutProps) => {
+const Layout = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [pageTransition, setPageTransition] = useState(false);
@@ -23,23 +19,21 @@ const Layout = ({ children }: LayoutProps) => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex w-full bg-background prevent-overflow">
-      <div className="flex-1 flex flex-col prevent-overflow">
-        <Navbar />
-        <main className={cn(
-          "flex-1 px-2 pt-3 pb-20 md:px-8 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300 prevent-overflow",
-          pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      <Navbar />
+      <main className={cn(
+        "flex-1 px-3 pt-3 pb-20 md:px-6 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300",
+        pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
+      )}>
+        <div className={cn(
+          "mx-auto w-full overflow-guard", 
+          isMobile ? "max-w-full px-1" : "max-w-5xl",
+          pageTransition ? "animate-fade-in" : ""
         )}>
-          <div className={cn(
-            "mx-auto w-full mobile-viewport-fix", 
-            isMobile ? "max-w-full px-0" : "max-w-5xl",
-            pageTransition ? "animate-fade-in" : ""
-          )}>
-            {children}
-          </div>
-        </main>
-        {isMobile && <BottomNavigation />}
-      </div>
+          <Outlet />
+        </div>
+      </main>
+      {isMobile && <BottomNavigation />}
     </div>
   );
 };

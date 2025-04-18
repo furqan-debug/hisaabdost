@@ -2,41 +2,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
 }
 
-export function BudgetComparison({ budgets = [] }: BudgetComparisonProps) {
+export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
-  // Ensure budgets is an array
-  const safeBudgets = Array.isArray(budgets) ? budgets : [];
-  
-  // Group budgets by period and calculate totals with validation
-  const budgetsByPeriod = safeBudgets.reduce((acc, budget) => {
-    const period = budget.period || 'monthly';
-    if (!acc[period]) {
-      acc[period] = {
-        period: period,
+  // Group budgets by period and calculate totals
+  const budgetsByPeriod = budgets.reduce((acc, budget) => {
+    if (!acc[budget.period]) {
+      acc[budget.period] = {
+        period: budget.period,
       };
     }
-    const category = budget.category || 'Uncategorized';
-    acc[period][category] = Number(budget.amount) || 0;
+    acc[budget.period][budget.category] = budget.amount;
     return acc;
   }, {} as Record<string, any>);
 
   const data = Object.values(budgetsByPeriod);
 
   // If no budgets or only one period, show message
-  if (safeBudgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
+  if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">Not enough data for comparison</p>
         <p className="text-sm text-muted-foreground">
-          {safeBudgets.length === 0 
+          {budgets.length === 0 
             ? "Add your first budget to see comparisons" 
             : "Add budgets with different periods (monthly, quarterly, yearly) to see comparisons"}
         </p>
@@ -49,8 +47,8 @@ export function BudgetComparison({ budgets = [] }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden min-h-[300px]">
-        <ResponsiveContainer width="99%" height={300}>
+      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
+        <ResponsiveContainer width="99%" height="100%">
           <BarChart 
             data={data} 
             margin={
@@ -73,7 +71,7 @@ export function BudgetComparison({ budgets = [] }: BudgetComparisonProps) {
               scale="band"
             />
             <YAxis 
-              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value))} 
+              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value), currencyCode)} 
               width={isMobile ? 30 : 60}
               tick={{ fontSize: isMobile ? 10 : 14 }}
             />
@@ -89,7 +87,7 @@ export function BudgetComparison({ budgets = [] }: BudgetComparisonProps) {
                         className="text-sm"
                         style={{ color: entry.color as string }}
                       >
-                        {entry.name}: {formatCurrency(Number(entry.value))}
+                        {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
                       </p>
                     ))}
                   </div>

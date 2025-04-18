@@ -1,211 +1,187 @@
 
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
-  /* Fix chart overflow issues */
   .recharts-wrapper {
-    @apply max-w-full rounded-lg;
-    overflow: visible !important;
-    width: 100% !important;
-    max-height: none !important; /* Prevent height constraints */
-  }
-  
-  /* Make chart containers more elegant */
-  .recharts-responsive-container {
+    @apply max-w-full rounded-lg min-h-[300px];
     overflow: visible !important;
     margin: 0 auto !important;
-    max-width: 95% !important;
-    min-height: 300px !important; /* Enforce minimum height */
   }
   
-  .pie-chart-container {
-    min-height: 300px !important; /* Ensure minimum height */
-    max-height: none !important; /* Remove max height constraints */
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-  
-  /* Better tooltip on mobile */
   .recharts-tooltip-wrapper {
     @apply z-50;
-    pointer-events: auto !important;
-    max-width: 80% !important;
   }
   
-  /* Improve chart margins for better display */
   .budget-chart-container {
-    margin: 0 !important;
+    @apply p-2 mx-0 overflow-x-auto;
     width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    min-height: 300px !important; /* Enforce minimum height */
+  }
+  
+  .recharts-legend-item {
+    @apply text-xs whitespace-nowrap overflow-hidden;
+    margin-right: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .recharts-legend-item-text {
+    @apply text-xs font-medium max-w-[100px] truncate;
+  }
+  
+  .recharts-cartesian-axis-tick-value {
+    @apply text-xs font-medium;
+    fill: var(--foreground) !important;
+  }
+
+  /* Fixed container to prevent overflow */
+  .chart-container {
+    @apply w-full h-[320px] relative overflow-hidden;
+  }
+
+  /* Enhance layout for pie chart on mobile */
+  .pie-chart-container {
+    @apply max-w-[280px] mx-auto;
+  }
+
+  /* Make legend more compact on mobile */
+  .expense-chart-legend {
+    @apply flex flex-wrap justify-center gap-2 mt-2;
+  }
+
+  .expense-chart-legend-item {
+    @apply text-xs px-1.5 py-0.5 rounded-full;
+  }
+
+  /* Center text properly */
+  .chart-center-total {
+    width: 75% !important;
+    text-align: center !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  .chart-center-total-amount {
+    @apply text-xl font-bold;
+    white-space: nowrap;
+  }
+  
+  .chart-center-total-label {
+    @apply text-xs;
+  }
+
+  /* Remove labels on pie chart for mobile */
+  .recharts-pie-label-text {
+    display: none !important;
+  }
+
+  /* Fix scrolling issues by containing the chart */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Prevent tooltips from causing scrolling */
+  .tooltip-card {
+    max-width: 200px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Adjust axis spacing */
+  .recharts-cartesian-axis {
     overflow: visible !important;
   }
   
-  /* Enhance pie chart appearance */
-  .recharts-pie {
-    @apply drop-shadow-sm;
+  /* Better label positioning for small screens */
+  .recharts-layer.recharts-cartesian-axis-tick {
+    overflow: visible !important;
   }
   
-  /* Fix pie chart label display */
-  .recharts-pie-label-line {
-    stroke: var(--muted-foreground, #a1a1aa) !important;
-    stroke-width: 0.5 !important;
+  /* Hide text that would overflow */
+  .recharts-text.recharts-label {
+    display: none !important;
   }
   
-  .recharts-pie-label-text {
-    font-size: 10px !important;
-    fill: var(--foreground, #ffffff) !important;
+  /* Hide detailed legend for simplicity */
+  .recharts-default-legend {
+    max-width: 100% !important;
+    display: none !important;
   }
   
-  /* Make active elements more visible */
-  .recharts-active-dot {
-    @apply stroke-background stroke-2;
-  }
-  
-  /* Fix legend spacing and layout */
-  .recharts-legend-wrapper {
-    position: relative !important;
-    padding-top: 8px !important;
-    bottom: 0 !important;
-    height: auto !important;
-    margin-top: 5px !important;
-    width: 100% !important;
-    left: 0 !important;
-  }
-  
-  /* Better axis labels */
-  .recharts-cartesian-axis-tick-value {
-    @apply font-light text-xs opacity-80;
+  /* Simplify axis ticks */
+  .recharts-cartesian-axis-tick text {
     font-size: 9px !important;
   }
-  
-  /* Smooth lines for line charts */
-  .recharts-curve.recharts-line-curve {
-    @apply stroke-2;
-  }
-  
-  /* Better dots for line charts */
-  .recharts-dot {
-    @apply stroke-1;
-  }
-  
-  /* Improve grid appearance */
-  .recharts-cartesian-grid-horizontal line,
-  .recharts-cartesian-grid-vertical line {
-    @apply stroke-muted/20;
-  }
-  
-  /* Make bars more elegant */
-  .recharts-bar-rectangle {
-    @apply opacity-95 shadow-sm;
-    transition: all 0.3s ease;
-  }
-  
-  /* Fix bottom navigation overlap with chart content */
-  .card .recharts-legend-wrapper {
-    margin-bottom: 12px !important;
-  }
-  
-  /* Better positioning for pie percentages */
-  .recharts-layer.recharts-pie-labels text {
-    @apply font-medium !important;
-    font-size: 10px !important;
-  }
-  
-  /* Enhance mobile chart containers */
-  .card-content-chart {
-    padding: 0.5rem !important;
-    overflow: visible !important;
-  }
-  
-  /* Fix chart label overflow */
-  .recharts-text.recharts-label {
-    font-size: 10px !important;
-  }
-  
-  /* Ensure tooltips don't overflow */
-  .chart-tooltip {
-    max-width: 85vw !important;
-    overflow: hidden !important;
-    word-break: break-word !important;
-  }
-  
-  /* Fix padding in chart cards */
-  .card-header {
-    padding: 0.75rem !important;
-  }
-  
-  /* Ensure tabs don't overflow */
-  .tabs-container .tab {
-    padding: 0.5rem 0.75rem !important;
-    font-size: 0.875rem !important;
-  }
 }
 
-/* Legend improvements for all screen sizes */
+/* Chart improvements for all screen sizes */
 .recharts-default-legend {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  padding-top: 8px !important;
+  @apply flex flex-wrap justify-center gap-2 mt-4 !important;
 }
 
-/* Stylish pill-style legend items */
-.legend-pill {
-  @apply flex items-center text-xs rounded-full px-2 py-0.5 border border-border/30 bg-card/50;
-}
-
-/* Make pie labels more visible */
 .recharts-layer.recharts-pie-labels text {
-  font-weight: 600 !important;
-  font-size: 12px !important;
+  @apply font-semibold text-sm !important;
+  fill: var(--foreground) !important;
 }
 
-/* Fix tooltip z-index */
-.recharts-tooltip-wrapper {
-  z-index: 50 !important;
+.recharts-tooltip-wrapper .tooltip-card {
+  @apply rounded-lg border bg-background/95 p-3 shadow-md text-left;
 }
 
-/* Enhance tooltips and dropdowns */
-.recharts-tooltip-cursor {
-  fill: hsl(var(--foreground)/0.05) !important;
-  filter: blur(2px);
-}
-
-/* Make the chart areas more elegant */
-.recharts-cartesian-axis-line,
-.recharts-reference-line line {
-  stroke: var(--border, #e5e7eb) !important;
-  stroke-width: 1 !important;
-}
-
-/* Add smooth transitions to all chart elements */
-.recharts-bar,
-.recharts-line,
-.recharts-pie {
-  transition: all 0.3s ease-in-out;
-}
-
-/* Style active legend items */
-.recharts-legend-item.inactive {
-  opacity: 0.5;
-}
-
-/* Better spacing between legend pills */
-.recharts-legend-item {
-  margin-right: 6px !important;
-  margin-bottom: 6px !important;
-}
-
-/* Fix pie chart sector transitions */
 .recharts-sector {
-  transition: all 0.3s ease;
+  @apply transition-all duration-200;
 }
 
-/* Make the hover effects smoother */
-.recharts-area-curve,
-.recharts-line-curve,
-.recharts-bar-rectangle {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.recharts-sector:hover {
+  @apply opacity-90;
+}
+
+.chart-center-total {
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10;
+}
+
+.chart-center-total-amount {
+  @apply text-2xl font-bold;
+}
+
+.chart-center-total-label {
+  @apply text-sm text-muted-foreground;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  @apply stroke-muted/30 stroke-1;
+}
+
+.expense-chart-legend {
+  @apply flex flex-wrap justify-center gap-3 mt-4;
+}
+
+.expense-chart-legend-item {
+  @apply flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-muted/20;
+}
+
+.expense-chart-legend-dot {
+  @apply w-2.5 h-2.5 rounded-full;
+}
+
+/* Fix for overflow issues */
+.recharts-surface {
+  overflow: visible !important;
+}
+
+/* Fix for tooltip positioning */
+.recharts-tooltip-wrapper {
+  pointer-events: none !important;
+}
+
+/* Improve mobile chart interactions */
+.chart-container .recharts-wrapper {
+  touch-action: pan-y !important;
+}
+
+/* Prevent scroll within chart container */
+.chart-container {
+  overflow: hidden !important;
+}
+
+/* Make sure all tooltip text fits */
+.tooltip-card p {
+  @apply truncate max-w-full;
 }

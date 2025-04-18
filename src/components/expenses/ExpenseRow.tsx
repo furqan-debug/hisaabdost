@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
 import { useState, useCallback, memo } from "react";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,7 @@ export const ExpenseRow = memo(function ExpenseRow({
 }: ExpenseRowProps) {
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const { currencyCode } = useCurrency();
   
   const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +74,7 @@ export const ExpenseRow = memo(function ExpenseRow({
       </TableCell>
       <TableCell>
         <span className="font-mono">
-          {formatCurrency(expense.amount)}
+          {formatCurrency(expense.amount, currencyCode)}
         </span>
       </TableCell>
       <TableCell className="hidden md:table-cell">

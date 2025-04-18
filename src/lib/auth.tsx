@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Redirect if user is authenticated and on auth page
       if (user && location.pathname === "/auth") {
-        navigate("/dashboard");
+        navigate("/app/dashboard");
       }
     });
 
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Redirect if user is authenticated and on auth page
       if (session?.user && location.pathname === "/auth") {
-        navigate("/dashboard");
+        navigate("/app/dashboard");
       }
     });
 
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       toast.success("Successfully signed in!");
-      navigate("/dashboard");
+      navigate("/app/dashboard");
     } catch (error: any) {
       uiToast({
         variant: "destructive",

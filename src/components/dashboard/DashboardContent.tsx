@@ -6,7 +6,6 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -47,8 +46,6 @@ export function DashboardContent({
   chartType,
   setChartType
 }: DashboardContentProps) {
-  const isMobile = useIsMobile();
-  
   // Animation variants for staggered children
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,13 +62,13 @@ export function DashboardContent({
     show: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.35, ease: "easeOut" }
+      transition: { duration: 0.3, ease: "easeOut" }
     }
   };
 
   return (
     <motion.div 
-      className="space-y-6 pb-16 sm:pb-0"
+      className="space-y-5"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -114,10 +111,7 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div 
-        variants={itemVariants} 
-        className={`pb-${isMobile ? '16' : '4'}`} // Add bottom padding to prevent overlap with bottom navigation
-      >
+      <motion.div variants={itemVariants}>
         <ExpenseAnalyticsCard 
           expenses={expenses}
           isLoading={isExpensesLoading}

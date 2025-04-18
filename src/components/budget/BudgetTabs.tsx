@@ -15,35 +15,30 @@ interface BudgetTabsProps {
   onTabChange: (value: string) => void;
 }
 
-export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: BudgetTabsProps) => {
-  // Use a safe default value for activeTab
-  const safeActiveTab = activeTab || 'overview';
+export const BudgetTabs = ({
+  budgets,
+  onEditBudget,
+  activeTab,
+  onTabChange
+}: BudgetTabsProps) => {
   // Local state to prevent tab flickering
-  const [stableActiveTab, setStableActiveTab] = useState(safeActiveTab);
-  
+  const [stableActiveTab, setStableActiveTab] = useState(activeTab);
+
   // Update local tab state when prop changes, but only if it's different
   useEffect(() => {
-    if (safeActiveTab !== stableActiveTab) {
-      setStableActiveTab(safeActiveTab);
+    if (activeTab !== stableActiveTab) {
+      setStableActiveTab(activeTab);
     }
-  }, [safeActiveTab, stableActiveTab]);
-  
+  }, [activeTab]);
+
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
 
-  // Safe budgets array to prevent undefined errors
-  const safeBudgets = Array.isArray(budgets) ? budgets : [];
-
-  return (
-    <Card className="budget-card overflow-hidden">
+  return <Card className="budget-card overflow-hidden mx-0 px-0">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
-        <Tabs 
-          value={stableActiveTab} 
-          onValueChange={handleValueChange} 
-          className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
-        >
+        <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
           <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -54,25 +49,21 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           </div>
 
           <TabsContent value="overview" className="budget-section overflow-hidden w-full">
-            <BudgetOverview budgets={safeBudgets} />
+            <BudgetOverview budgets={budgets || []} />
           </TabsContent>
 
           <TabsContent value="categories" className="budget-section overflow-hidden w-full">
-            <CategoryBudgets 
-              budgets={safeBudgets}
-              onEditBudget={onEditBudget}
-            />
+            <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
           </TabsContent>
 
           <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
-            <BudgetTransactions budgets={safeBudgets} />
+            <BudgetTransactions budgets={budgets || []} />
           </TabsContent>
 
           <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
-            <BudgetComparison budgets={safeBudgets} />
+            <BudgetComparison budgets={budgets || []} />
           </TabsContent>
         </Tabs>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };

@@ -5,6 +5,7 @@ import { Tag } from "lucide-react";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseCardProps {
   description: string;
@@ -22,6 +23,7 @@ export function ExpenseCard({
   onClick 
 }: ExpenseCardProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   // Get category color based on category name
   const getCategoryColor = () => {
@@ -74,7 +76,7 @@ export function ExpenseCard({
                 "font-semibold",
                 isMobile ? "text-xs" : "text-sm"
               )}>
-                {formatCurrency(amount)}
+                {formatCurrency(amount, currencyCode)}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-2">

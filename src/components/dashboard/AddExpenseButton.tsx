@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -27,6 +28,7 @@ export const AddExpenseButton = ({
   onAddExpense
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +44,6 @@ export const AddExpenseButton = ({
       if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
-
       e.target.value = '';
     }
   };
@@ -50,10 +51,8 @@ export const AddExpenseButton = ({
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
     setCaptureMode(mode);
-    
     setTimeout(() => {
       setActiveButton(null);
-      
       if (mode === 'manual') {
         // Just open the manual entry form
         setShowAddExpense(true);
@@ -77,78 +76,57 @@ export const AddExpenseButton = ({
 
   // Animation variants for the buttons
   const buttonVariants = {
-    initial: { scale: 1 },
-    active: { 
-      scale: 0.95,
-      transition: { duration: 0.2 }
+    initial: {
+      scale: 1
     },
-    hover: { 
+    active: {
+      scale: 0.95,
+      transition: {
+        duration: 0.2
+      }
+    },
+    hover: {
       scale: 1.03,
-      transition: { duration: 0.2 }
+      transition: {
+        duration: 0.2
+      }
     }
   };
 
   return <div className="mt-4">
       <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
-        <motion.div 
-          className="bg-card rounded-xl border shadow-sm p-3"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <h3 className="text-base font-medium mb-2 flex items-center">
+        <motion.div initial={{
+        opacity: 0,
+        y: 10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.3
+      }} className="bg-card rounded-xl border shadow-sm p-3 my-0 py-[19px]">
+          <h3 className="text-base font-medium mb-2 flex items-center my-px py-0">
             <Plus className="h-4 w-4 text-primary mr-1.5" />
             Add New Expense
           </h3>
           <div className="grid grid-cols-3 gap-2">
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'manual' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('manual')} 
-                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-              >
+            <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'manual' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
+              <Button variant="outline" onClick={() => handleOpenSheet('manual')} className="h-16 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all my-0 rounded-lg font-normal py-[35px]">
                 <Plus className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Manual</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Enter details</span>
               </Button>
             </motion.div>
             
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'upload' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('upload')} 
-                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-              >
+            <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'upload' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
+              <Button variant="outline" onClick={() => handleOpenSheet('upload')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[35px]">
                 <Upload className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Upload</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Photo receipt</span>
               </Button>
             </motion.div>
             
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'camera' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('camera')} 
-                className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-              >
+            <motion.div variants={buttonVariants} initial="initial" animate={activeButton === 'camera' ? 'active' : 'initial'} whileHover="hover" whileTap="active">
+              <Button variant="outline" onClick={() => handleOpenSheet('camera')} className="h-16 w-full flex flex-col items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all py-[35px]">
                 <Camera className="h-4 w-4 text-primary" />
                 <span className="text-xs font-medium">Camera</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">Take photo</span>
@@ -158,19 +136,9 @@ export const AddExpenseButton = ({
         </motion.div>
       </OnboardingTooltip>
       
-      <ReceiptFileInput 
-        onChange={handleFileChange} 
-        inputRef={fileInputRef} 
-        id="receipt-upload-button" 
-        useCamera={false} 
-      />
+      <ReceiptFileInput onChange={handleFileChange} inputRef={fileInputRef} id="receipt-upload-button" useCamera={false} />
       
-      <ReceiptFileInput 
-        onChange={handleFileChange} 
-        inputRef={cameraInputRef} 
-        id="camera-capture-button" 
-        useCamera={true} 
-      />
+      <ReceiptFileInput onChange={handleFileChange} inputRef={cameraInputRef} id="camera-capture-button" useCamera={true} />
       
       <AddExpenseSheet 
         onAddExpense={onAddExpense} 
@@ -179,7 +147,7 @@ export const AddExpenseButton = ({
         open={showAddExpense || expenseToEdit !== undefined} 
         onOpenChange={setShowAddExpense} 
         initialCaptureMode={captureMode} 
-        initialFile={selectedFile} 
+        initialFile={selectedFile}
       />
     </div>;
 };

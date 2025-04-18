@@ -6,7 +6,7 @@ import { ExpenseBarChart } from "@/components/charts/ExpenseBarChart";
 import { ExpenseLineChart } from "@/components/charts/ExpenseLineChart";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BarChartIcon, LineChartIcon, PieChartIcon } from "lucide-react";
+import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
@@ -22,10 +22,10 @@ export const ExpenseAnalyticsCard = ({
   expenses,
   isLoading,
   chartType,
-  setChartType,
+  setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-
+  
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -38,51 +38,49 @@ export const ExpenseAnalyticsCard = ({
         return null;
     }
   };
-
+  
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = { color };
+    acc[key] = {
+      color
+    };
     return acc;
-  }, {} as Record<string, { color: string }>);
-
+  }, {} as Record<string, {
+    color: string;
+  }>);
+  
   return (
-    <Card className="mt-4 overflow-hidden shadow-sm border-border/60">
-      <CardHeader className="flex flex-col space-y-2 p-4 pb-2">
+    <Card className="overflow-hidden shadow-sm border-border/50 dark:bg-[#1a1f2c]">
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>Expense Analytics</CardTitle>
-          <div className="flex items-center space-x-2">
-            <div className="bg-muted/40 rounded-lg p-1 flex border border-border/30 shadow-sm">
-              <button
-                onClick={() => setChartType('pie')}
-                className={`p-1.5 rounded-md transition-all ${
-                  chartType === 'pie' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                }`}
+          <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
+          <div className="flex items-center">
+            <div className="bg-muted/30 rounded-lg p-1 flex">
+              <button 
+                onClick={() => setChartType('pie')} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Pie chart"
               >
-                <PieChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <PieChart className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setChartType('bar')}
-                className={`p-1.5 rounded-md transition-all ${
-                  chartType === 'bar' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                }`}
+              <button 
+                onClick={() => setChartType('bar')} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Bar chart"
               >
-                <BarChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <BarChart3 className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setChartType('line')}
-                className={`p-1.5 rounded-md transition-all ${
-                  chartType === 'line' ? 'bg-background shadow-sm' : 'hover:bg-muted'
-                }`}
+              <button 
+                onClick={() => setChartType('line')} 
+                className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`}
                 aria-label="Line chart"
               >
-                <LineChartIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                <LineChart className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className={`${isMobile ? 'p-0' : 'px-4 pb-4 pt-2'} card-content-chart`}>
+      <CardContent className="pt-2 pb-4">
         {isLoading ? (
           <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -93,13 +91,13 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="w-full overflow-hidden"
+            className="chart-container" 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            key={chartType} // Re-run animation when chart type changes
+            transition={{ duration: 0.3 }}
+            key={chartType}
           >
-            <ChartContainer config={chartConfig} className={`${isMobile ? 'h-[280px]' : 'h-[400px]'}`}>
+            <ChartContainer config={chartConfig} className="h-full w-full">
               {renderChart()}
             </ChartContainer>
           </motion.div>

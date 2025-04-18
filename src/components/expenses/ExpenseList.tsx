@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
 import { Expense } from "@/components/expenses/types";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseListProps {
   filteredExpenses: Expense[];
@@ -52,13 +53,15 @@ export function ExpenseList({
   selectedMonth,
   useCustomDateRange
 }: ExpenseListProps) {
+  const { currencyCode } = useCurrency();
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Expense List</CardTitle>
           <p className="text-sm font-medium">
-            Total: {formatCurrency(totalFilteredAmount)}
+            Total: {formatCurrency(totalFilteredAmount, currencyCode)}
           </p>
         </div>
       </CardHeader>
@@ -99,7 +102,7 @@ export function ExpenseList({
                       <div className="flex flex-col items-center gap-2">
                         <p className="text-muted-foreground">No expenses found</p>
                         <Button 
-                          variant="purple" 
+                          variant="teal" 
                           onClick={onAddExpense}
                           className="mt-2"
                         >
