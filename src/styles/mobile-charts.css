@@ -1,5 +1,7 @@
+
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
+  /* Ensure charts are visible with minimum height */
   .recharts-wrapper {
     @apply max-w-full rounded-lg !important;
     overflow: visible !important;
@@ -15,7 +17,7 @@
   .budget-chart-container {
     @apply p-2 mx-0 overflow-x-auto;
     width: 100% !important;
-    min-height: 250px !important;
+    min-height: 300px !important;
     height: auto !important;
   }
   
@@ -39,12 +41,14 @@
     @apply w-full relative overflow-hidden !important;
     min-height: 300px !important;
     height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
     @apply max-w-[280px] mx-auto;
-    min-height: 250px !important;
+    min-height: 300px !important;
   }
 
   /* Make legend more compact on mobile */
@@ -81,7 +85,7 @@
   .recharts-responsive-container {
     width: 100% !important;
     height: 100% !important;
-    min-height: 250px !important;
+    min-height: 300px !important;
   }
   
   /* Prevent tooltips from causing scrolling */
@@ -116,6 +120,9 @@
   [data-state="active"] {
     min-height: 300px !important;
     height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
   }
 
   /* Chart container wrapper needs explicit height */
@@ -141,7 +148,9 @@
     height: 100% !important;
     min-height: 300px !important;
     visibility: visible !important;
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
   }
 
   /* Chart parent containers */
@@ -163,6 +172,7 @@
     min-height: 300px !important;
     display: flex !important;
     flex-direction: column !important;
+    flex: 1 !important;
   }
 
   [data-state="active"] {
@@ -171,6 +181,16 @@
     flex: 1 1 auto !important;
     height: 100% !important;
     min-height: 300px !important;
+  }
+  
+  /* Ensure all parent containers have sufficient height */
+  .CardContent,
+  [data-radix-tabs-content] {
+    min-height: 300px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
   }
 }
 
@@ -257,7 +277,7 @@
 /* Prevent scroll within chart container */
 .chart-container {
   overflow: hidden !important;
-  min-height: 250px;
+  min-height: 300px;
 }
 
 /* Make sure all tooltip text fits */
@@ -272,4 +292,15 @@
   height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
+}
+
+/* Global styles to ensure chart visibility */
+[data-radix-tabs-content] {
+  min-height: 300px !important;
+  height: 100% !important;
+  flex: 1 !important;
+}
+
+.tabs-container > div {
+  min-height: 300px !important;
 }

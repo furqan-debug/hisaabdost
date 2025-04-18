@@ -25,7 +25,7 @@ const Layout = () => {
         pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
       )}>
         <div className={cn(
-          "mx-auto w-full h-full flex flex-col flex-1", 
+          "mx-auto w-full h-full flex flex-col flex-1 min-h-[500px]", 
           isMobile ? "max-w-full px-1" : "max-w-5xl"
         )}>
           <Outlet />

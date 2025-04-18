@@ -97,7 +97,7 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden flex-1 min-h-0">
+      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden flex-1 min-h-[500px]">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}

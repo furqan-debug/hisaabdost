@@ -51,31 +51,31 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden p-4">
+          <div className="flex-1 min-h-0 overflow-hidden p-4 min-h-[300px]">
             <TabsContent 
               value="overview" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
             >
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="categories" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
             >
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
             <TabsContent 
               value="transactions" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
             >
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="comparison" 
-              className="h-full data-[state=active]:flex data-[state=active]:flex-col"
+              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
             >
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
