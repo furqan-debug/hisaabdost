@@ -1,5 +1,5 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatCurrency } from "@/utils/chartUtils";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +7,6 @@ import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -17,7 +15,6 @@ interface BudgetTransactionsProps {
 export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   
   // Fetch real expenses from Supabase
   const { data: expenses = [], isLoading } = useQuery({
@@ -97,10 +94,10 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                       </div>
                     </div>
                     <div className="text-right font-semibold min-w-[80px] flex-shrink-0">
-                      {formatCurrency(Number(transaction.amount), currencyCode)}
+                      {formatCurrency(Number(transaction.amount))}
                       {relatedBudget && (
                         <div className="text-xs text-muted-foreground">
-                          Budget: {formatCurrency(budgetAmount, currencyCode)}
+                          Budget: {formatCurrency(budgetAmount)}
                         </div>
                       )}
                     </div>
@@ -132,11 +129,11 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                   <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{transaction.category}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
-                  <TableCell>{formatCurrency(Number(transaction.amount), currencyCode)}</TableCell>
+                  <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
                   <TableCell>
                     {relatedBudget ? (
                       <div className="flex flex-col">
-                        <span>{formatCurrency(budgetAmount, currencyCode)}</span>
+                        <span>{formatCurrency(budgetAmount)}</span>
                         <span className="text-xs text-muted-foreground capitalize">
                           {relatedBudget.period}
                         </span>

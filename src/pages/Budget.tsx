@@ -10,7 +10,6 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
-import { useCurrency } from "@/hooks/use-currency";
 
 export interface Budget {
   id: string;
@@ -29,7 +28,6 @@ const Budget = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
@@ -45,6 +43,7 @@ const Budget = () => {
     monthlyIncome
   } = useBudgetData();
 
+  // Save budget data to month context when it changes
   useEffect(() => {
     if (!isLoading) {
       updateMonthData(currentMonthKey, {
@@ -66,16 +65,18 @@ const Budget = () => {
     setShowBudgetForm(true);
   };
 
+  // Handle tab change
   const handleTabChange = (tabValue: string) => {
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
 
+  // Get active tab from month data
   const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
-    return <div className="p-4 flex justify-center min-h-[500px]">
+    return <div className="p-4 flex justify-center">
       <div className="animate-pulse text-center">
         <p className="text-muted-foreground">Loading your budget data...</p>
       </div>
@@ -83,7 +84,7 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container h-full flex flex-col min-h-[calc(100vh-200px)]">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
       <BudgetHeader 
         onAddBudget={handleAddBudget}
         onExport={exportBudgetData}
@@ -97,7 +98,7 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden flex-1 min-h-[500px]">
+      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}

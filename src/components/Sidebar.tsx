@@ -21,11 +21,11 @@ import { MonthSelector } from "./MonthSelector";
 import { useMonthContext } from "@/hooks/use-month-context";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/app/dashboard" },
-  { icon: Receipt, label: "Expenses", path: "/app/expenses" },
-  { icon: Wallet, label: "Budget", path: "/app/budget" },
-  { icon: BarChart2, label: "Analytics", path: "/app/analytics" },
-  { icon: Target, label: "Goals", path: "/app/goals" },
+  { icon: Home, label: "Dashboard", path: "/" },
+  { icon: Receipt, label: "Expenses", path: "/expenses" },
+  { icon: Wallet, label: "Budget", path: "/budget" },
+  { icon: BarChart2, label: "Analytics", path: "/analytics" },
+  { icon: Target, label: "Goals", path: "/goals" },
 ];
 
 const Sidebar = () => {

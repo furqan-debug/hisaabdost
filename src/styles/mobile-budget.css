@@ -1,9 +1,9 @@
+
 /* Mobile Budget Styles */
 @media (max-width: 640px) {
   /* Budget specific mobile optimizations */
   .budget-card {
     @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl w-full max-w-full overflow-hidden;
-    min-height: 200px;
   }
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
@@ -50,8 +50,7 @@
   
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
-    height: 300px !important;
-    min-height: 250px !important;
+    height: 300px;
     width: 100%;
     max-width: 100%;
     overflow-x: hidden !important;
@@ -62,8 +61,6 @@
     @apply py-2 px-1 max-w-full;
     overflow-x: hidden !important;
     width: 100%;
-    min-height: 300px !important;
-    height: auto !important;
   }
   
   /* Progress bar height for budget */
@@ -115,95 +112,4 @@
     max-width: 100% !important;
     overflow-x: hidden !important;
   }
-
-  /* Tab content should have sufficient height to display charts */
-  [data-state="active"] {
-    min-height: 300px !important;
-  }
-
-  /* Ensure Tabs content is visible */
-  .tabs-content,
-  [role="tabpanel"] {
-    min-height: 300px !important;
-    height: auto !important;
-    display: block !important;
-  }
-  
-  /* Card content needs explicit height */
-  .card-content {
-    min-height: 250px !important;
-  }
-
-  /* Tab triggers should be more prominent */
-  [role="tab"] {
-    @apply text-sm font-medium;
-  }
-}
-
-/* Fix empty tab content on all screen sizes */
-.tabs-content,
-[role="tabpanel"][data-state="active"] {
-  display: block !important;
-  min-height: 300px;
-}
-
-/* Ensure chart containers have proper height */
-.budget-chart-container {
-  min-height: 300px !important;
-  height: 100% !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-
-/* Tab content height fixes */
-[data-state="active"] {
-  min-height: 300px !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 1 !important;
-}
-
-/* Card content needs explicit height */
-.card-content {
-  min-height: 300px !important;
-  height: 100% !important;
-}
-
-/* Ensure chart visibility */
-.recharts-wrapper {
-  min-height: 300px !important;
-  height: 100% !important;
-  width: 100% !important;
-}
-
-/* Budget card container */
-.budget-card {
-  min-height: 500px !important;
-  height: 100% !important;
-}
-
-/* Fix content overflow */
-.budget-content {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-}
-
-/* Fix chart responsiveness */
-.recharts-responsive-container {
-  min-height: 300px !important;
-  height: 100% !important;
-  width: 100% !important;
-}
-
-/* Chart parent containers */
-.budget-chart-container,
-.card-content-chart {
-  min-height: 300px !important;
-  height: 100% !important;
-  width: 100% !important;
-  position: relative !important;
-  overflow: hidden !important;
 }

@@ -2,10 +2,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
@@ -13,7 +11,6 @@ interface BudgetComparisonProps {
 
 export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   
   // Group budgets by period and calculate totals
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
@@ -47,8 +44,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden h-[300px] min-h-[250px]">
-        <ResponsiveContainer width="99%" height="100%" minHeight={250}>
+      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
+        <ResponsiveContainer width="99%" height="100%">
           <BarChart 
             data={data} 
             margin={
@@ -71,7 +68,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
               scale="band"
             />
             <YAxis 
-              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value), currencyCode)} 
+              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value))} 
               width={isMobile ? 30 : 60}
               tick={{ fontSize: isMobile ? 10 : 14 }}
             />
@@ -87,7 +84,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                         className="text-sm"
                         style={{ color: entry.color as string }}
                       >
-                        {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
+                        {entry.name}: {formatCurrency(Number(entry.value))}
                       </p>
                     ))}
                   </div>

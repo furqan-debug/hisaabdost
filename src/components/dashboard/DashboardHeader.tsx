@@ -16,10 +16,10 @@ export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
   
   return (
     <header className="space-y-1">
-      <h1 className="text-2xl font-bold text-foreground">
-        {isNewUser ? `Welcome, ${user?.user_metadata?.full_name || 'there'}!` : isCurrentMonth ? 'Dashboard' : `${format(selectedMonth, 'MMMM yyyy')}`}
+      <h1 className="text-3xl font-bold">
+        {isNewUser ? `Welcome, ${user?.user_metadata?.full_name || 'there'}! 👋` : isCurrentMonth ? 'Dashboard' : `${format(selectedMonth, 'MMMM yyyy')}`}
       </h1>
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground">
         {isNewUser 
           ? "Let's start tracking your expenses. Add your first expense to get started!"
           : isCurrentMonth 

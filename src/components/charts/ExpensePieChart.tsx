@@ -1,10 +1,9 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
-import { Expense } from "@/components/expenses/types";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { Expense } from "@/components/AddExpenseSheet";
+import { calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpensePieChartProps {
@@ -12,87 +11,136 @@ interface ExpensePieChartProps {
 }
 
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
+  const pieChartData = calculatePieChartData(expenses);
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
-  const data = calculatePieChartData(expenses);
   
-  // Calculate total amount
-  const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  // Sort data by value in descending order for better visualization
+  pieChartData.sort((a, b) => b.value - a.value);
   
+  // Calculate percentages
+  const total = pieChartData.reduce((sum, item) => sum + item.value, 0);
+  pieChartData.forEach(item => {
+    item.percent = total > 0 ? (item.value / total) : 0;
+  });
+
+  // Adjust chart dimensions based on mobile or desktop
+  const outerRadius = isMobile ? 70 : 150;
+  const innerRadius = isMobile ? 35 : 90;
+  const chartHeight = isMobile ? 260 : 400;
+
   return (
-    <div className="relative w-full h-full flex flex-col items-center">
-      {/* Center total display */}
-      <div className="chart-center-total">
-        <div className="chart-center-total-amount">
-          {formatCurrency(totalAmount, currencyCode)}
-        </div>
-        <div className="chart-center-total-label">
-          Total Expenses
-        </div>
-      </div>
-      
-      <div className={`w-full h-full ${isMobile ? 'pie-chart-container' : ''}`}>
-        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
-          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              innerRadius={isMobile ? 50 : 75}
-              outerRadius={isMobile ? 70 : 100}
-              paddingAngle={2}
-              cornerRadius={4}
-              labelLine={false}
-              label={false} // Remove labels to prevent overlapping
-            >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color}
-                  stroke="transparent"
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
-                const data = payload[0].payload;
-                return (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="tooltip-card"
-                  >
-                    <div className="text-sm font-medium mb-1">{data.name}</div>
-                    <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {data.percent.toFixed(1)}% of total
+    <ResponsiveContainer width="100%" height={chartHeight} className="pie-chart-container">
+      <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 30 } : { top: 10, right: 10, left: 10, bottom: 40 }}>
+        <Pie
+          data={pieChartData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="45%"
+          outerRadius={outerRadius}
+          innerRadius={innerRadius}
+          paddingAngle={3}
+          strokeWidth={0}
+          labelLine={false}
+          label={({ percent }) => {
+            // Only show percentage for segments > 5%
+            if (percent < 0.05) return null;
+            const percentLabel = (percent * 100).toFixed(0) + '%';
+            return (
+              <text 
+                x={0} 
+                y={0}
+                fill="var(--foreground)"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="text-xs font-medium"
+                style={{ fontSize: isMobile ? '9px' : '12px' }}
+              >
+                {percentLabel}
+              </text>
+            );
+          }}
+        >
+          {pieChartData.map((entry, index) => (
+            <Cell 
+              key={`cell-${index}`} 
+              fill={entry.color} 
+              stroke="var(--background)" 
+              strokeWidth={2}
+              className="filter drop-shadow-sm hover:brightness-105 transition-all duration-300"
+            />
+          ))}
+        </Pie>
+        <Tooltip 
+          content={({ active, payload }) => {
+            if (!active || !payload || !payload.length) return null;
+            const data = payload[0];
+            return (
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md"
+                style={{ maxWidth: isMobile ? '180px' : '240px' }}
+              >
+                <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
+                  {data.name}
+                </p>
+                <p className="text-sm font-bold">
+                  {formatCurrency(Number(data.value))}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(data.payload.percent * 100).toFixed(1)}% of total
+                </p>
+              </motion.div>
+            );
+          }}
+        />
+        <Legend
+          content={(props) => {
+            const { payload } = props;
+            
+            if (!payload || !payload.length) return null;
+            
+            // Limit to top categories on mobile to prevent overcrowding
+            const displayItems = isMobile ? 4 : 6;
+            const displayedItems = payload.slice(0, displayItems);
+            const hasMore = payload.length > displayItems;
+            
+            return (
+              <div className="flex flex-wrap justify-center items-center gap-1.5 mt-2 px-1 pb-3">
+                {displayedItems.map((entry: any, index: number) => {
+                  const amount = formatCurrency(entry.payload.value);
+                  const name = entry.value;
+                  // Truncate long category names even more on mobile
+                  const displayName = name.length > (isMobile ? 8 : 12) ? 
+                    name.slice(0, isMobile ? 6 : 10) + '...' : name;
+                  
+                  return (
+                    <div 
+                      key={`legend-${index}`}
+                      className="flex items-center bg-background/40 rounded-full px-2 py-0.5 border border-border/30 shadow-sm"
+                    >
+                      <div 
+                        className="w-2 h-2 rounded-full mr-1" 
+                        style={{ backgroundColor: entry.color }} 
+                      />
+                      <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-medium whitespace-nowrap`}>
+                        {displayName}: {amount}
+                      </span>
                     </div>
-                  </motion.div>
-                );
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {/* Simplified mobile-friendly legend */}
-      <div className="expense-chart-legend">
-        {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
-          <div key={index} className="expense-chart-legend-item">
-            <div 
-              className="expense-chart-legend-dot"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span>{entry.name}</span>
-            <span className="font-medium ml-1">
-              {entry.percent.toFixed(0)}%
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+                  );
+                })}
+                {hasMore && (
+                  <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-muted-foreground font-medium`}>
+                    +{payload.length - displayItems} more
+                  </div>
+                )}
+              </div>
+            );
+          }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
   );
-};
+}

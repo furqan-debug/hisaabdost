@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/utils/chartUtils";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Edit, Save } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -39,7 +38,6 @@ export const StatCards = ({
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { selectedMonth, updateMonthData } = useMonthContext();
-  const { currencyCode } = useCurrency();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
@@ -136,7 +134,7 @@ export const StatCards = ({
           </CardHeader>
           <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
             <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
-              {formatCurrency(totalBalance, currencyCode)}
+              {formatCurrency(totalBalance)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {isNewUser ? "Add expenses to see your balance" : "Current account balance"}
@@ -151,7 +149,7 @@ export const StatCards = ({
           <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatCurrency(monthlyExpenses, currencyCode)}</div>
+          <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatCurrency(monthlyExpenses)}</div>
           <div className="flex items-center text-expense-high text-xs mt-1">
             <ArrowUpRight className="h-3 w-3 mr-1" />
             12% from last month
@@ -178,7 +176,7 @@ export const StatCards = ({
           {!isEditing ? (
             <>
               <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
-                {formatCurrency(monthlyIncome, currencyCode)}
+                {formatCurrency(monthlyIncome)}
               </div>
               <div className="flex items-center text-expense-low text-xs mt-1">
                 <ArrowUpRight className="h-3 w-3 mr-1" />

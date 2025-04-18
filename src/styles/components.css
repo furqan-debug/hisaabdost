@@ -1,8 +1,8 @@
 
 /* Modern Card Design */
 .modern-card {
-  @apply rounded-lg bg-card/60 backdrop-blur-lg border shadow-sm transition-all duration-300
-         hover:shadow-md;
+  @apply rounded-xl bg-background/60 backdrop-blur-lg border shadow-sm transition-all duration-300
+         hover:shadow-lg hover:bg-background/80 hover:-translate-y-0.5;
 }
 
 /* Glass Effect */
@@ -12,7 +12,7 @@
 
 /* Interactive Elements */
 .interactive-hover {
-  @apply transition-all duration-200 hover:scale-[1.01] active:scale-[0.98];
+  @apply transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
 }
 
 /* Modern Scrollbar */
@@ -45,22 +45,22 @@
 
 /* Improved Card Shadows */
 .card-shadow {
-  @apply shadow-[0_2px_8px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.1)];
+  @apply shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)];
 }
 
 /* Card hover effect */
 .card-hover {
-  @apply hover:shadow-md transition-shadow duration-200;
+  @apply hover:shadow-md transition-shadow duration-300;
 }
 
 /* Better Mobile Inputs */
 .mobile-input {
-  @apply py-2.5 px-4 rounded-lg;
+  @apply py-2.5 px-4 rounded-xl;
 }
 
 /* Elastic animation for buttons */
 .elastic-hover {
-  @apply transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98];
+  @apply transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98];
 }
 
 /* Gradient text */
@@ -75,7 +75,7 @@
 
 /* Better mobile buttons */
 .mobile-button {
-  @apply h-11 min-w-[44px] rounded-lg shadow-sm;
+  @apply h-11 min-w-[44px] rounded-xl shadow-sm;
 }
 
 /* Bottom sheet designs */
@@ -95,7 +95,7 @@
 
 /* Floating elements */
 .floating {
-  @apply shadow-md hover:shadow-lg transition-shadow duration-200;
+  @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
 }
 
 /* Subtle gradient backgrounds */
@@ -114,7 +114,7 @@
     opacity: 1;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.1);
     opacity: 0.8;
   }
 }
@@ -151,19 +151,4 @@
 /* Optimized touch feedback */
 .touch-feedback {
   @apply active:bg-primary/10 transition-colors duration-150;
-}
-
-/* Clean design card */
-.clean-card {
-  @apply bg-card rounded-lg border border-border/50 shadow-sm transition-all duration-200 hover:shadow-md;
-}
-
-/* Soft highlight */
-.soft-highlight {
-  @apply bg-primary/10 text-primary px-2 py-0.5 rounded;
-}
-
-/* Clean button */
-.clean-button {
-  @apply bg-primary text-white rounded-lg px-4 py-2 transition-all duration-200 hover:bg-primary/90 active:scale-[0.98];
 }

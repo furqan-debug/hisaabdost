@@ -11,12 +11,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useCurrency } from "@/hooks/use-currency";
 
 export default function ExpenseList() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const navigate = useNavigate();
-  const { currencyCode } = useCurrency();
 
   // Define the fetch function for expenses
   const fetchExpenses = async () => {
@@ -94,7 +92,7 @@ export default function ExpenseList() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold">Recent Expenses</h2>
-          <p className="text-sm text-muted-foreground">Total: {formatCurrency(totalAmount, currencyCode)}</p>
+          <p className="text-sm text-muted-foreground">Total: {formatCurrency(totalAmount)}</p>
         </div>
         <Button variant="outline" onClick={handleAddExpense}>
           <Plus className="mr-2 h-4 w-4" />

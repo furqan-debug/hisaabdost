@@ -65,7 +65,7 @@ const Index = () => {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all elastic-hover"
                 onClick={() => navigate('/auth')}
               >
-                Get Started - It's Free
+                Get Started for Free
               </Button>
             </div>
           </div>
@@ -124,8 +124,8 @@ const Index = () => {
 
       <footer className="border-t py-8 bg-muted/20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Expensify AI. All rights reserved.</p>
-          <p className="text-sm mt-2">Powered by Quintessentia for simplified financial management</p>
+          <p>© 2023 Expense AI. All rights reserved.</p>
+          <p className="text-sm mt-2">Made with ❤️ for simplified financial management</p>
         </div>
       </footer>
     </div>

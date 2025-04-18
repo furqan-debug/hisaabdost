@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -5,6 +6,7 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -45,6 +47,9 @@ export function DashboardContent({
   chartType,
   setChartType
 }: DashboardContentProps) {
+  const isMobile = useIsMobile();
+  
+  // Animation variants for staggered children
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -60,13 +65,13 @@ export function DashboardContent({
     show: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.35, ease: "easeOut" }
     }
   };
 
   return (
     <motion.div 
-      className="space-y-4 md:space-y-5 px-2 md:px-0"
+      className="space-y-6 pb-20 sm:pb-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -88,7 +93,7 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="px-2 md:px-0">
+      <motion.div variants={itemVariants}>
         <AddExpenseButton 
           isNewUser={isNewUser}
           expenseToEdit={expenseToEdit}
@@ -109,7 +114,7 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="mb-16 md:mb-0">
+      <motion.div variants={itemVariants} className="pb-6">
         <ExpenseAnalyticsCard 
           expenses={expenses}
           isLoading={isExpensesLoading}

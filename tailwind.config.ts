@@ -26,7 +26,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         expense: {
-          low: "#38bdf8",
+          low: "#4ade80",
           medium: "#fb923c",
           high: "#f87171"
         },
@@ -99,8 +99,8 @@ export default {
         'slide-up': 'slideUp 0.3s ease-out',
       },
       borderRadius: {
-        'xl': '1rem',
-        '2xl': '1.5rem',
+        'xl': '0.75rem',
+        '2xl': '1rem',
       },
     },
   },
