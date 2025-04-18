@@ -1,4 +1,3 @@
-
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
@@ -11,9 +10,9 @@
     @apply z-50;
   }
   
-  .budget-chart-container {
-    @apply p-2 mx-0 overflow-x-auto;
-    width: 100% !important;
+  .budget-chart-container,
+  .analytics-chart-container {
+    @apply h-[300px] min-h-[300px] w-full overflow-visible !important;
   }
   
   .recharts-legend-item {
@@ -74,7 +73,8 @@
   /* Fix scrolling issues by containing the chart */
   .recharts-responsive-container {
     width: 100% !important;
-    height: 100% !important;
+    height: 300px !important;
+    min-height: 300px !important;
   }
   
   /* Prevent tooltips from causing scrolling */
