@@ -119,11 +119,11 @@ export default function Analytics() {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Tabs defaultValue="overview" className="space-y-4 mx--12">
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
-            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="comparison">Comparison</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-2">
@@ -132,8 +132,8 @@ export default function Analytics() {
                 <CardTitle>Category Breakdown</CardTitle>
                 <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px]">
-                <ChartContainer config={chartConfig} className="h-full px-0 py-0 my-0 mx--11">
+              <CardContent className="h-[400px] min-h-[300px]">
+                <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
@@ -146,7 +146,7 @@ export default function Analytics() {
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-[400px] min-h-[300px]">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -158,7 +158,7 @@ export default function Analytics() {
                 <CardTitle>Category Trends</CardTitle>
                 <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-[400px] min-h-[300px]">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
