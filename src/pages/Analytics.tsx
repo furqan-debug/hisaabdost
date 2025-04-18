@@ -140,8 +140,8 @@ export default function Analytics() {
                 <CardTitle>Category Breakdown</CardTitle>
                 <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className="analytics-chart-container chart-card-content">
-                <ChartContainer config={chartConfig} className="h-full px-0 py-0 my-0 mx--11">
+              <CardContent className="chart-wrapper">
+                <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
@@ -154,7 +154,7 @@ export default function Analytics() {
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className="analytics-chart-container chart-card-content">
+              <CardContent className="chart-wrapper">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
@@ -166,7 +166,7 @@ export default function Analytics() {
                 <CardTitle>Category Trends</CardTitle>
                 <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className="analytics-chart-container chart-card-content">
+              <CardContent className="chart-wrapper">
                 <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>

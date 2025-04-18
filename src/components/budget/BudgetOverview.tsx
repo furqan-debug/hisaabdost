@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
@@ -11,9 +10,7 @@ interface BudgetOverviewProps {
   budgets: Budget[];
 }
 
-export function BudgetOverview({
-  budgets
-}: BudgetOverviewProps) {
+export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
@@ -36,8 +33,8 @@ export function BudgetOverview({
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2 max-w-full my-0">
-          <ResponsiveContainer width="99%" height={300}>
+        <CardContent className="chart-wrapper p-0 pb-2 max-w-full my-0">
+          <ResponsiveContainer width="99%" height="100%">
             <PieChart margin={{
             top: 0,
             right: 0,

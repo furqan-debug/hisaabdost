@@ -11,7 +11,8 @@
   }
   
   .budget-chart-container,
-  .analytics-chart-container {
+  .analytics-chart-container,
+  .chart-wrapper {
     @apply h-[300px] min-h-[300px] w-full overflow-visible !important;
   }
   

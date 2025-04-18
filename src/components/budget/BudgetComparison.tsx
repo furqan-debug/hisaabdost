@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -15,7 +14,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   
-  // Group budgets by period and calculate totals
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
     if (!acc[budget.period]) {
       acc[budget.period] = {
@@ -28,7 +26,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
 
   const data = Object.values(budgetsByPeriod);
 
-  // If no budgets or only one period, show message
   if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -47,7 +44,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
+      <CardContent className="chart-wrapper p-0 pb-2 max-w-full overflow-hidden">
         <ResponsiveContainer width="99%" height="100%">
           <BarChart 
             data={data} 
