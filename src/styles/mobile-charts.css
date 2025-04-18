@@ -6,6 +6,7 @@
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     width: 100% !important;
+    max-height: none !important; /* Prevent height constraints */
   }
   
   /* Make chart containers more elegant */
@@ -13,11 +14,12 @@
     overflow: visible !important;
     margin: 0 auto !important;
     max-width: 95% !important;
+    min-height: 300px !important; /* Enforce minimum height */
   }
   
   .pie-chart-container {
-    max-height: 280px !important;
-    height: 280px !important;
+    min-height: 300px !important; /* Ensure minimum height */
+    max-height: none !important; /* Remove max height constraints */
     max-width: 100% !important;
     width: 100% !important;
   }
@@ -31,10 +33,12 @@
   
   /* Improve chart margins for better display */
   .budget-chart-container {
-    margin: 0 -5px !important;
-    width: calc(100% + 10px) !important;
-    max-width: calc(100% + 10px) !important;
-    padding: 0.5rem;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    min-height: 300px !important; /* Enforce minimum height */
+    overflow: visible !important;
   }
   
   /* Enhance pie chart appearance */
@@ -44,13 +48,13 @@
   
   /* Fix pie chart label display */
   .recharts-pie-label-line {
-    stroke: var(--muted-foreground) !important;
+    stroke: var(--muted-foreground, #a1a1aa) !important;
     stroke-width: 0.5 !important;
   }
   
   .recharts-pie-label-text {
     font-size: 10px !important;
-    fill: var(--foreground) !important;
+    fill: var(--foreground, #ffffff) !important;
   }
   
   /* Make active elements more visible */
@@ -172,7 +176,7 @@
 /* Make the chart areas more elegant */
 .recharts-cartesian-axis-line,
 .recharts-reference-line line {
-  stroke: var(--border) !important;
+  stroke: var(--border, #e5e7eb) !important;
   stroke-width: 1 !important;
 }
 

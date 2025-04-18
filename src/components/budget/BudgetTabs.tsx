@@ -16,20 +16,25 @@ interface BudgetTabsProps {
 }
 
 export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: BudgetTabsProps) => {
+  // Use a safe default value for activeTab
+  const safeActiveTab = activeTab || 'overview';
   // Local state to prevent tab flickering
-  const [stableActiveTab, setStableActiveTab] = useState(activeTab);
+  const [stableActiveTab, setStableActiveTab] = useState(safeActiveTab);
   
   // Update local tab state when prop changes, but only if it's different
   useEffect(() => {
-    if (activeTab !== stableActiveTab) {
-      setStableActiveTab(activeTab);
+    if (safeActiveTab !== stableActiveTab) {
+      setStableActiveTab(safeActiveTab);
     }
-  }, [activeTab]);
+  }, [safeActiveTab, stableActiveTab]);
   
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
+
+  // Safe budgets array to prevent undefined errors
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
 
   return (
     <Card className="budget-card overflow-hidden">
@@ -49,22 +54,22 @@ export const BudgetTabs = ({ budgets, onEditBudget, activeTab, onTabChange }: Bu
           </div>
 
           <TabsContent value="overview" className="budget-section overflow-hidden w-full">
-            <BudgetOverview budgets={budgets || []} />
+            <BudgetOverview budgets={safeBudgets} />
           </TabsContent>
 
           <TabsContent value="categories" className="budget-section overflow-hidden w-full">
             <CategoryBudgets 
-              budgets={budgets || []}
+              budgets={safeBudgets}
               onEditBudget={onEditBudget}
             />
           </TabsContent>
 
           <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
-            <BudgetTransactions budgets={budgets || []} />
+            <BudgetTransactions budgets={safeBudgets} />
           </TabsContent>
 
           <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
-            <BudgetComparison budgets={budgets || []} />
+            <BudgetComparison budgets={safeBudgets} />
           </TabsContent>
         </Tabs>
       </CardContent>

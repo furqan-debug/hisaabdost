@@ -65,15 +65,15 @@ const Budget = () => {
     setShowBudgetForm(true);
   };
 
+  // Get active tab from month data with a fallback
+  const activeTab = currentMonthData?.activeTab || 'overview';
+
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
-
-  // Get active tab from month data
-  const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
     return <div className="p-4 flex justify-center">
@@ -83,6 +83,9 @@ const Budget = () => {
     </div>;
   }
 
+  // Ensure budgets is an array
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+
   return (
     <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
       <BudgetHeader 
@@ -91,16 +94,16 @@ const Budget = () => {
       />
 
       <BudgetSummaryCards
-        totalBudget={totalBudget}
-        remainingBalance={remainingBalance}
-        usagePercentage={usagePercentage}
-        monthlyIncome={monthlyIncome}
+        totalBudget={totalBudget || 0}
+        remainingBalance={remainingBalance || 0}
+        usagePercentage={usagePercentage || 0}
+        monthlyIncome={monthlyIncome || 0}
         isLoading={isLoading}
       />
 
       <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
         <BudgetTabs 
-          budgets={budgets || []} 
+          budgets={safeBudgets} 
           onEditBudget={handleEditBudget}
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -120,8 +123,8 @@ const Budget = () => {
             description: `Budget ${selectedBudget ? 'updated' : 'created'} successfully.`,
           });
         }}
-        monthlyIncome={monthlyIncome}
-        totalBudget={totalBudget}
+        monthlyIncome={monthlyIncome || 0}
+        totalBudget={totalBudget || 0}
       />
     </div>
   );

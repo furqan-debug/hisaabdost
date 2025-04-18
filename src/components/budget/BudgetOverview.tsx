@@ -9,23 +9,38 @@ interface BudgetOverviewProps {
   budgets: Budget[];
 }
 
-export function BudgetOverview({ budgets }: BudgetOverviewProps) {
+export function BudgetOverview({ budgets = [] }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
-  const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+  
+  // Ensure budgets is an array
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+  
+  // Add guard in case totalBudget is 0 to prevent division by zero
+  const totalBudget = safeBudgets.reduce((sum, budget) => sum + (Number(budget.amount) || 0), 0);
 
-  const data = budgets.map(budget => ({
-    name: budget.category,
-    value: budget.amount,
-    color: CATEGORY_COLORS[budget.category as keyof typeof CATEGORY_COLORS],
-    percentage: ((budget.amount / totalBudget) * 100).toFixed(0)
+  const data = safeBudgets.map(budget => ({
+    name: budget.category || 'Uncategorized',
+    value: Number(budget.amount) || 0,
+    color: CATEGORY_COLORS[budget.category as keyof typeof CATEGORY_COLORS] || '#A4DE6C',
+    percentage: totalBudget > 0 ? ((Number(budget.amount) / totalBudget) * 100).toFixed(0) : '0'
   }));
 
   // If no budgets, show message
-  if (budgets.length === 0) {
+  if (safeBudgets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
+      </div>
+    );
+  }
+
+  // If all budget amounts are 0, show a message
+  if (totalBudget === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
+        <p className="text-muted-foreground">All budget amounts are set to 0</p>
+        <p className="text-sm text-muted-foreground">Update your budgets with non-zero amounts to see the chart</p>
       </div>
     );
   }
@@ -36,7 +51,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
         <CardHeader className="p-3">
           <CardTitle className="text-lg">Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="budget-chart-container p-0 pb-2 max-w-full">
+        <CardContent className="budget-chart-container p-0 pb-2 max-w-full min-h-[300px]">
           <ResponsiveContainer width="99%" height={300}>
             <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie

@@ -23,107 +23,149 @@ export function useBudgetData() {
 
   // Local state to prevent glitching during calculation
   const [stableValues, setStableValues] = useState({
-    totalBudget: currentMonthData.totalBudget || 0,
-    totalSpent: currentMonthData.monthlyExpenses || 0,
-    remainingBalance: currentMonthData.remainingBudget || 0,
-    usagePercentage: currentMonthData.budgetUsagePercentage || 0,
-    monthlyIncome: currentMonthData.monthlyIncome || 0
+    totalBudget: currentMonthData?.totalBudget || 0,
+    totalSpent: currentMonthData?.monthlyExpenses || 0,
+    remainingBalance: currentMonthData?.remainingBudget || 0,
+    usagePercentage: currentMonthData?.budgetUsagePercentage || 0,
+    monthlyIncome: currentMonthData?.monthlyIncome || 0
   });
 
   // Update debounce timer ref
   const updateTimerRef = useRef<number | null>(null);
   
   // Query budgets with the monthly income
-  const { data: budgets, isLoading: budgetsLoading } = useQuery({
+  const { data: budgets, isLoading: budgetsLoading, error: budgetsError } = useQuery({
     queryKey: ['budgets', monthKey, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as Budget[];
+        if (error) {
+          console.error('Error fetching budgets:', error);
+          return [];
+        }
+        
+        return data as Budget[] || [];
+      } catch (err) {
+        console.error('Exception in budgets query:', err);
+        return [];
+      }
     },
     enabled: !!user,
+    retry: 2,
   });
   
   // Query to get monthly income specifically
-  const { data: incomeData, isLoading: incomeLoading } = useQuery({
+  const { data: incomeData, isLoading: incomeLoading, error: incomeError } = useQuery({
     queryKey: ['monthly_income', user?.id],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('monthly_income')
-        .eq('user_id', user.id)
-        .limit(1);
+      try {
+        const { data, error } = await supabase
+          .from('budgets')
+          .select('monthly_income')
+          .eq('user_id', user.id)
+          .limit(1);
+          
+        if (error) {
+          console.error('Error fetching monthly income:', error);
+          return { monthlyIncome: 0 };
+        }
         
-      if (error) throw error;
-      return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+        return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+      } catch (err) {
+        console.error('Exception in monthly income query:', err);
+        return { monthlyIncome: 0 };
+      }
     },
     enabled: !!user,
+    retry: 2,
   });
 
-  const { data: expenses, isLoading: expensesLoading } = useQuery({
+  const { data: expenses, isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
-      
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', monthStart.toISOString().split('T')[0])
-        .lte('date', monthEnd.toISOString().split('T')[0]);
+      try {
+        const monthStart = startOfMonth(selectedMonth);
+        const monthEnd = endOfMonth(selectedMonth);
+        
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('date', monthStart.toISOString().split('T')[0])
+          .lte('date', monthEnd.toISOString().split('T')[0]);
 
-      if (error) throw error;
-      return data;
+        if (error) {
+          console.error('Error fetching expenses:', error);
+          return [];
+        }
+        
+        return data || [];
+      } catch (err) {
+        console.error('Exception in expenses query:', err);
+        return [];
+      }
     },
     enabled: !!user,
+    retry: 2,
   });
 
   // Define isLoading variable before it's used
   const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading || incomeLoading;
+  const hasError = budgetsError || expensesError || incomeError;
 
   const exportBudgetData = () => {
-    if (!budgets) return;
+    if (!budgets || !Array.isArray(budgets) || budgets.length === 0) {
+      console.log('No budget data to export');
+      return;
+    }
 
-    const csvContent = [
-      ['Category', 'Amount', 'Period', 'Carry Forward', 'Created At'].join(','),
-      ...budgets.map(budget => [
-        budget.category,
-        budget.amount,
-        budget.period,
-        budget.carry_forward,
-        format(new Date(budget.created_at), 'yyyy-MM-dd')
-      ].join(','))
-    ].join('\n');
+    try {
+      const csvContent = [
+        ['Category', 'Amount', 'Period', 'Carry Forward', 'Created At'].join(','),
+        ...budgets.map(budget => [
+          budget.category || 'Uncategorized',
+          budget.amount || 0,
+          budget.period || 'monthly',
+          budget.carry_forward || false,
+          format(new Date(budget.created_at), 'yyyy-MM-dd')
+        ].join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `budget_data_${format(selectedMonth, 'yyyy-MM')}.csv`;
-    link.click();
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `budget_data_${format(selectedMonth, 'yyyy-MM')}.csv`;
+      link.click();
+    } catch (error) {
+      console.error('Error exporting budget data:', error);
+    }
   };
 
   // Calculate and debounce summary data updates
   useEffect(() => {
-    if (isLoading || !budgets || !expenses || !incomeData) return;
+    if (isLoading || hasError) return;
     
-    // Get monthly income from Supabase data
-    const monthlyIncome = incomeData.monthlyIncome || 0;
+    // Ensure we have valid arrays
+    const validBudgets = Array.isArray(budgets) ? budgets : [];
+    const validExpenses = Array.isArray(expenses) ? expenses : [];
     
-    // Calculate new values
-    const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
-    const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+    // Get monthly income from Supabase data with fallback
+    const monthlyIncome = incomeData?.monthlyIncome || 0;
+    
+    // Calculate new values with safety checks
+    const totalBudget = validBudgets.reduce((sum, budget) => sum + (Number(budget.amount) || 0), 0);
+    const totalSpent = validExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     const remainingBalance = totalBudget - totalSpent;
     const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
     
@@ -174,12 +216,13 @@ export function useBudgetData() {
         window.clearTimeout(updateTimerRef.current);
       }
     };
-  }, [budgets, expenses, incomeData, currentMonthData, monthKey, updateMonthData, isLoading, stableValues.monthlyIncome]);
+  }, [budgets, expenses, incomeData, monthKey, updateMonthData, isLoading, hasError, stableValues.monthlyIncome]);
 
   return {
-    budgets,
-    expenses,
+    budgets: Array.isArray(budgets) ? budgets : [],
+    expenses: Array.isArray(expenses) ? expenses : [],
     isLoading,
+    hasError,
     exportBudgetData,
     ...stableValues
   };

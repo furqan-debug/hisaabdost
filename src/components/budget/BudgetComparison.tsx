@@ -9,29 +9,34 @@ interface BudgetComparisonProps {
   budgets: Budget[];
 }
 
-export function BudgetComparison({ budgets }: BudgetComparisonProps) {
+export function BudgetComparison({ budgets = [] }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
   
-  // Group budgets by period and calculate totals
-  const budgetsByPeriod = budgets.reduce((acc, budget) => {
-    if (!acc[budget.period]) {
-      acc[budget.period] = {
-        period: budget.period,
+  // Ensure budgets is an array
+  const safeBudgets = Array.isArray(budgets) ? budgets : [];
+  
+  // Group budgets by period and calculate totals with validation
+  const budgetsByPeriod = safeBudgets.reduce((acc, budget) => {
+    const period = budget.period || 'monthly';
+    if (!acc[period]) {
+      acc[period] = {
+        period: period,
       };
     }
-    acc[budget.period][budget.category] = budget.amount;
+    const category = budget.category || 'Uncategorized';
+    acc[period][category] = Number(budget.amount) || 0;
     return acc;
   }, {} as Record<string, any>);
 
   const data = Object.values(budgetsByPeriod);
 
   // If no budgets or only one period, show message
-  if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
+  if (safeBudgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">Not enough data for comparison</p>
         <p className="text-sm text-muted-foreground">
-          {budgets.length === 0 
+          {safeBudgets.length === 0 
             ? "Add your first budget to see comparisons" 
             : "Add budgets with different periods (monthly, quarterly, yearly) to see comparisons"}
         </p>
@@ -44,8 +49,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden">
-        <ResponsiveContainer width="99%" height="100%">
+      <CardContent className="budget-chart-container p-0 pb-2 max-w-full overflow-hidden min-h-[300px]">
+        <ResponsiveContainer width="99%" height={300}>
           <BarChart 
             data={data} 
             margin={
