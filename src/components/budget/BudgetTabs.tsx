@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
@@ -36,11 +35,16 @@ export const BudgetTabs = ({
     onTabChange(value); // Notify parent about the change
   };
 
-  return <Card className="budget-card overflow-hidden mx-0 px-0">
-      <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
-        <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
-          <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
+  return (
+    <Card className="budget-card overflow-hidden mx-0 px-0 min-h-[500px]">
+      <CardContent className="p-0 md:p-6 max-w-full h-full">
+        <Tabs 
+          value={stableActiveTab} 
+          onValueChange={handleValueChange} 
+          className="space-y-4 md:space-y-6 w-full h-full flex flex-col"
+        >
+          <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar flex-shrink-0">
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
@@ -48,22 +52,25 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="budget-section overflow-hidden w-full min-h-[300px]">
-            <BudgetOverview budgets={budgets || []} />
-          </TabsContent>
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <TabsContent value="overview" className="h-full">
+              <BudgetOverview budgets={budgets || []} />
+            </TabsContent>
 
-          <TabsContent value="categories" className="budget-section overflow-hidden w-full min-h-[300px]">
-            <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
-          </TabsContent>
+            <TabsContent value="categories" className="h-full">
+              <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
+            </TabsContent>
 
-          <TabsContent value="transactions" className="budget-section overflow-hidden w-full min-h-[300px]">
-            <BudgetTransactions budgets={budgets || []} />
-          </TabsContent>
+            <TabsContent value="transactions" className="h-full">
+              <BudgetTransactions budgets={budgets || []} />
+            </TabsContent>
 
-          <TabsContent value="comparison" className="budget-section overflow-hidden w-full min-h-[300px]">
-            <BudgetComparison budgets={budgets || []} />
-          </TabsContent>
+            <TabsContent value="comparison" className="h-full">
+              <BudgetComparison budgets={budgets || []} />
+            </TabsContent>
+          </div>
         </Tabs>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };

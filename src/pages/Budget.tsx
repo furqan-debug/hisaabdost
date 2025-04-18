@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +44,6 @@ const Budget = () => {
     monthlyIncome
   } = useBudgetData();
 
-  // Save budget data to month context when it changes
   useEffect(() => {
     if (!isLoading) {
       updateMonthData(currentMonthKey, {
@@ -67,18 +65,16 @@ const Budget = () => {
     setShowBudgetForm(true);
   };
 
-  // Handle tab change
   const handleTabChange = (tabValue: string) => {
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
 
-  // Get active tab from month data
   const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
-    return <div className="p-4 flex justify-center">
+    return <div className="p-4 flex justify-center min-h-[500px]">
       <div className="animate-pulse text-center">
         <p className="text-muted-foreground">Loading your budget data...</p>
       </div>
@@ -86,7 +82,7 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container h-full min-h-[calc(100vh-200px)]">
       <BudgetHeader 
         onAddBudget={handleAddBudget}
         onExport={exportBudgetData}
@@ -100,7 +96,7 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
+      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden flex-1 min-h-0">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}

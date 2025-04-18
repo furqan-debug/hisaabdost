@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Navbar from './Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,14 +18,14 @@ const Layout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className={cn(
-        "flex-1 px-3 pt-3 pb-20 md:px-6 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300 min-h-[calc(100vh-60px)]",
+        "flex-1 px-3 pt-3 pb-20 md:px-6 md:pt-6 md:pb-8 transition-all duration-300 min-h-[calc(100vh-60px)] overflow-x-hidden",
         pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
       )}>
         <div className={cn(
-          "mx-auto w-full overflow-guard min-h-[calc(100vh-120px)]", 
+          "mx-auto w-full h-full", 
           isMobile ? "max-w-full px-1" : "max-w-5xl",
           pageTransition ? "animate-fade-in" : ""
         )}>
