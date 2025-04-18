@@ -35,7 +35,7 @@ export const BudgetTabs = ({
   };
 
   return (
-    <Card className="budget-card overflow-hidden mx-0 px-0 w-full h-full min-h-[500px] flex flex-col">
+    <Card className="budget-card mx-0 px-0 w-full h-full min-h-[500px] flex flex-col overflow-hidden">
       <CardContent className="p-0 md:p-6 w-full h-full flex flex-col flex-1">
         <Tabs 
           value={stableActiveTab} 
@@ -51,31 +51,31 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden p-4 min-h-[300px]">
+          <div className="flex-1 min-h-0 overflow-hidden p-4 min-h-[500px]">
             <TabsContent 
               value="overview" 
-              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
             >
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="categories" 
-              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
             >
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
             <TabsContent 
               value="transactions" 
-              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
             >
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
             <TabsContent 
               value="comparison" 
-              className="h-full min-h-[300px] data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden"
+              className="h-full data-[state=active]:flex data-[state=active]:flex-col data-[state=inactive]:hidden min-h-[500px]"
             >
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>

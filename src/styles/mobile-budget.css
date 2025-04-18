@@ -1,4 +1,3 @@
-
 /* Mobile Budget Styles */
 @media (max-width: 640px) {
   /* Budget specific mobile optimizations */
@@ -146,4 +145,65 @@
 [role="tabpanel"][data-state="active"] {
   display: block !important;
   min-height: 300px;
+}
+
+/* Ensure chart containers have proper height */
+.budget-chart-container {
+  min-height: 300px !important;
+  height: 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Tab content height fixes */
+[data-state="active"] {
+  min-height: 300px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+}
+
+/* Card content needs explicit height */
+.card-content {
+  min-height: 300px !important;
+  height: 100% !important;
+}
+
+/* Ensure chart visibility */
+.recharts-wrapper {
+  min-height: 300px !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Budget card container */
+.budget-card {
+  min-height: 500px !important;
+  height: 100% !important;
+}
+
+/* Fix content overflow */
+.budget-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Fix chart responsiveness */
+.recharts-responsive-container {
+  min-height: 300px !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Chart parent containers */
+.budget-chart-container,
+.card-content-chart {
+  min-height: 300px !important;
+  height: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
