@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,6 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
-
 export default function Analytics() {
   const {
     user
@@ -109,7 +107,7 @@ export default function Analytics() {
       }
     }
   };
-  return <motion.div className="space-y-6 overflow-visible" variants={containerVariants} initial="hidden" animate="show">
+  return <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="show">
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
         <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
@@ -120,7 +118,7 @@ export default function Analytics() {
         <InsightsDisplay insights={insights} />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="overflow-visible">
+      <motion.div variants={itemVariants}>
         <Tabs defaultValue="overview" className="space-y-4 mx--12">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
@@ -128,53 +126,53 @@ export default function Analytics() {
             <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4 mt-2 overflow-visible">
-            <Card className="overflow-visible">
+          <TabsContent value="overview" className="space-y-4 mt-2">
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Category Breakdown</CardTitle>
                 <CardDescription>Your expenses by category</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full w-full px-0 py-0 overflow-visible">
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full px-0 py-0 my-0 mx--11">
                   <ExpensesPieChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="trends" className="space-y-4 mt-2 overflow-visible">
-            <Card className="overflow-visible">
+          <TabsContent value="trends" className="space-y-4 mt-2">
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Your spending patterns over time</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesBarChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            <Card className="overflow-visible">
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>Category Trends</CardTitle>
                 <CardDescription>How your spending evolves by category</CardDescription>
               </CardHeader>
-              <CardContent className="min-h-[300px] h-[350px] overflow-visible">
-                <ChartContainer config={chartConfig} className="h-full w-full overflow-visible">
+              <CardContent className="h-[400px]">
+                <ChartContainer config={chartConfig} className="h-full">
                   <ExpensesLineChart expenses={filteredExpenses} />
                 </ChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="comparison" className="space-y-4 mt-2 overflow-visible">
-            <Card className="overflow-visible">
+          <TabsContent value="comparison" className="space-y-4 mt-2">
+            <Card>
               <CardHeader>
                 <CardTitle>Period Comparison</CardTitle>
                 <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent className="overflow-visible min-h-[300px]">
+              <CardContent>
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>

@@ -15,10 +15,13 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const data = calculatePieChartData(expenses);
+  
+  // Calculate total amount
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <div className="relative w-full flex flex-col items-center" style={{ minHeight: '250px' }}>
+    <div className="relative w-full h-full flex flex-col items-center">
+      {/* Center total display */}
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
           {formatCurrency(totalAmount, currencyCode)}
@@ -28,9 +31,9 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className="w-full h-full" style={{ minHeight: '250px' }}>
-        <ResponsiveContainer width="100%" height={280}>
-          <PieChart>
+      <div className={`w-full ${isMobile ? 'pie-chart-container h-[220px]' : 'h-[300px]'}`}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie
               data={data}
               dataKey="value"
@@ -42,7 +45,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
               paddingAngle={2}
               cornerRadius={4}
               labelLine={false}
-              label={false}
+              label={false} // Remove labels to prevent overlapping
             >
               {data.map((entry, index) => (
                 <Cell 
@@ -75,6 +78,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </ResponsiveContainer>
       </div>
       
+      {/* Simplified mobile-friendly legend */}
       <div className="expense-chart-legend">
         {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
           <div key={index} className="expense-chart-legend-item">

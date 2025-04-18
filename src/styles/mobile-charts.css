@@ -2,17 +2,9 @@
 /* Mobile Chart Styles */
 @media (max-width: 640px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg overflow-visible;
-    margin: 0 auto !important;
-    min-height: 300px !important;
-    height: 300px !important;
-  }
-  
-  .recharts-responsive-container {
-    width: 100% !important;
-    min-height: 300px !important;
-    height: 300px !important;
+    @apply max-w-full rounded-lg min-h-[300px];
     overflow: visible !important;
+    margin: 0 auto !important;
   }
   
   .recharts-tooltip-wrapper {
@@ -20,25 +12,8 @@
   }
   
   .budget-chart-container {
-    @apply p-2 mx-0;
+    @apply p-2 mx-0 overflow-x-auto;
     width: 100% !important;
-    min-height: 300px !important;
-    height: 300px !important;
-    overflow: visible !important;
-  }
-  
-  .budget-card {
-    @apply bg-card/80 backdrop-blur-sm border-border/40 my-2 shadow rounded-xl;
-    min-height: 300px !important;
-    height: auto !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-  
-  .chart-container {
-    @apply w-full relative overflow-visible;
-    min-height: 300px !important;
-    height: 300px !important;
   }
   
   .recharts-legend-item {
@@ -56,113 +31,86 @@
     fill: var(--foreground) !important;
   }
 
-  /* Enhanced container styles for reliable chart rendering */
+  /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full relative overflow-visible;
-    min-height: 300px !important;
-    height: 300px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    @apply w-full h-[320px] relative overflow-hidden;
   }
 
-  /* Improved pie chart container */
+  /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
-    @apply w-full mx-auto overflow-visible;
-    min-height: 300px !important;
-    height: 300px !important;
+    @apply max-w-[280px] mx-auto;
   }
 
-  /* Better legend layout for mobile */
+  /* Make legend more compact on mobile */
   .expense-chart-legend {
     @apply flex flex-wrap justify-center gap-2 mt-2;
-    padding: 8px 4px;
   }
 
   .expense-chart-legend-item {
     @apply text-xs px-1.5 py-0.5 rounded-full;
   }
 
-  /* Center text positioning */
+  /* Center text properly */
   .chart-center-total {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    width: 75% !important;
     text-align: center !important;
-    z-index: 10 !important;
-    pointer-events: none !important;
-    width: auto !important;
+    transform: translate(-50%, -50%) !important;
   }
   
   .chart-center-total-amount {
-    @apply text-xl font-bold whitespace-nowrap;
+    @apply text-xl font-bold;
+    white-space: nowrap;
   }
   
   .chart-center-total-label {
     @apply text-xs;
   }
 
-  /* Better label visibility */
+  /* Remove labels on pie chart for mobile */
   .recharts-pie-label-text {
-    font-size: 10px !important;
-    font-weight: 500 !important;
-    fill: var(--foreground) !important;
+    display: none !important;
   }
 
-  /* Better tooltip handling */
-  .tooltip-card {
-    max-width: 180px !important;
-    overflow: hidden !important;
-    user-select: none !important;
+  /* Fix scrolling issues by containing the chart */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
   }
   
-  /* Improved axis rendering */
+  /* Prevent tooltips from causing scrolling */
+  .tooltip-card {
+    max-width: 200px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Adjust axis spacing */
   .recharts-cartesian-axis {
     overflow: visible !important;
   }
   
+  /* Better label positioning for small screens */
   .recharts-layer.recharts-cartesian-axis-tick {
     overflow: visible !important;
   }
   
-  /* Better text sizing */
+  /* Hide text that would overflow */
   .recharts-text.recharts-label {
-    font-size: 10px !important;
-    fill: var(--foreground) !important;
+    display: none !important;
   }
   
+  /* Hide detailed legend for simplicity */
+  .recharts-default-legend {
+    max-width: 100% !important;
+    display: none !important;
+  }
+  
+  /* Simplify axis ticks */
   .recharts-cartesian-axis-tick text {
-    font-size: 10px !important;
-    fill: var(--foreground) !important;
-  }
-
-  /* Budget comparison improvements */
-  .budget-comparison-chart {
-    min-height: 300px !important;
-    height: 300px !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-  
-  /* Force chart surfaces to be visible */
-  .recharts-surface {
-    overflow: visible !important;
-  }
-  
-  /* Fix content visibility */
-  .tabs-content {
-    min-height: 300px !important;
-    height: auto !important;
-  }
-  
-  .budget-section {
-    min-height: 300px !important;
-    height: auto !important;
+    font-size: 9px !important;
   }
 }
 
-/* General chart improvements */
+/* Chart improvements for all screen sizes */
 .recharts-default-legend {
   @apply flex flex-wrap justify-center gap-2 mt-4 !important;
 }
@@ -228,13 +176,12 @@
   touch-action: pan-y !important;
 }
 
+/* Prevent scroll within chart container */
+.chart-container {
+  overflow: hidden !important;
+}
+
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
-}
-
-/* Ensure chart visibility */
-.recharts-responsive-container {
-  min-height: 300px;
-  height: 300px !important;
 }

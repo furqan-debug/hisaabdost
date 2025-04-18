@@ -30,9 +30,7 @@ const Layout = () => {
           isMobile ? "max-w-full px-1" : "max-w-5xl",
           pageTransition ? "animate-fade-in" : ""
         )}>
-          <div className="min-h-[calc(100vh-120px)]">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </main>
       {isMobile && <BottomNavigation />}
