@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import { MessageSquareText, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,7 +12,8 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
   return (
     <div className="finny-chat-header flex justify-between items-center my--11 mx--5 my--0 mx-[-9px] py-[18px] px-[17px]">
       <div className="finny-chat-title flex items-center gap-2">
-        <div className="text-primary font-medium">Finny</div>
+        <MessageSquareText size={18} className="text-primary" />
+        <span className="text-primary font-medium">Finny</span>
         <Badge className="finny-chat-badge ml-1">Finance Assistant</Badge>
       </div>
       <div className="flex items-center gap-2">
@@ -28,10 +29,21 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        
+        {isMobile && onClose && (
+          <Button 
+            variant="ghost" 
+            size="icon-sm" 
+            className="rounded-lg hover:bg-muted/80" 
+            onClick={onClose} 
+            aria-label="Close Chat"
+          >
+            <X size={16} className="text-muted-foreground" />
+          </Button>
+        )}
       </div>
     </div>
   );
 };
 
 export default ChatHeader;
-
