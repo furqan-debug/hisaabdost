@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,8 @@ import QuickReplies from './chat/QuickReplies';
 import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info, Loader2 } from 'lucide-react';
 
 interface FinnyChatProps {
   isOpen: boolean;
