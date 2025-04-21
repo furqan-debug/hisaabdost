@@ -16,11 +16,3 @@
 #root {
   @apply w-full min-h-screen;
 }
-
-@media (max-width: 640px) {
-  .chart-wrapper {
-    height: 200px !important;
-    min-height: 200px !important;
-  }
-}
-
