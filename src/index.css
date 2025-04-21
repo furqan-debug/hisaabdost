@@ -16,3 +16,14 @@
 #root {
   @apply w-full min-h-screen;
 }
+
+/* ───────────────────────────────────────────────────────────────── */
+/* Force all chart wrappers to at least 250px tall on every viewport */
+.chart-wrapper,
+.budget-chart-container,
+.analytics-chart-container {
+  height: 250px !important;
+  min-height: 250px !important;
+}
+/* ───────────────────────────────────────────────────────────────── */
+
