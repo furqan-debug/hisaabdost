@@ -91,7 +91,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         ) : (
           <motion.div 
-            className="chart-container" 
+            className="chart-wrapper" // <--- CHART WRAPPER ADDED!
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -106,3 +106,4 @@ export const ExpenseAnalyticsCard = ({
     </Card>
   );
 };
+

@@ -42,13 +42,13 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     : 0;
   
   return (
-    <div className="relative w-full h-full flex flex-col items-center">
+    <div className="chart-wrapper relative w-full h-full flex flex-col items-center">
       {/* Display the center percentage */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
         <span className="text-4xl font-bold">{mainPercentage}%</span>
       </div>
       
-      <ResponsiveContainer width="100%" height={isMobile ? 300 : "100%"}>
+      <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 0, left: 0, bottom: 0 }}>
           <Pie
             data={data}
@@ -121,3 +121,4 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     </div>
   );
 }
+
