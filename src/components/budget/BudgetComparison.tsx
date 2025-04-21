@@ -44,66 +44,68 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader className="p-3">
         <CardTitle className="text-lg">Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="chart-wrapper p-0 pb-2 max-w-full overflow-hidden">
-        <ResponsiveContainer width="99%" height="100%">
-          <BarChart 
-            data={data} 
-            margin={
-              isMobile 
-                ? { top: 20, right: 15, left: -10, bottom: 60 } 
-                : { top: 20, right: 30, left: 20, bottom: 5 }
-            }
-            barCategoryGap={isMobile ? "30%" : "40%"}
-            barGap={isMobile ? 1 : 3}
-            style={{ maxWidth: '100%', overflow: 'hidden' }}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
-            <XAxis 
-              dataKey="period" 
-              angle={isMobile ? -45 : 0}
-              textAnchor={isMobile ? "end" : "middle"}
-              height={isMobile ? 60 : 30}
-              tick={{ fontSize: isMobile ? 10 : 14 }}
-              tickMargin={isMobile ? 5 : 10}
-              scale="band"
-            />
-            <YAxis 
-              tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value), currencyCode)} 
-              width={isMobile ? 30 : 60}
-              tick={{ fontSize: isMobile ? 10 : 14 }}
-            />
-            <Tooltip 
-              content={({ active, payload, label }) => {
-                if (!active || !payload || !payload.length) return null;
-                return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <p className="font-semibold mb-1 capitalize">{label}</p>
-                    {payload.map((entry) => (
-                      <p 
-                        key={entry.name} 
-                        className="text-sm"
-                        style={{ color: entry.color as string }}
-                      >
-                        {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
-                      </p>
-                    ))}
-                  </div>
-                );
-              }}
-            />
-            {!isMobile && <Legend />}
-            {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
-              <Bar 
-                key={category} 
-                dataKey={category} 
-                fill={color}
-                fillOpacity={0.85}
-                stackId="a"
-                radius={[4, 4, 0, 0]}
+      <CardContent className="p-0 pb-2 max-w-full overflow-hidden">
+        <div className="w-full h-[250px] md:h-[300px]">
+          <ResponsiveContainer width="99%" height="100%">
+            <BarChart 
+              data={data} 
+              margin={
+                isMobile 
+                  ? { top: 20, right: 15, left: -10, bottom: 60 } 
+                  : { top: 20, right: 30, left: 20, bottom: 5 }
+              }
+              barCategoryGap={isMobile ? "30%" : "40%"}
+              barGap={isMobile ? 1 : 3}
+              style={{ maxWidth: '100%', overflow: 'hidden' }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
+              <XAxis 
+                dataKey="period" 
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 60 : 30}
+                tick={{ fontSize: isMobile ? 10 : 14 }}
+                tickMargin={isMobile ? 5 : 10}
+                scale="band"
               />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+              <YAxis 
+                tickFormatter={(value) => isMobile ? `${(value/1000).toFixed(0)}k` : formatCurrency(Number(value), currencyCode)} 
+                width={isMobile ? 30 : 60}
+                tick={{ fontSize: isMobile ? 10 : 14 }}
+              />
+              <Tooltip 
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  return (
+                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                      <p className="font-semibold mb-1 capitalize">{label}</p>
+                      {payload.map((entry) => (
+                        <p 
+                          key={entry.name} 
+                          className="text-sm"
+                          style={{ color: entry.color as string }}
+                        >
+                          {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }}
+              />
+              {!isMobile && <Legend />}
+              {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+                <Bar 
+                  key={category} 
+                  dataKey={category} 
+                  fill={color}
+                  fillOpacity={0.85}
+                  stackId="a"
+                  radius={[4, 4, 0, 0]}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
       
       {isMobile && (

@@ -1,7 +1,7 @@
 /* Mobile Chart Styles */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .recharts-wrapper {
-    @apply max-w-full rounded-lg min-h-[300px];
+    @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
   }
@@ -10,10 +10,8 @@
     @apply z-50;
   }
   
-  .budget-chart-container,
-  .analytics-chart-container,
   .chart-wrapper {
-    @apply h-[300px] min-h-[300px] w-full overflow-visible !important;
+    @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
   }
   
   .recharts-legend-item {
@@ -112,6 +110,10 @@
 }
 
 /* Chart improvements for all screen sizes */
+.chart-wrapper {
+  @apply w-full h-[250px] md:h-[300px] relative overflow-visible;
+}
+
 .recharts-default-legend {
   @apply flex flex-wrap justify-center gap-2 mt-4 !important;
 }

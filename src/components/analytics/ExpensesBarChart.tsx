@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { formatCurrency } from "@/utils/formatters";
@@ -32,7 +31,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   }));
 
   return (
-    <div className="chart-wrapper">
+    <div className="w-full h-[250px] md:h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
@@ -71,4 +70,3 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     </div>
   );
 }
-
