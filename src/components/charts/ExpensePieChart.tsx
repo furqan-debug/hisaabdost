@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
@@ -31,7 +30,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
         </div>
       </div>
       
-      <div className={`w-full ${isMobile ? 'pie-chart-container h-[220px]' : 'h-[300px]'}`}>
+      <div className="chart-wrapper w-full h-[250px] md:h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie

@@ -34,7 +34,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
     }));
 
   return (
-    <div className="chart-wrapper">
+    <div className="chart-wrapper w-full h-[250px] md:h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.1} />

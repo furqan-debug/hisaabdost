@@ -1,5 +1,6 @@
+
 /* Mobile Chart Styles */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .recharts-wrapper {
     @apply max-w-full rounded-lg min-h-[300px];
     overflow: visible !important;
@@ -185,4 +186,5 @@
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
-}
+ }
+
