@@ -108,7 +108,7 @@ export default function Analytics() {
   return <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="show">
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
-        <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
+        <p className="text-muted-foreground py-[18px] px-0 my-0 mx-0">Track your spending patterns and financial trends</p>
         <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} />
       </motion.div>
 
