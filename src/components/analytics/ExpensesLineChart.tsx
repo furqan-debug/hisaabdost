@@ -6,12 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
+import { Expense } from "@/components/expenses/types";
 
-interface Expense {
-  amount: number;
-  category: string;
-  date: string;
-}
 interface ExpensesLineChartProps {
   expenses: Expense[];
 }
@@ -118,7 +114,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex flex-row flex-wrap gap-x-3 gap-y-1 justify-center mt-2">
+      <div className="chart-legend-row">
         {topCategories.map(cat => (
           <div key={cat} className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
             style={{background: (CATEGORY_COLORS[cat] || "#eee") + "22"}}>

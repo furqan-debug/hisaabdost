@@ -5,14 +5,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
-interface Expense {
-  amount: number;
-  category: string;
-}
+import { Expense } from "@/components/expenses/types";
 
 interface ExpensesPieChartProps {
   expenses: Expense[];
 }
+
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
@@ -69,7 +67,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
         </PieChart>
       </ResponsiveContainer>
       {/* Modern, soft pastel legend: row, below chart */}
-      <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 justify-center mt-2 w-full">
+      <div className="chart-legend-row">
         {data.slice(0, isMobile ? 4 : 7).map((entry, index) => (
           <div key={index}
             className="flex items-center gap-1.5 font-medium text-xs md:text-sm px-2 py-0.5 rounded-full"
