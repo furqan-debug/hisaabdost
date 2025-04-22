@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
@@ -45,7 +45,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     data.some(item => item[category] > 0)
   );
 
-  // Use only first 6 (or 8 if mobile) categories by total for clarity
+  // Use only top categories by total for clarity (fewer on mobile)
   const getCategoryTotal = (category: string) => 
     data.reduce((sum, item) => sum + (item[category] || 0), 0);
 
@@ -55,8 +55,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
 
   // For display-friendly period labels
   const formatPeriodShort = (period: string) => {
-    // Example: "Apr 2024", "Mar 2024" or just show month/year
-    return period.length > 9 ? period.slice(0, 9) + "…" : period;
+    // Shorter labels for better readability
+    return period.length > 7 ? period.slice(0, 7) + "…" : period;
   };
 
   return (
@@ -65,61 +65,56 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
         <CardTitle>Budget Comparison by Period</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
+        {/* Clean compact legend above the chart */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 justify-center">
+          {topCategories.map(category => (
+            <div key={category} className="flex items-center gap-1 text-xs font-medium whitespace-nowrap">
+              <span className="block w-3 h-3 rounded-full mr-1" style={{
+                backgroundColor: CATEGORY_COLORS[category]
+              }} />
+              <span className="truncate">{category}</span>
+            </div>
+          ))}
+        </div>
+        
         {/* Modern pastel rounded container */}
-        <div
-          className={clsx(
-            "w-full py-2 px-2 md:px-6 rounded-lg bg-[hsl(var(--muted)/0.5)] border border-border/50",
-            "backdrop-blur-sm"
-          )}
-        >
-          {/* Clean horizontal legend above the chart */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 justify-center">
-            {topCategories.map(category => (
-              <div key={category} className="flex items-center gap-1 text-xs font-medium whitespace-nowrap">
-                <span className="block w-3 h-3 rounded-full mr-1" style={{
-                  backgroundColor: CATEGORY_COLORS[category]
-                }} />
-                <span className="truncate">{category}</span>
-              </div>
-            ))}
-          </div>
-          <div className="w-full h-[270px] md:h-[350px] flex items-center justify-center">
+        <div className={clsx(
+          "w-full py-2 px-2 md:px-6 rounded-lg bg-[hsl(var(--muted)/0.5)] border border-border/50",
+          "backdrop-blur-sm h-[270px] md:h-[350px]"
+        )}>
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              layout="vertical"
+              layout="horizontal" 
               data={data}
               margin={{
                 top: 10,
-                right: isMobile ? 8 : 40,
-                left: isMobile ? 30 : 60,
-                bottom: 8
+                right: isMobile ? 8 : 30,
+                left: isMobile ? 10 : 20,
+                bottom: isMobile ? 30 : 40
               }}
-              barCategoryGap={isMobile ? "18%" : "26%"}
-              className="w-full"
+              barCategoryGap={isMobile ? "20%" : "30%"}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.11} />
-              <XAxis
-                type="number"
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.11} />
+              <XAxis 
+                dataKey="period"
                 axisLine={false}
                 tickLine={false}
                 tick={{
                   fontSize: isMobile ? 11 : 13,
                   fill: "var(--muted-foreground)",
                 }}
-                width={80}
-                tickFormatter={value => formatCurrency(value, currencyCode)}
+                tickFormatter={formatPeriodShort}
+                height={40}
               />
               <YAxis
-                type="category"
-                dataKey="period"
                 axisLine={false}
                 tickLine={false}
-                width={isMobile ? 60 : 90}
                 tick={{
-                  fontSize: isMobile ? 12 : 15,
-                  fill: "var(--foreground)",
-                  fontWeight: 500
+                  fontSize: isMobile ? 10 : 12,
+                  fill: "var(--muted-foreground)",
                 }}
-                tickFormatter={formatPeriodShort}
+                tickFormatter={value => formatCurrency(value, currencyCode)}
+                width={isMobile ? 50 : 70}
               />
               <Tooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.25 }}
@@ -130,7 +125,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                     entry => Number(entry.value) > 0
                   );
                   return (
-                    <div className="rounded-lg border bg-background/80 p-2 shadow text-xs">
+                    <div className="rounded-lg border bg-background/95 p-2 shadow-md text-xs backdrop-blur-sm">
                       <div className="font-semibold mb-1">{label}</div>
                       {filteredPayload.map((entry, idx) => (
                         <div className="flex items-center gap-1 my-0.5" key={entry.name}>
@@ -148,14 +143,13 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                   key={category}
                   dataKey={category}
                   fill={CATEGORY_COLORS[category]}
-                  radius={[12, 12, 12, 12]}
-                  barSize={isMobile ? 17 : 24}
-                  background={false}
+                  radius={[4, 4, 4, 4]} 
+                  maxBarSize={isMobile ? 20 : 30}
                   className="transition-all"
                 />
               ))}
             </BarChart>
-          </div>
+          </ResponsiveContainer>
         </div>
       </CardContent>
     </Card>
