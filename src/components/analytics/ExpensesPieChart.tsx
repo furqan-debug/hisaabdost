@@ -1,5 +1,5 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
@@ -7,30 +7,28 @@ import { useCurrency } from "@/hooks/use-currency";
 import { Expense } from "@/components/expenses/types";
 import React from "react";
 
-// Custom label renderer that places values in the middle of each sector, like your example image
-const renderSliceLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, index, fill } = props;
-  // calculate position for label
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.68;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  // Show value as integer percent or integer value
+// Custom label renderer that places values inside each slice
+const renderCustomizedLabel = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value } = props;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const radian = Math.PI / 180;
+  const x = cx + radius * Math.cos(-midAngle * radian);
+  const y = cy + radius * Math.sin(-midAngle * radian);
+  
+  if (percent < 0.05) return null; // Don't show labels for tiny slices
+
   return (
-    <text
-      x={x}
-      y={y}
-      fill="#222"
-      fontSize={19}
-      textAnchor="middle"
+    <text 
+      x={x} 
+      y={y} 
+      fill="#fff" 
+      textAnchor="middle" 
       dominantBaseline="central"
-      style={{
-        fontWeight: 600,
-        textShadow: "0 1px 8px #fff8",
-        pointerEvents: "none"
-      }}
+      fontSize={14}
+      fontWeight="bold"
+      style={{ textShadow: "0px 0px 2px rgba(0,0,0,0.5)" }}
     >
-      {value}
+      {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
@@ -43,118 +41,84 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  // Pie chart data (top N categories)
+  // Calculate pie data and total amount
   const data = calculatePieChartData(expenses);
-  // Total for percent-of-total
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
 
-  // Responsive chart sizing
-  const chartSize = isMobile ? 225 : 300;
-  const innerRadius = isMobile ? 70 : 98;
-  const legendColumn = isMobile ? false : true;
+  // Responsive sizing
+  const chartSize = isMobile ? 200 : 260;
+  
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 rounded shadow-md border text-sm">
+          <p className="font-semibold">{payload[0].name}</p>
+          <p>{formatCurrency(payload[0].value, currencyCode)}</p>
+          <p>{`${(payload[0].payload.percent).toFixed(1)}%`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div
-      className={
-        "flex w-full h-full items-center justify-center " +
-        (isMobile ? "flex-col max-h-[300px]" : "flex-row max-h-[300px]")
-      }
-      style={{ minHeight: 240, maxHeight: 300, height: 300 }}
-    >
-      <div className="flex-shrink-0 flex items-center justify-center"
-        style={{ width: chartSize, height: chartSize, position: "relative" }}>
+    <div className="flex flex-col items-center h-[300px] w-full overflow-visible">
+      {/* Chart Container */}
+      <div className="relative" style={{ width: chartSize, height: chartSize }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%" cy="50%"
-              outerRadius="98%"
-              innerRadius={innerRadius}
-              stroke="#ffffff"
-              strokeWidth={2}
-              label={renderSliceLabel}
+              cx="50%"
+              cy="50%"
               labelLine={false}
-              isAnimationActive={true}
+              label={renderCustomizedLabel}
+              outerRadius={chartSize / 2}
+              innerRadius={chartSize / 5}
+              dataKey="value"
+              animationDuration={700}
+              animationBegin={0}
               paddingAngle={2}
-              cornerRadius={10}
+              cornerRadius={4}
             >
-              {data.map((entry, idx) => (
-                <Cell
-                  key={idx}
-                  fill={entry.color}
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color} 
                   stroke="#fff"
                   strokeWidth={2}
-                  style={{ transition: "opacity .2s" }}
                 />
               ))}
             </Pie>
-            {/* No default tooltip or legend */}
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
-        {/* Pie total amount in center */}
-        <div
-          className="absolute top-1/2 left-1/2 flex flex-col items-center justify-center pointer-events-none"
-          style={{
-            transform: "translate(-50%, -50%)",
-            zIndex: 3
-          }}
-        >
-          <span
-            className="font-semibold text-[1.25rem] md:text-[1.55rem]"
-            style={{ color: "#222", textShadow: "0 2px 8px #fff8", lineHeight: 1 }}
-          >
-            {formatCurrency(totalAmount, currencyCode)}
-          </span>
-          <span className="text-sm text-muted-foreground">Total</span>
+        
+        {/* Total in center */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+          <div className="text-xl font-bold">{formatCurrency(totalAmount, currencyCode)}</div>
+          <div className="text-sm text-muted-foreground">Total</div>
         </div>
       </div>
-      {/* Custom Legend: beside pie on desktop, below on mobile */}
-      <div
-        className={
-          "flex " +
-          (legendColumn
-            ? "flex-col items-start justify-center ml-7"
-            : "flex-row flex-wrap items-center justify-center mt-2")
-        }
-        style={{
-          gap: legendColumn ? "0.6rem" : "0.85rem",
-          width: legendColumn ? 110 : "100%",
-          minWidth: isMobile ? 0 : 90,
-        }}
-      >
-        {data.map((entry, idx) => (
-          <div
-            key={entry.name}
-            className="flex items-center font-medium rounded-full px-2"
-            style={{
-              background: entry.color + "22",
-              color: "#222",
-              gap: "0.57em",
-              minWidth: 0,
-              fontSize: isMobile ? 13.2 : 15,
-              height: 26,
-              margin: 0
-            }}
+      
+      {/* Legend */}
+      <div className={`flex flex-wrap justify-center mt-2 gap-2 px-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+        {data.map((entry, index) => (
+          <div 
+            key={`legend-${index}`}
+            className="flex items-center bg-background rounded-full px-2 py-1 shadow-sm"
+            style={{ border: `1px solid ${entry.color}30` }}
           >
-            <span
-              style={{
-                display: "inline-block",
-                width: 18,
-                height: 18,
-                backgroundColor: entry.color,
-                borderRadius: "100%",
-                marginRight: 7,
-                border: "1.5px solid #fff",
-                boxShadow: "0 1px 4px #0001"
-              }}
+            <div 
+              className="w-3 h-3 rounded-full mr-1.5" 
+              style={{ backgroundColor: entry.color }}
             />
-            <span className="truncate max-w-[70px]" title={entry.name}>
-              {entry.name.length > 14 ? entry.name.slice(0, 13) + "…" : entry.name}
+            <span className="mr-1 font-medium truncate max-w-[70px]" title={entry.name}>
+              {entry.name}
             </span>
-            <span className="ml-1 text-xs font-semibold" style={{ color: "#222" }}>
-              {entry.percent.toFixed(0)}%
+            <span className="opacity-75">
+              {(entry.percent).toFixed(0)}%
             </span>
           </div>
         ))}
