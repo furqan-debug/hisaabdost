@@ -1,17 +1,30 @@
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
+  /* Chart containers */
+  .chart-wrapper {
+    @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
+  }
+  
+  /* Fixed container to prevent overflow */
+  .chart-container {
+    @apply w-full h-[320px] min-h-[320px] relative overflow-hidden;
+  }
+  
+  /* Better chart visibility on mobile */
   .recharts-wrapper {
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
   }
   
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 250px !important;
+  }
+
   .recharts-tooltip-wrapper {
     @apply z-50;
-  }
-  
-  .chart-wrapper {
-    @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
   }
   
   .recharts-legend-item {
@@ -27,11 +40,6 @@
   .recharts-cartesian-axis-tick-value {
     @apply text-xs font-medium;
     fill: var(--foreground) !important;
-  }
-
-  /* Fixed container to prevent overflow */
-  .chart-container {
-    @apply w-full h-[320px] relative overflow-hidden;
   }
 
   /* Enhance layout for pie chart on mobile */
@@ -67,13 +75,6 @@
   /* Remove labels on pie chart for mobile */
   .recharts-pie-label-text {
     display: none !important;
-  }
-
-  /* Fix scrolling issues by containing the chart */
-  .recharts-responsive-container {
-    width: 100% !important;
-    height: 300px !important;
-    min-height: 300px !important;
   }
   
   /* Prevent tooltips from causing scrolling */
