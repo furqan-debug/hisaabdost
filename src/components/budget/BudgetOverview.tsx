@@ -16,16 +16,21 @@ export function BudgetOverview({
 }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
-  
-  const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
-  
-  const data = budgets.map(budget => ({
+
+  // Filter out any budgets with the category CurrencyPreference
+  const filteredBudgets = budgets.filter(
+    budget => budget.category !== "CurrencyPreference"
+  );
+
+  const totalBudget = filteredBudgets.reduce((sum, budget) => sum + budget.amount, 0);
+
+  const data = filteredBudgets.map(budget => ({
     name: budget.category,
     value: budget.amount,
-    percentage: (budget.amount / totalBudget * 100).toFixed(0)
+    percentage: totalBudget > 0 ? (budget.amount / totalBudget * 100).toFixed(0) : "0"
   }));
 
-  if (budgets.length === 0) {
+  if (filteredBudgets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-8 px-4 text-center space-y-3">
         <p className="text-muted-foreground">No budget categories found</p>
@@ -34,11 +39,10 @@ export function BudgetOverview({
     );
   }
 
-  // Fixed: Removed the extra comma after opacity
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
-      opacity: 1, // Fixed: Removed the extra comma
+      opacity: 1,
       transition: { staggerChildren: 0.05 }
     }
   };
@@ -135,3 +139,4 @@ export function BudgetOverview({
     </motion.div>
   );
 }
+

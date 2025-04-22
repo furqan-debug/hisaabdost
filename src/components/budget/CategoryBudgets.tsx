@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
@@ -53,7 +52,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
-  // Query expenses for the current month
   const { data: expenses = [], error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
@@ -80,18 +78,20 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     
-    // Filter expenses by category (case-insensitive)
     const categoryExpenses = expenses.filter(expense => 
       expense.category.toLowerCase() === category.toLowerCase()
     );
     
-    // Sum up all expenses for this category
     return categoryExpenses.reduce((total, expense) => {
       return total + Number(expense.amount);
     }, 0);
   };
 
-  if (budgets.length === 0) {
+  const filteredBudgets = budgets.filter(
+    budget => budget.category !== "CurrencyPreference"
+  );
+
+  if (filteredBudgets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">No budget categories found</p>
@@ -103,9 +103,8 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   return (
     <div className="space-y-4">
       {isMobile ? (
-        // Mobile card view
         <div className="space-y-4">
-          {budgets.map((budget) => {
+          {filteredBudgets.map((budget) => {
             const spentAmount = getSpentAmount(budget.category);
             const remainingAmount = Number(budget.amount) - spentAmount;
             const progress = Number(budget.amount) > 0 
@@ -176,7 +175,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
           })}
         </div>
       ) : (
-        // Desktop table view
         <Table>
           <TableHeader>
             <TableRow>
@@ -190,7 +188,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
             </TableRow>
           </TableHeader>
           <TableBody>
-            {budgets.map((budget) => {
+            {filteredBudgets.map((budget) => {
               const spentAmount = getSpentAmount(budget.category);
               const remainingAmount = Number(budget.amount) - spentAmount;
               const progress = Number(budget.amount) > 0 
