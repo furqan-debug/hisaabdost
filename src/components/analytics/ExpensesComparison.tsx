@@ -45,7 +45,9 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   const comparisons = categories.map(category => {
     const currentAmount = getCategoryTotal(currentMonthExpenses, category);
     const lastAmount = getCategoryTotal(lastMonthExpenses, category);
-    const percentageChange = lastAmount === 0 ? 100 : ((currentAmount - lastAmount) / lastAmount) * 100;
+    const percentageChange = lastAmount === 0
+      ? (currentAmount > 0 ? 100 : 0)
+      : ((currentAmount - lastAmount) / lastAmount) * 100;
 
     return {
       category,
@@ -57,15 +59,15 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   }).filter(comparison => comparison.currentAmount > 0 || comparison.lastAmount > 0);
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="rounded-2xl shadow-none bg-[hsl(var(--muted)/0.45)] border border-border/50">
+    <div className="rounded-xl p-2 sm:p-6 bg-[#fafafb]/70 border border-border/20 glassmorphism">
+      <div className="grid gap-4 md:grid-cols-2 pb-4">
+        <Card className="rounded-xl shadow-none bg-[#f4fdf8]/60 border border-border/40">
           <CardContent className="pt-6 pb-4">
             <div className="text-2xl font-bold tracking-tight">{format(currentMonthStart, 'MMMM yyyy')}</div>
             <div className="text-sm text-muted-foreground">Current Month</div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl shadow-none bg-[hsl(var(--muted)/0.40)] border border-border/50">
+        <Card className="rounded-xl shadow-none bg-[#e8ebff]/45 border border-border/40">
           <CardContent className="pt-6 pb-4">
             <div className="text-2xl font-bold tracking-tight">{format(lastMonthStart, 'MMMM yyyy')}</div>
             <div className="text-sm text-muted-foreground">Previous Month</div>
@@ -74,7 +76,7 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
       </div>
       <div className="space-y-4">
         {comparisons.map(({ category, currentAmount, lastAmount, percentageChange, color }) => (
-          <div key={category} className="space-y-2 px-1 pb-1">
+          <div key={category} className="space-y-2 px-1 pb-1 rounded-xl bg-background shadow-sm border border-[#f1f4fa]/60">
             <div className="flex justify-between items-center">
               <span className="font-semibold" style={{ color }}>{category}</span>
               <span className={
@@ -82,7 +84,7 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
                   ? "text-red-400 font-bold"
                   : "text-green-500 font-bold"
               }>
-                {percentageChange.toFixed(1)}%
+                {percentageChange > 0 ? "+" : ""}{percentageChange.toFixed(1)}%
               </span>
             </div>
             <div className="flex gap-4 items-end text-xs">
@@ -100,10 +102,15 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
               className={cn(
                 "h-3 rounded-full bg-[hsl(var(--muted)/0.30)] [&>[role=progressbar]]:bg-current transition-all shadow-md",
               )}
-              style={{ color, background: `${color}18` }}
+              style={{ color, background: `${color}22` }}
             />
           </div>
         ))}
+        {comparisons.length === 0 && (
+          <div className="text-center text-muted-foreground py-8">
+            Not enough data to compare this period.
+          </div>
+        )}
       </div>
     </div>
   );

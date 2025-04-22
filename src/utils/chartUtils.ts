@@ -3,27 +3,27 @@ import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
-  return formatCurrencyUtil(amount, currencyCode);
+// Consistent soft pastel palette for all charts
+export const CATEGORY_COLORS: Record<string, string> = {
+  "Food": "#B7E5B4",           // Soft Green
+  "Groceries": "#FFF7AE",      // Soft Yellow
+  "Housing": "#F6D7A7",        // Soft Peach
+  "Utilities": "#D0E6FA",      // Soft Blue
+  "Transportation": "#FFD6E0", // Soft Pink
+  "Healthcare": "#F6BED6",     // Soft Pink-Purple
+  "Entertainment": "#DECFFB",  // Soft Purple
+  "Shopping": "#D9F6F6",       // Soft Aqua
+  "Personal": "#FFF3E6",       // Very Soft Orange
+  "Education": "#DEEBFC",      // Soft Light Blue
+  "Travel": "#B2F0EC",         // Soft Mint
+  "Insurance": "#D1F2EB",      // Soft Light Aqua
+  "Debt": "#FFE3A7",           // Soft Yellow-Orange
+  "Savings": "#FEE9AE",        // Pale Yellow
+  "Other": "#E4EDF2",          // Neutral Pale Gray
 };
 
-// Modern soft pastel color palette (cleaner look)
-export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#A7D8FF",
-  "Groceries": "#BEE7A5",
-  "Housing": "#CDB4EF",
-  "Utilities": "#CED8DF",
-  "Transportation": "#FFB8B2",
-  "Healthcare": "#FFB2D8",
-  "Entertainment": "#FFE3A7",
-  "Shopping": "#BFCAFB",
-  "Personal": "#D3C6F3",
-  "Education": "#A6E8FD",
-  "Travel": "#B2F0EC",
-  "Insurance": "#D3C6F3",
-  "Debt": "#FFD7AA",
-  "Savings": "#BEE7A5",
-  "Other": "#E4EDF2",
+export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
+  return formatCurrencyUtil(amount, currencyCode);
 };
 
 // Process monthly data for charts with optimization for mobile
@@ -37,7 +37,6 @@ export const processMonthlyData = (expenses: Expense[]) => {
         acc[month][category] = 0;
       });
     }
-    
     acc[month][expense.category] = (acc[month][expense.category] || 0) + Number(expense.amount);
     return acc;
   }, {} as Record<string, Record<string, number>>);
