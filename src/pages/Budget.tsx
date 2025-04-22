@@ -26,6 +26,7 @@ export interface Budget {
 const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [activeTab, setActiveTab] = useState('overview'); // Local state for active tab
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -44,6 +45,13 @@ const Budget = () => {
     usagePercentage,
     monthlyIncome
   } = useBudgetData();
+
+  // Initialize active tab from month data or use default
+  useEffect(() => {
+    if (currentMonthData.activeTab) {
+      setActiveTab(currentMonthData.activeTab);
+    }
+  }, [currentMonthData.activeTab]);
 
   // Save budget data to month context when it changes
   useEffect(() => {
@@ -70,14 +78,12 @@ const Budget = () => {
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
     console.log("Tab changed to:", tabValue);
+    setActiveTab(tabValue); // Update local state
+    // Also update in month data for persistence
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
-
-  // Get active tab from month data
-  const activeTab = currentMonthData.activeTab || 'overview';
-  console.log("Current active tab:", activeTab);
 
   if (isLoading) {
     return (

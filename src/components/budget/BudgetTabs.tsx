@@ -80,19 +80,19 @@ export const BudgetTabs = ({
           </TabsList>
 
           <div className="mt-4 px-2 tab-content-mobile budget-section">
-            <TabsContent value="overview" className="focus-visible:outline-none focus-visible:ring-0 tabs-content">
+            <TabsContent value="overview" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="focus-visible:outline-none focus-visible:ring-0 tabs-content">
+            <TabsContent value="categories" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="focus-visible:outline-none focus-visible:ring-0 tabs-content">
+            <TabsContent value="transactions" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="focus-visible:outline-none focus-visible:ring-0 tabs-content">
+            <TabsContent value="comparison" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </div>
