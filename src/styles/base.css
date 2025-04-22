@@ -11,7 +11,7 @@
     --card-foreground: 200 20% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 200 20% 20%;
-    --primary: 190 95% 39%;
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
     --secondary: 190 40% 96%;
     --secondary-foreground: 200 20% 20%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 190 20% 88%;
     --input: 190 20% 88%;
-    --ring: 190 95% 39%;
+    --ring: 142 76% 36%;
     --radius: 1rem;
     --expense-low: 199, 89%, 60%;
     --expense-medium: 251, 146, 60;
@@ -37,7 +37,7 @@
     --card-foreground: 0 0% 95%;
     --popover: 200 25% 15%;
     --popover-foreground: 0 0% 95%;
-    --primary: 186 95% 42%;
+    --primary: 142 76% 36%;
     --primary-foreground: 200 20% 10%;
     --secondary: 200 25% 20%;
     --secondary-foreground: 0 0% 95%;
@@ -49,10 +49,10 @@
     --destructive-foreground: 0 0% 95%;
     --border: 200 25% 25%;
     --input: 200 25% 25%;
-    --ring: 186 95% 42%;
+    --ring: 142 76% 36%;
   }
 
-  /* Pink theme - update to a teal variant */
+  /* Pink theme */
   .pink {
     --background: 190 20% 98%;
     --foreground: 200 20% 20%;
@@ -60,48 +60,48 @@
     --card-foreground: 200 20% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 200 20% 20%;
-    --primary: 186 95% 42%;
+    --primary: 328 73% 69%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 190 40% 96%;
+    --secondary: 325 40% 96%;
     --secondary-foreground: 200 20% 20%;
-    --muted: 190 20% 94%;
+    --muted: 325 20% 94%;
     --muted-foreground: 220 10% 45%;
-    --accent: 190 40% 94%;
+    --accent: 325 40% 94%;
     --accent-foreground: 200 20% 20%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 190 20% 88%;
-    --input: 190 20% 88%;
-    --ring: 186 95% 42%;
+    --border: 325 20% 88%;
+    --input: 325 20% 88%;
+    --ring: 328 73% 69%;
     --expense-low: 199, 89%, 60%;
     --expense-medium: 251, 146, 60;
     --expense-high: 239, 68, 68;
   }
 
-  /* Dark pink theme - now dark teal */
+  /* Dark pink theme */
   .pink.dark {
-    --background: 200 25% 10%;
+    --background: 330 25% 10%;
     --foreground: 0 0% 95%;
-    --card: 200 25% 15%;
+    --card: 330 25% 15%;
     --card-foreground: 0 0% 95%;
-    --popover: 200 25% 15%;
+    --popover: 330 25% 15%;
     --popover-foreground: 0 0% 95%;
-    --primary: 186 95% 42%;
-    --primary-foreground: 200 20% 10%;
-    --secondary: 200 25% 20%;
+    --primary: 328 73% 69%;
+    --primary-foreground: 330 20% 10%;
+    --secondary: 330 25% 20%;
     --secondary-foreground: 0 0% 95%;
-    --muted: 200 25% 20%;
-    --muted-foreground: 200 10% 70%;
-    --accent: 200 25% 20%;
+    --muted: 330 25% 20%;
+    --muted-foreground: 325 10% 70%;
+    --accent: 330 25% 20%;
     --accent-foreground: 0 0% 95%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 95%;
-    --border: 200 25% 25%;
-    --input: 200 25% 25%;
-    --ring: 186 95% 42%;
+    --border: 330 25% 25%;
+    --input: 330 25% 25%;
+    --ring: 328 73% 69%;
   }
   
-  /* Blue theme - make this our primary teal theme */
+  /* Blue theme */
   .blue {
     --background: 190 20% 98%;
     --foreground: 200 20% 20%;
@@ -109,45 +109,45 @@
     --card-foreground: 200 20% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 200 20% 20%;
-    --primary: 190 95% 39%;
+    --primary: 214 82% 51%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 190 40% 96%;
+    --secondary: 214 40% 96%;
     --secondary-foreground: 200 20% 20%;
-    --muted: 190 20% 94%;
+    --muted: 214 20% 94%;
     --muted-foreground: 220 10% 45%;
-    --accent: 190 40% 94%;
+    --accent: 214 40% 94%;
     --accent-foreground: 200 20% 20%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 190 20% 88%;
-    --input: 190 20% 88%;
-    --ring: 190 95% 39%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 214 82% 51%;
     --expense-low: 199, 89%, 60%;
     --expense-medium: 251, 146, 60;
     --expense-high: 239, 68, 68;
   }
 
-  /* Dark blue theme - dark teal */
+  /* Dark blue theme */
   .blue.dark {
-    --background: 200 25% 10%;
+    --background: 214 25% 10%;
     --foreground: 0 0% 95%;
-    --card: 200 25% 15%;
+    --card: 214 25% 15%;
     --card-foreground: 0 0% 95%;
-    --popover: 200 25% 15%;
+    --popover: 214 25% 15%;
     --popover-foreground: 0 0% 95%;
-    --primary: 186 95% 42%;
-    --primary-foreground: 200 20% 10%;
-    --secondary: 200 25% 20%;
+    --primary: 214 82% 51%;
+    --primary-foreground: 214 20% 10%;
+    --secondary: 214 25% 20%;
     --secondary-foreground: 0 0% 95%;
-    --muted: 200 25% 20%;
-    --muted-foreground: 200 10% 70%;
-    --accent: 200 25% 20%;
+    --muted: 214 25% 20%;
+    --muted-foreground: 214 10% 70%;
+    --accent: 214 25% 20%;
     --accent-foreground: 0 0% 95%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 95%;
-    --border: 200 25% 25%;
-    --input: 200 25% 25%;
-    --ring: 186 95% 42%;
+    --border: 214 25% 25%;
+    --input: 214 25% 25%;
+    --ring: 214 82% 51%;
   }
 }
 

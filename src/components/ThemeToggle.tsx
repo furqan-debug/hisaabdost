@@ -50,6 +50,9 @@ export function ThemeToggle() {
       document.documentElement.classList.add("blue");
     }
     
+    // Save color preference to localStorage
+    localStorage.setItem("color-theme", newColor);
+    
     setColorMode(newColor);
   };
 

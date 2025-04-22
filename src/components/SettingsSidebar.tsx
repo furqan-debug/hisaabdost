@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -42,6 +42,21 @@ export function SettingsSidebar({
   const { user, signOut } = useAuth();
   const [language, setLanguage] = React.useState("english");
   const { currencyCode, setCurrencyCode } = useCurrency();
+  const [colorMode, setColorMode] = useState<"default" | "pink" | "blue">("default");
+
+  // Initialize colorMode from localStorage or document class
+  useEffect(() => {
+    // Check localStorage first
+    const savedColorTheme = localStorage.getItem("color-theme");
+    
+    if (savedColorTheme === "pink" || document.documentElement.classList.contains("pink")) {
+      setColorMode("pink");
+    } else if (savedColorTheme === "blue" || document.documentElement.classList.contains("blue")) {
+      setColorMode("blue");
+    } else {
+      setColorMode("default");
+    }
+  }, []);
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
     // Remove existing color classes
@@ -53,6 +68,11 @@ export function SettingsSidebar({
     } else if (newColor === "blue") {
       document.documentElement.classList.add("blue");
     }
+    
+    // Save color preference to localStorage
+    localStorage.setItem("color-theme", newColor);
+    
+    setColorMode(newColor);
   };
 
   const handleSignOut = () => {
@@ -152,7 +172,7 @@ export function SettingsSidebar({
           <div className="flex flex-col gap-2">
             <Button 
               variant="outline" 
-              className="justify-start h-9"
+              className={`justify-start h-9 ${colorMode === 'default' ? 'bg-accent' : ''}`}
               onClick={() => handleColorChange('default')}
             >
               <div className="w-4 h-4 rounded-full bg-[hsl(142,76%,36%)] mr-2" />
@@ -160,7 +180,7 @@ export function SettingsSidebar({
             </Button>
             <Button 
               variant="outline" 
-              className="justify-start h-9"
+              className={`justify-start h-9 ${colorMode === 'pink' ? 'bg-accent' : ''}`}
               onClick={() => handleColorChange('pink')}
             >
               <div className="w-4 h-4 rounded-full bg-[hsl(328,73%,69%)] mr-2" />
@@ -168,7 +188,7 @@ export function SettingsSidebar({
             </Button>
             <Button 
               variant="outline" 
-              className="justify-start h-9"
+              className={`justify-start h-9 ${colorMode === 'blue' ? 'bg-accent' : ''}`}
               onClick={() => handleColorChange('blue')}
             >
               <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
