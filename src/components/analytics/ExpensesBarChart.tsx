@@ -1,13 +1,20 @@
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { formatCurrency } from "@/utils/formatters";
-import { format, parseISO } from "date-fns";
 import { useCurrency } from "@/hooks/use-currency";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Expense {
+  id: string;
   amount: number;
-  category: string;
+  description: string;
   date: string;
+  category: string;
+  paymentMethod?: string;
+  notes?: string;
+  isRecurring?: boolean;
+  receiptUrl?: string;
 }
 
 interface ExpensesBarChartProps {
@@ -16,37 +23,51 @@ interface ExpensesBarChartProps {
 
 export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   const { currencyCode } = useCurrency();
-  const data = expenses.reduce((acc, expense) => {
-    const month = format(parseISO(expense.date), 'MMM yyyy');
-    if (!acc[month]) {
-      acc[month] = {};
-    }
-    acc[month][expense.category] = (acc[month][expense.category] || 0) + Number(expense.amount);
-    return acc;
-  }, {} as Record<string, Record<string, number>>);
+  const isMobile = useIsMobile();
 
-  const chartData = Object.entries(data).map(([month, categories]) => ({
-    month,
-    ...categories
-  }));
+  // Group by month and categories
+  const chartData = processMonthlyData(expenses);
+
+  // Chart categories present in data only
+  const presentCategories = Object.keys(CATEGORY_COLORS).filter(category =>
+    chartData.some(d => !!d[category])
+  );
 
   return (
-    <div className="w-full h-[250px] md:h-[300px]">
+    <div className="w-full h-[220px] md:h-[320px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-          <XAxis dataKey="month" />
-          <YAxis tickFormatter={(value) => formatCurrency(value, currencyCode)} />
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ left: isMobile ? 10 : 30, right: 10, top: 10, bottom: 10 }}
+          barCategoryGap="40%"
+        >
+          <CartesianGrid strokeDasharray="3 3" opacity={0.08} />
+          <YAxis
+            type="category"
+            dataKey="month"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontWeight: 600, fontSize: isMobile ? 11 : 13, fill: "#888" }}
+            width={isMobile ? 50 : 70}
+          />
+          <XAxis
+            type="number"
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={v => formatCurrency(v, currencyCode)}
+            tick={{ fontWeight: 500, fontSize: isMobile ? 11 : 13, fill: "#B0BAC3" }}
+          />
           <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload || !payload.length) return null;
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
-                  <p className="text-sm font-semibold">{label}</p>
+                  <p className="text-xs font-semibold">{label}</p>
                   {payload.map((entry) => (
                     <p
                       key={entry.name}
-                      className="text-sm"
+                      className="text-xs"
                       style={{ color: entry.color }}
                     >
                       {entry.name}: {formatCurrency(entry.value as number, currencyCode)}
@@ -56,13 +77,15 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               );
             }}
           />
-          <Legend />
-          {Object.keys(CATEGORY_COLORS).map((category) => (
+          {presentCategories.map((category, idx) => (
             <Bar
               key={category}
               dataKey={category}
               stackId="a"
               fill={CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
+              radius={[10, 10, 10, 10]}
+              minPointSize={2}
+              barSize={isMobile ? 10 : 18}
             />
           ))}
         </BarChart>

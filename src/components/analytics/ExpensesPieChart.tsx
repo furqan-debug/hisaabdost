@@ -1,12 +1,19 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { CATEGORY_COLORS, formatCurrency, calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 
 interface Expense {
+  id: string;
   amount: number;
+  description: string;
+  date: string;
   category: string;
+  paymentMethod?: string;
+  notes?: string;
+  isRecurring?: boolean;
+  receiptUrl?: string;
 }
 
 interface ExpensesPieChartProps {
@@ -15,110 +22,99 @@ interface ExpensesPieChartProps {
 
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
-  
-  const data = Object.entries(
-    expenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount);
-      return acc;
-    }, {} as Record<string, number>)
-  )
-  .sort(([, a], [, b]) => b - a)
-  .map(([name, value]) => ({
-    name,
-    value,
-    color: CATEGORY_COLORS[name] || '#94A3B8',
-    percent: 0 // This will be calculated below
-  }));
-  
-  // Calculate percentages based on total
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  data.forEach(item => {
-    item.percent = total > 0 ? (item.value / total) : 0;
-  });
-  
-  // Get main percentage (for the largest category)
-  const mainPercentage = data.length > 0 
-    ? Math.round(data[0].percent * 100) 
-    : 0;
-  
+
+  // Improved: limit to top 5 categories, then group the rest as "Other"
+  let data = calculatePieChartData(expenses);
+  const topCategories = data.slice(0, 5);
+  const other = data.slice(5).reduce((acc, curr) => ({
+    ...acc,
+    value: acc.value + curr.value,
+    percent: acc.percent + curr.percent,
+  }), { name: 'Other', value: 0, percent: 0, color: CATEGORY_COLORS["Other"] });
+
+  const displayData = other.value > 0 ? [...topCategories, { ...other }] : topCategories;
+  const total = displayData.reduce((sum, item) => sum + item.value, 0);
+
+  // Get main category percent, rounded
+  const mainPercentage = displayData.length > 0 ? Math.round((displayData[0].percent)) : 0;
+  const mainLabel = displayData.length > 0 ? displayData[0].name : "";
+
   return (
-    <div className="chart-wrapper relative w-full h-full flex flex-col items-center">
-      {/* Display the center percentage */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-center">
-        <span className="text-4xl font-bold">{mainPercentage}%</span>
+    <div className="relative w-full flex flex-col items-center h-[220px] md:h-[300px]">
+      {/* Center bold percentage and label */}
+      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+        <span className="block text-3xl md:text-4xl font-black tracking-tight" style={{ color: displayData[0]?.color }}>
+          {mainPercentage}%
+        </span>
+        <span className="block text-muted-foreground text-xs md:text-sm font-medium">{mainLabel}</span>
       </div>
-      
+
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart margin={isMobile ? { top: 0, right: 0, left: 0, bottom: 0 } : { top: 0, right: 0, left: 0, bottom: 0 }}>
+        <PieChart>
           <Pie
-            data={data}
+            data={displayData}
             dataKey="value"
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={isMobile ? 110 : 130}
-            innerRadius={isMobile ? 75 : 90}
-            paddingAngle={2}
+            outerRadius={isMobile ? 80 : 120}
+            innerRadius={isMobile ? 55 : 80}
+            paddingAngle={3}
             startAngle={90}
             endAngle={-270}
-            cornerRadius={4}
+            cornerRadius={10}
             labelLine={false}
-            label={false} // Remove labels for cleaner appearance
+            label={({ name, percent }) =>
+              percent > 0
+                ? (
+                  <span className="font-semibold text-xs md:text-base" style={{ color: CATEGORY_COLORS[name] || "#999" }}>
+                    {Math.round(percent)}%
+                  </span>
+                )
+                : ''
+            }
             isAnimationActive={true}
-            animationDuration={800}
-            animationBegin={0}
-            animationEasing="ease-out"
+            animationDuration={500}
           >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.color} 
-                stroke="transparent" 
+            {displayData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color}
+                stroke="rgba(255,255,255,0.9)"
+                strokeWidth={2}
               />
             ))}
           </Pie>
           <Tooltip
-            animationDuration={200}
             content={({ active, payload }) => {
-              if (!active || !payload || !payload.length) return null;
-              const data = payload[0];
+              if (!active || !payload || !payload[0]) return null;
+              const entry = payload[0].payload;
               return (
-                <motion.div 
+                <motion.div className="rounded-xl border bg-background px-3 py-2 shadow-sm text-foreground text-xs font-medium"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg border bg-background p-3 shadow-md"
                 >
-                  <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
-                    {data.name}
-                  </p>
-                  <p className="text-sm font-bold">
-                    {formatCurrency(Number(data.value))}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {(data.payload.percent * 100).toFixed(1)}% of total
-                  </p>
+                  <span style={{ color: entry.color }}>{entry.name}</span>:<br />
+                  {formatCurrency(entry.value)}<br />
+                  <span className="text-muted-foreground">
+                    {entry.percent.toFixed(1)}% of total
+                  </span>
                 </motion.div>
               );
             }}
           />
         </PieChart>
       </ResponsiveContainer>
-      
-      {/* Simple legend below the chart */}
-      <div className="flex flex-wrap justify-center mt-2 gap-3">
-        {data.slice(0, 5).map((entry, index) => (
-          <div key={index} className="flex items-center gap-1.5 text-sm">
-            <div 
-              className="w-3 h-3 rounded" 
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-xs font-medium">
-              {entry.name.length > 10 ? entry.name.slice(0, 10) + "..." : entry.name}
-            </span>
+
+      {/* Minimal Legend */}
+      <div className="w-full mt-2 flex flex-wrap justify-center gap-3">
+        {displayData.map((entry, idx) => (
+          <div key={entry.name} className="flex items-center gap-1.5 text-xs font-semibold">
+            <span className="w-3 h-3 rounded-full border" style={{ background: entry.color, borderColor: "#eee" }}/>
+            {entry.name.length > 10 ? entry.name.slice(0,10)+"…" : entry.name}
           </div>
         ))}
       </div>
     </div>
   );
 }
-
