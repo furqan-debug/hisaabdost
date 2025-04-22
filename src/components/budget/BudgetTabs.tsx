@@ -1,6 +1,4 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
 import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
 import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
@@ -38,68 +36,66 @@ export const BudgetTabs = ({
   };
 
   return (
-    <Card className="min-h-[600px] h-full w-full overflow-hidden shadow-md border-border/30 backdrop-blur-sm">
-      <CardContent className="p-0 h-full">
-        <Tabs 
-          value={stableActiveTab} 
-          onValueChange={handleValueChange} 
-          className="flex flex-col h-full"
+    <div className="w-full space-y-6">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 w-full py-3">
+        <motion.div 
+          className="w-full flex justify-center"
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 w-full border-b border-border/20 py-3 px-4">
-            <motion.div 
-              className="w-full flex justify-center"
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <TabsList className="bg-muted/30 p-1 rounded-full w-auto">
-                <TabsTrigger 
-                  value="overview" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="categories" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  Categories
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="transactions" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  Transactions
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="comparison" 
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  Comparison
-                </TabsTrigger>
-              </TabsList>
-            </motion.div>
-          </div>
+          <Tabs 
+            value={stableActiveTab} 
+            onValueChange={handleValueChange} 
+            className="w-full max-w-2xl mx-auto"
+          >
+            <TabsList className="bg-muted/30 p-1 rounded-full w-full justify-center gap-1">
+              <TabsTrigger 
+                value="overview" 
+                className="flex-1 rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="categories" 
+                className="flex-1 rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Categories
+              </TabsTrigger>
+              <TabsTrigger 
+                value="transactions" 
+                className="flex-1 rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Transactions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="comparison" 
+                className="flex-1 rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Comparison
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="flex-1 h-[calc(100%-48px)] min-h-[500px] overflow-y-auto">
-            <TabsContent value="overview" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetOverview budgets={budgets || []} />
-            </TabsContent>
+            <div className="mt-6 px-4">
+              <TabsContent value="overview" className="focus-visible:outline-none focus-visible:ring-0">
+                <BudgetOverview budgets={budgets || []} />
+              </TabsContent>
 
-            <TabsContent value="categories" className="h-full mt-0 p-4 tab-content-mobile">
-              <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
-            </TabsContent>
+              <TabsContent value="categories" className="focus-visible:outline-none focus-visible:ring-0">
+                <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
+              </TabsContent>
 
-            <TabsContent value="transactions" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetTransactions budgets={budgets || []} />
-            </TabsContent>
+              <TabsContent value="transactions" className="focus-visible:outline-none focus-visible:ring-0">
+                <BudgetTransactions budgets={budgets || []} />
+              </TabsContent>
 
-            <TabsContent value="comparison" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetComparison budgets={budgets || []} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </CardContent>
-    </Card>
+              <TabsContent value="comparison" className="focus-visible:outline-none focus-visible:ring-0">
+                <BudgetComparison budgets={budgets || []} />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </motion.div>
+      </div>
+    </div>
   );
 }
