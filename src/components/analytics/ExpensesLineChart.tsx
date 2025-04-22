@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpenseLineChartProps {
@@ -13,7 +13,6 @@ interface ExpenseLineChartProps {
 
 export function ExpensesLineChart({ expenses }: ExpenseLineChartProps) {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   const data = processMonthlyData(expenses);
   
   // Filter out zero-value categories to reduce clutter
@@ -48,14 +47,7 @@ export function ExpensesLineChart({ expenses }: ExpenseLineChartProps) {
             height={isMobile ? 30 : 40}
           />
           <YAxis 
-            tickFormatter={(value) => {
-              if (isMobile) {
-                // Simplified formatter for mobile to save space
-                if (value >= 1000) return `${Math.floor(value / 1000)}k`;
-                return value.toString();
-              }
-              return formatCurrency(value, currencyCode);
-            }}
+            tickFormatter={(value) => formatCurrency(value)}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
@@ -90,7 +82,7 @@ export function ExpensesLineChart({ expenses }: ExpenseLineChartProps) {
                           <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                         </div>
                         <span className="text-xs font-medium">
-                          {formatCurrency(Number(entry.value), currencyCode)}
+                          {formatCurrency(Number(entry.value))}
                         </span>
                       </div>
                     ))}

@@ -1,7 +1,6 @@
 
-// Remove import for CurrencyCode, getCurrencyByCode
 /**
- * Format a number as USD currency string (default and only supported symbol now)
+ * Format a number as USD currency string
  * @param amount The amount to format
  * @returns Formatted currency string
  */

@@ -1,95 +1,80 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tag } from "lucide-react";
-import { formatCurrency, formatDate } from "@/utils/formatters";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import { useCurrency } from "@/hooks/use-currency";
+import React from 'react';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Receipt, CreditCard } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
+import { cn } from '@/lib/utils';
 
-interface ExpenseCardProps {
+export interface ExpenseCardProps {
+  id: string;
   description: string;
   amount: number;
-  date: string;
   category: string;
+  date: string;
+  paymentMethod?: string;
+  hasReceipt?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
-export function ExpenseCard({ 
-  description, 
-  amount, 
-  date, 
-  category, 
-  onClick 
+export function ExpenseCard({
+  description,
+  amount,
+  category,
+  date,
+  paymentMethod,
+  hasReceipt,
+  onClick,
+  className
 }: ExpenseCardProps) {
-  const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
+  const formattedDate = format(new Date(date), 'MMM dd, yyyy');
   
-  // Get category color based on category name
-  const getCategoryColor = () => {
-    switch (category.toLowerCase()) {
-      case 'food': return 'bg-green-500';
-      case 'transportation': return 'bg-blue-500';
-      case 'housing': return 'bg-purple-500';
-      case 'utilities': return 'bg-yellow-500';
-      case 'entertainment': return 'bg-pink-500';
-      case 'healthcare': return 'bg-red-500';
-      case 'personal': return 'bg-indigo-500';
-      case 'education': return 'bg-cyan-500';
-      case 'shopping': return 'bg-amber-500';
-      case 'other': return 'bg-gray-500';
-      default: return 'bg-gray-500';
-    }
+  const renderPaymentMethod = () => {
+    if (!paymentMethod) return null;
+    
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <CreditCard className="w-3 h-3" />
+        <span className="capitalize">{paymentMethod}</span>
+      </div>
+    );
   };
-
+  
+  const renderCategoryBadge = () => {
+    return (
+      <Badge variant="outline" className="font-normal text-xs rounded-sm px-1.5 bg-primary/5">
+        {category}
+      </Badge>
+    );
+  };
+  
   return (
     <Card 
       className={cn(
-        "overflow-hidden hover:shadow-md transition-shadow",
-        isMobile ? "my-2" : ""
-      )} 
+        "border group transition-all duration-200 ease-in-out hover:border-primary/20 hover:shadow-sm overflow-hidden",
+        onClick ? "cursor-pointer" : "",
+        className
+      )}
       onClick={onClick}
     >
-      <CardContent className="p-0">
-        <div className="flex items-center">
-          <div className={`w-1.5 self-stretch ${getCategoryColor()}`} />
-          <div className={cn(
-            "flex-1 p-4", 
-            isMobile ? "py-3 px-3" : ""
-          )}>
-            <div className="flex justify-between items-start mb-2">
-              <div className={isMobile ? "max-w-[70%]" : ""}>
-                <h3 className={cn(
-                  "font-medium line-clamp-1",
-                  isMobile ? "text-xs" : "text-sm"
-                )}>
-                  {description}
-                </h3>
-                <p className={cn(
-                  "text-muted-foreground",
-                  isMobile ? "text-[10px]" : "text-xs"
-                )}>
-                  {formatDate(date)}
-                </p>
-              </div>
-              <span className={cn(
-                "font-semibold",
-                isMobile ? "text-xs" : "text-sm"
-              )}>
-                {formatCurrency(amount, currencyCode)}
-              </span>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex justify-between items-start gap-2">
+          <div className="space-y-1 overflow-hidden flex-1">
+            <div className="font-medium text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+              {description}
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "flex items-center gap-1",
-                  isMobile ? "text-[10px] py-0.5 px-1.5" : "text-xs"
-                )}
-              >
-                <Tag className={isMobile ? "h-2.5 w-2.5" : "h-3 w-3"} />
-                {category}
-              </Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              {renderCategoryBadge()}
+              <span className="text-xs text-muted-foreground">{formattedDate}</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-semibold">{formatCurrency(amount)}</div>
+            <div className="flex items-center justify-end mt-1 gap-2">
+              {renderPaymentMethod()}
+              {hasReceipt && <Receipt className="w-3 h-3 text-muted-foreground" />}
             </div>
           </div>
         </div>

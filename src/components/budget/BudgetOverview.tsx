@@ -1,5 +1,4 @@
 
-// Remove useCurrency and just format as USD (which is now default)
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Budget } from "@/pages/Budget";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";

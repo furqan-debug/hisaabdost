@@ -1,6 +1,4 @@
 
-// Remove useCurrency import and any currency logic
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/utils/formatters";

@@ -16,7 +16,6 @@ import Index from "@/pages/Index";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/toaster";
 import { MonthProvider } from "@/hooks/use-month-context";
-import { CurrencyProvider } from "@/hooks/use-currency";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
 
 import "./App.css";
@@ -30,28 +29,26 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <CurrencyProvider>
-              <MonthProvider>
-                <FinnyProvider>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/app" element={<Layout />}>
-                      <Route index element={<Navigate to="/app/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="expenses" element={<Expenses />} />
-                      <Route path="budget" element={<Budget />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="goals" element={<Goals />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                    {/* Redirect any unknown routes to dashboard */}
-                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                  </Routes>
-                  <Toaster />
-                </FinnyProvider>
-              </MonthProvider>
-            </CurrencyProvider>
+            <MonthProvider>
+              <FinnyProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/app" element={<Layout />}>
+                    <Route index element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="expenses" element={<Expenses />} />
+                    <Route path="budget" element={<Budget />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="goals" element={<Goals />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                  {/* Redirect any unknown routes to dashboard */}
+                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                </Routes>
+                <Toaster />
+              </FinnyProvider>
+            </MonthProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

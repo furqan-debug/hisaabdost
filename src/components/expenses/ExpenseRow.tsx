@@ -1,130 +1,100 @@
 
-import { format } from "date-fns";
-import { Edit, Trash2, FileImage, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Expense } from "@/components/expenses/types";
-import { formatCurrency } from "@/utils/formatters";
-import { ViewReceiptDialog } from "./ViewReceiptDialog";
-import { useState, useCallback, memo } from "react";
-import { useCurrency } from "@/hooks/use-currency";
+import { format } from 'date-fns';
+import { MoreVertical, Pencil, Trash2, Receipt } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/utils/formatters';
+import { Expense } from '@/components/expenses/types';
 
 interface ExpenseRowProps {
   expense: Expense;
-  selectedExpenses: Set<string>;
-  toggleExpenseSelection: (id: string) => void;
-  onEdit: (expense: Expense) => void;
-  onDelete: (id: string) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-// Use memo to prevent unnecessary re-renders of rows
-export const ExpenseRow = memo(function ExpenseRow({
-  expense,
-  selectedExpenses,
-  toggleExpenseSelection,
-  onEdit,
-  onDelete
-}: ExpenseRowProps) {
-  const isSelected = selectedExpenses.has(expense.id);
-  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
-  const { currencyCode } = useCurrency();
+export function ExpenseRow({ expense, onEdit, onDelete }: ExpenseRowProps) {
+  const {
+    description,
+    amount,
+    date,
+    category,
+    paymentMethod,
+    receiptUrl,
+  } = expense;
   
-  const handleViewReceipt = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setReceiptDialogOpen(true);
-  }, []);
+  const formattedDate = format(new Date(date), 'MMM d, yyyy');
   
-  const handleReceiptDialogChange = useCallback((open: boolean) => {
-    setReceiptDialogOpen(open);
-  }, []);
-  
-  const handleEdit = useCallback(() => {
-    onEdit(expense);
-  }, [expense, onEdit]);
-  
-  const handleDelete = useCallback(() => {
-    onDelete(expense.id);
-  }, [expense.id, onDelete]);
-  
-  const handleCheckboxChange = useCallback(() => {
-    toggleExpenseSelection(expense.id);
-  }, [expense.id, toggleExpenseSelection]);
+  const handleOpenReceipt = () => {
+    if (receiptUrl) {
+      window.open(receiptUrl, '_blank');
+    }
+  };
   
   return (
-    <TableRow>
-      <TableCell className="w-[30px]">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={handleCheckboxChange}
-        />
-      </TableCell>
-      <TableCell className="font-medium">
-        {format(new Date(expense.date), "MMM dd, yyyy")}
-      </TableCell>
-      <TableCell>
-        {expense.description}
-      </TableCell>
-      <TableCell>
-        <span className="font-mono">
-          {formatCurrency(expense.amount, currencyCode)}
-        </span>
-      </TableCell>
-      <TableCell className="hidden md:table-cell">
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">
-          {expense.category}
-        </span>
-      </TableCell>
-      <TableCell className="hidden lg:table-cell">
-        <span className="text-muted-foreground">
-          {expense.paymentMethod || "N/A"}
-        </span>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2 justify-end">
+    <div className="py-2 flex items-center justify-between group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start">
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-foreground truncate">
+              {description}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              <span>{formattedDate}</span>
+              {paymentMethod && (
+                <span className="capitalize text-xs">{paymentMethod}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="bg-primary/5">
+          {category}
+        </Badge>
+        <div className="font-semibold text-right min-w-[80px]">
+          {formatCurrency(amount)}
+        </div>
+        
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {expense.receiptUrl && (
-                <DropdownMenuItem onClick={handleViewReceipt}>
-                  <FileImage className="h-4 w-4 mr-2" />
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {receiptUrl && (
+                <DropdownMenuItem onClick={handleOpenReceipt}>
+                  <Receipt className="mr-2 h-4 w-4" />
                   View Receipt
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
+              {onDelete && (
+                <DropdownMenuItem 
+                  onClick={onDelete}
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
-        {expense.receiptUrl && (
-          <ViewReceiptDialog 
-            receiptUrl={expense.receiptUrl} 
-            open={receiptDialogOpen}
-            onOpenChange={handleReceiptDialogChange}
-          />
-        )}
-      </TableCell>
-    </TableRow>
+      </div>
+    </div>
   );
-});
+}
