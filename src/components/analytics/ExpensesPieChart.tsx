@@ -1,117 +1,79 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { CATEGORY_COLORS, formatCurrency, calculatePieChartData } from "@/utils/chartUtils";
+import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
-
 interface Expense {
-  id: string;
   amount: number;
-  description: string;
-  date: string;
   category: string;
-  paymentMethod?: string;
-  notes?: string;
-  isRecurring?: boolean;
-  receiptUrl?: string;
 }
-
 interface ExpensesPieChartProps {
   expenses: Expense[];
 }
-
-export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
+export function ExpensesPieChart({
+  expenses
+}: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
-
-  // Improved: limit to top 5 categories, then group the rest as "Other"
-  let data = calculatePieChartData(expenses);
-  const topCategories = data.slice(0, 5);
-  const other = data.slice(5).reduce((acc, curr) => ({
-    ...acc,
-    value: acc.value + curr.value,
-    percent: acc.percent + curr.percent,
-  }), { name: 'Other', value: 0, percent: 0, color: CATEGORY_COLORS["Other"] });
-
-  const displayData = other.value > 0 ? [...topCategories, { ...other }] : topCategories;
-  const total = displayData.reduce((sum, item) => sum + item.value, 0);
-
-  // Get main category percent, rounded
-  const mainPercentage = displayData.length > 0 ? Math.round((displayData[0].percent)) : 0;
-  const mainLabel = displayData.length > 0 ? displayData[0].name : "";
-
+  const { currencyCode } = useCurrency();
+  const data = calculatePieChartData(expenses);
+  // Calculate total amount
+  const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  // For modern big percent in center, get biggest category percent
+  const mainPercentage = data.length > 0 ? Math.round(data[0].percent) : 0;
   return (
-    <div className="relative w-full flex flex-col items-center h-[220px] md:h-[300px]">
-      {/* Center bold percentage and label */}
-      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-        <span className="block text-3xl md:text-4xl font-black tracking-tight" style={{ color: displayData[0]?.color }}>
-          {mainPercentage}%
-        </span>
-        <span className="block text-muted-foreground text-xs md:text-sm font-medium">{mainLabel}</span>
+    <div className="relative w-full h-[220px] md:h-[270px] chart-wrapper flex flex-col justify-center items-center">
+      {/* Center total display */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center">
+        <span className="text-4xl md:text-5xl font-bold" style={{letterSpacing: '-1px'}}>{mainPercentage}%</span>
+        <div className="text-xs md:text-sm text-muted-foreground mt-1 whitespace-nowrap font-medium">of total</div>
       </div>
-
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{top: 0, right: 0, bottom: 0, left: 0}}>
           <Pie
-            data={displayData}
+            data={data}
             dataKey="value"
             nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={isMobile ? 80 : 120}
-            innerRadius={isMobile ? 55 : 80}
+            cx="50%" cy="50%"
+            outerRadius={isMobile ? 85 : 110}
+            innerRadius={isMobile ? 62 : 84}
             paddingAngle={3}
-            startAngle={90}
-            endAngle={-270}
-            cornerRadius={10}
+            cornerRadius={16}
             labelLine={false}
-            label={({ name, percent }) =>
-              percent > 0
-                ? (
-                  <span className="font-semibold text-xs md:text-base" style={{ color: CATEGORY_COLORS[name] || "#999" }}>
-                    {Math.round(percent)}%
-                  </span>
-                )
-                : ''
-            }
+            label={false}
             isAnimationActive={true}
-            animationDuration={500}
           >
-            {displayData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.color}
-                stroke="rgba(255,255,255,0.9)"
-                strokeWidth={2}
-              />
-            ))}
+            {data.map((entry, index) =>
+              <Cell key={index} fill={entry.color} stroke="transparent" />
+            )}
           </Pie>
           <Tooltip
             content={({ active, payload }) => {
-              if (!active || !payload || !payload[0]) return null;
-              const entry = payload[0].payload;
+              if (!active || !payload || !payload.length) return null;
+              const d = payload[0].payload;
               return (
-                <motion.div className="rounded-xl border bg-background px-3 py-2 shadow-sm text-foreground text-xs font-medium"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <span style={{ color: entry.color }}>{entry.name}</span>:<br />
-                  {formatCurrency(entry.value)}<br />
-                  <span className="text-muted-foreground">
-                    {entry.percent.toFixed(1)}% of total
-                  </span>
+                <motion.div initial={{opacity: 0, y: 8}} animate={{opacity: 1, y: 0}} className="rounded-xl border bg-background/95 px-3 py-2 shadow-sm text-xs min-w-[110px]">
+                  <div className="flex items-center gap-2 pb-1">
+                    <span className="w-[14px] h-[14px] rounded-full" style={{ background: d.color }}></span>
+                    <span className="font-bold">{d.name}</span>
+                  </div>
+                  <div className="mb-0.5">{formatCurrency(Number(d.value), currencyCode)}</div>
+                  <div className="text-muted-foreground">{d.percent.toFixed(1)}% of total</div>
                 </motion.div>
-              );
+              )
             }}
           />
         </PieChart>
       </ResponsiveContainer>
-
-      {/* Minimal Legend */}
-      <div className="w-full mt-2 flex flex-wrap justify-center gap-3">
-        {displayData.map((entry, idx) => (
-          <div key={entry.name} className="flex items-center gap-1.5 text-xs font-semibold">
-            <span className="w-3 h-3 rounded-full border" style={{ background: entry.color, borderColor: "#eee" }}/>
-            {entry.name.length > 10 ? entry.name.slice(0,10)+"…" : entry.name}
+      {/* modern legend: row, below chart, clean */}
+      <div className="flex flex-row justify-center flex-wrap gap-3 mt-2 w-full">
+        {data.slice(0, isMobile ? 4 : 7).map((entry, index) => (
+          <div key={index} className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full" style={{
+            background: entry.color + '22' // very soft pastel background, 13% alpha
+          }}>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></span>
+            <span className="truncate max-w-[60px]">{entry.name.length > 8 ? entry.name.slice(0, 8) + '…' : entry.name}</span>
           </div>
         ))}
       </div>
