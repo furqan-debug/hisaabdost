@@ -1,5 +1,4 @@
-
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
@@ -8,23 +7,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Updated pastel color palette with better contrast 
+// Modern soft pastel color palette (cleaner look)
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#90CAF9",         // Pastel Blue
-  "Groceries": "#A5D6A7",    // Pastel Green
-  "Housing": "#CE93D8",      // Pastel Purple
-  "Utilities": "#B0BEC5",    // Pastel Slate
-  "Transportation": "#EF9A9A", // Pastel Red
-  "Healthcare": "#F48FB1",    // Pastel Pink
-  "Entertainment": "#FFCC80", // Pastel Amber
-  "Shopping": "#9FA8DA",     // Pastel Indigo
-  "Personal": "#B39DDB",     // Pastel Violet
-  "Education": "#81D4FA",    // Pastel Sky
-  "Travel": "#80DEEA",       // Pastel Teal
-  "Insurance": "#B39DDB",    // Pastel Violet
-  "Debt": "#FFAB91",         // Pastel Orange
-  "Savings": "#A5D6A7",      // Pastel Green
-  "Other": "#CFD8DC",        // Pastel Gray
+  "Food": "#A7D8FF",
+  "Groceries": "#BEE7A5",
+  "Housing": "#CDB4EF",
+  "Utilities": "#CED8DF",
+  "Transportation": "#FFB8B2",
+  "Healthcare": "#FFB2D8",
+  "Entertainment": "#FFE3A7",
+  "Shopping": "#BFCAFB",
+  "Personal": "#D3C6F3",
+  "Education": "#A6E8FD",
+  "Travel": "#B2F0EC",
+  "Insurance": "#D3C6F3",
+  "Debt": "#FFD7AA",
+  "Savings": "#BEE7A5",
+  "Other": "#E4EDF2",
 };
 
 // Process monthly data for charts with optimization for mobile
