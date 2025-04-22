@@ -120,7 +120,7 @@ export default function Analytics() {
         <Tabs defaultValue="overview" className="space-y-4 mx--12">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
+            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm ">Trends</TabsTrigger>
             <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
           </TabsList>
 
