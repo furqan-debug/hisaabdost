@@ -55,7 +55,7 @@ export const ExpensePieChart = ({
             y: 0
           }} className="tooltip-card">
                   <div className="text-sm font-medium mb-1">{data.name}</div>
-                  <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
+                  <div className="text-sm my-[-50px] py-0">{formatCurrency(data.value, currencyCode)}</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {data.percent.toFixed(1)}% of total
                   </div>
