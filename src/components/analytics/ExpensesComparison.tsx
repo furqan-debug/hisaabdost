@@ -59,55 +59,57 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   }).filter(comparison => comparison.currentAmount > 0 || comparison.lastAmount > 0);
 
   return (
-    <div className="rounded-xl p-2 sm:p-6 bg-[#fafafb]/70 border border-border/20 glassmorphism">
-      <div className="grid gap-4 md:grid-cols-2 pb-4">
-        <Card className="rounded-xl shadow-none bg-[#f4fdf8]/60 border border-border/40">
+    <div className="rounded-xl p-6 bg-white shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2 pb-6">
+        <Card className="rounded-xl shadow-none bg-[#f4fdf8]/60 border border-[#e0e5e9]">
           <CardContent className="pt-6 pb-4">
-            <div className="text-2xl font-bold tracking-tight">{format(currentMonthStart, 'MMMM yyyy')}</div>
-            <div className="text-sm text-muted-foreground">Current Month</div>
+            <div className="text-2xl font-bold text-gray-800">{format(currentMonthStart, 'MMMM yyyy')}</div>
+            <div className="text-sm text-gray-500">Current Month</div>
           </CardContent>
         </Card>
-        <Card className="rounded-xl shadow-none bg-[#e8ebff]/45 border border-border/40">
+        <Card className="rounded-xl shadow-none bg-[#f1f2ff]/60 border border-[#e1e5ee]">
           <CardContent className="pt-6 pb-4">
-            <div className="text-2xl font-bold tracking-tight">{format(lastMonthStart, 'MMMM yyyy')}</div>
-            <div className="text-sm text-muted-foreground">Previous Month</div>
+            <div className="text-2xl font-bold text-gray-800">{format(lastMonthStart, 'MMMM yyyy')}</div>
+            <div className="text-sm text-gray-500">Previous Month</div>
           </CardContent>
         </Card>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-5">
         {comparisons.map(({ category, currentAmount, lastAmount, percentageChange, color }) => (
-          <div key={category} className="space-y-2 px-1 pb-1 rounded-xl bg-background shadow-sm border border-[#f1f4fa]/60">
+          <div key={category} className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold" style={{ color }}>{category}</span>
-              <span className={
-                percentageChange > 0
-                  ? "text-red-400 font-bold"
-                  : "text-green-500 font-bold"
-              }>
+              <span className="font-medium text-[16px]" style={{ color }}>{category}</span>
+              <span className={cn(
+                "font-bold text-[14px]",
+                percentageChange > 0 ? "text-red-500" : "text-green-500"
+              )}>
                 {percentageChange > 0 ? "+" : ""}{percentageChange.toFixed(1)}%
               </span>
             </div>
-            <div className="flex gap-4 items-end text-xs">
+            <div className="flex gap-8 items-end text-sm mb-2">
               <div>
-                <div className="text-xs text-muted-foreground">Current</div>
-                <div className="font-medium">{formatCurrency(currentAmount, currencyCode)}</div>
+                <div className="text-xs text-gray-500">Current</div>
+                <div className="font-medium text-gray-800">{formatCurrency(currentAmount, currencyCode)}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Previous</div>
-                <div className="font-medium">{formatCurrency(lastAmount, currencyCode)}</div>
+                <div className="text-xs text-gray-500">Previous</div>
+                <div className="font-medium text-gray-800">{formatCurrency(lastAmount, currencyCode)}</div>
               </div>
             </div>
             <Progress
-              value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)}
+              value={100}
               className={cn(
-                "h-3 rounded-full bg-[hsl(var(--muted)/0.30)] [&>[role=progressbar]]:bg-current transition-all shadow-md",
+                "h-3 rounded-full bg-[#e9ecef]",
               )}
-              style={{ color, background: `${color}22` }}
+              style={{ 
+                color: "#27ae60", 
+                background: "#e9ecef" 
+              }}
             />
           </div>
         ))}
         {comparisons.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
+          <div className="text-center text-gray-500 py-8">
             Not enough data to compare this period.
           </div>
         )}

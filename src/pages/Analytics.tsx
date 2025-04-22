@@ -18,6 +18,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
+
 export default function Analytics() {
   const {
     user
@@ -109,7 +110,7 @@ export default function Analytics() {
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
         <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
-        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} className="mx-- mx-[11px] px-[9px] text-center" />
+        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} className="mx-0 px-0 text-center" />
       </motion.div>
 
       <motion.div variants={itemVariants}>
@@ -117,7 +118,7 @@ export default function Analytics() {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Tabs defaultValue="overview" className="space-y-4 mx--12">
+        <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
             <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
@@ -165,12 +166,12 @@ export default function Analytics() {
           </TabsContent>
 
           <TabsContent value="comparison" className="space-y-4 mt-2">
-            <Card>
-              <CardHeader>
+            <Card className="border-0 shadow-none bg-transparent">
+              <CardHeader className="px-0">
                 <CardTitle>Period Comparison</CardTitle>
                 <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-0">
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>
