@@ -1,3 +1,4 @@
+
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
@@ -19,7 +20,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   
   return (
-    <div className="relative w-full h-[250px] md:h-[300px]">
+    <div className="relative w-full h-[250px] md:h-[300px] chart-wrapper">
       {/* Center total display */}
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
