@@ -27,6 +27,7 @@ interface ExpenseFiltersProps {
   setDateRange: (dateRange: { start: string; end: string; }) => void;
   selectedMonth: Date;
   useCustomDateRange: boolean;
+  className?: string; // Added className prop as optional
 }
 
 export function ExpenseFilters({
@@ -37,13 +38,14 @@ export function ExpenseFilters({
   dateRange,
   setDateRange,
   selectedMonth,
-  useCustomDateRange
+  useCustomDateRange,
+  className
 }: ExpenseFiltersProps) {
   const isMobile = useIsMobile();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-3", className)}>
       {/* Search input always visible */}
       <div className="relative">
         <Input
@@ -148,3 +150,4 @@ export function ExpenseFilters({
     </div>
   );
 }
+
