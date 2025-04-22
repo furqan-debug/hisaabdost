@@ -1,13 +1,11 @@
 /* Modern Card Design */
 .modern-card {
-  @apply rounded-lg bg-card/60 backdrop-blur-lg border shadow-sm transition-all duration-300
+  @apply rounded-lg bg-card/60 border shadow-sm transition-all duration-300
          hover:shadow-md;
 }
 
-/* Glass Effect */
-.glass {
-  @apply bg-background/60 backdrop-blur-xl border shadow-sm;
-}
+/* REMOVE Glass Effect for dashboard cards (but not globally) */
+/* .glass, .glass-card - will not be used in dashboard anymore */
 
 /* Interactive Elements */
 .interactive-hover {
