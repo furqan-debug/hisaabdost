@@ -4,6 +4,7 @@ import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpensePieChartProps {
@@ -12,6 +13,7 @@ interface ExpensePieChartProps {
 
 export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const data = calculatePieChartData(expenses);
   
   // Calculate total amount
@@ -22,7 +24,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
       {/* Center total display */}
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
-          {formatCurrency(totalAmount)}
+          {formatCurrency(totalAmount, currencyCode)}
         </div>
         <div className="chart-center-total-label">
           Total Expenses
@@ -63,7 +65,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
                   className="tooltip-card"
                 >
                   <div className="text-sm font-medium mb-1">{data.name}</div>
-                  <div className="text-sm">{formatCurrency(data.value)}</div>
+                  <div className="text-sm">{formatCurrency(data.value, currencyCode)}</div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {data.percent.toFixed(1)}% of total
                   </div>

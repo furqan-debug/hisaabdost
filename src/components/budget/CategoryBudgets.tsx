@@ -1,7 +1,8 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/utils/chartUtils";
 import { Progress } from "@/components/ui/progress";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
@@ -10,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
@@ -52,6 +53,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     }
   };
 
+  // Query expenses for the current month
   const { data: expenses = [], error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
@@ -78,10 +80,12 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     
+    // Filter expenses by category (case-insensitive)
     const categoryExpenses = expenses.filter(expense => 
       expense.category.toLowerCase() === category.toLowerCase()
     );
     
+    // Sum up all expenses for this category
     return categoryExpenses.reduce((total, expense) => {
       return total + Number(expense.amount);
     }, 0);
@@ -99,6 +103,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   return (
     <div className="space-y-4">
       {isMobile ? (
+        // Mobile card view
         <div className="space-y-4">
           {budgets.map((budget) => {
             const spentAmount = getSpentAmount(budget.category);
@@ -171,6 +176,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
           })}
         </div>
       ) : (
+        // Desktop table view
         <Table>
           <TableHeader>
             <TableRow>

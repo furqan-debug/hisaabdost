@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
@@ -12,6 +13,7 @@ interface BudgetComparisonProps {
 
 export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
     if (!acc[budget.period]) {
@@ -58,7 +60,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
               <YAxis
-                tickFormatter={(value) => formatCurrency(value)}
+                tickFormatter={(value) => formatCurrency(value, currencyCode)}
                 width={isMobile ? 50 : 60}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
@@ -74,7 +76,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                           className="text-sm"
                           style={{ color: entry.color as string }}
                         >
-                          {entry.name}: {formatCurrency(Number(entry.value))}
+                          {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
                         </p>
                       ))}
                     </div>

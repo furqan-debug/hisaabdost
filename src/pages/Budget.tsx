@@ -1,5 +1,4 @@
 
-// Remove useCurrency and any "currencyCode" props
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +10,7 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
+import { useCurrency } from "@/hooks/use-currency";
 
 export interface Budget {
   id: string;
@@ -26,10 +26,10 @@ export interface Budget {
 const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
-  const [activeTab, setActiveTab] = useState('overview'); // Local state for active tab
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
@@ -44,13 +44,6 @@ const Budget = () => {
     usagePercentage,
     monthlyIncome
   } = useBudgetData();
-
-  // Initialize active tab from month data or use default
-  useEffect(() => {
-    if (currentMonthData.activeTab) {
-      setActiveTab(currentMonthData.activeTab);
-    }
-  }, [currentMonthData.activeTab]);
 
   // Save budget data to month context when it changes
   useEffect(() => {
@@ -76,12 +69,15 @@ const Budget = () => {
 
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
-    setActiveTab(tabValue); // Update local state
-    // Also update in month data for persistence
+    console.log("Tab changed to:", tabValue);
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
   };
+
+  // Get active tab from month data
+  const activeTab = currentMonthData.activeTab || 'overview';
+  console.log("Current active tab:", activeTab);
 
   if (isLoading) {
     return (

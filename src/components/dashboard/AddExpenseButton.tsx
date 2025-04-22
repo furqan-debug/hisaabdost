@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -27,6 +28,7 @@ export const AddExpenseButton = ({
   onAddExpense
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

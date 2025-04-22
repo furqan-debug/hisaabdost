@@ -1,139 +1,133 @@
-
-import React from 'react';
-import { Expense } from '@/components/expenses/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExpenseRow } from '@/components/expenses/ExpenseRow';
-import { Separator } from '@/components/ui/separator';
-import { EmptyState } from '@/components/EmptyState';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatCurrency } from '@/utils/formatters';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
+import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
+import { ExpenseRow } from "@/components/expenses/ExpenseRow";
+import { Expense } from "@/components/expenses/types";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface ExpenseListProps {
-  expenses: Expense[];
-  isLoading?: boolean;
-  onEdit?: (expense: Expense) => void;
-  onDelete?: (id: string) => void;
-  onAddNew?: () => void;
-  totalAmount?: number;
+  filteredExpenses: Expense[];
+  isLoading: boolean;
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  categoryFilter: string;
+  setCategoryFilter: (value: string) => void;
+  dateRange: { start: string; end: string };
+  setDateRange: (dateRange: { start: string; end: string }) => void;
+  sortConfig: { field: 'date' | 'amount' | 'category' | 'description'; order: 'asc' | 'desc' };
+  handleSort: (field: 'date' | 'amount' | 'category' | 'description') => void;
+  selectedExpenses: Set<string>;
+  toggleSelectAll: () => void;
+  toggleExpenseSelection: (id: string) => void;
+  onAddExpense: () => void;
+  onEdit: (expense: Expense) => void;
+  onDelete: (id: string) => void;
+  totalFilteredAmount: number;
+  selectedMonth: Date;
+  useCustomDateRange: boolean;
 }
 
 export function ExpenseList({
-  expenses,
-  isLoading = false,
+  filteredExpenses,
+  isLoading,
+  searchTerm,
+  setSearchTerm,
+  categoryFilter,
+  setCategoryFilter,
+  dateRange,
+  setDateRange,
+  sortConfig,
+  handleSort,
+  selectedExpenses,
+  toggleSelectAll,
+  toggleExpenseSelection,
+  onAddExpense,
   onEdit,
   onDelete,
-  onAddNew,
-  totalAmount
+  totalFilteredAmount,
+  selectedMonth,
+  useCustomDateRange
 }: ExpenseListProps) {
-  // Group expenses by category
-  const groupedByCategory = expenses.reduce((acc, expense) => {
-    const category = expense.category;
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(expense);
-    return acc;
-  }, {} as Record<string, Expense[]>);
-  
-  // Calculate totals by category
-  const categoryTotals = Object.entries(groupedByCategory).map(([category, expenses]) => ({
-    category,
-    total: expenses.reduce((sum, exp) => sum + exp.amount, 0),
-    count: expenses.length
-  })).sort((a, b) => b.total - a.total);
-  
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3 animate-pulse">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      );
-    }
-    
-    if (expenses.length === 0) {
-      return (
-        <EmptyState
-          title="No expenses yet"
-          description="Start tracking your spending by adding your first expense"
-          onAction={onAddNew}
-          actionLabel="Add Expense"
-        />
-      );
-    }
-    
-    return (
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="byCategory">By Category</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="space-y-1">
-          <ScrollArea className="max-h-[400px] pr-4 -mr-4">
-            {expenses.map((expense, index) => (
-              <React.Fragment key={expense.id}>
-                <ExpenseRow
-                  expense={expense}
-                  onEdit={() => onEdit?.(expense)}
-                  onDelete={() => onDelete?.(expense.id)}
-                />
-                {index < expenses.length - 1 && <Separator className="my-1" />}
-              </React.Fragment>
-            ))}
-          </ScrollArea>
-        </TabsContent>
-        
-        <TabsContent value="byCategory">
-          <ScrollArea className="max-h-[400px] pr-4 -mr-4">
-            <div className="space-y-4">
-              {categoryTotals.map(({ category, total, count }) => (
-                <div key={category} className="space-y-1">
-                  <div className="flex justify-between items-center py-2">
-                    <div className="flex items-center">
-                      <span className="font-medium">{category}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        ({count} {count === 1 ? 'expense' : 'expenses'})
-                      </span>
-                    </div>
-                    <span className="font-semibold">{formatCurrency(total)}</span>
-                  </div>
-                  <Separator />
-                  {groupedByCategory[category].map((expense, index) => (
-                    <React.Fragment key={expense.id}>
-                      <ExpenseRow
-                        expense={expense}
-                        onEdit={() => onEdit?.(expense)}
-                        onDelete={() => onDelete?.(expense.id)}
-                      />
-                      {index < groupedByCategory[category].length - 1 && <Separator className="my-1" />}
-                    </React.Fragment>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
-    );
-  };
-  
+  const { currencyCode } = useCurrency();
+
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle>Expenses</CardTitle>
-          {totalAmount !== undefined && (
-            <span className="text-lg font-semibold">{formatCurrency(totalAmount)}</span>
-          )}
+          <CardTitle className="text-lg">Expense List</CardTitle>
+          <p className="text-sm font-medium">
+            Total: {formatCurrency(totalFilteredAmount, currencyCode)}
+          </p>
         </div>
       </CardHeader>
       <CardContent>
-        {renderContent()}
+        <div className="space-y-4">
+          <ExpenseFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            selectedMonth={selectedMonth}
+            useCustomDateRange={useCustomDateRange}
+          />
+
+          <div className="rounded-lg border border-border/40 overflow-hidden">
+            <Table>
+              <ExpenseTableHeader
+                sortConfig={sortConfig}
+                handleSort={handleSort}
+                selectedExpenses={selectedExpenses}
+                filteredExpenses={filteredExpenses}
+                toggleSelectAll={toggleSelectAll}
+              />
+              <TableBody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <p className="text-muted-foreground">Loading expenses...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredExpenses.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <p className="text-muted-foreground">No expenses found</p>
+                        <Button 
+                          variant="teal" 
+                          onClick={onAddExpense}
+                          className="mt-2"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add expense
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredExpenses.map((expense) => (
+                    <ExpenseRow
+                      key={expense.id}
+                      expense={expense}
+                      selectedExpenses={selectedExpenses}
+                      toggleExpenseSelection={toggleExpenseSelection}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpenseBarChartProps {
@@ -13,6 +13,7 @@ interface ExpenseBarChartProps {
 
 export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const data = processMonthlyData(expenses);
   
   // Filter out zero-value categories for cleaner display
@@ -55,7 +56,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                 if (value >= 1000) return `${Math.floor(value / 1000)}k`;
                 return value.toString();
               }
-              return formatCurrency(value);
+              return formatCurrency(value, currencyCode);
             }}
             axisLine={false}
             tickLine={false}
@@ -91,7 +92,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                           <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                         </div>
                         <span className="text-xs font-medium">
-                          {formatCurrency(Number(entry.value))}
+                          {formatCurrency(Number(entry.value), currencyCode)}
                         </span>
                       </div>
                     ))}

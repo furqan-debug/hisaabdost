@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/formatters";
 import { Progress } from "@/components/ui/progress";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetCardProps {
   title: string;
@@ -13,6 +14,7 @@ interface BudgetCardProps {
 
 export function BudgetCard({ title, budgeted, spent, remaining, progress }: BudgetCardProps) {
   const isOverBudget = spent > budgeted;
+  const { currencyCode } = useCurrency();
   
   return (
     <Card className="overflow-hidden">
@@ -25,18 +27,18 @@ export function BudgetCard({ title, budgeted, spent, remaining, progress }: Budg
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Budgeted</p>
-            <p className="text-lg font-semibold">{formatCurrency(budgeted)}</p>
+            <p className="text-lg font-semibold">{formatCurrency(budgeted, currencyCode)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Spent</p>
             <p className={`text-lg font-semibold ${isOverBudget ? 'text-red-500' : ''}`}>
-              {formatCurrency(spent)}
+              {formatCurrency(spent, currencyCode)}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Remaining</p>
             <p className={`text-lg font-semibold ${remaining < 0 ? 'text-red-500' : ''}`}>
-              {formatCurrency(remaining)}
+              {formatCurrency(remaining, currencyCode)}
             </p>
           </div>
           <div>

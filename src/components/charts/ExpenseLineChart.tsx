@@ -5,6 +5,7 @@ import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface ExpenseLineChartProps {
@@ -13,6 +14,7 @@ interface ExpenseLineChartProps {
 
 export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   const data = processMonthlyData(expenses);
   
   // Filter out zero-value categories to reduce clutter
@@ -52,7 +54,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
               if (value >= 1000) return `${Math.floor(value / 1000)}k`;
               return value.toString();
             }
-            return formatCurrency(value);
+            return formatCurrency(value, currencyCode);
           }}
           axisLine={false}
           tickLine={false}
@@ -88,7 +90,7 @@ export const ExpenseLineChart = ({ expenses }: ExpenseLineChartProps) => {
                         <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                       </div>
                       <span className="text-xs font-medium">
-                        {formatCurrency(Number(entry.value))}
+                        {formatCurrency(Number(entry.value), currencyCode)}
                       </span>
                     </div>
                   ))}

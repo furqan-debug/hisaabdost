@@ -8,6 +8,7 @@ import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -16,6 +17,7 @@ interface BudgetTransactionsProps {
 export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   // Fetch real expenses from Supabase
   const { data: expenses = [], isLoading } = useQuery({
@@ -95,10 +97,10 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                       </div>
                     </div>
                     <div className="text-right font-semibold min-w-[80px] flex-shrink-0">
-                      {formatCurrency(Number(transaction.amount))}
+                      {formatCurrency(Number(transaction.amount), currencyCode)}
                       {relatedBudget && (
                         <div className="text-xs text-muted-foreground">
-                          Budget: {formatCurrency(budgetAmount)}
+                          Budget: {formatCurrency(budgetAmount, currencyCode)}
                         </div>
                       )}
                     </div>
@@ -130,11 +132,11 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
                   <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{transaction.category}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
-                  <TableCell>{formatCurrency(Number(transaction.amount))}</TableCell>
+                  <TableCell>{formatCurrency(Number(transaction.amount), currencyCode)}</TableCell>
                   <TableCell>
                     {relatedBudget ? (
                       <div className="flex flex-col">
-                        <span>{formatCurrency(budgetAmount)}</span>
+                        <span>{formatCurrency(budgetAmount, currencyCode)}</span>
                         <span className="text-xs text-muted-foreground capitalize">
                           {relatedBudget.period}
                         </span>

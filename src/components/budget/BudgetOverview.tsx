@@ -4,6 +4,7 @@ import { Budget } from "@/pages/Budget";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 
 interface BudgetOverviewProps {
@@ -14,6 +15,7 @@ export function BudgetOverview({
   budgets
 }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
   
@@ -35,7 +37,7 @@ export function BudgetOverview({
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
-      opacity: 1,
+      opacity:, 1,
       transition: { staggerChildren: 0.05 }
     }
   };
@@ -60,7 +62,7 @@ export function BudgetOverview({
         <div className="w-full h-full min-h-[300px] relative pie-chart-container chart-wrapper">
           <div className="chart-center-total">
             <div className="chart-center-total-amount">
-              {formatCurrency(totalBudget)}
+              {formatCurrency(totalBudget, currencyCode)}
             </div>
             <div className="chart-center-total-label">
               Total Budget
@@ -98,7 +100,7 @@ export function BudgetOverview({
                       className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-sm tooltip-card"
                     >
                       <p className="text-sm font-semibold">{data.name}</p>
-                      <p className="text-sm">{formatCurrency(data.value)}</p>
+                      <p className="text-sm">{formatCurrency(data.value, currencyCode)}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {data.percentage}% of total
                       </p>

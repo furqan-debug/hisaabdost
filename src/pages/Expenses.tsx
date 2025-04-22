@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -12,32 +12,10 @@ import { ExpenseHeader } from "@/components/expenses/ExpenseHeader";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { exportExpensesToCSV } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
-
-// Create a custom interface for the ExpenseList in Expenses.tsx
-interface ExpensesPageListProps {
-  expenses: Expense[];
-  isLoading: boolean;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  categoryFilter: string;
-  setCategoryFilter: (category: string) => void;
-  dateRange: { start: string; end: string };
-  setDateRange: (range: { start: string; end: string }) => void;
-  sortConfig: { field: string; order: 'asc' | 'desc' };
-  handleSort: (field: string) => void;
-  selectedExpenses: Set<string>;
-  toggleSelectAll: () => void;
-  toggleExpenseSelection: (id: string) => void;
-  onAddExpense: () => void;
-  onEdit: (expense: Expense) => void;
-  onDelete: (id: string) => void;
-  totalFilteredAmount: number;
-  selectedMonth: Date;
-  useCustomDateRange: boolean;
-}
 
 const Expenses = () => {
   const { user } = useAuth();
@@ -206,16 +184,29 @@ const Expenses = () => {
         exportToCSV={exportToCSV}
       />
 
-      <ExpenseList 
-        expenses={filteredExpenses}
+      <ExpenseList
+        filteredExpenses={filteredExpenses}
         isLoading={isLoading}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        sortConfig={sortConfig}
+        handleSort={handleSort}
+        selectedExpenses={selectedExpenses}
+        toggleSelectAll={() => toggleSelectAll(filteredExpenses.map(exp => exp.id))}
+        toggleExpenseSelection={toggleExpenseSelection}
+        onAddExpense={handleAddExpense}
         onEdit={(expense) => {
           setExpenseToEdit(expense);
           setShowAddExpense(true);
         }}
         onDelete={handleSingleDelete}
-        onAddNew={handleAddExpense}
-        totalAmount={totalFilteredAmount}
+        totalFilteredAmount={totalFilteredAmount}
+        selectedMonth={selectedMonth}
+        useCustomDateRange={useCustomDateRange}
       />
     </div>
   );
