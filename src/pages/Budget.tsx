@@ -1,4 +1,5 @@
 
+// Remove useCurrency and any "currencyCode" props
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +11,6 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
-import { useCurrency } from "@/hooks/use-currency";
 
 export interface Budget {
   id: string;
@@ -30,7 +30,6 @@ const Budget = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const currentMonthData = getCurrentMonthData();
@@ -77,7 +76,6 @@ const Budget = () => {
 
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
-    console.log("Tab changed to:", tabValue);
     setActiveTab(tabValue); // Update local state
     // Also update in month data for persistence
     updateMonthData(currentMonthKey, {

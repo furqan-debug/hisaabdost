@@ -1,11 +1,11 @@
 
+// Remove useCurrency and always use USD format
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
@@ -13,7 +13,6 @@ interface BudgetComparisonProps {
 
 export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
   
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
     if (!acc[budget.period]) {
@@ -60,7 +59,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
               <YAxis
-                tickFormatter={(value) => formatCurrency(value, currencyCode)}
+                tickFormatter={(value) => formatCurrency(value)}
                 width={isMobile ? 50 : 60}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
@@ -76,7 +75,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                           className="text-sm"
                           style={{ color: entry.color as string }}
                         >
-                          {entry.name}: {formatCurrency(Number(entry.value), currencyCode)}
+                          {entry.name}: {formatCurrency(Number(entry.value))}
                         </p>
                       ))}
                     </div>

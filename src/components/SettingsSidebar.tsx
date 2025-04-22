@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -24,8 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCurrency } from "@/hooks/use-currency";
-import { CURRENCY_OPTIONS, CurrencyCode } from "@/utils/currencyUtils";
 
 interface SettingsSidebarProps {
   selectedMonth: Date;
@@ -41,7 +38,6 @@ export function SettingsSidebar({
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const [language, setLanguage] = React.useState("english");
-  const { currencyCode, setCurrencyCode } = useCurrency();
 
   const handleColorChange = (newColor: "default" | "pink" | "blue") => {
     // Remove existing color classes
@@ -58,10 +54,6 @@ export function SettingsSidebar({
   const handleSignOut = () => {
     onClose();
     signOut();
-  };
-
-  const handleCurrencyChange = (value: string) => {
-    setCurrencyCode(value as CurrencyCode);
   };
 
   return (
@@ -90,27 +82,6 @@ export function SettingsSidebar({
             onChange={onMonthChange}
             className="w-full"
           />
-        </div>
-
-        <Separator className="my-2" />
-
-        <div className="px-4 py-3">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
-          <Select value={currencyCode} onValueChange={handleCurrencyChange}>
-            <SelectTrigger className="w-full h-9">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCY_OPTIONS.map((option) => (
-                <SelectItem key={option.code} value={option.code}>
-                  <div className="flex items-center">
-                    <span className="mr-2">{option.symbol}</span>
-                    <span>{option.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <Separator className="my-2" />

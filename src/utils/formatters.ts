@@ -1,33 +1,18 @@
 
-import { CurrencyCode, getCurrencyByCode } from './currencyUtils';
-
+// Remove import for CurrencyCode, getCurrencyByCode
 /**
- * Format a number as currency with the specified currency code
+ * Format a number as USD currency string (default and only supported symbol now)
  * @param amount The amount to format
- * @param currencyCode The currency code to use for formatting
  * @returns Formatted currency string
  */
-export function formatCurrency(amount: number, currencyCode: CurrencyCode = 'USD'): string {
-  const currencyOption = getCurrencyByCode(currencyCode);
-  
+export function formatCurrency(amount: number): string {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currencyCode,
+    currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
-  
-  // For some currencies, we might want to override the default Intl.NumberFormat behavior
-  // to show the custom symbols
-  const formatted = formatter.format(amount);
-  
-  // For currencies like PKR Rs, which might not be formatted correctly by Intl
-  if (currencyCode === 'PKR') {
-    // Replace the currency symbol with our custom one
-    return `${currencyOption.symbol} ${amount.toFixed(2)}`;
-  }
-  
-  return formatted;
+  return formatter.format(amount);
 }
 
 /**
