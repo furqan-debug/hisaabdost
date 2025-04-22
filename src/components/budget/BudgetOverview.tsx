@@ -37,7 +37,7 @@ export function BudgetOverview({
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
-      opacity:, 1,
+      opacity: 1, // Fixed: Removed the extra comma and added the correct value
       transition: { staggerChildren: 0.05 }
     }
   };
