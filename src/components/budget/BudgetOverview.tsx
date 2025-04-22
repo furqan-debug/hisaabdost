@@ -1,5 +1,5 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
@@ -23,7 +23,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (budgets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center space-y-3 w-full">
+      <div className="flex flex-col items-center justify-center h-[500px] py-8 px-4 text-center space-y-3 w-full">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>
@@ -31,13 +31,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4 w-full">
-      <Card className="w-full">
+    <div className="space-y-4 w-full h-full min-h-[500px]">
+      <Card className="w-full h-full">
         <CardHeader>
           <CardTitle>Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="px-2 md:px-6">
-          <div className="w-full h-[250px] md:h-[300px] overflow-visible">
+        <CardContent className="h-[400px] px-2 md:px-6">
+          <div className="w-full h-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

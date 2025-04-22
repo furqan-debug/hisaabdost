@@ -1,16 +1,13 @@
-
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   /* Chart containers */
   .chart-wrapper {
-    @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
-    min-height: 250px !important;
+    @apply w-full h-[400px] min-h-[400px] relative overflow-visible !important;
   }
   
   /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-[320px] min-h-[320px] relative overflow-hidden;
-    min-height: 320px !important;
+    @apply w-full h-[400px] min-h-[400px] relative overflow-hidden;
   }
   
   /* Better chart visibility on mobile */
@@ -18,13 +15,13 @@
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
-    min-height: 200px !important;
+    min-height: 300px !important;
   }
   
   .recharts-responsive-container {
     width: 100% !important;
     height: 100% !important;
-    min-height: 250px !important;
+    min-height: 300px !important;
   }
 
   .recharts-tooltip-wrapper {
@@ -129,8 +126,8 @@
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
-  @apply w-full h-[250px] md:h-[300px] relative overflow-visible;
-  min-height: 250px;
+  @apply w-full h-[400px] md:h-[500px] relative overflow-visible;
+  min-height: 400px;
 }
 
 .recharts-default-legend {
@@ -210,16 +207,17 @@
 
 /* Ensure budget tabs maintain proper height */
 .budget-card {
-  min-height: 350px;
+  min-height: 600px !important;
 }
 
 /* Make tabs content visible */
 .tabs-content {
-  min-height: 300px;
+  min-height: 500px !important;
+  height: 100% !important;
 }
 
 /* Fix budget pages */
 .budget-section, 
 .budget-container {
-  min-height: 300px;
+  min-height: 600px !important;
 }

@@ -37,9 +37,13 @@ export const BudgetTabs = ({
   };
 
   return (
-    <Card className="budget-card overflow-hidden mx-0 px-0">
-      <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
-        <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
+    <Card className="budget-card min-h-[600px] overflow-hidden mx-0 px-0">
+      <CardContent className="p-0 md:p-6 h-full max-w-full overflow-hidden">
+        <Tabs 
+          value={stableActiveTab} 
+          onValueChange={handleValueChange} 
+          className="h-full flex flex-col space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
+        >
           <div className="sticky top-0 bg-background z-10 w-full overflow-x-auto no-scrollbar">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -49,20 +53,20 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <div className="min-h-[300px]">
-            <TabsContent value="overview" className="mt-0 w-full">
+          <div className="flex-1 min-h-[500px]">
+            <TabsContent value="overview" className="h-full mt-0 w-full">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="mt-0 w-full">
+            <TabsContent value="categories" className="h-full mt-0 w-full">
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="mt-0 w-full">
+            <TabsContent value="transactions" className="h-full mt-0 w-full">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="mt-0 w-full">
+            <TabsContent value="comparison" className="h-full mt-0 w-full">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </div>
