@@ -1,35 +1,69 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
 import { Expense } from "@/components/expenses/types";
 import React from "react";
 
-// Custom label renderer that places values inside each slice
-const renderCustomizedLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value } = props;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+/**
+ * Custom pastel colors picked for clear contrast and similarity to your reference image
+ * (override CATEGORY_COLORS for the chart, up to 8 slices for best readability)
+ */
+const PIE_COLORS: string[] = [
+  "#5B66F3", // Blue (Monopoly-like)
+  "#F58A2E", // Orange (Candyland-like)
+  "#EA3AB2", // Pink (Jenga, Chess)
+  "#9446D6", // Purple
+  "#E23DA1", // Magenta
+  "#9578FC", // Lilac
+  "#FDE059", // Yellow
+  "#28D7CE", // Teal
+];
+
+/**
+ * Custom label: show category name and percentage centered in each slice
+ */
+const renderSliceLabel = ({
+  cx, cy, midAngle, innerRadius, outerRadius, percent, name
+}: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
   const radian = Math.PI / 180;
   const x = cx + radius * Math.cos(-midAngle * radian);
   const y = cy + radius * Math.sin(-midAngle * radian);
-  
-  if (percent < 0.05) return null; // Don't show labels for tiny slices
+  if (percent < 0.04) return null; // Hide for slices <4%
 
+  // Label line 1 = name, line 2 = percent
   return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="#fff" 
-      textAnchor="middle" 
-      dominantBaseline="central"
-      fontSize={14}
-      fontWeight="bold"
-      style={{ textShadow: "0px 0px 2px rgba(0,0,0,0.5)" }}
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
+    <g>
+      <text
+        x={x}
+        y={y - 6}
+        fill="#fff"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={13}
+        fontWeight="bold"
+        style={{
+          textShadow: "0px 0px 4px rgba(0,0,0,.25)"
+        }}
+      >
+        {name}
+      </text>
+      <text
+        x={x}
+        y={y + 10}
+        fill="#fff"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
+        style={{
+          textShadow: "0px 0px 4px rgba(0,0,0,.22)"
+        }}
+      >
+        {`${Math.round(percent * 100)}%`}
+      </text>
+    </g>
   );
 };
 
@@ -39,89 +73,71 @@ interface ExpensesPieChartProps {
 
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
 
-  // Calculate pie data and total amount
-  const data = calculatePieChartData(expenses);
-  const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  // Prepare clean data: top 8 by value for best clarity (to fit all inside)
+  const dataRaw = calculatePieChartData(expenses)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
+
+  // Recalculate total for correct percentages
+  const total = dataRaw.reduce((sum, entry) => sum + entry.value, 0);
+  const data = dataRaw.map((entry, i) => ({
+    ...entry,
+    percent: total > 0 ? entry.value / total : 0,
+    color: PIE_COLORS[i % PIE_COLORS.length]
+  }));
 
   // Responsive sizing
-  const chartSize = isMobile ? 200 : 260;
-  
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 rounded shadow-md border text-sm">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p>{formatCurrency(payload[0].value, currencyCode)}</p>
-          <p>{`${(payload[0].payload.percent).toFixed(1)}%`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const chartSize = Math.min(300, isMobile ? 220 : 300);
 
   return (
-    <div className="flex flex-col items-center h-[300px] w-full overflow-visible">
-      {/* Chart Container */}
-      <div className="relative" style={{ width: chartSize, height: chartSize }}>
+    <div
+      className="flex items-center justify-center w-full"
+      style={{ minHeight: chartSize, height: chartSize, maxHeight: chartSize }}
+    >
+      <div
+        style={{
+          width: chartSize,
+          height: chartSize,
+          maxWidth: "100%",
+          maxHeight: chartSize,
+          background: "white",
+          borderRadius: "8px",
+          boxShadow: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
+              startAngle={90}
+              endAngle={450}
               labelLine={false}
-              label={renderCustomizedLabel}
-              outerRadius={chartSize / 2}
-              innerRadius={chartSize / 5}
+              label={renderSliceLabel}
+              outerRadius="98%"
+              innerRadius={0}
               dataKey="value"
-              animationDuration={700}
-              animationBegin={0}
+              isAnimationActive={false}
               paddingAngle={2}
-              cornerRadius={4}
+              stroke="#222"
+              strokeWidth={2}
             >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color} 
-                  stroke="#fff"
+              {data.map((entry, idx) => (
+                <Cell
+                  key={`cell-${idx}`}
+                  fill={entry.color}
+                  stroke="#222"
                   strokeWidth={2}
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
-        
-        {/* Total in center */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-          <div className="text-xl font-bold">{formatCurrency(totalAmount, currencyCode)}</div>
-          <div className="text-sm text-muted-foreground">Total</div>
-        </div>
-      </div>
-      
-      {/* Legend */}
-      <div className={`flex flex-wrap justify-center mt-2 gap-2 px-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-        {data.map((entry, index) => (
-          <div 
-            key={`legend-${index}`}
-            className="flex items-center bg-background rounded-full px-2 py-1 shadow-sm"
-            style={{ border: `1px solid ${entry.color}30` }}
-          >
-            <div 
-              className="w-3 h-3 rounded-full mr-1.5" 
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="mr-1 font-medium truncate max-w-[70px]" title={entry.name}>
-              {entry.name}
-            </span>
-            <span className="opacity-75">
-              {(entry.percent).toFixed(0)}%
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
