@@ -3,12 +3,12 @@
 @media (max-width: 768px) {
   /* Chart containers */
   .chart-wrapper {
-    @apply w-full h-full min-h-[300px] relative overflow-hidden !important;
+    @apply w-full h-full min-h-[300px] relative overflow-visible !important;
   }
   
   /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-full min-h-[300px] relative overflow-hidden;
+    @apply w-full h-full min-h-[300px] relative overflow-visible;
   }
   
   /* Better chart visibility on mobile */
@@ -74,11 +74,6 @@
     @apply text-xs;
   }
 
-  /* Remove labels on pie chart for mobile */
-  .recharts-pie-label-text {
-    display: none !important;
-  }
-  
   /* Prevent tooltips from causing scrolling */
   .tooltip-card {
     max-width: 200px !important;
@@ -210,12 +205,7 @@
   touch-action: pan-y !important;
 }
 
-/* Prevent scroll within chart container */
-.chart-container {
-  overflow: hidden !important;
-}
-
-/* Make sure all tooltip text fits */
+/* Ensure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
 }
@@ -248,12 +238,8 @@
   @apply shadow-lg transform translate-y-[-2px];
 }
 
-/* Glass card effect */
-.glass-card {
-  @apply bg-card/80 backdrop-blur-sm border-border/40;
-}
-
 /* Tab design improvements */
 .budget-tabs-trigger {
   @apply font-medium transition-all duration-200;
 }
+

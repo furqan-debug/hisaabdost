@@ -10,6 +10,7 @@ import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
@@ -90,20 +91,21 @@ export const ExpenseAnalyticsCard = ({
             Add some expenses to see analytics
           </div>
         ) : (
-          <motion.div 
-            className="chart-wrapper" // <--- CHART WRAPPER ADDED!
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            key={chartType}
-          >
-            <ChartContainer config={chartConfig} className="h-full w-full">
-              {renderChart()}
-            </ChartContainer>
-          </motion.div>
+          <ScrollArea className="h-[350px] w-full">
+            <motion.div 
+              className="min-h-[320px] w-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              key={chartType}
+            >
+              <ChartContainer config={chartConfig} className="h-full w-full min-h-[320px]">
+                {renderChart()}
+              </ChartContainer>
+            </motion.div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
   );
 };
-
