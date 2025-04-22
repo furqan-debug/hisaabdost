@@ -1,48 +1,54 @@
 
 /* Mobile Card Styles */
-@media (max-width: 640px) {
-  /* Card header and content padding */
-  .card-header {
-    @apply p-3;
+@layer components {
+  @media (max-width: 640px) {
+    /* Card header and content padding */
+    .card-header {
+      @apply p-3;
+    }
+    .card-content {
+      @apply p-3 pt-1;
+    }
+    
+    /* Glass effect cards */
+    .glass-card {
+      @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
+    }
+    
+    /* Better mobile alignment */
+    .modern-card {
+      @apply mx-0 my-2 rounded-xl;
+    }
+    
+    /* Improved card spacing and touch targets */
+    .card {
+      @apply rounded-xl mx-0 my-2 shadow-sm;
+    }
+    
+    /* Mobile-optimized card titles */
+    .card-title {
+      @apply text-base font-semibold;
+    }
+    
+    /* Mobile-optimized card descriptions */
+    .card-description {
+      @apply text-sm text-muted-foreground;
+    }
   }
-  .card-content {
-    @apply p-3 pt-1;
+
+  /* Card hover feedback */
+  .hover-feedback {
+    @apply hover:bg-muted/50 transition-colors duration-200;
   }
-  
-  /* Glass effect cards */
+
+  /* Glass card effect */
   .glass-card {
     @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
   }
   
-  /* Better mobile alignment */
-  .modern-card {
-    @apply mx-0 my-2 rounded-xl;
-  }
-  
-  /* Improved card spacing and touch targets */
-  .card {
-    @apply rounded-xl mx-0 my-2 shadow-sm;
-  }
-  
-  /* Mobile-optimized card titles */
-  .card-title {
-    @apply text-base font-semibold;
-  }
-  
-  /* Mobile-optimized card descriptions */
-  .card-description {
-    @apply text-sm text-muted-foreground;
+  /* Add hover effect with a standard opacity value */
+  .glass-card:hover {
+    @apply bg-card/90 shadow-md;
+    transition: all 0.2s ease-in-out;
   }
 }
-
-/* Card hover feedback */
-.hover-feedback {
-  @apply hover:bg-muted/50 transition-colors duration-200;
-}
-
-/* Glass card effect */
-.glass-card {
-  @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm 
-         hover:bg-card/98 transition-all duration-200;
-}
-
