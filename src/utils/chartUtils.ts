@@ -8,23 +8,23 @@ export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
   return formatCurrencyUtil(amount, currencyCode);
 };
 
-// Updated modern color palette with better contrast 
+// Updated pastel color palette with better contrast 
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#4287f5",         // Bright Blue
-  "Groceries": "#22c55e",    // Bright Green
-  "Housing": "#9046cf",      // Purple
-  "Utilities": "#64748b",    // Slate
-  "Transportation": "#ef4444", // Red
-  "Healthcare": "#d946ef",    // Pink
-  "Entertainment": "#f59e0b", // Amber
-  "Shopping": "#6366f1",     // Indigo
-  "Personal": "#8b5cf6",     // Violet
-  "Education": "#0ea5e9",    // Sky
-  "Travel": "#14b8a6",       // Teal
-  "Insurance": "#8b5cf6",    // Violet
-  "Debt": "#f97316",         // Orange
-  "Savings": "#22c55e",      // Green
-  "Other": "#94a3b8",        // Cool Gray
+  "Food": "#90CAF9",         // Pastel Blue
+  "Groceries": "#A5D6A7",    // Pastel Green
+  "Housing": "#CE93D8",      // Pastel Purple
+  "Utilities": "#B0BEC5",    // Pastel Slate
+  "Transportation": "#EF9A9A", // Pastel Red
+  "Healthcare": "#F48FB1",    // Pastel Pink
+  "Entertainment": "#FFCC80", // Pastel Amber
+  "Shopping": "#9FA8DA",     // Pastel Indigo
+  "Personal": "#B39DDB",     // Pastel Violet
+  "Education": "#81D4FA",    // Pastel Sky
+  "Travel": "#80DEEA",       // Pastel Teal
+  "Insurance": "#B39DDB",    // Pastel Violet
+  "Debt": "#FFAB91",         // Pastel Orange
+  "Savings": "#A5D6A7",      // Pastel Green
+  "Other": "#CFD8DC",        // Pastel Gray
 };
 
 // Process monthly data for charts with optimization for mobile
@@ -71,11 +71,11 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   // Sort by value and limit to top categories for cleaner display
   return Object.entries(categoryTotals)
     .sort(([, valueA], [, valueB]) => valueB - valueA)
-    .slice(0, 5) // Limit to top 5 categories for cleaner display
+    .slice(0, 6) // Limit to top 6 categories for cleaner display
     .map(([name, value]) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || "#94A3B8",
+      color: CATEGORY_COLORS[name] || "#CFD8DC",
       percent: total > 0 ? (value / total) * 100 : 0,
     }));
 };

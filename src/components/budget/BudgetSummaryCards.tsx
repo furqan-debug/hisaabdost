@@ -51,7 +51,7 @@ export const BudgetSummaryCards = ({
       )}
       
       <div className={`grid gap-3 md:gap-4 px-2 md:px-0 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-4'}`}>
-        <Card className="shadow-sm border-border/50">
+        <Card className="shadow-sm border-border/50 budget-glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
           </CardHeader>
@@ -60,7 +60,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50">
+        <Card className="shadow-sm border-border/50 budget-glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium">Remaining Balance</CardTitle>
           </CardHeader>
@@ -69,7 +69,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50">
+        <Card className="shadow-sm border-border/50 budget-glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
           </CardHeader>
@@ -78,7 +78,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50">
+        <Card className="shadow-sm border-border/50 budget-glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
           </CardHeader>
@@ -89,4 +89,4 @@ export const BudgetSummaryCards = ({
       </div>
     </div>
   );
-};
+}

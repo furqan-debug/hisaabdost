@@ -1,26 +1,27 @@
+
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   /* Chart containers */
   .chart-wrapper {
-    @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
+    @apply w-full h-full min-h-[300px] relative overflow-hidden !important;
   }
   
   /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-[320px] min-h-[320px] relative overflow-hidden;
+    @apply w-full h-full min-h-[300px] relative overflow-hidden;
   }
   
   /* Better chart visibility on mobile */
   .recharts-wrapper {
-    @apply max-w-full rounded-lg;
-    overflow: visible !important;
+    @apply h-full w-full rounded-lg;
     margin: 0 auto !important;
+    min-height: 300px !important;
   }
   
   .recharts-responsive-container {
     width: 100% !important;
     height: 100% !important;
-    min-height: 250px !important;
+    min-height: 300px !important;
   }
 
   .recharts-tooltip-wrapper {
@@ -45,6 +46,7 @@
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
     @apply max-w-[280px] mx-auto;
+    min-height: 250px !important;
   }
 
   /* Make legend more compact on mobile */
@@ -98,21 +100,49 @@
     display: none !important;
   }
   
-  /* Hide detailed legend for simplicity */
-  .recharts-default-legend {
-    max-width: 100% !important;
-    display: none !important;
-  }
-  
   /* Simplify axis ticks */
   .recharts-cartesian-axis-tick text {
     font-size: 9px !important;
+  }
+
+  /* Fix budget section on mobile */
+  .budget-section {
+    @apply min-h-[300px] w-full overflow-visible;
+    min-height: 300px !important;
+  }
+
+  /* Fix tabs content on mobile */
+  .tabs-content {
+    @apply min-h-[300px] w-full;
+    min-height: 300px !important;
+  }
+  
+  /* Budget tab tab list scrolling */
+  .scrollable-tabs-container {
+    @apply flex overflow-x-auto space-x-1 pb-1 no-scrollbar;
+    max-width: 100%;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Make tab items snap when scrolling */
+  .budget-tabs-trigger {
+    @apply flex-shrink-0 px-2 py-1;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  
+  /* Tab content padding for mobile */
+  .tab-content-mobile {
+    @apply px-0 max-w-full overflow-hidden;
+    width: 100%;
   }
 }
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
-  @apply w-full h-[250px] md:h-[300px] relative overflow-visible;
+  @apply w-full h-full relative;
+  min-height: 300px;
 }
 
 .recharts-default-legend {
@@ -125,7 +155,7 @@
 }
 
 .recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-3 shadow-md text-left;
+  @apply rounded-lg border bg-background/95 p-3 shadow-md text-left backdrop-blur-sm;
 }
 
 .recharts-sector {
@@ -188,4 +218,42 @@
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
+}
+
+/* Ensure budget tabs maintain proper height */
+.budget-card {
+  min-height: 600px !important;
+  height: 100% !important;
+}
+
+/* Make tabs content visible */
+.tabs-content {
+  @apply h-full min-h-[300px] w-full;
+}
+
+/* Fix budget pages */
+.budget-section, 
+.budget-container {
+  min-height: 600px !important;
+}
+
+/* Additional styles for redesign */
+
+/* Card hover effect */
+.card-hover {
+  @apply transition-all duration-200;
+}
+
+.card-hover:hover {
+  @apply shadow-lg transform translate-y-[-2px];
+}
+
+/* Glass card effect */
+.glass-card {
+  @apply bg-card/80 backdrop-blur-sm border-border/40;
+}
+
+/* Tab design improvements */
+.budget-tabs-trigger {
+  @apply font-medium transition-all duration-200;
 }
