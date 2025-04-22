@@ -57,50 +57,51 @@ export function ExpensesComparison({ expenses }: ExpensesComparisonProps) {
   }).filter(comparison => comparison.currentAmount > 0 || comparison.lastAmount > 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="rounded-2xl shadow-none bg-[hsl(var(--muted)/0.45)] border border-border/50">
-          <CardContent className="pt-6 pb-4">
-            <div className="text-2xl font-bold tracking-tight">{format(currentMonthStart, 'MMMM yyyy')}</div>
-            <div className="text-sm text-muted-foreground">Current Month</div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">
+              {format(currentMonthStart, 'MMMM yyyy')}
+            </div>
+            <div className="text-muted-foreground">Current Month</div>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl shadow-none bg-[hsl(var(--muted)/0.40)] border border-border/50">
-          <CardContent className="pt-6 pb-4">
-            <div className="text-2xl font-bold tracking-tight">{format(lastMonthStart, 'MMMM yyyy')}</div>
-            <div className="text-sm text-muted-foreground">Previous Month</div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">
+              {format(lastMonthStart, 'MMMM yyyy')}
+            </div>
+            <div className="text-muted-foreground">Previous Month</div>
           </CardContent>
         </Card>
       </div>
+
       <div className="space-y-4">
         {comparisons.map(({ category, currentAmount, lastAmount, percentageChange, color }) => (
-          <div key={category} className="space-y-2 px-1 pb-1">
+          <div key={category} className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-semibold" style={{ color }}>{category}</span>
-              <span className={
-                percentageChange > 0
-                  ? "text-red-400 font-bold"
-                  : "text-green-500 font-bold"
-              }>
+              <span className="font-medium" style={{ color }}>{category}</span>
+              <span className={percentageChange > 0 ? "text-red-500" : "text-green-500"}>
                 {percentageChange.toFixed(1)}%
               </span>
             </div>
-            <div className="flex gap-4 items-end text-xs">
+            <div className="grid gap-2 grid-cols-2">
               <div>
-                <div className="text-xs text-muted-foreground">Current</div>
+                <div className="text-sm text-muted-foreground">Current</div>
                 <div className="font-medium">{formatCurrency(currentAmount, currencyCode)}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Previous</div>
+                <div className="text-sm text-muted-foreground">Previous</div>
                 <div className="font-medium">{formatCurrency(lastAmount, currencyCode)}</div>
               </div>
             </div>
-            <Progress
-              value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)}
+            <Progress 
+              value={Math.min(100, (currentAmount / (lastAmount || currentAmount)) * 100)} 
               className={cn(
-                "h-3 rounded-full bg-[hsl(var(--muted)/0.30)] [&>[role=progressbar]]:bg-current transition-all shadow-md",
+                "h-2 [&>[role=progressbar]]:bg-current transition-all"
               )}
-              style={{ color, background: `${color}18` }}
+              style={{ color }}
             />
           </div>
         ))}
