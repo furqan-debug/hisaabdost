@@ -39,8 +39,8 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius={isMobile ? 50 : 75}
-            outerRadius={isMobile ? 70 : 100}
+            innerRadius={isMobile ? 60 : 80}
+            outerRadius={isMobile ? 80 : 110}
             paddingAngle={2}
             cornerRadius={4}
             labelLine={false}
@@ -78,7 +78,7 @@ export const ExpensePieChart = ({ expenses }: ExpensePieChartProps) => {
       
       {/* Simplified mobile-friendly legend */}
       <div className="expense-chart-legend">
-        {data.slice(0, isMobile ? 3 : 5).map((entry, index) => (
+        {data.slice(0, isMobile ? 4 : 6).map((entry, index) => (
           <div key={index} className="expense-chart-legend-item">
             <div 
               className="expense-chart-legend-dot"

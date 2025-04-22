@@ -7,6 +7,7 @@ import { BudgetTransactions } from "@/components/budget/BudgetTransactions";
 import { BudgetComparison } from "@/components/budget/BudgetComparison";
 import { Budget } from "@/pages/Budget";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 interface BudgetTabsProps {
   budgets: Budget[];
@@ -44,13 +45,40 @@ export const BudgetTabs = ({
           onValueChange={handleValueChange} 
           className="flex flex-col h-full"
         >
-          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 w-full border-b border-border/20">
-            <TabsList className="w-full justify-start rounded-none md:rounded-md scrollable-tabs-container">
-              <TabsTrigger value="overview" className="budget-tabs-trigger">Overview</TabsTrigger>
-              <TabsTrigger value="categories" className="budget-tabs-trigger">Categories</TabsTrigger>
-              <TabsTrigger value="transactions" className="budget-tabs-trigger">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison" className="budget-tabs-trigger">Comparison</TabsTrigger>
-            </TabsList>
+          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 w-full border-b border-border/20 py-3 px-4">
+            <motion.div 
+              className="w-full flex justify-center"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TabsList className="bg-muted/30 p-1 rounded-full w-auto">
+                <TabsTrigger 
+                  value="overview" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="categories" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Categories
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="transactions" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="comparison" 
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Comparison
+                </TabsTrigger>
+              </TabsList>
+            </motion.div>
           </div>
 
           <div className="flex-1 h-[calc(100%-48px)] min-h-[500px] overflow-y-auto">
