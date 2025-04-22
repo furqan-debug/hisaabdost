@@ -18,16 +18,19 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  const isBudgetRoute = location.pathname.includes('/budget');
+
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-[100dvh] flex flex-col bg-background overflow-x-hidden">
       <Navbar />
       <main className={cn(
-        "flex-1 px-3 pt-3 pb-20 md:px-6 md:pt-6 md:pb-8 overflow-x-hidden transition-all duration-300",
+        "flex-1 transition-all duration-300 pb-20 md:pb-8 overflow-x-hidden",
+        isBudgetRoute ? "px-0" : "px-3 md:px-6",
         pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
       )}>
         <div className={cn(
-          "mx-auto w-full overflow-guard", 
-          isMobile ? "max-w-full px-1" : "max-w-5xl",
+          "mx-auto w-full", 
+          isMobile ? "max-w-full" : "max-w-5xl",
           pageTransition ? "animate-fade-in" : ""
         )}>
           <Outlet />

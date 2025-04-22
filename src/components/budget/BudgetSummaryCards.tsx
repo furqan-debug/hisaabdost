@@ -30,9 +30,9 @@ export const BudgetSummaryCards = ({
     return (
       <div className="space-y-3">
         <Skeleton className="h-12 w-full" />
-        <div className={`grid gap-3 md:gap-4 px-2 md:px-0 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-4'}`}>
+        <div className="grid gap-2 grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[80px]" />
+            <Skeleton key={i} className="h-[100px]" />
           ))}
         </div>
       </div>
@@ -42,7 +42,7 @@ export const BudgetSummaryCards = ({
   return (
     <div className="space-y-3">
       {exceedsBudget && (
-        <Alert variant="destructive" className="mb-3 rounded-lg">
+        <Alert variant="destructive" className="rounded-lg mx-0">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Warning: Your total budget exceeds your monthly income by {formatCurrency(totalBudget - monthlyIncome, currencyCode)}
@@ -50,40 +50,40 @@ export const BudgetSummaryCards = ({
         </Alert>
       )}
       
-      <div className={`grid gap-3 md:gap-4 px-2 md:px-0 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-4'}`}>
-        <Card className="shadow-sm border-border/50 budget-glass-card">
+      <div className="grid gap-2 grid-cols-2">
+        <Card className="shadow-sm border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
-            <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Budget</CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <div className="text-xl font-bold text-primary">{formatCurrency(totalBudget, currencyCode)}</div>
+            <div className="text-xl font-bold">{formatCurrency(totalBudget, currencyCode)}</div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 budget-glass-card">
+        <Card className="shadow-sm border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
-            <CardTitle className="text-sm font-medium">Remaining Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Remaining</CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <div className="text-xl font-bold text-primary">{formatCurrency(remainingBalance, currencyCode)}</div>
+            <div className="text-xl font-bold">{formatCurrency(remainingBalance, currencyCode)}</div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 budget-glass-card">
+        <Card className="shadow-sm border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
-            <CardTitle className="text-sm font-medium">Budget Usage</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Usage</CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <div className="text-xl font-bold text-primary">{usagePercentage.toFixed(1)}%</div>
+            <div className="text-xl font-bold">{usagePercentage.toFixed(1)}%</div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 budget-glass-card">
+        <Card className="shadow-sm border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
-            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Income</CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <div className="text-xl font-bold text-primary">{formatCurrency(monthlyIncome, currencyCode)}</div>
+            <div className="text-xl font-bold">{formatCurrency(monthlyIncome, currencyCode)}</div>
           </CardContent>
         </Card>
       </div>

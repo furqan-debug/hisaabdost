@@ -79,7 +79,7 @@ const Budget = () => {
 
   if (isLoading) {
     return (
-      <div className="p-4 flex justify-center min-h-[300px]">
+      <div className="p-4 flex justify-center min-h-[200px]">
         <div className="animate-pulse text-center">
           <p className="text-muted-foreground">Loading your budget data...</p>
         </div>
@@ -88,21 +88,25 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container min-h-[600px] w-full">
-      <BudgetHeader 
-        onAddBudget={handleAddBudget}
-        onExport={exportBudgetData}
-      />
+    <div className="space-y-3 pb-20 md:pb-8 min-h-[100dvh] w-full overflow-x-hidden">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 px-3 py-2">
+        <BudgetHeader 
+          onAddBudget={handleAddBudget}
+          onExport={exportBudgetData}
+        />
+      </div>
 
-      <BudgetSummaryCards
-        totalBudget={totalBudget}
-        remainingBalance={remainingBalance}
-        usagePercentage={usagePercentage}
-        monthlyIncome={monthlyIncome}
-        isLoading={isLoading}
-      />
+      <div className="px-3">
+        <BudgetSummaryCards
+          totalBudget={totalBudget}
+          remainingBalance={remainingBalance}
+          usagePercentage={usagePercentage}
+          monthlyIncome={monthlyIncome}
+          isLoading={isLoading}
+        />
+      </div>
 
-      <div className="mx-0 md:mx-0 w-full min-h-[350px]">
+      <div className="w-full min-h-[350px]">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}
