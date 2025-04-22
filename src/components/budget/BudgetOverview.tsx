@@ -23,7 +23,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (budgets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3 w-full">
+      <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center space-y-3 w-full">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>
@@ -36,8 +36,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
         <CardHeader>
           <CardTitle>Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="w-full h-[250px] md:h-[300px]">
+        <CardContent className="px-2 md:px-6">
+          <div className="w-full h-[250px] md:h-[300px] overflow-visible">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

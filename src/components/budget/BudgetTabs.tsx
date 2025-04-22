@@ -29,17 +29,18 @@ export const BudgetTabs = ({
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
     }
-  }, [activeTab]);
+  }, [activeTab, stableActiveTab]);
 
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
 
-  return <Card className="budget-card overflow-hidden mx-0 px-0">
+  return (
+    <Card className="budget-card overflow-hidden mx-0 px-0">
       <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
         <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
-          <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
+          <div className="sticky top-0 bg-background z-10 w-full overflow-x-auto no-scrollbar">
             <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -48,22 +49,25 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="budget-section overflow-hidden w-full">
-            <BudgetOverview budgets={budgets || []} />
-          </TabsContent>
+          <div className="min-h-[300px]">
+            <TabsContent value="overview" className="mt-0 w-full">
+              <BudgetOverview budgets={budgets || []} />
+            </TabsContent>
 
-          <TabsContent value="categories" className="budget-section overflow-hidden w-full">
-            <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
-          </TabsContent>
+            <TabsContent value="categories" className="mt-0 w-full">
+              <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
+            </TabsContent>
 
-          <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
-            <BudgetTransactions budgets={budgets || []} />
-          </TabsContent>
+            <TabsContent value="transactions" className="mt-0 w-full">
+              <BudgetTransactions budgets={budgets || []} />
+            </TabsContent>
 
-          <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
-            <BudgetComparison budgets={budgets || []} />
-          </TabsContent>
+            <TabsContent value="comparison" className="mt-0 w-full">
+              <BudgetComparison budgets={budgets || []} />
+            </TabsContent>
+          </div>
         </Tabs>
       </CardContent>
-    </Card>;
-};
+    </Card>
+  );
+}

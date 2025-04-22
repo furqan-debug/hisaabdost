@@ -1,13 +1,16 @@
+
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   /* Chart containers */
   .chart-wrapper {
     @apply w-full h-[250px] min-h-[250px] relative overflow-visible !important;
+    min-height: 250px !important;
   }
   
   /* Fixed container to prevent overflow */
   .chart-container {
     @apply w-full h-[320px] min-h-[320px] relative overflow-hidden;
+    min-height: 320px !important;
   }
   
   /* Better chart visibility on mobile */
@@ -15,6 +18,7 @@
     @apply max-w-full rounded-lg;
     overflow: visible !important;
     margin: 0 auto !important;
+    min-height: 200px !important;
   }
   
   .recharts-responsive-container {
@@ -45,6 +49,7 @@
   /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
     @apply max-w-[280px] mx-auto;
+    min-height: 250px !important;
   }
 
   /* Make legend more compact on mobile */
@@ -108,11 +113,24 @@
   .recharts-cartesian-axis-tick text {
     font-size: 9px !important;
   }
+
+  /* Fix budget section on mobile */
+  .budget-section {
+    @apply min-h-[300px] w-full overflow-visible;
+    min-height: 300px !important;
+  }
+
+  /* Fix tabs content on mobile */
+  .tabs-content {
+    @apply min-h-[300px] w-full;
+    min-height: 300px !important;
+  }
 }
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
   @apply w-full h-[250px] md:h-[300px] relative overflow-visible;
+  min-height: 250px;
 }
 
 .recharts-default-legend {
@@ -188,4 +206,20 @@
 /* Make sure all tooltip text fits */
 .tooltip-card p {
   @apply truncate max-w-full;
+}
+
+/* Ensure budget tabs maintain proper height */
+.budget-card {
+  min-height: 350px;
+}
+
+/* Make tabs content visible */
+.tabs-content {
+  min-height: 300px;
+}
+
+/* Fix budget pages */
+.budget-section, 
+.budget-container {
+  min-height: 300px;
 }
