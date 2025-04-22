@@ -37,15 +37,15 @@ export const BudgetTabs = ({
   };
 
   return (
-    <Card className="budget-card min-h-[600px] overflow-hidden mx-0 px-0">
-      <CardContent className="p-0 md:p-6 h-full max-w-full overflow-hidden">
+    <Card className="min-h-[600px] h-full w-full">
+      <CardContent className="p-0 h-full">
         <Tabs 
           value={stableActiveTab} 
           onValueChange={handleValueChange} 
-          className="h-full flex flex-col space-y-4 md:space-y-6 w-full max-w-full overflow-hidden"
+          className="flex flex-col h-full"
         >
-          <div className="sticky top-0 bg-background z-10 w-full overflow-x-auto no-scrollbar">
-            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
+          <div className="sticky top-0 bg-background z-10 w-full">
+            <TabsList className="w-full justify-start rounded-none md:rounded-md">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
@@ -53,20 +53,20 @@ export const BudgetTabs = ({
             </TabsList>
           </div>
 
-          <div className="flex-1 min-h-[500px]">
-            <TabsContent value="overview" className="h-full mt-0 w-full">
+          <div className="flex-1 h-[calc(100%-48px)] min-h-[500px]">
+            <TabsContent value="overview" className="h-full mt-0 p-4">
               <BudgetOverview budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="categories" className="h-full mt-0 w-full">
+            <TabsContent value="categories" className="h-full mt-0 p-4">
               <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="h-full mt-0 w-full">
+            <TabsContent value="transactions" className="h-full mt-0 p-4">
               <BudgetTransactions budgets={budgets || []} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="h-full mt-0 w-full">
+            <TabsContent value="comparison" className="h-full mt-0 p-4">
               <BudgetComparison budgets={budgets || []} />
             </TabsContent>
           </div>

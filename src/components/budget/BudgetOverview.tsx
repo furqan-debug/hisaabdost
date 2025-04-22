@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
@@ -23,7 +22,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (budgets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[500px] py-8 px-4 text-center space-y-3 w-full">
+      <div className="flex flex-col items-center justify-center h-full py-8 px-4 text-center space-y-3">
         <p className="text-muted-foreground">No budget categories found</p>
         <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
       </div>
@@ -31,13 +30,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-4 w-full h-full min-h-[500px]">
-      <Card className="w-full h-full">
+    <div className="h-full">
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Budget Distribution</CardTitle>
         </CardHeader>
-        <CardContent className="h-[400px] px-2 md:px-6">
-          <div className="w-full h-full">
+        <CardContent className="h-[calc(100%-80px)]">
+          <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -74,7 +73,6 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
             </ResponsiveContainer>
           </div>
           
-          {/* Mobile-friendly legend */}
           {isMobile && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               {data.map((entry, index) => (
