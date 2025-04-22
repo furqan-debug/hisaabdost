@@ -6,9 +6,10 @@ interface EmptyStateProps {
   onAction: () => void;
   title: string;
   description: string;
+  actionLabel?: string;
 }
 
-export function EmptyState({ onAction, title, description }: EmptyStateProps) {
+export function EmptyState({ onAction, title, description, actionLabel = "Add Your First Expense" }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="rounded-full bg-muted p-3 mb-4">
@@ -16,7 +17,7 @@ export function EmptyState({ onAction, title, description }: EmptyStateProps) {
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground mb-4 max-w-sm">{description}</p>
-      <Button onClick={onAction}>Add Your First Expense</Button>
+      <Button onClick={onAction}>{actionLabel}</Button>
     </div>
   );
 }
