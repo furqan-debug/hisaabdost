@@ -21,15 +21,15 @@ const Layout = () => {
   const isBudgetRoute = location.pathname.includes('/budget');
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-[100dvh] flex flex-col bg-background overflow-hidden max-w-[100vw]">
       <Navbar />
       <main className={cn(
-        "flex-1 transition-all duration-300 pb-20 md:pb-8 overflow-x-hidden",
-        isBudgetRoute ? "px-0" : "px-3 md:px-6",
+        "flex-1 transition-all duration-300 pb-16 md:pb-8 overflow-x-hidden max-w-[100vw]",
+        isBudgetRoute ? "px-0" : "px-2 md:px-6",
         pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
       )}>
         <div className={cn(
-          "mx-auto w-full", 
+          "mx-auto w-full overflow-x-hidden", 
           isMobile ? "max-w-full" : "max-w-5xl",
           pageTransition ? "animate-fade-in" : ""
         )}>

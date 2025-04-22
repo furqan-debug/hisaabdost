@@ -30,7 +30,7 @@ export const BudgetSummaryCards = ({
     return (
       <div className="space-y-3">
         <Skeleton className="h-12 w-full" />
-        <div className="grid gap-2 grid-cols-2">
+        <div className="grid gap-3 grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-[100px]" />
           ))}
@@ -50,8 +50,8 @@ export const BudgetSummaryCards = ({
         </Alert>
       )}
       
-      <div className="grid gap-2 grid-cols-2">
-        <Card className="shadow-sm border-border/50 glass-card">
+      <div className="grid gap-3 grid-cols-2">
+        <Card className="shadow-md border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Budget</CardTitle>
           </CardHeader>
@@ -60,7 +60,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 glass-card">
+        <Card className="shadow-md border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Remaining</CardTitle>
           </CardHeader>
@@ -69,7 +69,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 glass-card">
+        <Card className="shadow-md border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Usage</CardTitle>
           </CardHeader>
@@ -78,7 +78,7 @@ export const BudgetSummaryCards = ({
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 glass-card">
+        <Card className="shadow-md border-border/50 glass-card">
           <CardHeader className="p-3 pb-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">Income</CardTitle>
           </CardHeader>

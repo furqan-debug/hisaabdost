@@ -69,6 +69,7 @@ const Budget = () => {
 
   // Handle tab change
   const handleTabChange = (tabValue: string) => {
+    console.log("Tab changed to:", tabValue);
     updateMonthData(currentMonthKey, {
       activeTab: tabValue
     });
@@ -76,6 +77,7 @@ const Budget = () => {
 
   // Get active tab from month data
   const activeTab = currentMonthData.activeTab || 'overview';
+  console.log("Current active tab:", activeTab);
 
   if (isLoading) {
     return (
@@ -88,7 +90,7 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-3 pb-20 md:pb-8 min-h-[100dvh] w-full overflow-x-hidden">
+    <div className="overflow-guard space-y-3 pb-20 md:pb-8 min-h-[100dvh] w-full overflow-x-hidden budget-container">
       <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 px-3 py-2">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
@@ -106,7 +108,7 @@ const Budget = () => {
         />
       </div>
 
-      <div className="w-full min-h-[350px]">
+      <div className="w-full min-h-[350px] budget-content">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}
