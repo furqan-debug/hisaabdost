@@ -108,8 +108,8 @@ export default function Analytics() {
   return <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="show">
       <motion.div variants={itemVariants} className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
-        <p className="text-muted-foreground py-[18px] px-0 my-0 mx-0">Track your spending patterns and financial trends</p>
-        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} />
+        <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
+        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} className="mx-- mx-[11px] px-[9px] text-center" />
       </motion.div>
 
       <motion.div variants={itemVariants}>
@@ -120,7 +120,7 @@ export default function Analytics() {
         <Tabs defaultValue="overview" className="space-y-4 mx--12">
           <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow- px-0 py-0 my-0">Trends</TabsTrigger>
+            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
             <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
           </TabsList>
 
@@ -170,7 +170,7 @@ export default function Analytics() {
                 <CardTitle>Period Comparison</CardTitle>
                 <CardDescription>Compare your spending across different periods</CardDescription>
               </CardHeader>
-              <CardContent className="mx-0 py-[5px]">
+              <CardContent>
                 <ExpensesComparison expenses={filteredExpenses} />
               </CardContent>
             </Card>
