@@ -123,16 +123,26 @@ export const StatCards = ({
     );
   }
 
+  // Glass/gradient card styles (add card-gradient for extra pop)
+  const cardClass =
+    "modern-card glass-card card-gradient transition-all duration-300 hover:shadow-lg rounded-2xl border-0 shadow-[0_4px_20px_rgba(80,80,180,0.11)]";
+
+  // Icon BG gradient styles
+  const iconBgGradient =
+    "rounded-xl p-2 shadow-md text-white bg-gradient-to-br from-primary via-indigo-400 to-primary/90";
+
   return (
     <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
       <OnboardingTooltip
         content="Track your remaining balance after expenses"
         defaultOpen={isNewUser}
       >
-        <Card className="transition-all duration-300 hover:shadow-md">
+        <Card className={cardClass}>
           <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
             <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Total Balance</CardTitle>
-            <Wallet className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
+            <div className={iconBgGradient}>
+              <Wallet className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+            </div>
           </CardHeader>
           <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
             <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
@@ -145,10 +155,12 @@ export const StatCards = ({
         </Card>
       </OnboardingTooltip>
       
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className={cardClass}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Expenses</CardTitle>
-          <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
+          <div className={iconBgGradient + " bg-gradient-to-br from-red-300 via-orange-300 to-orange-500"}>
+            <DollarSign className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+          </div>
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
           <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatCurrency(monthlyExpenses, currencyCode)}</div>
@@ -159,19 +171,23 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className={cardClass}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Monthly Income</CardTitle>
           {!isEditing ? (
-            <Edit 
-              className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground cursor-pointer hover:text-primary transition-colors`} 
-              onClick={() => setIsEditing(true)}
-            />
+            <div className={iconBgGradient + " bg-gradient-to-br from-green-300 via-teal-400 to-green-500"}>
+              <Edit 
+                className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} cursor-pointer hover:text-white/80 transition-colors`} 
+                onClick={() => setIsEditing(true)}
+              />
+            </div>
           ) : (
-            <Save 
-              className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-primary cursor-pointer hover:text-primary/80 transition-colors`} 
-              onClick={saveIncome}
-            />
+            <div className={iconBgGradient + " bg-gradient-to-br from-green-300 via-teal-400 to-green-500"}>
+              <Save 
+                className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} cursor-pointer hover:text-white/80 transition-colors`} 
+                onClick={saveIncome}
+              />
+            </div>
           )}
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
@@ -194,12 +210,12 @@ export const StatCards = ({
                   const value = e.target.value.replace(/[^0-9]/g, '');
                   handleIncomeChange(value ? parseInt(value, 10) : 0);
                 }}
-                className={`h-8 text-${isMobile ? 'sm' : 'base'} pr-2`}
+                className={`h-8 text-${isMobile ? 'sm' : 'base'} pr-2 glass-card`}
                 min={0}
               />
               <Button 
                 size="sm" 
-                className="w-full h-7 text-xs" 
+                className="w-full h-7 text-xs glass-card"
                 onClick={saveIncome}
               >
                 Save
@@ -209,10 +225,12 @@ export const StatCards = ({
         </CardContent>
       </Card>
 
-      <Card className="transition-all duration-300 hover:shadow-md">
+      <Card className={cardClass}>
         <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
           <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>Savings Rate</CardTitle>
-          <ArrowUpRight className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
+          <div className={iconBgGradient + " bg-gradient-to-br from-purple-300 via-indigo-400 to-primary/80"}>
+            <ArrowUpRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+          </div>
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
           <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatPercentage(savingsRate)}</div>
