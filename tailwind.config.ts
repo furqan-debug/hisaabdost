@@ -26,24 +26,9 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         expense: {
-          low: "#81D4FA",    // Pastel Blue
-          medium: "#FFCC80", // Pastel Amber
-          high: "#EF9A9A"    // Pastel Red
-        },
-        pastel: {
-          blue: "#90CAF9",
-          green: "#A5D6A7",
-          purple: "#CE93D8",
-          slate: "#B0BEC5",
-          red: "#EF9A9A",
-          pink: "#F48FB1",
-          amber: "#FFCC80",
-          indigo: "#9FA8DA",
-          violet: "#B39DDB",
-          sky: "#81D4FA",
-          teal: "#80DEEA",
-          orange: "#FFAB91",
-          gray: "#CFD8DC"
+          low: "#38bdf8",
+          medium: "#fb923c",
+          high: "#f87171"
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",

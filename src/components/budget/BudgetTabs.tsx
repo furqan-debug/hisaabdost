@@ -29,49 +29,41 @@ export const BudgetTabs = ({
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
     }
-  }, [activeTab, stableActiveTab]);
+  }, [activeTab]);
 
   const handleValueChange = (value: string) => {
     setStableActiveTab(value); // Update local state immediately
     onTabChange(value); // Notify parent about the change
   };
 
-  return (
-    <Card className="min-h-[600px] h-full w-full overflow-hidden shadow-md border-border/30 backdrop-blur-sm">
-      <CardContent className="p-0 h-full">
-        <Tabs 
-          value={stableActiveTab} 
-          onValueChange={handleValueChange} 
-          className="flex flex-col h-full"
-        >
-          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 w-full border-b border-border/20">
-            <TabsList className="w-full justify-start rounded-none md:rounded-md scrollable-tabs-container">
-              <TabsTrigger value="overview" className="budget-tabs-trigger">Overview</TabsTrigger>
-              <TabsTrigger value="categories" className="budget-tabs-trigger">Categories</TabsTrigger>
-              <TabsTrigger value="transactions" className="budget-tabs-trigger">Transactions</TabsTrigger>
-              <TabsTrigger value="comparison" className="budget-tabs-trigger">Comparison</TabsTrigger>
+  return <Card className="budget-card overflow-hidden mx-0 px-0">
+      <CardContent className="p-0 md:p-6 max-w-full overflow-hidden">
+        <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
+          <div className="scrollable-tabs-container w-full overflow-x-auto no-scrollbar">
+            <TabsList className="w-full justify-start px-0 mx-0 rounded-none md:rounded-md max-w-full overflow-x-auto">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="comparison">Comparison</TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="flex-1 h-[calc(100%-48px)] min-h-[500px] overflow-y-auto">
-            <TabsContent value="overview" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetOverview budgets={budgets || []} />
-            </TabsContent>
+          <TabsContent value="overview" className="budget-section overflow-hidden w-full">
+            <BudgetOverview budgets={budgets || []} />
+          </TabsContent>
 
-            <TabsContent value="categories" className="h-full mt-0 p-4 tab-content-mobile">
-              <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
-            </TabsContent>
+          <TabsContent value="categories" className="budget-section overflow-hidden w-full">
+            <CategoryBudgets budgets={budgets || []} onEditBudget={onEditBudget} />
+          </TabsContent>
 
-            <TabsContent value="transactions" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetTransactions budgets={budgets || []} />
-            </TabsContent>
+          <TabsContent value="transactions" className="budget-section overflow-hidden w-full">
+            <BudgetTransactions budgets={budgets || []} />
+          </TabsContent>
 
-            <TabsContent value="comparison" className="h-full mt-0 p-4 tab-content-mobile">
-              <BudgetComparison budgets={budgets || []} />
-            </TabsContent>
-          </div>
+          <TabsContent value="comparison" className="budget-section overflow-hidden w-full">
+            <BudgetComparison budgets={budgets || []} />
+          </TabsContent>
         </Tabs>
       </CardContent>
-    </Card>
-  );
-}
+    </Card>;
+};

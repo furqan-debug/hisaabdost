@@ -78,17 +78,15 @@ const Budget = () => {
   const activeTab = currentMonthData.activeTab || 'overview';
 
   if (isLoading) {
-    return (
-      <div className="p-4 flex justify-center min-h-[300px]">
-        <div className="animate-pulse text-center">
-          <p className="text-muted-foreground">Loading your budget data...</p>
-        </div>
+    return <div className="p-4 flex justify-center">
+      <div className="animate-pulse text-center">
+        <p className="text-muted-foreground">Loading your budget data...</p>
       </div>
-    );
+    </div>;
   }
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container min-h-[600px] w-full">
+    <div className="space-y-3 md:space-y-6 pb-20 md:pb-8 budget-container overflow-hidden w-full">
       <BudgetHeader 
         onAddBudget={handleAddBudget}
         onExport={exportBudgetData}
@@ -102,7 +100,7 @@ const Budget = () => {
         isLoading={isLoading}
       />
 
-      <div className="mx-0 md:mx-0 w-full min-h-[350px]">
+      <div className="mx-2 md:mx-0 mobile-container-fix overflow-hidden w-full">
         <BudgetTabs 
           budgets={budgets || []} 
           onEditBudget={handleEditBudget}

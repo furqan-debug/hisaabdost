@@ -27,7 +27,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
 
   if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
     return (
-      <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center">
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <p className="text-muted-foreground mb-2">Not enough data for comparison</p>
         <p className="text-sm text-muted-foreground">
           {budgets.length === 0 
@@ -43,8 +43,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <CardHeader>
         <CardTitle>Budget Comparison by Period</CardTitle>
       </CardHeader>
-      <CardContent className="px-2 md:px-6">
-        <div className="w-full h-[250px] md:h-[300px] overflow-visible">
+      <CardContent>
+        <div className="w-full h-[250px] md:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={data}
