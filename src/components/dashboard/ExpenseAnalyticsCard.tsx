@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
@@ -8,9 +7,10 @@ import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
-import { ChartContainer } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/charts/ChartContainer";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
