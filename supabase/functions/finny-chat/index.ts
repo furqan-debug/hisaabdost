@@ -35,11 +35,18 @@ You can perform these actions:
 4. Track and manage goals
 5. Give spending summaries
 6. Offer smart suggestions
+7. Provide detailed category breakdowns
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
 - For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Groceries","date":"2023-04-10","description":"Grocery shopping"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
+
+When asked about category-specific data:
+- Always include detailed information about individual transactions
+- Compare spending against previous periods
+- Provide insights on spending patterns
+- Suggest ways to optimize spending in that category
 
 If you don't have enough information to complete an action, ask follow-up questions. For example:
 "I can add that expense for you. What category should I use?"`;
@@ -52,7 +59,13 @@ serve(async (req) => {
   }
 
   try {
-    const { message, userId, chatHistory } = await req.json();
+    const { 
+      message, 
+      userId, 
+      chatHistory, 
+      analysisType = 'general',
+      specificCategory = null 
+    } = await req.json();
 
     if (!message) {
       throw new Error('Message is required');
@@ -61,6 +74,8 @@ serve(async (req) => {
     if (!userId) {
       throw new Error('User ID is required');
     }
+
+    console.log("Request details:", { message, analysisType, specificCategory });
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -83,6 +98,7 @@ serve(async (req) => {
 
     // Get user's financial data to provide context
     let userContext = "";
+    let visualData = null;
     try {
       const { data: budgets } = await supabase
         .from('budgets')
@@ -94,8 +110,60 @@ serve(async (req) => {
       
       const userData = await fetchUserFinancialData(supabase, userId, monthlyIncome);
       
-      // Format context for the AI
-      userContext = `
+      // If this is a category-specific request, prepare detailed analysis
+      if (analysisType === 'category' && specificCategory) {
+        // Convert to lowercase for case-insensitive comparison
+        const categoryLower = specificCategory.toLowerCase();
+        
+        // Check if we have data for this category
+        let categoryData = null;
+        let matchedCategory = '';
+        
+        // Find the exact category match (case insensitive)
+        for (const cat of Object.keys(userData.categoryDetails)) {
+          if (cat.toLowerCase() === categoryLower) {
+            categoryData = userData.categoryDetails[cat];
+            matchedCategory = cat;
+            break;
+          }
+        }
+        
+        // If we found data for this category
+        if (categoryData && categoryData.length > 0) {
+          // Calculate total for this category
+          const categoryTotal = userData.categorySpending[matchedCategory];
+          
+          // Prepare visual data for the frontend
+          visualData = {
+            type: "category",
+            category: matchedCategory,
+            total: categoryTotal,
+            transactions: categoryData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+            count: categoryData.length,
+          };
+          
+          // Generate detailed analysis
+          const details = categoryData
+            .slice(0, 5)  // Limit to top 5 transactions for the context
+            .map(item => `- ${item.description || 'Expense'}: ${formatCurrency(item.amount)} on ${item.date}${item.notes ? ` (${item.notes})` : ''}`)
+            .join('\n');
+          
+          // Add to context
+          userContext += `\n\nDetailed ${matchedCategory} spending breakdown:
+Total spent on ${matchedCategory}: ${formatCurrency(categoryTotal)}
+Number of ${matchedCategory} transactions: ${categoryData.length}
+Latest transactions:
+${details}
+
+When responding about ${matchedCategory}, include this detailed breakdown and insights about their spending pattern.`;
+        } 
+        else {
+          userContext += `\n\nThe user is asking about ${specificCategory} spending, but there are no recorded expenses in this category. Suggest adding expenses with this category to track spending.`;
+        }
+      }
+      
+      // Format general context for the AI
+      userContext += `
 Hi ${userName}! Here's your financial context:
 
 Monthly Overview:
@@ -198,7 +266,8 @@ When responding to the user:
     return new Response(
       JSON.stringify({ 
         response: processedResponse,
-        rawResponse: aiResponse
+        rawResponse: aiResponse,
+        visualData: visualData
       }),
       { 
         headers: { 
@@ -224,4 +293,3 @@ When responding to the user:
     );
   }
 });
-

@@ -12,6 +12,7 @@ interface UserData {
   categorySpending: Record<string, number>;
   prevCategorySpending: Record<string, number>;
   uniqueCategories: string[];
+  categoryDetails: Record<string, any[]>;
 }
 
 export async function fetchUserFinancialData(
@@ -62,7 +63,7 @@ export async function fetchUserFinancialData(
   // Calculate total spending this month
   const { data: monthlyExpenses, error: monthlyError } = await supabase
     .from('expenses')
-    .select('amount, category')
+    .select('amount, category, description, date, payment, notes')
     .eq('user_id', userId)
     .gte('date', firstDayOfMonth)
     .lte('date', lastDayOfMonth);
@@ -72,7 +73,7 @@ export async function fetchUserFinancialData(
   // Calculate last month's spending
   const { data: prevMonthExpenses, error: prevMonthError } = await supabase
     .from('expenses')
-    .select('amount, category')
+    .select('amount, category, description, date')
     .eq('user_id', userId)
     .gte('date', firstDayOfPrevMonth)
     .lte('date', lastDayOfPrevMonth);
@@ -81,8 +82,22 @@ export async function fetchUserFinancialData(
 
   // Calculate spending by category
   const categorySpending: Record<string, number> = {};
+  const categoryDetails: Record<string, any[]> = {};
+  
   monthlyExpenses?.forEach(exp => {
     categorySpending[exp.category] = (categorySpending[exp.category] || 0) + Number(exp.amount);
+    
+    // Group expenses by category for detailed analysis
+    if (!categoryDetails[exp.category]) {
+      categoryDetails[exp.category] = [];
+    }
+    categoryDetails[exp.category].push({
+      amount: Number(exp.amount),
+      description: exp.description,
+      date: exp.date,
+      payment: exp.payment,
+      notes: exp.notes
+    });
   });
 
   const prevCategorySpending: Record<string, number> = {};
@@ -107,7 +122,7 @@ export async function fetchUserFinancialData(
     savingsRate,
     categorySpending,
     prevCategorySpending,
-    uniqueCategories
+    uniqueCategories,
+    categoryDetails
   };
 }
-

@@ -1,9 +1,13 @@
+
 import React from 'react';
 import { X, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 interface ChatHeaderProps {
   onClose: () => void;
 }
+
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   onClose
 }) => {
@@ -18,13 +22,23 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </Badge>
       </div>
       <div className="flex items-center gap-1.5">
-        <button className="text-gray-400 hover:text-white rounded-full p-2 hover:bg-white/5 transition-colors" aria-label="Help">
-          <HelpCircle size={16} />
-        </button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="text-gray-400 hover:text-white rounded-full p-2 hover:bg-white/5 transition-colors" aria-label="Help">
+                <HelpCircle size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs max-w-[220px] p-2">
+              <p>Ask Finny about your expenses, budgets, or category-specific insights like "Show my transportation spending"</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <button onClick={onClose} className="text-gray-400 hover:text-white rounded-full p-2 hover:bg-white/5 transition-colors" aria-label="Close chat">
           <X size={16} />
         </button>
       </div>
     </div>;
 };
+
 export default ChatHeader;

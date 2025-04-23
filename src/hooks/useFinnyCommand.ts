@@ -49,6 +49,18 @@ export function useFinnyCommand() {
   };
   
   /**
+   * Request category-specific spending analysis
+   */
+  const requestCategoryAnalysis = (category: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    askFinny(`Show my ${category} spending breakdown`);
+  };
+  
+  /**
    * Create or update a financial goal
    */
   const setFinancialGoal = (title: string, amount: number, deadline?: string) => {
@@ -79,6 +91,7 @@ export function useFinnyCommand() {
     createBudget,
     askFinny,
     requestSpendingSummary,
+    requestCategoryAnalysis,
     setFinancialGoal,
     deleteExpense,
     openChat

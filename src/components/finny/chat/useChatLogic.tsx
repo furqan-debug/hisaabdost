@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';
@@ -27,6 +26,9 @@ const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistan
 const FINNY_AUTH_PROMPT = "I'll need you to log in first so I can access your personal financial information.";
 const FINNY_CONNECTING = "Connecting to your financial data...";
 
+const CATEGORY_PATTERN = /show my (\w+) (spending|expenses|breakdown)/i;
+const SUMMARY_PATTERN = /(show|get|give) (me )?(a )?(summary|overview|report|analysis)/i;
+
 export const useChatLogic = (queuedMessage: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -47,15 +49,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
     if (user) {
       setIsConnectingToData(true);
       
-      // Fetch user's financial data to provide context for Finny
       const fetchUserData = async () => {
         try {
-          // Get current month range
           const now = new Date();
           const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
           const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
           
-          // Get expenses for current month
           const { data: monthlyExpenses, error: monthlyError } = await supabase
             .from('expenses')
             .select('amount, category')
@@ -65,7 +64,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
             
           if (monthlyError) throw monthlyError;
           
-          // Get latest 5 expenses
           const { data: recentExpenses, error: expensesError } = await supabase
             .from('expenses')
             .select('*')
@@ -75,7 +73,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
             
           if (expensesError) throw expensesError;
           
-          // Get active budgets
           const { data: budgets, error: budgetsError } = await supabase
             .from('budgets')
             .select('*')
@@ -83,14 +80,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
             
           if (budgetsError) throw budgetsError;
           
-          // Calculate monthly spending
           const totalMonthlySpending = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
           
-          // Generate personalized greeting
           let personalizedGreeting = FINNY_GREETING;
           
           if (monthlyExpenses && monthlyExpenses.length > 0) {
-            // Get top spending category
             const categoryTotals: {[key: string]: number} = {};
             monthlyExpenses.forEach(exp => {
               categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + Number(exp.amount);
@@ -99,21 +93,17 @@ export const useChatLogic = (queuedMessage: string | null) => {
             const topCategory = Object.entries(categoryTotals)
               .sort((a, b) => b[1] - a[1])[0];
             
-            // Updated greeting format as requested by user
             const userName = user?.user_metadata?.full_name || '';
             personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1])} — shall we explore ways to save? 🧠`;
             
-            // Generate context-aware quick replies
             let contextReplies: QuickReply[] = [];
             
-            // Add top category analysis
             contextReplies.push({
               text: `${topCategory[0]} analysis`,
               action: `Show my ${topCategory[0].toLowerCase()} spending breakdown`,
               icon: <BarChart3 size={14} />
             });
             
-            // Check if budget exceeded
             if (budgets && budgets.length > 0) {
               const budgetByCategory: {[key: string]: number} = {};
               budgets.forEach(budget => {
@@ -127,12 +117,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
                     action: `How am I doing with my ${category.toLowerCase()} budget?`,
                     icon: <Info size={14} />
                   });
-                  break; // Just add one budget alert
+                  break;
                 }
               }
             }
             
-            // If recent expense exists, offer to add similar
             if (recentExpenses && recentExpenses.length > 0) {
               const latestExpense = recentExpenses[0];
               contextReplies.push({
@@ -142,14 +131,24 @@ export const useChatLogic = (queuedMessage: string | null) => {
               });
             }
             
-            // Mix contextual and default replies
+            const majorCategories = ['Transportation', 'Food', 'Housing', 'Entertainment'];
+            for (const category of majorCategories) {
+              if (categoryTotals[category] && !contextReplies.some(reply => reply.text.includes(category))) {
+                contextReplies.push({
+                  text: `${category} breakdown`,
+                  action: `Show my ${category.toLowerCase()} spending breakdown`,
+                  icon: <PieChart size={14} />
+                });
+                break;
+              }
+            }
+            
             setQuickReplies([
-              ...contextReplies.slice(0, 2),
-              ...DEFAULT_QUICK_REPLIES.slice(0, 2)
+              ...contextReplies.slice(0, 3),
+              ...DEFAULT_QUICK_REPLIES.slice(0, 1)
             ]);
           }
           
-          // Add a typing effect
           setIsTyping(true);
           setTimeout(() => {
             setMessages([{
@@ -188,7 +187,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
     
-    // Use either provided custom message (from quick replies) or input field value
     const messageToSend = customMessage || newMessage;
     
     if (!messageToSend.trim() || isLoading) return;
@@ -208,17 +206,27 @@ export const useChatLogic = (queuedMessage: string | null) => {
     setMessages((prev) => [...prev, userMessage]);
     setNewMessage('');
     setIsLoading(true);
-    // Show typing indicator
     setIsTyping(true);
 
     try {
       const recentMessages = [...messages.slice(-5), userMessage];
+      
+      const categoryMatch = messageToSend.match(CATEGORY_PATTERN);
+      const summaryMatch = messageToSend.match(SUMMARY_PATTERN);
+      
+      console.log("Message analysis:", { 
+        message: messageToSend,
+        categoryMatch,
+        summaryMatch
+      });
 
       const { data, error } = await supabase.functions.invoke('finny-chat', {
         body: {
           message: messageToSend,
           userId: user.id,
-          chatHistory: recentMessages
+          chatHistory: recentMessages,
+          analysisType: categoryMatch ? 'category' : (summaryMatch ? 'summary' : 'general'),
+          specificCategory: categoryMatch ? categoryMatch[1] : null
         },
       });
 
@@ -227,13 +235,14 @@ export const useChatLogic = (queuedMessage: string | null) => {
         throw new Error(`Failed to get response: ${error.message}`);
       }
 
-      // Hide typing indicator and show actual message
       setIsTyping(false);
       
-      // Detect if response contains an action (was performed)
       const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
+      
+      const needsVisualization = messageToSend.toLowerCase().includes('spending') || 
+                               messageToSend.toLowerCase().includes('budget') ||
+                               messageToSend.toLowerCase().includes('breakdown');
 
-      // Check for potential visualization triggers
       const newMessage: Message = {
         id: Date.now().toString(),
         content: data.response,
@@ -242,18 +251,21 @@ export const useChatLogic = (queuedMessage: string | null) => {
         hasAction: hasAction,
       };
       
-      // Add visual data if needed (spending summary, charts, etc.)
-      if (messageToSend.toLowerCase().includes('spending summary') || 
-          messageToSend.toLowerCase().includes('spend breakdown') ||
-          messageToSend.toLowerCase().includes('spending analysis')) {
-        // We'll add chart data visualization in a future iteration
-        // For now, we'll mark it for UI treatment
+      if (data.visualData) {
+        newMessage.visualData = data.visualData;
+      }
+      else if (needsVisualization && categoryMatch) {
+        newMessage.visualData = { 
+          type: 'category-chart',
+          category: categoryMatch[1]
+        };
+      }
+      else if (needsVisualization && summaryMatch) {
         newMessage.visualData = { type: 'spending-chart' };
       }
 
       setMessages((prev) => [...prev, newMessage]);
       
-      // Generate new quick replies based on the context
       let updatedReplies: QuickReply[] = [...DEFAULT_QUICK_REPLIES];
       
       if (data.response.toLowerCase().includes('budget')) {
@@ -269,6 +281,13 @@ export const useChatLogic = (queuedMessage: string | null) => {
           { text: "Recent expenses", action: "Show my recent expenses", icon: <Calendar size={14} /> },
           { text: "Category analysis", action: "Show my spending by category", icon: <PieChart size={14} /> },
           { text: "Monthly total", action: "What's my total spending this month?", icon: <DollarSign size={14} /> }
+        ];
+      } else if (categoryMatch) {
+        updatedReplies = [
+          { text: "All categories", action: "Show my spending by category", icon: <PieChart size={14} /> },
+          { text: `Add ${categoryMatch[1]}`, action: `Add a ${categoryMatch[1]} expense`, icon: <Plus size={14} /> },
+          { text: "Monthly spending", action: "What's my total spending this month?", icon: <DollarSign size={14} /> },
+          { text: "Spending insights", action: "Give me insights on my spending", icon: <Info size={14} /> }
         ];
       } else if (data.response.toLowerCase().includes('goal')) {
         updatedReplies = [
@@ -305,7 +324,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
     
     setNewMessage(reply.action);
     
-    // Either auto-send or wait for user to press send
     handleSendMessage(null, reply.action);
   };
 
