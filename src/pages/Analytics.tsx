@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -82,17 +83,17 @@ export default function Analytics() {
       </div>;
   }
   return (
-    <div className="space-y-8 px-4 md:px-8 py-6">
+    <div className="space-y-6 px-4 md:px-8 py-4 pb-20">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
+        className="space-y-4"
       >
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Analytics
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Track your spending patterns and financial trends
           </p>
         </div>
@@ -111,64 +112,64 @@ export default function Analytics() {
 
         <InsightsDisplay insights={insights} />
 
-        <Card className="border-0 shadow-sm bg-background/50 backdrop-blur-sm">
+        <Card className="border shadow-sm bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
                 <TabsTrigger 
                   value="overview"
-                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="trends"
-                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
                   Trends
                 </TabsTrigger>
                 <TabsTrigger 
                   value="comparison"
-                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
                 >
-                  Comparison
+                  Compare
                 </TabsTrigger>
               </TabsList>
 
-              <div className="mt-6 space-y-6">
+              <div className="mt-4 space-y-4 px-4 pb-4">
                 <TabsContent value="overview">
-                  <Card className="border-0 shadow-sm bg-card/50">
-                    <CardHeader>
+                  <Card className="border-0 shadow-sm bg-card/80">
+                    <CardHeader className="pb-2">
                       <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
                       <CardDescription>Your expenses by category</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <ChartContainer config={chartConfig}>
+                    <CardContent className="pt-0 pb-4">
+                      <ChartContainer config={chartConfig} className="pie-chart-container">
                         <ExpensesPieChart expenses={filteredExpenses} />
                       </ChartContainer>
                     </CardContent>
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="trends" className="space-y-6">
-                  <Card className="border-0 shadow-sm bg-card/50">
-                    <CardHeader>
+                <TabsContent value="trends" className="space-y-4">
+                  <Card className="border-0 shadow-sm bg-card/80">
+                    <CardHeader className="pb-2">
                       <CardTitle className="text-lg font-medium">Monthly Trends</CardTitle>
                       <CardDescription>Your spending patterns over time</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 pb-4">
                       <ChartContainer config={chartConfig}>
                         <ExpensesBarChart expenses={filteredExpenses} />
                       </ChartContainer>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-0 shadow-sm bg-card/50">
-                    <CardHeader>
+                  <Card className="border-0 shadow-sm bg-card/80">
+                    <CardHeader className="pb-2">
                       <CardTitle className="text-lg font-medium">Category Trends</CardTitle>
                       <CardDescription>How your spending evolves by category</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 pb-4">
                       <ChartContainer config={chartConfig}>
                         <ExpensesLineChart expenses={filteredExpenses} />
                       </ChartContainer>
@@ -178,7 +179,7 @@ export default function Analytics() {
 
                 <TabsContent value="comparison">
                   <Card className="border-0 shadow-none bg-transparent">
-                    <CardContent className="px-0">
+                    <CardContent className="px-0 pt-0">
                       <ExpensesComparison expenses={filteredExpenses} />
                     </CardContent>
                   </Card>
