@@ -10,11 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Menu, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { ThemeToggle } from "./ThemeToggle";
-import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { MonthSelector } from "./MonthSelector";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { SettingsSidebar } from "./SettingsSidebar";
 
@@ -35,10 +32,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className={cn(
-      "sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
-      scrolled && "shadow-sm"
-    )}>
+    <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
       <div className="flex h-14 items-center px-3 gap-2 max-w-[480px] mx-auto">
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
@@ -51,7 +45,7 @@ const Navbar = () => {
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0">
+          <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0 overflow-hidden">
             <SettingsSidebar
               selectedMonth={selectedMonth}
               onMonthChange={setSelectedMonth}
