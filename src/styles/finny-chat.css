@@ -1,11 +1,10 @@
-
 /* Finny Chat Styles - Dark Modern Design */
 .finny-chat-card {
-  @apply bg-[#1A1F2C] backdrop-blur-md border border-gray-800 rounded-xl shadow-md overflow-hidden;
+  @apply bg-[#1A1F2C] border border-gray-800/50 rounded-xl shadow-xl overflow-hidden;
 }
 
 .finny-chat-header {
-  @apply border-b border-gray-800 bg-[#1F2937]/95 backdrop-blur-sm;
+  @apply bg-gradient-to-b from-[#1A1F2C] to-[#1F2937] backdrop-blur-xl;
 }
 
 .finny-chat-badge {
