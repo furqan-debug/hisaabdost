@@ -160,19 +160,19 @@ export default function Analytics() {
                   </TabsContent>
 
                   <TabsContent value="trends" className="mt-0 space-y-6 focus:outline-none focus:ring-0">
-                    <Card className="border-0 shadow-sm bg-card/80">
-                      <CardHeader className="pb-2">
+                    <Card className="border-0 shadow-sm bg-card/80 my-[6px] px-0 py-[35px]">
+                      <CardHeader className="pb-2 py-0">
                         <CardTitle className="text-lg font-medium">Monthly Trends</CardTitle>
                         <CardDescription>Your spending patterns over time</CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-4">
+                      <CardContent className="pt-0 pb-4 py-[3px] my-0">
                         <ChartContainer config={chartConfig}>
                           <ExpensesBarChart expenses={filteredExpenses} />
                         </ChartContainer>
                       </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-sm bg-card/80">
+                    <Card className="border-0 shadow-sm bg-card/80 my-[25px] py-[30px]">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-medium">Category Trends</CardTitle>
                         <CardDescription>How your spending evolves by category</CardDescription>
