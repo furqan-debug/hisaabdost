@@ -30,11 +30,11 @@
   }
 
   .expense-chart-legend-item {
-    @apply text-xs px-2 py-0.5 rounded-full bg-muted/10;
+    @apply text-xs px-2 py-0.5 rounded-full bg-muted/20 border border-muted/10;
   }
 
   .chart-center-total {
-    @apply w-3/4 text-center -translate-x-1/2 -translate-y-1/2;
+    @apply absolute top-1/2 left-1/2 w-2/3 text-center -translate-x-1/2 -translate-y-1/2 pointer-events-none;
   }
   
   .chart-center-total-amount {
@@ -47,6 +47,28 @@
   
   .recharts-cartesian-axis-tick text {
     @apply text-[9px] text-muted-foreground/70;
+  }
+  
+  /* Mobile optimized comparison cards */
+  .comparison-card {
+    @apply py-3 px-3 rounded-xl;
+  }
+  
+  .comparison-title {
+    @apply text-base font-medium;
+  }
+  
+  .comparison-subtitle {
+    @apply text-xs;
+  }
+  
+  .comparison-value {
+    @apply text-sm font-medium;
+  }
+  
+  /* Fix vertical overflow in charts */
+  .recharts-wrapper, .recharts-surface {
+    overflow: visible !important;
   }
 }
 
@@ -88,11 +110,11 @@
 }
 
 .expense-chart-legend {
-  @apply flex flex-wrap justify-center gap-1.5 mt-2 px-1;
+  @apply flex flex-wrap justify-center gap-1.5 mt-3 px-1;
 }
 
 .expense-chart-legend-item {
-  @apply flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-muted/10 hover:bg-muted/20 transition-colors;
+  @apply flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors hover:bg-muted/20;
 }
 
 .expense-chart-legend-dot {
@@ -134,6 +156,40 @@
 
 /* Chart legend row */
 .chart-legend-row {
-  @apply flex flex-wrap justify-center gap-1.5 mt-4 px-2;
+  @apply flex flex-wrap justify-center gap-1.5 mt-3 px-2;
 }
 
+/* Better bar chart styling */
+.recharts-bar-rectangle {
+  @apply transition-all duration-300;
+}
+
+.recharts-bar-rectangle:hover {
+  @apply opacity-80;
+}
+
+/* Enhanced line chart styling */
+.recharts-line-curve {
+  @apply transition-opacity duration-300;
+}
+
+.recharts-line-curve:hover {
+  @apply opacity-90;
+}
+
+.recharts-line-dots {
+  @apply transition-transform duration-200;
+}
+
+.recharts-active-dot {
+  @apply scale-125 transition-transform duration-150;
+}
+
+/* Better reference line */
+.recharts-reference-line line {
+  @apply stroke-muted-foreground/30;
+}
+
+.recharts-reference-line-text {
+  @apply fill-muted-foreground/70 text-[8px];
+}
