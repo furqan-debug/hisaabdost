@@ -6,12 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
-
-interface Expense {
-  amount: number;
-  category: string;
-  date: string;
-}
+import { Expense } from "@/components/expenses/types";
 
 interface ExpensesLineChartProps {
   expenses: Expense[];

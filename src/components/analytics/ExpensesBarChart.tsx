@@ -6,12 +6,7 @@ import { format, parseISO } from "date-fns";
 import { useCurrency } from "@/hooks/use-currency";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
-
-interface Expense {
-  amount: number;
-  category: string;
-  date: string;
-}
+import { Expense } from "@/components/expenses/types";
 
 interface ExpensesBarChartProps {
   expenses: Expense[];
