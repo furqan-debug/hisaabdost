@@ -20,7 +20,7 @@ const ChatInput = ({
   isConnecting
 }: ChatInputProps) => {
   const isMobile = useIsMobile();
-  return <form onSubmit={onSubmit} className="finny-chat-input mx--2 mx--4 py-[18px] my-[49px] px-[18px]">
+  return <form onSubmit={onSubmit} className="finny-chat-input mx--2 mx--4 py-[18px] my-[49px] px-[24px] mx--5">
       <div className="finny-chat-input-container">
         <Input type="text" placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny"} value={value} onChange={onChange} disabled={isLoading || !isAuthenticated || isConnecting} className="flex-1 rounded-lg my-0 py-0" />
         <Button type="submit" size={isMobile ? "default" : "icon"} className="bg-primary hover:bg-primary/90" disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}>
