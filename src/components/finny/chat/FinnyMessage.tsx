@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -45,10 +45,18 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Avatar className={`w-8 h-8 ${isUser ? 'bg-green-500' : 'bg-gray-500'}`}>
-              <span className="text-xs font-medium text-white">
+            <Avatar>
+              <AvatarImage 
+                src={
+                  isUser 
+                    ? "/lovable-uploads/636d3f3b-f98d-4539-a003-5afe36b96701.png" 
+                    : "/lovable-uploads/37d37218-6a8c-434e-b03d-977ee786a0b1.png"
+                } 
+                alt={isUser ? "User" : "Finny"}
+              />
+              <AvatarFallback>
                 {isUser ? 'You' : 'F'}
-              </span>
+              </AvatarFallback>
             </Avatar>
           </TooltipTrigger>
           <TooltipContent side="top">
