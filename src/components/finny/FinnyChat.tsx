@@ -9,6 +9,7 @@ import ChatHeader from './chat/ChatHeader';
 import ChatInput from './chat/ChatInput';
 import FinnyMessage from './chat/FinnyMessage';
 import QuickReplies from './chat/QuickReplies';
+import TypingIndicator from './chat/TypingIndicator';
 import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -135,7 +136,18 @@ const FinnyChat = ({
                   <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
                 </div>}
               
-                {messages.map(message => <FinnyMessage key={message.id} content={message.content} isUser={message.isUser} timestamp={message.timestamp} hasAction={message.hasAction} visualData={message.visualData} />)}
+                {messages.map(message => (
+                  <FinnyMessage 
+                    key={message.id} 
+                    content={message.content} 
+                    isUser={message.isUser} 
+                    timestamp={message.timestamp} 
+                    hasAction={message.hasAction} 
+                    visualData={message.visualData} 
+                  />
+                ))}
+
+                {isTyping && <TypingIndicator />}
               
                 {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && (
                   <QuickReplies 
