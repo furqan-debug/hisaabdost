@@ -3,7 +3,6 @@ import React from 'react';
 import { QuickReply } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { PiggyBank, ChartPie, DollarSign, TrendingUp } from 'lucide-react';
 
 interface QuickRepliesProps {
   replies: QuickReply[];

@@ -45,7 +45,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny("Show me a summary of my spending for this month. Include my savings rate and compare it to last month.");
+    askFinny("Show me a summary of my spending for this month");
   };
   
   /**
@@ -57,7 +57,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `Set a financial goal named "${title}" with a target amount of ${amount}${deadline ? ` and deadline of ${deadline}` : ''}`;
+    const message = `I want to set a financial goal called "${title}" with a target amount of ${amount}${deadline ? ` by ${deadline}` : ''}`;
     askFinny(message);
   };
   

@@ -18,9 +18,9 @@ import { formatCurrency } from '@/utils/formatters';
 
 const DEFAULT_QUICK_REPLIES: QuickReply[] = [
   { text: "Spending summary", action: "Show me a summary of my recent spending", icon: <PieChart size={14} /> },
-  { text: "Budget advice", action: "Set a budget for groceries of $300", icon: <DollarSign size={14} /> },
-  { text: "Add expense", action: "Add an expense of $45 for dinner yesterday", icon: <Plus size={14} /> },
-  { text: "Set a goal", action: "I want to set a savings goal of $5000 for vacation", icon: <PiggyBank size={14} /> }
+  { text: "Budget advice", action: "I need advice for creating a budget", icon: <DollarSign size={14} /> },
+  { text: "Add expense", action: "I want to add a new expense", icon: <Plus size={14} /> },
+  { text: "Set a goal", action: "I'd like to set a savings goal", icon: <PiggyBank size={14} /> }
 ];
 
 const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistant. I can help you track expenses, set budgets, manage goals, and more. How can I help you today?";
@@ -124,7 +124,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
                 if (budgetByCategory[category] && spent > budgetByCategory[category]) {
                   contextReplies.push({
                     text: `${category} budget alert`,
-                    action: `Update my ${category.toLowerCase()} budget`,
+                    action: `How am I doing with my ${category.toLowerCase()} budget?`,
                     icon: <Info size={14} />
                   });
                   break; // Just add one budget alert
@@ -137,7 +137,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
               const latestExpense = recentExpenses[0];
               contextReplies.push({
                 text: `Add ${latestExpense.category}`,
-                action: `Add a new ${latestExpense.category.toLowerCase()} expense`,
+                action: `I want to add a new ${latestExpense.category.toLowerCase()} expense`,
                 icon: <Plus size={14} />
               });
             }
@@ -259,9 +259,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
       if (data.response.toLowerCase().includes('budget')) {
         updatedReplies = [
           { text: "Show my budget", action: "Show me my budget", icon: <PieChart size={14} /> },
-          { text: "Update budget", action: "I want to increase my groceries budget by $50", icon: <Plus size={14} /> },
+          { text: "Update budget", action: "I'd like to update my budget", icon: <Plus size={14} /> },
           { text: "Budget analysis", action: "How am I doing with my budgets this month?", icon: <BarChart3 size={14} /> },
-          { text: "Add expense", action: "Add a new expense", icon: <Plus size={14} /> }
+          { text: "Add expense", action: "I want to add a new expense", icon: <Plus size={14} /> }
         ];
       } else if (data.response.toLowerCase().includes('expense')) {
         updatedReplies = [
@@ -274,7 +274,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         updatedReplies = [
           { text: "Progress update", action: "What's my progress on my goals?", icon: <PiggyBank size={14} /> },
           { text: "Set new goal", action: "I want to set a new savings goal", icon: <Plus size={14} /> },
-          { text: "Update goal", action: "Update my vacation goal progress", icon: <ArrowRight size={14} /> },
+          { text: "Update goal", action: "How can I update my goal progress?", icon: <ArrowRight size={14} /> },
           { text: "Budget advice", action: "How can I save more money?", icon: <DollarSign size={14} /> }
         ];
       }
