@@ -1,17 +1,14 @@
 
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
-  /* Chart containers */
   .chart-wrapper {
-    @apply w-full h-full min-h-[300px] relative overflow-visible;
+    @apply w-full h-full min-h-[300px] relative overflow-visible px-0;
   }
   
-  /* Fixed container to prevent overflow */
   .chart-container {
-    @apply w-full h-full min-h-[300px] relative overflow-visible mx-auto max-w-[400px];
+    @apply w-full h-full min-h-[300px] relative overflow-visible mx-auto max-w-[400px] px-0;
   }
   
-  /* Better chart visibility on mobile */
   .recharts-wrapper {
     @apply h-full w-full rounded-lg mx-auto min-h-[300px];
   }
@@ -24,59 +21,50 @@
     @apply z-50;
   }
   
-  /* Enhance layout for pie chart on mobile */
   .pie-chart-container {
     @apply max-w-[280px] mx-auto min-h-[250px];
   }
 
-  /* Make legend more compact on mobile */
   .expense-chart-legend {
-    @apply flex flex-wrap justify-center gap-2 mt-2;
+    @apply flex flex-wrap justify-center gap-1.5 mt-2;
   }
 
   .expense-chart-legend-item {
-    @apply text-xs px-3 py-0.5 rounded-full bg-muted/20;
+    @apply text-xs px-2 py-0.5 rounded-full bg-muted/10;
   }
 
-  /* Center text properly */
   .chart-center-total {
     @apply w-3/4 text-center -translate-x-1/2 -translate-y-1/2;
   }
   
   .chart-center-total-amount {
-    @apply text-xl font-bold whitespace-nowrap;
+    @apply text-xl font-semibold whitespace-nowrap;
   }
   
   .chart-center-total-label {
-    @apply text-xs;
-  }
-
-  /* Better label positioning for small screens */
-  .recharts-layer.recharts-cartesian-axis-tick {
-    @apply overflow-visible;
+    @apply text-xs text-muted-foreground;
   }
   
-  /* Simplify axis ticks */
   .recharts-cartesian-axis-tick text {
-    @apply text-[9px];
+    @apply text-[9px] text-muted-foreground/70;
   }
 }
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
-  @apply w-full h-full relative min-h-[300px];
+  @apply w-full h-full relative min-h-[300px] px-0;
 }
 
 .recharts-default-legend {
-  @apply flex flex-wrap justify-center gap-2 mt-4;
+  @apply flex flex-wrap justify-center gap-1.5 mt-4;
 }
 
 .recharts-layer.recharts-pie-labels text {
-  @apply font-semibold text-sm fill-current;
+  @apply font-medium text-sm fill-current opacity-90;
 }
 
 .recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur-sm text-left;
+  @apply rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur-sm;
 }
 
 .recharts-sector {
@@ -92,42 +80,60 @@
 }
 
 .chart-center-total-amount {
-  @apply text-2xl font-bold;
+  @apply text-2xl font-semibold;
 }
 
 .chart-center-total-label {
   @apply text-sm text-muted-foreground;
 }
 
-/* Modern, clean legend styles */
 .expense-chart-legend {
-  @apply flex flex-wrap justify-center gap-2 mt-2 px-1;
+  @apply flex flex-wrap justify-center gap-1.5 mt-2 px-1;
 }
 
 .expense-chart-legend-item {
-  @apply flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-muted/20;
+  @apply flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-muted/10 hover:bg-muted/20 transition-colors;
 }
 
 .expense-chart-legend-dot {
-  @apply w-2.5 h-2.5 rounded-full;
+  @apply w-2 h-2 rounded-full;
 }
 
-/* Fix for overflow issues */
 .recharts-surface {
   @apply overflow-visible;
 }
 
-/* Fix for tooltip positioning */
 .recharts-tooltip-wrapper {
   @apply pointer-events-none;
 }
 
-/* Improve mobile chart interactions */
 .chart-container .recharts-wrapper {
   touch-action: pan-y;
 }
 
-/* Ensure all tooltip text fits */
 .tooltip-card p {
-  @apply truncate max-w-full;
+  @apply truncate max-w-full text-xs;
 }
+
+/* Clean minimalist chart styles */
+.recharts-cartesian-grid line {
+  @apply stroke-muted/10;
+}
+
+.recharts-cartesian-axis-line {
+  @apply stroke-muted/20;
+}
+
+.recharts-cartesian-axis-tick-line {
+  @apply stroke-muted/20;
+}
+
+.recharts-text {
+  @apply fill-muted-foreground/70 text-xs;
+}
+
+/* Chart legend row */
+.chart-legend-row {
+  @apply flex flex-wrap justify-center gap-1.5 mt-4 px-2;
+}
+

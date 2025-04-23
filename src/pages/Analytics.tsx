@@ -81,102 +81,113 @@ export default function Analytics() {
         </div>
       </div>;
   }
-  const containerVariants = {
-    hidden: {
-      opacity: 0
-    },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-  const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 15
-    },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    }
-  };
-  return <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="show">
-      <motion.div variants={itemVariants} className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold tracking-tight gradient-text">Analytics Dashboard</h1>
-        <p className="text-muted-foreground">Track your spending patterns and financial trends</p>
-        <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} className="mx-0 px-0 text-center" />
-      </motion.div>
+  return (
+    <div className="space-y-8 px-4 md:px-8 py-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <div className="flex flex-col gap-4">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Analytics
+          </h1>
+          <p className="text-muted-foreground">
+            Track your spending patterns and financial trends
+          </p>
+        </div>
 
-      <motion.div variants={itemVariants}>
+        <ExpenseFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          selectedMonth={selectedMonth}
+          useCustomDateRange={useCustomDateRange}
+          className="mx-0 px-0"
+        />
+
         <InsightsDisplay insights={insights} />
+
+        <Card className="border-0 shadow-sm bg-background/50 backdrop-blur-sm">
+          <CardContent className="p-0">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+                <TabsTrigger 
+                  value="overview"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="trends"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                >
+                  Trends
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="comparison"
+                  className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                >
+                  Comparison
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="mt-6 space-y-6">
+                <TabsContent value="overview">
+                  <Card className="border-0 shadow-sm bg-card/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
+                      <CardDescription>Your expenses by category</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ChartContainer config={chartConfig}>
+                        <ExpensesPieChart expenses={filteredExpenses} />
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="trends" className="space-y-6">
+                  <Card className="border-0 shadow-sm bg-card/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-medium">Monthly Trends</CardTitle>
+                      <CardDescription>Your spending patterns over time</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ChartContainer config={chartConfig}>
+                        <ExpensesBarChart expenses={filteredExpenses} />
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-0 shadow-sm bg-card/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-medium">Category Trends</CardTitle>
+                      <CardDescription>How your spending evolves by category</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ChartContainer config={chartConfig}>
+                        <ExpensesLineChart expenses={filteredExpenses} />
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="comparison">
+                  <Card className="border-0 shadow-none bg-transparent">
+                    <CardContent className="px-0">
+                      <ExpensesComparison expenses={filteredExpenses} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
       </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="bg-muted/50 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="trends" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Trends</TabsTrigger>
-            <TabsTrigger value="comparison" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Comparison</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 mt-2">
-            <Card className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>Category Breakdown</CardTitle>
-                <CardDescription>Your expenses by category</CardDescription>
-              </CardHeader>
-              <CardContent className="chart-wrapper">
-                <ChartContainer config={chartConfig} className="h-full">
-                  <ExpensesPieChart expenses={filteredExpenses} />
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="trends" className="space-y-4 mt-2">
-            <Card className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>Monthly Trends</CardTitle>
-                <CardDescription>Your spending patterns over time</CardDescription>
-              </CardHeader>
-              <CardContent className="chart-wrapper">
-                <ChartContainer config={chartConfig} className="h-full">
-                  <ExpensesBarChart expenses={filteredExpenses} />
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>Category Trends</CardTitle>
-                <CardDescription>How your spending evolves by category</CardDescription>
-              </CardHeader>
-              <CardContent className="chart-wrapper">
-                <ChartContainer config={chartConfig} className="h-full">
-                  <ExpensesLineChart expenses={filteredExpenses} />
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="comparison" className="space-y-4 mt-2">
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardHeader className="px-0">
-                <CardTitle>Period Comparison</CardTitle>
-                <CardDescription>Compare your spending across different periods</CardDescription>
-              </CardHeader>
-              <CardContent className="px-0">
-                <ExpensesComparison expenses={filteredExpenses} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
-    </motion.div>;
+    </div>
+  );
 }
