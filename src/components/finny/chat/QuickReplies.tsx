@@ -20,7 +20,7 @@ const QuickReplies = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex flex-wrap gap-3 px-3 py-4">
+    <div className="flex flex-wrap gap-2 px-1.5 py-3">
       {replies.map((reply, index) => (
         <Button
           key={index}
@@ -28,9 +28,9 @@ const QuickReplies = ({
           disabled={isLoading || !isAuthenticated}
           variant="outline"
           size="sm"
-          className="rounded-full text-sm shadow-sm hover:shadow-md transition-all hover:bg-accent/50 group"
+          className="rounded-full text-xs shadow-sm hover:shadow-md transition-all"
         >
-          {reply.icon && <span className="mr-2 group-hover:scale-110 transition-transform">{reply.icon}</span>}
+          {reply.icon && <span className="mr-1.5">{reply.icon}</span>}
           {reply.text}
         </Button>
       ))}

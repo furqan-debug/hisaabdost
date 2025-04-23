@@ -29,21 +29,21 @@ const ChatInput = ({
       <div className="finny-chat-input-container">
         <Input 
           type="text" 
-          placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny ✨"} 
+          placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny"} 
           value={value} 
           onChange={onChange} 
-          disabled={isLoading || !isAuthenticated || isConnecting}
-          className="h-11 text-sm rounded-full shadow-sm border-muted bg-background/80 backdrop-blur-sm focus-visible:ring-offset-0"
+          disabled={isLoading || !isAuthenticated || isConnecting} 
+          className="h-10 text-sm rounded-full shadow-sm border-muted"
         />
         <Button 
           type="submit" 
           size="icon"
-          className="h-11 w-11 rounded-full shadow-sm hover:shadow-md transition-all" 
+          className="h-10 w-10 rounded-full shadow-sm" 
           disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}
         >
           {isLoading ? 
-            <Loader2 className="h-5 w-5 animate-spin" /> : 
-            <Send className="h-5 w-5" />
+            <Loader2 className="h-4 w-4 animate-spin" /> : 
+            <Send className="h-4 w-4" />
           }
         </Button>
       </div>
