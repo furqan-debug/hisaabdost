@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -200,9 +201,8 @@ export function SettingsSidebar({
           </Button>
         </div>
       </div>
-    </div>
 
-      <div className="border-t p-4">
+      <div className="border-t p-4 mt-auto">
         <div className="flex items-center mb-4">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.email}</p>
