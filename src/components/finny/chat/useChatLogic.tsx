@@ -99,7 +99,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
             const topCategory = Object.entries(categoryTotals)
               .sort((a, b) => b[1] - a[1])[0];
             
-            personalizedGreeting = `Hi there! 👋 I'm Finny, your personal finance assistant. I see you've spent ${formatCurrency(totalMonthlySpending)} this month, with ${formatCurrency(topCategory[1])} on ${topCategory[0]}. How can I help with your finances today?`;
+            // EXACTLY AS REQUESTED BY USER - Updated greeting format
+            const userName = user?.user_metadata?.full_name || '';
+            personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1])} — shall we explore ways to save? 🧠`;
             
             // Generate context-aware quick replies
             let contextReplies: QuickReply[] = [];
