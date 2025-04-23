@@ -34,7 +34,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       inputRef.current.focus();
     }
   }, []);
-  return <div className="finny-chat-input my--11 px-[16px] my--14 py-[25px]">
+  return <div className="finny-chat-input my--11 px-[16px] my--14 py-[22px]">
       <form onSubmit={onSubmit} className="finny-chat-input-container">
         <input type="text" ref={inputRef} value={value} onChange={onChange} disabled={isDisabled} className="w-full" placeholder={isConnecting ? 'Connecting...' : isAuthenticated ? placeholder : 'Please log in to chat...'} />
         <Button type="submit" size="icon" disabled={isDisabled || !value.trim()} className="rounded-full h-10 w-10 bg-green-500 hover:bg-green-600 text-white py-0 px-[9px]">
