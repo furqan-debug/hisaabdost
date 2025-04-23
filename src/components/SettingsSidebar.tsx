@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -98,103 +97,110 @@ export function SettingsSidebar({
       </div>
 
       <div className="flex-1 py-4 overflow-auto">
-        <div className="px-4 pb-4 mb-2">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent mb-4">
-            Expensify AI
-          </h2>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Date Range</h3>
-          <MonthSelector
-            selectedMonth={selectedMonth}
-            onChange={onMonthChange}
-            className="w-full"
+        <div className="px-4 pb-4 mb-2 flex items-center gap-3">
+          <img
+            src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
+            alt="Hisab Dost logo"
+            className="h-8 w-8 bg-white rounded shadow"
+            style={{ filter: "drop-shadow(0 2px 3px rgba(128,102,255,0.10))" }}
           />
+          <h2 className="text-xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent mb-2">
+            Hisab Dost
+          </h2>
         </div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">Date Range</h3>
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          onChange={onMonthChange}
+          className="w-full"
+        />
+      </div>
 
-        <Separator className="my-2" />
+      <Separator className="my-2" />
 
-        <div className="px-4 py-3">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
-          <Select value={currencyCode} onValueChange={handleCurrencyChange}>
-            <SelectTrigger className="w-full h-9">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCY_OPTIONS.map((option) => (
-                <SelectItem key={option.code} value={option.code}>
-                  <div className="flex items-center">
-                    <span className="mr-2">{option.symbol}</span>
-                    <span>{option.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="px-4 py-3">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Currency</h3>
+        <Select value={currencyCode} onValueChange={handleCurrencyChange}>
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            {CURRENCY_OPTIONS.map((option) => (
+              <SelectItem key={option.code} value={option.code}>
+                <div className="flex items-center">
+                  <span className="mr-2">{option.symbol}</span>
+                  <span>{option.label}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <Separator className="my-2" />
+      <Separator className="my-2" />
 
-        <div className="px-4 py-3">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Theme</h3>
-          <div className="flex flex-col gap-2">
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${theme === 'light' ? 'bg-accent' : ''}`}
-              onClick={() => setTheme('light')}
-            >
-              <Sun className="mr-2 h-4 w-4" />
-              Light
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${theme === 'dark' ? 'bg-accent' : ''}`}
-              onClick={() => setTheme('dark')}
-            >
-              <Moon className="mr-2 h-4 w-4" />
-              Dark
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${theme === 'system' ? 'bg-accent' : ''}`}
-              onClick={() => setTheme('system')}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              System
-            </Button>
-          </div>
-        </div>
-
-        <Separator className="my-2" />
-
-        <div className="px-4 py-3">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Color</h3>
-          <div className="flex flex-col gap-2">
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${colorMode === 'default' ? 'bg-accent' : ''}`}
-              onClick={() => handleColorChange('default')}
-            >
-              <div className="w-4 h-4 rounded-full bg-[hsl(142,76%,36%)] mr-2" />
-              Green (Default)
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${colorMode === 'pink' ? 'bg-accent' : ''}`}
-              onClick={() => handleColorChange('pink')}
-            >
-              <div className="w-4 h-4 rounded-full bg-[hsl(328,73%,69%)] mr-2" />
-              Pink
-            </Button>
-            <Button 
-              variant="outline" 
-              className={`justify-start h-9 ${colorMode === 'blue' ? 'bg-accent' : ''}`}
-              onClick={() => handleColorChange('blue')}
-            >
-              <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
-              Blue
-            </Button>
-          </div>
+      <div className="px-4 py-3">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Theme</h3>
+        <div className="flex flex-col gap-2">
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${theme === 'light' ? 'bg-accent' : ''}`}
+            onClick={() => setTheme('light')}
+          >
+            <Sun className="mr-2 h-4 w-4" />
+            Light
+          </Button>
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${theme === 'dark' ? 'bg-accent' : ''}`}
+            onClick={() => setTheme('dark')}
+          >
+            <Moon className="mr-2 h-4 w-4" />
+            Dark
+          </Button>
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${theme === 'system' ? 'bg-accent' : ''}`}
+            onClick={() => setTheme('system')}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            System
+          </Button>
         </div>
       </div>
+
+      <Separator className="my-2" />
+
+      <div className="px-4 py-3">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Color</h3>
+        <div className="flex flex-col gap-2">
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${colorMode === 'default' ? 'bg-accent' : ''}`}
+            onClick={() => handleColorChange('default')}
+          >
+            <div className="w-4 h-4 rounded-full bg-[hsl(142,76%,36%)] mr-2" />
+            Green (Default)
+          </Button>
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${colorMode === 'pink' ? 'bg-accent' : ''}`}
+            onClick={() => handleColorChange('pink')}
+          >
+            <div className="w-4 h-4 rounded-full bg-[hsl(328,73%,69%)] mr-2" />
+            Pink
+          </Button>
+          <Button 
+            variant="outline" 
+            className={`justify-start h-9 ${colorMode === 'blue' ? 'bg-accent' : ''}`}
+            onClick={() => handleColorChange('blue')}
+          >
+            <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
+            Blue
+          </Button>
+        </div>
+      </div>
+    </div>
 
       <div className="border-t p-4">
         <div className="flex items-center mb-4">

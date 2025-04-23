@@ -27,9 +27,16 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-background/95 backdrop-blur-md sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
-            Expense AI
-          </h1>
+          <div className="flex items-center gap-3">
+            <img
+              src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
+              alt="Hisab Dost logo"
+              className="h-8 w-8 bg-white rounded shadow"
+            />
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent drop-shadow">
+              Hisab Dost
+            </h1>
+          </div>
           <div className="space-x-2">
             <Button 
               variant="outline" 
@@ -53,16 +60,23 @@ const Index = () => {
         {/* Hero section with improved visual appeal */}
         <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
           <div className="container mx-auto text-center max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight gradient-text animation-slide-up">
-              Smart Expense Tracking for Modern Life
+            <div className="flex items-center justify-center mb-4">
+              <img
+                src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
+                alt="Hisab Dost mascot"
+                className="h-16 w-16 rounded bg-white shadow mx-auto"
+              />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+              स्मार्ट खर्च प्रबंधन के लिए आपका दोस्त
             </h1>
-            <p className="text-xl text-muted-foreground mb-10 leading-relaxed animation-slide-up animation-delay-100">
-              Take control of your finances with AI-powered insights, easy tracking, and beautiful visualizations.
+            <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
+              Track your expenses and budgets with a friendly, easy-to-use app designed for you—now smarter, better, and more fun than ever!
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 animation-slide-up animation-delay-200">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all elastic-hover"
+                className="bg-[#6E59A5] hover:bg-[#533ea8] text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all elastic-hover"
                 onClick={() => navigate('/auth')}
               >
                 Get Started - It's Free
@@ -79,8 +93,8 @@ const Index = () => {
                 <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8 bg-gradient-to-tr from-background/80 via-background/40 to-background/10">
                   <img 
                     src="/og-image.png" 
-                    alt="Expense AI Dashboard" 
-                    className="object-cover rounded-lg shadow-2xl max-w-full max-h-full animation-scale-in"
+                    alt="Hisab Dost Dashboard Preview" 
+                    className="object-cover rounded-lg shadow-2xl max-w-full max-h-full"
                   />
                 </div>
               </div>
@@ -91,31 +105,31 @@ const Index = () => {
         {/* Features with improved layout and icons */}
         <section className="py-20 px-4">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Key Features</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#6E59A5]">Key Features</h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Designed for simplicity and efficiency to help you take control of your finances
             </p>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-primary/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <PieChart className="h-6 w-6 text-primary" />
+                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <PieChart className="h-6 w-6 text-[#6E59A5]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Smart Expense Tracking</h3>
-                <p className="text-muted-foreground">Effortlessly track your expenses with AI-powered receipt scanning and categorization.</p>
+                <p className="text-muted-foreground">Track every rupee easily, categorize smartly, and get instant insights!</p>
               </div>
               <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-primary/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-[#6E59A5]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Monthly Insights</h3>
-                <p className="text-muted-foreground">View and compare financial data across different months with our powerful time selector.</p>
+                <p className="text-muted-foreground">See your spends and savings for any month—clear, simple, visual.</p>
               </div>
               <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-primary/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
+                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <ShieldCheck className="h-6 w-6 text-[#6E59A5]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Budget Management</h3>
-                <p className="text-muted-foreground">Set and track budgets for different categories to stay on top of your spending goals.</p>
+                <p className="text-muted-foreground">Set goals, track your progress, and control spending with confidence.</p>
               </div>
             </div>
           </div>
@@ -124,8 +138,8 @@ const Index = () => {
 
       <footer className="border-t py-8 bg-muted/20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Expensify AI. All rights reserved.</p>
-          <p className="text-sm mt-2">Powered by Quintessentia for simplified financial management</p>
+          <p>© 2025 Hisab Dost. All rights reserved.</p>
+          <p className="text-sm mt-2">Created for simplified financial management</p>
         </div>
       </footer>
     </div>

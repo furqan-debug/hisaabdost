@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +25,6 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   
-  // Track scroll position for navbar styling
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -63,8 +61,14 @@ const Navbar = () => {
         </Sheet>
         
         <div className="flex-1 flex items-center">
-          <h2 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
-            Expensify AI
+          <img 
+            src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png" 
+            alt="Hisab Dost logo" 
+            className="h-8 w-8 mr-2 rounded bg-white shadow-sm"
+            style={{ filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))" }}
+          />
+          <h2 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+            Hisab Dost
           </h2>
         </div>
         

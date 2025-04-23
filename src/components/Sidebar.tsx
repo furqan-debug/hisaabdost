@@ -1,4 +1,3 @@
-
 import {
   Sidebar as SidebarComponent,
   SidebarContent,
@@ -40,13 +39,17 @@ const Sidebar = () => {
     <SidebarComponent>
       <SidebarContent>
         <div className="flex items-center gap-2 px-4 py-6">
-          <Wallet className="h-7 w-7 text-primary animate-pulse" />
-          <span className="font-bold text-lg bg-gradient-to-r from-[#9b87f5] to-primary bg-clip-text text-transparent">
-            Expense AI
+          <img
+            src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
+            alt="Hisab Dost logo"
+            className="h-7 w-7 bg-white rounded shadow-sm"
+            style={{ filter: "drop-shadow(0 2px 3px rgba(128,102,255,0.10))" }}
+          />
+          <span className="font-bold text-lg bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+            Hisab Dost
           </span>
         </div>
         
-        {/* Month selector in sidebar for desktop */}
         <div className="px-3 mb-4">
           <MonthSelector
             selectedMonth={selectedMonth}
