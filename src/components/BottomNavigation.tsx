@@ -45,7 +45,7 @@ export function BottomNavigation() {
   if (!isMobile || !mounted) return null;
   
   return (
-    <div className={cn("fixed bottom-0 left-0 right-0 z-50 border-t transition-all duration-300 w-full", 
+    <div className={cn("fixed bottom-0 left-0 right-0 z-40 border-t transition-all duration-300 w-full", 
       isScrolled ? "border-border/40 bg-black/95 backdrop-blur-xl shadow-lg" : "border-border/20 bg-black/90 backdrop-blur-lg")}>
       <div className="flex h-14 items-center justify-around max-w-[480px] mx-auto px-0">
         {navItems.map(item => {
@@ -76,4 +76,4 @@ export function BottomNavigation() {
       </div>
     </div>
   );
-}
+};

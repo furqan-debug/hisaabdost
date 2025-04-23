@@ -81,6 +81,11 @@
   .mobile-truncate {
     @apply truncate max-w-[180px];
   }
+  
+  /* Finny chat - bottom padding to prevent overlap */
+  .finny-chat-container {
+    padding-bottom: 70px !important;
+  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -122,4 +127,9 @@
 
 .responsive-text-lg {
   font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+
+/* Safe area adjustments for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

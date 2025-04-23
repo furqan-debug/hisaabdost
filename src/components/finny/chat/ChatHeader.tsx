@@ -10,9 +10,9 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="finny-chat-header flex justify-between items-center px-3 py-2.5 border-b bg-background/95 backdrop-blur-sm">
+    <div className="finny-chat-header flex justify-between items-center px-2.5 py-2 border-b bg-background/95 backdrop-blur-sm">
       <div className="finny-chat-title flex items-center gap-1.5">
-        <MessageSquareText size={16} className="text-primary" />
+        <MessageSquareText size={14} className="text-primary" />
         <span className="text-sm font-medium text-primary">Finny</span>
         <Badge className="finny-chat-badge text-[10px] py-0 px-1.5">Finance Assistant</Badge>
       </div>

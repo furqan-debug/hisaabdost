@@ -18,8 +18,8 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 
   return (
     <motion.div
-      className={`fixed right-4 bottom-20 md:bottom-8 z-50 ${
-        isMobile ? 'bottom-24' : ''
+      className={`fixed z-50 ${
+        isMobile ? 'right-4 bottom-20' : 'right-4 bottom-8'
       }`}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -28,11 +28,11 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
     >
       <Button
         onClick={onClick}
-        className="w-14 h-14 rounded-full shadow-md bg-primary hover:bg-primary/90"
+        className="w-12 h-12 rounded-full shadow-md bg-primary hover:bg-primary/90"
         aria-label="Open Finny Chat"
       >
         <motion.div>
-          <Bot className="w-6 h-6 text-white" />
+          <Bot className="w-5 h-5 text-white" />
         </motion.div>
       </Button>
     </motion.div>

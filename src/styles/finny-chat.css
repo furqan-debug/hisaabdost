@@ -14,7 +14,7 @@
 
 /* Message containers */
 .finny-messages-container {
-  @apply p-3 space-y-2 scrollbar-hide;
+  @apply p-3 space-y-2 scrollbar-hide pb-16;
 }
 
 /* Message bubbles */
@@ -32,7 +32,7 @@
 
 /* Input area */
 .finny-chat-input {
-  @apply border-t bg-background/50 backdrop-blur-sm;
+  @apply border-t bg-background/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10;
 }
 
 .finny-chat-input-container {
@@ -68,5 +68,16 @@
   
   .finny-message {
     @apply max-w-[90%];
+  }
+  
+  /* Fix bottom navigation overlap */
+  .finny-chat-input {
+    @apply bottom-14; /* Gives space for bottom nav */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  /* Add padding to the bottom of messages container to prevent message input overlap */
+  .finny-messages-container {
+    padding-bottom: 80px;
   }
 }

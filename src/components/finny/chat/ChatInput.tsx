@@ -25,7 +25,7 @@ const ChatInput = ({
   const isMobile = useIsMobile();
   
   return (
-    <form onSubmit={onSubmit} className="finny-chat-input px-3 py-2.5 border-t bg-background/95 backdrop-blur-sm">
+    <form onSubmit={onSubmit} className="finny-chat-input px-2 py-2 border-t bg-background/95 backdrop-blur-sm">
       <div className="finny-chat-input-container flex items-center gap-2">
         <Input 
           type="text" 
@@ -33,7 +33,7 @@ const ChatInput = ({
           value={value} 
           onChange={onChange} 
           disabled={isLoading || !isAuthenticated || isConnecting} 
-          className="h-8 text-sm"
+          className="h-8 text-xs"
         />
         <Button 
           type="submit" 
