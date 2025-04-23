@@ -1,44 +1,35 @@
 
 import React from 'react';
-import { MessageSquareText, HelpCircle, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useIsMobile } from '@/hooks/use-mobile';
 
-const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
-  const isMobile = useIsMobile();
+interface ChatHeaderProps {
+  onClose: () => void;
+}
 
+const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
   return (
-    <div className="finny-chat-header flex justify-between items-center px-3 py-3 border-b bg-background/95 backdrop-blur-sm">
-      <div className="finny-chat-title flex items-center gap-2">
-        <MessageSquareText size={16} className="text-primary" />
-        <span className="text-sm font-medium text-primary">Finny</span>
-        <Badge className="finny-chat-badge text-[10px] py-0.5 px-2">AI Assistant</Badge>
+    <div className="finny-chat-header p-3 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="text-lg font-semibold text-white flex items-center">
+          <span className="text-green-400 mr-2">💰</span>
+          Finny
+        </div>
+        <Badge variant="outline" className="finny-chat-badge px-2 py-0.5 text-[10px] bg-[#9b87f5]/20 text-[#9b87f5]">
+          AI Assistant
+        </Badge>
       </div>
       <div className="flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="h-8 w-8" aria-label="Finny Help">
-                <HelpCircle size={16} className="text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              <p className="text-xs">Ask me about your finances! I can help with budgets, expenses, and saving tips 💡</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <Button 
-          variant="ghost" 
-          size="icon-sm"
-          className="h-8 w-8" 
+        <button className="text-gray-400 hover:text-white rounded-full p-1.5 hover:bg-gray-800/30 transition-colors" aria-label="Help">
+          <HelpCircle size={18} />
+        </button>
+        <button 
           onClick={onClose} 
-          aria-label="Close Chat"
+          className="text-gray-400 hover:text-white rounded-full p-1.5 hover:bg-gray-800/30 transition-colors"
+          aria-label="Close chat"
         >
-          <X size={16} className="text-muted-foreground" />
-        </Button>
+          <X size={18} />
+        </button>
       </div>
     </div>
   );

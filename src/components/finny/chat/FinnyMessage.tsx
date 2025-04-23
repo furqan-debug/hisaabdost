@@ -45,7 +45,7 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Avatar className={`w-8 h-8 ${isUser ? 'bg-primary/90' : 'bg-muted'}`}>
+            <Avatar className={`w-8 h-8 ${isUser ? 'bg-green-500' : 'bg-gray-500'}`}>
               <span className="text-xs font-medium text-white">
                 {isUser ? 'You' : 'F'}
               </span>
@@ -60,8 +60,8 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       <div className={`
         max-w-[85%] rounded-lg px-3.5 py-2.5 shadow-sm
         ${isUser 
-          ? 'bg-primary text-primary-foreground finny-message-user' 
-          : 'bg-muted/80 finny-message-bot'
+          ? 'bg-green-500 text-white' 
+          : 'bg-[#352F44] text-white'
         }
         ${hasLinks || hasAction || visualData ? 'space-y-2' : ''}
       `}>
@@ -123,7 +123,7 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
               </Badge>
             )}
           </div>
-          <div className="text-[10px] text-muted-foreground ml-auto">
+          <div className="text-[10px] text-white/70 ml-auto">
             {formatTime(timestamp)}
           </div>
         </div>

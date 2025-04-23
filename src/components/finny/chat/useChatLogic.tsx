@@ -99,7 +99,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
             const topCategory = Object.entries(categoryTotals)
               .sort((a, b) => b[1] - a[1])[0];
             
-            // EXACTLY AS REQUESTED BY USER - Updated greeting format
+            // Updated greeting format as requested by user
             const userName = user?.user_metadata?.full_name || '';
             personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1])} — shall we explore ways to save? 🧠`;
             

@@ -1,53 +1,56 @@
 
-import React from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  isConnecting: boolean;
+  disabled: boolean;
+  placeholder?: string;
 }
 
-const ChatInput = ({
+const ChatInput: React.FC<ChatInputProps> = ({
   value,
   onChange,
   onSubmit,
-  isLoading,
-  isAuthenticated,
-  isConnecting
-}: ChatInputProps) => {
+  disabled,
+  placeholder = 'Message Finny...'
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   
+  // Focus input when component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  
   return (
-    <form onSubmit={onSubmit} className="finny-chat-input">
-      <div className="finny-chat-input-container">
-        <Input 
-          type="text" 
-          placeholder={isAuthenticated ? "Ask me anything about your finances..." : "Log in to chat with Finny"} 
-          value={value} 
-          onChange={onChange} 
-          disabled={isLoading || !isAuthenticated || isConnecting} 
-          className="h-11 text-sm rounded-full shadow-sm border-muted bg-background/80"
+    <div className="finny-chat-input">
+      <form onSubmit={onSubmit} className="finny-chat-input-container">
+        <input
+          type="text"
+          ref={inputRef}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          className="w-full"
+          placeholder={placeholder}
         />
         <Button 
           type="submit" 
-          size="icon"
-          className="h-11 w-11 rounded-full shadow-sm" 
-          disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}
+          size="icon" 
+          disabled={disabled || !value.trim()} 
+          className="rounded-full h-10 w-10 bg-green-500 hover:bg-green-600 text-white"
         >
-          {isLoading ? 
-            <Loader2 className="h-5 w-5 animate-spin" /> : 
-            <Send className="h-5 w-5" />
-          }
+          <SendHorizontal size={18} />
         </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 
