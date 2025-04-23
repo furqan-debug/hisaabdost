@@ -2,6 +2,7 @@
 import React from 'react';
 import { QuickReply } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface QuickRepliesProps {
   replies: QuickReply[];
@@ -19,18 +20,19 @@ const QuickReplies = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex flex-wrap gap-1.5 px-1.5 py-1.5">
+    <div className="flex flex-wrap gap-2 px-1.5 py-3">
       {replies.map((reply, index) => (
-        <button
+        <Button
           key={index}
           onClick={() => onSelect(reply)}
           disabled={isLoading || !isAuthenticated}
-          className="quick-reply-button inline-flex items-center text-xs py-1 px-2 rounded-md 
-            bg-muted/80 hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="outline"
+          size="sm"
+          className="rounded-full text-xs shadow-sm hover:shadow-md transition-all"
         >
-          {reply.icon && <span className="mr-1">{reply.icon}</span>}
+          {reply.icon && <span className="mr-1.5">{reply.icon}</span>}
           {reply.text}
-        </button>
+        </Button>
       ))}
     </div>
   );

@@ -1,7 +1,7 @@
 
-/* Finny Chat Styles - Updated for clean, minimal design */
+/* Finny Chat Styles - Modern & Clean Design */
 .finny-chat-card {
-  @apply bg-background/95 backdrop-blur-md border rounded-lg sm:rounded-xl shadow-sm overflow-hidden;
+  @apply bg-background/95 backdrop-blur-md border rounded-xl shadow-md overflow-hidden;
 }
 
 .finny-chat-header {
@@ -9,45 +9,46 @@
 }
 
 .finny-chat-badge {
-  @apply text-[10px] py-0 px-1.5 bg-primary/10 text-primary;
+  @apply text-[10px] py-0.5 px-2 bg-primary/10 text-primary rounded-full;
 }
 
 /* Message containers */
 .finny-messages-container {
-  @apply p-3 space-y-2 scrollbar-hide pb-16;
+  @apply p-4 space-y-4 scrollbar-hide pb-20;
 }
 
 /* Message bubbles */
 .finny-message-user {
-  @apply relative transition-all duration-200 
+  @apply relative transition-all duration-200 shadow-sm
     before:content-[''] before:absolute before:right-[-6px] before:bottom-[6px]
     before:w-3 before:h-3 before:bg-primary before:rounded-bl-lg;
 }
 
 .finny-message-bot {
-  @apply relative transition-all duration-200
+  @apply relative transition-all duration-200 shadow-sm
     before:content-[''] before:absolute before:left-[-6px] before:bottom-[6px]
-    before:w-3 before:h-3 before:bg-muted before:rounded-br-lg;
+    before:w-3 before:h-3 before:bg-[#f8f5ff] dark:bg-[#2a2438] before:rounded-br-lg;
 }
 
 /* Input area */
 .finny-chat-input {
-  @apply border-t bg-background/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10;
+  @apply border-t bg-background/80 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10 px-4 py-3;
 }
 
 .finny-chat-input-container {
-  @apply flex gap-2 items-center;
+  @apply flex gap-3 items-center max-w-3xl mx-auto;
 }
 
 .finny-chat-input input {
   @apply text-sm bg-transparent border focus-visible:ring-1 transition-all duration-300
-    py-1.5 px-3 rounded-md;
+    py-2 px-4 rounded-full;
 }
 
 /* Quick Reply Buttons */
 .quick-reply-button {
-  @apply text-xs py-1.5 px-2.5 rounded-md transition-colors
-    bg-muted/80 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply flex items-center gap-2 text-xs py-2 px-4 rounded-full transition-all
+    bg-muted/50 hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed
+    shadow-sm hover:shadow-md active:scale-95;
 }
 
 /* Enhanced scrollbar */
@@ -70,14 +71,11 @@
     @apply max-w-[90%];
   }
   
-  /* Fix bottom navigation overlap */
   .finny-chat-input {
-    @apply bottom-14; /* Gives space for bottom nav */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    @apply bottom-14 px-3 py-2;
   }
   
-  /* Add padding to the bottom of messages container to prevent message input overlap */
   .finny-messages-container {
-    padding-bottom: 80px;
+    @apply px-3 pb-24;
   }
 }
