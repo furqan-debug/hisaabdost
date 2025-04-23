@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -116,7 +115,7 @@ const FinnyChat = ({
           }}
         >
           <Card className="finny-chat-card h-full flex flex-col shadow-lg">
-            <ChatHeader onClose={isMobile ? onClose : undefined} />
+            <ChatHeader onClose={onClose} />
             
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scrollbar-hide mx-0 px-1 my-[26px] py-[42px]">
               {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">

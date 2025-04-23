@@ -97,7 +97,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }}
     >
       {children}
-      <FinnyButton onClick={toggleChat} isOpen={isOpen} />
+      <FinnyButton onClick={openChat} isOpen={isOpen} />
       <FinnyChat isOpen={isOpen} onClose={closeChat} />
     </FinnyContext.Provider>
   );

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { MessageSquareText, ChevronDown, Bot } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FinnyButtonProps {
@@ -12,6 +12,9 @@ interface FinnyButtonProps {
 
 const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
+
+  // Don't show the button when chat is open
+  if (isOpen) return null;
 
   return (
     <motion.div
@@ -25,22 +28,11 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
     >
       <Button
         onClick={onClick}
-        className={`w-14 h-14 rounded-full shadow-md ${
-          isOpen 
-            ? 'bg-destructive hover:bg-destructive/90' 
-            : 'bg-primary hover:bg-primary/90'
-        }`}
-        aria-label={isOpen ? "Close Finny Chat" : "Open Finny Chat"}
+        className="w-14 h-14 rounded-full shadow-md bg-primary hover:bg-primary/90"
+        aria-label="Open Finny Chat"
       >
-        <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {isOpen ? (
-            <ChevronDown className="w-6 h-6 text-white" />
-          ) : (
-            <Bot className="w-6 h-6 text-white" />  // Changed from MessageSquareText to Bot
-          )}
+        <motion.div>
+          <Bot className="w-6 h-6 text-white" />
         </motion.div>
       </Button>
     </motion.div>
@@ -48,4 +40,3 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 };
 
 export default FinnyButton;
-

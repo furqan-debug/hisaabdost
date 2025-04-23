@@ -30,17 +30,16 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
           </Tooltip>
         </TooltipProvider>
         
-        {isMobile && onClose && (
-          <Button 
-            variant="ghost" 
-            size="icon-sm" 
-            className="rounded-lg hover:bg-muted/80" 
-            onClick={onClose} 
-            aria-label="Close Chat"
-          >
-            <X size={16} className="text-muted-foreground" />
-          </Button>
-        )}
+        {/* Always show the close button, not just on mobile */}
+        <Button 
+          variant="ghost" 
+          size="icon-sm" 
+          className="rounded-lg hover:bg-muted/80" 
+          onClick={onClose} 
+          aria-label="Close Chat"
+        >
+          <X size={16} className="text-muted-foreground" />
+        </Button>
       </div>
     </div>
   );
