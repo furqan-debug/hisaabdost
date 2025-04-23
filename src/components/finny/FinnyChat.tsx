@@ -153,7 +153,8 @@ const FinnyChat = ({
             <ChatInput 
               value={newMessage} 
               onChange={e => setNewMessage(e.target.value)} 
-              onSubmit={handleSendMessage} 
+              onSubmit={handleSendMessage}
+              disabled={false}
               isLoading={isLoading} 
               isAuthenticated={!!user} 
               isConnecting={isConnectingToData} 

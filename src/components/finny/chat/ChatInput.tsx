@@ -8,8 +8,11 @@ interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
-  disabled: boolean;
+  disabled?: boolean;
   placeholder?: string;
+  isLoading?: boolean;
+  isAuthenticated?: boolean;
+  isConnecting?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -17,10 +20,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onChange,
   onSubmit,
   disabled,
-  placeholder = 'Message Finny...'
+  placeholder = 'Message Finny...',
+  isLoading,
+  isAuthenticated,
+  isConnecting
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  
+  // Calculate final disabled state
+  const isDisabled = disabled || isLoading || isConnecting || !isAuthenticated;
   
   // Focus input when component mounts
   useEffect(() => {
@@ -37,14 +46,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
           ref={inputRef}
           value={value}
           onChange={onChange}
-          disabled={disabled}
+          disabled={isDisabled}
           className="w-full"
-          placeholder={placeholder}
+          placeholder={isConnecting ? 'Connecting...' : isAuthenticated ? placeholder : 'Please log in to chat...'}
         />
         <Button 
           type="submit" 
           size="icon" 
-          disabled={disabled || !value.trim()} 
+          disabled={isDisabled || !value.trim()} 
           className="rounded-full h-10 w-10 bg-green-500 hover:bg-green-600 text-white"
         >
           <SendHorizontal size={18} />
