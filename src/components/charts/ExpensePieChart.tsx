@@ -19,7 +19,7 @@ export const ExpensePieChart = ({
 
   // Calculate total amount
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-  return <div className="relative w-full h-[250px] md:h-[300px] chart-wrapper my-0 px-[48px] py-0 mx-[-35px]">
+  return <div className="relative w-full h-[250px] md:h-[300px] chart-wrapper my-[-20px]">
       {/* Center total display */}
       <div className="chart-center-total">
         <div className="chart-center-total-amount">
@@ -65,7 +65,7 @@ export const ExpensePieChart = ({
       </ResponsiveContainer>
       
       {/* Simplified mobile-friendly legend */}
-      <div className="expense-chart-legend">
+      <div className="expense-chart-legend my--9">
         {data.slice(0, isMobile ? 4 : 6).map((entry, index) => <div key={index} className="expense-chart-legend-item">
             <div className="expense-chart-legend-dot" style={{
           backgroundColor: entry.color
