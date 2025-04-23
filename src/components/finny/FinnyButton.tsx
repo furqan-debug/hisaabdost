@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 interface FinnyButtonProps {
   onClick: () => void;
   isOpen: boolean;
 }
+
 const FinnyButton = ({
   onClick,
   isOpen
@@ -15,24 +18,26 @@ const FinnyButton = ({
 
   // Don't show the button when chat is open
   if (isOpen) return null;
-  return <motion.div className={`fixed z-40 ${isMobile ? 'right-4 bottom-20' : 'right-4 bottom-8'}`} initial={{
-    scale: 0,
-    opacity: 0
-  }} animate={{
-    scale: 1,
-    opacity: 1
-  }} transition={{
-    type: 'spring',
-    stiffness: 260,
-    damping: 20
-  }} whileTap={{
-    scale: 0.9
-  }}>
-      <Button onClick={onClick} aria-label="Open Finny Chat" className="w-12 h-12 rounded-full shadow-md bg-primary hover:bg-primary/90 mx-[10px] px-[10px] py-[4px] my-[3px]">
+
+  return (
+    <motion.div 
+      className={`fixed z-40 ${isMobile ? 'right-4 bottom-20' : 'right-4 bottom-8'}`}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+      whileTap={{ scale: 0.9 }}
+    >
+      <Button 
+        onClick={onClick} 
+        aria-label="Open Finny Chat" 
+        className="w-14 h-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+      >
         <motion.div>
-          <Bot className="w-5 h-5 text-white " />
+          <Bot className="w-6 h-6 text-white" />
         </motion.div>
       </Button>
-    </motion.div>;
+    </motion.div>
+  );
 };
+
 export default FinnyButton;

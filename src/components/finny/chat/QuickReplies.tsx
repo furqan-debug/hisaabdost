@@ -3,6 +3,7 @@ import React from 'react';
 import { QuickReply } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { PiggyBank, ChartPie, DollarSign, TrendingUp } from 'lucide-react';
 
 interface QuickRepliesProps {
   replies: QuickReply[];
@@ -20,7 +21,7 @@ const QuickReplies = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex flex-wrap gap-2 px-1.5 py-3">
+    <div className="flex flex-wrap gap-3 px-3 py-4">
       {replies.map((reply, index) => (
         <Button
           key={index}
@@ -28,9 +29,9 @@ const QuickReplies = ({
           disabled={isLoading || !isAuthenticated}
           variant="outline"
           size="sm"
-          className="rounded-full text-xs shadow-sm hover:shadow-md transition-all"
+          className="rounded-full text-sm shadow-sm hover:shadow-md transition-all flex items-center gap-2"
         >
-          {reply.icon && <span className="mr-1.5">{reply.icon}</span>}
+          {reply.icon}
           {reply.text}
         </Button>
       ))}
