@@ -1,341 +1,70 @@
 
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
-  /* Chart containers */
   .chart-wrapper {
     width: 100%;
-    height: 100%;
     min-height: 300px;
     position: relative;
     overflow: visible !important;
   }
   
-  /* Fixed container to prevent overflow */
   .chart-container {
     width: 100%;
-    height: 100%;
     min-height: 300px;
     position: relative;
     overflow: visible;
   }
   
-  /* Better chart visibility on mobile */
   .recharts-wrapper {
-    height: 100%;
-    width: 100%;
-    border-radius: 0.5rem;
-    margin: 0 auto !important;
+    height: 100% !important;
+    width: 100% !important;
     min-height: 300px !important;
   }
   
   .recharts-responsive-container {
-    width: 100% !important;
-    height: 100% !important;
     min-height: 300px !important;
   }
-
+  
+  /* Better tooltip positioning */
   .recharts-tooltip-wrapper {
-    z-index: 50;
+    z-index: 50 !important;
   }
   
+  /* Improved legend items */
   .recharts-legend-item {
-    font-size: 0.75rem;
-    white-space: nowrap;
-    overflow: hidden;
+    font-size: 0.75rem !important;
     margin-right: 12px !important;
     margin-bottom: 6px !important;
   }
   
-  .recharts-legend-item-text {
-    font-size: 0.75rem;
-    font-weight: 500;
-    max-width: 100px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  
+  /* Cleaner axis labels */
   .recharts-cartesian-axis-tick-value {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.75rem !important;
     fill: var(--foreground) !important;
   }
-
-  /* Enhance layout for pie chart on mobile */
-  .pie-chart-container {
-    max-width: 280px;
-    margin-left: auto;
-    margin-right: auto;
-    min-height: 250px !important;
-  }
-
-  /* Make legend more compact on mobile */
-  .expense-chart-legend {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .expense-chart-legend-item {
-    font-size: 0.75rem;
-    padding-left: 0.375rem;
-    padding-right: 0.375rem;
-    padding-top: 0.125rem;
-    padding-bottom: 0.125rem;
-    border-radius: 9999px;
-  }
-
-  /* Center text properly */
-  .chart-center-total {
-    width: 75% !important;
-    text-align: center !important;
-    transform: translate(-50%, -50%) !important;
-  }
-  
-  .chart-center-total-amount {
-    font-size: 1.25rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  
-  .chart-center-total-label {
-    font-size: 0.75rem;
-  }
-
-  /* Prevent tooltips from causing scrolling */
-  .tooltip-card {
-    max-width: 200px !important;
-    overflow: hidden !important;
-  }
-  
-  /* Adjust axis spacing */
-  .recharts-cartesian-axis {
-    overflow: visible !important;
-  }
-  
-  /* Better label positioning for small screens */
-  .recharts-layer.recharts-cartesian-axis-tick {
-    overflow: visible !important;
-  }
-  
-  /* Hide text that would overflow */
-  .recharts-text.recharts-label {
-    display: none !important;
-  }
-  
-  /* Simplify axis ticks */
-  .recharts-cartesian-axis-tick text {
-    font-size: 9px !important;
-  }
-
-  /* Fix budget section on mobile */
-  .budget-section {
-    min-height: 300px;
-    width: 100%;
-    overflow: visible;
-    min-height: 300px !important;
-  }
-
-  /* Fix tabs content on mobile */
-  .tabs-content {
-    min-height: 300px;
-    width: 100%;
-    min-height: 300px !important;
-  }
-  
-  /* Budget tab tab list scrolling */
-  .scrollable-tabs-container {
-    display: flex;
-    overflow-x: auto;
-    margin-right: 0.25rem;
-    padding-bottom: 0.25rem;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Make tab items snap when scrolling */
-  .budget-tabs-trigger {
-    flex-shrink: 0;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-    scroll-snap-align: start;
-    white-space: nowrap;
-  }
-  
-  /* Tab content padding for mobile */
-  .tab-content-mobile {
-    padding-left: 0;
-    padding-right: 0;
-    max-width: 100%;
-    overflow: hidden;
-    width: 100%;
-  }
 }
 
-/* Chart improvements for all screen sizes */
+/* Consistent chart styling for all screen sizes */
 .chart-wrapper {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  min-height: 300px;
+  @apply rounded-xl border border-border/50 bg-card/95 backdrop-blur-sm p-4;
 }
 
-.recharts-default-legend {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 0.5rem !important;
-  margin-top: 1rem !important;
+/* Better tooltip styling */
+.chart-tooltip {
+  @apply rounded-lg border bg-background/95 backdrop-blur-sm p-2 shadow-md;
+  @apply text-sm font-medium;
 }
 
-.recharts-layer.recharts-pie-labels text {
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  fill: var(--foreground) !important;
+/* Chart legend improvements */
+.chart-legend {
+  @apply flex flex-wrap justify-center gap-2 mt-4;
 }
 
-.recharts-tooltip-wrapper .tooltip-card {
-  border-radius: 0.5rem;
-  border: 1px solid var(--border);
-  background-color: rgba(var(--background-rgb), 0.95);
-  padding: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  backdrop-filter: blur(4px);
+.chart-legend-item {
+  @apply flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium;
+  @apply bg-muted/20 transition-colors;
 }
 
-.recharts-sector {
-  transition: all 0.2s;
-}
-
-.recharts-sector:hover {
-  opacity: 0.9;
-}
-
-.chart-center-total {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.chart-center-total-amount {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.chart-center-total-label {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-}
-
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: hsl(var(--muted)/0.30);
-  stroke-width: 1;
-}
-
-/* Modern, clean legend styles */
-.expense-chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-}
-
-/* Class for chart legend items */
-.chart-legend-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  width: 100%;
-  padding: 0 0.25rem;
-}
-
-.expense-chart-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background-color: hsl(var(--muted)/0.20);
-}
-
-.expense-chart-legend-dot {
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 9999px;
-}
-
-/* Fix for overflow issues */
-.recharts-surface {
-  overflow: visible !important;
-}
-
-/* Fix for tooltip positioning */
-.recharts-tooltip-wrapper {
-  pointer-events: none !important;
-}
-
-/* Improve mobile chart interactions */
-.chart-container .recharts-wrapper {
-  touch-action: pan-y !important;
-}
-
-/* Ensure all tooltip text fits */
-.tooltip-card p {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 100%;
-}
-
-/* Ensure budget tabs maintain proper height */
-.budget-card {
-  min-height: 600px !important;
-  height: 100% !important;
-}
-
-/* Make tabs content visible */
-.tabs-content {
-  height: 100%;
-  min-height: 300px;
-  width: 100%;
-}
-
-/* Fix budget pages */
-.budget-section, 
-.budget-container {
-  min-height: 600px !important;
-}
-
-/* Additional styles for redesign */
-
-/* Card hover effect */
-.card-hover {
-  transition: all 0.2s;
-}
-
-.card-hover:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* Tab design improvements */
-.budget-tabs-trigger {
-  font-weight: 500;
-  transition: all 0.2s;
+.chart-legend-dot {
+  @apply w-2 h-2 rounded-full;
 }
