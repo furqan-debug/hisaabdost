@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,103 +19,98 @@ import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 export default function Analytics() {
-  const { user } = useAuth();
-  const { selectedMonth } = useMonthContext();
+  const {
+    user
+  } = useAuth();
+  const {
+    selectedMonth
+  } = useMonthContext();
   const isMobile = useIsMobile();
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
     start: format(subMonths(new Date(), 1), 'yyyy-MM-dd'),
     end: format(new Date(), 'yyyy-MM-dd')
   });
-  
   const useCustomDateRange = true;
-  
-  const { data: expenses, isLoading, error } = useQuery({
+  const {
+    data: expenses,
+    isLoading,
+    error
+  } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', dateRange.start)
-        .lte('date', dateRange.end)
-        .order('date', { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('expenses').select('*').eq('user_id', user.id).gte('date', dateRange.start).lte('date', dateRange.end).order('date', {
+        ascending: false
+      });
       if (error) throw error;
       return data || [];
     },
     enabled: !!user
   });
-  
   const filteredExpenses = expenses?.filter(expense => {
-    const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      expense.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || expense.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
     return matchesSearch && matchesCategory;
   }) || [];
-  
   const insights = useAnalyticsInsights(filteredExpenses);
-  
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = { color };
+    acc[key] = {
+      color
+    };
     return acc;
-  }, {} as Record<string, { color: string; }>);
-  
+  }, {} as Record<string, {
+    color: string;
+  }>);
+
   // Animation variants
   const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
+    hidden: {
+      opacity: 0
+    },
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         staggerChildren: 0.1,
         delayChildren: 0.1
       }
     }
   };
-  
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    hidden: {
+      opacity: 0,
+      y: 20
+    },
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.4 }
+      transition: {
+        duration: 0.4
+      }
     }
   };
-
   if (error) {
-    return (
-      <Alert variant="destructive">
+    return <Alert variant="destructive">
         <AlertDescription>Error loading expenses data. Please try again later.</AlertDescription>
-      </Alert>
-    );
+      </Alert>;
   }
-
   if (isLoading) {
-    return (
-      <div className="space-y-4">
+    return <div className="space-y-4">
         <Skeleton className="h-8 w-[200px]" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Skeleton className="h-[200px] rounded-xl" />
           <Skeleton className="h-[200px] rounded-xl" />
           <Skeleton className="h-[200px] rounded-xl" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-5 px-3 md:px-6 py-4 pb-20">
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-4"
-      >
+  return <div className="space-y-5 px-3 md:px-6 py-4 pb-20">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
         <motion.div variants={itemVariants} className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Analytics
@@ -127,17 +121,7 @@ export default function Analytics() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <ExpenseFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            selectedMonth={selectedMonth}
-            useCustomDateRange={useCustomDateRange}
-            className="mx-0 px-0"
-          />
+          <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} className="mx-0 px-0" />
         </motion.div>
 
         <motion.div variants={itemVariants}>
@@ -149,22 +133,13 @@ export default function Analytics() {
             <CardContent className="p-0">
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-                  <TabsTrigger 
-                    value="overview"
-                    className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent">
                     Overview
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="trends"
-                    className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="trends" className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent">
                     Trends
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="comparison"
-                    className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="comparison" className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent">
                     Compare
                   </TabsTrigger>
                 </TabsList>
@@ -176,7 +151,7 @@ export default function Analytics() {
                         <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
                         <CardDescription>Your expenses by category</CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-4">
+                      <CardContent className="pt-0 pb-6 py-[10px] px-1 mx-[-7px] my-[48px]">
                         <ChartContainer config={chartConfig} className="pie-chart-container">
                           <ExpensesPieChart expenses={filteredExpenses} />
                         </ChartContainer>
@@ -223,6 +198,5 @@ export default function Analytics() {
           </Card>
         </motion.div>
       </motion.div>
-    </div>
-  );
+    </div>;
 }
