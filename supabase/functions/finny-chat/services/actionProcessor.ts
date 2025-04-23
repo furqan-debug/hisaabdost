@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 export async function processAction(action: any, userId: string, supabase: any) {
@@ -17,6 +16,8 @@ export async function processAction(action: any, userId: string, supabase: any) 
       return await setGoal(action, userId, supabase);
     case 'update_goal':
       return await updateGoal(action, userId, supabase);
+    case 'get_spending':
+      return await getSpending(action, userId, supabase);
     default:
       throw new Error(`Unknown action type: ${action.type}`);
   }
@@ -311,3 +312,54 @@ async function updateGoal(action: any, userId: string, supabase: any) {
   return `I've updated your goal "${data[0].title}"`;
 }
 
+async function getSpending(action: any, userId: string, supabase: any) {
+  const { category, period } = action;
+  
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  
+  let query = supabase
+    .from('expenses')
+    .select('amount, category, date')
+    .eq('user_id', userId);
+  
+  if (period === 'current_month' || !period) {
+    query = query
+      .gte('date', firstDayOfMonth)
+      .lte('date', lastDayOfMonth);
+  } else if (period === 'previous_month') {
+    const firstDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+    const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+    query = query
+      .gte('date', firstDayOfPrevMonth)
+      .lte('date', lastDayOfPrevMonth);
+  } else if (period === 'year_to_date') {
+    const firstDayOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+    query = query
+      .gte('date', firstDayOfYear)
+      .lte('date', lastDayOfMonth);
+  }
+  
+  if (category) {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    throw new Error(`Failed to get spending data: ${error.message}`);
+  }
+  
+  const total = data.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  
+  const byCategory: Record<string, number> = {};
+  data.forEach(expense => {
+    byCategory[expense.category] = (byCategory[expense.category] || 0) + Number(expense.amount);
+  });
+  
+  const periodText = period === 'previous_month' ? 'last month' : period === 'year_to_date' ? 'this year' : 'this month';
+  const response = `Here's your spending breakdown for ${periodText}: $${total.toFixed(2)} total`;
+  
+  return response;
+}
