@@ -14,18 +14,18 @@
 
 /* Message containers */
 .finny-messages-container {
-  @apply p-4 space-y-4 scrollbar-hide pb-20;
+  @apply p-4 space-y-4 scrollbar-hide pb-[90px] md:pb-20;
 }
 
 /* Message bubbles */
 .finny-message-user {
-  @apply relative transition-all duration-200 shadow-sm
+  @apply relative transition-all duration-200 shadow-md hover:shadow-lg
     before:content-[''] before:absolute before:right-[-6px] before:bottom-[6px]
     before:w-3 before:h-3 before:bg-primary before:rounded-bl-lg;
 }
 
 .finny-message-bot {
-  @apply relative transition-all duration-200 shadow-sm
+  @apply relative transition-all duration-200 shadow-md hover:shadow-lg
     before:content-[''] before:absolute before:left-[-6px] before:bottom-[6px]
     before:w-3 before:h-3 before:bg-[#f8f5ff] dark:bg-[#2a2438] before:rounded-br-lg;
 }
@@ -46,7 +46,7 @@
 
 /* Quick Reply Buttons */
 .quick-reply-button {
-  @apply flex items-center gap-2 text-xs py-2 px-4 rounded-full transition-all
+  @apply flex items-center gap-2 text-sm py-2 px-4 rounded-full transition-all
     bg-muted/50 hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed
     shadow-sm hover:shadow-md active:scale-95;
 }
