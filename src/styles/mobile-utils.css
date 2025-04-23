@@ -13,71 +13,123 @@
   p {
     @apply text-sm;
   }
-  
-  /* Better touch targets */
   input, select, textarea, button {
-    @apply min-h-[44px] text-sm;
+    @apply text-sm;
   }
   
-  /* Improved spacing */
-  .mobile-spacing {
-    @apply space-y-3;
+  /* Fix centering for mobile elements */
+  .mobile-center {
+    @apply flex justify-center items-center;
   }
   
-  /* Container fixes */
-  .mobile-container {
-    @apply px-2 w-full max-w-full;
+  /* Adjust touch targets */
+  .touch-target {
+    @apply min-h-10 min-w-10;
   }
   
-  /* Better content wrapping */
-  .mobile-wrap {
-    @apply break-words;
+  /* Ensure all content stays within container */
+  .mobile-container-fix {
+    @apply w-full px-0;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    width: 100%;
   }
   
-  /* Font size utilities */
+  /* Force budget tab content to wrap */
+  .budget-tab-content-wrap {
+    @apply w-full max-w-full break-words;
+    overflow-x: hidden !important;
+    width: 100%;
+  }
+  
+  /* Optimize for small screens */
   .mobile-text-xs {
     @apply text-xs;
   }
+  
   .mobile-text-sm {
     @apply text-sm;
   }
   
-  /* Layout helpers */
-  .mobile-full-width {
-    width: 100vw;
-    margin-left: 50%;
-    transform: translateX(-50%);
+  .mobile-p-1 {
+    @apply p-1;
   }
   
-  /* Safe area adjustments */
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  .mobile-p-2 {
+    @apply p-2;
+  }
+  
+  .mobile-gap-1 {
+    @apply gap-1;
+  }
+  
+  .mobile-h-auto {
+    @apply h-auto;
+  }
+  
+  /* Fix form inputs for mobile */
+  .mobile-input {
+    @apply text-sm py-1.5 px-2;
+  }
+  
+  /* Responsive spacing */
+  .sm-spacing {
+    @apply p-2 gap-2;
+  }
+  
+  /* Responsive text truncation */
+  .mobile-truncate {
+    @apply truncate max-w-[180px];
+  }
+  
+  /* Finny chat - bottom padding to prevent overlap */
+  .finny-chat-container {
+    padding-bottom: 70px !important;
   }
 }
 
-/* General improvements */
+/* Remove scrollbar but keep functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Make sure all content is visible */
 .overflow-guard {
-  @apply max-w-full overflow-x-hidden;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-.touch-target {
-  @apply min-h-[44px] min-w-[44px];
+/* Prevent horizontal scrolling */
+.prevent-x-overflow {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
-/* Improved scrollbars */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+/* Responsive font sizes */
+.responsive-text-xs {
+  font-size: clamp(0.7rem, 2.5vw, 0.8rem);
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  @apply w-1.5;
+.responsive-text-sm {
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  @apply bg-transparent;
+.responsive-text-base {
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-border/50 rounded-full hover:bg-border/70 transition-colors;
+.responsive-text-lg {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+}
+
+/* Safe area adjustments for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

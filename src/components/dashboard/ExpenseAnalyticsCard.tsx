@@ -7,18 +7,15 @@ import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BarChart3, LineChart, PieChart } from "lucide-react";
 import { motion } from "framer-motion";
-import { ChartContainer } from "@/components/charts/ChartContainer";
+import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-
 interface ExpenseAnalyticsCardProps {
   expenses: Expense[];
   isLoading: boolean;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
 }
-
 export const ExpenseAnalyticsCard = ({
   expenses,
   isLoading,
@@ -26,7 +23,6 @@ export const ExpenseAnalyticsCard = ({
   setChartType
 }: ExpenseAnalyticsCardProps) => {
   const isMobile = useIsMobile();
-
   const renderChart = () => {
     switch (chartType) {
       case 'pie':
@@ -39,66 +35,51 @@ export const ExpenseAnalyticsCard = ({
         return null;
     }
   };
-
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = { color };
+    acc[key] = {
+      color
+    };
     return acc;
-  }, {} as Record<string, { color: string; }>);
-
-  return (
-    <Card className="overflow-hidden shadow-sm border-border/50 bg-card/95 backdrop-blur-sm">
+  }, {} as Record<string, {
+    color: string;
+  }>);
+  return <Card className="overflow-hidden shadow-sm border-border/50 dark:bg-[#1a1f2c]">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
           <CardTitle className={isMobile ? 'text-base' : ''}>Expense Analytics</CardTitle>
           <div className="flex items-center">
-            <div className="bg-muted/20 rounded-lg p-1 flex gap-1">
-              {[
-                { type: 'pie', icon: PieChart },
-                { type: 'bar', icon: BarChart3 },
-                { type: 'line', icon: LineChart }
-              ].map(({ type, icon: Icon }) => (
-                <button
-                  key={type}
-                  onClick={() => setChartType(type as 'pie' | 'bar' | 'line')}
-                  className={cn(
-                    "p-1.5 rounded-md transition-all",
-                    chartType === type 
-                      ? "bg-background shadow-sm text-primary" 
-                      : "hover:bg-muted text-muted-foreground"
-                  )}
-                  aria-label={`${type} chart`}
-                >
-                  <Icon className="h-4 w-4" />
-                </button>
-              ))}
+            <div className="bg-muted/30 rounded-lg p-1 flex">
+              <button onClick={() => setChartType('pie')} className={`p-1.5 rounded-md transition-all ${chartType === 'pie' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} aria-label="Pie chart">
+                <PieChart className="h-4 w-4" />
+              </button>
+              <button onClick={() => setChartType('bar')} className={`p-1.5 rounded-md transition-all ${chartType === 'bar' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} aria-label="Bar chart">
+                <BarChart3 className="h-4 w-4" />
+              </button>
+              <button onClick={() => setChartType('line')} className={`p-1.5 rounded-md transition-all ${chartType === 'line' ? 'bg-background shadow-sm text-primary' : 'hover:bg-muted text-muted-foreground'}`} aria-label="Line chart">
+                <LineChart className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
       </CardHeader>
-      
-      <CardContent className="p-4">
-        {isLoading ? (
-          <div className="flex justify-center items-center min-h-[300px]">
+      <CardContent className="pt-2 pb-4 mx--10">
+        {isLoading ? <div className="flex justify-center p-6">
             <p className="text-muted-foreground">Loading analytics...</p>
-          </div>
-        ) : expenses.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[300px]">
-            <p className="text-muted-foreground">Add some expenses to see analytics</p>
-          </div>
-        ) : (
-          <motion.div 
-            className="min-h-[300px] w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            key={chartType}
-          >
-            <ChartContainer config={chartConfig}>
-              {renderChart()}
-            </ChartContainer>
-          </motion.div>
-        )}
+          </div> : expenses.length === 0 ? <div className="text-center text-muted-foreground py-8">
+            Add some expenses to see analytics
+          </div> : <ScrollArea className="h-[350px] w-full">
+            <motion.div className="min-h-[320px] w-full" initial={{
+          opacity: 0
+        }} animate={{
+          opacity: 1
+        }} transition={{
+          duration: 0.3
+        }} key={chartType}>
+              <ChartContainer config={chartConfig} className="h-full w-full min-h-[320px]">
+                {renderChart()}
+              </ChartContainer>
+            </motion.div>
+          </ScrollArea>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
