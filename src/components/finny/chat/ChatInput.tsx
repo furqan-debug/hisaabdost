@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Send } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -11,6 +13,7 @@ interface ChatInputProps {
   isAuthenticated: boolean;
   isConnecting: boolean;
 }
+
 const ChatInput = ({
   value,
   onChange,
@@ -20,13 +23,29 @@ const ChatInput = ({
   isConnecting
 }: ChatInputProps) => {
   const isMobile = useIsMobile();
-  return <form onSubmit={onSubmit} className="finny-chat-input mx--2 mx--4 py-[18px] my-[49px] px-[27px]">
-      <div className="finny-chat-input-container">
-        <Input type="text" placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny"} value={value} onChange={onChange} disabled={isLoading || !isAuthenticated || isConnecting} className="flex-1 rounded-lg my-0 py-0" />
-        <Button type="submit" size={isMobile ? "default" : "icon"} className="bg-primary hover:bg-primary/90" disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}>
-          {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Send className="h-4 w-4" />}
+  
+  return (
+    <form onSubmit={onSubmit} className="finny-chat-input px-3 py-2.5 border-t bg-background/95 backdrop-blur-sm">
+      <div className="finny-chat-input-container flex items-center gap-2">
+        <Input 
+          type="text" 
+          placeholder={isAuthenticated ? "Message Finny..." : "Log in to chat with Finny"} 
+          value={value} 
+          onChange={onChange} 
+          disabled={isLoading || !isAuthenticated || isConnecting} 
+          className="h-8 text-sm"
+        />
+        <Button 
+          type="submit" 
+          size="icon-sm"
+          className="h-8 w-8 bg-primary hover:bg-primary/90" 
+          disabled={!value.trim() || isLoading || !isAuthenticated || isConnecting}
+        >
+          {isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
         </Button>
       </div>
-    </form>;
+    </form>
+  );
 };
+
 export default ChatInput;

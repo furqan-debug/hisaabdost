@@ -10,18 +10,18 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="finny-chat-header flex justify-between items-center my--11 mx--5 my--0 mx-[-9px] py-[18px] px-[17px]">
-      <div className="finny-chat-title flex items-center gap-2">
-        <MessageSquareText size={18} className="text-primary" />
-        <span className="text-primary font-medium">Finny</span>
-        <Badge className="finny-chat-badge ml-1">Finance Assistant</Badge>
+    <div className="finny-chat-header flex justify-between items-center px-3 py-2.5 border-b bg-background/95 backdrop-blur-sm">
+      <div className="finny-chat-title flex items-center gap-1.5">
+        <MessageSquareText size={16} className="text-primary" />
+        <span className="text-sm font-medium text-primary">Finny</span>
+        <Badge className="finny-chat-badge text-[10px] py-0 px-1.5">Finance Assistant</Badge>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="rounded-lg hover:bg-muted/80" aria-label="Finny Help">
-                <HelpCircle size={16} className="text-muted-foreground" />
+              <Button variant="ghost" size="icon-sm" className="h-7 w-7" aria-label="Finny Help">
+                <HelpCircle size={14} className="text-muted-foreground" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
@@ -30,15 +30,14 @@ const ChatHeader = ({ onClose }: { onClose?: () => void }) => {
           </Tooltip>
         </TooltipProvider>
         
-        {/* Always show the close button, not just on mobile */}
         <Button 
           variant="ghost" 
-          size="icon-sm" 
-          className="rounded-lg hover:bg-muted/80" 
+          size="icon-sm"
+          className="h-7 w-7" 
           onClick={onClose} 
           aria-label="Close Chat"
         >
-          <X size={16} className="text-muted-foreground" />
+          <X size={14} className="text-muted-foreground" />
         </Button>
       </div>
     </div>
