@@ -132,7 +132,7 @@ export default function Analytics() {
           <Card className="border shadow-sm bg-card/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+                <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 mx-[5px] px-0 my-[4px]">
                   <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent px-4 py-2.5 font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent">
                     Overview
                   </TabsTrigger>
@@ -151,7 +151,7 @@ export default function Analytics() {
                         <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
                         <CardDescription>Your expenses by category</CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-6 py-[10px] px-1 mx-[-7px] my-[48px]">
+                      <CardContent className="pt-0 pb-6 px-1 mx-[-7px] py-[11px] my-[7px]">
                         <ChartContainer config={chartConfig} className="pie-chart-container">
                           <ExpensesPieChart expenses={filteredExpenses} />
                         </ChartContainer>
