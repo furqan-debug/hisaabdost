@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Eye, Smile } from 'lucide-react';
 
@@ -8,6 +8,16 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
+  // Auto-dismiss after animation completes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 3500); // Set to match our animation duration plus a small buffer
+    
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+  
+  // Container animation - appears and disappears
   const containerVariants = {
     initial: { opacity: 0 },
     animate: { 
@@ -20,9 +30,10 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
+  // Wallet logo animation
   const walletVariants = {
     initial: { 
-      scale: 0.9,
+      scale: 0.8,
       rotate: -15
     },
     animate: {
@@ -37,6 +48,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
+  // Bounce animation for logo
   const bounceVariants = {
     initial: { y: -20, opacity: 0 },
     animate: {
@@ -52,6 +64,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
+  // Face elements animation
   const faceVariants = {
     initial: { scale: 0, opacity: 0 },
     animate: {
@@ -66,6 +79,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
+  // Text appear animation
   const textVariants = {
     initial: { opacity: 0, y: 20 },
     animate: {
@@ -80,6 +94,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
+  // Shimmer effect animation
   const shimmerVariants = {
     initial: { 
       background: "linear-gradient(45deg, transparent 0%, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%, transparent 100%)",
@@ -97,7 +112,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   };
 
   return (
-    <AnimatePresence onExitComplete={onComplete}>
+    <AnimatePresence>
       <motion.div
         key="splash"
         variants={containerVariants}
