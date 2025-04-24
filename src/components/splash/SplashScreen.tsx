@@ -82,7 +82,6 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               size={80}
               strokeWidth={1.5}
               className="w-full h-full"
-              style={{ pathLength: 0 }}
               initial="initial"
               animate="animate"
               variants={walletVariants}
