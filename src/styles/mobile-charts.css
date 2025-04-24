@@ -1,19 +1,20 @@
+
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   .chart-wrapper {
-    @apply w-full relative px-0 min-h-[250px];
+    @apply w-full relative px-0 overflow-visible;
   }
   
   .chart-container {
-    @apply w-full relative mx-auto max-w-[400px] px-0 min-h-[250px];
+    @apply w-full relative mx-auto max-w-[400px] px-0 overflow-visible;
   }
   
   .recharts-wrapper {
-    @apply h-full w-full rounded-lg mx-auto;
+    @apply h-full w-full rounded-lg mx-auto overflow-visible;
   }
   
   .recharts-responsive-container {
-    @apply w-full h-full;
+    @apply w-full h-full overflow-visible;
   }
 
   .recharts-tooltip-wrapper {
@@ -21,7 +22,7 @@
   }
   
   .pie-chart-container {
-    @apply max-w-[280px] mx-auto min-h-[250px];
+    @apply max-w-[280px] mx-auto min-h-[220px] overflow-visible;
   }
 
   .expense-chart-legend {
@@ -56,15 +57,15 @@
 
   /* Enhanced mobile styles for trends section */
   .trends-card {
-    @apply mx-auto my-4 px-2;
+    @apply mx-auto my-4 px-2 overflow-visible;
   }
 
   .trends-chart-wrapper {
-    @apply h-[250px] w-full mb-3;
+    @apply h-[220px] w-full overflow-visible;
   }
   
   .trends-chart-container {
-    @apply h-[250px] mx-auto w-full;
+    @apply h-auto mx-auto w-full overflow-visible;
   }
 
   /* Better axis label visibility */
@@ -75,7 +76,7 @@
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
-  @apply w-full h-full relative min-h-[300px] px-0;
+  @apply w-full h-full relative px-0 overflow-visible;
 }
 
 .recharts-default-legend {
@@ -205,9 +206,9 @@
 }
 
 .trends-chart-wrapper {
-  @apply relative w-full h-[300px];
+  @apply relative w-full h-[220px] overflow-visible;
 }
 
 .trends-chart-container {
-  @apply mx-auto max-w-[90%];
+  @apply mx-auto max-w-[90%] overflow-visible;
 }

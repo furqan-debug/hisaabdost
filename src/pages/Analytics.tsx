@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -175,9 +176,11 @@ export default function Analytics() {
                         <CardDescription className="text-center">Your spending patterns over time</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 pb-2 trends-chart-container">
-                        <ChartContainer config={chartConfig}>
-                          <ExpensesBarChart expenses={filteredExpenses} />
-                        </ChartContainer>
+                        <div className="h-[220px]">
+                          <ChartContainer config={chartConfig}>
+                            <ExpensesBarChart expenses={filteredExpenses} />
+                          </ChartContainer>
+                        </div>
                       </CardContent>
                     </Card>
 
@@ -187,9 +190,11 @@ export default function Analytics() {
                         <CardDescription className="text-center">How your spending evolves by category</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 pb-2 trends-chart-container">
-                        <ChartContainer config={chartConfig}>
-                          <ExpensesLineChart expenses={filteredExpenses} />
-                        </ChartContainer>
+                        <div className="h-[220px]">
+                          <ChartContainer config={chartConfig}>
+                            <ExpensesLineChart expenses={filteredExpenses} />
+                          </ChartContainer>
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>

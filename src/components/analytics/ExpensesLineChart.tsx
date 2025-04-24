@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
@@ -38,11 +39,11 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
     : 0;
 
   return (
-    <div className="w-full h-[250px]">
-      <ResponsiveContainer width="100%" height={250}>
+    <div className="w-full h-full">
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={isMobile ? { top: 15, right: 5, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
+          margin={isMobile ? { top: 15, right: 10, left: -15, bottom: 5 } : { top: 20, right: 30, left: 0, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
           <XAxis
