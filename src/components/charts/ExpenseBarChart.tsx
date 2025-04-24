@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
@@ -78,7 +79,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
                 <motion.div 
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="tooltip-card"
+                  className="tooltip-card bg-popover text-popover-foreground"
                 >
                   <div className="text-sm font-medium mb-1">{label}</div>
                   <div className="space-y-1">

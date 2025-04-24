@@ -30,7 +30,7 @@
   }
 
   .expense-chart-legend-item {
-    @apply text-xs px-2 py-0.5 rounded-full bg-muted/20 border border-muted/10;
+    @apply text-xs px-2 py-0.5 rounded-full border border-muted/10;
   }
 
   .chart-center-total {
@@ -42,11 +42,11 @@
   }
   
   .chart-center-total-label {
-    @apply text-xs text-muted-foreground;
+    @apply text-xs;
   }
   
   .recharts-cartesian-axis-tick text {
-    @apply text-[9px] text-muted-foreground/70;
+    @apply text-[9px];
   }
   
   /* Mobile optimized comparison cards */
@@ -86,7 +86,7 @@
 }
 
 .recharts-tooltip-wrapper .tooltip-card {
-  @apply rounded-lg border bg-background/95 p-2 shadow-sm backdrop-blur-sm;
+  @apply rounded-lg border p-2 shadow-sm backdrop-blur-sm;
 }
 
 .recharts-sector {
@@ -106,7 +106,7 @@
 }
 
 .chart-center-total-label {
-  @apply text-sm text-muted-foreground;
+  @apply text-sm;
 }
 
 .expense-chart-legend {
@@ -114,7 +114,7 @@
 }
 
 .expense-chart-legend-item {
-  @apply flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors hover:bg-muted/20;
+  @apply flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium transition-colors hover:bg-muted/30;
 }
 
 .expense-chart-legend-dot {
@@ -151,7 +151,7 @@
 }
 
 .recharts-text {
-  @apply fill-muted-foreground/70 text-xs;
+  @apply text-xs fill-muted-foreground/70;
 }
 
 /* Chart legend row */
