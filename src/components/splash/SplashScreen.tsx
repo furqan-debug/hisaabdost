@@ -1,23 +1,20 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Eye, Smile } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete: () => void;
 }
 
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
-  // Auto-dismiss after animation completes
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 3500); // Set to match our animation duration plus a small buffer
+    }, 3500);
     
     return () => clearTimeout(timer);
   }, [onComplete]);
-  
-  // Container animation - appears and disappears
+
   const containerVariants = {
     initial: { opacity: 0 },
     animate: { 
@@ -30,8 +27,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
-  // Wallet logo animation
-  const walletVariants = {
+  const logoVariants = {
     initial: { 
       scale: 0.8,
       rotate: -15
@@ -48,7 +44,6 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
-  // Bounce animation for logo
   const bounceVariants = {
     initial: { y: -20, opacity: 0 },
     animate: {
@@ -64,22 +59,6 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
-  // Face elements animation
-  const faceVariants = {
-    initial: { scale: 0, opacity: 0 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-      transition: { 
-        duration: 0.4,
-        delay: 1.5,
-        type: "spring",
-        stiffness: 300
-      }
-    }
-  };
-
-  // Text appear animation
   const textVariants = {
     initial: { opacity: 0, y: 20 },
     animate: {
@@ -94,7 +73,6 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
-  // Shimmer effect animation
   const shimmerVariants = {
     initial: { 
       background: "linear-gradient(45deg, transparent 0%, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%, transparent 100%)",
@@ -125,24 +103,12 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           variants={bounceVariants}
           className="relative mb-6"
         >
-          <motion.div 
-            className="text-[#6E59A5] w-20 h-20"
-            variants={walletVariants}
-          >
-            <Wallet 
-              size={80}
-              strokeWidth={1.5}
-              className="w-full h-full"
-            />
-            <motion.div
-              variants={faceVariants}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <Eye size={10} className="absolute left-[35%] top-[40%]" />
-              <Eye size={10} className="absolute right-[35%] top-[40%]" />
-              <Smile size={20} className="absolute left-[30%] top-[50%]" />
-            </motion.div>
-          </motion.div>
+          <motion.img
+            src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
+            alt="Hisaab Dost Logo"
+            className="w-20 h-20"
+            variants={logoVariants}
+          />
         </motion.div>
 
         <motion.div
