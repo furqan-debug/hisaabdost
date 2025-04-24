@@ -1,3 +1,4 @@
+
 import { Moon, Sun, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -117,7 +118,7 @@ export function ThemeToggle() {
             className={cn(colorMode === "purple" ? "bg-accent" : "")}
           >
             <div className="w-4 h-4 rounded-full bg-[hsl(265,73%,69%)] mr-2" />
-            Royal Purple
+            Purple
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

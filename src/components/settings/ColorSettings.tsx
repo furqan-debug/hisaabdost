@@ -56,7 +56,7 @@ export function ColorSettings() {
           onClick={() => handleColorChange('purple')}
         >
           <div className="w-4 h-4 rounded-full bg-[hsl(265,73%,69%)] mr-2" />
-          Royal Purple
+          Purple
         </Button>
       </div>
     </div>
