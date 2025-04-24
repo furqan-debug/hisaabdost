@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
 import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
@@ -7,7 +8,7 @@ import { Budget } from "@/pages/Budget";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { LayoutDashboard, Category, Receipt, BarChart2 } from "lucide-react";
+import { LayoutDashboard, Layers, Receipt, BarChart2 } from "lucide-react";
 
 interface BudgetTabsProps {
   budgets: Budget[];
@@ -38,7 +39,7 @@ export const BudgetTabs = ({
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'categories', label: 'Categories', icon: Category },
+    { id: 'categories', label: 'Categories', icon: Layers },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
     { id: 'comparison', label: 'Comparison', icon: BarChart2 },
   ];
