@@ -1,51 +1,31 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useCurrency } from "@/hooks/use-currency";
-import { formatCurrency } from "@/utils/formatters";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
+import { useAuth } from "@/lib/auth";
+import { format } from "date-fns";
+import { useMonthContext } from "@/hooks/use-month-context";
 
 interface DashboardHeaderProps {
-  totalExpenses: number;
-  onAddExpense: () => void;
+  isNewUser: boolean;
 }
 
-export const DashboardHeader = ({ 
-  totalExpenses, 
-  onAddExpense 
-}: DashboardHeaderProps) => {
-  const { currencyCode } = useCurrency();
-  const isMobile = useIsMobile();
-
+export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
+  const { user } = useAuth();
+  const { selectedMonth } = useMonthContext();
+  const isCurrentMonth = selectedMonth.getMonth() === new Date().getMonth() && 
+                        selectedMonth.getFullYear() === new Date().getFullYear();
+  
   return (
-    <header className="space-y-4">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Overview of your financial activity
-        </p>
-      </div>
-      
-      <div className="flex justify-center items-center space-x-4">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">Total Expenses</p>
-          <p className="text-xl font-semibold">
-            {formatCurrency(totalExpenses, currencyCode)}
-          </p>
-        </div>
-        
-        <Button 
-          variant="default" 
-          size={isMobile ? "sm" : "default"}
-          onClick={onAddExpense}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Expense
-        </Button>
-      </div>
+    <header className="space-y-1">
+      <h1 className="text-2xl font-bold text-foreground">
+        {isNewUser ? `Welcome, ${user?.user_metadata?.full_name || 'there'}!` : isCurrentMonth ? 'Dashboard' : `${format(selectedMonth, 'MMMM yyyy')}`}
+      </h1>
+      <p className="text-muted-foreground text-sm">
+        {isNewUser 
+          ? "Let's start tracking your expenses. Add your first expense to get started!"
+          : isCurrentMonth 
+            ? "Here's an overview of your expenses" 
+            : `Viewing your financial data for ${format(selectedMonth, 'MMMM yyyy')}`}
+      </p>
     </header>
   );
 };
