@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -5,6 +6,7 @@ import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { format, parseISO } from "date-fns";
 import clsx from "clsx";
 
 interface BudgetComparisonProps {
@@ -15,23 +17,29 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  const budgetsByPeriod = budgets.reduce((acc, budget) => {
-    if (!acc[budget.period]) {
-      acc[budget.period] = { period: budget.period };
+  // Group budgets by month using created_at
+  const budgetsByMonth = budgets.reduce((acc, budget) => {
+    const monthKey = format(parseISO(budget.created_at), 'MMM yyyy');
+    if (!acc[monthKey]) {
+      acc[monthKey] = { month: monthKey };
     }
-    acc[budget.period][budget.category] = budget.amount;
+    acc[monthKey][budget.category] = (acc[monthKey][budget.category] || 0) + budget.amount;
     return acc;
   }, {} as Record<string, any>);
-  const data = Object.values(budgetsByPeriod);
 
-  if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
+  // Convert to array and sort chronologically
+  const data = Object.values(budgetsByMonth).sort((a, b) => {
+    return new Date(a.month).getTime() - new Date(b.month).getTime();
+  });
+
+  if (budgets.length === 0 || Object.keys(budgetsByMonth).length <= 1) {
     return (
       <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center">
-        <p className="text-muted-foreground mb-2">Not enough data for comparison</p>
+        <p className="text-muted-foreground mb-2">Not enough data for monthly comparison</p>
         <p className="text-sm text-muted-foreground">
           {budgets.length === 0 
-            ? "Add your first budget to see comparisons" 
-            : "Add budgets with different periods to see comparisons"}
+            ? "Add your first budget to see monthly comparisons" 
+            : "Add budgets across different months to see comparisons"}
         </p>
       </div>
     );
@@ -48,14 +56,10 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
     .slice(0, isMobile ? 4 : 6);
 
-  const formatPeriodShort = (period: string) => {
-    return period.length > 7 ? period.slice(0, 7) + "…" : period;
-  };
-
   return (
     <Card className="overflow-hidden rounded-xl shadow-md border bg-card">
       <CardHeader>
-        <CardTitle>Budget Comparison by Period</CardTitle>
+        <CardTitle>Monthly Budget Comparison</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 justify-center">
@@ -87,14 +91,13 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.11} />
               <XAxis 
-                dataKey="period"
+                dataKey="month"
                 axisLine={false}
                 tickLine={false}
                 tick={{
                   fontSize: isMobile ? 11 : 13,
                   fill: "var(--muted-foreground)",
                 }}
-                tickFormatter={formatPeriodShort}
                 height={40}
               />
               <YAxis
