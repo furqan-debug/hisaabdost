@@ -3,23 +3,22 @@ import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Consistent soft pastel palette for all charts
+// Updated vibrant and minimalist color palette
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Food": "#B7E5B4",           // Soft Green
-  "Groceries": "#FFF7AE",      // Soft Yellow
-  "Housing": "#F6D7A7",        // Soft Peach
-  "Utilities": "#D0E6FA",      // Soft Blue
-  "Transportation": "#FFD6E0", // Soft Pink
-  "Healthcare": "#F6BED6",     // Soft Pink-Purple
-  "Entertainment": "#DECFFB",  // Soft Purple
-  "Shopping": "#D9F6F6",       // Soft Aqua
-  "Personal": "#FFF3E6",       // Very Soft Orange
-  "Education": "#DEEBFC",      // Soft Light Blue
-  "Travel": "#B2F0EC",         // Soft Mint
-  "Insurance": "#D1F2EB",      // Soft Light Aqua
-  "Debt": "#FFE3A7",           // Soft Yellow-Orange
-  "Savings": "#FEE9AE",        // Pale Yellow
-  "Other": "#E4EDF2",          // Neutral Pale Gray
+  "Healthcare": "#FF6B8E",      // Soft Vibrant Pink
+  "Groceries": "#FFD700",        // Soft Vibrant Gold
+  "Utilities": "#5CC7F2",        // Soft Vibrant Blue
+  "Housing": "#B7E5B4",          // Soft Green
+  "Transportation": "#9370DB",   // Soft Purple
+  "Entertainment": "#FFA07A",    // Soft Coral
+  "Shopping": "#87CEFA",         // Light Sky Blue
+  "Personal": "#DDA0DD",         // Soft Plum
+  "Education": "#32CD32",        // Lime Green
+  "Travel": "#40E0D0",           // Turquoise
+  "Insurance": "#F0E68C",        // Khaki
+  "Debt": "#FF6347",             // Tomato
+  "Savings": "#98FB98",          // Pale Green
+  "Other": "#D3D3D3",            // Light Gray
 };
 
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
