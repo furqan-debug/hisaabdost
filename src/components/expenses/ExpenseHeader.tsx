@@ -223,15 +223,15 @@ export function ExpenseHeader({
                   className="cursor-pointer"
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'csv' ? 'Exporting...' : 'Export CSV'}</span>
+                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => handleExport('pdf')}
                   disabled={isExporting !== null}
                   className="cursor-pointer"
                 >
-                  <FilePdf className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'Export PDF'}</span>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -272,7 +272,7 @@ export function ExpenseHeader({
                   disabled={isExporting !== null}
                   className="cursor-pointer"
                 >
-                  <FilePdf className="mr-2 h-4 w-4" />
+                  <FileText className="mr-2 h-4 w-4" />
                   <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
