@@ -1,4 +1,3 @@
-
 import { Moon, Sun, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -17,46 +16,37 @@ import { cn } from "@/lib/utils";
 export function ThemeToggle() {
   const { setTheme, theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [colorMode, setColorMode] = useState<"default" | "pink" | "blue">("default");
+  const [colorMode, setColorMode] = useState<"default" | "pink" | "purple">("default");
   const [isOpen, setIsOpen] = useState(false);
 
-  // After mounting, we can access the DOM
   useEffect(() => {
     setMounted(true);
-    // Set initial color mode based on document class
     if (document.documentElement.classList.contains("pink")) {
       setColorMode("pink");
-    } else if (document.documentElement.classList.contains("blue")) {
-      setColorMode("blue");
+    } else if (document.documentElement.classList.contains("purple")) {
+      setColorMode("purple");
     } else {
       setColorMode("default");
     }
   }, []);
 
-  // Handle theme changes
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
   };
 
-  // Handle color scheme changes
-  const handleColorChange = (newColor: "default" | "pink" | "blue") => {
-    // Remove existing color classes
-    document.documentElement.classList.remove("pink", "blue");
+  const handleColorChange = (newColor: "default" | "pink" | "purple") => {
+    document.documentElement.classList.remove("pink", "purple");
     
-    // Add new color class if needed
     if (newColor === "pink") {
       document.documentElement.classList.add("pink");
-    } else if (newColor === "blue") {
-      document.documentElement.classList.add("blue");
+    } else if (newColor === "purple") {
+      document.documentElement.classList.add("purple");
     }
     
-    // Save color preference to localStorage
     localStorage.setItem("color-theme", newColor);
-    
     setColorMode(newColor);
   };
 
-  // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) return null;
 
   return (
@@ -123,11 +113,11 @@ export function ThemeToggle() {
             Pink
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => handleColorChange("blue")}
-            className={cn(colorMode === "blue" ? "bg-accent" : "")}
+            onClick={() => handleColorChange("purple")}
+            className={cn(colorMode === "purple" ? "bg-accent" : "")}
           >
-            <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
-            Blue
+            <div className="w-4 h-4 rounded-full bg-[hsl(265,73%,69%)] mr-2" />
+            Royal Purple
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

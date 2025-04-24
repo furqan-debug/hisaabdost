@@ -9,13 +9,13 @@ const initColorTheme = () => {
   const savedColorTheme = localStorage.getItem("color-theme");
   
   // Remove any existing theme classes
-  document.documentElement.classList.remove("pink", "blue");
+  document.documentElement.classList.remove("pink", "purple");
   
   // Apply saved theme if it exists
   if (savedColorTheme === "pink") {
     document.documentElement.classList.add("pink");
-  } else if (savedColorTheme === "blue") {
-    document.documentElement.classList.add("blue");
+  } else if (savedColorTheme === "purple") {
+    document.documentElement.classList.add("purple");
   }
 };
 

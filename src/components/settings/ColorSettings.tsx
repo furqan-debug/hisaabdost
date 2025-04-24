@@ -3,27 +3,27 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ColorSettings() {
-  const [colorMode, setColorMode] = useState<"default" | "pink" | "blue">("default");
+  const [colorMode, setColorMode] = useState<"default" | "pink" | "purple">("default");
 
   useEffect(() => {
     const savedColorTheme = localStorage.getItem("color-theme");
     
     if (savedColorTheme === "pink" || document.documentElement.classList.contains("pink")) {
       setColorMode("pink");
-    } else if (savedColorTheme === "blue" || document.documentElement.classList.contains("blue")) {
-      setColorMode("blue");
+    } else if (savedColorTheme === "purple" || document.documentElement.classList.contains("purple")) {
+      setColorMode("purple");
     } else {
       setColorMode("default");
     }
   }, []);
 
-  const handleColorChange = (newColor: "default" | "pink" | "blue") => {
-    document.documentElement.classList.remove("pink", "blue");
+  const handleColorChange = (newColor: "default" | "pink" | "purple") => {
+    document.documentElement.classList.remove("pink", "purple");
     
     if (newColor === "pink") {
       document.documentElement.classList.add("pink");
-    } else if (newColor === "blue") {
-      document.documentElement.classList.add("blue");
+    } else if (newColor === "purple") {
+      document.documentElement.classList.add("purple");
     }
     
     localStorage.setItem("color-theme", newColor);
@@ -52,11 +52,11 @@ export function ColorSettings() {
         </Button>
         <Button 
           variant="outline" 
-          className={`justify-start h-9 ${colorMode === 'blue' ? 'bg-accent' : ''}`}
-          onClick={() => handleColorChange('blue')}
+          className={`justify-start h-9 ${colorMode === 'purple' ? 'bg-accent' : ''}`}
+          onClick={() => handleColorChange('purple')}
         >
-          <div className="w-4 h-4 rounded-full bg-[hsl(214,82%,51%)] mr-2" />
-          Blue
+          <div className="w-4 h-4 rounded-full bg-[hsl(265,73%,69%)] mr-2" />
+          Royal Purple
         </Button>
       </div>
     </div>
