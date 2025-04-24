@@ -73,7 +73,7 @@ export const RecentExpensesCard = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Expenses</CardTitle>
+        <CardTitle className="text-center">Recent Expenses</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (

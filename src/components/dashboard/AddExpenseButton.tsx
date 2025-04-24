@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -95,16 +94,13 @@ export const AddExpenseButton = ({
 
   return <div className="mt-4">
       <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
-        <motion.div initial={{
-        opacity: 0,
-        y: 10
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.3
-      }} className="bg-card rounded-xl border shadow-sm p-3 my-0 py-[19px]">
-          <h3 className="text-base font-medium mb-2 flex items-center my-px py-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.3 }} 
+          className="bg-card rounded-xl border shadow-sm p-3 my-0 py-[19px]"
+        >
+          <h3 className="text-base font-medium mb-2 flex items-center justify-center my-px py-0">
             <Plus className="h-4 w-4 text-primary mr-1.5" />
             Add New Expense
           </h3>
