@@ -3,6 +3,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Insight } from "@/hooks/useAnalyticsInsights";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency } from "@/utils/formatters";
 
 interface InsightsDisplayProps {
   insights: Insight[];
@@ -10,8 +12,31 @@ interface InsightsDisplayProps {
 
 export function InsightsDisplay({ insights }: InsightsDisplayProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
   
   if (insights.length === 0) return null;
+
+  // Format currency values in insights messages
+  const formattedInsights = insights.map(insight => {
+    const formattedMessage = insight.message.replace(
+      /\$(\d+(\.\d+)?)/g, 
+      (match, amount) => formatCurrency(parseFloat(amount), currencyCode)
+    );
+    
+    let formattedRecommendation = insight.recommendation;
+    if (formattedRecommendation) {
+      formattedRecommendation = formattedRecommendation.replace(
+        /\$(\d+(\.\d+)?)/g, 
+        (match, amount) => formatCurrency(parseFloat(amount), currencyCode)
+      );
+    }
+    
+    return {
+      ...insight,
+      message: formattedMessage,
+      recommendation: formattedRecommendation
+    };
+  });
   
   return (
     <motion.div 
@@ -20,7 +45,7 @@ export function InsightsDisplay({ insights }: InsightsDisplayProps) {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      {insights.map((insight, index) => (
+      {formattedInsights.map((insight, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, y: 5 }}

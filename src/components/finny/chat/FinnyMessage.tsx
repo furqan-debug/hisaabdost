@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { PieChart, BarChart3, Check, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface FinnyMessageProps {
   content: string;
@@ -17,6 +18,8 @@ interface FinnyMessageProps {
 }
 
 const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: FinnyMessageProps) => {
+  const { currencyCode } = useCurrency();
+
   // Remove any action markers from the message content for display
   const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
   

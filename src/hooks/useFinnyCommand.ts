@@ -1,7 +1,9 @@
 
+
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 /**
  * Hook to send commands to Finny programmatically
@@ -9,6 +11,7 @@ import { toast } from 'sonner';
 export function useFinnyCommand() {
   const { addExpense, setBudget, askFinny, openChat } = useFinny();
   const { user } = useAuth();
+  const { currencyCode } = useCurrency();
 
   /**
    * Send a command to Finny to add an expense
@@ -20,7 +23,7 @@ export function useFinnyCommand() {
     }
     
     const message = `Add an expense of ${amount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ' today'}`;
-    askFinny(message);
+    askFinny(message, currencyCode);
   };
   
   /**
@@ -33,7 +36,7 @@ export function useFinnyCommand() {
     }
     
     const message = `Set a budget of ${amount} for ${category}`;
-    askFinny(message);
+    askFinny(message, currencyCode);
   };
   
   /**
@@ -45,7 +48,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny("Show me a summary of my spending for this month");
+    askFinny("Show me a summary of my spending for this month", currencyCode);
   };
   
   /**
@@ -57,7 +60,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny(`Show my ${category} spending breakdown`);
+    askFinny(`Show my ${category} spending breakdown`, currencyCode);
   };
   
   /**
@@ -70,7 +73,7 @@ export function useFinnyCommand() {
     }
     
     const message = `I want to set a financial goal called "${title}" with a target amount of ${amount}${deadline ? ` by ${deadline}` : ''}`;
-    askFinny(message);
+    askFinny(message, currencyCode);
   };
   
   /**
@@ -83,7 +86,7 @@ export function useFinnyCommand() {
     }
     
     const message = `Delete my ${category} expense${date ? ` from ${date}` : ''}`;
-    askFinny(message);
+    askFinny(message, currencyCode);
   };
 
   return {
@@ -97,3 +100,4 @@ export function useFinnyCommand() {
     openChat
   };
 }
+

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';
@@ -14,6 +15,7 @@ import {
   PiggyBank 
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
+import { useCurrency } from '@/hooks/use-currency';
 
 const DEFAULT_QUICK_REPLIES: QuickReply[] = [
   { text: "Spending summary", action: "Show me a summary of my recent spending", icon: <PieChart size={14} /> },
@@ -38,6 +40,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { currencyCode } = useCurrency();
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -94,7 +97,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
               .sort((a, b) => b[1] - a[1])[0];
             
             const userName = user?.user_metadata?.full_name || '';
-            personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1])} — shall we explore ways to save? 🧠`;
+            personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
             
             let contextReplies: QuickReply[] = [];
             
@@ -182,7 +185,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         timestamp: new Date(),
       }]);
     }
-  }, [user]);
+  }, [user, currencyCode]);
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
@@ -226,7 +229,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
           userId: user.id,
           chatHistory: recentMessages,
           analysisType: categoryMatch ? 'category' : (summaryMatch ? 'summary' : 'general'),
-          specificCategory: categoryMatch ? categoryMatch[1] : null
+          specificCategory: categoryMatch ? categoryMatch[1] : null,
+          currencyCode: currencyCode
         },
       });
 

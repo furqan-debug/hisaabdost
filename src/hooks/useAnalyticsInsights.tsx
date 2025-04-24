@@ -2,6 +2,8 @@
 import React from 'react';
 import { TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon, SparklesIcon } from "lucide-react";
 import { subMonths, isAfter, isBefore } from "date-fns";
+import { useCurrency } from '@/hooks/use-currency';
+import { formatCurrency } from '@/utils/formatters';
 
 interface Expense {
   amount: number;
@@ -18,6 +20,8 @@ export interface Insight {
 }
 
 export function useAnalyticsInsights(filteredExpenses: Expense[]): Insight[] {
+  const { currencyCode } = useCurrency();
+
   if (!filteredExpenses.length) return [];
 
   const insights: Insight[] = [];
@@ -54,7 +58,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]): Insight[] {
     insights.push({
       type: 'highlight',
       icon: React.createElement(TrendingUpIcon, { className: "h-4 w-4 text-orange-500" }),
-      message: `Your highest spending category is ${highestCategory[0]} at ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(highestCategory[1])} (${categoryPercentage.toFixed(1)}% of total)`,
+      message: `Your highest spending category is ${highestCategory[0]} at ${formatCurrency(highestCategory[1], currencyCode)} (${categoryPercentage.toFixed(1)}% of total)`,
       recommendation: categoryPercentage > 40 ? 
         "Consider setting a budget limit for this category as it represents a significant portion of your expenses." : 
         null
@@ -67,7 +71,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]): Insight[] {
     insights.push({
       type: 'alert',
       icon: React.createElement(AlertTriangleIcon, { className: "h-4 w-4 text-yellow-500" }),
-      message: `You have ${highTransactions.length} unusually large transactions that are 50% above your average expense of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(avgExpense)}`,
+      message: `You have ${highTransactions.length} unusually large transactions that are 50% above your average expense of ${formatCurrency(avgExpense, currencyCode)}`,
       recommendation: "Review these transactions to ensure they were planned expenses."
     });
   }
@@ -101,7 +105,7 @@ export function useAnalyticsInsights(filteredExpenses: Expense[]): Insight[] {
     insights.push({
       type: 'tip',
       icon: React.createElement(SparklesIcon, { className: "h-4 w-4 text-blue-500" }),
-      message: `You could save ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(savingsTotal)} by optimizing spending in smaller categories`,
+      message: `You could save ${formatCurrency(savingsTotal, currencyCode)} by optimizing spending in smaller categories`,
       recommendation: "Consider consolidating or eliminating expenses in these smaller categories for potential savings."
     });
   }

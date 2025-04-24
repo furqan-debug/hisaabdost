@@ -1,4 +1,5 @@
 
+
 // Format a price number to a standard string format
 export function formatPrice(price: number, currencyCode = 'USD'): string {
   try {

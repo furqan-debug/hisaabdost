@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, startOfMonth, endOfMonth, parseISO, isAfter, isSameMonth, isBefore, subMonths, subDays } from "date-fns";
 import { GoalForm } from "@/components/goals/GoalForm";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency } from "@/utils/formatters";
 
 interface Goal {
   id: string;
@@ -29,6 +31,7 @@ export default function Goals() {
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const queryClient = useQueryClient();
+  const { currencyCode } = useCurrency();
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals', user?.id],
@@ -146,12 +149,12 @@ export default function Goals() {
     
     // If savings are negative (overspent)
     if (savings < 0) {
-      return `You've overspent your ${goal.category} budget by $${Math.abs(savings).toFixed(2)}. Try to reduce spending to get back on track.`;
+      return `You've overspent your ${goal.category} budget by ${formatCurrency(Math.abs(savings), currencyCode)}. Try to reduce spending to get back on track.`;
     }
     
     // Progress tips based on percentage
     if (progress < 25) {
-      return `Focus on reducing your ${goal.category} spending to increase your savings. Try to save at least $${(goal.target_amount * 0.25).toFixed(2)} this month.`;
+      return `Focus on reducing your ${goal.category} spending to increase your savings. Try to save at least ${formatCurrency(goal.target_amount * 0.25, currencyCode)} this month.`;
     } else if (progress < 50) {
       return "You're making progress! Keep reducing expenses to reach your goal faster.";
     } else if (progress < 75) {
@@ -286,7 +289,7 @@ export default function Goals() {
                       </Button>
                     </div>
                     <CardDescription>
-                      Target: ${goal.target_amount.toLocaleString()}
+                      Target: {formatCurrency(goal.target_amount, currencyCode)}
                       <br />
                       Deadline: {format(parseISO(goal.deadline), 'MMM dd, yyyy')}
                     </CardDescription>
@@ -297,9 +300,9 @@ export default function Goals() {
                         <span>Progress ({formattedProgress}%)</span>
                         <span>
                           {isOverspent ? (
-                            <span className="text-destructive">-${Math.abs(savings).toFixed(2)}</span>
+                            <span className="text-destructive">-{formatCurrency(Math.abs(savings), currencyCode)}</span>
                           ) : (
-                            `$${Math.max(0, savings).toFixed(2)} of $${goal.target_amount.toLocaleString()}`
+                            `${formatCurrency(Math.max(0, savings), currencyCode)} of ${formatCurrency(goal.target_amount, currencyCode)}`
                           )}
                         </span>
                       </div>
