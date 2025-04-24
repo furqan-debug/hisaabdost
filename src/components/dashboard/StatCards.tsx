@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { ArrowDownRight, ArrowUpRight, DollarSign, Wallet, Edit, Save } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { format } from "date-fns";
+import { format, subMonths } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,30 +37,63 @@ export const StatCards = ({
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { selectedMonth, updateMonthData } = useMonthContext();
+  const { selectedMonth } = useMonthContext();
   const { currencyCode } = useCurrency();
-  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
   const [isEditing, setIsEditing] = useState(false);
   const [tempIncome, setTempIncome] = useState(monthlyIncome);
-  
-  // Update month data when values change
+  const [percentageChanges, setPercentageChanges] = useState({
+    expenses: 0,
+    income: 0,
+    savings: 0
+  });
+
   useEffect(() => {
+    const fetchPreviousMonthData = async () => {
+      if (!user) return;
+
+      const previousMonth = subMonths(selectedMonth, 1);
+      const prevMonthStart = format(previousMonth, 'yyyy-MM-01');
+      const prevMonthEnd = format(previousMonth, 'yyyy-MM-dd');
+
+      try {
+        const { data: prevExpenses } = await supabase
+          .from('expenses')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('date', prevMonthStart)
+          .lte('date', prevMonthEnd);
+
+        const prevMonthExpenses = prevExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+        const prevMonthIncome = monthlyIncome;
+        const prevSavingsRate = prevMonthIncome > 0 
+          ? ((prevMonthIncome - prevMonthExpenses) / prevMonthIncome) * 100 
+          : 0;
+
+        const expensesChange = prevMonthExpenses > 0 
+          ? ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 
+          : 0;
+        const incomeChange = prevMonthIncome > 0 
+          ? ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100 
+          : 0;
+        const savingsChange = prevSavingsRate > 0 
+          ? (savingsRate - prevSavingsRate) 
+          : 0;
+
+        setPercentageChanges({
+          expenses: expensesChange,
+          income: incomeChange,
+          savings: savingsChange
+        });
+      } catch (error) {
+        console.error("Error fetching previous month data:", error);
+      }
+    };
+
     if (!isLoading) {
-      updateMonthData(currentMonthKey, {
-        monthlyIncome,
-        monthlyExpenses,
-        totalBalance,
-        savingsRate
-      });
+      fetchPreviousMonthData();
     }
-  }, [monthlyIncome, monthlyExpenses, totalBalance, savingsRate, currentMonthKey, updateMonthData, isLoading]);
+  }, [user, selectedMonth, monthlyExpenses, monthlyIncome, savingsRate, isLoading]);
 
-  // Reset temp income when monthly income changes
-  useEffect(() => {
-    setTempIncome(monthlyIncome);
-  }, [monthlyIncome]);
-
-  // Handle income change with month-specific persistence
   const handleIncomeChange = (value: number) => {
     setTempIncome(value);
   };
@@ -70,7 +102,6 @@ export const StatCards = ({
     try {
       if (!user) return;
       
-      // Save to Supabase - check if there's already a budget record for this month
       const { data: existingBudgets, error: fetchError } = await supabase
         .from('budgets')
         .select('id, monthly_income')
@@ -80,7 +111,6 @@ export const StatCards = ({
       if (fetchError) throw fetchError;
       
       if (existingBudgets && existingBudgets.length > 0) {
-        // Update existing budget record(s) with new monthly income
         const { error } = await supabase
           .from('budgets')
           .update({ monthly_income: tempIncome })
@@ -88,21 +118,19 @@ export const StatCards = ({
           
         if (error) throw error;
       } else {
-        // Create a new budget record with the monthly income
         const { error } = await supabase
           .from('budgets')
           .insert({
             user_id: user.id,
-            category: 'General', // Default category
-            amount: 0, // Default amount
-            period: 'monthly', // Default period
+            category: 'General',
+            amount: 0,
+            period: 'monthly',
             monthly_income: tempIncome
           });
           
         if (error) throw error;
       }
       
-      // Update local state
       setMonthlyIncome(tempIncome);
       setIsEditing(false);
       
@@ -111,6 +139,19 @@ export const StatCards = ({
       console.error("Error saving monthly income:", error);
       toast.error("Failed to save monthly income");
     }
+  };
+
+  const renderPercentageChange = (value: number, inverse = false) => {
+    const isPositive = inverse ? value < 0 : value > 0;
+    const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
+    const textColor = isPositive ? "text-expense-high" : "text-expense-low";
+
+    return (
+      <div className={`flex items-center ${textColor} text-xs mt-1`}>
+        <Icon className="h-3 w-3 mr-1" />
+        {Math.abs(value).toFixed(1)}% from last month
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -151,11 +192,10 @@ export const StatCards = ({
           <DollarSign className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-muted-foreground`} />
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-          <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatCurrency(monthlyExpenses, currencyCode)}</div>
-          <div className="flex items-center text-expense-high text-xs mt-1">
-            <ArrowUpRight className="h-3 w-3 mr-1" />
-            12% from last month
+          <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
+            {formatCurrency(monthlyExpenses, currencyCode)}
           </div>
+          {renderPercentageChange(percentageChanges.expenses, true)}
         </CardContent>
       </Card>
 
@@ -170,7 +210,7 @@ export const StatCards = ({
           ) : (
             <Save 
               className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-primary cursor-pointer hover:text-primary/80 transition-colors`} 
-              onClick={saveIncome}
+              onClick={() => saveIncome()}
             />
           )}
         </CardHeader>
@@ -180,10 +220,7 @@ export const StatCards = ({
               <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
                 {formatCurrency(monthlyIncome, currencyCode)}
               </div>
-              <div className="flex items-center text-expense-low text-xs mt-1">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                8% from last month
-              </div>
+              {renderPercentageChange(percentageChanges.income)}
             </>
           ) : (
             <div className="space-y-2">
@@ -216,10 +253,7 @@ export const StatCards = ({
         </CardHeader>
         <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
           <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{formatPercentage(savingsRate)}</div>
-          <div className="flex items-center text-expense-low text-xs mt-1">
-            <ArrowDownRight className="h-3 w-3 mr-1" />
-            2% from last month
-          </div>
+          {renderPercentageChange(percentageChanges.savings)}
         </CardContent>
       </Card>
     </div>
