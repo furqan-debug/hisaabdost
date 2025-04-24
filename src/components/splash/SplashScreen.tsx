@@ -21,13 +21,23 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   };
 
   const walletVariants = {
-    initial: { pathLength: 0, scale: 0.9 },
+    initial: { scale: 0.9 },
     animate: {
-      pathLength: 1,
       scale: 1,
       transition: { 
-        pathLength: { duration: 1, delay: 0.5 },
-        scale: { duration: 0.3, delay: 1.5 }
+        duration: 0.3, 
+        delay: 1.5 
+      }
+    }
+  };
+
+  const pathVariants = {
+    initial: { pathLength: 0 },
+    animate: {
+      pathLength: 1,
+      transition: { 
+        duration: 1, 
+        delay: 0.5 
       }
     }
   };
@@ -77,15 +87,40 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           variants={bounceVariants}
           className="relative mb-6"
         >
-          <motion.div className="text-[#6E59A5] w-20 h-20">
+          <motion.div 
+            className="text-[#6E59A5] w-20 h-20"
+            variants={walletVariants}
+            initial="initial"
+            animate="animate"
+          >
             <Wallet 
               size={80}
               strokeWidth={1.5}
               className="w-full h-full"
-              initial="initial"
-              animate="animate"
-              variants={walletVariants}
             />
+            <motion.svg
+              viewBox="0 0 24 24"
+              width="80"
+              height="80"
+              className="absolute inset-0"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <motion.path
+                d="M2 6h20v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6zm2-4h16a2 2 0 0 1 2 2v2H2V4a2 2 0 0 1 2-2z"
+                variants={pathVariants}
+                initial="initial"
+                animate="animate"
+              />
+              <motion.path 
+                d="M22 10h-4v4h4"
+                variants={pathVariants}
+                initial="initial"
+                animate="animate"
+              />
+            </motion.svg>
             <motion.div
               variants={faceVariants}
               className="absolute inset-0 flex items-center justify-center"
