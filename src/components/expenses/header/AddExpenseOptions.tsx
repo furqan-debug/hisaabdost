@@ -1,8 +1,7 @@
-
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Camera } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/utils/animations";
 
 interface AddExpenseOptionsProps {
   expandAddOptions: boolean;
@@ -11,18 +10,6 @@ interface AddExpenseOptionsProps {
   activeButton: string | null;
   isMobile: boolean;
 }
-
-const buttonVariants = {
-  initial: { scale: 1 },
-  active: { 
-    scale: 0.95,
-    transition: { duration: 0.2 }
-  },
-  hover: { 
-    scale: 1.03,
-    transition: { duration: 0.2 }
-  }
-};
 
 export function AddExpenseOptions({
   expandAddOptions,

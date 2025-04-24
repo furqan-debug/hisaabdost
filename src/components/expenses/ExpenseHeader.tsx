@@ -1,14 +1,14 @@
-
-import { Button } from "@/components/ui/button";
-import AddExpenseSheet from "@/components/AddExpenseSheet";
-import { Expense } from "@/components/expenses/types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import { useState, useRef } from "react";
-import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
+import { useState } from "react";
 import { HeaderTitle } from "./header/HeaderTitle";
 import { AddExpenseOptions } from "./header/AddExpenseOptions";
 import { ExportActions } from "./header/ExportActions";
+import { DeleteButton } from "./header/DeleteButton";
+import { useExpenseFile } from "@/hooks/use-expense-file";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { Expense } from "@/components/expenses/types";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -35,23 +35,19 @@ export function ExpenseHeader({
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [expandAddOptions, setExpandAddOptions] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState<string | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      if (captureMode !== 'manual') {
-        setShowAddExpense(true);
-      }
-      e.target.value = '';
-    }
-  };
+  
+  const {
+    selectedFile,
+    setSelectedFile,
+    fileInputRef,
+    cameraInputRef,
+    handleFileChange,
+    triggerFileUpload,
+    triggerCameraCapture
+  } = useExpenseFile();
 
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
@@ -63,10 +59,10 @@ export function ExpenseHeader({
       
       if (mode === 'manual') {
         setShowAddExpense(true);
-      } else if (mode === 'upload' && fileInputRef.current) {
-        fileInputRef.current.click();
-      } else if (mode === 'camera' && cameraInputRef.current) {
-        cameraInputRef.current.click();
+      } else if (mode === 'upload') {
+        triggerFileUpload();
+      } else if (mode === 'camera') {
+        triggerCameraCapture();
       }
     }, 300);
   };
@@ -103,16 +99,11 @@ export function ExpenseHeader({
           isMobile={isMobile}
         />
         
-        {selectedExpenses.size > 0 && (
-          <Button 
-            variant="destructive"
-            onClick={onDeleteSelected}
-            size={isMobile ? "sm" : "default"}
-            className="whitespace-nowrap rounded-lg"
-          >
-            Delete {selectedExpenses.size > 0 && `(${selectedExpenses.size})`}
-          </Button>
-        )}
+        <DeleteButton 
+          selectedCount={selectedExpenses.size}
+          onDelete={onDeleteSelected}
+          isMobile={isMobile}
+        />
         
         <ExportActions 
           isMobile={isMobile}
