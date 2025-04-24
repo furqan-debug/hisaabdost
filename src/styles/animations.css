@@ -54,11 +54,18 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes scanLine {
-  0% { transform: translateY(-100%); opacity: 0.3; }
-  30% { opacity: 0.7; }
-  70% { opacity: 0.7; }
-  100% { transform: translateY(100%); opacity: 0.3; }
+@keyframes scan-line {
+  0% {
+    background-position: -200% 0;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    background-position: 200% 0;
+    opacity: 0;
+  }
 }
 
 @keyframes pulse-border {
@@ -68,8 +75,12 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
 /* Applied Animation Classes */
@@ -122,6 +133,22 @@
   overflow: hidden;
 }
 
+.animate-scan-line::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--primary) 50%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: scan-line 2s linear infinite;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
 .animate-scan-line::after {
   content: "";
   position: absolute;
@@ -142,13 +169,13 @@
 
 .animate-shimmer {
   background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s linear infinite;
 }
 
 /* Animation Delays */

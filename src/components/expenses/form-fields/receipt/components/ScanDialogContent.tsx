@@ -1,10 +1,8 @@
-
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ReceiptPreview } from "../ReceiptPreview";
 import { DialogActions } from "./DialogActions";
-import { ScanProgressBar } from "./ScanProgressBar";
+import { ReceiptProcessingAnimation } from "./ReceiptProcessingAnimation";
 import { ScanErrorDisplay } from "./ScanErrorDisplay";
-import { ScanStatus } from "./ScanStatus";
 import { motion } from "framer-motion";
 
 interface ScanDialogContentProps {
@@ -36,12 +34,9 @@ export function ScanDialogContent({
   processingComplete,
   autoProcess
 }: ScanDialogContentProps) {
-  // Determine if we're in a scanning/processing state
   const scanning = isScanning || isAutoProcessing;
-  
-  // Determine if we're in an error state
   const hasError = !!scanError || scanTimedOut;
-  
+
   return (
     <div className="flex flex-col gap-4">
       <DialogHeader>
@@ -69,8 +64,7 @@ export function ScanDialogContent({
         </DialogDescription>
       </DialogHeader>
       
-      {/* Receipt preview */}
-      <div className={`relative rounded-md overflow-hidden ${scanning ? 'opacity-70' : 'opacity-100'}`}>
+      <div className="relative rounded-md overflow-hidden">
         {previewUrl ? (
           <motion.div 
             initial={{ opacity: 0, y: 5 }}
@@ -90,24 +84,14 @@ export function ScanDialogContent({
           </div>
         )}
         
-        {/* Show scan progress overlay */}
         {scanning && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[1px]"
-          >
-            <ScanProgressBar progress={scanProgress} isScanning={scanning} />
-            <ScanStatus 
-              message={statusMessage} 
-              progress={scanProgress} 
-              isScanning={scanning} 
-            />
-          </motion.div>
+          <ReceiptProcessingAnimation 
+            progress={scanProgress}
+            message={statusMessage}
+          />
         )}
       </div>
       
-      {/* Error display */}
       {hasError && (
         <ScanErrorDisplay 
           scanError={scanError}
@@ -115,7 +99,6 @@ export function ScanDialogContent({
         />
       )}
       
-      {/* Success message */}
       {processingComplete && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}
@@ -129,7 +112,6 @@ export function ScanDialogContent({
         </motion.div>
       )}
       
-      {/* Actions */}
       <DialogActions
         onCleanup={onCleanup}
         isScanning={isScanning}
