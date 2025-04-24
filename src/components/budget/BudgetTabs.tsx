@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
 import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
@@ -75,19 +74,19 @@ export const BudgetTabs = ({
           </TabsList>
 
           <div className="mt-4 px-2 tab-content-mobile">
-            <TabsContent value="overview" className="mt-0">
+            <TabsContent value="overview" className="mt-0 space-y-4">
               <BudgetOverview budgets={budgets} />
             </TabsContent>
 
-            <TabsContent value="categories" className="mt-0">
+            <TabsContent value="categories" className="mt-0 space-y-4">
               <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="mt-0">
+            <TabsContent value="transactions" className="mt-0 space-y-4">
               <BudgetTransactions budgets={budgets} />
             </TabsContent>
 
-            <TabsContent value="comparison" className="mt-0">
+            <TabsContent value="comparison" className="mt-0 space-y-4">
               <BudgetComparison budgets={budgets} />
             </TabsContent>
           </div>
