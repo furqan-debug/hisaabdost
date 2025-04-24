@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -29,12 +28,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img
-              src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
-              alt="Hisab Dost logo"
+              src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
+              alt="Hisaab Dost logo"
               className="h-8 w-8 bg-white rounded shadow"
             />
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent drop-shadow">
-              Hisab Dost
+              Hisaab Dost
             </h1>
           </div>
           <div className="space-x-2">
@@ -57,13 +56,12 @@ const Index = () => {
       </header>
 
       <main className="flex-grow">
-        {/* Hero section with improved visual appeal */}
         <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
           <div className="container mx-auto text-center max-w-3xl">
             <div className="flex items-center justify-center mb-4">
               <img
-                src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
-                alt="Hisab Dost mascot"
+                src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
+                alt="Hisaab Dost mascot"
                 className="h-16 w-16 rounded bg-white shadow mx-auto"
               />
             </div>
@@ -85,7 +83,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* App preview */}
         <section className="py-16 px-4 bg-muted/30">
           <div className="container mx-auto">
             <div className="bg-card/80 backdrop-blur-sm border rounded-xl shadow-xl overflow-hidden">
@@ -102,7 +99,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features with improved layout and icons */}
         <section className="py-20 px-4">
           <div className="container mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#6E59A5]">Key Features</h2>
@@ -138,7 +134,7 @@ const Index = () => {
 
       <footer className="border-t py-8 bg-muted/20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 Hisab Dost. All rights reserved.</p>
+          <p>© 2025 Hisaab Dost. All rights reserved.</p>
           <p className="text-sm mt-2">Created for simplified financial management</p>
         </div>
       </footer>

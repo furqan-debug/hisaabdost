@@ -56,13 +56,13 @@ const Navbar = () => {
         
         <div className="flex-1 flex items-center">
           <img 
-            src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png" 
-            alt="Hisab Dost logo" 
+            src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png" 
+            alt="Hisaab Dost logo" 
             className="h-8 w-8 mr-2 rounded bg-white shadow-sm"
             style={{ filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))" }}
           />
           <h2 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
-            Hisab Dost
+            Hisaab Dost
           </h2>
         </div>
         
