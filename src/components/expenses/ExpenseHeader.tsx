@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { Download, Plus, Upload, Camera } from "lucide-react";
+import { Download, FileText, FilePdf, Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,6 +7,12 @@ import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -18,6 +23,7 @@ interface ExpenseHeaderProps {
   showAddExpense: boolean;
   setShowAddExpense: (show: boolean) => void;
   exportToCSV: () => void;
+  exportToPDF: () => void;
 }
 
 export function ExpenseHeader({
@@ -28,7 +34,8 @@ export function ExpenseHeader({
   onExpenseEditClose,
   showAddExpense,
   setShowAddExpense,
-  exportToCSV
+  exportToCSV,
+  exportToPDF
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
@@ -37,6 +44,7 @@ export function ExpenseHeader({
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,7 +81,19 @@ export function ExpenseHeader({
     }, 300);
   };
 
-  // Animation variants for the buttons
+  const handleExport = async (type: 'csv' | 'pdf') => {
+    setIsExporting(type);
+    try {
+      if (type === 'csv') {
+        exportToCSV();
+      } else if (type === 'pdf') {
+        exportToPDF();
+      }
+    } finally {
+      setTimeout(() => setIsExporting(null), 1000);
+    }
+  };
+
   const buttonVariants = {
     initial: { scale: 1 },
     active: { 
@@ -185,15 +205,36 @@ export function ExpenseHeader({
               </Button>
             )}
             
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={exportToCSV}
-              className="rounded-lg"
-            >
-              <Download className="h-4 w-4" />
-              <span className="sr-only">Export</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  className="rounded-lg"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => handleExport('csv')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'csv' ? 'Exporting...' : 'Export CSV'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleExport('pdf')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FilePdf className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'Export PDF'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         ) : (
           <>
@@ -207,14 +248,35 @@ export function ExpenseHeader({
               </Button>
             )}
             
-            <Button
-              variant="outline"
-              onClick={exportToCSV}
-              className="rounded-lg"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="rounded-lg"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => handleExport('csv')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleExport('pdf')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FilePdf className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
         

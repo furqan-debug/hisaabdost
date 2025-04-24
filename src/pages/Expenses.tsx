@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -10,7 +9,7 @@ import { useExpenseSelection } from "@/hooks/use-expense-selection";
 import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
 import { ExpenseHeader } from "@/components/expenses/ExpenseHeader";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
-import { exportExpensesToCSV } from "@/utils/exportUtils";
+import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,7 +26,6 @@ const Expenses = () => {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Fetch expenses using React Query, get all expenses instead of just for selected month
   const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
     queryKey: ['all-expenses', refreshTrigger],
     queryFn: async () => {
@@ -68,7 +66,6 @@ const Expenses = () => {
     staleTime: 0,
   });
 
-  // Hook for filtering and sorting expenses - now will handle date filtering
   const {
     searchTerm,
     setSearchTerm,
@@ -83,7 +80,6 @@ const Expenses = () => {
     useCustomDateRange
   } = useExpenseFilter(allExpenses);
 
-  // Hook for managing expense selection
   const {
     selectedExpenses,
     toggleSelectAll,
@@ -96,9 +92,7 @@ const Expenses = () => {
   };
 
   const handleExpenseAdded = () => {
-    // Refresh expenses when a new expense is added
     refetch();
-    // Force a refresh after a delay to ensure DB has been updated
     setTimeout(() => {
       refetch();
       triggerRefresh();
@@ -125,12 +119,14 @@ const Expenses = () => {
     exportExpensesToCSV(filteredExpenses);
   };
 
-  // Listen for receipt scan event to trigger a refetch
+  const exportToPDF = () => {
+    exportExpensesToPDF(filteredExpenses);
+  };
+
   useEffect(() => {
     const handleReceiptScan = () => {
       console.log("Receipt scan detected, refreshing expenses list");
       refetch();
-      // Force a refresh after a delay to ensure DB has been updated
       setTimeout(() => {
         refetch();
         triggerRefresh();
@@ -140,7 +136,6 @@ const Expenses = () => {
     const handleExpensesUpdated = () => {
       console.log("Expenses updated event detected, refreshing list");
       refetch();
-      // Force a refresh after a delay to ensure DB has been updated
       setTimeout(() => {
         refetch();
         triggerRefresh();
@@ -150,7 +145,6 @@ const Expenses = () => {
     window.addEventListener('receipt-scanned', handleReceiptScan);
     window.addEventListener('expenses-updated', handleExpensesUpdated);
     
-    // Initial refetch when component mounts
     refetch();
     
     return () => {
@@ -182,6 +176,7 @@ const Expenses = () => {
         showAddExpense={showAddExpense}
         setShowAddExpense={setShowAddExpense}
         exportToCSV={exportToCSV}
+        exportToPDF={exportToPDF}
       />
 
       <ExpenseList

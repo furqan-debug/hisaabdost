@@ -1,10 +1,18 @@
 
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText, FilePdf, Plus } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -28,6 +36,19 @@ export function ExpenseHeader({
   exportToCSV
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
+  const [isExporting, setIsExporting] = useState<string | null>(null);
+
+  const handleExport = async (type: 'csv' | 'pdf') => {
+    setIsExporting(type);
+    try {
+      if (type === 'csv') {
+        exportToCSV();
+      }
+      // We don't need to handle PDF export here as it's passed directly to the dropdown item
+    } finally {
+      setTimeout(() => setIsExporting(null), 1000);
+    }
+  };
 
   return (
     <header className={cn(
@@ -60,15 +81,36 @@ export function ExpenseHeader({
               </Button>
             )}
             
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={exportToCSV}
-              className="rounded-lg"
-            >
-              <Download className="h-4 w-4" />
-              <span className="sr-only">Export</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  className="rounded-lg"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => handleExport('csv')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'csv' ? 'Exporting...' : 'Export CSV'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => exportExpensesToPDF([])} // This will be updated in Expenses.tsx
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FilePdf className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'Export PDF'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         ) : (
           <>
@@ -82,14 +124,35 @@ export function ExpenseHeader({
               </Button>
             )}
             
-            <Button
-              variant="outline"
-              onClick={exportToCSV}
-              className="rounded-lg"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="rounded-lg"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => handleExport('csv')}
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => exportExpensesToPDF([])} // This will be updated in Expenses.tsx
+                  disabled={isExporting !== null}
+                  className="cursor-pointer"
+                >
+                  <FilePdf className="mr-2 h-4 w-4" />
+                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>
