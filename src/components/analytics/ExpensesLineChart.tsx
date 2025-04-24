@@ -4,7 +4,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
-import { useCurrency } from "@/hooks/use-currency";
+import { useCurrency } from '@/hooks/use-currency';
 import { motion } from "framer-motion";
 import { Expense } from "@/components/expenses/types";
 

@@ -70,6 +70,24 @@
   .recharts-wrapper, .recharts-surface {
     overflow: visible !important;
   }
+
+  /* Enhanced mobile styles for trends section */
+  .trends-card {
+    @apply mx-auto my-4 px-2 max-w-[95%];
+  }
+
+  .trends-chart-wrapper {
+    @apply h-[250px] w-full max-w-full mb-3;
+  }
+  
+  .trends-chart-container {
+    @apply h-[240px] mx-auto w-full max-w-[95%];
+  }
+
+  /* Better axis label visibility */
+  .recharts-layer.recharts-cartesian-axis-tick text {
+    @apply fill-current opacity-80 text-[10px];
+  }
 }
 
 /* Chart improvements for all screen sizes */
@@ -192,4 +210,21 @@
 
 .recharts-reference-line-text {
   @apply fill-muted-foreground/70 text-[8px];
+}
+
+/* Trends specific styling */
+.trends-section {
+  @apply space-y-5;
+}
+
+.trends-card {
+  @apply border shadow-sm bg-card/80;
+}
+
+.trends-chart-wrapper {
+  @apply relative w-full h-[300px];
+}
+
+.trends-chart-container {
+  @apply mx-auto max-w-[90%];
 }

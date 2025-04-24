@@ -1,107 +1,98 @@
 
+import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
-import { formatCurrency } from "@/utils/formatters";
-import { format, parseISO } from "date-fns";
-import { useCurrency } from "@/hooks/use-currency";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { motion } from "framer-motion";
+import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { formatCurrency } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/use-currency";
+import { motion } from "framer-motion";
 
 interface ExpensesBarChartProps {
   expenses: Expense[];
 }
 
 export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
-  const { currencyCode } = useCurrency();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
+  const data = processMonthlyData(expenses);
   
-  const data = expenses.reduce((acc, expense) => {
-    const month = format(parseISO(expense.date), 'MMM yyyy');
-    if (!acc[month]) {
-      acc[month] = {};
-    }
-    acc[month][expense.category] = (acc[month][expense.category] || 0) + Number(expense.amount);
-    return acc;
-  }, {} as Record<string, Record<string, number>>);
+  // Filter out zero-value categories for cleaner display
+  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => {
+    return data.some(item => item[category] > 0);
+  });
   
-  const chartData = Object.entries(data).map(([month, categories]) => ({
-    month,
-    ...categories
-  }));
-
-  // Get top categories by total amount
+  // Limit to top categories by total value
   const getCategoryTotal = (category: string) => {
-    return chartData.reduce((sum, item) => sum + (item[category] || 0), 0);
+    return data.reduce((sum, item) => sum + (item[category] || 0), 0);
   };
-  
-  const allCategories = Object.keys(CATEGORY_COLORS);
-  const activeCategories = allCategories.filter(category => 
-    chartData.some(item => item[category] && item[category] > 0)
-  );
   
   const topCategories = activeCategories
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
-    .slice(0, isMobile ? 4 : 6);
-
+    .slice(0, isMobile ? 3 : 5);
+  
   return (
-    <div className="w-full h-[300px] md:h-[350px] pt-2">
+    <div className="w-full h-full trends-chart-wrapper">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart 
-          data={chartData} 
-          margin={isMobile ? { top: 15, right: 5, left: 0, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
+        <BarChart
+          data={data}
+          margin={isMobile ? { top: 10, right: 0, left: -15, bottom: 0 } : { top: 20, right: 30, left: 0, bottom: 5 }}
           barCategoryGap={isMobile ? "20%" : "30%"}
           maxBarSize={isMobile ? 28 : 40}
         >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
           <XAxis 
             dataKey="month" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: isMobile ? 11 : 13, fill: 'var(--foreground)' }}
+            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
             dy={8}
-            interval={isMobile ? 1 : 0}
+            interval={isMobile ? "preserveStartEnd" : 0}
+            height={isMobile ? 30 : 40}
           />
           <YAxis 
-            tickFormatter={value => {
+            tickFormatter={(value) => {
               if (isMobile) {
+                // Simplified formatter for mobile to save space
                 if (value >= 1000) return `${Math.floor(value / 1000)}k`;
                 return value.toString();
               }
               return formatCurrency(value, currencyCode);
-            }} 
+            }}
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: isMobile ? 11 : 13, fill: 'var(--foreground)' }}
-            width={isMobile ? 30 : 60}
+            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+            width={isMobile ? 35 : 60}
           />
-          <Tooltip 
+          <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload || !payload.length) return null;
               
-              // Filter out zero values and limit to top entries
-              const filteredPayload = payload
-                .filter(entry => Number(entry.value) > 0)
-                .slice(0, isMobile ? 3 : 5);
-                
+              // Filter out items with zero value to reduce tooltip size
+              const filteredPayload = payload.filter(entry => {
+                // Convert ValueType to number for safe comparison
+                const value = entry.value !== undefined ? Number(entry.value) : 0;
+                return value > 0;
+              }).slice(0, isMobile ? 3 : 5); // Limit to top 3 for cleaner mobile display
+            
               return (
                 <motion.div 
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg border bg-background/95 px-3 py-2 shadow-md backdrop-blur-sm"
+                  className="tooltip-card bg-popover text-popover-foreground"
                 >
-                  <p className="text-sm font-semibold mb-1">{label}</p>
+                  <div className="text-sm font-medium mb-1">{label}</div>
                   <div className="space-y-1">
                     {filteredPayload.map((entry: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between gap-2 text-xs">
+                      <div key={index} className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
-                          <span
-                            className="inline-block w-2 h-2 rounded-full"
+                          <div 
+                            className="w-2 h-2 rounded-full" 
                             style={{ backgroundColor: entry.color }}
                           />
-                          <span className="truncate max-w-[90px]">{entry.name}</span>
+                          <span className="text-xs truncate max-w-[90px]">{entry.name}</span>
                         </div>
-                        <span className="font-medium">
+                        <span className="text-xs font-medium">
                           {formatCurrency(Number(entry.value), currencyCode)}
                         </span>
                       </div>
@@ -111,18 +102,15 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               );
             }}
           />
-          
           {/* Only render bars for top categories */}
           {topCategories.map(category => (
-            <Bar 
-              key={category} 
-              dataKey={category} 
-              stackId="a" 
-              fill={CATEGORY_COLORS[category]} 
+            <Bar
+              key={category}
+              dataKey={category}
+              fill={CATEGORY_COLORS[category]}
               radius={[4, 4, 0, 0]}
+              maxBarSize={isMobile ? 28 : 40}
               animationDuration={800}
-              animationBegin={300}
-              isAnimationActive={true}
             />
           ))}
         </BarChart>
@@ -130,7 +118,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       
       {/* Mobile-friendly legend */}
       <div className="chart-legend-row">
-        {topCategories.map(category => (
+        {topCategories.slice(0, isMobile ? 3 : 5).map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
@@ -141,7 +129,9 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               style={{ backgroundColor: CATEGORY_COLORS[category] }} 
             />
             <span className="truncate">
-              {category.length > 12 ? category.slice(0, 12) + "…" : category}
+              {category.length > (isMobile ? 8 : 12) ? 
+                category.slice(0, isMobile ? 8 : 12) + "…" : 
+                category}
             </span>
           </div>
         ))}

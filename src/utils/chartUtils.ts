@@ -1,24 +1,25 @@
+
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Soft, minimalist color palette with distinct pastel colors
+// Vibrant color palette with better visibility on mobile
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Healthcare": "#E1F0FF",      // Soft Sky Blue
-  "Groceries": "#FFE4D6",      // Soft Peach
-  "Utilities": "#F0E5FF",      // Soft Lavender
-  "Housing": "#DCFCE7",        // Soft Mint
-  "Transportation": "#FCE7F3",  // Soft Pink
-  "Entertainment": "#FEF9C3",   // Soft Yellow
-  "Shopping": "#FFE4E6",       // Soft Rose
-  "Personal": "#F3E8FF",       // Soft Purple
-  "Education": "#E0F2FE",      // Light Blue
-  "Travel": "#F0FDF4",         // Light Mint
-  "Insurance": "#FDF2F8",      // Light Rose
-  "Debt": "#FAE8FF",          // Light Purple
-  "Savings": "#ECFCCB",       // Light Lime
-  "Other": "#F1F5F9",         // Light Gray
+  "Healthcare": "#7AB2F5",      // Vivid Blue
+  "Groceries": "#FF9F7A",      // Vibrant Peach
+  "Utilities": "#A17FFF",      // Bright Purple
+  "Housing": "#4ADE80",        // Vivid Green
+  "Transportation": "#F87DB5",  // Bright Pink
+  "Entertainment": "#FACC15",   // Vivid Yellow
+  "Shopping": "#FF7A92",       // Bright Rose
+  "Personal": "#9E75FF",       // Bright Purple
+  "Education": "#38BDF8",      // Bright Blue
+  "Travel": "#4ADE80",         // Bright Mint
+  "Insurance": "#F472B6",      // Bright Pink
+  "Debt": "#C084FC",          // Bright Purple
+  "Savings": "#A3E635",       // Bright Lime
+  "Other": "#94A3B8",         // Bright Gray
 };
 
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
@@ -72,7 +73,7 @@ export const calculatePieChartData = (expenses: Expense[]) => {
     .map(([name, value]) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || "#F1F5F9",
+      color: CATEGORY_COLORS[name] || "#94A3B8",
       percent: total > 0 ? (value / total) * 100 : 0,
     }));
 };
