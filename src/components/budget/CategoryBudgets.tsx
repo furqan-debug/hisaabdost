@@ -1,7 +1,8 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Budget } from "@/pages/Budget";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { Progress } from "@/components/ui/progress";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
@@ -10,12 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -26,6 +28,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
 
   const handleDeleteBudget = async (budgetId: string) => {
     try {
@@ -148,15 +151,15 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Budgeted</p>
-                      <p className="font-medium">{formatCurrency(Number(budget.amount))}</p>
+                      <p className="font-medium">{formatCurrency(Number(budget.amount), currencyCode)}</p>
                     </div>
                     <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Spent</p>
-                      <p className={`font-medium ${isOverBudget ? 'text-red-500' : ''}`}>{formatCurrency(spentAmount)}</p>
+                      <p className={`font-medium ${isOverBudget ? 'text-red-500' : ''}`}>{formatCurrency(spentAmount, currencyCode)}</p>
                     </div>
                     <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Remaining</p>
-                      <p className={`font-medium ${remainingAmount < 0 ? 'text-red-500' : ''}`}>{formatCurrency(remainingAmount)}</p>
+                      <p className={`font-medium ${remainingAmount < 0 ? 'text-red-500' : ''}`}>{formatCurrency(remainingAmount, currencyCode)}</p>
                     </div>
                     <div className="bg-background/50 p-2 rounded-md">
                       <p className="text-muted-foreground text-xs">Progress</p>
@@ -200,12 +203,12 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                 <TableRow key={budget.id} className={isOverBudget ? 'bg-red-50/10' : undefined}>
                   <TableCell>{budget.category}</TableCell>
                   <TableCell className="capitalize">{budget.period}</TableCell>
-                  <TableCell>{formatCurrency(Number(budget.amount))}</TableCell>
+                  <TableCell>{formatCurrency(Number(budget.amount), currencyCode)}</TableCell>
                   <TableCell className={isOverBudget ? 'text-red-500 font-medium' : undefined}>
-                    {formatCurrency(spentAmount)}
+                    {formatCurrency(spentAmount, currencyCode)}
                   </TableCell>
                   <TableCell className={remainingAmount < 0 ? 'text-red-500 font-medium' : undefined}>
-                    {formatCurrency(remainingAmount)}
+                    {formatCurrency(remainingAmount, currencyCode)}
                   </TableCell>
                   <TableCell className="w-[200px]">
                     <Progress 

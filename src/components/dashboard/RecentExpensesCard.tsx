@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,13 +7,14 @@ import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { SampleDataButton } from "@/components/SampleDataButton";
-import { formatCurrency } from "@/utils/chartUtils";
+import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrency } from "@/hooks/use-currency";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +41,7 @@ export const RecentExpensesCard = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!user) return;
@@ -141,7 +144,7 @@ export const RecentExpensesCard = ({
                         <span className="text-xs text-muted-foreground truncate">{expense.category}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount, currencyCode)}</TableCell>
                     <TableCell className="text-right p-0 pr-2 md:p-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

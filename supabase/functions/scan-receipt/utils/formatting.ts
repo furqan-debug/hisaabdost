@@ -1,7 +1,15 @@
 
 // Format a price number to a standard string format
-export function formatPrice(price: number): string {
-  return price.toFixed(2);
+export function formatPrice(price: number, currencyCode = 'USD'): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(price);
+  } catch (e) {
+    // Fallback to simple formatting
+    return price.toFixed(2);
+  }
 }
 
 // Capitalize the first letter of a string
