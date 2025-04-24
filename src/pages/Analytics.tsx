@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +19,6 @@ import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 export default function Analytics() {
   const {
     user
@@ -36,7 +34,6 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd')
   });
   const useCustomDateRange = true;
-
   const {
     data: expenses,
     isLoading,
@@ -56,15 +53,12 @@ export default function Analytics() {
     },
     enabled: !!user
   });
-
   const filteredExpenses = expenses?.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || expense.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
     return matchesSearch && matchesCategory;
   }) || [];
-
   const insights = useAnalyticsInsights(filteredExpenses);
-
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
     acc[key] = {
       color
@@ -73,7 +67,6 @@ export default function Analytics() {
   }, {} as Record<string, {
     color: string;
   }>);
-
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -86,7 +79,6 @@ export default function Analytics() {
       }
     }
   };
-
   const itemVariants = {
     hidden: {
       opacity: 0,
@@ -100,13 +92,11 @@ export default function Analytics() {
       }
     }
   };
-
   if (error) {
     return <Alert variant="destructive">
         <AlertDescription>Error loading expenses data. Please try again later.</AlertDescription>
       </Alert>;
   }
-
   if (isLoading) {
     return <div className="space-y-4">
         <Skeleton className="h-8 w-[200px]" />
@@ -117,9 +107,7 @@ export default function Analytics() {
         </div>
       </div>;
   }
-
-  return (
-    <div className="space-y-5 px-3 md:px-6 py-4 pb-20">
+  return <div className="space-y-5 px-3 md:px-6 py-4 pb-20">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
         <motion.div variants={itemVariants} className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -170,13 +158,13 @@ export default function Analytics() {
                   </TabsContent>
 
                   <TabsContent value="trends" className="mt-0 space-y-4 focus:outline-none focus:ring-0">
-                    <Card className="border-0 shadow-sm bg-card/80 trends-card">
+                    <Card className="border-0 shadow-sm bg-card/80 trends-card py-[8px]">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-medium text-center">Monthly Trends</CardTitle>
                         <CardDescription className="text-center">Your spending patterns over time</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 pb-2 trends-chart-container">
-                        <div className="h-[220px]">
+                        <div className="h-[220px] py-[18px] mx--4">
                           <ChartContainer config={chartConfig}>
                             <ExpensesBarChart expenses={filteredExpenses} />
                           </ChartContainer>
@@ -189,7 +177,7 @@ export default function Analytics() {
                         <CardTitle className="text-lg font-medium text-center">Category Trends</CardTitle>
                         <CardDescription className="text-center">How your spending evolves by category</CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-0 pb-2 trends-chart-container">
+                      <CardContent className="pt-0 pb-2 trends-chart-container my-[29px] py-[11px]">
                         <div className="h-[220px]">
                           <ChartContainer config={chartConfig}>
                             <ExpensesLineChart expenses={filteredExpenses} />
@@ -212,6 +200,5 @@ export default function Analytics() {
           </Card>
         </motion.div>
       </motion.div>
-    </div>
-  );
+    </div>;
 }
