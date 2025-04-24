@@ -1,20 +1,19 @@
-
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   .chart-wrapper {
-    @apply w-full h-full min-h-[300px] relative overflow-visible px-0;
+    @apply w-full relative px-0 min-h-[250px];
   }
   
   .chart-container {
-    @apply w-full h-full min-h-[300px] relative overflow-visible mx-auto max-w-[400px] px-0;
+    @apply w-full relative mx-auto max-w-[400px] px-0 min-h-[250px];
   }
   
   .recharts-wrapper {
-    @apply h-full w-full rounded-lg mx-auto min-h-[300px];
+    @apply h-full w-full rounded-lg mx-auto;
   }
   
   .recharts-responsive-container {
-    @apply w-full h-full min-h-[300px];
+    @apply w-full h-full;
   }
 
   .recharts-tooltip-wrapper {
@@ -33,22 +32,6 @@
     @apply text-xs px-2 py-0.5 rounded-full border border-muted/10;
   }
 
-  .chart-center-total {
-    @apply absolute top-1/2 left-1/2 w-2/3 text-center -translate-x-1/2 -translate-y-1/2 pointer-events-none;
-  }
-  
-  .chart-center-total-amount {
-    @apply text-xl font-semibold whitespace-nowrap;
-  }
-  
-  .chart-center-total-label {
-    @apply text-xs;
-  }
-  
-  .recharts-cartesian-axis-tick text {
-    @apply text-[9px];
-  }
-  
   /* Mobile optimized comparison cards */
   .comparison-card {
     @apply py-3 px-3 rounded-xl;
@@ -73,15 +56,15 @@
 
   /* Enhanced mobile styles for trends section */
   .trends-card {
-    @apply mx-auto my-4 px-2 max-w-[95%];
+    @apply mx-auto my-4 px-2;
   }
 
   .trends-chart-wrapper {
-    @apply h-[250px] w-full max-w-full mb-3;
+    @apply h-[250px] w-full mb-3;
   }
   
   .trends-chart-container {
-    @apply h-[240px] mx-auto w-full max-w-[95%];
+    @apply h-[250px] mx-auto w-full;
   }
 
   /* Better axis label visibility */

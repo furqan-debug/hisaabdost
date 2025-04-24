@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
@@ -33,7 +32,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   
   return (
     <div className="w-full h-full trends-chart-wrapper">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart
           data={data}
           margin={isMobile ? { top: 10, right: 0, left: -15, bottom: 0 } : { top: 20, right: 30, left: 0, bottom: 5 }}
