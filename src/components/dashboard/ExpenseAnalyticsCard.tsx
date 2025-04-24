@@ -42,19 +42,21 @@ export const ExpenseAnalyticsCard = ({
   };
 
   const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = {
-      color
-    };
+    acc[key] = { color };
     return acc;
-  }, {} as Record<string, {
-    color: string;
-  }>);
+  }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className="overflow-hidden shadow-sm border-border/50">
+    <Card className={cn(
+      "overflow-hidden shadow-sm border-border/50", 
+      isMobile && "w-full max-w-md mx-auto"
+    )}>
       <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2">
-          <CardTitle className={cn("text-lg font-semibold", isMobile && "text-base")}>
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2">
+          <CardTitle className={cn(
+            "text-lg font-semibold", 
+            isMobile && "text-center w-full"
+          )}>
             Expense Analytics
           </CardTitle>
           <div className="flex items-center">
@@ -99,7 +101,10 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 pb-4 mx--11">
+      <CardContent className={cn(
+        "pt-2 pb-4 mx-0", 
+        isMobile && "flex flex-col items-center justify-center"
+      )}>
         {isLoading ? (
           <div className="flex justify-center items-center h-[350px]">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -109,16 +114,28 @@ export const ExpenseAnalyticsCard = ({
             <p className="text-muted-foreground">Add some expenses to see analytics</p>
           </div>
         ) : (
-          <ScrollArea className="h-[350px] w-full">
+          <ScrollArea className={cn(
+            "h-[350px] w-full", 
+            isMobile && "max-w-[350px]"
+          )}>
             <div className="flex justify-center items-center w-full">
               <motion.div 
-                className="w-full max-w-[500px] min-h-[320px]" 
+                className={cn(
+                  "w-full max-w-[500px] min-h-[320px]", 
+                  isMobile && "max-w-[300px]"
+                )} 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 transition={{ duration: 0.3 }} 
                 key={chartType}
               >
-                <ChartContainer className="h-full w-full min-h-[320px]" config={chartConfig}>
+                <ChartContainer 
+                  className={cn(
+                    "h-full w-full min-h-[320px]", 
+                    isMobile && "max-w-[300px] mx-auto"
+                  )} 
+                  config={chartConfig}
+                >
                   {renderChart()}
                 </ChartContainer>
               </motion.div>
