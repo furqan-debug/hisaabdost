@@ -3,22 +3,22 @@ import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Light and minimalist color palette with distinct colors
+// Soft, minimalist color palette with distinct pastel colors
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Healthcare": "#F2FCE2",      // Soft Green
-  "Groceries": "#FEF7CD",       // Soft Yellow
-  "Utilities": "#D3E4FD",       // Soft Blue
-  "Housing": "#FEC6A1",         // Soft Orange
-  "Transportation": "#E5DEFF",  // Soft Purple
-  "Entertainment": "#FFDEE2",   // Soft Pink
-  "Shopping": "#FDE1D3",        // Soft Peach
-  "Personal": "#F1F0FB",        // Soft Gray
-  "Education": "#8B5CF6",       // Vivid Purple (for accent)
-  "Travel": "#0EA5E9",          // Ocean Blue (for accent)
-  "Insurance": "#D946EF",       // Magenta Pink (for accent)
-  "Debt": "#F97316",            // Bright Orange (for accent)
-  "Savings": "#98FB98",         // Pale Green
-  "Other": "#D3D3D3",           // Light Gray
+  "Healthcare": "#E1F0FF",      // Soft Sky Blue
+  "Groceries": "#FFE4D6",      // Soft Peach
+  "Utilities": "#F0E5FF",      // Soft Lavender
+  "Housing": "#DCFCE7",        // Soft Mint
+  "Transportation": "#FCE7F3",  // Soft Pink
+  "Entertainment": "#FEF9C3",   // Soft Yellow
+  "Shopping": "#FFE4E6",       // Soft Rose
+  "Personal": "#F3E8FF",       // Soft Purple
+  "Education": "#E0F2FE",      // Light Blue
+  "Travel": "#F0FDF4",         // Light Mint
+  "Insurance": "#FDF2F8",      // Light Rose
+  "Debt": "#FAE8FF",          // Light Purple
+  "Savings": "#ECFCCB",       // Light Lime
+  "Other": "#F1F5F9",         // Light Gray
 };
 
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
@@ -68,11 +68,11 @@ export const calculatePieChartData = (expenses: Expense[]) => {
   // Sort by value and limit to top categories for cleaner display
   return Object.entries(categoryTotals)
     .sort(([, valueA], [, valueB]) => valueB - valueA)
-    .slice(0, 6) // Limit to top 6 categories for cleaner display
+    .slice(0, 8) // Show top 8 categories for better visibility
     .map(([name, value]) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || "#CFD8DC",
+      color: CATEGORY_COLORS[name] || "#F1F5F9",
       percent: total > 0 ? (value / total) * 100 : 0,
     }));
 };
