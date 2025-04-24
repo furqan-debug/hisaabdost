@@ -1,8 +1,11 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
+import { useCurrency } from '@/hooks/use-currency';
+import { formatCurrency } from '@/utils/formatters';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -32,6 +35,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const { user } = useAuth();
+  const { currencyCode } = useCurrency();
 
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
@@ -49,12 +53,14 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
     const today = new Date().toISOString().split('T')[0];
-    const message = `Add expense of ${amount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ` on ${today}`}`;
+    const formattedAmount = formatCurrency(amount, currencyCode);
+    const message = `Add expense of ${formattedAmount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ` on ${today}`}`;
     triggerChat(message);
   };
   
   const setBudget = (amount: number, category: string) => {
-    const message = `Set a budget of ${amount} for ${category}`;
+    const formattedAmount = formatCurrency(amount, currencyCode);
+    const message = `Set a budget of ${formattedAmount} for ${category}`;
     triggerChat(message);
   };
   

@@ -1,9 +1,9 @@
 
-
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
+import { formatCurrency } from '@/utils/formatters';
 
 /**
  * Hook to send commands to Finny programmatically
@@ -22,8 +22,9 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `Add an expense of ${amount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ' today'}`;
-    askFinny(message, currencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode);
+    const message = `Add an expense of ${formattedAmount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ' today'}`;
+    askFinny(message);
   };
   
   /**
@@ -35,8 +36,9 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `Set a budget of ${amount} for ${category}`;
-    askFinny(message, currencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode);
+    const message = `Set a budget of ${formattedAmount} for ${category}`;
+    askFinny(message);
   };
   
   /**
@@ -48,7 +50,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny("Show me a summary of my spending for this month", currencyCode);
+    askFinny("Show me a summary of my spending for this month");
   };
   
   /**
@@ -60,7 +62,7 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny(`Show my ${category} spending breakdown`, currencyCode);
+    askFinny(`Show my ${category} spending breakdown`);
   };
   
   /**
@@ -72,8 +74,9 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `I want to set a financial goal called "${title}" with a target amount of ${amount}${deadline ? ` by ${deadline}` : ''}`;
-    askFinny(message, currencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode);
+    const message = `I want to set a financial goal called "${title}" with a target amount of ${formattedAmount}${deadline ? ` by ${deadline}` : ''}`;
+    askFinny(message);
   };
   
   /**
@@ -86,7 +89,7 @@ export function useFinnyCommand() {
     }
     
     const message = `Delete my ${category} expense${date ? ` from ${date}` : ''}`;
-    askFinny(message, currencyCode);
+    askFinny(message);
   };
 
   return {
@@ -100,4 +103,3 @@ export function useFinnyCommand() {
     openChat
   };
 }
-
