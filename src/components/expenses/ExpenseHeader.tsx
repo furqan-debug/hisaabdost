@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, FileText, FilePdf, Plus, Upload, Camera } from "lucide-react";
+import { Download, FileText, Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";

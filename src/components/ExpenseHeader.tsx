@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Download, FileText, Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
@@ -6,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
+import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import {
   DropdownMenu,
   DropdownMenuContent,
