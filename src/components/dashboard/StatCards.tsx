@@ -1,6 +1,6 @@
 
 import React from "react";
-import { DollarSign, Wallet } from "lucide-react";
+import { DollarSign, Wallet, ArrowUpRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useCurrency } from "@/hooks/use-currency";

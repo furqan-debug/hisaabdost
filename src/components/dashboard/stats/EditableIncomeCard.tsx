@@ -75,17 +75,18 @@ export const EditableIncomeCard = ({
     }
   };
 
-  const toggleIcon = !isEditing ? (
-    <Edit className="cursor-pointer hover:text-primary transition-colors" onClick={() => setIsEditing(true)} />
-  ) : (
+  // Create the icon element using the correct Lucide icon component
+  const toggleIconComponent = isEditing ? (
     <Save className="text-primary cursor-pointer hover:text-primary/80 transition-colors" onClick={saveIncome} />
+  ) : (
+    <Edit className="cursor-pointer hover:text-primary transition-colors" onClick={() => setIsEditing(true)} />
   );
 
   return (
     <StatCard
       title="Monthly Income"
       value={isEditing ? "" : formatCurrency(monthlyIncome, currencyCode)}
-      icon={toggleIcon}
+      icon={isEditing ? Save : Edit}
     >
       {isEditing ? (
         <div className="space-y-2">
