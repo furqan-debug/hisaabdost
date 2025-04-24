@@ -15,7 +15,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  // Aggregate budgets by period, with totals per category
   const budgetsByPeriod = budgets.reduce((acc, budget) => {
     if (!acc[budget.period]) {
       acc[budget.period] = { period: budget.period };
@@ -25,7 +24,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
   }, {} as Record<string, any>);
   const data = Object.values(budgetsByPeriod);
 
-  // Remove periods with no amounts
   if (budgets.length === 0 || Object.keys(budgetsByPeriod).length <= 1) {
     return (
       <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center">
@@ -39,12 +37,10 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     );
   }
 
-  // Filter to only categories in use (with any value)
   const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => 
     data.some(item => item[category] > 0)
   );
 
-  // Use only top categories by total for clarity (fewer on mobile)
   const getCategoryTotal = (category: string) => 
     data.reduce((sum, item) => sum + (item[category] || 0), 0);
 
@@ -52,9 +48,7 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
     .slice(0, isMobile ? 4 : 6);
 
-  // For display-friendly period labels
   const formatPeriodShort = (period: string) => {
-    // Shorter labels for better readability
     return period.length > 7 ? period.slice(0, 7) + "…" : period;
   };
 
@@ -64,7 +58,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
         <CardTitle>Budget Comparison by Period</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        {/* Clean compact legend above the chart */}
         <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 justify-center">
           {topCategories.map(category => (
             <div key={category} className="flex items-center gap-1 text-xs font-medium whitespace-nowrap">
@@ -76,7 +69,6 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
           ))}
         </div>
         
-        {/* Modern pastel rounded container */}
         <div className={clsx(
           "w-full py-2 px-2 md:px-6 rounded-lg bg-[hsl(var(--muted)/0.5)] border border-border/50",
           "backdrop-blur-sm h-[270px] md:h-[350px]"
@@ -112,14 +104,13 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                   fontSize: isMobile ? 10 : 12,
                   fill: "var(--muted-foreground)",
                 }}
-                tickFormatter={value => formatCurrency(value, currencyCode)}
+                tickFormatter={(value) => `${value}`}
                 width={isMobile ? 50 : 70}
               />
               <Tooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.25 }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload || !payload.length) return null;
-                  // Only show nonzero categories for this period
                   const filteredPayload = payload.filter(
                     entry => Number(entry.value) > 0
                   );
