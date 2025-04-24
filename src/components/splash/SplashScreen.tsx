@@ -21,36 +21,33 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   };
 
   const walletVariants = {
-    initial: { scale: 0.9 },
+    initial: { 
+      scale: 0.9,
+      rotate: -15
+    },
     animate: {
       scale: 1,
+      rotate: 0,
       transition: { 
-        duration: 0.3, 
-        delay: 1.5 
-      }
-    }
-  };
-
-  const pathVariants = {
-    initial: { pathLength: 0 },
-    animate: {
-      pathLength: 1,
-      transition: { 
-        duration: 1, 
-        delay: 0.5 
+        duration: 0.6, 
+        delay: 0.5,
+        type: "spring",
+        stiffness: 200
       }
     }
   };
 
   const bounceVariants = {
-    initial: { y: 0 },
+    initial: { y: -20, opacity: 0 },
     animate: {
-      y: [-10, 0],
+      y: 0,
+      opacity: 1,
       transition: {
-        duration: 0.6,
-        delay: 1.8,
+        duration: 0.8,
+        delay: 1.2,
         type: "spring",
-        stiffness: 200
+        stiffness: 200,
+        damping: 10
       }
     }
   };
@@ -60,16 +57,42 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     animate: {
       scale: 1,
       opacity: 1,
-      transition: { duration: 0.3, delay: 1.5 }
+      transition: { 
+        duration: 0.4,
+        delay: 1.5,
+        type: "spring",
+        stiffness: 300
+      }
     }
   };
 
   const textVariants = {
-    initial: { opacity: 0, y: 10 },
+    initial: { opacity: 0, y: 20 },
     animate: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, delay: 2.2 }
+      transition: { 
+        duration: 0.6,
+        delay: 2,
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
+  const shimmerVariants = {
+    initial: { 
+      background: "linear-gradient(45deg, transparent 0%, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%, transparent 100%)",
+      backgroundSize: "200% 100%",
+      backgroundPosition: "200% 0"
+    },
+    animate: {
+      backgroundPosition: "-200% 0",
+      transition: {
+        duration: 1.5,
+        delay: 2.2,
+        ease: "easeInOut"
+      }
     }
   };
 
@@ -90,37 +113,12 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           <motion.div 
             className="text-[#6E59A5] w-20 h-20"
             variants={walletVariants}
-            initial="initial"
-            animate="animate"
           >
             <Wallet 
               size={80}
               strokeWidth={1.5}
               className="w-full h-full"
             />
-            <motion.svg
-              viewBox="0 0 24 24"
-              width="80"
-              height="80"
-              className="absolute inset-0"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <motion.path
-                d="M2 6h20v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6zm2-4h16a2 2 0 0 1 2 2v2H2V4a2 2 0 0 1 2-2z"
-                variants={pathVariants}
-                initial="initial"
-                animate="animate"
-              />
-              <motion.path 
-                d="M22 10h-4v4h4"
-                variants={pathVariants}
-                initial="initial"
-                animate="animate"
-              />
-            </motion.svg>
             <motion.div
               variants={faceVariants}
               className="absolute inset-0 flex items-center justify-center"
@@ -132,12 +130,17 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           </motion.div>
         </motion.div>
 
-        <motion.h1
-          variants={textVariants}
-          className="text-4xl font-bold mb-2 text-[#6E59A5]"
+        <motion.div
+          variants={shimmerVariants}
+          className="overflow-hidden"
         >
-          Hisaab Dost
-        </motion.h1>
+          <motion.h1
+            variants={textVariants}
+            className="text-4xl font-bold mb-2 text-[#6E59A5]"
+          >
+            Hisaab Dost
+          </motion.h1>
+        </motion.div>
 
         <motion.p
           variants={textVariants}
