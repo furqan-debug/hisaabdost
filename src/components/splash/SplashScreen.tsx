@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Smile } from 'lucide-react';
-import { WalletLogo } from './WalletLogo';
+import { Wallet, Eye, Smile } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -21,14 +20,19 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     }
   };
 
-  const logoVariants = {
-    initial: { pathLength: 0, scale: 0.8 },
-    animate: { 
-      pathLength: 1,
+  const walletVariants = {
+    initial: { 
+      scale: 0.9,
+      rotate: -15
+    },
+    animate: {
       scale: 1,
-      transition: {
-        pathLength: { duration: 1, delay: 0.5 },
-        scale: { duration: 0.3, delay: 0.5 }
+      rotate: 0,
+      transition: { 
+        duration: 0.6, 
+        delay: 0.5,
+        type: "spring",
+        stiffness: 200
       }
     }
   };
@@ -39,8 +43,8 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.6,
-        delay: 1.5,
+        duration: 0.8,
+        delay: 1.2,
         type: "spring",
         stiffness: 200,
         damping: 10
@@ -54,8 +58,8 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       scale: 1,
       opacity: 1,
       transition: { 
-        duration: 0.3,
-        delay: 2,
+        duration: 0.4,
+        delay: 1.5,
         type: "spring",
         stiffness: 300
       }
@@ -68,8 +72,26 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       opacity: 1,
       y: 0,
       transition: { 
-        duration: 0.5,
-        delay: 2.5
+        duration: 0.6,
+        delay: 2,
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
+  const shimmerVariants = {
+    initial: { 
+      background: "linear-gradient(45deg, transparent 0%, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%, transparent 100%)",
+      backgroundSize: "200% 100%",
+      backgroundPosition: "200% 0"
+    },
+    animate: {
+      backgroundPosition: "-200% 0",
+      transition: {
+        duration: 1.5,
+        delay: 2.2,
+        ease: "easeInOut"
       }
     }
   };
@@ -90,30 +112,35 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         >
           <motion.div 
             className="text-[#6E59A5] w-20 h-20"
+            variants={walletVariants}
           >
+            <Wallet 
+              size={80}
+              strokeWidth={1.5}
+              className="w-full h-full"
+            />
             <motion.div
-              className="relative"
-              variants={logoVariants}
+              variants={faceVariants}
+              className="absolute inset-0 flex items-center justify-center"
             >
-              <WalletLogo />
-              <motion.div
-                variants={faceVariants}
-                className="absolute inset-0 flex items-center justify-center"
-              >
-                <Eye size={10} className="absolute left-[35%] top-[40%]" />
-                <Eye size={10} className="absolute right-[35%] top-[40%]" />
-                <Smile size={20} className="absolute left-[30%] top-[50%]" />
-              </motion.div>
+              <Eye size={10} className="absolute left-[35%] top-[40%]" />
+              <Eye size={10} className="absolute right-[35%] top-[40%]" />
+              <Smile size={20} className="absolute left-[30%] top-[50%]" />
             </motion.div>
           </motion.div>
         </motion.div>
 
-        <motion.h1
-          variants={textVariants}
-          className="text-4xl font-bold mb-2 text-[#6E59A5]"
+        <motion.div
+          variants={shimmerVariants}
+          className="overflow-hidden"
         >
-          Hisaab Dost
-        </motion.h1>
+          <motion.h1
+            variants={textVariants}
+            className="text-4xl font-bold mb-2 text-[#6E59A5]"
+          >
+            Hisaab Dost
+          </motion.h1>
+        </motion.div>
 
         <motion.p
           variants={textVariants}
