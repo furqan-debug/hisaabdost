@@ -1,18 +1,14 @@
+
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
+import { HeaderTitle } from "./header/HeaderTitle";
+import { AddExpenseOptions } from "./header/AddExpenseOptions";
+import { ExportActions } from "./header/ExportActions";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -50,12 +46,9 @@ export function ExpenseHeader({
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-
-      // For upload or camera modes, we want to auto-process
       if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
-
       e.target.value = '';
     }
   };
@@ -69,13 +62,10 @@ export function ExpenseHeader({
       setExpandAddOptions(false);
       
       if (mode === 'manual') {
-        // Just open the manual entry form
         setShowAddExpense(true);
       } else if (mode === 'upload' && fileInputRef.current) {
-        // Trigger file upload
         fileInputRef.current.click();
       } else if (mode === 'camera' && cameraInputRef.current) {
-        // Trigger camera
         cameraInputRef.current.click();
       }
     }, 300);
@@ -94,191 +84,41 @@ export function ExpenseHeader({
     }
   };
 
-  const buttonVariants = {
-    initial: { scale: 1 },
-    active: { 
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    },
-    hover: { 
-      scale: 1.03,
-      transition: { duration: 0.2 }
-    }
-  };
-
   return (
     <header className={cn(
       "space-y-3 mb-4",
       isMobile ? "px-1" : "flex justify-between items-center space-y-0"
     )}>
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Expenses
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage and analyze your expenses
-        </p>
-      </div>
+      <HeaderTitle />
       
       <div className={cn(
         "flex items-center gap-2",
         isMobile ? "justify-between w-full" : "w-auto justify-end"
       )}>
-        {expandAddOptions ? (
-          <div className="grid grid-cols-3 gap-2">
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'manual' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('manual')} 
-                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-                size={isMobile ? "sm" : "default"}
-              >
-                <Plus className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium">Manual</span>
-              </Button>
-            </motion.div>
-            
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'upload' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('upload')} 
-                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-                size={isMobile ? "sm" : "default"}
-              >
-                <Upload className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium">Upload</span>
-              </Button>
-            </motion.div>
-            
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              animate={activeButton === 'camera' ? 'active' : 'initial'}
-              whileHover="hover"
-              whileTap="active"
-            >
-              <Button 
-                variant="outline" 
-                onClick={() => handleOpenSheet('camera')} 
-                className="flex-col h-16 items-center justify-center rounded-lg border-dashed space-y-0.5 hover:bg-accent/30 transition-all"
-                size={isMobile ? "sm" : "default"}
-              >
-                <Camera className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium">Camera</span>
-              </Button>
-            </motion.div>
-          </div>
-        ) : (
+        <AddExpenseOptions
+          expandAddOptions={expandAddOptions}
+          setExpandAddOptions={setExpandAddOptions}
+          handleOpenSheet={handleOpenSheet}
+          activeButton={activeButton}
+          isMobile={isMobile}
+        />
+        
+        {selectedExpenses.size > 0 && (
           <Button 
-            variant="default" 
-            onClick={() => setExpandAddOptions(true)}
-            className="rounded-lg"
+            variant="destructive"
+            onClick={onDeleteSelected}
             size={isMobile ? "sm" : "default"}
+            className="whitespace-nowrap rounded-lg"
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Expense
+            Delete {selectedExpenses.size > 0 && `(${selectedExpenses.size})`}
           </Button>
         )}
         
-        {isMobile ? (
-          <>
-            {selectedExpenses.size > 0 && (
-              <Button 
-                variant="destructive"
-                onClick={onDeleteSelected}
-                size="sm"
-                className="whitespace-nowrap rounded-lg"
-              >
-                Delete ({selectedExpenses.size})
-              </Button>
-            )}
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  className="rounded-lg"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="sr-only">Export</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem 
-                  onClick={() => handleExport('csv')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleExport('pdf')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <>
-            {selectedExpenses.size > 0 && (
-              <Button 
-                variant="destructive"
-                onClick={onDeleteSelected}
-                className="whitespace-nowrap rounded-lg"
-              >
-                Delete Selected ({selectedExpenses.size})
-              </Button>
-            )}
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-lg"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem 
-                  onClick={() => handleExport('csv')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleExport('pdf')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        )}
+        <ExportActions 
+          isMobile={isMobile}
+          isExporting={isExporting}
+          handleExport={handleExport}
+        />
         
         <ReceiptFileInput 
           onChange={handleFileChange} 
