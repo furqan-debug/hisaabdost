@@ -104,9 +104,9 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           className="relative mb-6"
         >
           <motion.img
-            src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
+            src="/lovable-uploads/3f10c252-66a8-4cb7-aa08-8898805429dc.png"
             alt="Hisaab Dost Logo"
-            className="w-20 h-20"
+            className="w-24 h-24"
             variants={logoVariants}
           />
         </motion.div>
