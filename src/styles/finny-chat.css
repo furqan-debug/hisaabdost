@@ -1,3 +1,4 @@
+
 /* Finny Chat Styles - Dark Modern Design */
 .finny-chat-card {
   @apply bg-[#1A1F2C] border border-gray-800/50 rounded-xl shadow-xl overflow-hidden;
@@ -13,7 +14,7 @@
 
 /* Message containers */
 .finny-messages-container {
-  @apply p-4 space-y-5 scrollbar-hide pb-20 bg-[#1A1F2C];
+  @apply p-4 space-y-5 pb-6;
 }
 
 /* Message bubbles */
@@ -31,7 +32,7 @@
 
 /* Input area */
 .finny-chat-input {
-  @apply border-t border-gray-800 bg-[#1A1F2C]/90 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-10 px-4 py-3;
+  @apply border-t border-gray-800 bg-[#1A1F2C]/90 backdrop-blur-sm px-4 py-3;
 }
 
 .finny-chat-input-container {
@@ -70,11 +71,7 @@
     @apply max-w-[90%];
   }
   
-  .finny-chat-input {
-    @apply bottom-14 px-3 py-2;
-  }
-  
   .finny-messages-container {
-    @apply px-3 pb-24;
+    @apply px-3;
   }
 }

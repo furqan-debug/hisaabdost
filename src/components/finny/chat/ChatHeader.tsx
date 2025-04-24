@@ -11,7 +11,8 @@ interface ChatHeaderProps {
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   onClose
 }) => {
-  return <div className="finny-chat-header py-3 flex items-center justify-between bg-[#1A1F2C] border-b border-gray-800/50 mx--2 px-[19px]">
+  return (
+    <div className="finny-chat-header py-3 flex items-center justify-between bg-[#1A1F2C] border-b border-gray-800/50 px-4">
       <div className="flex items-center gap-2.5">
         <div className="text-lg font-medium text-white flex items-center">
           <span className="text-yellow-400 mr-2">💰</span>
@@ -38,7 +39,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <X size={16} />
         </button>
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default ChatHeader;
