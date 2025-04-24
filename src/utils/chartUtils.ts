@@ -3,22 +3,22 @@ import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Updated vibrant and minimalist color palette
+// Light and minimalist color palette with distinct colors
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Healthcare": "#FF6B8E",      // Soft Vibrant Pink
-  "Groceries": "#FFD700",        // Soft Vibrant Gold
-  "Utilities": "#5CC7F2",        // Soft Vibrant Blue
-  "Housing": "#B7E5B4",          // Soft Green
-  "Transportation": "#9370DB",   // Soft Purple
-  "Entertainment": "#FFA07A",    // Soft Coral
-  "Shopping": "#87CEFA",         // Light Sky Blue
-  "Personal": "#DDA0DD",         // Soft Plum
-  "Education": "#32CD32",        // Lime Green
-  "Travel": "#40E0D0",           // Turquoise
-  "Insurance": "#F0E68C",        // Khaki
-  "Debt": "#FF6347",             // Tomato
-  "Savings": "#98FB98",          // Pale Green
-  "Other": "#D3D3D3",            // Light Gray
+  "Healthcare": "#F2FCE2",      // Soft Green
+  "Groceries": "#FEF7CD",       // Soft Yellow
+  "Utilities": "#D3E4FD",       // Soft Blue
+  "Housing": "#FEC6A1",         // Soft Orange
+  "Transportation": "#E5DEFF",  // Soft Purple
+  "Entertainment": "#FFDEE2",   // Soft Pink
+  "Shopping": "#FDE1D3",        // Soft Peach
+  "Personal": "#F1F0FB",        // Soft Gray
+  "Education": "#8B5CF6",       // Vivid Purple (for accent)
+  "Travel": "#0EA5E9",          // Ocean Blue (for accent)
+  "Insurance": "#D946EF",       // Magenta Pink (for accent)
+  "Debt": "#F97316",            // Bright Orange (for accent)
+  "Savings": "#98FB98",         // Pale Green
+  "Other": "#D3D3D3",           // Light Gray
 };
 
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {
