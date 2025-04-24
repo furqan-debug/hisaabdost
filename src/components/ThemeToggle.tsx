@@ -1,4 +1,3 @@
-
 import { Moon, Sun, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -33,6 +32,11 @@ export function ThemeToggle() {
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
+    if (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches === false) {
+      document.documentElement.classList.add("purple");
+      localStorage.setItem("color-theme", "purple");
+      setColorMode("purple");
+    }
   };
 
   const handleColorChange = (newColor: "default" | "pink" | "purple") => {
