@@ -13,7 +13,8 @@ import {
   Info, 
   ArrowRight, 
   PiggyBank,
-  Trash2
+  Trash2,
+  ChartPie
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useCurrency } from '@/hooks/use-currency';
@@ -35,6 +36,7 @@ const SUMMARY_PATTERN = /(show|get|give) (me )?(a )?(summary|overview|report|ana
 const DELETE_EXPENSE_PATTERN = /delete (?:my|the) ([\w\s]+) expense/i;
 const DELETE_BUDGET_PATTERN = /delete (?:my|the) ([\w\s]+) budget/i;
 const DELETE_GOAL_PATTERN = /delete (?:my|the) (?:financial |savings )?goal(?: called| named)? ["|']?([^"']+)["|']?/i;
+const VISUALIZATION_PATTERN = /(visualize|show|generate|create|chart) (.*?) (spending|expenses)/i;
 
 export const useChatLogic = (queuedMessage: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -225,6 +227,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
       const deleteExpenseMatch = messageToSend.match(DELETE_EXPENSE_PATTERN);
       const deleteBudgetMatch = messageToSend.match(DELETE_BUDGET_PATTERN);
       const deleteGoalMatch = messageToSend.match(DELETE_GOAL_PATTERN);
+      const visualizationMatch = messageToSend.match(VISUALIZATION_PATTERN);
       
       console.log("Message analysis:", { 
         message: messageToSend,
@@ -232,7 +235,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
         summaryMatch,
         deleteExpenseMatch,
         deleteBudgetMatch,
-        deleteGoalMatch
+        deleteGoalMatch,
+        visualizationMatch
       });
 
       // Prepare the analysis type based on patterns
@@ -244,6 +248,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
         specificCategory = categoryMatch[1];
       } else if (summaryMatch) {
         analysisType = "summary";
+      } else if (visualizationMatch) {
+        analysisType = "visualization";
+        specificCategory = visualizationMatch[2];
       } else if (deleteExpenseMatch) {
         analysisType = "delete_expense";
         specificCategory = deleteExpenseMatch[1].trim();
@@ -275,9 +282,53 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
       const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
       
-      const needsVisualization = messageToSend.toLowerCase().includes('spending') || 
-                               messageToSend.toLowerCase().includes('budget') ||
-                               messageToSend.toLowerCase().includes('breakdown');
+      // Determine if we should show a visualization
+      const needsVisualization = 
+        messageToSend.toLowerCase().includes('spending') || 
+        messageToSend.toLowerCase().includes('budget') ||
+        messageToSend.toLowerCase().includes('breakdown') ||
+        messageToSend.toLowerCase().includes('summary') ||
+        messageToSend.toLowerCase().includes('show me') ||
+        messageToSend.toLowerCase().includes('visualize') ||
+        messageToSend.toLowerCase().includes('chart') ||
+        messageToSend.toLowerCase().includes('graph') ||
+        data.response.includes('$') ||
+        hasAction;
+
+      // Process response to extract financial data for visualization
+      const extractVisualizationData = () => {
+        // If backend provided data, use it
+        if (data.visualData) {
+          return data.visualData;
+        }
+        
+        // Generate visualization data based on category match
+        if (categoryMatch) {
+          const category = categoryMatch[1];
+          return {
+            type: 'category',
+            category: category.charAt(0).toUpperCase() + category.slice(1),
+            total: extractTotalFromResponse(data.response, category),
+          };
+        }
+        
+        // Generate visualization for summary
+        if (summaryMatch || needsVisualization) {
+          return {
+            type: 'spending-chart',
+            summary: true
+          };
+        }
+        
+        return null;
+      };
+      
+      // Helper to extract total from response
+      const extractTotalFromResponse = (response: string, category: string) => {
+        const totalRegex = new RegExp(`${category}[^$]*\\$(\\d+\\.?\\d*)`, 'i');
+        const match = response.match(totalRegex);
+        return match ? parseFloat(match[1]) : 0;
+      };
 
       const newMessage: Message = {
         id: Date.now().toString(),
@@ -285,21 +336,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
         isUser: false,
         timestamp: new Date(),
         hasAction: hasAction,
+        visualData: extractVisualizationData()
       };
       
-      if (data.visualData) {
-        newMessage.visualData = data.visualData;
-      }
-      else if (needsVisualization && categoryMatch) {
-        newMessage.visualData = { 
-          type: 'category-chart',
-          category: categoryMatch[1]
-        };
-      }
-      else if (needsVisualization && summaryMatch) {
-        newMessage.visualData = { type: 'spending-chart' };
-      }
-
       setMessages((prev) => [...prev, newMessage]);
       
       // Update the quick replies based on context
@@ -333,6 +372,20 @@ export const useChatLogic = (queuedMessage: string | null) => {
           { text: "Update goal", action: "How can I update my goal progress?", icon: <ArrowRight size={14} /> },
           { text: "Delete goal", action: "Delete my savings goal", icon: <Trash2 size={14} /> }
         ];
+      }
+      
+      // Add visualization option if financial data is present
+      if (data.response.includes('$')) {
+        const hasVisualizationOption = updatedReplies.some(r => 
+          r.text.toLowerCase().includes('visualization') || 
+          r.text.toLowerCase().includes('chart'));
+          
+        if (!hasVisualizationOption) {
+          updatedReplies = [
+            ...updatedReplies.slice(0, 3),
+            { text: "Visualize data", action: "Generate a chart of this data", icon: <ChartPie size={14} /> }
+          ];
+        }
       }
       
       setQuickReplies(updatedReplies);

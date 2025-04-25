@@ -67,7 +67,7 @@ export function useFinnyCommand() {
   };
   
   /**
-   * Request category-specific spending analysis
+   * Request category-specific spending analysis with visualization
    */
   const requestCategoryAnalysis = (category: string) => {
     if (!user) {
@@ -117,6 +117,18 @@ export function useFinnyCommand() {
     const message = `Delete my ${category} expense${date ? ` from ${date}` : ''}`;
     askFinny(message);
   };
+  
+  /**
+   * Generate spending visualization only
+   */
+  const generateVisualization = () => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    askFinny("Generate a visualization of my spending by category");
+  };
 
   return {
     recordExpense,
@@ -128,6 +140,7 @@ export function useFinnyCommand() {
     setFinancialGoal,
     deleteFinancialGoal,
     deleteExpense,
+    generateVisualization,
     openChat
   };
 }
