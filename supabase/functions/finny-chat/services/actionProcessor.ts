@@ -1,3 +1,4 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 export async function processAction(action: any, userId: string, supabase: any) {
@@ -12,10 +13,14 @@ export async function processAction(action: any, userId: string, supabase: any) 
       return await setBudget(action, userId, supabase);
     case 'update_budget':
       return await updateBudget(action, userId, supabase);
+    case 'delete_budget':
+      return await deleteBudget(action, userId, supabase);
     case 'set_goal':
       return await setGoal(action, userId, supabase);
     case 'update_goal':
       return await updateGoal(action, userId, supabase);
+    case 'delete_goal':
+      return await deleteGoal(action, userId, supabase);
     case 'get_spending':
       return await getSpending(action, userId, supabase);
     default:
@@ -28,6 +33,10 @@ async function addExpense(action: any, userId: string, supabase: any) {
   
   if (!amount || !category || !date) {
     throw new Error('Missing required fields for expense');
+  }
+
+  if (parseFloat(amount) <= 0) {
+    throw new Error('Expense amount must be greater than zero');
   }
 
   const { data, error } = await supabase
@@ -51,7 +60,14 @@ async function addExpense(action: any, userId: string, supabase: any) {
 async function updateExpense(action: any, userId: string, supabase: any) {
   const { expenseId, amount, category, date, description } = action;
   
-  if (!expenseId) {
+  let targetExpenseId = expenseId;
+  
+  // If no specific expense ID is provided but we have a category, find the most recent expense in that category
+  if (!targetExpenseId) {
+    if (!category) {
+      throw new Error('Either expense ID or category is required to update an expense');
+    }
+    
     const { data, error } = await supabase
       .from('expenses')
       .select('*')
@@ -64,11 +80,16 @@ async function updateExpense(action: any, userId: string, supabase: any) {
       throw new Error('Could not find the expense to update');
     }
     
-    action.expenseId = data[0].id;
+    targetExpenseId = data[0].id;
   }
 
   const updates: any = {};
-  if (amount !== undefined) updates.amount = parseFloat(amount);
+  if (amount !== undefined) {
+    if (parseFloat(amount) <= 0) {
+      throw new Error('Expense amount must be greater than zero');
+    }
+    updates.amount = parseFloat(amount);
+  }
   if (category) updates.category = category;
   if (date) updates.date = date;
   if (description) updates.description = description;
@@ -77,7 +98,7 @@ async function updateExpense(action: any, userId: string, supabase: any) {
   const { data, error } = await supabase
     .from('expenses')
     .update(updates)
-    .eq('id', action.expenseId)
+    .eq('id', targetExpenseId)
     .eq('user_id', userId);
 
   if (error) {
@@ -90,6 +111,26 @@ async function updateExpense(action: any, userId: string, supabase: any) {
 async function deleteExpense(action: any, userId: string, supabase: any) {
   const { expenseId, category, date } = action;
   
+  if (!expenseId && !category) {
+    throw new Error('Either expense ID or category is required to delete an expense');
+  }
+
+  // If we have multiple IDs, it's a bulk delete operation
+  if (Array.isArray(expenseId) && expenseId.length > 0) {
+    const { data, error } = await supabase
+      .from('expenses')
+      .delete()
+      .in('id', expenseId)
+      .eq('user_id', userId);
+    
+    if (error) {
+      throw new Error(`Failed to delete expenses: ${error.message}`);
+    }
+    
+    return `I've deleted ${expenseId.length} expenses`;
+  }
+  
+  // If no specific ID is provided, find by category (and optionally date)
   if (!expenseId) {
     let query = supabase
       .from('expenses')
@@ -112,6 +153,7 @@ async function deleteExpense(action: any, userId: string, supabase: any) {
     action.expenseId = data[0].id;
   }
 
+  // Delete the single expense
   const { data, error } = await supabase
     .from('expenses')
     .delete()
@@ -130,6 +172,10 @@ async function setBudget(action: any, userId: string, supabase: any) {
   
   if (!category || !amount) {
     throw new Error('Missing required fields for budget');
+  }
+
+  if (parseFloat(amount) <= 0) {
+    throw new Error('Budget amount must be greater than zero');
   }
 
   const { data: existingBudget, error: fetchError } = await supabase
@@ -197,7 +243,12 @@ async function updateBudget(action: any, userId: string, supabase: any) {
   }
 
   const updates: any = {};
-  if (amount !== undefined) updates.amount = parseFloat(amount);
+  if (amount !== undefined) {
+    if (parseFloat(amount) <= 0) {
+      throw new Error('Budget amount must be greater than zero');
+    }
+    updates.amount = parseFloat(amount);
+  }
   if (period) updates.period = period;
 
   const { error } = await supabase
@@ -213,11 +264,53 @@ async function updateBudget(action: any, userId: string, supabase: any) {
   return `I've updated your ${category} budget`;
 }
 
+async function deleteBudget(action: any, userId: string, supabase: any) {
+  const { category, budgetId } = action;
+  
+  if (!budgetId && !category) {
+    throw new Error('Either budget ID or category is required to delete a budget');
+  }
+  
+  let targetBudgetId = budgetId;
+  
+  // If no specific budget ID is provided, find by category
+  if (!targetBudgetId) {
+    const { data, error } = await supabase
+      .from('budgets')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('category', category)
+      .single();
+    
+    if (error || !data) {
+      throw new Error(`Could not find a budget for category: ${category}`);
+    }
+    
+    targetBudgetId = data.id;
+  }
+
+  const { error } = await supabase
+    .from('budgets')
+    .delete()
+    .eq('id', targetBudgetId)
+    .eq('user_id', userId);
+  
+  if (error) {
+    throw new Error(`Failed to delete budget: ${error.message}`);
+  }
+  
+  return `I've deleted the ${category || ''} budget`;
+}
+
 async function setGoal(action: any, userId: string, supabase: any) {
   const { title, targetAmount, deadline, category } = action;
   
   if (!title || !targetAmount) {
     throw new Error('Missing required fields for goal');
+  }
+
+  if (parseFloat(targetAmount) <= 0) {
+    throw new Error('Goal amount must be greater than zero');
   }
 
   const { data: existingGoal, error: fetchError } = await supabase
@@ -293,7 +386,12 @@ async function updateGoal(action: any, userId: string, supabase: any) {
   }
 
   const updates: any = {};
-  if (targetAmount !== undefined) updates.target_amount = parseFloat(targetAmount);
+  if (targetAmount !== undefined) {
+    if (parseFloat(targetAmount) <= 0) {
+      throw new Error('Goal target amount must be greater than zero');
+    }
+    updates.target_amount = parseFloat(targetAmount);
+  }
   if (currentAmount !== undefined) updates.current_amount = parseFloat(currentAmount);
   if (deadline) updates.deadline = deadline;
   if (category) updates.category = category;
@@ -310,6 +408,33 @@ async function updateGoal(action: any, userId: string, supabase: any) {
   }
 
   return `I've updated your goal "${data[0].title}"`;
+}
+
+async function deleteGoal(action: any, userId: string, supabase: any) {
+  const { goalId, title } = action;
+  
+  if (!goalId && !title) {
+    throw new Error('Either goal ID or title is required to delete a goal');
+  }
+  
+  let goalQuery = supabase
+    .from('goals')
+    .delete()
+    .eq('user_id', userId);
+  
+  if (goalId) {
+    goalQuery = goalQuery.eq('id', goalId);
+  } else {
+    goalQuery = goalQuery.eq('title', title);
+  }
+  
+  const { error } = await goalQuery;
+  
+  if (error) {
+    throw new Error(`Failed to delete goal: ${error.message}`);
+  }
+  
+  return `I've deleted the goal${title ? ` "${title}"` : ''}`;
 }
 
 async function getSpending(action: any, userId: string, supabase: any) {

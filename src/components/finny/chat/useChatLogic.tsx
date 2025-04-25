@@ -12,7 +12,8 @@ import {
   DollarSign, 
   Info, 
   ArrowRight, 
-  PiggyBank 
+  PiggyBank,
+  Trash2
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useCurrency } from '@/hooks/use-currency';
@@ -28,8 +29,12 @@ const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistan
 const FINNY_AUTH_PROMPT = "I'll need you to log in first so I can access your personal financial information.";
 const FINNY_CONNECTING = "Connecting to your financial data...";
 
+// Regex patterns to identify user intents
 const CATEGORY_PATTERN = /show my (\w+) (spending|expenses|breakdown)/i;
 const SUMMARY_PATTERN = /(show|get|give) (me )?(a )?(summary|overview|report|analysis)/i;
+const DELETE_EXPENSE_PATTERN = /delete (?:my|the) ([\w\s]+) expense/i;
+const DELETE_BUDGET_PATTERN = /delete (?:my|the) ([\w\s]+) budget/i;
+const DELETE_GOAL_PATTERN = /delete (?:my|the) (?:financial |savings )?goal(?: called| named)? ["|']?([^"']+)["|']?/i;
 
 export const useChatLogic = (queuedMessage: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -214,22 +219,49 @@ export const useChatLogic = (queuedMessage: string | null) => {
     try {
       const recentMessages = [...messages.slice(-5), userMessage];
       
+      // Check for intent patterns in the user's message
       const categoryMatch = messageToSend.match(CATEGORY_PATTERN);
       const summaryMatch = messageToSend.match(SUMMARY_PATTERN);
+      const deleteExpenseMatch = messageToSend.match(DELETE_EXPENSE_PATTERN);
+      const deleteBudgetMatch = messageToSend.match(DELETE_BUDGET_PATTERN);
+      const deleteGoalMatch = messageToSend.match(DELETE_GOAL_PATTERN);
       
       console.log("Message analysis:", { 
         message: messageToSend,
         categoryMatch,
-        summaryMatch
+        summaryMatch,
+        deleteExpenseMatch,
+        deleteBudgetMatch,
+        deleteGoalMatch
       });
+
+      // Prepare the analysis type based on patterns
+      let analysisType = "general";
+      let specificCategory = null;
+      
+      if (categoryMatch) {
+        analysisType = "category";
+        specificCategory = categoryMatch[1];
+      } else if (summaryMatch) {
+        analysisType = "summary";
+      } else if (deleteExpenseMatch) {
+        analysisType = "delete_expense";
+        specificCategory = deleteExpenseMatch[1].trim();
+      } else if (deleteBudgetMatch) {
+        analysisType = "delete_budget";
+        specificCategory = deleteBudgetMatch[1].trim();
+      } else if (deleteGoalMatch) {
+        analysisType = "delete_goal";
+        specificCategory = deleteGoalMatch[1].trim();
+      }
 
       const { data, error } = await supabase.functions.invoke('finny-chat', {
         body: {
           message: messageToSend,
           userId: user.id,
           chatHistory: recentMessages,
-          analysisType: categoryMatch ? 'category' : (summaryMatch ? 'summary' : 'general'),
-          specificCategory: categoryMatch ? categoryMatch[1] : null,
+          analysisType: analysisType,
+          specificCategory: specificCategory,
           currencyCode: currencyCode
         },
       });
@@ -270,21 +302,22 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
       setMessages((prev) => [...prev, newMessage]);
       
+      // Update the quick replies based on context
       let updatedReplies: QuickReply[] = [...DEFAULT_QUICK_REPLIES];
       
-      if (data.response.toLowerCase().includes('budget')) {
+      if (messageToSend.toLowerCase().includes('budget') || data.response.toLowerCase().includes('budget')) {
         updatedReplies = [
           { text: "Show my budget", action: "Show me my budget", icon: <PieChart size={14} /> },
           { text: "Update budget", action: "I'd like to update my budget", icon: <Plus size={14} /> },
           { text: "Budget analysis", action: "How am I doing with my budgets this month?", icon: <BarChart3 size={14} /> },
-          { text: "Add expense", action: "I want to add a new expense", icon: <Plus size={14} /> }
+          { text: "Delete budget", action: "I want to delete a budget", icon: <Trash2 size={14} /> }
         ];
-      } else if (data.response.toLowerCase().includes('expense')) {
+      } else if (messageToSend.toLowerCase().includes('expense') || data.response.toLowerCase().includes('expense')) {
         updatedReplies = [
           { text: "Add expense", action: "I want to add an expense", icon: <Plus size={14} /> },
           { text: "Recent expenses", action: "Show my recent expenses", icon: <Calendar size={14} /> },
           { text: "Category analysis", action: "Show my spending by category", icon: <PieChart size={14} /> },
-          { text: "Monthly total", action: "What's my total spending this month?", icon: <DollarSign size={14} /> }
+          { text: "Delete expense", action: "Delete my latest expense", icon: <Trash2 size={14} /> }
         ];
       } else if (categoryMatch) {
         updatedReplies = [
@@ -293,12 +326,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
           { text: "Monthly spending", action: "What's my total spending this month?", icon: <DollarSign size={14} /> },
           { text: "Spending insights", action: "Give me insights on my spending", icon: <Info size={14} /> }
         ];
-      } else if (data.response.toLowerCase().includes('goal')) {
+      } else if (messageToSend.toLowerCase().includes('goal') || data.response.toLowerCase().includes('goal')) {
         updatedReplies = [
           { text: "Progress update", action: "What's my progress on my goals?", icon: <PiggyBank size={14} /> },
           { text: "Set new goal", action: "I want to set a new savings goal", icon: <Plus size={14} /> },
           { text: "Update goal", action: "How can I update my goal progress?", icon: <ArrowRight size={14} /> },
-          { text: "Budget advice", action: "How can I save more money?", icon: <DollarSign size={14} /> }
+          { text: "Delete goal", action: "Delete my savings goal", icon: <Trash2 size={14} /> }
         ];
       }
       

@@ -42,6 +42,19 @@ export function useFinnyCommand() {
   };
   
   /**
+   * Delete a budget by category
+   */
+  const deleteBudget = (category: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    const message = `Delete my ${category} budget`;
+    askFinny(message);
+  };
+  
+  /**
    * Request a spending summary
    */
   const requestSpendingSummary = () => {
@@ -80,6 +93,19 @@ export function useFinnyCommand() {
   };
   
   /**
+   * Delete a financial goal by title
+   */
+  const deleteFinancialGoal = (title: string) => {
+    if (!user) {
+      toast.error('Please log in to use Finny');
+      return;
+    }
+    
+    const message = `Delete my financial goal called "${title}"`;
+    askFinny(message);
+  };
+  
+  /**
    * Delete an expense by category and optionally date
    */
   const deleteExpense = (category: string, date?: string) => {
@@ -95,10 +121,12 @@ export function useFinnyCommand() {
   return {
     recordExpense,
     createBudget,
+    deleteBudget,
     askFinny,
     requestSpendingSummary,
     requestCategoryAnalysis,
     setFinancialGoal,
+    deleteFinancialGoal,
     deleteExpense,
     openChat
   };
