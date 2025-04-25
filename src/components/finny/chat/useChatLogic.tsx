@@ -49,6 +49,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const { currencyCode } = useCurrency();
 
   useEffect(() => {
+    if (user) {
+      loadChatHistory();
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -195,15 +201,16 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   const loadChatHistory = async () => {
     try {
-      const { data: chatHistory, error } = await supabase
+      const { data: chatMessages, error } = await supabase
         .from('chat_messages')
         .select('*')
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: true });
-        
+
       if (error) throw error;
-      
-      if (chatHistory && chatHistory.length > 0) {
-        const messages: Message[] = chatHistory.map(msg => ({
+
+      if (chatMessages && chatMessages.length > 0) {
+        const messages: Message[] = chatMessages.map(msg => ({
           id: msg.id,
           content: msg.content,
           isUser: msg.is_user,
@@ -212,9 +219,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
           visualData: msg.visual_data,
           expiresAt: new Date(msg.expires_at)
         }));
-        
+
         setMessages(messages);
-        setOldestMessageTime(new Date(chatHistory[0].created_at));
+        setOldestMessageTime(new Date(chatMessages[0].created_at));
       }
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -222,24 +229,20 @@ export const useChatLogic = (queuedMessage: string | null) => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      loadChatHistory();
-    }
-  }, [user]);
-
   const saveMessage = async (message: Message) => {
     if (!user) return;
-    
+
     try {
-      const { error } = await supabase.from('chat_messages').insert({
-        content: message.content,
-        is_user: message.isUser,
-        has_action: message.hasAction || false,
-        visual_data: message.visualData,
-        user_id: user.id
-      });
-      
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          content: message.content,
+          is_user: message.isUser,
+          has_action: message.hasAction || false,
+          visual_data: message.visualData,
+          user_id: user.id
+        });
+
       if (error) throw error;
     } catch (error) {
       console.error('Error saving message:', error);
@@ -249,11 +252,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
-    
+
     const messageToSend = customMessage || newMessage;
-    
+
     if (!messageToSend.trim() || isLoading) return;
-    
+
     if (!user) {
       toast.error("Please log in to chat with Finny");
       return;
@@ -274,14 +277,14 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
     try {
       const recentMessages = [...messages.slice(-5), userMessage];
-      
+
       const categoryMatch = messageToSend.match(CATEGORY_PATTERN);
       const summaryMatch = messageToSend.match(SUMMARY_PATTERN);
       const deleteExpenseMatch = messageToSend.match(DELETE_EXPENSE_PATTERN);
       const deleteBudgetMatch = messageToSend.match(DELETE_BUDGET_PATTERN);
       const deleteGoalMatch = messageToSend.match(DELETE_GOAL_PATTERN);
       const visualizationMatch = messageToSend.match(VISUALIZATION_PATTERN);
-      
+
       console.log("Message analysis:", { 
         message: messageToSend,
         categoryMatch,
@@ -294,7 +297,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
       let analysisType = "general";
       let specificCategory = null;
-      
+
       if (categoryMatch) {
         analysisType = "category";
         specificCategory = categoryMatch[1];
@@ -331,7 +334,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
       }
 
       setIsTyping(false);
-      
+
       const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
       
       const needsVisualization = 
@@ -456,9 +459,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   const handleQuickReply = (reply: QuickReply) => {
     if (isLoading || !user) return;
-    
+
     setNewMessage(reply.action);
-    
+
     handleSendMessage(null, reply.action);
   };
 
