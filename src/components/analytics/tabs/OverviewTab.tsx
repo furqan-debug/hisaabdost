@@ -12,7 +12,7 @@ export function OverviewTab({
   config
 }: OverviewTabProps) {
   return <Card className="border-0 shadow-sm bg-card/80 py-[12px] my-[21px]">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 py-[9px] my-[11px]">
         <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
         <CardDescription>Your expenses by category</CardDescription>
       </CardHeader>
