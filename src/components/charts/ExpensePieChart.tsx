@@ -66,7 +66,7 @@ export const ExpensePieChart = ({
       </ResponsiveContainer>
       
       {/* Simplified mobile-friendly legend */}
-      <div className="expense-chart-legend my--9 my--2">
+      <div className="expense-chart-legend my--9 my--3">
         {data.slice(0, isMobile ? 4 : 6).map((entry, index) => <div key={index} className="expense-chart-legend-item bg-muted/20 text-foreground">
             <div className="expense-chart-legend-dot" style={{
           backgroundColor: entry.color
