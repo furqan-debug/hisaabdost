@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,9 +31,7 @@ export function ExpensesPieChart({
 
   // Get main percentage (for the largest category)
   const mainPercentage = data.length > 0 ? Math.round(data[0].percent) : 0;
-  
-  return (
-    <div className="chart-wrapper relative w-full h-full flex flex-col items-center">
+  return <div className="chart-wrapper relative w-full h-full flex flex-col items-center p my-[8px]">
       {/* Display the center percentage */}
       <div className="chart-center-total">
         <span className="text-2xl font-semibold">{mainPercentage}%</span>
@@ -44,51 +41,37 @@ export function ExpensesPieChart({
       </div>
       
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart 
-          margin={isMobile ? {top: 0, right: 0, left: 0, bottom: 0} : {top: 0, right: 0, left: 0, bottom: 0}}
-          className="mx-auto"
-        >
-          <Pie 
-            data={data} 
-            dataKey="value" 
-            nameKey="name" 
-            cx="50%" 
-            cy="50%" 
-            outerRadius={isMobile ? 90 : 130} 
-            innerRadius={isMobile ? 65 : 90}
-            paddingAngle={2}
-            startAngle={90}
-            endAngle={-270}
-            cornerRadius={4}
-            labelLine={false}
-            label={false}
-            isAnimationActive={true}
-            animationDuration={800}
-            animationBegin={0}
-            animationEasing="ease-out"
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.color} 
-                stroke="transparent" 
-              />
-            ))}
+        <PieChart margin={isMobile ? {
+        top: 0,
+        right: 0,
+        left: 0,
+        bottom: 0
+      } : {
+        top: 0,
+        right: 0,
+        left: 0,
+        bottom: 0
+      }} className="mx-auto">
+          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 90 : 130} innerRadius={isMobile ? 65 : 90} paddingAngle={2} startAngle={90} endAngle={-270} cornerRadius={4} labelLine={false} label={false} isAnimationActive={true} animationDuration={800} animationBegin={0} animationEasing="ease-out">
+            {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />)}
           </Pie>
           
-          <Tooltip 
-            animationDuration={200}
-            content={({ active, payload }) => {
-              if (!active || !payload || !payload.length) return null;
-              
-              const data = payload[0];
-              return (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg border bg-background/95 p-3 shadow-md backdrop-blur-sm"
-                >
-                  <p className="text-sm font-semibold" style={{ color: data.payload.color }}>
+          <Tooltip animationDuration={200} content={({
+          active,
+          payload
+        }) => {
+          if (!active || !payload || !payload.length) return null;
+          const data = payload[0];
+          return <motion.div initial={{
+            opacity: 0,
+            y: 10
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} className="rounded-lg border bg-background/95 p-3 shadow-md backdrop-blur-sm">
+                  <p className="text-sm font-semibold" style={{
+              color: data.payload.color
+            }}>
                     {data.name}
                   </p>
                   <p className="text-sm font-bold">
@@ -97,30 +80,24 @@ export function ExpensesPieChart({
                   <p className="text-xs text-muted-foreground mt-1">
                     {data.payload.percent.toFixed(1)}% of total
                   </p>
-                </motion.div>
-              );
-            }}
-          />
+                </motion.div>;
+        }} />
         </PieChart>
       </ResponsiveContainer>
       
       {/* Enhanced mobile legend */}
-      <div className="expense-chart-legend mt-2">
-        {data.slice(0, isMobile ? 5 : 6).map((entry, index) => (
-          <div key={index} className="expense-chart-legend-item">
-            <div 
-              className="expense-chart-legend-dot" 
-              style={{ backgroundColor: entry.color }}
-            />
+      <div className="expense-chart-legend mt-2 py-0 my--12">
+        {data.slice(0, isMobile ? 5 : 6).map((entry, index) => <div key={index} className="expense-chart-legend-item">
+            <div className="expense-chart-legend-dot" style={{
+          backgroundColor: entry.color
+        }} />
             <span className="truncate max-w-[90px]">
               {entry.name.length > 10 ? entry.name.slice(0, 10) + "..." : entry.name}
             </span>
             <span className="font-medium ml-1">
               {entry.percent.toFixed(0)}%
             </span>
-          </div>
-        ))}
+          </div>)}
       </div>
-    </div>
-  );
+    </div>;
 }
