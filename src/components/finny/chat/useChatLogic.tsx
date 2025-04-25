@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +29,6 @@ const FINNY_GREETING = "Hi there! 👋 I'm Finny, your personal finance assistan
 const FINNY_AUTH_PROMPT = "I'll need you to log in first so I can access your personal financial information.";
 const FINNY_CONNECTING = "Connecting to your financial data...";
 
-// Regex patterns to identify user intents
 const CATEGORY_PATTERN = /show my (\w+) (spending|expenses|breakdown)/i;
 const SUMMARY_PATTERN = /(show|get|give) (me )?(a )?(summary|overview|report|analysis)/i;
 const DELETE_EXPENSE_PATTERN = /delete (?:my|the) ([\w\s]+) expense/i;
@@ -45,6 +43,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
+  const [oldestMessageTime, setOldestMessageTime] = useState<Date | undefined>();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currencyCode } = useCurrency();
@@ -194,6 +193,60 @@ export const useChatLogic = (queuedMessage: string | null) => {
     }
   }, [user, currencyCode]);
 
+  const loadChatHistory = async () => {
+    try {
+      const { data: chatHistory, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      
+      if (chatHistory && chatHistory.length > 0) {
+        const messages: Message[] = chatHistory.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          isUser: msg.is_user,
+          timestamp: new Date(msg.created_at),
+          hasAction: msg.has_action,
+          visualData: msg.visual_data,
+          expiresAt: new Date(msg.expires_at)
+        }));
+        
+        setMessages(messages);
+        setOldestMessageTime(new Date(chatHistory[0].created_at));
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      toast.error('Failed to load chat history');
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadChatHistory();
+    }
+  }, [user]);
+
+  const saveMessage = async (message: Message) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase.from('chat_messages').insert({
+        content: message.content,
+        is_user: message.isUser,
+        has_action: message.hasAction || false,
+        visual_data: message.visualData,
+        user_id: user.id
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving message:', error);
+      toast.error('Failed to save message');
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
     
@@ -214,6 +267,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    await saveMessage(userMessage);
     setNewMessage('');
     setIsLoading(true);
     setIsTyping(true);
@@ -221,7 +275,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
     try {
       const recentMessages = [...messages.slice(-5), userMessage];
       
-      // Check for intent patterns in the user's message
       const categoryMatch = messageToSend.match(CATEGORY_PATTERN);
       const summaryMatch = messageToSend.match(SUMMARY_PATTERN);
       const deleteExpenseMatch = messageToSend.match(DELETE_EXPENSE_PATTERN);
@@ -239,7 +292,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         visualizationMatch
       });
 
-      // Prepare the analysis type based on patterns
       let analysisType = "general";
       let specificCategory = null;
       
@@ -282,7 +334,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
       const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
       
-      // Determine if we should show a visualization
       const needsVisualization = 
         messageToSend.toLowerCase().includes('spending') || 
         messageToSend.toLowerCase().includes('budget') ||
@@ -295,14 +346,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
         data.response.includes('$') ||
         hasAction;
 
-      // Process response to extract financial data for visualization
       const extractVisualizationData = () => {
-        // If backend provided data, use it
         if (data.visualData) {
           return data.visualData;
         }
         
-        // Generate visualization data based on category match
         if (categoryMatch) {
           const category = categoryMatch[1];
           return {
@@ -312,7 +360,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
           };
         }
         
-        // Generate visualization for summary
         if (summaryMatch || needsVisualization) {
           return {
             type: 'spending-chart',
@@ -323,7 +370,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         return null;
       };
       
-      // Helper to extract total from response
       const extractTotalFromResponse = (response: string, category: string) => {
         const totalRegex = new RegExp(`${category}[^$]*\\$(\\d+\\.?\\d*)`, 'i');
         const match = response.match(totalRegex);
@@ -340,8 +386,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
       };
       
       setMessages((prev) => [...prev, newMessage]);
+      await saveMessage(newMessage);
       
-      // Update the quick replies based on context
       let updatedReplies: QuickReply[] = [...DEFAULT_QUICK_REPLIES];
       
       if (messageToSend.toLowerCase().includes('budget') || data.response.toLowerCase().includes('budget')) {
@@ -374,7 +420,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         ];
       }
       
-      // Add visualization option if financial data is present
       if (data.response.includes('$')) {
         const hasVisualizationOption = updatedReplies.some(r => 
           r.text.toLowerCase().includes('visualization') || 
@@ -427,6 +472,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
     quickReplies,
     messagesEndRef,
     handleSendMessage,
-    handleQuickReply
+    handleQuickReply,
+    oldestMessageTime
   };
 };

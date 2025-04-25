@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +13,7 @@ import { useChatLogic } from './chat/useChatLogic';
 import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
 
 interface FinnyChatProps {
   isOpen: boolean;
@@ -44,7 +44,8 @@ const FinnyChat = ({
     quickReplies,
     messagesEndRef,
     handleSendMessage,
-    handleQuickReply
+    handleQuickReply,
+    oldestMessageTime
   } = useChatLogic(null);
 
   useEffect(() => {
@@ -132,7 +133,9 @@ const FinnyChat = ({
                         You need to log in to use Finny's personalized features.
                       </AlertDescription>
                     </Alert>}
-                  
+
+                    {user && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
+                    
                     {isConnectingToData && user && <div className="flex flex-col items-center justify-center py-6 space-y-3">
                       <div className="relative w-10 h-10">
                         <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
