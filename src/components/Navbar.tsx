@@ -1,66 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut, Menu, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { SettingsSidebar } from "./SettingsSidebar";
-
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const isMobile = useIsMobile();
-  const { selectedMonth, setSelectedMonth } = useMonthContext();
+  const {
+    selectedMonth,
+    setSelectedMonth
+  } = useMonthContext();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  return (
-    <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
       <div className="flex h-14 items-center px-3 gap-2 max-w-[480px] mx-auto">
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon-sm" 
-              className="rounded-full hover:bg-muted transition-all duration-300"
-            >
+            <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300 py-[13px] mx-0 my-0 font-normal">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0 overflow-hidden">
-            <SettingsSidebar
-              selectedMonth={selectedMonth}
-              onMonthChange={setSelectedMonth}
-              onClose={() => setSettingsOpen(false)}
-            />
+            <SettingsSidebar selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} onClose={() => setSettingsOpen(false)} />
           </SheetContent>
         </Sheet>
         
         <div className="flex-1 flex items-center">
-          <img 
-            src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png" 
-            alt="Hisaab Dost logo" 
-            className="h-8 w-8 mr-2 rounded bg-white shadow-sm"
-            style={{ filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))" }}
-          />
+          <img src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded bg-white shadow-sm" style={{
+          filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
+        }} />
           <h2 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
             Hisaab Dost
           </h2>
@@ -69,11 +52,7 @@ const Navbar = () => {
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="glass" 
-                size="icon-sm" 
-                className="rounded-full transition-all duration-300 h-7 w-7"
-              >
+              <Button variant="glass" size="icon-sm" className="rounded-full transition-all duration-300 h-7 w-7">
                 <User className="h-4 w-4" />
                 <span className="sr-only">User menu</span>
               </Button>
@@ -88,10 +67,7 @@ const Navbar = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => signOut()}
-                className="text-destructive focus:text-destructive"
-              >
+              <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -99,8 +75,6 @@ const Navbar = () => {
           </DropdownMenu>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
