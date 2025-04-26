@@ -1,8 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet, Star, CreditCard } from "lucide-react";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -25,25 +26,52 @@ const Index = () => {
   const features = [
     {
       icon: ChartPie,
-      title: "Auto-Categorized Expenses",
-      description: "Smart sorting of your spending for crystal-clear insights"
+      title: "Smart Expense Tracking",
+      description: "Effortlessly track and categorize your spending with AI-powered automation"
     },
     {
       icon: Brain,
-      title: "AI-Powered Insights",
-      description: "Intelligent analysis to help you save more effortlessly"
+      title: "AI Financial Assistant",
+      description: "Get personalized insights and recommendations to optimize your spending"
     },
     {
       icon: Flag,
-      title: "Goals & Reminders",
-      description: "Stay on track with friendly nudges and milestone celebrations"
+      title: "Custom Goals & Milestones",
+      description: "Set and achieve your financial goals with smart progress tracking"
+    },
+    {
+      icon: CreditCard,
+      title: "Budget Management",
+      description: "Create flexible budgets and get real-time spending alerts"
+    },
+    {
+      icon: Star,
+      title: "Personalized Reports",
+      description: "Detailed analytics and insights tailored to your spending patterns"
+    },
+    {
+      icon: Wallet,
+      title: "Smart Savings",
+      description: "Discover opportunities to save more with AI-powered suggestions"
     }
   ];
 
   const steps = [
-    { number: "1️⃣", title: "Create an account", description: "Quick signup, no credit card needed" },
-    { number: "2️⃣", title: "Log your first expense", description: "Simple and fast expense tracking" },
-    { number: "3️⃣", title: "Get instant insights", description: "See where your money goes" }
+    { 
+      number: "1️⃣", 
+      title: "Create an account", 
+      description: "Quick signup, no credit card needed" 
+    },
+    { 
+      number: "2️⃣", 
+      title: "Log your first expense", 
+      description: "Simple and fast expense tracking" 
+    },
+    { 
+      number: "3️⃣", 
+      title: "Get instant insights", 
+      description: "See where your money goes" 
+    }
   ];
 
   return (
@@ -70,10 +98,10 @@ const Index = () => {
         <section className="py-20 container px-4">
           <div className="max-w-[980px] mx-auto text-center">
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tighter mb-4">
-              Hisaab Dost: Your Pocket's Best Friend
+              Your Smart Financial Companion
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-[700px] mx-auto">
-              Track every rupee, crush your budget goals, and watch your savings grow!
+              Experience smarter money management with AI-powered insights, automated tracking, and personalized guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button 
@@ -81,10 +109,9 @@ const Index = () => {
                 onClick={() => navigate('/auth')}
                 className="bg-[#6E59A5] hover:bg-[#533ea8] text-white font-semibold"
               >
-                Get Started – It's Free! <ArrowRight className="ml-2 h-4 w-4" />
+                Start Your Financial Journey <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-
             <p className="text-sm text-muted-foreground">
               Already have an account? <a href="/auth" className="text-primary hover:underline">Log in</a>
             </p>
@@ -94,7 +121,7 @@ const Index = () => {
         <section className="py-12 bg-muted/50">
           <div className="container px-4">
             <div className="grid md:grid-cols-3 gap-8 max-w-[980px] mx-auto">
-              {features.map((feature, i) => (
+              {features.slice(0, 3).map((feature, i) => (
                 <div key={i} className="relative group rounded-lg border bg-background p-6 hover:shadow-md transition-all">
                   <div className="bg-[#6E59A5]/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                     <feature.icon className="h-6 w-6 text-[#6E59A5]" />
@@ -109,7 +136,7 @@ const Index = () => {
 
         <section className="py-16 container px-4">
           <div className="max-w-[980px] mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">How It Works</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Get Started in Minutes</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {steps.map((step, i) => (
                 <div key={i} className="text-center">
@@ -122,13 +149,29 @@ const Index = () => {
           </div>
         </section>
 
+        <section className="py-12 bg-muted/50">
+          <div className="container px-4">
+            <div className="grid md:grid-cols-3 gap-8 max-w-[980px] mx-auto">
+              {features.slice(3).map((feature, i) => (
+                <div key={i} className="relative group rounded-lg border bg-background p-6 hover:shadow-md transition-all">
+                  <div className="bg-[#6E59A5]/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-[#6E59A5]" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="py-16 bg-muted/50">
           <div className="container px-4 text-center max-w-[980px] mx-auto">
             <div className="flex justify-center mb-8">
               <Wallet className="h-16 w-16 text-[#6E59A5]" />
             </div>
             <p className="text-lg sm:text-xl font-medium mb-4">
-              Loved by 10,000+ savvy savers worldwide!
+              Trusted by 10,000+ savvy savers worldwide!
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <ShieldCheck className="h-4 w-4" />
@@ -148,3 +191,4 @@ const Index = () => {
 };
 
 export default Index;
+
