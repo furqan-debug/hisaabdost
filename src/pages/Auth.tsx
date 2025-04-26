@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Key, User, AlertCircle } from "lucide-react";
+import { Mail, Key, User, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,10 +20,15 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
+  const navigate = useNavigate();
 
   if (user) {
     return <Navigate to="/" replace />;
   }
+
+  const handleGoBack = () => {
+    navigate('/');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +98,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/20">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/20 relative">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="absolute top-4 left-4"
+        onClick={handleGoBack}
+      >
+        <ArrowLeft className="h-6 w-6" />
+      </Button>
+
       <AnimatePresence mode="wait">
         {showForgotPassword ? (
           <motion.div
