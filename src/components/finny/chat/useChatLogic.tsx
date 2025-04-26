@@ -36,6 +36,9 @@ const DELETE_BUDGET_PATTERN = /delete (?:my|the) ([\w\s]+) budget/i;
 const DELETE_GOAL_PATTERN = /delete (?:my|the) (?:financial |savings )?goal(?: called| named)? ["|']?([^"']+)["|']?/i;
 const VISUALIZATION_PATTERN = /(visualize|show|generate|create|chart) (.*?) (spending|expenses)/i;
 
+const LOCAL_STORAGE_MESSAGES_KEY = 'finny_chat_messages';
+const MESSAGE_EXPIRY_HOURS = 24;
+
 export const useChatLogic = (queuedMessage: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -171,6 +174,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
               content: personalizedGreeting,
               isUser: false,
               timestamp: new Date(),
+              expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
             }]);
             setIsTyping(false);
           }, 1500);
@@ -182,6 +186,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
             content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
             isUser: false,
             timestamp: new Date(),
+            expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
           }]);
         } finally {
           setIsConnectingToData(false);
@@ -195,57 +200,71 @@ export const useChatLogic = (queuedMessage: string | null) => {
         content: FINNY_AUTH_PROMPT,
         isUser: false,
         timestamp: new Date(),
+        expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
       }]);
     }
   }, [user, currencyCode]);
 
-  const loadChatHistory = async () => {
+  const loadChatHistory = () => {
     try {
-      const { data: chatMessages, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      if (chatMessages && chatMessages.length > 0) {
-        const messages: Message[] = chatMessages.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          isUser: msg.is_user,
-          timestamp: new Date(msg.created_at),
-          hasAction: msg.has_action,
-          visualData: msg.visual_data,
-          expiresAt: new Date(msg.expires_at)
-        }));
-
-        setMessages(messages);
-        setOldestMessageTime(new Date(chatMessages[0].created_at));
+      const savedMessages = localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY);
+      
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages) as Array<{
+          id: string;
+          content: string;
+          isUser: boolean;
+          timestamp: string;
+          hasAction?: boolean;
+          visualData?: any;
+          expiresAt?: string;
+        }>;
+        
+        const now = new Date();
+        const validMessages = parsedMessages
+          .filter(msg => !msg.expiresAt || new Date(msg.expiresAt) > now)
+          .map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+            expiresAt: msg.expiresAt ? new Date(msg.expiresAt) : undefined
+          }));
+          
+        if (validMessages.length > 0) {
+          setMessages(validMessages);
+          
+          const timestamps = validMessages.map(msg => msg.timestamp.getTime());
+          const oldestTime = new Date(Math.min(...timestamps));
+          setOldestMessageTime(oldestTime);
+        }
       }
     } catch (error) {
-      console.error('Error loading chat history:', error);
-      toast.error('Failed to load chat history');
+      console.error('Error loading chat history from local storage:', error);
     }
   };
 
-  const saveMessage = async (message: Message) => {
+  const saveMessage = (message: Message) => {
     if (!user) return;
-
+    
     try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert({
-          content: message.content,
-          is_user: message.isUser,
-          has_action: message.hasAction || false,
-          visual_data: message.visualData,
-          user_id: user.id
-        });
-
-      if (error) throw error;
+      if (!message.expiresAt) {
+        message.expiresAt = new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000);
+      }
+      
+      const updatedMessages = [...messages, message];
+      localStorage.setItem(
+        LOCAL_STORAGE_MESSAGES_KEY, 
+        JSON.stringify(updatedMessages.map(msg => ({
+          ...msg,
+          timestamp: msg.timestamp.toISOString(),
+          expiresAt: msg.expiresAt ? msg.expiresAt.toISOString() : undefined
+        })))
+      );
+      
+      if (!oldestMessageTime || message.timestamp < oldestMessageTime) {
+        setOldestMessageTime(message.timestamp);
+      }
     } catch (error) {
-      console.error('Error saving message:', error);
+      console.error('Error saving message to local storage:', error);
       toast.error('Failed to save message');
     }
   };
@@ -267,10 +286,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
       content: messageToSend,
       isUser: true,
       timestamp: new Date(),
+      expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    await saveMessage(userMessage);
+    saveMessage(userMessage);
     setNewMessage('');
     setIsLoading(true);
     setIsTyping(true);
@@ -385,11 +405,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
         isUser: false,
         timestamp: new Date(),
         hasAction: hasAction,
-        visualData: extractVisualizationData()
+        visualData: extractVisualizationData(),
+        expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
       };
       
       setMessages((prev) => [...prev, newMessage]);
-      await saveMessage(newMessage);
+      saveMessage(newMessage);
       
       let updatedReplies: QuickReply[] = [...DEFAULT_QUICK_REPLIES];
       
@@ -450,6 +471,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
           content: "Sorry, I'm having trouble processing your request. Please try again later.",
           isUser: false,
           timestamp: new Date(),
+          expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
         },
       ]);
     } finally {
