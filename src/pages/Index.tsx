@@ -1,8 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { ArrowRight, PieChart, TrendingUp, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChartPie, Brain, Flag, ArrowRight, ShieldCheck, Wallet } from "lucide-react";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -22,120 +23,125 @@ const Index = () => {
     );
   }
 
+  const features = [
+    {
+      icon: ChartPie,
+      title: "Auto-Categorized Expenses",
+      description: "Smart sorting of your spending for crystal-clear insights"
+    },
+    {
+      icon: Brain,
+      title: "AI-Powered Insights",
+      description: "Intelligent analysis to help you save more effortlessly"
+    },
+    {
+      icon: Flag,
+      title: "Goals & Reminders",
+      description: "Stay on track with friendly nudges and milestone celebrations"
+    }
+  ];
+
+  const steps = [
+    { number: "1️⃣", title: "Create an account", description: "Quick signup, no credit card needed" },
+    { number: "2️⃣", title: "Log your first expense", description: "Simple and fast expense tracking" },
+    { number: "3️⃣", title: "Get instant insights", description: "See where your money goes" }
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-background/95 backdrop-blur-md sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-background/95">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
+        <div className="container px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <img
               src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
               alt="Hisaab Dost logo"
-              className="h-8 w-8 bg-white rounded shadow"
+              className="h-8 w-8 bg-white rounded shadow-sm"
             />
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent drop-shadow">
+            <span className="font-bold text-xl bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
               Hisaab Dost
-            </h1>
+            </span>
           </div>
-          <div className="space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/auth')}
-              className="hover:border-primary/50"
-            >
-              Log in
-            </Button>
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="group"
-            >
-              Sign up
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </div>
+          <Button variant="ghost" onClick={() => navigate('/auth')}>
+            Log in →
+          </Button>
         </div>
       </header>
 
-      <main className="flex-grow">
-        <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
-          <div className="container mx-auto text-center max-w-3xl">
-            <div className="flex items-center justify-center mb-4">
-              <img
-                src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
-                alt="Hisaab Dost mascot"
-                className="h-16 w-16 rounded bg-white shadow mx-auto"
-              />
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
-              स्मार्ट खर्च प्रबंधन के लिए आपका दोस्त
+      <main className="flex-1">
+        <section className="py-20 container px-4">
+          <div className="max-w-[980px] mx-auto text-center">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tighter mb-4">
+              Hisaab Dost: Your Pocket's Best Friend
             </h1>
-            <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-              Track your expenses and budgets with a friendly, easy-to-use app designed for you—now smarter, better, and more fun than ever!
+            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-[700px] mx-auto">
+              Track every rupee, crush your budget goals, and watch your savings grow!
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button 
-                size="lg" 
-                className="bg-[#6E59A5] hover:bg-[#533ea8] text-white text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all elastic-hover"
+                size="lg"
                 onClick={() => navigate('/auth')}
+                className="bg-[#6E59A5] hover:bg-[#533ea8] text-white font-semibold"
               >
-                Get Started - It's Free
+                Get Started – It's Free! <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
+
+            <p className="text-sm text-muted-foreground">
+              Already have an account? <a href="/auth" className="text-primary hover:underline">Log in</a>
+            </p>
           </div>
         </section>
 
-        <section className="py-16 px-4 bg-muted/30">
-          <div className="container mx-auto">
-            <div className="bg-card/80 backdrop-blur-sm border rounded-xl shadow-xl overflow-hidden">
-              <div className="aspect-video relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8 bg-gradient-to-tr from-background/80 via-background/40 to-background/10">
-                  <img 
-                    src="/og-image.png" 
-                    alt="Hisab Dost Dashboard Preview" 
-                    className="object-cover rounded-lg shadow-2xl max-w-full max-h-full"
-                  />
+        <section className="py-12 bg-muted/50">
+          <div className="container px-4">
+            <div className="grid md:grid-cols-3 gap-8 max-w-[980px] mx-auto">
+              {features.map((feature, i) => (
+                <div key={i} className="relative group rounded-lg border bg-background p-6 hover:shadow-md transition-all">
+                  <div className="bg-[#6E59A5]/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-[#6E59A5]" />
+                  </div>
+                  <h3 className="font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="py-20 px-4">
-          <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#6E59A5]">Key Features</h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Designed for simplicity and efficiency to help you take control of your finances
-            </p>
+        <section className="py-16 container px-4">
+          <div className="max-w-[980px] mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <PieChart className="h-6 w-6 text-[#6E59A5]" />
+              {steps.map((step, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-4xl mb-4">{step.number}</div>
+                  <h3 className="font-semibold mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.description}</p>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Smart Expense Tracking</h3>
-                <p className="text-muted-foreground">Track every rupee easily, categorize smartly, and get instant insights!</p>
-              </div>
-              <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-[#6E59A5]" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3">Monthly Insights</h3>
-                <p className="text-muted-foreground">See your spends and savings for any month—clear, simple, visual.</p>
-              </div>
-              <div className="p-6 border rounded-xl bg-card hover:shadow-md transition-all duration-300 card-hover">
-                <div className="bg-[#9b87f5]/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <ShieldCheck className="h-6 w-6 text-[#6E59A5]" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3">Budget Management</h3>
-                <p className="text-muted-foreground">Set goals, track your progress, and control spending with confidence.</p>
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 bg-muted/50">
+          <div className="container px-4 text-center max-w-[980px] mx-auto">
+            <div className="flex justify-center mb-8">
+              <Wallet className="h-16 w-16 text-[#6E59A5]" />
+            </div>
+            <p className="text-lg sm:text-xl font-medium mb-4">
+              Loved by 10,000+ savvy savers worldwide!
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck className="h-4 w-4" />
+              <p>Your data stays yours—bank-level encryption guaranteed.</p>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t py-8 bg-muted/20">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
+      <footer className="border-t py-6 bg-background">
+        <div className="container px-4 text-center text-sm text-muted-foreground">
           <p>© 2025 Hisaab Dost. All rights reserved.</p>
-          <p className="text-sm mt-2">Created for simplified financial management</p>
         </div>
       </footer>
     </div>
