@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -100,12 +101,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/20 relative">
       <Button 
-        variant="ghost" 
+        variant="glass" 
         size="icon" 
-        className="absolute top-4 left-4"
+        className="absolute top-4 left-4 hover:bg-[#6E59A5]/10 transition-all duration-300 backdrop-blur-md border border-[#6E59A5]/20 shadow-sm"
         onClick={handleGoBack}
       >
-        <ArrowLeft className="h-6 w-6" />
+        <ArrowLeft className="h-5 w-5 text-[#6E59A5]" />
       </Button>
 
       <AnimatePresence mode="wait">
