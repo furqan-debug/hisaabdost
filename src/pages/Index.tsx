@@ -1,9 +1,8 @@
-
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { ArrowRight, ChartPie, Brain, Flag, ArrowRight, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet } from "lucide-react";
 
 const Index = () => {
   const { user, loading } = useAuth();
