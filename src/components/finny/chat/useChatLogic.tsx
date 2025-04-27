@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';
@@ -222,7 +223,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
         
         const now = new Date();
         const validMessages = parsedMessages
-          .filter(msg => !msg.expiresAt || new Date(msg.expiresAt) > now)
+          .filter(msg => {
+            // Only filter out expired messages
+            if (!msg.expiresAt) return true;
+            return new Date(msg.expiresAt) > now;
+          })
           .map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
@@ -246,11 +251,14 @@ export const useChatLogic = (queuedMessage: string | null) => {
     if (!user) return;
     
     try {
+      // Ensure message has an expiration date set to 24 hours from now
       if (!message.expiresAt) {
         message.expiresAt = new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000);
       }
       
       const updatedMessages = [...messages, message];
+      
+      // Store messages in localStorage with proper date formatting
       localStorage.setItem(
         LOCAL_STORAGE_MESSAGES_KEY, 
         JSON.stringify(updatedMessages.map(msg => ({
