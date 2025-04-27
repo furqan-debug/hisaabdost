@@ -1,10 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { toast } from "sonner";
+import React, { createContext, useContext } from "react";
+import { useAuthSession } from "@/hooks/auth/useAuthSession";
+import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
+import { useVerification } from "@/hooks/auth/useVerification";
+import { useSocialAuth } from "@/hooks/auth/useSocialAuth";
+import { useSignOut } from "@/hooks/auth/useSignOut";
+import { useOnboarding } from "@/hooks/auth/useOnboarding";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 
 type AuthContextType = {
@@ -21,199 +22,24 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast: uiToast } = useToast();
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
-
-      if (user) {
-        // Check onboarding status
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single();
-
-        if (profile && !profile.onboarding_completed) {
-          setShowOnboarding(true);
-        }
-
-        // Update last login timestamp
-        await supabase
-          .from('profiles')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', user.id);
-
-        // Redirect if on auth page
-        if (location.pathname === "/auth") {
-          navigate("/app/dashboard");
-        }
-      }
-
-      setLoading(false);
-    });
-
-    // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const user = session?.user ?? null;
-      setUser(user);
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single();
-
-        if (profile && !profile.onboarding_completed) {
-          setShowOnboarding(true);
-        }
-
-        if (location.pathname === "/auth") {
-          navigate("/app/dashboard");
-        }
-      }
-
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
-
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Successfully signed in!");
-      navigate("/app/dashboard");
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error.message || "Error signing in");
-      throw error;
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) {
-        console.error("Google auth error:", error);
-        throw error;
-      }
-      
-      toast.info("Redirecting to Google...");
-    } catch (error: any) {
-      console.error("Google auth error:", error);
-      toast.error(error.message || "Error signing in with Google");
-    }
-  };
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      // First step: Create the user account with metadata
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      // Send OTP for verification
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false, // User is already created above
-        }
-      });
-      
-      if (otpError) throw otpError;
-      
-      toast.success("Verification code sent! Please check your email.");
-      return { email };
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      toast.error(error.message || "Error signing up");
-      throw error;
-    }
-  };
-
-  const verifyOtp = async (email: string, token: string) => {
-    try {
-      console.log("Verifying OTP:", email, token);
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "email"
-      });
-      
-      if (error) {
-        console.error("OTP verification error:", error);
-        throw error;
-      }
-      
-      toast.success("Email verified successfully!");
-      navigate("/app/dashboard");
-    } catch (error: any) {
-      console.error("OTP verification error:", error);
-      toast.error(error.message || "Verification failed");
-      throw error;
-    }
-  };
-
-  const resendOtp = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false, // User should already exist
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("New verification code sent! Please check your email.");
-    } catch (error: any) {
-      toast.error(error.message || "Error sending verification code");
-      throw error;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast.success("Successfully signed out");
-      navigate("/auth");
-    } catch (error: any) {
-      toast.error(error.message || "Error signing out");
-    }
-  };
+  const { user, loading, session } = useAuthSession();
+  const { signInWithEmail, signUp } = useEmailAuth();
+  const { verifyOtp, resendOtp } = useVerification();
+  const { signInWithGoogle } = useSocialAuth();
+  const { signOut } = useSignOut();
+  const { showOnboarding } = useOnboarding(user);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, verifyOtp, resendOtp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user,
+      loading,
+      signInWithEmail,
+      signInWithGoogle,
+      signUp,
+      verifyOtp,
+      resendOtp,
+      signOut,
+    }}>
       {children}
       {showOnboarding && user && (
         <OnboardingDialog open={showOnboarding} />
