@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ const Auth = () => {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   useEffect(() => {
-    // Clear any verification errors when code changes
     if (verificationError && verificationCode) {
       setVerificationError("");
     }
@@ -54,7 +52,6 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isSignUp) {
-        // Validate inputs
         if (!fullName.trim()) {
           throw new Error("Please enter your full name");
         }
@@ -85,7 +82,6 @@ const Auth = () => {
   const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate the verification code
     if (!verificationCode || verificationCode.length !== 6) {
       setVerificationError("Please enter a valid 6-digit verification code");
       return;
@@ -225,7 +221,7 @@ const Auth = () => {
                         render={({ slots }) => (
                           <InputOTPGroup>
                             {slots.map((slot, index) => (
-                              <InputOTPSlot key={index} {...slot} />
+                              <InputOTPSlot key={index} {...slot} index={index} />
                             ))}
                           </InputOTPGroup>
                         )}
