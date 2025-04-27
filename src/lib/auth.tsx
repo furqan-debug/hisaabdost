@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext } from "react";
+import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
 import { useVerification } from "@/hooks/auth/useVerification";
