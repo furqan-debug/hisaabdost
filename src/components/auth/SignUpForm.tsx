@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ type SignUpFormProps = {
 export const SignUpForm = ({ onLoginClick, onGoogleSignIn, onSignUpSuccess }: SignUpFormProps) => {
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
@@ -37,13 +37,16 @@ export const SignUpForm = ({ onLoginClick, onGoogleSignIn, onSignUpSuccess }: Si
 
   const handleSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setLoading(true);
+    setError(null);
+    
     try {
       const result = await signUp(values.email, values.password, values.fullName);
       if (result?.email) {
         onSignUpSuccess(result.email);
       }
-    } catch (error) {
-      // Error is handled in the signUp function
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "An error occurred during sign up");
     } finally {
       setLoading(false);
     }
@@ -65,6 +68,16 @@ export const SignUpForm = ({ onLoginClick, onGoogleSignIn, onSignUpSuccess }: Si
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="space-y-4">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3 rounded-md bg-destructive/10 text-destructive text-sm"
+            >
+              {error}
+            </motion.div>
+          )}
+          
           <motion.div variants={inputVariants} custom={0}>
             <FormField
               control={form.control}

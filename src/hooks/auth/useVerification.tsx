@@ -38,9 +38,15 @@ export const useVerification = () => {
         }
       });
       
-      if (error) throw error;
-      
-      toast.success("New verification code sent! Please check your email.");
+      if (error) {
+        if (error.status === 429) {
+          toast.warning("Too many requests. Please wait a minute before trying again.");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("New verification code sent! Please check your email.");
+      }
     } catch (error: any) {
       toast.error(error.message || "Error sending verification code");
       throw error;
