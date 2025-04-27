@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { Message, QuickReply } from './types';
@@ -51,6 +50,47 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currencyCode } = useCurrency();
+
+  useEffect(() => {
+    if (user) {
+      const fetchUserProfile = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          const personalizedGreeting = generatePersonalizedGreeting(profile);
+          setMessages([{
+            id: '1',
+            content: personalizedGreeting,
+            isUser: false,
+            timestamp: new Date(),
+            expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
+          }]);
+        }
+      };
+
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const generatePersonalizedGreeting = (profile: any) => {
+    const userName = profile.full_name || 'there';
+    const timeOfDay = new Date().getHours();
+    let greeting = '';
+
+    if (timeOfDay < 12) greeting = 'Good morning';
+    else if (timeOfDay < 18) greeting = 'Good afternoon';
+    else greeting = 'Good evening';
+
+    const pronouns = profile.gender === 'female' ? 'her' :
+                    profile.gender === 'male' ? 'his' :
+                    'their';
+
+    return `${greeting} ${userName}! 👋 I'm Finny, your personal finance assistant. I'll help you manage ${pronouns} finances with personalized advice and insights. How can I assist you today?`;
+  };
 
   useEffect(() => {
     if (user) {

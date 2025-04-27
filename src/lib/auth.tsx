@@ -20,32 +20,64 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast: uiToast } = useToast();
 
   useEffect(() => {
-    // First set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user ?? null;
       setUser(user);
-      setLoading(false);
-      
-      // Redirect if user is authenticated and on auth page
-      if (user && location.pathname === "/auth") {
-        navigate("/app/dashboard");
+
+      if (user) {
+        // Check onboarding status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && !profile.onboarding_completed) {
+          setShowOnboarding(true);
+        }
+
+        // Update last login timestamp
+        await supabase
+          .from('profiles')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', user.id);
+
+        // Redirect if on auth page
+        if (location.pathname === "/auth") {
+          navigate("/app/dashboard");
+        }
       }
+
+      setLoading(false);
     });
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Redirect if user is authenticated and on auth page
-      if (session?.user && location.pathname === "/auth") {
-        navigate("/app/dashboard");
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user ?? null;
+      setUser(user);
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && !profile.onboarding_completed) {
+          setShowOnboarding(true);
+        }
+
+        if (location.pathname === "/auth") {
+          navigate("/app/dashboard");
+        }
       }
+
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -144,6 +176,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, signOut }}>
       {children}
+      {showOnboarding && user && (
+        <OnboardingDialog open={showOnboarding} />
+      )}
     </AuthContext.Provider>
   );
 };
