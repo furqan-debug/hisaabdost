@@ -569,7 +569,6 @@ const Auth = () => {
                         onClick={() => {
                           setIsSignUp(false);
                           signUpForm.reset();
-                          loginForm.reset();
                         }}
                       >
                         Already have an account? Sign in
@@ -696,7 +695,6 @@ const Auth = () => {
                         onClick={() => {
                           setIsSignUp(true);
                           loginForm.reset();
-                          signUpForm.reset();
                         }}
                       >
                         Don't have an account? Sign up
