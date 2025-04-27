@@ -139,19 +139,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // Use OTP for sign up - explicitly specify emailRedirectTo as null
-      const { error } = await supabase.auth.signUp({
+      // First, we'll use signUp with email but we won't send confirmation emails
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: null, // Explicitly set to null to prevent redirect URLs
+          emailRedirectTo: null,
         },
       });
       
       if (error) throw error;
+      
+      // Now request an OTP specifically
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: null,
+          shouldCreateUser: false, // User is already created above
+        }
+      });
+      
+      if (otpError) throw otpError;
       
       toast.success("Verification code sent! Please check your email.");
       return { email };
@@ -169,7 +180,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type: "signup"
+        type: "email"
       });
       
       if (error) throw error;
@@ -187,11 +198,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const resendOtp = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: null, // Explicitly set to null to prevent redirect URLs
+          shouldCreateUser: false, // User should already exist
+          emailRedirectTo: null,
         }
       });
       
