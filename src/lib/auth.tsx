@@ -12,7 +12,8 @@ type AuthContextType = {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
+  verifyOtp: (email: string, token: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -149,12 +150,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       if (error) throw error;
       
-      toast.success("Account created! Please check your email to verify your account.");
-      // Don't navigate immediately for signUp as verification may be required
+      toast.success("Verification code sent! Please check your email.");
+      return { email };
     } catch (error: any) {
       uiToast({
         variant: "destructive",
         title: "Error signing up",
+        description: error.message,
+      });
+    }
+  };
+
+  const verifyOtp = async (email: string, token: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "signup"
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Email verified successfully!");
+      navigate("/app/dashboard");
+    } catch (error: any) {
+      uiToast({
+        variant: "destructive",
+        title: "Verification failed",
         description: error.message,
       });
     }
@@ -175,7 +197,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, verifyOtp, signOut }}>
       {children}
       {showOnboarding && user && (
         <OnboardingDialog open={showOnboarding} />

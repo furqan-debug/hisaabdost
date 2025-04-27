@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Key, User, AlertCircle, ArrowLeft } from "lucide-react";
+import { Mail, Key, User, AlertCircle, ArrowLeft, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Auth = () => {
-  const { user, signInWithEmail, signInWithGoogle, signUp } = useAuth();
+  const { user, signInWithEmail, signInWithGoogle, signUp, verifyOtp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +23,11 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
+  
+  // New states for OTP verification
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -34,12 +40,34 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (isSignUp) {
-      await signUp(email, password, fullName);
-    } else {
-      await signInWithEmail(email, password);
+    try {
+      if (isSignUp) {
+        const result = await signUp(email, password, fullName);
+        if (result?.email) {
+          setVerificationEmail(result.email);
+          setShowVerification(true);
+        }
+      } else {
+        await signInWithEmail(email, password);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast.error("Please enter a valid 6-digit verification code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await verifyOtp(verificationEmail, verificationCode);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -110,7 +138,70 @@ const Auth = () => {
       </Button>
 
       <AnimatePresence mode="wait">
-        {showForgotPassword ? (
+        {showVerification ? (
+          <motion.div
+            key="verification"
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={cardVariants}
+            className="w-full max-w-md"
+          >
+            <Card className="border-primary/10 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl">Verify your email</CardTitle>
+                <CardDescription>
+                  Enter the 6-digit verification code sent to {verificationEmail}
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={handleVerifySubmit}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Verification Code</Label>
+                    <div className="flex justify-center pt-4">
+                      <InputOTP 
+                        maxLength={6} 
+                        value={verificationCode} 
+                        onChange={setVerificationCode}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col space-y-4">
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                        <span>Verifying...</span>
+                      </div> : 
+                      "Verify Email"
+                    }
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      setShowVerification(false);
+                      setVerificationCode("");
+                    }}
+                  >
+                    Back to login
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </motion.div>
+        ) : showForgotPassword ? (
           <motion.div
             key="forgot-password"
             initial="hidden"
