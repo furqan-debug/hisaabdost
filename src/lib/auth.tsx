@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
+import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 
 type AuthContextType = {
   user: User | null;
