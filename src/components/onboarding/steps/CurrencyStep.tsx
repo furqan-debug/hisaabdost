@@ -2,18 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
-
-const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar ($)' },
-  { code: 'EUR', name: 'Euro (€)' },
-  { code: 'GBP', name: 'British Pound (£)' },
-  { code: 'INR', name: 'Indian Rupee (₹)' },
-  { code: 'JPY', name: 'Japanese Yen (¥)' },
-  { code: 'CAD', name: 'Canadian Dollar (C$)' },
-  { code: 'AUD', name: 'Australian Dollar (A$)' },
-];
+import { CURRENCY_OPTIONS, CurrencyOption } from "@/utils/currencyUtils";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -39,12 +31,14 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
             <SelectTrigger>
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map(({ code, name }) => (
-                <SelectItem key={code} value={code}>
-                  {name}
-                </SelectItem>
-              ))}
+            <SelectContent className="max-h-[300px]">
+              <ScrollArea className="h-[200px]">
+                {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
+                  <SelectItem key={currency.code} value={currency.code}>
+                    {currency.label}
+                  </SelectItem>
+                ))}
+              </ScrollArea>
             </SelectContent>
           </Select>
         </div>
