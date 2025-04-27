@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,23 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+const signUpSchema = loginSchema.extend({
+  fullName: z.string().min(2, "Please enter your full name"),
+});
 
 const Auth = () => {
   const { user, signInWithEmail, signInWithGoogle, signUp, verifyOtp, resendOtp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -33,6 +44,23 @@ const Auth = () => {
   const [verificationError, setVerificationError] = useState("");
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const signUpForm = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      fullName: "",
+    },
+  });
+
   useEffect(() => {
     if (verificationError && verificationCode) {
       setVerificationError("");
@@ -47,33 +75,29 @@ const Auth = () => {
     navigate('/');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     setLoading(true);
     try {
-      if (isSignUp) {
-        if (!fullName.trim()) {
-          throw new Error("Please enter your full name");
-        }
-        if (!email.includes('@')) {
-          throw new Error("Please enter a valid email address");
-        }
-        if (password.length < 6) {
-          throw new Error("Password must be at least 6 characters long");
-        }
+      await signInWithEmail(values.email, values.password);
+    } catch (error) {
+      // Error is handled in the signInWithEmail function
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const result = await signUp(email, password, fullName);
-        if (result?.email) {
-          setVerificationEmail(result.email);
-          setShowVerification(true);
-          setVerificationError("");
-          setVerificationSuccess(false);
-        }
-      } else {
-        await signInWithEmail(email, password);
+  const handleSignUpSubmit = async (values: z.infer<typeof signUpSchema>) => {
+    setLoading(true);
+    try {
+      const result = await signUp(values.email, values.password, values.fullName);
+      if (result?.email) {
+        setVerificationEmail(result.email);
+        setShowVerification(true);
+        setVerificationError("");
+        setVerificationSuccess(false);
       }
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error) {
+      // Error is handled in the signUp function
     } finally {
       setLoading(false);
     }
@@ -118,8 +142,8 @@ const Auth = () => {
           return prev - 1;
         });
       }, 1000);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to resend verification code");
+    } catch (error) {
+      // Error is handled in the resendOtp function
     } finally {
       setResendLoading(false);
     }
@@ -408,111 +432,103 @@ const Auth = () => {
                     : "Sign in to your account"}
                 </CardDescription>
               </CardHeader>
-              <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                  <AnimatePresence>
-                    {isSignUp && (
-                      <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                        variants={inputVariants}
-                        custom={0}
-                        className="space-y-2"
-                      >
-                        <Label htmlFor="fullName">Full Name</Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input
-                            id="fullName"
-                            type="text"
-                            placeholder="John Doe"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            required
-                            minLength={3}
-                            className="pl-10"
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  <motion.div 
-                    variants={inputVariants} 
-                    custom={isSignUp ? 1 : 0}
-                    className="space-y-2"
-                  >
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="pl-10"
+              
+              {isSignUp ? (
+                <form onSubmit={signUpForm.handleSubmit(handleSignUpSubmit)}>
+                  <CardContent className="space-y-4">
+                    <motion.div
+                      variants={inputVariants}
+                      custom={0}
+                      className="space-y-2"
+                    >
+                      <FormField
+                        control={signUpForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <FormControl>
+                                <Input
+                                  placeholder="John Doe"
+                                  className="pl-10"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div 
-                    variants={inputVariants} 
-                    custom={isSignUp ? 2 : 1}
-                    className="space-y-2"
-                  >
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                        className="pl-10"
+                    </motion.div>
+
+                    <motion.div 
+                      variants={inputVariants} 
+                      custom={1}
+                    >
+                      <FormField
+                        control={signUpForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <FormControl>
+                                <Input
+                                  type="email"
+                                  placeholder="you@example.com"
+                                  className="pl-10"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                    {!isSignUp && (
-                      <div className="text-right">
-                        <Button 
-                          type="button" 
-                          variant="link" 
-                          className="text-xs p-0 h-auto"
-                          onClick={() => setShowForgotPassword(true)}
-                        >
-                          Forgot password?
-                        </Button>
-                      </div>
-                    )}
-                  </motion.div>
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
-                  <motion.div 
-                    variants={inputVariants} 
-                    custom={isSignUp ? 3 : 2}
-                    className="w-full"
-                  >
+                    </motion.div>
+                    
+                    <motion.div 
+                      variants={inputVariants} 
+                      custom={2}
+                    >
+                      <FormField
+                        control={signUpForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <div className="relative">
+                              <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="••••••••"
+                                  className="pl-10"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col space-y-4">
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 
+                      {loading ? (
                         <div className="flex items-center gap-2">
                           <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-                          <span>{isSignUp ? "Creating account..." : "Signing in..."}</span>
-                        </div> : 
-                        isSignUp ? "Sign up" : "Sign in"
-                      }
+                          <span>Creating account...</span>
+                        </div>
+                      ) : (
+                        "Sign up"
+                      )}
                     </Button>
-                  </motion.div>
-                  
-                  <motion.div 
-                    variants={inputVariants} 
-                    custom={isSignUp ? 4 : 3}
-                    className="w-full"
-                  >
+                    
                     <Button
                       type="button"
                       variant="outline"
@@ -544,31 +560,147 @@ const Auth = () => {
                         Continue with Google
                       </span>
                     </Button>
-                  </motion.div>
-                  
-                  <motion.div 
-                    variants={inputVariants} 
-                    custom={isSignUp ? 5 : 4}
-                    className="w-full"
-                  >
+                    
                     <Button
                       type="button"
                       variant="link"
                       className="w-full"
                       onClick={() => {
-                        setIsSignUp(!isSignUp);
-                        setFullName("");
-                        setEmail("");
-                        setPassword("");
+                        setIsSignUp(false);
+                        signUpForm.reset();
+                        loginForm.reset();
                       }}
                     >
-                      {isSignUp
-                        ? "Already have an account? Sign in"
-                        : "Don't have an account? Sign up"}
+                      Already have an account? Sign in
                     </Button>
-                  </motion.div>
-                </CardFooter>
-              </form>
+                  </CardFooter>
+                </form>
+              ) : (
+                <form onSubmit={loginForm.handleSubmit(handleLoginSubmit)}>
+                  <CardContent className="space-y-4">
+                    <motion.div 
+                      variants={inputVariants} 
+                      custom={0}
+                    >
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <FormControl>
+                                <Input
+                                  type="email"
+                                  placeholder="you@example.com"
+                                  className="pl-10"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                    
+                    <motion.div 
+                      variants={inputVariants} 
+                      custom={1}
+                    >
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <div className="relative">
+                              <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="••••••••"
+                                  className="pl-10"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <div className="text-right">
+                              <Button 
+                                type="button" 
+                                variant="link" 
+                                className="text-xs p-0 h-auto"
+                                onClick={() => setShowForgotPassword(true)}
+                              >
+                                Forgot password?
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col space-y-4">
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                          <span>Signing in...</span>
+                        </div>
+                      ) : (
+                        "Sign in"
+                      )}
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full relative overflow-hidden group"
+                      onClick={() => signInWithGoogle()}
+                      disabled={loading}
+                    >
+                      <span className="absolute inset-0 w-0 bg-gradient-to-r from-primary/10 to-primary/5 transition-all duration-[400ms] ease-out group-hover:w-full"></span>
+                      <span className="relative flex items-center justify-center">
+                        <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                          <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4"
+                          />
+                          <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853"
+                          />
+                          <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05"
+                          />
+                          <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335"
+                          />
+                          <path d="M1 1h22v22H1z" fill="none" />
+                        </svg>
+                        Continue with Google
+                      </span>
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full"
+                      onClick={() => {
+                        setIsSignUp(true);
+                        loginForm.reset();
+                        signUpForm.reset();
+                      }}
+                    >
+                      Don't have an account? Sign up
+                    </Button>
+                  </CardFooter>
+                </form>
+              )}
             </Card>
           </motion.div>
         )}

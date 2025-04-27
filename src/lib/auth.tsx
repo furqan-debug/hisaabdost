@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
+    // Initial session check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const user = session?.user ?? null;
       setUser(user);
@@ -92,16 +93,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         password,
       });
+      
       if (error) throw error;
       
       toast.success("Successfully signed in!");
       navigate("/app/dashboard");
     } catch (error: any) {
-      uiToast({
-        variant: "destructive",
-        title: "Error signing in",
-        description: error.message,
-      });
+      console.error("Sign in error:", error);
+      toast.error(error.message || "Error signing in");
+      throw error;
     }
   };
 
@@ -111,10 +111,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
         },
       });
       
@@ -123,24 +119,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      uiToast({
-        title: "Redirecting to Google...",
-        description: "Please wait while we redirect you to Google for authentication.",
-      });
+      toast.info("Redirecting to Google...");
     } catch (error: any) {
       console.error("Google auth error:", error);
-      uiToast({
-        variant: "destructive",
-        title: "Error signing in with Google",
-        description: error.message,
-      });
+      toast.error(error.message || "Error signing in with Google");
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // First step: Create the user account
-      const { error: signUpError, data } = await supabase.auth.signUp({
+      // First step: Create the user account with metadata
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -152,8 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (signUpError) throw signUpError;
       
-      // If the user was created successfully but needs verification,
-      // send an OTP code instead of using email confirmation
+      // Send OTP for verification
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -167,18 +155,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { email };
     } catch (error: any) {
       console.error("Signup error:", error);
-      uiToast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error.message,
-      });
+      toast.error(error.message || "Error signing up");
+      throw error;
     }
   };
 
   const verifyOtp = async (email: string, token: string) => {
     try {
       console.log("Verifying OTP:", email, token);
-      const { error, data } = await supabase.auth.verifyOtp({
+      const { error } = await supabase.auth.verifyOtp({
         email,
         token,
         type: "email"
@@ -189,16 +174,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      console.log("OTP verification successful:", data);
       toast.success("Email verified successfully!");
       navigate("/app/dashboard");
     } catch (error: any) {
-      console.error("OTP verification error catch:", error);
-      uiToast({
-        variant: "destructive",
-        title: "Verification failed",
-        description: error.message,
-      });
+      console.error("OTP verification error:", error);
+      toast.error(error.message || "Verification failed");
+      throw error;
     }
   };
 
@@ -215,11 +196,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       toast.success("New verification code sent! Please check your email.");
     } catch (error: any) {
-      uiToast({
-        variant: "destructive",
-        title: "Error sending verification code",
-        description: error.message,
-      });
+      toast.error(error.message || "Error sending verification code");
+      throw error;
     }
   };
 
@@ -227,13 +205,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      toast.success("Successfully signed out");
       navigate("/auth");
     } catch (error: any) {
-      uiToast({
-        variant: "destructive",
-        title: "Error signing out",
-        description: error.message,
-      });
+      toast.error(error.message || "Error signing out");
     }
   };
 
