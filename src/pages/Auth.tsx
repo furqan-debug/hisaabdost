@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Key, User, AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { Mail, Key, User, AlertCircle, ArrowLeft, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Auth = () => {
   const { user, signInWithEmail, signInWithGoogle, signUp, verifyOtp, resendOtp } = useAuth();
@@ -22,15 +24,25 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [verificationError, setVerificationError] = useState("");
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+
+  useEffect(() => {
+    // Clear any verification errors when code changes
+    if (verificationError && verificationCode) {
+      setVerificationError("");
+    }
+  }, [verificationCode]);
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
 
   const handleGoBack = () => {
@@ -42,14 +54,29 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isSignUp) {
+        // Validate inputs
+        if (!fullName.trim()) {
+          throw new Error("Please enter your full name");
+        }
+        if (!email.includes('@')) {
+          throw new Error("Please enter a valid email address");
+        }
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters long");
+        }
+
         const result = await signUp(email, password, fullName);
         if (result?.email) {
           setVerificationEmail(result.email);
           setShowVerification(true);
+          setVerificationError("");
+          setVerificationSuccess(false);
         }
       } else {
         await signInWithEmail(email, password);
       }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -57,14 +84,22 @@ const Auth = () => {
 
   const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate the verification code
     if (!verificationCode || verificationCode.length !== 6) {
-      toast.error("Please enter a valid 6-digit verification code");
+      setVerificationError("Please enter a valid 6-digit verification code");
       return;
     }
 
     setLoading(true);
+    setVerificationError("");
+    
     try {
       await verifyOtp(verificationEmail, verificationCode);
+      setVerificationSuccess(true);
+    } catch (error: any) {
+      setVerificationError(error.message || "Verification failed. Please try again.");
+      setVerificationSuccess(false);
     } finally {
       setLoading(false);
     }
@@ -87,6 +122,8 @@ const Auth = () => {
           return prev - 1;
         });
       }, 1000);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification code");
     } finally {
       setResendLoading(false);
     }
@@ -171,42 +208,67 @@ const Auth = () => {
           >
             <Card className="border-primary/10 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Verify your email</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">Verify your email</CardTitle>
                 <CardDescription>
-                  Enter the 6-digit verification code sent to {verificationEmail}
+                  Enter the 6-digit verification code sent to <span className="font-medium">{verificationEmail}</span>
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleVerifySubmit}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="otp">Verification Code</Label>
-                    <div className="flex justify-center pt-4">
+                    <div className="flex justify-center pt-2">
                       <InputOTP 
                         maxLength={6} 
                         value={verificationCode} 
                         onChange={setVerificationCode}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
+                        render={({ slots }) => (
+                          <InputOTPGroup>
+                            {slots.map((slot, index) => (
+                              <InputOTPSlot key={index} {...slot} />
+                            ))}
+                          </InputOTPGroup>
+                        )}
+                      />
                     </div>
+                    
+                    {verificationError && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex p-3 mt-2 rounded-md bg-destructive/10 text-destructive items-start gap-3"
+                      >
+                        <XCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm">{verificationError}</p>
+                      </motion.div>
+                    )}
+                    
+                    {verificationSuccess && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex p-3 mt-2 rounded-md bg-primary/10 text-primary items-start gap-3"
+                      >
+                        <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm">Verification successful! Redirecting you to dashboard...</p>
+                      </motion.div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading || verificationSuccess || !verificationCode || verificationCode.length !== 6}
+                  >
+                    {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
                         <span>Verifying...</span>
-                      </div> : 
+                      </div>
+                    ) : (
                       "Verify Email"
-                    }
+                    )}
                   </Button>
                   
                   <Button
@@ -241,6 +303,7 @@ const Auth = () => {
                     onClick={() => {
                       setShowVerification(false);
                       setVerificationCode("");
+                      setVerificationError("");
                     }}
                   >
                     Back to login
@@ -260,7 +323,7 @@ const Auth = () => {
           >
             <Card className="border-primary/10 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Reset Password</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">Reset Password</CardTitle>
                 <CardDescription>
                   Enter your email and we'll send you a link to reset your password
                 </CardDescription>
@@ -289,7 +352,7 @@ const Auth = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex p-3 rounded-md bg-primary/10 text-primary items-start gap-3"
                     >
-                      <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                       <p className="text-sm">
                         If an account exists with this email, you'll receive a password reset link shortly.
                       </p>
@@ -298,7 +361,14 @@ const Auth = () => {
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                   <Button type="submit" className="w-full" disabled={loading || resetSent}>
-                    {loading ? "Sending..." : "Send Reset Link"}
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                        <span>Sending...</span>
+                      </div>
+                    ) : (
+                      "Send Reset Link"
+                    )}
                   </Button>
                   <Button
                     type="button"
@@ -335,7 +405,7 @@ const Auth = () => {
                 >
                   <User className="h-6 w-6 text-primary" />
                 </motion.div>
-                <CardTitle className="text-center text-2xl">{isSignUp ? "Create an account" : "Welcome back"}</CardTitle>
+                <CardTitle className="text-center text-xl md:text-2xl">{isSignUp ? "Create an account" : "Welcome back"}</CardTitle>
                 <CardDescription className="text-center">
                   {isSignUp
                     ? "Sign up to start managing your expenses"

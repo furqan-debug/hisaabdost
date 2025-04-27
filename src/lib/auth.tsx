@@ -139,25 +139,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // First, we'll use signUp with email but we won't send confirmation emails
-      const { error, data } = await supabase.auth.signUp({
+      // First step: Create the user account
+      const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: null,
         },
       });
       
-      if (error) throw error;
+      if (signUpError) throw signUpError;
       
-      // Now request an OTP specifically
+      // If the user was created successfully but needs verification,
+      // send an OTP code instead of using email confirmation
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: null,
           shouldCreateUser: false, // User is already created above
         }
       });
@@ -167,6 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Verification code sent! Please check your email.");
       return { email };
     } catch (error: any) {
+      console.error("Signup error:", error);
       uiToast({
         variant: "destructive",
         title: "Error signing up",
@@ -177,17 +177,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const verifyOtp = async (email: string, token: string) => {
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      console.log("Verifying OTP:", email, token);
+      const { error, data } = await supabase.auth.verifyOtp({
         email,
         token,
         type: "email"
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("OTP verification error:", error);
+        throw error;
+      }
       
+      console.log("OTP verification successful:", data);
       toast.success("Email verified successfully!");
       navigate("/app/dashboard");
     } catch (error: any) {
+      console.error("OTP verification error catch:", error);
       uiToast({
         variant: "destructive",
         title: "Verification failed",
@@ -202,7 +208,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         options: {
           shouldCreateUser: false, // User should already exist
-          emailRedirectTo: null,
         }
       });
       
