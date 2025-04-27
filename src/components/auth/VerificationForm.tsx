@@ -1,3 +1,4 @@
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,11 @@ type VerificationFormProps = {
   onBackToLogin: () => void;
 };
 
-export const VerificationForm = ({ 
-  email, 
-  onVerify, 
-  onResend, 
-  onBackToLogin 
+export const VerificationForm = ({
+  email,
+  onVerify,
+  onResend,
+  onBackToLogin,
 }: VerificationFormProps) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export const VerificationForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!verificationCode || verificationCode.length !== 6) {
       setVerificationError("Please enter a valid 6-digit verification code");
       return;
@@ -36,7 +37,7 @@ export const VerificationForm = ({
 
     setLoading(true);
     setVerificationError("");
-    
+
     try {
       await onVerify(verificationCode);
       setVerificationSuccess(true);
@@ -50,11 +51,11 @@ export const VerificationForm = ({
 
   const handleResendCode = async () => {
     if (resendCooldown > 0) return;
-    
+
     setResendLoading(true);
     try {
       await onResend();
-      
+
       setResendCooldown(60);
       const interval = setInterval(() => {
         setResendCooldown((prev) => {
@@ -66,31 +67,35 @@ export const VerificationForm = ({
         });
       }, 1000);
     } catch (error) {
-      // Error is handled in the resendOtp function
+      // Error is handled elsewhere
     } finally {
       setResendLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="otp">Verification Code</Label>
+        <Label htmlFor="otp" className="text-center block">
+          Enter the 6-digit verification code sent to {email}
+        </Label>
+
         <div className="flex justify-center pt-2">
           <InputOTP
             maxLength={6}
             value={verificationCode}
-            onChange={setVerificationCode}
-            render={({ slots }) => (
-              <InputOTPGroup>
-                {slots.map((slot, i) => (
-                  <InputOTPSlot key={i} {...slot} index={i} />
-                ))}
-              </InputOTPGroup>
-            )}
-          />
+            onChange={(val) => setVerificationCode(val)}
+            inputMode="numeric"
+            pattern="\d*"
+          >
+            <InputOTPGroup>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <InputOTPSlot key={index} index={index} />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
         </div>
-        
+
         {verificationError && (
           <motion.div
             initial={{ opacity: 0, y: 5 }}
@@ -101,7 +106,7 @@ export const VerificationForm = ({
             <p className="text-sm">{verificationError}</p>
           </motion.div>
         )}
-        
+
         {verificationSuccess && (
           <motion.div
             initial={{ opacity: 0, y: 5 }}
@@ -118,7 +123,7 @@ export const VerificationForm = ({
         <Button
           type="submit"
           className="w-full"
-          disabled={loading || verificationSuccess || !verificationCode || verificationCode.length !== 6}
+          disabled={loading || verificationSuccess || verificationCode.length !== 6}
         >
           {loading ? (
             <div className="flex items-center gap-2">
@@ -129,7 +134,7 @@ export const VerificationForm = ({
             "Verify Email"
           )}
         </Button>
-        
+
         <Button
           type="button"
           variant="outline"
@@ -154,7 +159,7 @@ export const VerificationForm = ({
             </>
           )}
         </Button>
-        
+
         <Button
           type="button"
           variant="ghost"
