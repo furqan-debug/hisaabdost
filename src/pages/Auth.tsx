@@ -7,13 +7,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Key, User, AlertCircle, ArrowLeft, Shield } from "lucide-react";
+import { Mail, Key, User, AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Auth = () => {
-  const { user, signInWithEmail, signInWithGoogle, signUp, verifyOtp } = useAuth();
+  const { user, signInWithEmail, signInWithGoogle, signUp, verifyOtp, resendOtp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,10 +24,12 @@ const Auth = () => {
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   
-  // New states for OTP verification
+  // OTP verification states
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -67,6 +69,29 @@ const Auth = () => {
       await verifyOtp(verificationEmail, verificationCode);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+    
+    setResendLoading(true);
+    try {
+      await resendOtp(verificationEmail);
+      
+      // Set cooldown for 60 seconds
+      setResendCooldown(60);
+      const interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -186,6 +211,32 @@ const Auth = () => {
                       "Verify Email"
                     }
                   </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full flex items-center gap-2"
+                    onClick={handleResendCode}
+                    disabled={resendLoading || resendCooldown > 0}
+                  >
+                    {resendLoading ? (
+                      <>
+                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-primary animate-spin"></div>
+                        <span>Sending...</span>
+                      </>
+                    ) : resendCooldown > 0 ? (
+                      <>
+                        <RefreshCw className="h-4 w-4" />
+                        <span>Resend code ({resendCooldown}s)</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4" />
+                        <span>Resend code</span>
+                      </>
+                    )}
+                  </Button>
+                  
                   <Button
                     type="button"
                     variant="ghost"

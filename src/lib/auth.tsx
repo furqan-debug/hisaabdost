@@ -14,6 +14,7 @@ type AuthContextType = {
   signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -138,6 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      // Use OTP for sign up instead of email confirmation link
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,9 +147,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Don't redirect to any URL since we're using OTP verification
+          emailRedirectTo: undefined,
         },
       });
+      
       if (error) throw error;
       
       toast.success("Verification code sent! Please check your email.");
@@ -182,6 +186,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resendOtp = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("New verification code sent! Please check your email.");
+    } catch (error: any) {
+      uiToast({
+        variant: "destructive",
+        title: "Error sending verification code",
+        description: error.message,
+      });
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -197,7 +220,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, verifyOtp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithEmail, signInWithGoogle, signUp, verifyOtp, resendOtp, signOut }}>
       {children}
       {showOnboarding && user && (
         <OnboardingDialog open={showOnboarding} />
