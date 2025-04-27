@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // Use OTP for sign up instead of email confirmation link
+      // Use OTP for sign up - explicitly specify emailRedirectTo as null
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -147,8 +147,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             full_name: fullName,
           },
-          // Don't redirect to any URL since we're using OTP verification
-          emailRedirectTo: undefined,
+          emailRedirectTo: null, // Explicitly set to null to prevent redirect URLs
         },
       });
       
@@ -191,6 +190,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
+        options: {
+          emailRedirectTo: null, // Explicitly set to null to prevent redirect URLs
+        }
       });
       
       if (error) throw error;

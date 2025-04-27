@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ const Auth = () => {
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   
-  // OTP verification states
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -79,7 +77,6 @@ const Auth = () => {
     try {
       await resendOtp(verificationEmail);
       
-      // Set cooldown for 60 seconds
       setResendCooldown(60);
       const interval = setInterval(() => {
         setResendCooldown((prev) => {
