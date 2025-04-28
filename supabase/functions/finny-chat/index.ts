@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -42,6 +41,12 @@ Format for responses:
 - For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Groceries","date":"2023-04-10","description":"Grocery shopping"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
 
+For goal setting specifically:
+- When the user is setting a goal, extract the amount and deadline from their message
+- Format the goal action as: [ACTION:{"type":"set_goal","title":"Savings Goal","targetAmount":1500,"deadline":"2023-12-31","category":"Savings"}]
+- Always include a title, target amount and deadline for goals
+- Parse natural language dates appropriately (e.g., "by December" → "2023-12-31")
+
 When asked about category-specific data:
 - Always include detailed information about individual transactions
 - Compare spending against previous periods
@@ -64,7 +69,8 @@ serve(async (req) => {
       userId, 
       chatHistory, 
       analysisType = 'general',
-      specificCategory = null 
+      specificCategory = null,
+      currencyCode = 'USD'
     } = await req.json();
 
     if (!message) {
@@ -95,6 +101,17 @@ serve(async (req) => {
     }
 
     const userName = userProfile?.full_name || 'there';
+
+    // Look for goal setting patterns to extract info directly
+    const goalPattern = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: (?:for|to reach|to save))? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
+    const goalMatch = message.match(goalPattern);
+    
+    if (goalMatch) {
+      console.log("Detected goal setting request with:", {
+        amount: goalMatch[1],
+        deadline: goalMatch[2]
+      });
+    }
 
     // Get user's financial data to provide context
     let userContext = "";
@@ -218,7 +235,7 @@ When responding to the user:
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + userContext },
+          { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + (userContext || '') },
           ...formattedHistory,
           { role: 'user', content: message }
         ],
@@ -235,11 +252,48 @@ When responding to the user:
     const result = await response.json();
     const aiResponse = result.choices[0].message.content;
 
-    // Check if the response contains an action to perform
-    const actionMatch = aiResponse.match(/\[ACTION:(.*?)\]/);
+    // Process goal setting patterns directly if the normal action fails
+    let actionMatch = aiResponse.match(/\[ACTION:(.*?)\]/);
     let processedResponse = aiResponse;
     
-    if (actionMatch && actionMatch[1]) {
+    // If we have a goal match in the input but no action in the response, try to create a goal action
+    if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
+      try {
+        console.log("Creating goal action from pattern match");
+        const goalAction = {
+          type: "set_goal",
+          title: "Savings Goal",
+          targetAmount: parseFloat(goalMatch[1]),
+          deadline: goalMatch[2],
+          category: "Savings"
+        };
+        
+        // Process the goal action directly
+        const actionResult = await processAction(goalAction, userId, supabase);
+        
+        // Replace or append the confirmation to the response
+        if (aiResponse.includes("goal") || aiResponse.includes("saving")) {
+          processedResponse = processedResponse.replace(
+            /I can help you (set|create) (a|your) (savings|financial) goal/i,
+            `✅ ${actionResult}`
+          );
+        } else {
+          processedResponse = `${processedResponse}\n\n✅ ${actionResult}`;
+        }
+      } catch (actionError) {
+        console.error('Error processing goal action:', actionError);
+        if (processedResponse.includes("goal") || processedResponse.includes("saving")) {
+          processedResponse = processedResponse.replace(
+            /I can help you (set|create) (a|your) (savings|financial) goal/i,
+            `❌ Sorry, I couldn't complete that action. ${actionError.message}`
+          );
+        } else {
+          processedResponse = `${processedResponse}\n\n❌ Sorry, I couldn't complete that action. ${actionError.message}`;
+        }
+      }
+    }
+    // Check if there's an action in the AI response
+    else if (actionMatch && actionMatch[1]) {
       try {
         const actionData = JSON.parse(actionMatch[1]);
         

@@ -35,6 +35,7 @@ const DELETE_EXPENSE_PATTERN = /delete (?:my|the) ([\w\s]+) expense/i;
 const DELETE_BUDGET_PATTERN = /delete (?:my|the) ([\w\s]+) budget/i;
 const DELETE_GOAL_PATTERN = /delete (?:my|the) (?:financial |savings )?goal(?: called| named)? ["|']?([^"']+)["|']?/i;
 const VISUALIZATION_PATTERN = /(visualize|show|generate|create|chart) (.*?) (spending|expenses)/i;
+const GOAL_PATTERN = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: for| to reach| to save)? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
 
 const LOCAL_STORAGE_MESSAGES_KEY = 'finny_chat_messages';
 const MESSAGE_EXPIRY_HOURS = 24;
@@ -223,7 +224,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         const now = new Date();
         const validMessages = parsedMessages
           .filter(msg => {
-            // Only keep messages that haven't expired
             if (!msg.expiresAt) return true;
             return new Date(msg.expiresAt) > now;
           })
@@ -236,7 +236,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         if (validMessages.length > 0) {
           setMessages(validMessages);
           
-          // Find oldest message to calculate expiration time for the banner
           const timestamps = validMessages.map(msg => msg.timestamp.getTime());
           const oldestTime = new Date(Math.min(...timestamps));
           setOldestMessageTime(oldestTime);
@@ -251,14 +250,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
     if (!user) return;
     
     try {
-      // Ensure message has an expiration date set to 24 hours from now
       if (!message.expiresAt) {
         message.expiresAt = new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000);
       }
       
       const updatedMessages = [...messages, message];
       
-      // Store messages in localStorage with proper date formatting
       localStorage.setItem(
         LOCAL_STORAGE_MESSAGES_KEY, 
         JSON.stringify(updatedMessages.map(msg => ({
@@ -268,7 +265,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         })))
       );
       
-      // Update oldest message time for expiration banner
       if (!oldestMessageTime || message.timestamp < oldestMessageTime) {
         setOldestMessageTime(message.timestamp);
       }
@@ -313,6 +309,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
       const deleteBudgetMatch = messageToSend.match(DELETE_BUDGET_PATTERN);
       const deleteGoalMatch = messageToSend.match(DELETE_GOAL_PATTERN);
       const visualizationMatch = messageToSend.match(VISUALIZATION_PATTERN);
+      const goalMatch = messageToSend.match(GOAL_PATTERN);
 
       console.log("Message analysis:", { 
         message: messageToSend,
@@ -321,11 +318,20 @@ export const useChatLogic = (queuedMessage: string | null) => {
         deleteExpenseMatch,
         deleteBudgetMatch,
         deleteGoalMatch,
-        visualizationMatch
+        visualizationMatch,
+        goalMatch
       });
 
       let analysisType = "general";
       let specificCategory = null;
+      
+      if (goalMatch) {
+        messageToSend += `\n\nPlease create a goal with the following details: 
+        - amount: ${goalMatch[1]}
+        - deadline: ${goalMatch[2]}
+        - title: "Savings Goal"
+        - category: Savings`;
+      }
 
       if (categoryMatch) {
         analysisType = "category";
@@ -414,7 +420,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         isUser: false,
         timestamp: new Date(),
         hasAction: hasAction,
-        visualData: extractVisualizationData(),
+        visualData: data.visualData || (needsVisualization ? { type: 'spending-chart', summary: true } : null),
         expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
       };
       

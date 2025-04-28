@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 export async function processAction(action: any, userId: string, supabase: any) {
@@ -62,7 +61,6 @@ async function updateExpense(action: any, userId: string, supabase: any) {
   
   let targetExpenseId = expenseId;
   
-  // If no specific expense ID is provided but we have a category, find the most recent expense in that category
   if (!targetExpenseId) {
     if (!category) {
       throw new Error('Either expense ID or category is required to update an expense');
@@ -115,7 +113,6 @@ async function deleteExpense(action: any, userId: string, supabase: any) {
     throw new Error('Either expense ID or category is required to delete an expense');
   }
 
-  // If we have multiple IDs, it's a bulk delete operation
   if (Array.isArray(expenseId) && expenseId.length > 0) {
     const { data, error } = await supabase
       .from('expenses')
@@ -130,7 +127,6 @@ async function deleteExpense(action: any, userId: string, supabase: any) {
     return `I've deleted ${expenseId.length} expenses`;
   }
   
-  // If no specific ID is provided, find by category (and optionally date)
   if (!expenseId) {
     let query = supabase
       .from('expenses')
@@ -153,7 +149,6 @@ async function deleteExpense(action: any, userId: string, supabase: any) {
     action.expenseId = data[0].id;
   }
 
-  // Delete the single expense
   const { data, error } = await supabase
     .from('expenses')
     .delete()
@@ -273,7 +268,6 @@ async function deleteBudget(action: any, userId: string, supabase: any) {
   
   let targetBudgetId = budgetId;
   
-  // If no specific budget ID is provided, find by category
   if (!targetBudgetId) {
     const { data, error } = await supabase
       .from('budgets')
@@ -305,11 +299,10 @@ async function deleteBudget(action: any, userId: string, supabase: any) {
 async function setGoal(action: any, userId: string, supabase: any) {
   const { title, targetAmount, deadline, category } = action;
   
-  if (!title || !targetAmount) {
-    throw new Error('Missing required fields for goal');
-  }
-
-  if (parseFloat(targetAmount) <= 0) {
+  const goalTitle = title || "Savings Goal";
+  const targetAmt = targetAmount || 0;
+  
+  if (targetAmt <= 0) {
     throw new Error('Goal amount must be greater than zero');
   }
 
@@ -317,45 +310,100 @@ async function setGoal(action: any, userId: string, supabase: any) {
     .from('goals')
     .select('*')
     .eq('user_id', userId)
-    .eq('title', title);
+    .eq('title', goalTitle);
 
   if (fetchError) {
+    console.error('Failed to check existing goal:', fetchError);
     throw new Error(`Failed to check existing goal: ${fetchError.message}`);
   }
+
+  let formattedDeadline = deadline;
+  if (deadline && typeof deadline === 'string') {
+    if (deadline.includes('/')) {
+      const [month, day, year] = deadline.split('/');
+      formattedDeadline = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    } else if (deadline.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/)) {
+      const parts = deadline.split('/');
+      formattedDeadline = `20${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+    } else if (deadline.match(/\d{1,2}-\d{1,2}-\d{2,4}/)) {
+      formattedDeadline = deadline;
+    } else {
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+      
+      if (deadline.toLowerCase().includes('january') || deadline.toLowerCase().includes('jan')) {
+        formattedDeadline = `${nextYear}-01-31`;
+      } else if (deadline.toLowerCase().includes('february') || deadline.toLowerCase().includes('feb')) {
+        formattedDeadline = `${nextYear}-02-28`;
+      } else if (deadline.toLowerCase().includes('march') || deadline.toLowerCase().includes('mar')) {
+        formattedDeadline = `${nextYear}-03-31`;
+      } else if (deadline.toLowerCase().includes('april') || deadline.toLowerCase().includes('apr')) {
+        formattedDeadline = `${nextYear}-04-30`;
+      } else if (deadline.toLowerCase().includes('may')) {
+        formattedDeadline = `${nextYear}-05-31`;
+      } else if (deadline.toLowerCase().includes('june') || deadline.toLowerCase().includes('jun')) {
+        formattedDeadline = `${nextYear}-06-30`;
+      } else if (deadline.toLowerCase().includes('july') || deadline.toLowerCase().includes('jul')) {
+        formattedDeadline = `${nextYear}-07-31`;
+      } else if (deadline.toLowerCase().includes('august') || deadline.toLowerCase().includes('aug')) {
+        formattedDeadline = `${nextYear}-08-31`;
+      } else if (deadline.toLowerCase().includes('september') || deadline.toLowerCase().includes('sept') || deadline.toLowerCase().includes('sep')) {
+        formattedDeadline = `${nextYear}-09-30`;
+      } else if (deadline.toLowerCase().includes('october') || deadline.toLowerCase().includes('oct')) {
+        formattedDeadline = `${nextYear}-10-31`;
+      } else if (deadline.toLowerCase().includes('november') || deadline.toLowerCase().includes('nov')) {
+        formattedDeadline = `${nextYear}-11-30`;
+      } else if (deadline.toLowerCase().includes('december') || deadline.toLowerCase().includes('dec')) {
+        formattedDeadline = `${nextYear}-12-31`;
+      } else {
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+        formattedDeadline = oneYearFromNow.toISOString().split('T')[0];
+      }
+    }
+  } else if (!formattedDeadline) {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    formattedDeadline = oneYearFromNow.toISOString().split('T')[0];
+  }
+
+  console.log(`Setting goal: ${goalTitle} for ${targetAmt} with deadline ${formattedDeadline}`);
 
   if (existingGoal && existingGoal.length > 0) {
     const { error } = await supabase
       .from('goals')
       .update({
-        target_amount: parseFloat(targetAmount),
-        deadline: deadline || null,
-        category: category || existingGoal[0].category
+        target_amount: parseFloat(targetAmt.toString()),
+        deadline: formattedDeadline,
+        category: category || existingGoal[0].category || 'Savings'
       })
       .eq('id', existingGoal[0].id)
       .eq('user_id', userId);
 
     if (error) {
+      console.error('Failed to update goal:', error);
       throw new Error(`Failed to update goal: ${error.message}`);
     }
 
-    return `I've updated your goal "${title}" to ${targetAmount}`;
+    return `I've updated your goal "${goalTitle}" to ${targetAmt}`;
   } else {
     const { error } = await supabase
       .from('goals')
       .insert({
         user_id: userId,
-        title,
-        target_amount: parseFloat(targetAmount),
+        title: goalTitle,
+        target_amount: parseFloat(targetAmt.toString()),
         current_amount: 0,
-        deadline: deadline || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+        deadline: formattedDeadline,
         category: category || 'Savings'
       });
 
     if (error) {
+      console.error('Failed to create goal:', error);
       throw new Error(`Failed to create goal: ${error.message}`);
     }
 
-    return `I've set your goal "${title}" with a target of ${targetAmount}`;
+    return `I've set your goal "${goalTitle}" with a target of ${targetAmt}`;
   }
 }
 
@@ -458,7 +506,7 @@ async function getSpending(action: any, userId: string, supabase: any) {
     const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
     query = query
       .gte('date', firstDayOfPrevMonth)
-      .lte('date', lastDayOfPrevMonth);
+      .lte('date', lastDayDayOfMonth);
   } else if (period === 'year_to_date') {
     const firstDayOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
     query = query
