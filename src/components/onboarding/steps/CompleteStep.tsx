@@ -12,29 +12,32 @@ export function CompleteStep() {
 
   const handleGetStarted = async () => {
     try {
-      // Ensure the dialog closes and user gets redirected to dashboard
-      console.log("Get Started button clicked, navigating to dashboard");
-      
       // Force update the onboarding status in the database to ensure it's completed
       if (user) {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
           .eq('id', user.id);
+          
+        if (error) throw error;
       }
       
       // Show success message
       toast.success("Setup completed! Welcome to your dashboard.");
       
-      // Navigate to dashboard
+      // Navigate to dashboard with replace:true to prevent back navigation to onboarding
       navigate("/app/dashboard", { replace: true });
+      
+      // Force a page reload to ensure all components recognize the completed onboarding
+      window.location.reload();
     } catch (error) {
-      console.error("Navigation error:", error);
+      console.error("Error completing onboarding:", error);
       toast.error("Something went wrong. Please try again.");
-      // Force navigate even if there's an error updating the profile
+      
+      // Even if there's an error, try to navigate to dashboard
       navigate("/app/dashboard", { replace: true });
     }
   };

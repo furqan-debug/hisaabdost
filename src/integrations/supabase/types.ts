@@ -164,6 +164,7 @@ export type Database = {
           gender: string | null
           id: string
           last_login_at: string | null
+          monthly_income: number | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           preferred_currency: string | null
@@ -176,6 +177,7 @@ export type Database = {
           gender?: string | null
           id: string
           last_login_at?: string | null
+          monthly_income?: number | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
@@ -188,6 +190,7 @@ export type Database = {
           gender?: string | null
           id?: string
           last_login_at?: string | null
+          monthly_income?: number | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
