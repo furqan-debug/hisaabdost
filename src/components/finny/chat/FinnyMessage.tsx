@@ -9,7 +9,7 @@ import { PieChart as PieChartIcon, BarChart3, Check, AlertCircle, Clock } from '
 import { Card } from '@/components/ui/card';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
-import { FinnyVisualization } from '@/components/finny/FinnyVisualization';
+import FinnyVisualization from '@/components/finny/FinnyVisualization';
 
 interface FinnyMessageProps {
   content: string;
