@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Check, AlertCircle } from 'lucide-react';
 
 interface MessageBadgesProps {
   content: string;
