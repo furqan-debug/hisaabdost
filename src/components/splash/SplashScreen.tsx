@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SplashScreenProps {
@@ -9,12 +9,23 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 10000); // 10 seconds
+  const [showContent, setShowContent] = useState(false);
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    // Show content after a brief delay
+    const contentTimer = setTimeout(() => {
+      setShowContent(true);
+    }, 300);
+
+    // Complete splash screen after timeout
+    const completeTimer = setTimeout(() => {
+      onComplete();
+    }, 5000); // Reduced to 5 seconds for better UX
+
+    return () => {
+      clearTimeout(contentTimer);
+      clearTimeout(completeTimer);
+    };
   }, [onComplete]);
 
   const containerVariants = {
@@ -37,24 +48,26 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
 
   const logoVariants = {
     initial: { scale: 0.8, opacity: 0 },
-    animate: {
-      scale: [0.8, 1.1, 1],
+    animate: { 
+      scale: 1,
       opacity: 1,
       transition: {
-        duration: 1.2,
         type: "spring",
         stiffness: 200,
-        damping: 18
+        damping: 15,
+        duration: 1
       }
     }
   };
 
   const pulseVariants = {
+    initial: { scale: 1, opacity: 0.5 },
     animate: {
       scale: [1, 1.5, 1],
       opacity: [0.5, 0.8, 0.5],
       transition: {
         duration: 4,
+        times: [0, 0.5, 1],
         repeat: Infinity,
         ease: "easeInOut"
       }
@@ -65,7 +78,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     animate: {
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 1.5
+        delayChildren: 0.8
       }
     }
   };
@@ -89,7 +102,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       opacity: 1,
       y: 0,
       transition: {
-        delay: 2.5,
+        delay: 1.5,
         duration: 0.7,
         ease: "easeOut"
       }
@@ -116,49 +129,58 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         />
 
         {/* Logo with pulse effect */}
-        <div className="relative mb-10 z-10">
-          <motion.div
-            className="absolute inset-0 bg-purple-400/20 rounded-full blur-2xl -z-10"
-            variants={pulseVariants}
-            animate="animate"
-          />
-          <motion.img
-            variants={logoVariants}
-            src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
-            alt="Hisaab Dost Logo"
-            className="w-28 h-28 relative z-10"
-          />
-        </div>
+        {showContent && (
+          <div className="relative mb-10 z-10">
+            <motion.div
+              className="absolute inset-0 bg-purple-400/20 rounded-full blur-2xl -z-10"
+              variants={pulseVariants}
+              initial="initial"
+              animate="animate"
+            />
+            <motion.img
+              variants={logoVariants}
+              initial="initial"
+              animate="animate"
+              src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
+              alt="Hisaab Dost Logo"
+              className="w-28 h-28 relative z-10"
+            />
+          </div>
+        )}
 
         {/* App Title */}
-        <motion.div
-          variants={textContainerVariants}
-          initial="initial"
-          animate="animate"
-          className="flex justify-center mb-4 z-10"
-        >
-          {title.map((letter, index) => (
-            <motion.span
-              key={index}
-              variants={letterVariants}
-              className="text-5xl font-bold text-[#6E59A5] inline-block"
-              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-            >
-              {letter === " " ? "\u00A0" : letter}
-            </motion.span>
-          ))}
-        </motion.div>
+        {showContent && (
+          <motion.div
+            variants={textContainerVariants}
+            initial="initial"
+            animate="animate"
+            className="flex justify-center mb-4 z-10"
+          >
+            {title.map((letter, index) => (
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className="text-5xl font-bold text-[#6E59A5] inline-block"
+                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+              >
+                {letter === " " ? "\u00A0" : letter}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
 
         {/* Tagline */}
-        <motion.p
-          variants={taglineVariants}
-          initial="initial"
-          animate="animate"
-          className="text-lg font-medium tracking-wide text-[#7E69AB] z-10"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-        >
-          Master your home budget with ease
-        </motion.p>
+        {showContent && (
+          <motion.p
+            variants={taglineVariants}
+            initial="initial"
+            animate="animate"
+            className="text-lg font-medium tracking-wide text-[#7E69AB] z-10"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+          >
+            Master your home budget with ease
+          </motion.p>
+        )}
       </motion.div>
     </AnimatePresence>
   );
