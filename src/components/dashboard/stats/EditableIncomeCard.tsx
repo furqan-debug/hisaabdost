@@ -1,4 +1,3 @@
-
 import { Edit, Save } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -63,6 +62,15 @@ export const EditableIncomeCard = ({
           });
           
         if (error) throw error;
+      }
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ monthly_income: tempIncome })
+        .eq('id', user.id);
+      
+      if (profileError) {
+        console.warn("Could not update profile with new income:", profileError);
       }
       
       setMonthlyIncome(tempIncome);

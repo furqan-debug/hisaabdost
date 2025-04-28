@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,21 +22,44 @@ export function useDashboardData() {
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Fetch monthly income from Supabase
+  // Fetch monthly income from Supabase - checking both budgets and profiles
   const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
     queryKey: ['monthly_income', user?.id],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
       try {
-        const { data, error } = await supabase
+        // First check budgets table for monthly income
+        const { data: budgetData, error: budgetError } = await supabase
           .from('budgets')
           .select('monthly_income')
           .eq('user_id', user.id)
           .limit(1);
           
-        if (error) throw error;
-        return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+        if (budgetError) throw budgetError;
+        
+        // If we have income data in budgets, use that
+        if (budgetData && budgetData.length > 0 && budgetData[0].monthly_income) {
+          return { monthlyIncome: budgetData[0].monthly_income };
+        }
+        
+        // Otherwise, check the profiles table for monthly income
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('monthly_income')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError) {
+          // If there's an error getting the profile, but it's not critical
+          console.warn("Could not fetch profile data:", profileError);
+          return { monthlyIncome: 0 };
+        }
+        
+        // Return income from profile if available
+        return { 
+          monthlyIncome: profileData?.monthly_income || 0 
+        };
       } catch (error) {
         console.error("Error fetching monthly income:", error);
         return { monthlyIncome: 0 };
