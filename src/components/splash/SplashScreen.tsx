@@ -12,6 +12,9 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
+    // Apply no-scroll class to body when splash screen is active
+    document.body.classList.add('no-scroll');
+    
     // Show content after a brief delay
     const contentTimer = setTimeout(() => {
       setShowContent(true);
@@ -19,12 +22,15 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
 
     // Complete splash screen after timeout
     const completeTimer = setTimeout(() => {
+      // Remove no-scroll class when splash screen completes
+      document.body.classList.remove('no-scroll');
       onComplete();
-    }, 5000); // Reduced to 5 seconds for better UX
+    }, 5000);
 
     return () => {
       clearTimeout(contentTimer);
       clearTimeout(completeTimer);
+      document.body.classList.remove('no-scroll');
     };
   }, [onComplete]);
 
@@ -120,6 +126,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         animate="animate"
         exit="exit"
         className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+        style={{ position: 'fixed', height: '100vh', width: '100vw' }}
       >
         {/* Animated pastel background */}
         <motion.div

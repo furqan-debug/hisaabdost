@@ -133,3 +133,12 @@
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Prevent scrolling when splash screen is active */
+.no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  touch-action: none !important;
+}
