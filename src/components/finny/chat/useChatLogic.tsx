@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -61,13 +60,15 @@ export const useChatLogic = (queuedMessage: string | null) => {
     if (user) {
       initializeChat();
     } else {
-      setMessages([{
+      const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
         isUser: false,
         timestamp: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }]);
+      };
+      setMessages([welcomeMessage]);
+      saveMessage(welcomeMessage);
     }
   }, [user, currencyCode]);
 
@@ -118,7 +119,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         - category: Savings`;
       }
 
-      // Set analysis type based on message content
       if (categoryMatch) {
         analysisType = "category";
         specificCategory = categoryMatch[1];
@@ -169,7 +169,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
       setMessages(prev => [...prev, newMessage]);
       saveMessage(newMessage);
 
-      // Update quick replies based on the conversation
       const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
       setQuickReplies(updatedReplies);
 
@@ -178,16 +177,16 @@ export const useChatLogic = (queuedMessage: string | null) => {
       toast.error(`Sorry, I couldn't process that request: ${error.message}`);
       
       setIsTyping(false);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          content: "Sorry, I'm having trouble processing your request. Please try again later.",
-          isUser: false,
-          timestamp: new Date(),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        },
-      ]);
+      const errorMessage = {
+        id: Date.now().toString(),
+        content: "Sorry, I'm having trouble processing your request. Please try again later.",
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      saveMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -198,7 +197,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
     handleSendMessage(null, reply.action);
   };
 
-  // Move initializeChat inside the hook to access state variables
   const initializeChat = async () => {
     setIsConnectingToData(true);
         
@@ -303,25 +301,29 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
       setIsTyping(true);
       setTimeout(() => {
-        setMessages([{
+        const welcomeMessage = {
           id: '1',
           content: personalizedGreeting,
           isUser: false,
           timestamp: new Date(),
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        }]);
+        };
+        setMessages([welcomeMessage]);
+        saveMessage(welcomeMessage);
         setIsTyping(false);
       }, 1500);
       
     } catch (error) {
       console.error('Error fetching user data:', error);
-      setMessages([{
+      const errorMessage = {
         id: '1',
         content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
         isUser: false,
         timestamp: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }]);
+      };
+      setMessages([errorMessage]);
+      saveMessage(errorMessage);
     } finally {
       setIsConnectingToData(false);
     }

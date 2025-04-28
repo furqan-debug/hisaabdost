@@ -27,15 +27,40 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
         message.expiresAt = new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000);
       }
       
-      const updatedMessages = [...messages, message];
+      // Get current messages from localStorage first to ensure we don't overwrite existing ones
+      const existingMessagesString = localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY);
+      let existingMessages: Array<{
+        id: string;
+        content: string;
+        isUser: boolean;
+        timestamp: string;
+        hasAction?: boolean;
+        visualData?: any;
+        expiresAt?: string;
+      }> = [];
       
+      if (existingMessagesString) {
+        try {
+          existingMessages = JSON.parse(existingMessagesString);
+        } catch (e) {
+          console.error("Error parsing existing messages:", e);
+        }
+      }
+      
+      // Prepare the new message for storage
+      const messageForStorage = {
+        ...message,
+        timestamp: message.timestamp.toISOString(),
+        expiresAt: message.expiresAt ? message.expiresAt.toISOString() : undefined
+      };
+      
+      // Add the new message to existing messages
+      const updatedMessages = [...existingMessages, messageForStorage];
+      
+      // Save to localStorage
       localStorage.setItem(
         LOCAL_STORAGE_MESSAGES_KEY, 
-        JSON.stringify(updatedMessages.map(msg => ({
-          ...msg,
-          timestamp: msg.timestamp.toISOString(),
-          expiresAt: msg.expiresAt ? msg.expiresAt.toISOString() : undefined
-        })))
+        JSON.stringify(updatedMessages)
       );
       
       if (!oldestMessageTime || message.timestamp < oldestMessageTime) {
