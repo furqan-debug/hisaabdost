@@ -9,74 +9,93 @@ interface ScanProgressBarProps {
 }
 
 export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBarProps) {
-  const [animatedProgress, setAnimatedProgress] = useState(0);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Track the actual displayed progress value
+  const [displayProgress, setDisplayProgress] = useState(0);
+  // Track real target progress from props
   const targetProgressRef = useRef(0);
+  // Track our animation interval
+  const animationRef = useRef<number | null>(null);
   
-  // Reset animation when scanning stops
+  // When scanning starts/stops
   useEffect(() => {
+    // Reset everything when scanning stops
     if (!isScanning) {
-      // Clear any running animation intervals
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-      // Reset progress to 0
-      setAnimatedProgress(0);
+      setDisplayProgress(0);
       targetProgressRef.current = 0;
-      return;
+      
+      // Cancel any running animations
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    } else {
+      // When scanning starts, begin at 0
+      setDisplayProgress(0);
+      // Schedule a small jump to 3% for immediate visual feedback
+      // But use a timeout to ensure it visibly starts from 0
+      setTimeout(() => {
+        if (isScanning) {
+          setDisplayProgress(3);
+        }
+      }, 100);
     }
+    
+    return () => {
+      // Clean up any animations when component unmounts
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [isScanning]);
-
-  // Animate progress smoothly
+  
+  // Handle progress updates - update our target but animate to it
   useEffect(() => {
-    // Set the target progress reference
+    // Update the target we want to animate to
     targetProgressRef.current = progress;
     
-    // Start from 0 if this is the beginning of a new scan
-    if (progress > 0 && animatedProgress === 0) {
-      // Always start with a small amount of progress for immediate feedback
-      setAnimatedProgress(3);
-    }
+    // Don't animate if we're not scanning
+    if (!isScanning) return;
     
-    // Clear any existing interval
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
-    
-    // Only set up animation if we're scanning and progress needs to increase
-    if (isScanning && progress > animatedProgress) {
-      // Create a smooth animation that updates frequently
-      progressIntervalRef.current = setInterval(() => {
-        setAnimatedProgress(prev => {
-          // If we're close to target, just set it directly
-          if (targetProgressRef.current - prev < 1) {
-            clearInterval(progressIntervalRef.current!);
+    // Start our custom animation loop if not already running
+    if (animationRef.current === null && progress > displayProgress) {
+      const animateProgress = () => {
+        setDisplayProgress(prev => {
+          // If we're very close to target or past it, just set to target
+          if (Math.abs(targetProgressRef.current - prev) < 0.5) {
             return targetProgressRef.current;
           }
           
-          // Calculate a smooth increment that speeds up based on the gap
+          // Calculate increment based on gap - faster when gap is larger
           const gap = targetProgressRef.current - prev;
-          const increment = Math.max(gap * 0.05, 0.5); // At least 0.5% increase each time
+          const increment = Math.max(gap * 0.07, 0.3); // At least 0.3% increase
+          const newValue = Math.min(prev + increment, targetProgressRef.current);
           
-          // Cap the progress at the target
-          return Math.min(prev + increment, targetProgressRef.current);
+          // If we haven't reached target yet, continue animation
+          if (newValue < targetProgressRef.current) {
+            animationRef.current = requestAnimationFrame(animateProgress);
+          }
+          
+          return newValue;
         });
-      }, 50); // Update every 50ms for smooth animation
+      };
+      
+      // Start the animation
+      animationRef.current = requestAnimationFrame(animateProgress);
     }
     
-    // Clean up interval on component unmount
+    // Clean up animation when dependencies change
     return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
-  }, [progress, isScanning, animatedProgress]);
+  }, [progress, isScanning, displayProgress]);
   
   // Get the appropriate color class based on the progress value
   const getIndicatorClassName = () => {
-    if (animatedProgress < 30) return 'bg-amber-500';
-    if (animatedProgress < 70) return 'bg-blue-500';
+    if (displayProgress < 30) return 'bg-amber-500';
+    if (displayProgress < 70) return 'bg-blue-500';
     return 'bg-emerald-500';
   };
 
@@ -88,7 +107,7 @@ export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBar
         transition={{ duration: 0.3 }}
       >
         <Progress 
-          value={animatedProgress} 
+          value={displayProgress} 
           className="h-2 bg-secondary"
           indicatorClassName={getIndicatorClassName()}
         />
