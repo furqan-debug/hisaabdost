@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const EXPENSE_CATEGORIES = [
+export const EXPENSE_CATEGORIES = [
   "Food",
   "Rent",
   "Utilities",
