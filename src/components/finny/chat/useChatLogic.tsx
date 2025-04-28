@@ -53,47 +53,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   useEffect(() => {
     if (user) {
-      const fetchUserProfile = async () => {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          const personalizedGreeting = generatePersonalizedGreeting(profile);
-          setMessages([{
-            id: '1',
-            content: personalizedGreeting,
-            isUser: false,
-            timestamp: new Date(),
-            expiresAt: new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000)
-          }]);
-        }
-      };
-
-      fetchUserProfile();
-    }
-  }, [user]);
-
-  const generatePersonalizedGreeting = (profile: any) => {
-    const userName = profile.full_name || 'there';
-    const timeOfDay = new Date().getHours();
-    let greeting = '';
-
-    if (timeOfDay < 12) greeting = 'Good morning';
-    else if (timeOfDay < 18) greeting = 'Good afternoon';
-    else greeting = 'Good evening';
-
-    const pronouns = profile.gender === 'female' ? 'her' :
-                    profile.gender === 'male' ? 'his' :
-                    'their';
-
-    return `${greeting} ${userName}! 👋 I'm Finny, your personal finance assistant. I'll help you manage ${pronouns} finances with personalized advice and insights. How can I assist you today?`;
-  };
-
-  useEffect(() => {
-    if (user) {
       loadChatHistory();
     }
   }, [user]);
@@ -264,7 +223,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         const now = new Date();
         const validMessages = parsedMessages
           .filter(msg => {
-            // Only filter out expired messages
+            // Only keep messages that haven't expired
             if (!msg.expiresAt) return true;
             return new Date(msg.expiresAt) > now;
           })
@@ -277,6 +236,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         if (validMessages.length > 0) {
           setMessages(validMessages);
           
+          // Find oldest message to calculate expiration time for the banner
           const timestamps = validMessages.map(msg => msg.timestamp.getTime());
           const oldestTime = new Date(Math.min(...timestamps));
           setOldestMessageTime(oldestTime);
@@ -308,6 +268,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         })))
       );
       
+      // Update oldest message time for expiration banner
       if (!oldestMessageTime || message.timestamp < oldestMessageTime) {
         setOldestMessageTime(message.timestamp);
       }

@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -134,7 +135,7 @@ const FinnyChat = ({
                       </AlertDescription>
                     </Alert>}
 
-                    {user && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
+                    {user && oldestMessageTime && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
                     
                     {isConnectingToData && user && <div className="flex flex-col items-center justify-center py-6 space-y-3">
                       <div className="relative w-10 h-10">

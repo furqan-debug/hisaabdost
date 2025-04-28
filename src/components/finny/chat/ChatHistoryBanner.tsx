@@ -28,11 +28,11 @@ export const ChatHistoryBanner = ({ oldestMessageTime }: ChatHistoryBannerProps)
   if (!oldestMessageTime) return null;
   
   return (
-    <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20">
-      <Info className="h-4 w-4 text-primary" />
-      <AlertDescription className="text-sm">
+    <div className="flex items-center gap-2 rounded-lg bg-gray-800/40 p-3 mb-4">
+      <Info className="h-4 w-4 text-gray-400 flex-shrink-0" />
+      <p className="text-xs text-gray-300">
         Chat history is saved for 24 hours. Older messages will be automatically removed in {timeLeft}.
-      </AlertDescription>
-    </Alert>
+      </p>
+    </div>
   );
 };
