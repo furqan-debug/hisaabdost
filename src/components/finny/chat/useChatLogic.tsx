@@ -45,21 +45,15 @@ export const useChatLogic = (queuedMessage: string | null) => {
   } = useMessageHandling(setQuickReplies);
 
   useEffect(() => {
-    if (user) {
-      loadChatHistory();
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
 
   useEffect(() => {
-    if (user) {
+    if (user && messages.length === 0) {
       initializeChat();
-    } else {
+    } else if (!user) {
       const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,

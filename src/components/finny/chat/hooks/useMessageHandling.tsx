@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Message, QuickReply } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,6 +18,13 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
   const [oldestMessageTime, setOldestMessageTime] = useState<Date | undefined>();
   const { user } = useAuth();
   const { currencyCode } = useCurrency();
+
+  // Load chat history when the component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      loadChatHistory();
+    }
+  }, [user]);
 
   const saveMessage = (message: Message) => {
     if (!user) return;
@@ -100,17 +107,30 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
           }));
           
         if (validMessages.length > 0) {
+          console.log("Loaded chat history:", validMessages.length, "messages");
           setMessages(validMessages);
           
           const timestamps = validMessages.map(msg => msg.timestamp.getTime());
           const oldestTime = new Date(Math.min(...timestamps));
           setOldestMessageTime(oldestTime);
+        } else {
+          console.log("No valid messages found in storage");
         }
+      } else {
+        console.log("No messages found in localStorage");
       }
     } catch (error) {
       console.error('Error loading chat history from local storage:', error);
     }
   };
+
+  // Make sure messages are cleared when user logs out
+  useEffect(() => {
+    if (!user) {
+      setMessages([]);
+      setOldestMessageTime(undefined);
+    }
+  }, [user]);
 
   return {
     messages,
