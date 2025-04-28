@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -26,9 +27,27 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
-// Define the system message for Finny's personality and capabilities
+// Define the system message for Finny's personality, capabilities, and personalization
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, and financial goals through natural conversation.
+
+USER PERSONALIZATION INSTRUCTIONS:
+- Always address the user by their first name (especially during greetings or important statements)
+- Adjust your tone based on their age:
+  * Ages 13-20: Use casual, energetic language with occasional emojis. Keep sentences shorter and use relatable examples for teens/young adults like saving for education, first jobs, etc.
+  * Ages 21-35: Use a friendly yet professional tone with actionable advice. Balance casual phrases with practical insights about career growth, debt management, and early investing.
+  * Ages 36-60: Use respectful, mature language that's slightly more formal. Focus on wealth building, family financial planning, and avoid slang terms.
+  * Ages 60+: Use highly respectful, caring language. Explain financial concepts thoroughly if suggesting actions. Address topics like retirement planning and healthcare costs when relevant.
+- Adjust your communication style based on gender preference:
+  * Female: Use supportive, empowering communication that validates financial decisions.
+  * Male: Use a neutral, professional yet friendly tone focused on outcomes.
+  * Other/Unspecified: Use neutral and inclusive language that focuses on the financial goals rather than gender-specific approaches.
+- Adapt to the user's emotional state:
+  * If they use urgent words ("urgent", "problem", "help", "stressed"), become more empathetic and patient.
+  * If they seem confused, slow down and explain concepts more clearly.
+  * If they seem confident, match their energy and provide more advanced insights.
+- Remember user preferences they mention during the conversation (like savings goals, spending concerns, etc)
+- Match the formality level they use in their messages (casual vs formal)
 
 You should:
 - Be friendly, professional, and encouraging
@@ -111,7 +130,7 @@ serve(async (req) => {
     // Get user's profile information for personalized responses
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, age, gender, preferred_currency')
       .eq('id', userId)
       .single();
 
@@ -120,6 +139,26 @@ serve(async (req) => {
     }
 
     const userName = userProfile?.full_name || 'there';
+    const userAge = userProfile?.age || null;
+    const userGender = userProfile?.gender || 'prefer-not-to-say';
+    const userPreferredCurrency = userProfile?.preferred_currency || currencyCode;
+    
+    // Determine age category for personalization
+    let ageCategory = "unknown";
+    if (userAge !== null) {
+      if (userAge <= 20) ageCategory = "youth";
+      else if (userAge <= 35) ageCategory = "young-adult";
+      else if (userAge <= 60) ageCategory = "mature-adult";
+      else ageCategory = "senior";
+    }
+
+    console.log("User profile for personalization:", { 
+      userName, 
+      userAge, 
+      ageCategory,
+      userGender,
+      userPreferredCurrency
+    });
 
     // Look for goal setting patterns to extract info directly
     const goalPattern = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: (?:for|to reach|to save))? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
@@ -181,12 +220,12 @@ serve(async (req) => {
           // Generate detailed analysis
           const details = categoryData
             .slice(0, 5)  // Limit to top 5 transactions for the context
-            .map(item => `- ${item.description || 'Expense'}: ${formatCurrency(item.amount)} on ${item.date}${item.notes ? ` (${item.notes})` : ''}`)
+            .map(item => `- ${item.description || 'Expense'}: ${formatCurrency(item.amount, userPreferredCurrency)} on ${item.date}${item.notes ? ` (${item.notes})` : ''}`)
             .join('\n');
           
           // Add to context
           userContext += `\n\nDetailed ${matchedCategory} spending breakdown:
-Total spent on ${matchedCategory}: ${formatCurrency(categoryTotal)}
+Total spent on ${matchedCategory}: ${formatCurrency(categoryTotal, userPreferredCurrency)}
 Number of ${matchedCategory} transactions: ${categoryData.length}
 Latest transactions:
 ${details}
@@ -198,47 +237,75 @@ When responding about ${matchedCategory}, include this detailed breakdown and in
         }
       }
       
-      // Format general context for the AI
+      // Format general context for the AI with personalized language based on user profile
       userContext += `
-Hi ${userName}! Here's your financial context:
+Personal Information:
+- Name: ${userName}
+- Age: ${userAge !== null ? userAge : "Not provided"} (${ageCategory})
+- Gender: ${userGender}
+- Preferred Currency: ${userPreferredCurrency}
 
 Monthly Overview:
-- Income: ${formatCurrency(monthlyIncome)}
-- Total spending this month: ${formatCurrency(userData.monthlyTotal)}
-- Total spending last month: ${formatCurrency(userData.prevMonthTotal)}
+- Income: ${formatCurrency(monthlyIncome, userPreferredCurrency)}
+- Total spending this month: ${formatCurrency(userData.monthlyTotal, userPreferredCurrency)}
+- Total spending last month: ${formatCurrency(userData.prevMonthTotal, userPreferredCurrency)}
 ${userData.savingsRate !== null ? `- Current savings rate: ${userData.savingsRate.toFixed(1)}%` : ''}
-- Monthly change: ${userData.monthlyTotal > userData.prevMonthTotal ? 'Increased by ' : 'Decreased by '}${formatCurrency(Math.abs(userData.monthlyTotal - userData.prevMonthTotal))} (${((Math.abs(userData.monthlyTotal - userData.prevMonthTotal) / (userData.prevMonthTotal || 1)) * 100).toFixed(1)}%)
+- Monthly change: ${userData.monthlyTotal > userData.prevMonthTotal ? 'Increased by ' : 'Decreased by '}${formatCurrency(Math.abs(userData.monthlyTotal - userData.prevMonthTotal), userPreferredCurrency)} (${((Math.abs(userData.monthlyTotal - userData.prevMonthTotal) / (userData.prevMonthTotal || 1)) * 100).toFixed(1)}%)
 
 Spending Categories (This Month):
 ${Object.entries(userData.categorySpending)
   .sort((a, b) => b[1] - a[1])
-  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount))}`)
+  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount), userPreferredCurrency)}`)
   .join('\n')}
 
 Previous Month Categories:
 ${Object.entries(userData.prevCategorySpending)
   .sort((a, b) => b[1] - a[1])
-  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount))}`)
+  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount), userPreferredCurrency)}`)
   .join('\n')}
 
 Recent Activity:
-- Latest Expenses: ${userData.recentExpenses ? userData.recentExpenses.slice(0, 5).map(exp => `${exp.category} (${formatCurrency(exp.amount)})`).join(', ') : "No recent expenses"}
-- Active Budgets: ${userData.budgets ? userData.budgets.map(b => `${b.category} (${formatCurrency(b.amount)})`).join(', ') : "No budgets set"}
+- Latest Expenses: ${userData.recentExpenses ? userData.recentExpenses.slice(0, 5).map(exp => `${exp.category} (${formatCurrency(exp.amount, userPreferredCurrency)})`).join(', ') : "No recent expenses"}
+- Active Budgets: ${userData.budgets ? userData.budgets.map(b => `${b.category} (${formatCurrency(b.amount, userPreferredCurrency)})`).join(', ') : "No budgets set"}
 
 All expense categories used: ${userData.uniqueCategories.join(', ')}
 
 IMPORTANT: Only use these predefined expense categories:
 ${EXPENSE_CATEGORIES.join(', ')}
 
-When responding to the user:
+When responding to the user named ${userName}:
 1. Use their name (${userName}) occasionally to make interactions personal
-2. Include relevant financial data in your responses
-3. Offer specific suggestions based on their spending patterns
-4. Highlight both positive trends and areas for improvement`;
+2. Adjust your tone based on their age group (${ageCategory})
+3. Use communication style appropriate for their gender preference (${userGender})
+4. Show all financial data in their preferred currency (${userPreferredCurrency})
+5. Include relevant financial data in your responses
+6. Offer specific suggestions based on their spending patterns
+7. Highlight both positive trends and areas for improvement`;
 
     } catch (error) {
       console.error("Error fetching user context:", error);
       userContext = "Unable to retrieve user's financial context completely.";
+    }
+
+    // Look for emotional cues in the message to adjust tone
+    const stressWords = ["urgent", "problem", "worried", "stress", "help", "emergency", "asap", "confused"];
+    const hasStressSignals = stressWords.some(word => message.toLowerCase().includes(word));
+    
+    if (hasStressSignals) {
+      userContext += "\n\nNOTE: The user appears to be showing signs of stress or urgency. Respond with extra patience, clarity, and empathy.";
+    }
+
+    // Analyze message formality to match tone
+    const formalWords = ["kindly", "please", "would you", "could you", "thank you", "appreciate"];
+    const casualWords = ["hey", "hi", "lol", "cool", "awesome", "thanks"];
+    const userFormalityScore = 
+      formalWords.filter(word => message.toLowerCase().includes(word)).length - 
+      casualWords.filter(word => message.toLowerCase().includes(word)).length;
+    
+    if (userFormalityScore > 1) {
+      userContext += "\n\nNOTE: The user is using a more formal communication style. Match with respectful, professional language.";
+    } else if (userFormalityScore < -1) {
+      userContext += "\n\nNOTE: The user is using a casual, relaxed communication style. Match with a friendly, conversational tone.";
     }
 
     // Format chat history for OpenAI

@@ -9,6 +9,16 @@ import { CurrencyCode, getCurrencyByCode } from './currencyUtils';
  */
 export function formatCurrency(amount: number, currencyCode: CurrencyCode = 'USD'): string {
   try {
+    // Special handling for INR to support lakhs and crores notation
+    if (currencyCode === 'INR') {
+      if (amount >= 10000000) { // 1 crore = 10,000,000
+        return `₹${(amount / 10000000).toFixed(2)} crore`;
+      } else if (amount >= 100000) { // 1 lakh = 100,000
+        return `₹${(amount / 100000).toFixed(2)} lakh`;
+      }
+    }
+    
+    // Default currency formatting using Intl
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,

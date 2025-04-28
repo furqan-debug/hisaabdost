@@ -11,6 +11,13 @@ export async function processMessageWithAI(
   specificCategory: string | null = null,
   currencyCode = 'USD'
 ) {
+  // Get enhanced user profile data for personalization
+  const { data: userProfile } = await supabase
+    .from('profiles')
+    .select('full_name, age, gender, preferred_currency')
+    .eq('id', userId)
+    .single();
+    
   const { data, error } = await supabase.functions.invoke('finny-chat', {
     body: {
       message: messageToSend,
@@ -18,7 +25,8 @@ export async function processMessageWithAI(
       chatHistory: recentMessages,
       analysisType,
       specificCategory,
-      currencyCode
+      currencyCode: userProfile?.preferred_currency || currencyCode,
+      // User profile data is now fetched directly in the edge function
     },
   });
 

@@ -36,6 +36,14 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
   const isSuccess = formattedContent.includes('✅');
   const isError = formattedContent.includes('❌');
 
+  // Detect emotional tone in message to apply appropriate styling
+  const isEmpathetic = 
+    !isUser &&
+    (formattedContent.toLowerCase().includes("i understand") ||
+     formattedContent.toLowerCase().includes("don't worry") ||
+     formattedContent.toLowerCase().includes("sorry to hear") ||
+     formattedContent.toLowerCase().includes("completely understand"));
+
   // Generate visualization data based on content
   const chartData = useMemo(() => {
     // Default data if no visualization data is provided or for spending-chart
@@ -193,7 +201,9 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
         max-w-[85%] rounded-lg px-3.5 py-2.5 shadow-sm
         ${isUser 
           ? 'bg-green-500 text-white' 
-          : 'bg-[#352F44] text-white'
+          : isEmpathetic 
+            ? 'bg-[#3e3559] text-white' // More empathetic tone for supportive messages
+            : 'bg-[#352F44] text-white'
         }
         ${hasLinks || hasAction || visualData ? 'space-y-2' : ''}
       `}>
@@ -249,6 +259,11 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
             {!isUser && content.toLowerCase().includes('goal') && (
               <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
                 goal
+              </Badge>
+            )}
+            {!isUser && isEmpathetic && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                support
               </Badge>
             )}
           </div>
