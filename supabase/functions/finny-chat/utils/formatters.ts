@@ -10,10 +10,17 @@ export function formatCurrency(amount: number, currencyCode = 'USD'): string {
       }
     }
     
+    // Special handling for PKR
+    if (currencyCode === 'PKR') {
+      return `Rs ${amount.toFixed(2)}`;
+    }
+    
     // Default currency formatting using Intl
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   } catch (e) {
     // Fallback to USD if there's any error

@@ -8,9 +8,8 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { PieChart as PieChartIcon, BarChart3, Check, AlertCircle, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useCurrency } from '@/hooks/use-currency';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
-import { CATEGORY_COLORS } from '@/utils/chartUtils';
 import { formatCurrency } from '@/utils/formatters';
+import { FinnyVisualization } from '@/components/finny/FinnyVisualization';
 
 interface FinnyMessageProps {
   content: string;
@@ -57,12 +56,12 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       const shoppingMatch = formattedContent.match(/Shopping:?\s*\$?(\d+\.?\d*)/i);
       
       const data = [
-        { name: 'Food', value: foodMatch ? parseFloat(foodMatch[1]) : 0, color: CATEGORY_COLORS['Groceries'] || '#FF9F7A' },
-        { name: 'Utilities', value: utilitiesMatch ? parseFloat(utilitiesMatch[1]) : 0, color: CATEGORY_COLORS['Utilities'] || '#A17FFF' },
-        { name: 'Entertainment', value: entertainmentMatch ? parseFloat(entertainmentMatch[1]) : 0, color: CATEGORY_COLORS['Entertainment'] || '#FACC15' },
-        { name: 'Housing', value: housingMatch ? parseFloat(housingMatch[1]) : 0, color: CATEGORY_COLORS['Housing'] || '#4ADE80' },
-        { name: 'Transportation', value: transportationMatch ? parseFloat(transportationMatch[1]) : 0, color: CATEGORY_COLORS['Transportation'] || '#F87DB5' },
-        { name: 'Shopping', value: shoppingMatch ? parseFloat(shoppingMatch[1]) : 0, color: CATEGORY_COLORS['Shopping'] || '#FF7A92' }
+        { name: 'Food', value: foodMatch ? parseFloat(foodMatch[1]) : 0, color: '#FF9F7A' },
+        { name: 'Utilities', value: utilitiesMatch ? parseFloat(utilitiesMatch[1]) : 0, color: '#A17FFF' },
+        { name: 'Entertainment', value: entertainmentMatch ? parseFloat(entertainmentMatch[1]) : 0, color: '#FACC15' },
+        { name: 'Housing', value: housingMatch ? parseFloat(housingMatch[1]) : 0, color: '#4ADE80' },
+        { name: 'Transportation', value: transportationMatch ? parseFloat(transportationMatch[1]) : 0, color: '#F87DB5' },
+        { name: 'Shopping', value: shoppingMatch ? parseFloat(shoppingMatch[1]) : 0, color: '#FF7A92' }
       ];
       
       // Filter out categories with zero value
@@ -74,7 +73,7 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       return visualData.transactions.map((transaction: any) => ({
         name: transaction.description || transaction.category,
         value: transaction.amount,
-        color: CATEGORY_COLORS[transaction.category] || '#94A3B8'
+        color: '#94A3B8'
       })).slice(0, 5); // Limit to top 5 for clarity
     }
     
@@ -95,7 +94,7 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
         monthlyData.push({
           name: monthName,
           value: Math.round(baseValue * 100) / 100, 
-          color: CATEGORY_COLORS[categoryName] || '#94A3B8'
+          color: '#94A3B8'
         });
       }
       
@@ -105,62 +104,6 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
     // Default empty data
     return [];
   }, [formattedContent, visualData]);
-
-  const renderVisualization = () => {
-    // Choose chart type based on visualData type
-    const chartType = visualData?.type === 'category' ? 'bar' : 'pie';
-    
-    if (chartData.length === 0) {
-      return (
-        <div className="w-full h-24 flex items-center justify-center bg-muted/30 rounded-md">
-          <span className="text-xs text-muted-foreground">No data available for visualization</span>
-        </div>
-      );
-    }
-    
-    if (chartType === 'pie') {
-      return (
-        <ResponsiveContainer width="100%" height={120}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              innerRadius={25}
-              outerRadius={45}
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              formatter={(value: any) => formatCurrency(value, currencyCode)}
-              labelFormatter={(index: any) => chartData[index]?.name}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-    } else {
-      return (
-        <ResponsiveContainer width="100%" height={120}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 10 }} width={30} />
-            <RechartsTooltip 
-              formatter={(value: any) => formatCurrency(value, currencyCode)}
-            />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-  };
 
   return (
     <motion.div
@@ -211,15 +154,19 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
           {formattedContent}
         </div>
         
-        {/* Visual Data - Renders actual charts instead of placeholder */}
-        {(visualData || formattedContent.includes('$')) && (
+        {/* Visual Data - Now uses FinnyVisualization component */}
+        {(visualData || formattedContent.includes('$') && chartData.length > 0) && (
           <Card className="p-3 mt-2 bg-background/90 dark:bg-background/30 border border-muted overflow-hidden">
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
               {visualData?.type === 'category' ? <BarChart3 size={14} /> : <PieChartIcon size={14} />}
               <span>Finance Visualization</span>
             </div>
             <div className="w-full rounded-md overflow-hidden">
-              {renderVisualization()}
+              <FinnyVisualization 
+                data={chartData}
+                type={visualData?.type === 'category' ? 'bar' : 'pie'}
+                height={120}
+              />
             </div>
           </Card>
         )}

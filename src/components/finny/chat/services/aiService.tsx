@@ -26,7 +26,9 @@ export async function processMessageWithAI(
       analysisType,
       specificCategory,
       currencyCode: userProfile?.preferred_currency || currencyCode,
-      // User profile data is now fetched directly in the edge function
+      userName: userProfile?.full_name,
+      userAge: userProfile?.age,
+      userGender: userProfile?.gender,
     },
   });
 
