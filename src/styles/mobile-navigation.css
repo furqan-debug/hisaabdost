@@ -61,6 +61,16 @@
   .finny-chat-container {
     @apply pb-14;
   }
+  
+  /* Ensure dropdowns are on top of navigation */
+  [data-radix-popper-content-wrapper] {
+    z-index: 999 !important;
+  }
+  
+  /* Ensure dropdowns scroll properly */
+  [data-radix-select-viewport] {
+    max-height: 30vh !important;
+  }
 }
 
 /* Enhanced floating action button */
