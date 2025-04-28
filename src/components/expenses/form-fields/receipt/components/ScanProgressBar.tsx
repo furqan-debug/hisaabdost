@@ -13,22 +13,41 @@ export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBar
   
   // Smoothly animate to the target progress value
   useEffect(() => {
-    if (!isScanning) return;
+    if (!isScanning) {
+      setAnimatedProgress(0);
+      return;
+    }
+    
+    // Always animate from 0 to current progress
+    const initialDelay = 100; // Small initial delay
     
     // Create artificial progress points for smoother animation
     const intermediateSteps = [
-      { target: Math.min(30, progress), duration: 1000 },
-      { target: Math.min(60, progress), duration: 1500 },
-      { target: Math.min(85, progress), duration: 2000 },
-      { target: progress, duration: 2500 }
+      { target: Math.min(20, progress), duration: initialDelay + 500 },
+      { target: Math.min(40, progress), duration: initialDelay + 1000 },
+      { target: Math.min(60, progress), duration: initialDelay + 1500 },
+      { target: Math.min(80, progress), duration: initialDelay + 2000 },
+      { target: progress, duration: initialDelay + 2500 }
     ];
     
+    // Reset to 0 when starting a new scan
+    if (progress === 0) {
+      setAnimatedProgress(0);
+      return;
+    }
+    
+    // Ensure we have a minimum starting point for visual feedback
+    if (animatedProgress === 0 && progress > 0) {
+      setAnimatedProgress(5); // Start at 5% for immediate visual feedback
+    }
+    
     // Animate through each step
-    intermediateSteps.forEach(({ target, duration }, index) => {
+    intermediateSteps.forEach(({ target, duration }) => {
       if (target > animatedProgress) {
         setTimeout(() => {
           setAnimatedProgress(prev => {
-            const increment = (target - prev) / 10;
+            // Smoother increment calculation
+            const increment = Math.max((target - prev) / 8, 1);
             return Math.min(target, prev + increment);
           });
         }, duration);
