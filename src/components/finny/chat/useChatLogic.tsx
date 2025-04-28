@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -197,25 +198,10 @@ export const useChatLogic = (queuedMessage: string | null) => {
     handleSendMessage(null, reply.action);
   };
 
-  return {
-    messages,
-    newMessage,
-    setNewMessage,
-    isLoading,
-    isConnectingToData,
-    isTyping,
-    quickReplies,
-    messagesEndRef,
-    handleSendMessage,
-    handleQuickReply,
-    oldestMessageTime
-  };
-};
-
-async function initializeChat() {
-  setIsConnectingToData(true);
-      
-  const fetchUserData = async () => {
+  // Move initializeChat inside the hook to access state variables
+  const initializeChat = async () => {
+    setIsConnectingToData(true);
+        
     try {
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
@@ -340,6 +326,18 @@ async function initializeChat() {
       setIsConnectingToData(false);
     }
   };
-  
-  fetchUserData();
-}
+
+  return {
+    messages,
+    newMessage,
+    setNewMessage,
+    isLoading,
+    isConnectingToData,
+    isTyping,
+    quickReplies,
+    messagesEndRef,
+    handleSendMessage,
+    handleQuickReply,
+    oldestMessageTime
+  };
+};
