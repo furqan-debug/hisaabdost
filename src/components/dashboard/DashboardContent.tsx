@@ -68,7 +68,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-5"
+      className="space-y-5 touch-scroll-container no-scrollbar"
       variants={containerVariants}
       initial="hidden"
       animate="show"

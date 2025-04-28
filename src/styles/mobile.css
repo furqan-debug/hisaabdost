@@ -16,6 +16,8 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
     width: 100%;
     position: relative;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
   }
   
   /* Prevent horizontal overflow */
@@ -36,4 +38,33 @@ Most styles are now organized into component-specific files:
     max-width: 100%;
     overflow-x: hidden;
   }
+  
+  /* All scrollable containers should have smooth scrolling */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior: contain;
+  }
+  
+  .scrollable::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Add touch action to all interactive elements */
+  button, a, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Hide scrollbars globally */
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }

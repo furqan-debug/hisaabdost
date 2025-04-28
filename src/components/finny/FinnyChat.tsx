@@ -126,7 +126,7 @@ const FinnyChat = ({
               </div>
               
               <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
+                <ScrollArea className="h-full no-scrollbar touch-scroll-container">
                   <div className="finny-messages-container">
                     {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
                       <Info className="h-4 w-4 text-primary" />

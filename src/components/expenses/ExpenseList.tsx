@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody } from "@/components/ui/table";
@@ -78,7 +79,7 @@ export function ExpenseList({
             useCustomDateRange={useCustomDateRange}
           />
 
-          <div className="rounded-lg border border-border/40 overflow-hidden">
+          <div className="rounded-lg border border-border/40 overflow-hidden no-scrollbar touch-scroll-container">
             <Table>
               <ExpenseTableHeader
                 sortConfig={sortConfig}
@@ -87,7 +88,7 @@ export function ExpenseList({
                 filteredExpenses={filteredExpenses}
                 toggleSelectAll={toggleSelectAll}
               />
-              <TableBody>
+              <TableBody className="no-scrollbar">
                 {isLoading ? (
                   <tr>
                     <td colSpan={7} className="text-center py-8">

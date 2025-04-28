@@ -10,4 +10,25 @@
   td {
     @apply p-2;
   }
+  
+  /* Ensure smooth scrolling in mobile tables */
+  .table-container, .table-responsive {
+    @apply no-scrollbar touch-scroll-container;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  /* Prevent horizontal scrolling in tables */
+  table {
+    max-width: 100%;
+    position: relative;
+  }
+  
+  /* Table row touch feedback */
+  tr {
+    @apply touch-feedback active:bg-muted/10;
+  }
 }

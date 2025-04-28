@@ -21,6 +21,23 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Set default scrolling behavior with no visible scrollbars */
+:root {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+:root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Ensure all scrollable elements have touch-friendly scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
 #root {
   @apply w-full h-full;
 }

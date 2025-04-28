@@ -86,6 +86,13 @@
   .finny-chat-container {
     padding-bottom: 70px !important;
   }
+  
+  /* Improve touch scrolling on mobile */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -141,4 +148,25 @@
   width: 100vw !important;
   position: fixed !important;
   touch-action: none !important;
+}
+
+/* Touch-friendly scrolling container */
+.touch-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.touch-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scrollable area with momentum */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
