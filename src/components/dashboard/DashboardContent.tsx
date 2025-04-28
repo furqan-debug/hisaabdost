@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -6,6 +5,7 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
+import { FinnyCard } from "@/components/dashboard/FinnyCard";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -46,7 +46,6 @@ export function DashboardContent({
   chartType,
   setChartType
 }: DashboardContentProps) {
-  // Animation variants for staggered children
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -99,6 +98,10 @@ export function DashboardContent({
           setShowAddExpense={setShowAddExpense}
           onAddExpense={handleExpenseRefresh}
         />
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <FinnyCard />
       </motion.div>
 
       <motion.div variants={itemVariants}>
