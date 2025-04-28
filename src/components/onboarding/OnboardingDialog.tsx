@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { WelcomeStep } from './steps/WelcomeStep';
+import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
 import { CompleteStep } from './steps/CompleteStep';
 import { OnboardingStep, OnboardingFormData } from './types';
@@ -20,7 +21,8 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     fullName: '',
     age: null,
     gender: 'prefer-not-to-say',
-    preferredCurrency: 'USD'
+    preferredCurrency: 'USD',
+    monthlyIncome: null
   });
   const { user } = useAuth();
 
@@ -37,6 +39,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             age: updatedData.age,
             gender: updatedData.gender,
             preferred_currency: updatedData.preferredCurrency,
+            monthly_income: updatedData.monthlyIncome,
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
@@ -51,7 +54,8 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     } else {
       const nextSteps: Record<OnboardingStep, OnboardingStep> = {
         welcome: 'personal',
-        personal: 'currency',
+        personal: 'income',
+        income: 'currency',
         currency: 'complete',
         complete: 'complete'
       };
@@ -62,6 +66,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   const steps = {
     welcome: <WelcomeStep onComplete={data => handleStepComplete('welcome', data)} initialData={formData} />,
     personal: <PersonalDetailsStep onComplete={data => handleStepComplete('personal', data)} initialData={formData} />,
+    income: <IncomeStep onComplete={data => handleStepComplete('income', data)} initialData={formData} />,
     currency: <CurrencyStep onComplete={data => handleStepComplete('currency', data)} initialData={formData} />,
     complete: <CompleteStep />
   };
