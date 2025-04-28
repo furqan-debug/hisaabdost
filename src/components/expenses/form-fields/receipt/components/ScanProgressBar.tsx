@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
 
@@ -10,50 +10,67 @@ interface ScanProgressBarProps {
 
 export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBarProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const targetProgressRef = useRef(0);
   
-  // Smoothly animate to the target progress value
+  // Reset animation when scanning stops
   useEffect(() => {
     if (!isScanning) {
-      setAnimatedProgress(0);
-      return;
-    }
-    
-    // Always animate from 0 to current progress
-    const initialDelay = 100; // Small initial delay
-    
-    // Create artificial progress points for smoother animation
-    const intermediateSteps = [
-      { target: Math.min(20, progress), duration: initialDelay + 500 },
-      { target: Math.min(40, progress), duration: initialDelay + 1000 },
-      { target: Math.min(60, progress), duration: initialDelay + 1500 },
-      { target: Math.min(80, progress), duration: initialDelay + 2000 },
-      { target: progress, duration: initialDelay + 2500 }
-    ];
-    
-    // Reset to 0 when starting a new scan
-    if (progress === 0) {
-      setAnimatedProgress(0);
-      return;
-    }
-    
-    // Ensure we have a minimum starting point for visual feedback
-    if (animatedProgress === 0 && progress > 0) {
-      setAnimatedProgress(5); // Start at 5% for immediate visual feedback
-    }
-    
-    // Animate through each step
-    intermediateSteps.forEach(({ target, duration }) => {
-      if (target > animatedProgress) {
-        setTimeout(() => {
-          setAnimatedProgress(prev => {
-            // Smoother increment calculation
-            const increment = Math.max((target - prev) / 8, 1);
-            return Math.min(target, prev + increment);
-          });
-        }, duration);
+      // Clear any running animation intervals
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
       }
-    });
+      // Reset progress to 0
+      setAnimatedProgress(0);
+      targetProgressRef.current = 0;
+      return;
+    }
+  }, [isScanning]);
+
+  // Animate progress smoothly
+  useEffect(() => {
+    // Set the target progress reference
+    targetProgressRef.current = progress;
     
+    // Start from 0 if this is the beginning of a new scan
+    if (progress > 0 && animatedProgress === 0) {
+      // Always start with a small amount of progress for immediate feedback
+      setAnimatedProgress(3);
+    }
+    
+    // Clear any existing interval
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    
+    // Only set up animation if we're scanning and progress needs to increase
+    if (isScanning && progress > animatedProgress) {
+      // Create a smooth animation that updates frequently
+      progressIntervalRef.current = setInterval(() => {
+        setAnimatedProgress(prev => {
+          // If we're close to target, just set it directly
+          if (targetProgressRef.current - prev < 1) {
+            clearInterval(progressIntervalRef.current!);
+            return targetProgressRef.current;
+          }
+          
+          // Calculate a smooth increment that speeds up based on the gap
+          const gap = targetProgressRef.current - prev;
+          const increment = Math.max(gap * 0.05, 0.5); // At least 0.5% increase each time
+          
+          // Cap the progress at the target
+          return Math.min(prev + increment, targetProgressRef.current);
+        });
+      }, 50); // Update every 50ms for smooth animation
+    }
+    
+    // Clean up interval on component unmount
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
   }, [progress, isScanning, animatedProgress]);
   
   // Get the appropriate color class based on the progress value
