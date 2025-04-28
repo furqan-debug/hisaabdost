@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
@@ -123,7 +124,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           />
           <motion.img
             variants={logoVariants}
-            src="/your-logo-path/logo_final-removebg-preview.png"
+            src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
             alt="Hisaab Dost Logo"
             className="w-28 h-28 relative z-10"
           />
