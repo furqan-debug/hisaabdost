@@ -27,9 +27,9 @@ export function CurrencySettings() {
         <SelectTrigger className="w-full h-9">
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
-        <SelectContent className="touch-scroll-container mobile-select-content">
+        <SelectContent>
           {isMobile ? (
-            <div className="py-1 max-h-[30vh] touch-scroll-container momentum-scroll">
+            <div className="py-1">
               {CURRENCY_OPTIONS.map((option) => (
                 <SelectItem key={option.code} value={option.code}>
                   <div className="flex items-center">

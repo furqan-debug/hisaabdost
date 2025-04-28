@@ -96,7 +96,7 @@
 
   /* Enhanced dropdown scrolling for mobile */
   .mobile-select-content {
-    max-height: 40vh !important;
+    max-height: 300px !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -113,7 +113,8 @@
   .radix-dropdown-content,
   .radix-select-content,
   [data-radix-popper-content-wrapper] {
-    max-height: 50vh !important;
+    max-height: 300px !important;
+    max-width: 95vw !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
     overscroll-behavior-y: contain !important;
@@ -121,9 +122,17 @@
     will-change: transform !important;
     animation: none !important;
     transition-property: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+    background-color: var(--popover) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    position: absolute !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
   }
   
   /* Optimize Radix Select component for mobile */
@@ -131,7 +140,8 @@
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
-    max-height: 40vh !important;
+    max-height: 300px !important;
+    background-color: var(--popover) !important;
   }
 }
 
@@ -219,18 +229,24 @@
 /* Enhanced mobile dropdown styles */
 @media (max-width: 640px) {
   [data-radix-popper-content-wrapper] {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-    background-color: var(--background) !important;
+    max-height: 300px !important;
+    max-width: 95vw !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+    background-color: var(--popover) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
     animation: none !important;
     transition-property: none !important;
+    position: absolute !important;
+    border-radius: 8px !important;
+    z-index: 1000 !important;
   }
   
   /* Ensure the content inside select is scrollable */
   [data-radix-select-content] {
-    max-height: 50vh !important;
+    max-height: 300px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    background-color: var(--popover) !important;
   }
 }
