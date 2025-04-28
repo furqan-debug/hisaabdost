@@ -27,7 +27,7 @@ interface ExpenseFiltersProps {
   setDateRange: (dateRange: { start: string; end: string; }) => void;
   selectedMonth: Date;
   useCustomDateRange: boolean;
-  className?: string; // Added className prop as optional
+  className?: string;
 }
 
 export function ExpenseFilters({
@@ -89,12 +89,12 @@ export function ExpenseFilters({
               onValueChange={setCategoryFilter}
             >
               <SelectTrigger className={cn(
-                "rounded-lg",
+                "rounded-lg bg-background",
                 isMobile ? "w-full" : "w-[180px]"
               )}>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="touch-scroll-container max-h-[40vh]">
                 <SelectItem value="all">All Categories</SelectItem>
                 {Object.keys(CATEGORY_COLORS).map((category) => (
                   <SelectItem key={category} value={category}>
@@ -150,4 +150,3 @@ export function ExpenseFilters({
     </div>
   );
 }
-

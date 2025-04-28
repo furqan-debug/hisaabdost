@@ -28,10 +28,10 @@ export function CategoryField({ value, onChange }: CategoryFieldProps) {
     <div className="space-y-2">
       <Label htmlFor="expense-category">Category</Label>
       <Select name="category" value={value} onValueChange={onChange}>
-        <SelectTrigger id="expense-category">
+        <SelectTrigger id="expense-category" className="bg-background">
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="touch-scroll-container max-h-[40vh]">
           {EXPENSE_CATEGORIES.map((cat) => (
             <SelectItem key={cat} value={cat}>
               {cat}
