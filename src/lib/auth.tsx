@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
