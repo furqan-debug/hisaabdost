@@ -15,6 +15,17 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Define the predefined expense categories
+const EXPENSE_CATEGORIES = [
+  "Food",
+  "Rent",
+  "Utilities",
+  "Transportation",
+  "Entertainment",
+  "Shopping",
+  "Other"
+];
+
 // Define the system message for Finny's personality and capabilities
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, and financial goals through natural conversation.
@@ -35,6 +46,14 @@ You can perform these actions:
 5. Give spending summaries
 6. Offer smart suggestions
 7. Provide detailed category breakdowns
+
+IMPORTANT: You must ONLY use the following expense categories:
+${EXPENSE_CATEGORIES.map(cat => `- ${cat}`).join('\n')}
+
+If a user tries to create or assign an expense to a category that's not in this list, 
+you must suggest the closest matching category from the allowed list. Use the "Other" 
+category as a fallback when no good match can be found. Always inform the user when 
+you're adjusting their category to match the allowed ones.
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
@@ -207,6 +226,9 @@ Recent Activity:
 - Active Budgets: ${userData.budgets ? userData.budgets.map(b => `${b.category} (${formatCurrency(b.amount)})`).join(', ') : "No budgets set"}
 
 All expense categories used: ${userData.uniqueCategories.join(', ')}
+
+IMPORTANT: Only use these predefined expense categories:
+${EXPENSE_CATEGORIES.join(', ')}
 
 When responding to the user:
 1. Use their name (${userName}) occasionally to make interactions personal

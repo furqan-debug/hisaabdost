@@ -1,5 +1,43 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
+// Define the predefined expense categories
+const EXPENSE_CATEGORIES = [
+  "Food",
+  "Rent",
+  "Utilities",
+  "Transportation",
+  "Entertainment",
+  "Shopping",
+  "Other"
+];
+
+/**
+ * Validate and normalize a category against allowed expense categories
+ */
+function validateCategory(category: string): string {
+  if (!category) return 'Other';
+  
+  // Check for exact match
+  const exactMatch = EXPENSE_CATEGORIES.find(
+    c => c.toLowerCase() === category.toLowerCase()
+  );
+  
+  if (exactMatch) return exactMatch;
+  
+  // Look for partial matches
+  const partialMatches = EXPENSE_CATEGORIES.filter(
+    c => c.toLowerCase().includes(category.toLowerCase()) || 
+         category.toLowerCase().includes(c.toLowerCase())
+  );
+  
+  if (partialMatches.length > 0) {
+    return partialMatches[0]; // Return the first partial match
+  }
+  
+  // No match found, use Other as fallback
+  return 'Other';
+}
+
 export async function processAction(action: any, userId: string, supabase: any) {
   switch (action.type) {
     case 'add_expense':
@@ -37,15 +75,23 @@ async function addExpense(action: any, userId: string, supabase: any) {
   if (parseFloat(amount) <= 0) {
     throw new Error('Expense amount must be greater than zero');
   }
+  
+  // Validate the category
+  const validCategory = validateCategory(category);
+  let responseMessage = `I've added the ${validCategory} expense of ${amount}`;
+  
+  if (validCategory !== category) {
+    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
+  }
 
   const { data, error } = await supabase
     .from('expenses')
     .insert({
       user_id: userId,
       amount: parseFloat(amount),
-      category,
+      category: validCategory,
       date,
-      description: description || category,
+      description: description || validCategory,
       payment: action.paymentMethod || 'Card'
     });
 
@@ -53,7 +99,7 @@ async function addExpense(action: any, userId: string, supabase: any) {
     throw new Error(`Failed to add expense: ${error.message}`);
   }
 
-  return `I've added the ${category} expense of ${amount}`;
+  return responseMessage;
 }
 
 async function updateExpense(action: any, userId: string, supabase: any) {
@@ -66,11 +112,14 @@ async function updateExpense(action: any, userId: string, supabase: any) {
       throw new Error('Either expense ID or category is required to update an expense');
     }
     
+    // Validate the category for lookup
+    const validCategory = validateCategory(category);
+    
     const { data, error } = await supabase
       .from('expenses')
       .select('*')
       .eq('user_id', userId)
-      .eq('category', category)
+      .eq('category', validCategory)
       .order('created_at', { ascending: false })
       .limit(1);
     
@@ -88,7 +137,10 @@ async function updateExpense(action: any, userId: string, supabase: any) {
     }
     updates.amount = parseFloat(amount);
   }
-  if (category) updates.category = category;
+  if (category) {
+    // Validate the category for the update
+    updates.category = validateCategory(category);
+  }
   if (date) updates.date = date;
   if (description) updates.description = description;
   if (action.paymentMethod) updates.payment = action.paymentMethod;
@@ -103,7 +155,12 @@ async function updateExpense(action: any, userId: string, supabase: any) {
     throw new Error(`Failed to update expense: ${error.message}`);
   }
 
-  return `I've updated the expense for you`;
+  let responseMessage = `I've updated the expense for you`;
+  if (category && updates.category !== category) {
+    responseMessage += ` (using "${updates.category}" as the category instead of "${category}")`;
+  }
+  
+  return responseMessage;
 }
 
 async function deleteExpense(action: any, userId: string, supabase: any) {
@@ -128,11 +185,14 @@ async function deleteExpense(action: any, userId: string, supabase: any) {
   }
   
   if (!expenseId) {
+    // Validate the category for lookup
+    const validCategory = validateCategory(category);
+    
     let query = supabase
       .from('expenses')
       .select('*')
       .eq('user_id', userId)
-      .eq('category', category);
+      .eq('category', validCategory);
     
     if (date) {
       query = query.eq('date', date);
@@ -172,17 +232,21 @@ async function setBudget(action: any, userId: string, supabase: any) {
   if (parseFloat(amount) <= 0) {
     throw new Error('Budget amount must be greater than zero');
   }
+  
+  // Validate the category
+  const validCategory = validateCategory(category);
 
   const { data: existingBudget, error: fetchError } = await supabase
     .from('budgets')
     .select('*')
     .eq('user_id', userId)
-    .eq('category', category);
+    .eq('category', validCategory);
 
   if (fetchError) {
     throw new Error(`Failed to check existing budget: ${fetchError.message}`);
   }
 
+  let responseMessage;
   if (existingBudget && existingBudget.length > 0) {
     const { error } = await supabase
       .from('budgets')
@@ -197,13 +261,13 @@ async function setBudget(action: any, userId: string, supabase: any) {
       throw new Error(`Failed to update budget: ${error.message}`);
     }
 
-    return `I've updated your ${category} budget to ${amount}`;
+    responseMessage = `I've updated your ${validCategory} budget to ${amount}`;
   } else {
     const { error } = await supabase
       .from('budgets')
       .insert({
         user_id: userId,
-        category,
+        category: validCategory,
         amount: parseFloat(amount),
         period: period || 'monthly'
       });
@@ -212,8 +276,14 @@ async function setBudget(action: any, userId: string, supabase: any) {
       throw new Error(`Failed to create budget: ${error.message}`);
     }
 
-    return `I've set your ${category} budget to ${amount}`;
+    responseMessage = `I've set your ${validCategory} budget to ${amount}`;
   }
+  
+  if (validCategory !== category) {
+    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
+  }
+  
+  return responseMessage;
 }
 
 async function updateBudget(action: any, userId: string, supabase: any) {
@@ -222,19 +292,22 @@ async function updateBudget(action: any, userId: string, supabase: any) {
   if (!category) {
     throw new Error('Category is required to update a budget');
   }
+  
+  // Validate the category
+  const validCategory = validateCategory(category);
 
   const { data, error: fetchError } = await supabase
     .from('budgets')
     .select('*')
     .eq('user_id', userId)
-    .eq('category', category);
+    .eq('category', validCategory);
 
   if (fetchError) {
     throw new Error(`Failed to find budget: ${fetchError.message}`);
   }
 
   if (!data || data.length === 0) {
-    throw new Error(`No budget found for category: ${category}`);
+    throw new Error(`No budget found for category: ${validCategory}`);
   }
 
   const updates: any = {};
@@ -256,7 +329,12 @@ async function updateBudget(action: any, userId: string, supabase: any) {
     throw new Error(`Failed to update budget: ${error.message}`);
   }
 
-  return `I've updated your ${category} budget`;
+  let responseMessage = `I've updated your ${validCategory} budget`;
+  if (validCategory !== category) {
+    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
+  }
+  
+  return responseMessage;
 }
 
 async function deleteBudget(action: any, userId: string, supabase: any) {
@@ -269,15 +347,18 @@ async function deleteBudget(action: any, userId: string, supabase: any) {
   let targetBudgetId = budgetId;
   
   if (!targetBudgetId) {
+    // Validate the category
+    const validCategory = validateCategory(category);
+    
     const { data, error } = await supabase
       .from('budgets')
       .select('id')
       .eq('user_id', userId)
-      .eq('category', category)
+      .eq('category', validCategory)
       .single();
     
     if (error || !data) {
-      throw new Error(`Could not find a budget for category: ${category}`);
+      throw new Error(`Could not find a budget for category: ${validCategory}`);
     }
     
     targetBudgetId = data.id;
@@ -293,7 +374,7 @@ async function deleteBudget(action: any, userId: string, supabase: any) {
     throw new Error(`Failed to delete budget: ${error.message}`);
   }
   
-  return `I've deleted the ${category || ''} budget`;
+  return `I've deleted the budget`;
 }
 
 async function setGoal(action: any, userId: string, supabase: any) {
@@ -506,7 +587,7 @@ async function getSpending(action: any, userId: string, supabase: any) {
     const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
     query = query
       .gte('date', firstDayOfPrevMonth)
-      .lte('date', lastDayDayOfMonth);
+      .lte('date', lastDayOfMonth);
   } else if (period === 'year_to_date') {
     const firstDayOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
     query = query

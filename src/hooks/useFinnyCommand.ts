@@ -1,9 +1,9 @@
-
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
+import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 
 /**
  * Hook to send commands to Finny programmatically
@@ -14,6 +14,33 @@ export function useFinnyCommand() {
   const { currencyCode } = useCurrency();
 
   /**
+   * Validate a category against allowed expense categories
+   */
+  const validateCategory = (category: string): string => {
+    if (!category) return 'Miscellaneous';
+    
+    // Check for exact match
+    const exactMatch = EXPENSE_CATEGORIES.find(
+      c => c.toLowerCase() === category.toLowerCase()
+    );
+    
+    if (exactMatch) return exactMatch;
+    
+    // Look for partial matches
+    const partialMatches = EXPENSE_CATEGORIES.filter(
+      c => c.toLowerCase().includes(category.toLowerCase()) || 
+           category.toLowerCase().includes(c.toLowerCase())
+    );
+    
+    if (partialMatches.length > 0) {
+      return partialMatches[0]; // Return the first partial match
+    }
+    
+    // No match found, use miscellaneous as fallback
+    return 'Other';
+  };
+
+  /**
    * Send a command to Finny to add an expense
    */
   const recordExpense = (amount: number, category: string, description?: string, date?: string) => {
@@ -22,9 +49,13 @@ export function useFinnyCommand() {
       return;
     }
     
-    const formattedAmount = formatCurrency(amount, currencyCode);
-    const message = `Add an expense of ${formattedAmount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ' today'}`;
-    askFinny(message);
+    const validCategory = validateCategory(category);
+    
+    if (validCategory !== category) {
+      toast.info(`Using category "${validCategory}" instead of "${category}"`);
+    }
+    
+    addExpense(amount, validCategory, description, date);
   };
   
   /**
@@ -36,9 +67,13 @@ export function useFinnyCommand() {
       return;
     }
     
-    const formattedAmount = formatCurrency(amount, currencyCode);
-    const message = `Set a budget of ${formattedAmount} for ${category}`;
-    askFinny(message);
+    const validCategory = validateCategory(category);
+    
+    if (validCategory !== category) {
+      toast.info(`Using category "${validCategory}" instead of "${category}"`);
+    }
+    
+    setBudget(amount, validCategory);
   };
   
   /**
@@ -50,7 +85,8 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `Delete my ${category} budget`;
+    const validCategory = validateCategory(category);
+    const message = `Delete my ${validCategory} budget`;
     askFinny(message);
   };
   
@@ -75,7 +111,8 @@ export function useFinnyCommand() {
       return;
     }
     
-    askFinny(`Show my ${category} spending breakdown`);
+    const validCategory = validateCategory(category);
+    askFinny(`Show my ${validCategory} spending breakdown`);
   };
   
   /**
@@ -114,7 +151,8 @@ export function useFinnyCommand() {
       return;
     }
     
-    const message = `Delete my ${category} expense${date ? ` from ${date}` : ''}`;
+    const validCategory = validateCategory(category);
+    const message = `Delete my ${validCategory} expense${date ? ` from ${date}` : ''}`;
     askFinny(message);
   };
   

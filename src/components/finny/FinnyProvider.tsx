@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
+import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -51,16 +52,60 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsOpen(true);
   };
   
+  const validateCategory = (category: string): string => {
+    if (!category) return 'Miscellaneous';
+    
+    // Check for exact match
+    const exactMatch = EXPENSE_CATEGORIES.find(
+      c => c.toLowerCase() === category.toLowerCase()
+    );
+    
+    if (exactMatch) return exactMatch;
+    
+    // Look for partial matches
+    const partialMatches = EXPENSE_CATEGORIES.filter(
+      c => c.toLowerCase().includes(category.toLowerCase()) || 
+           category.toLowerCase().includes(c.toLowerCase())
+    );
+    
+    if (partialMatches.length > 0) {
+      return partialMatches[0]; // Return the first partial match
+    }
+    
+    // No match found, use miscellaneous as fallback
+    return 'Other';
+  };
+  
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
     const today = new Date().toISOString().split('T')[0];
     const formattedAmount = formatCurrency(amount, currencyCode);
-    const message = `Add expense of ${formattedAmount} for ${category}${description ? ` for ${description}` : ''}${date ? ` on ${date}` : ` on ${today}`}`;
+    const validCategory = validateCategory(category);
+    
+    let message = `Add expense of ${formattedAmount} for ${validCategory}`;
+    
+    if (validCategory !== category) {
+      message += ` (originally requested as "${category}")`;
+    }
+    
+    if (description) {
+      message += ` for ${description}`;
+    }
+    
+    message += date ? ` on ${date}` : ` on ${today}`;
+    
     triggerChat(message);
   };
   
   const setBudget = (amount: number, category: string) => {
     const formattedAmount = formatCurrency(amount, currencyCode);
-    const message = `Set a budget of ${formattedAmount} for ${category}`;
+    const validCategory = validateCategory(category);
+    
+    let message = `Set a budget of ${formattedAmount} for ${validCategory}`;
+    
+    if (validCategory !== category) {
+      message += ` (originally requested as "${category}")`;
+    }
+    
     triggerChat(message);
   };
   
