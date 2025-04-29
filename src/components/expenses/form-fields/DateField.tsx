@@ -52,7 +52,7 @@ export function DateField({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-start text-left font-normal touch-target",
+              "w-full justify-start text-left font-normal",
               !value && "text-muted-foreground",
               isToday && "border-primary/70"
             )}
