@@ -31,15 +31,14 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
             <SelectTrigger>
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              <ScrollArea className="h-[200px]">
-                {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
-                  <SelectItem key={currency.code} value={currency.code}>
-                    {currency.label}
-                  </SelectItem>
-                ))}
-              </ScrollArea>
-            </SelectContent>
+           <SelectContent className="max-h-[300px] overflow-y-auto">
+  {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
+    <SelectItem key={currency.code} value={currency.code}>
+      {currency.label}
+    </SelectItem>
+  ))}
+</SelectContent>
+
           </Select>
         </div>
       </div>
