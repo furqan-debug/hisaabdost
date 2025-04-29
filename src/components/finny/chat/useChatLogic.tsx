@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -28,6 +29,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnectingToData, setIsConnectingToData] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const { currencyCode } = useCurrency();
 
   const {
@@ -44,6 +46,36 @@ export const useChatLogic = (queuedMessage: string | null) => {
     loadChatHistory
   } = useMessageHandling(setQuickReplies);
 
+  // Fetch the user's name from the profiles table
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+
+          if (profile && profile.full_name) {
+            setUserName(profile.full_name);
+          } else if (user.user_metadata?.full_name) {
+            // Fallback to user metadata if profile name is not available
+            setUserName(user.user_metadata.full_name);
+          }
+          
+          if (error) {
+            console.error('Error fetching user profile:', error);
+          }
+        } catch (error) {
+          console.error('Error fetching user name:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -54,6 +86,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
     if (user && messages.length === 0) {
       initializeChat();
     } else if (!user) {
+      // Clear any existing messages
+      setMessages([]);
+      
       const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
@@ -226,6 +261,10 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
       const totalMonthlySpending = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
       
+      // Clear any existing messages before adding the new welcome message
+      // This prevents duplicate welcome messages on re-initialization
+      setMessages([]);
+      
       let personalizedGreeting = FINNY_MESSAGES.GREETING;
       
       if (monthlyExpenses && monthlyExpenses.length > 0) {
@@ -237,8 +276,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
         const topCategory = Object.entries(categoryTotals)
           .sort((a, b) => b[1] - a[1])[0];
         
-        const userName = user?.user_metadata?.full_name || '';
-        personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
+        // Use the name from profiles table
+        const displayName = userName || 'there';
+        personalizedGreeting = `Hey ${displayName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
         
         let contextReplies: QuickReply[] = [];
         
@@ -293,10 +333,13 @@ export const useChatLogic = (queuedMessage: string | null) => {
         ]);
       }
       
+      // Generate a unique ID for the welcome message to prevent duplication
+      const welcomeMessageId = `welcome-${Date.now()}`;
+      
       setIsTyping(true);
       setTimeout(() => {
         const welcomeMessage = {
-          id: '1',
+          id: welcomeMessageId,
           content: personalizedGreeting,
           isUser: false,
           timestamp: new Date(),
@@ -309,8 +352,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // Clear any existing messages before adding the error message
+      setMessages([]);
+      
       const errorMessage = {
-        id: '1',
+        id: `error-${Date.now()}`,
         content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
         isUser: false,
         timestamp: new Date(),

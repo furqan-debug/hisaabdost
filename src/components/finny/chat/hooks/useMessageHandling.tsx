@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Message, QuickReply } from '../types';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,6 +53,21 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
         }
       }
       
+      // Check for duplicate messages with the same content
+      // Skip saving if we find a duplicate non-user message with similar content
+      if (!message.isUser) {
+        const duplicateMessage = existingMessages.find(msg => 
+          !JSON.parse(msg.isUser.toString()) && // Make sure it's not a user message
+          msg.content.trim().substring(0, 50) === message.content.trim().substring(0, 50) && // Compare first 50 chars
+          new Date(msg.timestamp).getTime() > Date.now() - 10 * 60 * 1000 // Added in the last 10 minutes
+        );
+
+        if (duplicateMessage) {
+          console.log("Skipping duplicate message:", message.content.substring(0, 30) + "...");
+          return;
+        }
+      }
+      
       // Prepare the new message for storage
       const messageForStorage = {
         ...message,
@@ -104,7 +118,20 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
             ...msg,
             timestamp: new Date(msg.timestamp),
             expiresAt: msg.expiresAt ? new Date(msg.expiresAt) : undefined
-          }));
+          }))
+          // Filter out duplicates by selecting only the most recent message with the same content
+          .filter((msg, index, self) => {
+            if (msg.isUser) return true; // Keep all user messages
+            
+            // For non-user messages, find the latest message with the same content prefix (first 50 chars)
+            const contentPrefix = msg.content.trim().substring(0, 50);
+            const latestDuplicate = self
+              .filter(m => !m.isUser && m.content.trim().substring(0, 50) === contentPrefix)
+              .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+              
+            // Only keep this message if it's the latest duplicate
+            return latestDuplicate.id === msg.id;
+          });
           
         if (validMessages.length > 0) {
           console.log("Loaded chat history:", validMessages.length, "messages");
@@ -132,6 +159,13 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     }
   }, [user]);
 
+  // Provide a method to clear chat history
+  const clearChatHistory = () => {
+    localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY);
+    setMessages([]);
+    setOldestMessageTime(undefined);
+  };
+
   return {
     messages,
     setMessages,
@@ -143,6 +177,7 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearChatHistory
   };
 };
