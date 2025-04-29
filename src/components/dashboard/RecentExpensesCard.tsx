@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,13 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
+import { ViewReceiptDialog } from "@/components/expenses/ViewReceiptDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ViewReceiptDialog } from "@/components/expenses/ViewReceiptDialog";
 
 interface RecentExpensesCardProps {
   expenses: Expense[];
@@ -76,6 +77,15 @@ export const RecentExpensesCard = ({
       url: receiptUrl,
       open: true
     });
+  };
+
+  const handleReceiptDialogChange = (open: boolean) => {
+    if (viewReceiptData) {
+      setViewReceiptData({
+        ...viewReceiptData,
+        open
+      });
+    }
   };
 
   return (
@@ -205,7 +215,7 @@ export const RecentExpensesCard = ({
           <ViewReceiptDialog
             receiptUrl={viewReceiptData.url}
             open={viewReceiptData.open}
-            onOpenChange={(open) => setViewReceiptData(prev => prev ? {...prev, open} : null)}
+            onOpenChange={handleReceiptDialogChange}
           />
         )}
       </CardContent>
