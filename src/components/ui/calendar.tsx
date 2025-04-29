@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, CaptionProps } from "react-day-picker";
 import { format, setYear, getYear } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -134,8 +134,8 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: ({ displayMonth, goToMonth }) => (
-          <CustomCaption displayMonth={displayMonth} goToMonth={goToMonth} />
+        Caption: (props: CaptionProps) => (
+          <CustomCaption displayMonth={props.displayMonth} goToMonth={props.goToMonth} />
         ),
       }}
       onMonthChange={setCurrentMonth}
