@@ -2,7 +2,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/lib/auth';
 import { Info, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ChatHeader from './chat/ChatHeader';
@@ -30,10 +29,18 @@ const FinnyChat = ({
   onClose,
   config
 }: FinnyChatProps) => {
-  const auth = useAuth();
-  const user = auth?.user || null;
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Try to safely get user
+  let user = null;
+  try {
+    const { useAuth } = require('@/lib/auth');
+    const auth = useAuth();
+    user = auth?.user || null;
+  } catch (error) {
+    console.error("Auth context not available in FinnyChat:", error);
+  }
 
   const {
     messages,

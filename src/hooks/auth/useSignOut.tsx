@@ -6,12 +6,27 @@ import { useFinny } from "@/components/finny/FinnyProvider";
 
 export const useSignOut = () => {
   const navigate = useNavigate();
-  const { resetChat } = useFinny();
+  let resetChat = () => {}; // Default empty function
+  
+  // Safely try to get resetChat function
+  try {
+    const finny = useFinny();
+    if (finny && finny.resetChat) {
+      resetChat = finny.resetChat;
+    }
+  } catch (error) {
+    console.error("Error accessing Finny context:", error);
+    // Continue with empty resetChat function
+  }
 
   const signOut = async () => {
     try {
-      // Clear Finny chat before signing out
-      resetChat();
+      // Try to clear Finny chat before signing out
+      try {
+        resetChat();
+      } catch (error) {
+        console.error("Error resetting chat:", error);
+      }
       
       // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
