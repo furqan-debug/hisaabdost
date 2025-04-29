@@ -32,6 +32,14 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
 
     if (step === 'currency') {
       try {
+        // Update user metadata to ensure the full name is available in user.user_metadata
+        if (user && updatedData.fullName) {
+          await supabase.auth.updateUser({
+            data: { full_name: updatedData.fullName }
+          });
+        }
+        
+        // Update the profile table
         const { error } = await supabase
           .from('profiles')
           .update({

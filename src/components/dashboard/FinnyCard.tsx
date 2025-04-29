@@ -1,15 +1,38 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFinny } from "@/components/finny/FinnyProvider";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function FinnyCard() {
   const { openChat } = useFinny();
   const { user } = useAuth();
+  const [userName, setUserName] = useState<string>("");
+  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+          
+        if (!error && data) {
+          setUserName(data.full_name || '');
+        } else {
+          // Fallback to user metadata if profile data is not available
+          setUserName(user.user_metadata?.full_name || '');
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-background border-border/50">
@@ -23,7 +46,7 @@ export function FinnyCard() {
             <h3 className="font-medium text-base">Talk to Finny</h3>
             <p className="text-sm text-muted-foreground">
               {user 
-                ? "Get instant help with your expenses and budgeting"
+                ? userName ? `Hello ${userName}! Get instant help with your expenses` : "Get instant help with your expenses and budgeting"
                 : "Sign in to access personalized finance assistance"}
             </p>
           </div>

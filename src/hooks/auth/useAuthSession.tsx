@@ -17,11 +17,29 @@ export const useAuthSession = () => {
       setSession(session);
 
       if (user) {
-        // Update last login timestamp
-        await supabase
-          .from('profiles')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', user.id);
+        try {
+          // Update last login timestamp and sync user metadata with profiles
+          const { data: profileData, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+            
+          if (!profileCheckError) {
+            // Profile exists, update it
+            await supabase
+              .from('profiles')
+              .update({ 
+                last_login_at: new Date().toISOString(),
+                // Update profile full_name with user_metadata if available and profile name is empty
+                ...(user.user_metadata?.full_name && !profileData.full_name ? 
+                  { full_name: user.user_metadata.full_name } : {})
+              })
+              .eq('id', user.id);
+          }
+        } catch (error) {
+          console.error("Error updating user profile:", error);
+        }
       }
     });
 
