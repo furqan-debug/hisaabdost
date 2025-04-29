@@ -51,15 +51,16 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
             cy="50%"
             innerRadius={isMobile ? 25 : 35}
             outerRadius={isMobile ? 45 : 55}
-            paddingAngle={2}
-            cornerRadius={3}
+            paddingAngle={0}
+            cornerRadius={0}
+            strokeWidth={0}
             dataKey="value"
             nameKey="name"
             label={false}
             isAnimationActive={true}
           >
             {processedData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
             ))}
           </Pie>
           <RechartsTooltip

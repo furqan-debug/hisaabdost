@@ -91,8 +91,10 @@
   @apply rounded-lg border p-2 shadow-sm backdrop-blur-sm;
 }
 
+/* Remove gaps between pie chart segments */
 .recharts-sector {
   @apply transition-opacity duration-200;
+  stroke-width: 0 !important;
 }
 
 .recharts-sector:hover {
@@ -212,3 +214,4 @@
 .trends-chart-container {
   @apply mx-auto max-w-[90%] overflow-visible;
 }
+

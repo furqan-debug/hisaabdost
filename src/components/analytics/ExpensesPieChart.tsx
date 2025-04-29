@@ -1,3 +1,4 @@
+
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -52,7 +53,26 @@ export function ExpensesPieChart({
         left: 0,
         bottom: 0
       }} className="mx-auto">
-          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 90 : 130} innerRadius={isMobile ? 65 : 90} paddingAngle={2} startAngle={90} endAngle={-270} cornerRadius={4} labelLine={false} label={false} isAnimationActive={true} animationDuration={800} animationBegin={0} animationEasing="ease-out">
+          <Pie 
+            data={data} 
+            dataKey="value" 
+            nameKey="name" 
+            cx="50%" 
+            cy="50%" 
+            outerRadius={isMobile ? 90 : 130} 
+            innerRadius={isMobile ? 65 : 90} 
+            paddingAngle={0} 
+            startAngle={90} 
+            endAngle={-270} 
+            cornerRadius={0}
+            strokeWidth={0}
+            labelLine={false} 
+            label={false} 
+            isAnimationActive={true} 
+            animationDuration={800} 
+            animationBegin={0} 
+            animationEasing="ease-out"
+          >
             {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />)}
           </Pie>
           
