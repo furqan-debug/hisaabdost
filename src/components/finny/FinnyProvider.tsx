@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -19,6 +18,8 @@ interface FinnyContextType {
   addExpense: (amount: number, category: string, description?: string, date?: string) => void;
   setBudget: (amount: number, category: string) => void;
   askFinny: (question: string) => void;
+  queuedMessage: string | null;
+  setQueuedMessage: (message: string | null) => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -30,6 +31,8 @@ const FinnyContext = createContext<FinnyContextType>({
   addExpense: () => {},
   setBudget: () => {},
   askFinny: () => {},
+  queuedMessage: null,
+  setQueuedMessage: () => {}
 });
 
 export const useFinny = () => useContext(FinnyContext);
@@ -161,11 +164,13 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addExpense,
         setBudget,
         askFinny,
+        queuedMessage,
+        setQueuedMessage
       }}
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat isOpen={isOpen} onClose={closeChat} />
+      <FinnyChat isOpen={isOpen} onClose={closeChat} queuedMessage={queuedMessage} />
     </FinnyContext.Provider>
   );
 };

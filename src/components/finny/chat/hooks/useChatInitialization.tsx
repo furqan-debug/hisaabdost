@@ -8,6 +8,7 @@ import { Message } from '../types';
 import { QuickReply } from '../types';
 import { BarChart3, PieChart, Plus, Info } from 'lucide-react';
 import { DEFAULT_QUICK_REPLIES } from '../constants/quickReplies';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 export const useChatInitialization = (
   user: User | null, 
@@ -102,7 +103,7 @@ export const useChatInitialization = (
         
         // Use the name from profiles table
         const displayName = userName || 'there';
-        personalizedGreeting = `Hey ${displayName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
+        personalizedGreeting = `Hey ${displayName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode as CurrencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode as CurrencyCode)} — shall we explore ways to save? 🧠`;
         
         let contextReplies: QuickReply[] = [];
         
