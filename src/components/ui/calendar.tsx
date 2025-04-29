@@ -42,13 +42,13 @@ function Calendar({
     const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
     return (
-      <div className="absolute z-50 top-14 left-1/2 -translate-x-1/2 bg-background rounded-lg shadow-md p-2 max-h-[200px] overflow-y-auto border w-32">
+      <div className="absolute z-50 top-full mt-2 left-1/2 -translate-x-1/2 bg-background rounded-lg shadow-md p-2 max-h-[200px] overflow-y-auto border w-32">
         {years.map((year) => (
           <button
             key={year}
             onClick={() => handleYearSelect(year)}
             className={cn(
-              "w-full text-sm py-1 px-2 rounded hover:bg-accent",
+              "w-full text-sm py-1 px-2 rounded hover:bg-accent text-center",
               year === currentYear && "bg-primary text-primary-foreground"
             )}
           >
@@ -71,9 +71,12 @@ function Calendar({
           <ChevronLeft className="h-4 w-4 text-primary" />
         </button>
 
-        <h2 className="text-base sm:text-lg font-semibold text-foreground cursor-pointer" onClick={() => setShowYearPicker(true)}>
-          {format(displayMonth, "MMMM")} {year}
-        </h2>
+        <button
+          className="text-base sm:text-lg font-semibold text-foreground focus:outline-none"
+          onClick={() => setShowYearPicker((prev) => !prev)}
+        >
+          {format(displayMonth, "MMMM yyyy")}
+        </button>
 
         <button
           onClick={handleNext}
