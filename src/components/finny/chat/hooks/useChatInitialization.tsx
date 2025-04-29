@@ -20,6 +20,7 @@ export const useChatInitialization = (
 ) => {
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [chatInitialized, setChatInitialized] = useState(false);
 
   // Fetch the user's name from the profiles table
   useEffect(() => {
@@ -52,9 +53,34 @@ export const useChatInitialization = (
   }, [user]);
 
   const initializeChat = async () => {
+    // Skip initialization if we've already done it
+    if (chatInitialized) {
+      console.log("Chat already initialized, skipping");
+      return;
+    }
+
     setIsConnectingToData(true);
-        
+    
     try {
+      // Fetch the latest profile data before proceeding
+      let displayName = userName;
+      if (user) {
+        const { data: latestProfile, error } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (latestProfile && latestProfile.full_name) {
+          displayName = latestProfile.full_name;
+          setUserName(latestProfile.full_name);
+        }
+        
+        if (error) {
+          console.error('Error fetching latest profile data:', error);
+        }
+      }
+        
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -101,8 +127,8 @@ export const useChatInitialization = (
         const topCategory = Object.entries(categoryTotals)
           .sort((a, b) => b[1] - a[1])[0];
         
-        // Use the name from profiles table
-        const displayName = userName || 'there';
+        // Use the latest profile name
+        displayName = displayName || 'there';
         personalizedGreeting = `Hey ${displayName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode as CurrencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode as CurrencyCode)} — shall we explore ways to save? 🧠`;
         
         let contextReplies: QuickReply[] = [];
@@ -173,6 +199,9 @@ export const useChatInitialization = (
         setMessages([welcomeMessage]);
         saveMessage(welcomeMessage);
         setIsTyping(false);
+        
+        // Mark chat as initialized to prevent duplicate messages
+        setChatInitialized(true);
       }, 1500);
       
     } catch (error) {
@@ -189,6 +218,9 @@ export const useChatInitialization = (
       };
       setMessages([errorMessage]);
       saveMessage(errorMessage);
+      
+      // Mark chat as initialized even with error
+      setChatInitialized(true);
     } finally {
       setIsConnectingToData(false);
     }
@@ -197,6 +229,7 @@ export const useChatInitialization = (
   return {
     initializeChat,
     isConnectingToData,
-    userName
+    userName,
+    chatInitialized
   };
 };

@@ -1,20 +1,20 @@
 
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { QuickReply } from './types';
-import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
-import { useMessageHandling } from './hooks/useMessageHandling';
 import { useCurrency } from '@/hooks/use-currency';
-import { useChatInitialization } from './hooks/useChatInitialization';
+import { useMessageHandling } from './hooks/useMessageHandling';
 import { useMessageProcessing } from './hooks/useMessageProcessing';
-import { useQueuedMessage } from './hooks/useQueuedMessage';
+import { useChatInitialization } from './hooks/useChatInitialization';
+import { DEFAULT_QUICK_REPLIES } from './constants/quickReplies';
+import { QuickReply } from './types';
 
-export const useChatLogic = (queuedMessage: string | null) => {
-  const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
-  const { user } = useAuth();
+export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?: number) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   const { currencyCode } = useCurrency();
+  const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
 
+  // Use the message handling hooks
   const {
     messages,
     setMessages,
@@ -26,77 +26,87 @@ export const useChatLogic = (queuedMessage: string | null) => {
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearChatHistory
   } = useMessageHandling(setQuickReplies);
 
-  const { 
+  // Use message processing hook
+  const messageProcessor = useMessageProcessing(
+    messages,
+    setMessages,
+    setQuickReplies,
+    saveMessage
+  );
+
+  // Use chat initialization hook
+  const {
     initializeChat,
     isConnectingToData,
-    userName
+    userName,
+    chatInitialized
   } = useChatInitialization(
-    user, 
-    currencyCode, 
-    setMessages, 
-    setQuickReplies, 
-    setIsTyping, 
+    user,
+    currencyCode,
+    setMessages,
+    setQuickReplies,
+    setIsTyping,
     saveMessage
   );
 
-  const {
-    handleSendMessage: processMessageAndSend,
-    handleQuickReply: processQuickReply,
-    setNewMessage: setProcessingNewMessage
-  } = useMessageProcessing(
-    messages, 
-    setMessages, 
-    setQuickReplies, 
-    saveMessage
-  );
-
-  // Make sure newMessage stays in sync between hooks
-  useEffect(() => {
-    setProcessingNewMessage(newMessage);
-  }, [newMessage, setProcessingNewMessage]);
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  // Reset chat function for name updates
+  const resetChat = useCallback(() => {
+    if (user) {
+      // Clear existing messages from state and storage
+      clearChatHistory();
+      
+      // Re-initialize the chat with fresh data
+      setTimeout(() => {
+        initializeChat();
+      }, 500); // Short delay to ensure state is cleared first
     }
+  }, [user, clearChatHistory, initializeChat]);
+
+  // Initialize chat when component mounts or user changes
+  useEffect(() => {
+    if (user && !chatInitialized) {
+      initializeChat();
+    }
+  }, [user, initializeChat, chatInitialized]);
+
+  // Re-initialize chat if name update timestamp changes
+  useEffect(() => {
+    if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user) {
+      console.log("Name updated, reinitializing chat");
+      resetChat();
+    }
+  }, [nameUpdateTimestamp, user, resetChat]);
+
+  // Process queued message if available
+  useEffect(() => {
+    if (queuedMessage && user && !isLoading) {
+      messageProcessor.handleSendMessage(null, user, currencyCode, queuedMessage);
+    }
+  }, [queuedMessage, user, isLoading, currencyCode]);
+
+  // Scroll to bottom of messages when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    if (user && messages.length === 0) {
-      initializeChat();
-    } else if (!user) {
-      // Clear any existing messages
-      setMessages([]);
-      
-      const welcomeMessage = {
-        id: '1',
-        content: FINNY_MESSAGES.AUTH_PROMPT,
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      setMessages([welcomeMessage]);
-      saveMessage(welcomeMessage);
-    }
-  }, [user, currencyCode, initializeChat, messages.length, saveMessage, setMessages]);
-
-  const handleSendMessage = (e: React.FormEvent | null, customMessage?: string) => {
-    return processMessageAndSend(e, user, currencyCode, customMessage);
+  // Send a message handler
+  const handleSendMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user) return;
+    
+    messageProcessor.handleSendMessage(e, user, currencyCode);
   };
 
+  // Handle quick reply click
   const handleQuickReply = (reply: QuickReply) => {
-    return processQuickReply(reply, user, currencyCode);
+    if (!user) return;
+    
+    messageProcessor.handleQuickReply(reply, user, currencyCode);
   };
-
-  // Handle queued messages (from outside components)
-  useQueuedMessage(queuedMessage, true, setQueuedMessage => {
-    // This is a dummy function since we don't have access to the original setQueuedMessage
-    // In a real implementation, this would be passed down from the parent component
-    console.log("Message queued:", queuedMessage);
-  });
 
   return {
     messages,
@@ -109,6 +119,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime
+    oldestMessageTime,
+    resetChat
   };
 };

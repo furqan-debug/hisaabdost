@@ -41,6 +41,7 @@ export const useFinny = () => useContext(FinnyContext);
 export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
+  const [lastNameUpdate, setLastNameUpdate] = useState<number>(0);
   
   // Get auth context - now we're sure we're inside the Router context
   const auth = useAuth();
@@ -62,6 +63,8 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
           if (profile && profile.full_name) {
             setUserName(profile.full_name);
+            // Update timestamp to trigger re-initialization if name changes
+            setLastNameUpdate(Date.now());
           } else if (user.user_metadata?.full_name) {
             // Fallback to user metadata if profile name is not available
             setUserName(user.user_metadata.full_name);
@@ -174,7 +177,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat isOpen={isOpen} onClose={closeChat} queuedMessage={queuedMessage} />
+      <FinnyChat isOpen={isOpen} onClose={closeChat} queuedMessage={queuedMessage} nameUpdateTimestamp={lastNameUpdate} />
     </FinnyContext.Provider>
   );
 };

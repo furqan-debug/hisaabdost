@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +20,7 @@ interface FinnyChatProps {
   isOpen: boolean;
   onClose: () => void;
   queuedMessage: string | null;
+  nameUpdateTimestamp?: number;
   config?: {
     initialMessages?: Message[];
   };
@@ -28,6 +30,7 @@ const FinnyChat = ({
   isOpen,
   onClose,
   queuedMessage,
+  nameUpdateTimestamp,
   config
 }: FinnyChatProps) => {
   const auth = useAuth();
@@ -46,8 +49,17 @@ const FinnyChat = ({
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime
-  } = useChatLogic(queuedMessage);
+    oldestMessageTime,
+    resetChat
+  } = useChatLogic(queuedMessage, nameUpdateTimestamp);
+
+  // Reset chat when name updates
+  useEffect(() => {
+    if (nameUpdateTimestamp && user) {
+      console.log("Name updated, resetting chat");
+      resetChat();
+    }
+  }, [nameUpdateTimestamp, user, resetChat]);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
