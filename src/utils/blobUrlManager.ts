@@ -126,10 +126,16 @@ export function getBlobUrlStats(): { created: number; revoked: number; active: n
  * Force cleanup all blob URLs and reset counters (emergency use only)
  */
 export function forceCleanupAllBlobUrls(): void {
-  // Get all active blob URLs in the application
-  const allUrls = Object.values(window)
-    .filter(v => typeof v === 'string' && v.startsWith('blob:'))
-    .map(v => v as string);
+  // Fix: First create an array of string values
+  const allUrls: string[] = [];
+  
+  // Fix: Type-safe approach to find blob URLs in the window object
+  Object.keys(window).forEach(key => {
+    const value = window[key as keyof Window];
+    if (typeof value === 'string' && value.startsWith('blob:')) {
+      allUrls.push(value);
+    }
+  });
   
   console.warn(`Force cleaning ${allUrls.length} detected blob URLs and ${blobUrlReferences.size} tracked URLs`);
   
