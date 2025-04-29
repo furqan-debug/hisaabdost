@@ -34,8 +34,10 @@ export function parseReceiptText(text: string): ParsedReceipt {
   // Extract store name using the utility function
   const merchant = extractStoreName(lines) || 'Unknown';
   
-  // Extract date using the utility function
-  const date = extractDate(text, lines) || new Date().toISOString().split('T')[0];
+  // Extract date using the utility function - always defaulting to today
+  const currentDate = new Date().toISOString().split('T')[0];
+  const date = extractDate(text, lines) || currentDate;
+  console.log(`Date extraction result: ${date}, is default date: ${date === currentDate}`);
   
   // Extract items and total amount
   const { items, total } = extractItemsAndTotal(text, lines);

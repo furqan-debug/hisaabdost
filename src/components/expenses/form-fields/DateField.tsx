@@ -1,4 +1,5 @@
 
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -23,6 +24,9 @@ export function DateField({
   // Format the displayed date if there's a value
   const displayValue = value ? format(new Date(value), "PP") : "";
   
+  // Check if this is today's date
+  const isToday = value === new Date().toISOString().split('T')[0];
+  
   return (
     <div className="space-y-2">
       {label && <Label htmlFor={id}>{label}</Label>}
@@ -38,9 +42,10 @@ export function DateField({
       />
       {displayValue && (
         <div className="text-xs text-muted-foreground">
-          {displayValue}
+          {isToday ? "Today" : displayValue}
         </div>
       )}
     </div>
   );
 }
+
