@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2, FileImage } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { SampleDataButton } from "@/components/SampleDataButton";
@@ -20,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ViewReceiptDialog } from "@/components/expenses/ViewReceiptDialog";
 
 interface RecentExpensesCardProps {
   expenses: Expense[];
@@ -42,7 +42,6 @@ export const RecentExpensesCard = ({
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
-  const [viewReceiptData, setViewReceiptData] = useState<{ url: string, open: boolean } | null>(null);
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!user) return;
@@ -69,13 +68,6 @@ export const RecentExpensesCard = ({
         variant: "destructive",
       });
     }
-  };
-
-  const handleViewReceipt = (receiptUrl: string) => {
-    setViewReceiptData({
-      url: receiptUrl,
-      open: true
-    });
   };
 
   return (
@@ -166,14 +158,6 @@ export const RecentExpensesCard = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
-                          {expense.receiptUrl && (
-                            <DropdownMenuItem
-                              onClick={() => handleViewReceipt(expense.receiptUrl as string)}
-                            >
-                              <FileImage className="mr-2 h-4 w-4" />
-                              <span>View Receipt</span>
-                            </DropdownMenuItem>
-                          )}
                           <DropdownMenuItem
                             onClick={() => {
                               setExpenseToEdit(expense);
@@ -198,15 +182,6 @@ export const RecentExpensesCard = ({
               </TableBody>
             </Table>
           </div>
-        )}
-
-        {/* Receipt Viewer Dialog */}
-        {viewReceiptData && (
-          <ViewReceiptDialog
-            receiptUrl={viewReceiptData.url}
-            open={viewReceiptData.open}
-            onOpenChange={(open) => setViewReceiptData(prev => prev ? {...prev, open} : null)}
-          />
         )}
       </CardContent>
     </Card>
