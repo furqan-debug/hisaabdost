@@ -1,3 +1,4 @@
+
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -10,7 +11,8 @@ import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryFi
  */
 export function useFinnyCommand() {
   const { addExpense, setBudget, askFinny, openChat } = useFinny();
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
   const { currencyCode } = useCurrency();
 
   /**

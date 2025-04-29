@@ -35,7 +35,8 @@ export const useFinny = () => useContext(FinnyContext);
 export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
   const { currencyCode } = useCurrency();
 
   const openChat = () => setIsOpen(true);

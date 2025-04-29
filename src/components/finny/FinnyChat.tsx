@@ -29,9 +29,8 @@ const FinnyChat = ({
   onClose,
   config
 }: FinnyChatProps) => {
-  const {
-    user
-  } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
 

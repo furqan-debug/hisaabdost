@@ -11,7 +11,8 @@ interface UseReceiptFileProps {
 }
 
 export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const userId = auth?.user?.id || null;
   const [isUploading, setIsUploading] = useState(false);
   const currentBlobUrlRef = useRef<string | null>(null);
 
@@ -20,7 +21,7 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
     console.log(`useReceiptFile: Processing file ${file.name} (${file.size} bytes)`);
 
     try {
-      const result = await processFile(file, user?.id, currentBlobUrlRef.current, updateField, setIsUploading);
+      const result = await processFile(file, userId, currentBlobUrlRef.current, updateField, setIsUploading);
 
       // Return just the URL in this hook without trying to add items
       // Item addition will be handled by the scan dialog directly

@@ -6,7 +6,9 @@ import { useAuth } from "@/lib/auth";
 import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet, Star, CreditCard } from "lucide-react";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const loading = auth?.loading || false;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -191,4 +193,3 @@ const Index = () => {
 };
 
 export default Index;
-
