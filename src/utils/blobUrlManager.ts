@@ -7,6 +7,16 @@
 const blobUrlReferences = new Map<string, number>();
 
 /**
+ * Create a managed blob URL from a file
+ */
+export function createManagedBlobUrl(file: File | Blob): string {
+  const url = URL.createObjectURL(file);
+  addBlobUrlReference(url);
+  console.log(`Created managed blob URL: ${url}`);
+  return url;
+}
+
+/**
  * Add a reference to a blob URL to prevent garbage collection
  */
 export function addBlobUrlReference(url: string): void {
@@ -52,4 +62,28 @@ export function cleanupAllBlobUrls(): void {
   
   blobUrlReferences.clear();
   console.log("All blob URL references cleared");
+}
+
+/**
+ * Clean up blob URLs that are no longer in use
+ */
+export function cleanupUnusedBlobUrls(): void {
+  let cleanedCount = 0;
+  
+  blobUrlReferences.forEach((count, url) => {
+    if (count <= 0) {
+      try {
+        URL.revokeObjectURL(url);
+        blobUrlReferences.delete(url);
+        cleanedCount++;
+        console.log(`Cleaned up unused blob URL: ${url}`);
+      } catch (error) {
+        console.error(`Error cleaning up unused blob URL: ${url}`, error);
+      }
+    }
+  });
+  
+  if (cleanedCount > 0) {
+    console.log(`Cleaned up ${cleanedCount} unused blob URLs`);
+  }
 }
