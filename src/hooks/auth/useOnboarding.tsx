@@ -5,22 +5,18 @@ import { User } from "@supabase/supabase-js";
 
 export const useOnboarding = (user: User | null) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed, full_name')
+          .select('onboarding_completed')
           .eq('id', user.id)
           .single();
 
-        if (profile) {
-          if (!profile.onboarding_completed) {
-            setShowOnboarding(true);
-          }
-          setFullName(profile.full_name || null);
+        if (profile && !profile.onboarding_completed) {
+          setShowOnboarding(true);
         }
       }
     };
@@ -28,5 +24,5 @@ export const useOnboarding = (user: User | null) => {
     checkOnboardingStatus();
   }, [user]);
 
-  return { showOnboarding, fullName };
+  return { showOnboarding };
 };

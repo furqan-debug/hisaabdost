@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
@@ -28,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { verifyOtp, resendOtp } = useVerification();
   const { signInWithGoogle } = useSocialAuth();
   const { signOut } = useSignOut();
-  const { showOnboarding, fullName } = useOnboarding(user);
+  const { showOnboarding } = useOnboarding(user);
 
   return (
     <AuthContext.Provider value={{ 
