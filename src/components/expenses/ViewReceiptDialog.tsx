@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileImage, ImageOff, X } from "lucide-react";
+import { Download, FileImage, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
@@ -241,16 +241,7 @@ export function ViewReceiptDialog({
             )}
           </div>
           
-          {/* Custom close button with focus on proper cleanup */}
-          <Button
-            onClick={handleCloseDialog}
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-            aria-label="Close dialog"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {/* Removed the duplicate close button here */}
         </DialogContent>
       </Dialog>
     </>
