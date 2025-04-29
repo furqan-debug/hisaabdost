@@ -27,23 +27,11 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   const { user } = useAuth();
 
   const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
-    console.log(`Completing step: ${step} with data:`, data);
-    
-    // Update form data with new values
     const updatedData = { ...formData, ...data };
     setFormData(updatedData);
-    console.log("Updated form data:", updatedData);
 
     if (step === 'currency') {
       try {
-        console.log("Finalizing onboarding for user:", user?.id);
-        
-        if (!user?.id) {
-          console.error("No user ID available for saving onboarding data");
-          toast.error('Authentication error. Please try logging in again.');
-          return;
-        }
-        
         const { error } = await supabase
           .from('profiles')
           .update({
@@ -55,22 +43,15 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
-          .eq('id', user.id);
+          .eq('id', user?.id);
 
-        if (error) {
-          console.error("Failed to save onboarding data:", error);
-          toast.error('Failed to save your preferences');
-          return;
-        }
-        
-        console.log("Onboarding completed successfully");
+        if (error) throw error;
         setCurrentStep('complete');
       } catch (error) {
-        console.error('Error saving onboarding data:', error);
         toast.error('Failed to save your preferences');
+        console.error('Error saving onboarding data:', error);
       }
     } else {
-      // Move to next step
       const nextSteps: Record<OnboardingStep, OnboardingStep> = {
         welcome: 'personal',
         personal: 'income',
@@ -78,38 +59,22 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         currency: 'complete',
         complete: 'complete'
       };
-      
-      const nextStep = nextSteps[step];
-      console.log(`Moving to next step: ${nextStep}`);
-      
-      // Use a small timeout to ensure state updates properly
-      setTimeout(() => {
-        setCurrentStep(nextStep);
-      }, 100);
+      setCurrentStep(nextSteps[step]);
     }
   };
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 'welcome':
-        return <WelcomeStep onComplete={data => handleStepComplete('welcome', data)} initialData={formData} />;
-      case 'personal':
-        return <PersonalDetailsStep onComplete={data => handleStepComplete('personal', data)} initialData={formData} />;
-      case 'income':
-        return <IncomeStep onComplete={data => handleStepComplete('income', data)} initialData={formData} />;
-      case 'currency':
-        return <CurrencyStep onComplete={data => handleStepComplete('currency', data)} initialData={formData} />;
-      case 'complete':
-        return <CompleteStep />;
-      default:
-        return <WelcomeStep onComplete={data => handleStepComplete('welcome', data)} initialData={formData} />;
-    }
+  const steps = {
+    welcome: <WelcomeStep onComplete={data => handleStepComplete('welcome', data)} initialData={formData} />,
+    personal: <PersonalDetailsStep onComplete={data => handleStepComplete('personal', data)} initialData={formData} />,
+    income: <IncomeStep onComplete={data => handleStepComplete('income', data)} initialData={formData} />,
+    currency: <CurrencyStep onComplete={data => handleStepComplete('currency', data)} initialData={formData} />,
+    complete: <CompleteStep />
   };
 
   return (
     <Dialog open={open} modal>
       <DialogContent className="sm:max-w-[500px]">
-        {renderCurrentStep()}
+        {steps[currentStep]}
       </DialogContent>
     </Dialog>
   );

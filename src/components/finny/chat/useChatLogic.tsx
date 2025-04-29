@@ -1,18 +1,35 @@
 
-import { useRef, useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
 import { useMessageHandling } from './hooks/useMessageHandling';
+import { processMessageWithAI } from './services/aiService';
+import { updateQuickRepliesForResponse } from './services/quickReplyService';
+import { PATTERNS } from './utils/messagePatterns';
 import { useCurrency } from '@/hooks/use-currency';
-import { useChatInitialization } from './hooks/useChatInitialization';
-import { useMessageProcessing } from './hooks/useMessageProcessing';
-import { useQueuedMessage } from './hooks/useQueuedMessage';
+import { 
+  PieChart, 
+  BarChart3, 
+  Plus, 
+  Calendar, 
+  DollarSign, 
+  Info, 
+  ArrowRight, 
+  PiggyBank,
+  Trash2,
+  ChartPie
+} from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
 
 export const useChatLogic = (queuedMessage: string | null) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isConnectingToData, setIsConnectingToData] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const { currencyCode } = useCurrency();
 
   const {
@@ -29,34 +46,35 @@ export const useChatLogic = (queuedMessage: string | null) => {
     loadChatHistory
   } = useMessageHandling(setQuickReplies);
 
-  const { 
-    initializeChat,
-    isConnectingToData,
-    userName
-  } = useChatInitialization(
-    user, 
-    currencyCode, 
-    setMessages, 
-    setQuickReplies, 
-    setIsTyping, 
-    saveMessage
-  );
-
-  const {
-    handleSendMessage: processMessageAndSend,
-    handleQuickReply: processQuickReply,
-    setNewMessage: setProcessingNewMessage
-  } = useMessageProcessing(
-    messages, 
-    setMessages, 
-    setQuickReplies, 
-    saveMessage
-  );
-
-  // Make sure newMessage stays in sync between hooks
+  // Fetch the user's name from the profiles table
   useEffect(() => {
-    setProcessingNewMessage(newMessage);
-  }, [newMessage, setProcessingNewMessage]);
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+
+          if (profile && profile.full_name) {
+            setUserName(profile.full_name);
+          } else if (user.user_metadata?.full_name) {
+            // Fallback to user metadata if profile name is not available
+            setUserName(user.user_metadata.full_name);
+          }
+          
+          if (error) {
+            console.error('Error fetching user profile:', error);
+          }
+        } catch (error) {
+          console.error('Error fetching user name:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -81,22 +99,275 @@ export const useChatLogic = (queuedMessage: string | null) => {
       setMessages([welcomeMessage]);
       saveMessage(welcomeMessage);
     }
-  }, [user, currencyCode, initializeChat, messages.length, saveMessage, setMessages]);
+  }, [user, currencyCode]);
 
-  const handleSendMessage = (e: React.FormEvent | null, customMessage?: string) => {
-    return processMessageAndSend(e, user, currencyCode, customMessage);
+  const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
+    if (e) e.preventDefault();
+    
+    let messageText = customMessage || newMessage;
+    if (!messageText.trim() || isLoading) return;
+
+    if (!user) {
+      toast.error("Please log in to chat with Finny");
+      return;
+    }
+
+    const userMessage = {
+      id: Date.now().toString(),
+      content: messageText,
+      isUser: true,
+      timestamp: new Date(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    saveMessage(userMessage);
+    setNewMessage('');
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      const recentMessages = [...messages.slice(-5), userMessage];
+
+      const categoryMatch = messageText.match(PATTERNS.CATEGORY);
+      const summaryMatch = messageText.match(PATTERNS.SUMMARY);
+      const deleteExpenseMatch = messageText.match(PATTERNS.DELETE_EXPENSE);
+      const deleteBudgetMatch = messageText.match(PATTERNS.DELETE_BUDGET);
+      const deleteGoalMatch = messageText.match(PATTERNS.DELETE_GOAL);
+      const visualizationMatch = messageText.match(PATTERNS.VISUALIZATION);
+      const goalMatch = messageText.match(PATTERNS.GOAL);
+
+      let analysisType = "general";
+      let specificCategory = null;
+
+      if (goalMatch) {
+        messageText = `${messageText}\n\nPlease create a goal with the following details: 
+        - amount: ${goalMatch[1]}
+        - deadline: ${goalMatch[2]}
+        - title: "Savings Goal"
+        - category: Savings`;
+      }
+
+      if (categoryMatch) {
+        analysisType = "category";
+        specificCategory = categoryMatch[1];
+      } else if (summaryMatch) {
+        analysisType = "summary";
+      } else if (visualizationMatch) {
+        analysisType = "visualization";
+        specificCategory = visualizationMatch[2];
+      } else if (deleteExpenseMatch) {
+        analysisType = "delete_expense";
+        specificCategory = deleteExpenseMatch[1].trim();
+      } else if (deleteBudgetMatch) {
+        analysisType = "delete_budget";
+        specificCategory = deleteBudgetMatch[1].trim();
+      } else if (deleteGoalMatch) {
+        analysisType = "delete_goal";
+        specificCategory = deleteGoalMatch[1].trim();
+      }
+
+      const data = await processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode);
+      
+      setIsTyping(false);
+
+      const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
+      
+      const needsVisualization = 
+        messageText.toLowerCase().includes('spending') || 
+        messageText.toLowerCase().includes('budget') ||
+        messageText.toLowerCase().includes('breakdown') ||
+        messageText.toLowerCase().includes('summary') ||
+        messageText.toLowerCase().includes('show me') ||
+        messageText.toLowerCase().includes('visualize') ||
+        messageText.toLowerCase().includes('chart') ||
+        messageText.toLowerCase().includes('graph') ||
+        data.response.includes('$') ||
+        hasAction;
+
+      const newMessage = {
+        id: Date.now().toString(),
+        content: data.response,
+        isUser: false,
+        timestamp: new Date(),
+        hasAction: hasAction,
+        visualData: data.visualData || (needsVisualization ? { type: 'spending-chart', summary: true } : null),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      saveMessage(newMessage);
+
+      const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
+      setQuickReplies(updatedReplies);
+
+    } catch (error) {
+      console.error('Error in chat:', error);
+      toast.error(`Sorry, I couldn't process that request: ${error.message}`);
+      
+      setIsTyping(false);
+      const errorMessage = {
+        id: Date.now().toString(),
+        content: "Sorry, I'm having trouble processing your request. Please try again later.",
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      saveMessage(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleQuickReply = (reply: QuickReply) => {
-    return processQuickReply(reply, user, currencyCode);
+    if (isLoading || !user) return;
+    handleSendMessage(null, reply.action);
   };
 
-  // Handle queued messages (from outside components)
-  useQueuedMessage(queuedMessage, true, setQueuedMessage => {
-    // This is a dummy function since we don't have access to the original setQueuedMessage
-    // In a real implementation, this would be passed down from the parent component
-    console.log("Message queued:", queuedMessage);
-  });
+  const initializeChat = async () => {
+    setIsConnectingToData(true);
+        
+    try {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      
+      const { data: monthlyExpenses, error: monthlyError } = await supabase
+        .from('expenses')
+        .select('amount, category')
+        .eq('user_id', user.id)
+        .gte('date', firstDayOfMonth)
+        .lte('date', lastDayOfMonth);
+        
+      if (monthlyError) throw monthlyError;
+      
+      const { data: recentExpenses, error: expensesError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(5);
+        
+      if (expensesError) throw expensesError;
+      
+      const { data: budgets, error: budgetsError } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id);
+        
+      if (budgetsError) throw budgetsError;
+      
+      const totalMonthlySpending = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
+      
+      // Clear any existing messages before adding the new welcome message
+      // This prevents duplicate welcome messages on re-initialization
+      setMessages([]);
+      
+      let personalizedGreeting = FINNY_MESSAGES.GREETING;
+      
+      if (monthlyExpenses && monthlyExpenses.length > 0) {
+        const categoryTotals: {[key: string]: number} = {};
+        monthlyExpenses.forEach(exp => {
+          categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + Number(exp.amount);
+        });
+        
+        const topCategory = Object.entries(categoryTotals)
+          .sort((a, b) => b[1] - a[1])[0];
+        
+        // Use the name from profiles table
+        const displayName = userName || 'there';
+        personalizedGreeting = `Hey ${displayName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
+        
+        let contextReplies: QuickReply[] = [];
+        
+        contextReplies.push({
+          text: `${topCategory[0]} analysis`,
+          action: `Show my ${topCategory[0].toLowerCase()} spending breakdown`,
+          icon: <BarChart3 size={14} />
+        });
+        
+        if (budgets && budgets.length > 0) {
+          const budgetByCategory: {[key: string]: number} = {};
+          budgets.forEach(budget => {
+            budgetByCategory[budget.category] = budget.amount;
+          });
+          
+          for (const [category, spent] of Object.entries(categoryTotals)) {
+            if (budgetByCategory[category] && spent > budgetByCategory[category]) {
+              contextReplies.push({
+                text: `${category} budget alert`,
+                action: `How am I doing with my ${category.toLowerCase()} budget?`,
+                icon: <Info size={14} />
+              });
+              break;
+            }
+          }
+        }
+        
+        if (recentExpenses && recentExpenses.length > 0) {
+          const latestExpense = recentExpenses[0];
+          contextReplies.push({
+            text: `Add ${latestExpense.category}`,
+            action: `I want to add a new ${latestExpense.category.toLowerCase()} expense`,
+            icon: <Plus size={14} />
+          });
+        }
+        
+        const majorCategories = ['Transportation', 'Food', 'Housing', 'Entertainment'];
+        for (const category of majorCategories) {
+          if (categoryTotals[category] && !contextReplies.some(reply => reply.text.includes(category))) {
+            contextReplies.push({
+              text: `${category} breakdown`,
+              action: `Show my ${category.toLowerCase()} spending breakdown`,
+              icon: <PieChart size={14} />
+            });
+            break;
+          }
+        }
+        
+        setQuickReplies([
+          ...contextReplies.slice(0, 3),
+          ...DEFAULT_QUICK_REPLIES.slice(0, 1)
+        ]);
+      }
+      
+      // Generate a unique ID for the welcome message to prevent duplication
+      const welcomeMessageId = `welcome-${Date.now()}`;
+      
+      setIsTyping(true);
+      setTimeout(() => {
+        const welcomeMessage = {
+          id: welcomeMessageId,
+          content: personalizedGreeting,
+          isUser: false,
+          timestamp: new Date(),
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        };
+        setMessages([welcomeMessage]);
+        saveMessage(welcomeMessage);
+        setIsTyping(false);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Clear any existing messages before adding the error message
+      setMessages([]);
+      
+      const errorMessage = {
+        id: `error-${Date.now()}`,
+        content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      setMessages([errorMessage]);
+      saveMessage(errorMessage);
+    } finally {
+      setIsConnectingToData(false);
+    }
+  };
 
   return {
     messages,

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -7,7 +8,6 @@ import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueuedMessage } from './chat/hooks/useQueuedMessage';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -18,8 +18,6 @@ interface FinnyContextType {
   addExpense: (amount: number, category: string, description?: string, date?: string) => void;
   setBudget: (amount: number, category: string) => void;
   askFinny: (question: string) => void;
-  queuedMessage: string | null;
-  setQueuedMessage: (message: string | null) => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -31,8 +29,6 @@ const FinnyContext = createContext<FinnyContextType>({
   addExpense: () => {},
   setBudget: () => {},
   askFinny: () => {},
-  queuedMessage: null,
-  setQueuedMessage: () => {}
 });
 
 export const useFinny = () => useContext(FinnyContext);
@@ -150,8 +146,26 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(question);
   };
   
-  // Use the new hook for handling queued messages
-  useQueuedMessage(queuedMessage, isOpen, setQueuedMessage);
+  useEffect(() => {
+    if (queuedMessage && isOpen) {
+      const timer = setTimeout(() => {
+        const input = document.querySelector('input[placeholder="Message Finny..."]') as HTMLInputElement;
+        const sendButton = input?.parentElement?.querySelector('button[type="submit"]') as HTMLButtonElement;
+        
+        if (input && sendButton) {
+          input.value = queuedMessage;
+          const event = new Event('input', { bubbles: true });
+          input.dispatchEvent(event);
+          setTimeout(() => {
+            sendButton.click();
+            setQueuedMessage(null);
+          }, 100);
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [queuedMessage, isOpen]);
 
   return (
     <FinnyContext.Provider
@@ -164,13 +178,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addExpense,
         setBudget,
         askFinny,
-        queuedMessage,
-        setQueuedMessage
       }}
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat isOpen={isOpen} onClose={closeChat} queuedMessage={queuedMessage} />
+      <FinnyChat isOpen={isOpen} onClose={closeChat} />
     </FinnyContext.Provider>
   );
 };
