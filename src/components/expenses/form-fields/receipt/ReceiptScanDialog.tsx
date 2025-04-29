@@ -1,11 +1,10 @@
-
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { useEffect, useRef, useState } from "react";
 import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
-import { cleanupUnusedBlobUrls } from "@/utils/blobUrlManager";
+import { cleanupUnusedBlobUrls } from "@/utils/blobManager";
 
 interface ReceiptScanDialogProps {
   file: File | null;
