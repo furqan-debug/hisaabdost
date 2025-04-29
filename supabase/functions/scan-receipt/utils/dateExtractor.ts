@@ -1,3 +1,4 @@
+
 /**
  * Extracts the date from receipt text
  */
@@ -70,9 +71,7 @@ export function extractDate(text: string, lines: string[] = []): string {
   }
   
   // If no date found, return today's date
-  const today = new Date().toISOString().split('T')[0];
-  console.log("No date found in receipt, using current date:", today);
-  return today;
+  return new Date().toISOString().split('T')[0];
 }
 
 /**
