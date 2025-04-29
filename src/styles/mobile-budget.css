@@ -130,7 +130,7 @@
   
   /* Date picker popover styles for mobile */
   .date-picker-popover {
-    @apply p-0 border border-border rounded-md shadow-md;
+    @apply p-0 border border-border rounded-md shadow-md bg-background;
     width: 100%;
     margin: 4px 0;
     min-width: 280px;
@@ -143,6 +143,12 @@
     --rdp-background-color: var(--accent);
     margin: 0;
     overflow: visible;
+  }
+  
+  /* Ensure popover content is visible and clickable on mobile */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
+    pointer-events: auto !important;
   }
 }
 
@@ -195,4 +201,29 @@
   width: 300px;
   z-index: 100;
   pointer-events: auto !important;
+}
+
+/* Fix for Radix UI popover layer */
+[data-radix-popper-content-wrapper] {
+  z-index: 50 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure calendar days are clickable */
+.rdp-day {
+  pointer-events: auto !important;
+}
+
+/* Calendar visibility in dark mode */
+.dark .rdp-day {
+  color: white;
+}
+
+.dark .rdp-day_selected {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.dark .rdp-button:hover:not([disabled]) {
+  background-color: var(--accent);
 }

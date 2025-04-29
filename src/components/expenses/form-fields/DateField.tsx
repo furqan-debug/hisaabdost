@@ -2,6 +2,8 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DateFieldProps {
   value: string;
@@ -30,18 +32,27 @@ export function DateField({
   return (
     <div className="space-y-2">
       {label && <Label htmlFor={id}>{label}</Label>}
-      <Input
-        id={id}
-        name={name}
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="date-input-custom"
-        required
-      />
+      <div className="relative">
+        <Input
+          id={id}
+          name={name}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={cn(
+            "date-input-custom pl-8",
+            isToday && "border-primary border-opacity-50"
+          )}
+          required
+        />
+        <CalendarIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      </div>
       {displayValue && (
-        <div className="text-xs text-muted-foreground">
+        <div className={cn(
+          "text-xs", 
+          isToday ? "text-primary font-medium" : "text-muted-foreground"
+        )}>
           {isToday ? "Today" : displayValue}
         </div>
       )}

@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -37,8 +38,27 @@ export function DateRangePicker({
     
     if (type === 'start') {
       onStartDateChange(formattedDate);
+      
+      // If start date is after end date or no end date is set,
+      // update end date to be the same as start date
+      if (endDate && new Date(formattedDate) > new Date(endDate)) {
+        onEndDateChange(formattedDate);
+        toast.info("End date adjusted to match start date");
+      }
     } else {
       onEndDateChange(formattedDate);
+      
+      // If end date is before start date or no start date is set,
+      // update start date to be the same as end date
+      if (startDate && new Date(formattedDate) < new Date(startDate)) {
+        onStartDateChange(formattedDate);
+        toast.info("Start date adjusted to match end date");
+      }
+    }
+    
+    // Notify the user when date range is successfully applied
+    if ((type === 'start' && endDate) || (type === 'end' && startDate)) {
+      toast.success("Date filter applied");
     }
   };
 
@@ -66,7 +86,7 @@ export function DateRangePicker({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto p-0">
+          <PopoverContent align="start" className="w-auto p-0 bg-background border border-border">
             <Calendar
               mode="single"
               selected={startDate ? new Date(startDate) : undefined}
@@ -96,7 +116,7 @@ export function DateRangePicker({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto p-0">
+          <PopoverContent align="end" className="w-auto p-0 bg-background border border-border">
             <Calendar
               mode="single"
               selected={endDate ? new Date(endDate) : undefined}
@@ -113,7 +133,10 @@ export function DateRangePicker({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onClear}
+            onClick={() => {
+              onClear();
+              toast.info("Date filter cleared");
+            }}
             className="h-10 w-10 p-0 sm:self-start"
             title="Clear date range"
             aria-label="Clear date range"
