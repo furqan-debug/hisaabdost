@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -31,11 +30,13 @@ const DialogPortal = React.forwardRef<
         // Store ref locally
         portalRef.current = node;
         
-        // Forward ref if needed
+        // Forward ref if needed - Fix: Type checking for forwardedRef
         if (typeof forwardedRef === 'function') {
-          forwardedRef(node);
+          // Use type assertion to handle the never type issue
+          forwardedRef(node as any);
         } else if (forwardedRef) {
-          forwardedRef.current = node;
+          // Use type assertion to handle the never type issue
+          (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }
       }}>
         {children}
