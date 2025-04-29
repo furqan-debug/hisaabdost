@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -6,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -51,7 +53,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }
   
   // Safely get currency code
-  let currencyCode = 'USD'; // Default fallback
+  let currencyCode: CurrencyCode = 'USD'; // Default fallback with proper typing
   try {
     const { currencyCode: code } = useCurrency();
     if (code) currencyCode = code;
@@ -99,7 +101,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
     const today = new Date().toISOString().split('T')[0];
-    const formattedAmount = formatCurrency(amount, currencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode as CurrencyCode);
     const validCategory = validateCategory(category);
     
     let message = `Add expense of ${formattedAmount} for ${validCategory}`;
@@ -118,7 +120,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   const setBudget = (amount: number, category: string) => {
-    const formattedAmount = formatCurrency(amount, currencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode as CurrencyCode);
     const validCategory = validateCategory(category);
     
     let message = `Set a budget of ${formattedAmount} for ${validCategory}`;
