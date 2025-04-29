@@ -42,7 +42,7 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
   return (
     <div className="space-y-6">
       <DialogHeader>
-        <DialogTitle>Welcome to Hisaab Dost! 👋</DialogTitle>
+        <DialogTitle>Welcome to Hisab Dost! 👋</DialogTitle>
         <DialogDescription>
           Let's personalize your experience. First, tell us what we should call you.
         </DialogDescription>
