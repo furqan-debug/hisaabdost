@@ -28,7 +28,6 @@ const initColorTheme = () => {
 // Run initialization
 initColorTheme();
 
-// Render the app without wrapping it in AuthProvider (we'll move that inside App.tsx)
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

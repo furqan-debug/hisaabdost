@@ -6,16 +6,14 @@ import { useAuth } from "@/lib/auth";
 import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet, Star, CreditCard } from "lucide-react";
 
 const Index = () => {
-  const navigate = useNavigate();
-  
-  // Get auth context safely
   const auth = useAuth();
-  const user = auth.user;
-  const loading = auth.loading;
+  const user = auth?.user || null;
+  const loading = auth?.loading || false;
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user && !loading) {
-      navigate('/app/dashboard');
+      navigate('/dashboard');
     }
   }, [user, loading, navigate]);
 

@@ -15,10 +15,10 @@ import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
 import { AuthProvider } from "@/lib/auth";
+import { Toaster } from "@/components/ui/sonner";
 import { MonthProvider } from "@/hooks/use-month-context";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
-import { Toaster } from "@/components/ui/sonner";
 
 import "./App.css";
 

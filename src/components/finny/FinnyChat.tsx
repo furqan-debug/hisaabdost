@@ -19,8 +19,6 @@ import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
 interface FinnyChatProps {
   isOpen: boolean;
   onClose: () => void;
-  queuedMessage: string | null;
-  nameUpdateTimestamp?: number;
   config?: {
     initialMessages?: Message[];
   };
@@ -29,15 +27,12 @@ interface FinnyChatProps {
 const FinnyChat = ({
   isOpen,
   onClose,
-  queuedMessage,
-  nameUpdateTimestamp,
   config
 }: FinnyChatProps) => {
   const auth = useAuth();
   const user = auth?.user || null;
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const initialRenderRef = useRef(true);
 
   const {
     messages,
@@ -50,23 +45,8 @@ const FinnyChat = ({
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime,
-    resetChat,
-    resetInProgress
-  } = useChatLogic(queuedMessage, nameUpdateTimestamp);
-
-  // Reset chat when name updates
-  useEffect(() => {
-    if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user) {
-      // Skip the first render to avoid unnecessary reset
-      if (!initialRenderRef.current) {
-        console.log("Name updated, resetting chat");
-        resetChat();
-      } else {
-        initialRenderRef.current = false;
-      }
-    }
-  }, [nameUpdateTimestamp, user, resetChat]);
+    oldestMessageTime
+  } = useChatLogic(null);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
@@ -156,25 +136,13 @@ const FinnyChat = ({
 
                     {user && oldestMessageTime && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
                     
-                    {resetInProgress && (
-                      <div className="flex flex-col items-center justify-center py-6 space-y-3">
-                        <div className="relative w-10 h-10">
-                          <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
-                          <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
-                        </div>
-                        <span className="text-xs text-muted-foreground">Resetting Finny...</span>
+                    {isConnectingToData && user && <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                      <div className="relative w-10 h-10">
+                        <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
+                        <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
                       </div>
-                    )}
-                    
-                    {isConnectingToData && user && !resetInProgress && (
-                      <div className="flex flex-col items-center justify-center py-6 space-y-3">
-                        <div className="relative w-10 h-10">
-                          <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
-                          <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
-                        </div>
-                        <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
-                      </div>
-                    )}
+                      <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
+                    </div>}
                   
                     {messages.map(message => (
                       <FinnyMessage 
@@ -187,9 +155,9 @@ const FinnyChat = ({
                       />
                     ))}
 
-                    {isTyping && !resetInProgress && <TypingIndicator />}
+                    {isTyping && <TypingIndicator />}
                   
-                    {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && !resetInProgress && (
+                    {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && (
                       <QuickReplies 
                         replies={quickReplies} 
                         onSelect={handleQuickReply} 
@@ -208,10 +176,10 @@ const FinnyChat = ({
                   value={newMessage} 
                   onChange={e => setNewMessage(e.target.value)} 
                   onSubmit={handleSendMessage}
-                  disabled={resetInProgress}
-                  isLoading={isLoading || resetInProgress} 
+                  disabled={false}
+                  isLoading={isLoading} 
                   isAuthenticated={!!user} 
-                  isConnecting={isConnectingToData || resetInProgress} 
+                  isConnecting={isConnectingToData} 
                 />
               </div>
             </div>

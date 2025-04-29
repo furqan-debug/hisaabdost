@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,15 +7,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { SettingsSidebar } from "./SettingsSidebar";
-import { toast } from "sonner";
-import { useFinny } from "@/components/finny/FinnyProvider";
-
 const Navbar = () => {
   const {
     user,
     signOut
   } = useAuth();
-  const { resetChat } = useFinny();
   const isMobile = useIsMobile();
   const {
     selectedMonth,
@@ -24,7 +19,6 @@ const Navbar = () => {
   } = useMonthContext();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -32,20 +26,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
-  const handleSignOut = async () => {
-    try {
-      // Reset Finny chat first
-      resetChat();
-      
-      // Then sign out
-      await signOut();
-    } catch (error) {
-      console.error("Error during sign out:", error);
-      toast.error("Failed to sign out properly");
-    }
-  };
-  
   return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
       <div className="flex h-14 items-center px-3 gap-2 max-w-[480px] mx-auto">
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -87,7 +67,7 @@ const Navbar = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -97,5 +77,4 @@ const Navbar = () => {
       </div>
     </nav>;
 };
-
 export default Navbar;
