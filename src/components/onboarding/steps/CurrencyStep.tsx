@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption } from "@/utils/currencyUtils";
@@ -31,14 +30,16 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
             <SelectTrigger>
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
-           <SelectContent className="max-h-[300px] overflow-y-auto">
-  {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
-    <SelectItem key={currency.code} value={currency.code}>
-      {currency.label}
-    </SelectItem>
-  ))}
-</SelectContent>
-
+            <SelectContent className="touch-scroll">
+              {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
+                <SelectItem key={currency.code} value={currency.code}>
+                  <div className="flex items-center">
+                    <span className="mr-2">{currency.symbol}</span>
+                    <span>{currency.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
       </div>

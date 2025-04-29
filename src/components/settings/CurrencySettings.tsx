@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Select,
@@ -24,24 +25,15 @@ export function CurrencySettings() {
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
 
-        <SelectContent
-          className="max-h-[300px] overflow-y-auto"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "contain",
-            touchAction: "auto", // ensures smooth finger scroll
-          }}
-        >
-          <div className="max-h-[300px] overflow-y-auto">
-            {CURRENCY_OPTIONS.map((option) => (
-              <SelectItem key={option.code} value={option.code}>
-                <div className="flex items-center">
-                  <span className="mr-2">{option.symbol}</span>
-                  <span>{option.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </div>
+        <SelectContent className="touch-scroll">
+          {CURRENCY_OPTIONS.map((option) => (
+            <SelectItem key={option.code} value={option.code}>
+              <div className="flex items-center">
+                <span className="mr-2">{option.symbol}</span>
+                <span>{option.label}</span>
+              </div>
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

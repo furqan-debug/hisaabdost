@@ -103,6 +103,17 @@
     touch-action: pan-y !important;
     overscroll-behavior-y: contain !important;
   }
+  
+  /* Enhanced dropdown touch scrolling */
+  [data-state="open"] {
+    .select-viewport,
+    [role="listbox"],
+    [data-radix-select-viewport] {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
+  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -181,6 +192,8 @@
     -webkit-backdrop-filter: none !important;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
     background-color: var(--background) !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 }
 
@@ -189,4 +202,19 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
+}
+
+/* Touch-friendly dropdown scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain !important;
+  overflow-y: auto !important;
+  max-height: 40vh !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.touch-scroll::-webkit-scrollbar {
+  display: none !important;
 }
