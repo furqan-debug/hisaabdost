@@ -34,6 +34,15 @@ function Calendar({
     setShowYearPicker(false);
   };
 
+  const renderBackdrop = () => (
+    <motion.div
+      className="fixed inset-0 bg-black/30 z-10 sm:rounded-xl"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    />
+  );
+
   const renderYearPicker = () => {
     const currentYear = getYear(currentMonth);
     const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
@@ -43,7 +52,7 @@ function Calendar({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
       >
         <div className="grid grid-cols-3 gap-2 p-2">
           {years.map((year) => (
@@ -75,7 +84,7 @@ function Calendar({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
       >
         <div className="grid grid-cols-3 gap-2 p-2">
           {months.map((month, index) => (
@@ -100,7 +109,7 @@ function Calendar({
     const month = format(displayMonth, "MMMM");
 
     return (
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center relative">
         <div className="flex justify-between items-center w-full px-2 py-3">
           <button
             onClick={handlePrev}
@@ -138,12 +147,9 @@ function Calendar({
           </button>
         </div>
 
-        <AnimatePresence>
-          {showMonthPicker && renderMonthPicker()}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showYearPicker && renderYearPicker()}
-        </AnimatePresence>
+        <AnimatePresence>{(showMonthPicker || showYearPicker) && renderBackdrop()}</AnimatePresence>
+        <AnimatePresence>{showMonthPicker && renderMonthPicker()}</AnimatePresence>
+        <AnimatePresence>{showYearPicker && renderYearPicker()}</AnimatePresence>
       </div>
     );
   }
