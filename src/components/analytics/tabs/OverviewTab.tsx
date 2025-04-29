@@ -21,7 +21,7 @@ export function OverviewTab({
         <CardDescription>Your expenses by category</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-12">
-        <ChartContainer config={config} className="pie-chart-container h-[400px]">
+        <ChartContainer config={config} className="pie-chart-container h-[420px]">
           <ExpensesPieChart expenses={expenses} />
         </ChartContainer>
       </CardContent>

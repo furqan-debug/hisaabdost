@@ -1,5 +1,5 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -39,10 +39,12 @@ export function ExpensesPieChart({
   
   return (
     <div className="chart-wrapper relative w-full flex flex-col items-center px-2 pb-6">
-      {/* Display the center percentage - moved outside chart for permanent visibility */}
-      <div className="chart-center-percentage absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center pointer-events-none">
-        <span className="text-2xl font-semibold text-primary-foreground bg-background/60 backdrop-blur-sm rounded-full px-3 py-1">{mainPercentage}%</span>
-        <div className="text-xs text-muted-foreground mt-1 text-center bg-background/60 backdrop-blur-sm rounded-full px-2 py-0.5">
+      {/* Static center percentage display - completely outside chart container */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
+        <span className="text-2xl font-semibold bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-center">
+          {mainPercentage}%
+        </span>
+        <div className="text-xs text-muted-foreground mt-1 bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded-full text-center">
           {mainCategory}
         </div>
       </div>
@@ -85,8 +87,7 @@ export function ExpensesPieChart({
             >
               {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />)}
             </Pie>
-            
-            {/* Removed Tooltip component */}
+            {/* No Tooltip component at all */}
           </PieChart>
         </ResponsiveContainer>
       </div>
