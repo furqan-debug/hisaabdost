@@ -7,7 +7,14 @@ import {
   DayPicker,
   CaptionProps
 } from "react-day-picker";
-import { format, addMonths, subMonths } from "date-fns";
+import {
+  format,
+  addMonths,
+  subMonths,
+  setYear,
+  getYear,
+  getMonth
+} from "date-fns";
 import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -19,33 +26,63 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.defaultMonth || new Date());
+  const [showYearPicker, setShowYearPicker] = React.useState(false);
 
-  const handlePrevMonth = () => {
-    setCurrentMonth((prev) => subMonths(prev, 1));
+  const handlePrev = () => setCurrentMonth((prev) => subMonths(prev, 1));
+  const handleNext = () => setCurrentMonth((prev) => addMonths(prev, 1));
+
+  const handleYearSelect = (year: number) => {
+    const updated = setYear(currentMonth, year);
+    setCurrentMonth(updated);
+    setShowYearPicker(false);
   };
 
-  const handleNextMonth = () => {
-    setCurrentMonth((prev) => addMonths(prev, 1));
+  const renderYearPicker = () => {
+    const currentYear = getYear(currentMonth);
+    const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
+
+    return (
+      <div className="absolute z-50 top-14 left-1/2 -translate-x-1/2 bg-background rounded-lg shadow-md p-2 max-h-[200px] overflow-y-auto border w-32">
+        {years.map((year) => (
+          <button
+            key={year}
+            onClick={() => handleYearSelect(year)}
+            className={cn(
+              "w-full text-sm py-1 px-2 rounded hover:bg-accent",
+              year === currentYear && "bg-primary text-primary-foreground"
+            )}
+          >
+            {year}
+          </button>
+        ))}
+      </div>
+    );
   };
 
   function CustomCaption({ displayMonth }: CaptionProps) {
+    const year = getYear(displayMonth);
+
     return (
-      <div className="flex justify-between items-center px-4 py-2">
+      <div className="relative flex justify-between items-center px-2 py-3">
         <button
-          onClick={handlePrevMonth}
-          className="bg-orange-400 text-white rounded-full p-2 hover:bg-orange-500 transition"
+          onClick={handlePrev}
+          className="rounded-full p-2 hover:bg-accent/70 transition"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 text-primary" />
         </button>
-        <h2 className="text-lg font-bold text-gray-800">
-          {format(displayMonth, "MMMM yyyy")}
+
+        <h2 className="text-base sm:text-lg font-semibold text-foreground cursor-pointer" onClick={() => setShowYearPicker(true)}>
+          {format(displayMonth, "MMMM")} {year}
         </h2>
+
         <button
-          onClick={handleNextMonth}
-          className="bg-orange-400 text-white rounded-full p-2 hover:bg-orange-500 transition"
+          onClick={handleNext}
+          className="rounded-full p-2 hover:bg-accent/70 transition"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 text-primary" />
         </button>
+
+        {showYearPicker && renderYearPicker()}
       </div>
     );
   }
@@ -55,23 +92,23 @@ function Calendar({
       month={currentMonth}
       onMonthChange={setCurrentMonth}
       showOutsideDays={showOutsideDays}
-      className={cn("bg-white rounded-xl shadow-sm p-4", className)}
+      className={cn("bg-background rounded-xl p-3", className)}
       classNames={{
         months: "flex flex-col",
         month: "space-y-2",
-        caption: "text-center mb-4",
+        caption: "text-center mb-2",
         head_row: "flex justify-between",
-        head_cell: "w-10 text-xs font-medium text-gray-400 text-center",
+        head_cell: "w-10 text-xs font-medium text-muted-foreground text-center",
         row: "flex justify-between",
         cell: cn(
-          "h-10 w-10 text-center text-sm text-gray-700 rounded-full",
-          "focus:outline-none focus:ring-2 focus:ring-orange-400",
-          "[&:has([aria-selected])]:bg-orange-400 [&:has([aria-selected])]:text-white"
+          "h-10 w-10 text-center text-sm text-foreground rounded-md",
+          "focus:outline-none focus:ring-2 focus:ring-primary",
+          "[&:has([aria-selected])]:bg-primary [&:has([aria-selected])]:text-primary-foreground"
         ),
-        day: "w-full h-full flex items-center justify-center cursor-pointer rounded-full hover:bg-orange-100",
-        day_selected: "bg-orange-400 text-white hover:bg-orange-500",
-        day_today: "border border-orange-400 text-orange-600",
-        day_outside: "text-gray-300",
+        day: "w-full h-full flex items-center justify-center cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground",
+        day_selected: "bg-primary text-primary-foreground hover:bg-primary",
+        day_today: "border border-primary text-accent-foreground",
+        day_outside: "text-muted-foreground/50",
         ...classNames,
       }}
       components={{
