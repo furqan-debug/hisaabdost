@@ -1,3 +1,4 @@
+
 /* Mobile Chart Styles */
 @media (max-width: 768px) {
   .chart-wrapper {
@@ -86,6 +87,10 @@
   @apply font-medium text-sm fill-current opacity-90;
 }
 
+.recharts-tooltip-wrapper .tooltip-card {
+  @apply rounded-lg border p-2 shadow-sm backdrop-blur-sm;
+}
+
 /* Remove gaps between pie chart segments */
 .recharts-sector {
   @apply transition-opacity duration-200;
@@ -94,6 +99,18 @@
 
 .recharts-sector:hover {
   @apply opacity-90;
+}
+
+.chart-center-total {
+  @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10;
+}
+
+.chart-center-total-amount {
+  @apply text-2xl font-semibold;
+}
+
+.chart-center-total-label {
+  @apply text-sm;
 }
 
 .expense-chart-legend {
@@ -118,6 +135,10 @@
 
 .chart-container .recharts-wrapper {
   touch-action: pan-y;
+}
+
+.tooltip-card p {
+  @apply truncate max-w-full text-xs;
 }
 
 /* Clean minimalist chart styles */
@@ -200,26 +221,4 @@
   margin: 0 auto;
   position: relative;
   overflow: visible;
-}
-
-/* Keep all center text visible and styled properly, not just on mobile */
-.chart-center-percentage {
-  @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-20;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.chart-center-percentage span {
-  @apply bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-center text-2xl font-semibold;
-  min-width: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.chart-center-percentage div {
-  @apply text-xs bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full mt-1;
 }

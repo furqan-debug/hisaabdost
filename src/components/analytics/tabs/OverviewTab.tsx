@@ -20,8 +20,8 @@ export function OverviewTab({
         <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
         <CardDescription>Your expenses by category</CardDescription>
       </CardHeader>
-      <CardContent className="px-0 pb-12">
-        <ChartContainer config={config} className="pie-chart-container h-[420px]">
+      <CardContent className="px-0 pb-8">
+        <ChartContainer config={config} className="pie-chart-container h-[350px]">
           <ExpensesPieChart expenses={expenses} />
         </ChartContainer>
       </CardContent>

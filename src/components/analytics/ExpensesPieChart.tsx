@@ -1,7 +1,8 @@
 
-import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "framer-motion";
 
 interface Expense {
   amount: number;
@@ -35,17 +36,14 @@ export function ExpensesPieChart({
 
   // Get main percentage (for the largest category)
   const mainPercentage = data.length > 0 ? Math.round(data[0].percent) : 0;
-  const mainCategory = data.length > 0 ? data[0].name : "No data";
   
   return (
     <div className="chart-wrapper relative w-full flex flex-col items-center px-2 pb-6">
-      {/* Static center percentage display - completely outside chart container */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
-        <span className="text-2xl font-semibold bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-center">
-          {mainPercentage}%
-        </span>
-        <div className="text-xs text-muted-foreground mt-1 bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded-full text-center">
-          {mainCategory}
+      {/* Display the center percentage */}
+      <div className="chart-center-total">
+        <span className="text-2xl font-semibold">{mainPercentage}%</span>
+        <div className="text-xs text-muted-foreground mt-1">
+          {data.length > 0 ? data[0].name : "No data"}
         </div>
       </div>
       
@@ -87,7 +85,37 @@ export function ExpensesPieChart({
             >
               {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />)}
             </Pie>
-            {/* No Tooltip component at all */}
+            
+            <Tooltip animationDuration={200} content={({
+              active,
+              payload
+            }) => {
+              if (!active || !payload || !payload.length) return null;
+              const data = payload[0];
+              return <motion.div 
+                initial={{
+                  opacity: 0,
+                  y: 10
+                }} 
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }} 
+                className="rounded-lg border bg-background/95 p-3 shadow-md backdrop-blur-sm"
+              >
+                <p className="text-sm font-semibold" style={{
+                  color: data.payload.color
+                }}>
+                  {data.name}
+                </p>
+                <p className="text-sm font-bold">
+                  {formatCurrency(Number(data.value))}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {data.payload.percent.toFixed(1)}% of total
+                </p>
+              </motion.div>;
+            }} />
           </PieChart>
         </ResponsiveContainer>
       </div>

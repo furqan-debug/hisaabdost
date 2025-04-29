@@ -1,10 +1,9 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Enhanced color palette with more distinct colors and ensuring Food and General have different colors
+// Enhanced color palette with more distinct colors
 export const CATEGORY_COLORS: Record<string, string> = {
   "Food": "#FF9F7A",         // Vibrant Peach
   "Groceries": "#4ADE80",    // Vivid Green  
@@ -20,7 +19,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   "Debt": "#C084FC",         // Bright Purple
   "Savings": "#A3E635",      // Bright Lime
   "Healthcare": "#60A5FA",   // Blue
-  "General": "#FF8042",      // Orange (changed from gray to orange to distinguish from Food)
+  "General": "#FF8042",      // Orange
   "Other": "#94A3B8",        // Bright Gray
 };
 
