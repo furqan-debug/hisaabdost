@@ -124,6 +124,13 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     }
   };
 
+  const clearMessages = () => {
+    localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY);
+    setMessages([]);
+    setOldestMessageTime(undefined);
+    console.log("Chat history cleared");
+  };
+
   // Make sure messages are cleared when user logs out
   useEffect(() => {
     if (!user) {
@@ -143,6 +150,7 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearMessages
   };
 };
