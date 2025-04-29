@@ -9,7 +9,7 @@ import { User } from '@supabase/supabase-js';
 
 export const useMessageProcessing = (
   messages: Message[],
-  setMessages: (messages: Message[]) => void,
+  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void,
   setQuickReplies: (replies: QuickReply[]) => void,
   saveMessage: (message: Message) => void
 ) => {
@@ -35,7 +35,7 @@ export const useMessageProcessing = (
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev: Message[]) => [...prev, userMessage]);
     saveMessage(userMessage);
     setNewMessage('');
     setIsLoading(true);
@@ -110,7 +110,7 @@ export const useMessageProcessing = (
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
 
-      setMessages(prev => [...prev, newMessage]);
+      setMessages((prev: Message[]) => [...prev, newMessage]);
       saveMessage(newMessage);
 
       const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
@@ -129,7 +129,7 @@ export const useMessageProcessing = (
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
       
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev: Message[]) => [...prev, errorMessage]);
       saveMessage(errorMessage);
     } finally {
       setIsLoading(false);

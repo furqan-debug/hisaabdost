@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +18,7 @@ import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
 interface FinnyChatProps {
   isOpen: boolean;
   onClose: () => void;
+  queuedMessage: string | null;
   config?: {
     initialMessages?: Message[];
   };
@@ -27,6 +27,7 @@ interface FinnyChatProps {
 const FinnyChat = ({
   isOpen,
   onClose,
+  queuedMessage,
   config
 }: FinnyChatProps) => {
   const auth = useAuth();
@@ -46,7 +47,7 @@ const FinnyChat = ({
     handleSendMessage,
     handleQuickReply,
     oldestMessageTime
-  } = useChatLogic(null);
+  } = useChatLogic(queuedMessage);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
