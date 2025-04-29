@@ -13,6 +13,7 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
   const { user } = useAuth();
   const { currencyCode } = useCurrency();
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   // Use the message handling hooks
   const {
@@ -43,7 +44,8 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
     initializeChat,
     isConnectingToData,
     userName,
-    chatInitialized
+    chatInitialized,
+    setChatInitialized
   } = useChatInitialization(
     user,
     currencyCode,
@@ -53,30 +55,39 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
     saveMessage
   );
 
-  // Reset chat function for name updates
+  // Reset chat function for name updates or manual resets
   const resetChat = useCallback(() => {
     if (user) {
+      console.log("Resetting chat...");
+      
       // Clear existing messages from state and storage
       clearChatHistory();
+      setMessages([]);
       
-      // Re-initialize the chat with fresh data
+      // Reset chat initialization state
+      setChatInitialized(false);
+      
+      // Force a re-render
+      setForceRefresh(prev => prev + 1);
+      
+      // Re-initialize the chat with fresh data after a slight delay
       setTimeout(() => {
         initializeChat();
       }, 500); // Short delay to ensure state is cleared first
     }
-  }, [user, clearChatHistory, initializeChat]);
+  }, [user, clearChatHistory, initializeChat, setMessages, setChatInitialized]);
 
   // Initialize chat when component mounts or user changes
   useEffect(() => {
     if (user && !chatInitialized) {
       initializeChat();
     }
-  }, [user, initializeChat, chatInitialized]);
+  }, [user, initializeChat, chatInitialized, forceRefresh]);
 
   // Re-initialize chat if name update timestamp changes
   useEffect(() => {
     if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user) {
-      console.log("Name updated, reinitializing chat");
+      console.log("Name updated, reinitializing chat with timestamp:", nameUpdateTimestamp);
       resetChat();
     }
   }, [nameUpdateTimestamp, user, resetChat]);
@@ -86,7 +97,7 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
     if (queuedMessage && user && !isLoading) {
       messageProcessor.handleSendMessage(null, user, currencyCode, queuedMessage);
     }
-  }, [queuedMessage, user, isLoading, currencyCode]);
+  }, [queuedMessage, user, isLoading, currencyCode, messageProcessor]);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Message, QuickReply } from '../types';
 import { supabase } from '@/integrations/supabase/client';
@@ -160,6 +161,7 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
 
   // Provide a method to clear chat history
   const clearChatHistory = () => {
+    console.log("Clearing chat history from local storage");
     localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY);
     setMessages([]);
     setOldestMessageTime(undefined);
