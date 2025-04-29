@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -41,9 +42,9 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   
-  // Use optional chaining to safely access auth properties
-  const auth = useAuth?.() || {};
-  const user = auth?.user || null;
+  // Get auth context - now we're sure we're inside the Router context
+  const auth = useAuth();
+  const user = auth.user;
   
   const { currencyCode } = useCurrency();
   const [userName, setUserName] = useState<string | null>(null);

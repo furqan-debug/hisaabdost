@@ -8,10 +8,10 @@ import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet, Star, CreditCar
 const Index = () => {
   const navigate = useNavigate();
   
-  // Use optional chaining to safely access auth properties
-  const auth = useAuth?.() || {};
-  const user = auth?.user || null;
-  const loading = auth?.loading || false;
+  // Get auth context safely
+  const auth = useAuth();
+  const user = auth.user;
+  const loading = auth.loading;
 
   useEffect(() => {
     if (user && !loading) {
