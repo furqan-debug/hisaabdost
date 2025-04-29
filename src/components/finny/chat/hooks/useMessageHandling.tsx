@@ -37,8 +37,6 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
   }, [user]);
 
   const saveMessage = (message: Message) => {
-    if (!user) return;
-    
     try {
       if (!message.expiresAt) {
         message.expiresAt = new Date(Date.now() + MESSAGE_EXPIRY_HOURS * 60 * 60 * 1000);

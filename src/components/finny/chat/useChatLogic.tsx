@@ -54,7 +54,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   }, [messages, isTyping]);
 
   useEffect(() => {
-    // Only initialize if we haven't already and either have no messages or user status changed
+    // Only initialize if we haven't already and user is available
     if (!hasInitialized && user) {
       initializeChat();
       setHasInitialized(true);
@@ -74,8 +74,9 @@ export const useChatLogic = (queuedMessage: string | null) => {
     }
   }, [user, hasInitialized]);
 
-  // Check for user on mount and show auth prompt if needed
+  // Check for user on mount and handle initial message appropriately
   useEffect(() => {
+    // If no messages and no user, show auth prompt
     if (!user && messages.length === 0) {
       const authPromptMessage = {
         id: '1',
@@ -214,14 +215,16 @@ export const useChatLogic = (queuedMessage: string | null) => {
   };
 
   const initializeChat = async () => {
+    if (!user) return; // Exit early if no user
+    
     setIsConnectingToData(true);
     
     try {
       // First check if we have any existing messages in storage
-      await loadChatHistory();
+      const messageCount = await loadChatHistory();
       
       // If we have chat history, don't show welcome message again
-      if (messages.length > 0) {
+      if (messageCount > 0) {
         setIsConnectingToData(false);
         return;
       }

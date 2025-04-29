@@ -53,9 +53,15 @@ const FinnyChat = ({
   // Effect to reset chat when it's first opened
   useEffect(() => {
     if (isOpen) {
-      console.log("Finny chat opened");
+      console.log("Finny chat opened, user status:", user ? "logged in" : "not logged in");
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
+  
+  // Check if this is the initial auth prompt message
+  const isAuthPromptOnly = messages.length === 1 && 
+                           !messages[0].isUser && 
+                           messages[0].content.includes("log in") &&
+                           !user;
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
@@ -136,12 +142,14 @@ const FinnyChat = ({
               <div className="flex-1 overflow-hidden">
                 <ScrollArea className="h-full no-scrollbar touch-scroll-container">
                   <div className="finny-messages-container">
-                    {!user && <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
-                      <Info className="h-4 w-4 text-primary" />
-                      <AlertDescription className="text-sm">
-                        You need to log in to use Finny's personalized features.
-                      </AlertDescription>
-                    </Alert>}
+                    {!user && !isAuthPromptOnly && (
+                      <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
+                        <Info className="h-4 w-4 text-primary" />
+                        <AlertDescription className="text-sm">
+                          You need to log in to use Finny's personalized features.
+                        </AlertDescription>
+                      </Alert>
+                    )}
 
                     {user && oldestMessageTime && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
                     
@@ -185,7 +193,7 @@ const FinnyChat = ({
                   value={newMessage} 
                   onChange={e => setNewMessage(e.target.value)} 
                   onSubmit={handleSendMessage}
-                  disabled={false}
+                  disabled={isAuthPromptOnly && !user}
                   isLoading={isLoading} 
                   isAuthenticated={!!user} 
                   isConnecting={isConnectingToData} 
