@@ -41,8 +41,8 @@ export function ExpensesPieChart({
     <div className="chart-wrapper relative w-full flex flex-col items-center px-2 pb-6">
       {/* Display the center percentage */}
       <div className="chart-center-total">
-        <span className="text-2xl font-semibold">{mainPercentage}%</span>
-        <div className="text-xs text-muted-foreground mt-1">
+        <span className="text-2xl font-semibold text-center bg-background/80 rounded-full px-3 py-1 backdrop-blur-sm">{mainPercentage}%</span>
+        <div className="text-xs text-muted-foreground mt-1 text-center">
           {data.length > 0 ? data[0].name : "No data"}
         </div>
       </div>
