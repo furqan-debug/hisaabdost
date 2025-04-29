@@ -22,7 +22,7 @@ const Progress = React.forwardRef<
       className={cn("h-full w-full flex-1 bg-primary transition-all", indicatorClassName)}
       style={{ 
         transform: `translateX(-${100 - (value || 0)}%)`,
-        transition: "transform 0.5s ease-in-out" // Add smooth transition effect
+        transition: "transform 0.3s ease" // Smooth transition effect with slightly shorter duration
       }}
     />
   </ProgressPrimitive.Root>

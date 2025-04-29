@@ -10,12 +10,14 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const animationFrameRef = useRef<number>();
   const lastUpdateTime = useRef<number>(0);
+  
+  // Updated progress steps for smoother animation
   const progressStepsRef = useRef({
-    initial: 5,    // Start at 5%
-    scanning: 30,  // Jump to 30% quickly
-    processing: 60, // Progress to 60% more slowly
-    analyzing: 80,  // Progress to 80% even more slowly
-    complete: 100  // Final value
+    initial: 0,     // Start at 0% instead of 5%
+    scanning: 25,   // First milestone (was 30%)
+    processing: 50, // Second milestone (was 60%)
+    analyzing: 75,  // Third milestone (was 80%)
+    complete: 100   // Final value
   });
 
   useEffect(() => {
@@ -36,35 +38,49 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
       lastUpdateTime.current = currentTime;
 
       setDisplayedProgress(prevProgress => {
-        // If backend is complete, go to 100%
+        // If backend is complete, gradually move to 100%
         if (backendProgress >= 100) {
-          return 100;
+          // Faster progression to 100% when backend is done
+          return Math.min(prevProgress + (deltaTime * 0.1), 100);
+        }
+        
+        // Determine target based on backend progress
+        // This prevents the progress from getting too far ahead of actual backend progress
+        let targetProgress = backendProgress;
+        if (backendProgress < 20) {
+          targetProgress = Math.min(backendProgress * 1.2, 25); // Allow slight advancement
+        } else if (backendProgress < 50) {
+          targetProgress = Math.min(backendProgress * 1.1, 60);
+        } else if (backendProgress < 75) {
+          targetProgress = Math.min(backendProgress * 1.05, 85);
+        } else {
+          targetProgress = Math.min(backendProgress, 95); // Don't go to 100% until backend is done
         }
         
         let newProgress = prevProgress;
         let speedFactor = 0;
         
         // Use different speed factors based on current progress stage
+        // and make sure we're not going too far ahead of backend progress
         if (prevProgress < progressStepsRef.current.scanning) {
-          // Fast initial progress to 30%
-          speedFactor = 0.06; // 6% per second
-        } else if (prevProgress < progressStepsRef.current.processing) {
-          // Medium speed to 60%
+          // Medium initial progress to 25%
           speedFactor = 0.04; // 4% per second
+        } else if (prevProgress < progressStepsRef.current.processing) {
+          // Medium speed to 50%
+          speedFactor = 0.035; // 3.5% per second
         } else if (prevProgress < progressStepsRef.current.analyzing) {
-          // Slower progress to 80%
-          speedFactor = 0.02; // 2% per second
+          // Slightly slower progress to 75%
+          speedFactor = 0.03; // 3% per second
         } else {
-          // Very slow progress after 80% until completion
-          speedFactor = 0.008; // 0.8% per second
+          // Even slower progress after 75% until completion
+          speedFactor = 0.02; // 2% per second
         }
         
         // Calculate new progress based on time and speed factor
         newProgress += (deltaTime * speedFactor);
         
-        // Ensure we don't exceed backend progress or target limits
-        const maxProgress = backendProgress >= 100 ? 100 : progressStepsRef.current.analyzing;
-        return Math.min(newProgress, maxProgress);
+        // Ensure we don't exceed target progress
+        return Math.min(newProgress, targetProgress);
       });
 
       if (displayedProgress < 100) {
@@ -81,13 +97,12 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
     };
   }, [isScanning, backendProgress]);
 
-  // When backend reports 100%, immediately set displayed to 100%
+  // When backend reports 100%, smoothly transition to 100% instead of jumping
   useEffect(() => {
     if (backendProgress >= 100 && isScanning) {
-      setDisplayedProgress(100);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      // Don't immediately set to 100%, let the animation finish naturally
+      // but increase the speed of the animation
+      lastUpdateTime.current = performance.now(); // Reset time for smooth animation
     }
   }, [backendProgress, isScanning]);
 

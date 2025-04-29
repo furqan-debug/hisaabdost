@@ -25,9 +25,12 @@ export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBar
       >
         <Progress 
           value={displayedProgress} 
-          className="h-2 bg-secondary"
+          className="h-2 bg-secondary/30" // Lighter background for better contrast
           indicatorClassName={getProgressColor(displayedProgress)}
         />
+        <div className="text-xs text-center mt-1 text-muted-foreground">
+          {Math.round(displayedProgress)}% complete
+        </div>
       </motion.div>
     </div>
   );
