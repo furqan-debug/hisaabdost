@@ -33,13 +33,13 @@ export function ViewReceiptDialog({
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setIsOpen = (value: boolean) => {
+  const setIsOpen = useCallback((value: boolean) => {
     if (externalOnOpenChange) {
       externalOnOpenChange(value);
     } else {
       setInternalOpen(value);
     }
-  };
+  }, [externalOnOpenChange]);
   
   // Handle image loading state when dialog opens
   useEffect(() => {
@@ -57,14 +57,15 @@ export function ViewReceiptDialog({
       if (receiptUrl && receiptUrl.startsWith('blob:')) {
         addBlobUrlReference(receiptUrl);
       }
-    }
-    
-    return () => {
-      // Clean up blob URL reference when dialog closes
-      if (!isOpen && receiptUrl && receiptUrl.startsWith('blob:')) {
-        markBlobUrlForCleanup(receiptUrl);
+    } else {
+      // Cleanup when dialog closes
+      if (receiptUrl && receiptUrl.startsWith('blob:')) {
+        // Add a small delay before cleanup to ensure smooth transitions
+        setTimeout(() => {
+          markBlobUrlForCleanup(receiptUrl);
+        }, 300);
       }
-    };
+    }
   }, [isOpen, receiptUrl, imageSrc]);
   
   // Track if component is mounted
@@ -73,8 +74,12 @@ export function ViewReceiptDialog({
     isMounted.current = true;
     return () => {
       isMounted.current = false;
+      // Cleanup on unmount
+      if (receiptUrl && receiptUrl.startsWith('blob:')) {
+        markBlobUrlForCleanup(receiptUrl);
+      }
     };
-  }, []);
+  }, [receiptUrl]);
   
   const handleDownload = useCallback(() => {
     if (!receiptUrl || imageError) return;
@@ -240,8 +245,6 @@ export function ViewReceiptDialog({
               </div>
             )}
           </div>
-          
-          {/* Removed the duplicate close button here */}
         </DialogContent>
       </Dialog>
     </>
