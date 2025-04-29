@@ -103,6 +103,33 @@
     touch-action: pan-y !important;
     overscroll-behavior-y: contain !important;
   }
+  
+  /* Optimize date picker popovers for mobile */
+  .date-picker-popover {
+    max-width: calc(100vw - 24px) !important;
+    width: 320px !important;
+    transform: translateX(0) !important;
+    position: fixed !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 100 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  }
+  
+  /* Make buttons more finger-friendly */
+  button, 
+  [role="button"], 
+  .rdp-button {
+    @apply min-h-9 min-w-9;
+  }
+  
+  /* Add extra contrast for mobile form elements */
+  input, select, textarea {
+    background-color: rgba(var(--background), 0.8) !important;
+    border-color: rgba(var(--border), 0.4) !important;
+    @apply shadow-sm;
+  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -189,4 +216,24 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
+}
+
+/* Special styles for date pickers */
+.date-picker-popover {
+  @apply backdrop-blur-sm border shadow-lg;
+}
+
+@media (max-width: 640px) {
+  .rdp {
+    --rdp-cell-size: 36px !important;
+    margin: 0 !important;
+  }
+  
+  .rdp-months {
+    justify-content: center !important;
+  }
+  
+  .rdp-caption_label {
+    font-size: 1rem !important;
+  }
 }
