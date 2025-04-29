@@ -1,14 +1,17 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, FileImage, ImageOff } from "lucide-react";
 import { toast } from "sonner";
-import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
+import { addBlobUrlReference, markBlobUrlForCleanup, forceCleanupAllBlobUrls } from "@/utils/blobUrlManager";
+
 interface ViewReceiptDialogProps {
   receiptUrl?: string | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
+
 export function ViewReceiptDialog({
   receiptUrl,
   open: externalOpen,
@@ -21,6 +24,7 @@ export function ViewReceiptDialog({
   const [imageSrc, setImageSrc] = useState<string | undefined | null>(receiptUrl);
   const imageRef = useRef<HTMLImageElement>(null);
   const dialogOpenTime = useRef<number>(0);
+  const cleanupAttempted = useRef(false);
 
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -38,6 +42,7 @@ export function ViewReceiptDialog({
       setImageLoading(true);
       setImageError(false);
       dialogOpenTime.current = Date.now();
+      cleanupAttempted.current = false;
 
       // Update image source when dialog opens
       if (receiptUrl !== imageSrc) {
@@ -48,29 +53,65 @@ export function ViewReceiptDialog({
       if (receiptUrl && receiptUrl.startsWith('blob:')) {
         addBlobUrlReference(receiptUrl);
       }
-    } else {
-      // Cleanup when dialog closes
-      if (receiptUrl && receiptUrl.startsWith('blob:')) {
-        // Add a small delay before cleanup to ensure smooth transitions
+    } else if (!isOpen && receiptUrl) {
+      // Cleanup with longer delay when dialog closes
+      if (receiptUrl.startsWith('blob:')) {
+        // Add a longer delay before cleanup to ensure smooth transitions
         setTimeout(() => {
-          markBlobUrlForCleanup(receiptUrl);
-        }, 300);
+          if (receiptUrl) {
+            console.log("Marking blob URL for cleanup after dialog close:", receiptUrl);
+            markBlobUrlForCleanup(receiptUrl);
+          }
+        }, 1000);
       }
     }
   }, [isOpen, receiptUrl, imageSrc]);
 
   // Track if component is mounted
   const isMounted = useRef(true);
+  
+  // Dedicated cleanup function for consistency
+  const performCleanup = useCallback(() => {
+    if (cleanupAttempted.current) return;
+    
+    cleanupAttempted.current = true;
+    console.log("Performing dialog cleanup, receipt URL:", receiptUrl);
+    
+    if (receiptUrl && receiptUrl.startsWith('blob:')) {
+      try {
+        console.log("Marking blob URL for cleanup on unmount:", receiptUrl);
+        markBlobUrlForCleanup(receiptUrl);
+      } catch (error) {
+        console.error("Error during cleanup:", error);
+      }
+    }
+  }, [receiptUrl]);
+
+  // Enhanced cleanup on unmount
   useEffect(() => {
     isMounted.current = true;
+    
     return () => {
       isMounted.current = false;
-      // Cleanup on unmount
-      if (receiptUrl && receiptUrl.startsWith('blob:')) {
-        markBlobUrlForCleanup(receiptUrl);
+      
+      // Cleanup on unmount with safeguards
+      try {
+        performCleanup();
+        
+        // As a last resort, use the force cleanup after a delay
+        // This ensures the UI doesn't freeze by cleaning up any leftover blob URLs
+        setTimeout(() => {
+          if (!isMounted.current) {
+            console.log("Performing emergency blob URL cleanup on unmount");
+            forceCleanupAllBlobUrls();
+          }
+        }, 500);
+      } catch (error) {
+        console.error("Error during unmount cleanup:", error);
       }
     };
-  }, [receiptUrl]);
+  }, [receiptUrl, performCleanup]);
+  
   const handleDownload = useCallback(() => {
     if (!receiptUrl || imageError) return;
     try {
@@ -112,6 +153,7 @@ export function ViewReceiptDialog({
       toast.error("Failed to download receipt");
     }
   }, [receiptUrl, imageError]);
+  
   const handleImageLoad = useCallback(() => {
     if (isMounted.current) {
       console.log("Image loaded successfully in dialog:", receiptUrl);
@@ -119,6 +161,7 @@ export function ViewReceiptDialog({
       setImageError(false);
     }
   }, [receiptUrl]);
+  
   const handleImageError = useCallback(() => {
     if (isMounted.current) {
       // If error happens immediately after opening dialog, it might be a timing issue
@@ -140,22 +183,43 @@ export function ViewReceiptDialog({
       }
     }
   }, [receiptUrl]);
+  
   const handleCloseDialog = useCallback(() => {
     setIsOpen(false);
-  }, [setIsOpen]);
+    
+    // Ensure cleanup happens on manual close
+    if (receiptUrl && receiptUrl.startsWith('blob:')) {
+      setTimeout(() => {
+        if (receiptUrl) {
+          console.log("Manual close - marking blob URL for cleanup:", receiptUrl);
+          markBlobUrlForCleanup(receiptUrl);
+        }
+      }, 500);
+    }
+  }, [setIsOpen, receiptUrl]);
 
   // Determine if receipt is a blob URL
   const isBlobUrl = receiptUrl?.startsWith('blob:') || false;
 
   // If no receipt URL provided, don't render the component
   if (!receiptUrl) return null;
+  
   return <>
       {/* Only show the button when used without external control */}
       {externalOpen === undefined && <Button variant="ghost" size="icon" onClick={() => setInternalOpen(true)} title="View Receipt">
           <FileImage className="h-4 w-4" />
         </Button>}
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog 
+        open={isOpen} 
+        onOpenChange={(newOpen) => {
+          setIsOpen(newOpen);
+          if (!newOpen) {
+            // Run cleanup with a delay on close
+            setTimeout(performCleanup, 500);
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex justify-between items-center">
@@ -176,16 +240,28 @@ export function ViewReceiptDialog({
               </div>}
             
             {!imageError ?
-          // Use a key to force re-render when the dialog opens
-          <img key={`receipt-img-${isOpen}-${receiptUrl}-${Date.now()}`} ref={imageRef} src={receiptUrl} alt="Receipt" className="max-h-full max-w-full object-contain" style={{
-            opacity: imageLoading ? 0 : 1,
-            transition: 'opacity 0.3s ease'
-          }} onLoad={handleImageLoad} onError={handleImageError} crossOrigin="anonymous" loading="eager" /> : <div className="text-center p-4">
+              <img 
+                key={`receipt-img-${isOpen}-${Date.now()}`} 
+                ref={imageRef} 
+                src={receiptUrl} 
+                alt="Receipt" 
+                className="max-h-full max-w-full object-contain" 
+                style={{
+                  opacity: imageLoading ? 0 : 1,
+                  transition: 'opacity 0.3s ease'
+                }} 
+                onLoad={handleImageLoad} 
+                onError={handleImageError} 
+                crossOrigin="anonymous" 
+                loading="eager" 
+              /> : 
+              <div className="text-center p-4">
                 <ImageOff className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
                 <p className="text-muted-foreground">
                   Unable to display receipt image
                 </p>
-              </div>}
+              </div>
+            }
             
             {isBlobUrl && !imageError && <div className="absolute bottom-4 left-0 right-0 text-center">
                 <div className="inline-block px-3 py-1 bg-black/60 text-white text-xs rounded-full">
