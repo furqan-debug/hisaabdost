@@ -22,6 +22,14 @@ export async function processMessageWithAI(
     console.error('Error fetching profile for AI:', profileError);
   }
 
+  // Log important personalization data that will be sent to the AI
+  console.log('AI personalization data:', {
+    userName: userProfile?.full_name,
+    userAge: userProfile?.age,
+    userGender: userProfile?.gender,
+    currency: userProfile?.preferred_currency || currencyCode
+  });
+
   const { data, error } = await supabase.functions.invoke('finny-chat', {
     body: {
       message: messageToSend,

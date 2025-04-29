@@ -8,6 +8,7 @@ import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueuedMessage } from './chat/hooks/useQueuedMessage';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -146,26 +147,8 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(question);
   };
   
-  useEffect(() => {
-    if (queuedMessage && isOpen) {
-      const timer = setTimeout(() => {
-        const input = document.querySelector('input[placeholder="Message Finny..."]') as HTMLInputElement;
-        const sendButton = input?.parentElement?.querySelector('button[type="submit"]') as HTMLButtonElement;
-        
-        if (input && sendButton) {
-          input.value = queuedMessage;
-          const event = new Event('input', { bubbles: true });
-          input.dispatchEvent(event);
-          setTimeout(() => {
-            sendButton.click();
-            setQueuedMessage(null);
-          }, 100);
-        }
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [queuedMessage, isOpen]);
+  // Use the new hook for handling queued messages
+  useQueuedMessage(queuedMessage, isOpen, setQueuedMessage);
 
   return (
     <FinnyContext.Provider

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Message, QuickReply } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { processMessageWithAI } from '../services/aiService';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 
