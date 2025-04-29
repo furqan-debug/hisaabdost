@@ -12,12 +12,16 @@ export async function processMessageWithAI(
   currencyCode = 'USD'
 ) {
   // Get enhanced user profile data for personalization
-  const { data: userProfile } = await supabase
+  const { data: userProfile, error: profileError } = await supabase
     .from('profiles')
     .select('full_name, age, gender, preferred_currency')
     .eq('id', userId)
     .single();
     
+  if (profileError) {
+    console.error('Error fetching profile for AI:', profileError);
+  }
+
   const { data, error } = await supabase.functions.invoke('finny-chat', {
     body: {
       message: messageToSend,
