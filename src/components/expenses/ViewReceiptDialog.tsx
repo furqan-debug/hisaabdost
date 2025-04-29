@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ViewReceiptDialogProps {
-  receiptUrl?: string;
+  receiptUrl?: string | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -27,7 +27,7 @@ export function ViewReceiptDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | undefined>(receiptUrl);
+  const [imageSrc, setImageSrc] = useState<string | undefined | null>(receiptUrl);
   const imageRef = useRef<HTMLImageElement>(null);
   const dialogOpenTime = useRef<number>(0);
   
@@ -157,6 +157,7 @@ export function ViewReceiptDialog({
   // Determine if receipt is a blob URL
   const isBlobUrl = receiptUrl?.startsWith('blob:') || false;
 
+  // If no receipt URL provided, don't render the component
   if (!receiptUrl) return null;
 
   return (

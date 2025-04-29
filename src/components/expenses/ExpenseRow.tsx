@@ -39,8 +39,10 @@ export const ExpenseRow = memo(function ExpenseRow({
   const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setReceiptDialogOpen(true);
-  }, []);
+    if (expense.receiptUrl) {
+      setReceiptDialogOpen(true);
+    }
+  }, [expense.receiptUrl]);
   
   const handleReceiptDialogChange = useCallback((open: boolean) => {
     setReceiptDialogOpen(open);
