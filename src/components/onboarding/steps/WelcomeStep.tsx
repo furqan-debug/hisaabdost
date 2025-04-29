@@ -4,6 +4,8 @@ import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/di
 import { Input } from "@/components/ui/input";
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 interface WelcomeStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -12,6 +14,30 @@ interface WelcomeStepProps {
 
 export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
   const [fullName, setFullName] = useState(initialData.fullName);
+  const { user } = useAuth();
+
+  const handleContinue = async () => {
+    // Save the name immediately to the profile
+    if (user && fullName.trim()) {
+      try {
+        // Update the user's full_name in the profiles table
+        await supabase
+          .from('profiles')
+          .update({ full_name: fullName.trim() })
+          .eq('id', user.id);
+
+        // Also update the user metadata for backup
+        await supabase.auth.updateUser({
+          data: { full_name: fullName.trim() }
+        });
+      } catch (error) {
+        console.error("Error updating user name:", error);
+      }
+    }
+
+    // Continue with the onboarding flow
+    onComplete({ fullName });
+  };
 
   return (
     <div className="space-y-6">
@@ -37,7 +63,7 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => onComplete({ fullName })} disabled={!fullName.trim()}>
+        <Button onClick={handleContinue} disabled={!fullName.trim()}>
           Continue
         </Button>
       </div>
