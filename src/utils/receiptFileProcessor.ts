@@ -5,7 +5,7 @@ import {
   markBlobUrlForCleanup, 
   cleanupUnusedBlobUrls, 
   addBlobUrlReference 
-} from "./blobManager";
+} from "./blobUrlManager";
 import { uploadToSupabase } from "./supabaseUploader";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
 
