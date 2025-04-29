@@ -25,6 +25,7 @@ export function DangerZone() {
       
       // Delete expenses
       await supabase.from('expenses').delete().eq('user_id', user.id);
+      toast.info("Deleting expenses...");
       
       // Delete budget data
       await supabase.from('budgets').delete().eq('user_id', user.id);
@@ -35,27 +36,53 @@ export function DangerZone() {
       // Delete goals
       await supabase.from('goals').delete().eq('user_id', user.id);
       
-      // Get receipt extractions to delete
+      // First, find all receipt extraction IDs for this user
+      toast.info("Deleting receipt data...");
       const { data: receipts } = await supabase
         .from('receipt_extractions')
         .select('id')
         .eq('user_id', user.id);
       
-      // Delete receipt items for each receipt
+      // Delete receipt items for each receipt extraction
       if (receipts && receipts.length > 0) {
-        for (const receipt of receipts) {
-          await supabase
-            .from('receipt_items')
-            .delete()
-            .eq('receipt_id', receipt.id);
-        }
+        // Create an array of receipt IDs for the IN clause
+        const receiptIds = receipts.map(receipt => receipt.id);
+        
+        // Batch delete all receipt items using the IN clause
+        await supabase
+          .from('receipt_items')
+          .delete()
+          .in('receipt_id', receiptIds);
+          
+        console.log(`Deleted receipt items for ${receiptIds.length} receipts`);
       }
       
-      // Delete receipt extractions
+      // Now delete all receipt extractions for this user
       await supabase
         .from('receipt_extractions')
         .delete()
         .eq('user_id', user.id);
+      
+      // Delete stored files in the 'receipts' storage bucket if it exists
+      try {
+        // Get list of files in user's folder in storage
+        const { data: files } = await supabase.storage
+          .from('receipts')
+          .list(`users/${user.id}`);
+          
+        if (files && files.length > 0) {
+          // Delete each file in the user's storage folder
+          for (const file of files) {
+            await supabase.storage
+              .from('receipts')
+              .remove([`users/${user.id}/${file.name}`]);
+          }
+          console.log(`Deleted ${files.length} receipt files from storage`);
+        }
+      } catch (storageError) {
+        // If bucket doesn't exist or other storage error, just log and continue
+        console.log("Storage cleanup skipped:", storageError);
+      }
       
       // Reset profile to initial state (keep profile but mark onboarding as incomplete)
       await supabase
