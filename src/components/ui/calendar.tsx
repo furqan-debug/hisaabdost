@@ -1,20 +1,8 @@
 import * as React from "react";
-import {
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
-import {
-  DayPicker,
-  CaptionProps
-} from "react-day-picker";
-import {
-  format,
-  addMonths,
-  subMonths,
-  setYear,
-  getYear,
-  getMonth
-} from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPicker, CaptionProps } from "react-day-picker";
+import { format, addMonths, subMonths, setYear, getYear, getMonth, setMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -27,6 +15,7 @@ function Calendar({
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.defaultMonth || new Date());
   const [showYearPicker, setShowYearPicker] = React.useState(false);
+  const [showMonthPicker, setShowMonthPicker] = React.useState(false);
 
   const handlePrev = () => setCurrentMonth((prev) => subMonths(prev, 1));
   const handleNext = () => setCurrentMonth((prev) => addMonths(prev, 1));
@@ -35,6 +24,14 @@ function Calendar({
     const updated = setYear(currentMonth, year);
     setCurrentMonth(updated);
     setShowYearPicker(false);
+    setShowMonthPicker(false);
+  };
+
+  const handleMonthSelect = (month: number) => {
+    const updated = setMonth(currentMonth, month);
+    setCurrentMonth(updated);
+    setShowMonthPicker(false);
+    setShowYearPicker(false);
   };
 
   const renderYearPicker = () => {
@@ -42,50 +39,111 @@ function Calendar({
     const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
     return (
-      <div className="absolute z-50 top-full mt-2 left-1/2 -translate-x-1/2 bg-background rounded-lg shadow-md p-2 max-h-[200px] overflow-y-auto border w-32">
-        {years.map((year) => (
-          <button
-            key={year}
-            onClick={() => handleYearSelect(year)}
-            className={cn(
-              "w-full text-sm py-1 px-2 rounded hover:bg-accent text-center",
-              year === currentYear && "bg-primary text-primary-foreground"
-            )}
-          >
-            {year}
-          </button>
-        ))}
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+      >
+        <div className="grid grid-cols-3 gap-2 p-2">
+          {years.map((year) => (
+            <button
+              key={year}
+              onClick={() => handleYearSelect(year)}
+              className={cn(
+                "text-sm py-1 rounded hover:bg-accent text-center",
+                year === currentYear && "bg-primary text-primary-foreground"
+              )}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const renderMonthPicker = () => {
+    const currentMonthIndex = getMonth(currentMonth);
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+      >
+        <div className="grid grid-cols-3 gap-2 p-2">
+          {months.map((month, index) => (
+            <button
+              key={month}
+              onClick={() => handleMonthSelect(index)}
+              className={cn(
+                "text-sm py-1 rounded hover:bg-accent text-center",
+                index === currentMonthIndex && "bg-primary text-primary-foreground"
+              )}
+            >
+              {month}
+            </button>
+          ))}
+        </div>
+      </motion.div>
     );
   };
 
   function CustomCaption({ displayMonth }: CaptionProps) {
     const year = getYear(displayMonth);
+    const month = format(displayMonth, "MMMM");
 
     return (
-      <div className="relative flex justify-between items-center px-2 py-3">
-        <button
-          onClick={handlePrev}
-          className="rounded-full p-2 hover:bg-accent/70 transition"
-        >
-          <ChevronLeft className="h-4 w-4 text-primary" />
-        </button>
+      <div className="flex flex-col items-center">
+        <div className="flex justify-between items-center w-full px-2 py-3">
+          <button
+            onClick={handlePrev}
+            className="rounded-full p-2 hover:bg-accent/70 transition"
+          >
+            <ChevronLeft className="h-4 w-4 text-primary" />
+          </button>
 
-        <button
-          className="text-base sm:text-lg font-semibold text-foreground focus:outline-none"
-          onClick={() => setShowYearPicker((prev) => !prev)}
-        >
-          {format(displayMonth, "MMMM yyyy")}
-        </button>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              className="text-base sm:text-lg font-semibold text-foreground focus:outline-none"
+              onClick={() => {
+                setShowMonthPicker((prev) => !prev);
+                setShowYearPicker(false);
+              }}
+            >
+              {month}
+            </button>
+            <button
+              className="text-sm text-muted-foreground focus:outline-none"
+              onClick={() => {
+                setShowYearPicker((prev) => !prev);
+                setShowMonthPicker(false);
+              }}
+            >
+              {year}
+            </button>
+          </div>
 
-        <button
-          onClick={handleNext}
-          className="rounded-full p-2 hover:bg-accent/70 transition"
-        >
-          <ChevronRight className="h-4 w-4 text-primary" />
-        </button>
+          <button
+            onClick={handleNext}
+            className="rounded-full p-2 hover:bg-accent/70 transition"
+          >
+            <ChevronRight className="h-4 w-4 text-primary" />
+          </button>
+        </div>
 
-        {showYearPicker && renderYearPicker()}
+        <AnimatePresence>
+          {showMonthPicker && renderMonthPicker()}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showYearPicker && renderYearPicker()}
+        </AnimatePresence>
       </div>
     );
   }
