@@ -7,7 +7,6 @@ import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
-import { supabase } from '@/integrations/supabase/client';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -39,37 +38,6 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const auth = useAuth();
   const user = auth?.user || null;
   const { currencyCode } = useCurrency();
-  const [userName, setUserName] = useState<string | null>(null);
-
-  // Fetch user's name from profiles table
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single();
-
-          if (profile && profile.full_name) {
-            setUserName(profile.full_name);
-          } else if (user.user_metadata?.full_name) {
-            // Fallback to user metadata if profile name is not available
-            setUserName(user.user_metadata.full_name);
-          }
-          
-          if (error) {
-            console.error('Error fetching user profile:', error);
-          }
-        } catch (error) {
-          console.error('Error fetching user name:', error);
-        }
-      }
-    };
-
-    fetchUserProfile();
-  }, [user]);
 
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
