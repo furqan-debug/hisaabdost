@@ -4,12 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
-
-<ScanProgressBar 
-  isScanning={isScanning} 
-  processingComplete={processingComplete}
-/>
-
+import { ScanProgressBar } from "./components/ScanProgressBar";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -63,7 +58,7 @@ export function ReceiptScanDialog({
     autoProcessReceipt,
     resetScanState
   } = useScanReceipt({
-    file, // Use direct file, not fileRef
+    file, 
     onCleanup,
     onCapture,
     autoSave,
@@ -144,8 +139,6 @@ export function ReceiptScanDialog({
     }
   };
 
-  
-
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
@@ -162,7 +155,12 @@ export function ReceiptScanDialog({
           fileExists={!!file}
           processingComplete={processingComplete}
           autoProcess={autoProcess}
-        />
+        >
+          <ScanProgressBar 
+            isScanning={isScanning || isAutoProcessing} 
+            processingComplete={processingComplete}
+          />
+        </ScanDialogContent>
       </DialogContent>
     </Dialog>
   );

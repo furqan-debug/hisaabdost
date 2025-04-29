@@ -1,10 +1,7 @@
-
 import { Receipt, ArrowRight, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ScanButton } from "./ScanButton";
-import { useProgressAnimation } from "../hooks/useProgressAnimation";
-import { getProgressStyles } from "../utils/progressColors";
+import { ReactNode } from "react";
 
 interface ScanDialogContentProps {
   previewUrl: string | null;
@@ -19,6 +16,7 @@ interface ScanDialogContentProps {
   fileExists: boolean;
   processingComplete: boolean;
   autoProcess?: boolean;
+  children?: ReactNode; // Add children prop to receive the progress bar
 }
 
 export function ScanDialogContent({
@@ -33,20 +31,9 @@ export function ScanDialogContent({
   onCleanup,
   fileExists,
   processingComplete,
-  autoProcess = true
+  autoProcess = true,
+  children // Progress bar will be passed as children
 }: ScanDialogContentProps) {
-  // Use the improved progress animation hook
-  const displayedProgress = useProgressAnimation({ 
-    isScanning: isScanning || isAutoProcessing, 
-    backendProgress: scanProgress 
-  });
-
-  // Get gradient styles for smooth color transitions
-  const progressStyles = getProgressStyles(displayedProgress);
-
-  // Format progress to whole number for display
-  const formattedProgress = Math.round(displayedProgress);
-  
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
@@ -75,18 +62,9 @@ export function ScanDialogContent({
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-lg text-white">
               <p className="mb-4 text-center px-4">{statusMessage || "Processing receipt image..."}</p>
               
-              <div className="w-4/5 px-4">
-                <Progress 
-                  value={displayedProgress} 
-                  className="h-2.5 bg-secondary/30"
-                  indicatorClassName={`bg-gradient-to-r ${progressStyles.className} animate-gradient`}
-                  indicatorStyle={{ background: progressStyles.background }}
-                />
-                <div className="flex justify-between text-xs mt-2">
-                  <span>0%</span>
-                  <span className="font-medium">{formattedProgress}% complete</span>
-                  <span>100%</span>
-                </div>
+              {/* Replace the progress component with the children (progress bar) */}
+              <div className="w-4/5">
+                {children}
               </div>
             </div>
           )}
@@ -140,7 +118,7 @@ export function ScanDialogContent({
                 disabled={!fileExists || isScanning || isAutoProcessing}
                 autoSave={true}
                 isAutoProcessing={isAutoProcessing}
-                scanProgress={displayedProgress}
+                scanProgress={scanProgress}
                 statusMessage={statusMessage}
               />
             </div>
