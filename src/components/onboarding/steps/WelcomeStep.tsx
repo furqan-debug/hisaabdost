@@ -6,6 +6,7 @@ import { OnboardingFormData } from "../types";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface WelcomeStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -13,30 +14,54 @@ interface WelcomeStepProps {
 }
 
 export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
-  const [fullName, setFullName] = useState(initialData.fullName);
+  const [fullName, setFullName] = useState(initialData.fullName || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
   const handleContinue = async () => {
-    // Save the name immediately to the profile
-    if (user && fullName.trim()) {
-      try {
+    if (!fullName.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Save the name immediately to the profile if user is logged in
+      if (user && fullName.trim()) {
+        console.log("Updating profile for user:", user.id);
+        
         // Update the user's full_name in the profiles table
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ full_name: fullName.trim() })
           .eq('id', user.id);
+          
+        if (error) {
+          console.error("Error updating profile:", error);
+          toast.error("There was an error updating your name. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
 
         // Also update the user metadata for backup
         await supabase.auth.updateUser({
           data: { full_name: fullName.trim() }
         });
-      } catch (error) {
-        console.error("Error updating user name:", error);
+        
+        console.log("Profile updated successfully");
       }
-    }
 
-    // Continue with the onboarding flow
-    onComplete({ fullName });
+      // Continue with the onboarding flow
+      console.log("Completing welcome step with name:", fullName);
+      onComplete({ fullName: fullName.trim() });
+      
+    } catch (error) {
+      console.error("Error in welcome step:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -58,13 +83,17 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
             placeholder="Enter your name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            autoFocus
           />
         </div>
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleContinue} disabled={!fullName.trim()}>
-          Continue
+        <Button 
+          onClick={handleContinue} 
+          disabled={!fullName.trim() || isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Continue"}
         </Button>
       </div>
     </div>

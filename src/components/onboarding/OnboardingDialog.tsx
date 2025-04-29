@@ -27,11 +27,16 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   const { user } = useAuth();
 
   const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
+    console.log(`Completing step: ${step} with data:`, data);
+    
+    // Update form data with new values
     const updatedData = { ...formData, ...data };
     setFormData(updatedData);
+    console.log("Updated form data:", updatedData);
 
     if (step === 'currency') {
       try {
+        console.log("Finalizing onboarding for user:", user?.id);
         const { error } = await supabase
           .from('profiles')
           .update({
@@ -45,13 +50,20 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           })
           .eq('id', user?.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Failed to save onboarding data:", error);
+          toast.error('Failed to save your preferences');
+          return;
+        }
+        
+        console.log("Onboarding completed successfully");
         setCurrentStep('complete');
       } catch (error) {
-        toast.error('Failed to save your preferences');
         console.error('Error saving onboarding data:', error);
+        toast.error('Failed to save your preferences');
       }
     } else {
+      // Move to next step
       const nextSteps: Record<OnboardingStep, OnboardingStep> = {
         welcome: 'personal',
         personal: 'income',
@@ -59,6 +71,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         currency: 'complete',
         complete: 'complete'
       };
+      console.log(`Moving to next step: ${nextSteps[step]}`);
       setCurrentStep(nextSteps[step]);
     }
   };
