@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -86,10 +85,10 @@ export function ExpenseFilters({
       {(!isMobile || showAdvancedFilters) && (
         <div className={cn(
           "space-y-3 animated-fade-in",
-          isMobile ? "p-2 bg-muted/30 rounded-lg border border-border/40" : ""
+          isMobile ? "p-3 bg-muted/30 rounded-lg border border-border/40" : ""
         )}>
           <div className={cn(
-            isMobile ? "flex-col space-y-2" : "sm:flex-row sm:items-start sm:justify-between gap-2",
+            isMobile ? "flex-col space-y-3" : "sm:flex sm:items-start sm:justify-between sm:gap-2",
             "flex"
           )}>
             <Select

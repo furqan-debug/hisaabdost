@@ -131,8 +131,9 @@
   /* Date picker popover styles for mobile */
   .date-picker-popover {
     @apply p-0 border border-border rounded-md shadow-md bg-background;
-    width: 100%;
-    margin: 4px 0;
+    width: 90vw !important;
+    max-width: 340px !important;
+    margin: 4px auto;
     min-width: 280px;
   }
   
@@ -145,10 +146,63 @@
     overflow: visible;
   }
   
+  /* Fix Calendar UI for mobile */
+  .rdp-day, .rdp-head_cell {
+    @apply text-sm !important;
+  }
+  
+  /* Calendar day styling for better touch targets */
+  .rdp-day {
+    @apply h-8 w-8 !important;
+  }
+  
+  /* Month select in calendar for mobile */
+  .rdp-caption_dropdowns {
+    @apply text-xs !important;
+  }
+  
+  /* Enhance calendar navigation buttons */
+  .rdp-nav {
+    @apply gap-1 !important;
+  }
+  
+  /* Calendar container on mobile */
+  .calendar-container {
+    @apply p-1 !important;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Make calendar UI items bigger and more touchable */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix touch issues with calendar */
+  [data-radix-select-viewport] {
+    max-height: 40vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Make calendar selection buttons more touch-friendly */
+  .date-picker-button {
+    @apply py-3 px-4 !important;
+    min-height: 44px !important;
+  }
+  
+  /* Improve dropdown UX on mobile */
+  [data-radix-select-content] {
+    max-height: 50vh !important;
+  }
+  
   /* Ensure popover content is visible and clickable on mobile */
   [data-radix-popper-content-wrapper] {
     z-index: 50 !important;
     pointer-events: auto !important;
+    touch-action: manipulation !important;
   }
 }
 
@@ -180,8 +234,9 @@
 
 /* Date picker popover styling */
 .date-picker-popover {
-  @apply p-0 border border-border rounded-lg shadow-md overflow-hidden;
+  @apply p-0 border border-border rounded-lg shadow-md overflow-hidden bg-background/95 backdrop-blur-sm;
   min-width: 300px;
+  touch-action: manipulation;
 }
 
 /* Style for date buttons to make them more visible */
@@ -191,7 +246,7 @@
 
 /* Make calendar cells pointer-events-auto so they're clickable in popovers */
 .calendar-cell {
-  @apply pointer-events-auto;
+  @apply pointer-events-auto touch-manipulation;
 }
 
 /* Fix calendar positioning on mobile devices */
@@ -201,29 +256,82 @@
   width: 300px;
   z-index: 100;
   pointer-events: auto !important;
+  touch-action: manipulation;
 }
 
 /* Fix for Radix UI popover layer */
 [data-radix-popper-content-wrapper] {
   z-index: 50 !important;
   pointer-events: auto !important;
+  touch-action: manipulation;
 }
 
 /* Ensure calendar days are clickable */
 .rdp-day {
   pointer-events: auto !important;
+  touch-action: manipulation !important;
 }
 
 /* Calendar visibility in dark mode */
 .dark .rdp-day {
-  color: white;
+  color: white !important;
 }
 
 .dark .rdp-day_selected {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
 
 .dark .rdp-button:hover:not([disabled]) {
-  background-color: var(--accent);
+  background-color: var(--accent) !important;
+}
+
+/* Month/Year dropdown improvements */
+.rdp-caption_dropdowns {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* Better styling for calendar header cells */
+.rdp-head_cell {
+  @apply text-muted-foreground font-normal;
+  padding: 0.5rem 0;
+}
+
+/* Enhanced calendar day styling */
+.rdp-day {
+  @apply rounded-md transition-colors;
+  aspect-ratio: 1;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Specific styling for dark mode */
+.dark [data-radix-select-item] {
+  @apply text-foreground bg-transparent;
+}
+
+.dark [data-radix-select-item]:hover {
+  @apply bg-accent text-accent-foreground;
+}
+
+.dark [data-radix-select-trigger] {
+  @apply border-border bg-background/80;
+}
+
+/* Make the dropdown more visible in dark mode */
+.dark [data-radix-select-content] {
+  @apply bg-background/95 backdrop-blur-sm border-border/60 shadow-lg text-foreground;
+}
+
+/* Selected date styling in dark mode */
+.dark .rdp-day_selected {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* Better hover effects for days */
+.rdp-day:hover:not(.rdp-day_selected) {
+  @apply bg-accent/60 text-accent-foreground;
 }

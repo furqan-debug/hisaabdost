@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -31,6 +31,9 @@ export function DateRangePicker({
   label = "Date Range",
   className
 }: DateRangePickerProps) {
+  const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
+  
   const handleDateSelect = (type: 'start' | 'end', date: Date | undefined) => {
     if (!date) return;
     
@@ -38,6 +41,7 @@ export function DateRangePicker({
     
     if (type === 'start') {
       onStartDateChange(formattedDate);
+      setStartOpen(false);
       
       // If start date is after end date or no end date is set,
       // update end date to be the same as start date
@@ -47,6 +51,7 @@ export function DateRangePicker({
       }
     } else {
       onEndDateChange(formattedDate);
+      setEndOpen(false);
       
       // If end date is before start date or no start date is set,
       // update start date to be the same as end date
@@ -69,13 +74,14 @@ export function DateRangePicker({
       )}
       
       <div className="flex flex-col sm:flex-row gap-2">
-        <Popover>
+        <Popover open={startOpen} onOpenChange={setStartOpen}>
           <PopoverTrigger asChild>
             <Button 
               variant="outline"
               className={cn(
-                "justify-start text-left w-full sm:w-40",
-                !startDate && "text-muted-foreground"
+                "justify-start text-left w-full sm:w-[140px]",
+                !startDate && "text-muted-foreground",
+                startDate && "border-primary/70"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -86,26 +92,28 @@ export function DateRangePicker({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto p-0 bg-background border border-border">
+          <PopoverContent 
+            align="start" 
+            className="w-auto p-0 bg-background/95 backdrop-blur-sm border border-border date-picker-popover"
+          >
             <Calendar
               mode="single"
               selected={startDate ? new Date(startDate) : undefined}
               onSelect={(date) => handleDateSelect('start', date)}
               initialFocus
-              disabled={(date) => 
-                endDate ? date > new Date(endDate) : false
-              }
+              defaultMonth={startDate ? new Date(startDate) : new Date()}
             />
           </PopoverContent>
         </Popover>
         
-        <Popover>
+        <Popover open={endOpen} onOpenChange={setEndOpen}>
           <PopoverTrigger asChild>
             <Button 
               variant="outline"
               className={cn(
-                "justify-start text-left w-full sm:w-40",
-                !endDate && "text-muted-foreground"
+                "justify-start text-left w-full sm:w-[140px]",
+                !endDate && "text-muted-foreground",
+                endDate && "border-primary/70"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -116,15 +124,16 @@ export function DateRangePicker({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto p-0 bg-background border border-border">
+          <PopoverContent 
+            align="end" 
+            className="w-auto p-0 bg-background/95 backdrop-blur-sm border border-border date-picker-popover"
+          >
             <Calendar
               mode="single"
               selected={endDate ? new Date(endDate) : undefined}
               onSelect={(date) => handleDateSelect('end', date)}
               initialFocus
-              disabled={(date) => 
-                startDate ? date < new Date(startDate) : false
-              }
+              defaultMonth={endDate ? new Date(endDate) : new Date()}
             />
           </PopoverContent>
         </Popover>
