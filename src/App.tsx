@@ -14,8 +14,6 @@ import Goals from "@/pages/Goals";
 import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
-import { AuthProvider } from "@/lib/auth";
-import { Toaster } from "@/components/ui/sonner";
 import { MonthProvider } from "@/hooks/use-month-context";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
@@ -34,7 +32,7 @@ function App() {
           {showSplash ? (
             <SplashScreen onComplete={() => setShowSplash(false)} />
           ) : (
-            <AuthProvider>
+            <>
               <CurrencyProvider>
                 <MonthProvider>
                   <FinnyProvider>
@@ -56,12 +54,14 @@ function App() {
                   </FinnyProvider>
                 </MonthProvider>
               </CurrencyProvider>
-            </AuthProvider>
+            </>
           )}
         </BrowserRouter>
       </QueryClientProvider>
     </ThemeProvider>
   );
 }
+
+import { Toaster } from "@/components/ui/sonner";
 
 export default App;

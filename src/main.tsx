@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { AuthProvider } from './lib/auth';
 
 // Initialize color theme from localStorage before rendering
 const initColorTheme = () => {
@@ -28,8 +29,11 @@ const initColorTheme = () => {
 // Run initialization
 initColorTheme();
 
+// Wrap the entire app with AuthProvider
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </React.StrictMode>
 );
