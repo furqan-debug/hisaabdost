@@ -24,6 +24,7 @@ export const useSignOut = () => {
       // Try to clear Finny chat before signing out
       try {
         resetChat();
+        localStorage.removeItem('finny_chat_messages');
       } catch (error) {
         console.error("Error resetting chat:", error);
       }
@@ -31,9 +32,6 @@ export const useSignOut = () => {
       // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
-      // Clear local storage of any user data
-      localStorage.removeItem('finny_chat_messages');
       
       toast.success("Successfully signed out");
       navigate("/auth");

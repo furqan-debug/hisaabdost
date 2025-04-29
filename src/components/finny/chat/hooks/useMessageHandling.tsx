@@ -17,23 +17,13 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
   const [isTyping, setIsTyping] = useState(false);
   const [oldestMessageTime, setOldestMessageTime] = useState<Date | undefined>();
   
-  // Safely get user with error handling
-  let user = null;
-  try {
-    const { user: authUser } = useAuth();
-    user = authUser;
-  } catch (error) {
-    console.error("Auth context not available in useMessageHandling:", error);
-  }
+  // Get user authentication status - use proper error handling
+  const auth = useAuth();
+  const user = auth?.user || null;
   
-  // Safely get currency code with error handling
-  let currencyCode = 'USD'; // Default fallback
-  try {
-    const currency = useCurrency();
-    currencyCode = currency.currencyCode;
-  } catch (error) {
-    console.error("Currency context not available in useMessageHandling:", error);
-  }
+  // Get currency code with proper error handling
+  const currency = useCurrency();
+  const currencyCode = currency?.currencyCode || 'USD'; // Default fallback
 
   // Load chat history when the component mounts or user changes
   useEffect(() => {

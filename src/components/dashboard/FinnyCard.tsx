@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFinny } from "@/components/finny/FinnyProvider";
+import { useAuth } from "@/lib/auth";
 
 export function FinnyCard() {
   const { openChat } = useFinny();
+  const { user } = useAuth();
 
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-background border-border/50">
@@ -20,7 +22,9 @@ export function FinnyCard() {
           <div className="space-y-1">
             <h3 className="font-medium text-base">Talk to Finny</h3>
             <p className="text-sm text-muted-foreground">
-              Get instant help with your expenses and budgeting
+              {user 
+                ? "Get instant help with your expenses and budgeting"
+                : "Sign in to access personalized finance assistance"}
             </p>
           </div>
         </div>
@@ -32,7 +36,7 @@ export function FinnyCard() {
             className="w-full sm:w-auto rounded-full transition-all duration-300 hover:shadow-md"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Chat Now
+            {user ? "Chat Now" : "Try Finny"}
           </Button>
         </div>
       </motion.div>

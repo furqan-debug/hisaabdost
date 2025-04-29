@@ -40,19 +40,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(Date.now());
   
-  // Safely access auth with error handling
-  let auth = null;
-  let user = null;
+  // Get user authentication with proper error handling
+  const auth = useAuth();
+  const user = auth?.user || null;
   
-  try {
-    auth = useAuth();
-    user = auth?.user || null;
-  } catch (error) {
-    console.error("Auth context not available:", error);
-    // Continue with null user
-  }
-  
-  // Safely get currency code
+  // Get currency code with proper error handling
   let currencyCode: CurrencyCode = 'USD'; // Default fallback with proper typing
   try {
     const { currencyCode: code } = useCurrency();

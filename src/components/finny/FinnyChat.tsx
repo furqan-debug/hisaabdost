@@ -14,7 +14,7 @@ import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
-import { useFinny } from './FinnyProvider';
+import { useAuth } from '@/lib/auth';
 
 interface FinnyChatProps {
   isOpen: boolean;
@@ -32,15 +32,8 @@ const FinnyChat = ({
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
-  // Try to safely get user
-  let user = null;
-  try {
-    const { useAuth } = require('@/lib/auth');
-    const auth = useAuth();
-    user = auth?.user || null;
-  } catch (error) {
-    console.error("Auth context not available in FinnyChat:", error);
-  }
+  // Get user authentication status
+  const { user } = useAuth();
 
   const {
     messages,

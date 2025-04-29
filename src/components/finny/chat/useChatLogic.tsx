@@ -74,6 +74,20 @@ export const useChatLogic = (queuedMessage: string | null) => {
     }
   }, [user, hasInitialized]);
 
+  // Check for user on mount and show auth prompt if needed
+  useEffect(() => {
+    if (!user && messages.length === 0) {
+      const authPromptMessage = {
+        id: '1',
+        content: FINNY_MESSAGES.AUTH_PROMPT,
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      setMessages([authPromptMessage]);
+    }
+  }, []);
+
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
     
