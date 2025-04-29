@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
-import { cleanupUnusedBlobUrls, markBlobUrlForCleanup } from "@/utils/blobManager";
+import { cleanupAllBlobUrls, cleanupUnusedBlobUrls, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 import { processReceiptFile as processFile } from "@/utils/receiptFileProcessor";
 
 interface UseReceiptFileProps {

@@ -80,7 +80,7 @@ export function ReceiptField({
     
     // Generate fingerprint for the file
     const fingerprint = generateFileFingerprint(file);
-    console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint}, autoProcess: ${autoProcess}`);
+    console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint})`);
     
     // Check if this file is already being processed in any component
     if (processingCache.has(fingerprint)) {

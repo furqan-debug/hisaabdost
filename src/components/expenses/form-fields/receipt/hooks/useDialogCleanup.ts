@@ -1,5 +1,6 @@
+
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { cleanupUnusedBlobUrls, forceCleanupAllBlobUrls } from '@/utils/blobManager';
+import { cleanupUnusedBlobUrls, forceCleanupAllBlobUrls } from '@/utils/blobUrlManager';
 
 interface UseDialogCleanupProps {
   open: boolean;

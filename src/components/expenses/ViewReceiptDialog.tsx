@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, FileImage, ImageOff } from "lucide-react";
 import { toast } from "sonner";
-import { addBlobUrlReference, markBlobUrlForCleanup, forceCleanupAllBlobUrls } from "@/utils/blobManager";
+import { addBlobUrlReference, markBlobUrlForCleanup, forceCleanupAllBlobUrls } from "@/utils/blobUrlManager";
 
 interface ViewReceiptDialogProps {
   receiptUrl?: string | null;

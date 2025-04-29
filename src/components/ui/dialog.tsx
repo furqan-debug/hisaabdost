@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -8,7 +9,7 @@ const DialogTrigger = DialogPrimitive.Trigger;
 
 // Enhanced portal with unmount tracking
 const DialogPortal = React.forwardRef<
-  React.ComponentRef<typeof DialogPrimitive.Portal>, 
+  React.ElementRef<typeof DialogPrimitive.Portal>, 
   DialogPrimitive.DialogPortalProps & { onCleanup?: () => void }
 >(({ onCleanup, children, ...props }, forwardedRef) => {
   // Track portal mounted state
@@ -30,11 +31,11 @@ const DialogPortal = React.forwardRef<
         // Store ref locally
         portalRef.current = node;
         
-        // Forward ref if needed - Fix: Update type handling
+        // Forward ref if needed
         if (typeof forwardedRef === 'function') {
-          forwardedRef(node as React.ComponentRef<typeof DialogPrimitive.Portal>);
+          forwardedRef(node);
         } else if (forwardedRef) {
-          (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          forwardedRef.current = node;
         }
       }}>
         {children}
