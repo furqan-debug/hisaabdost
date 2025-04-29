@@ -5,6 +5,12 @@ import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
 
+<ScanProgressBar 
+  isScanning={isScanning} 
+  processingComplete={processingComplete}
+/>
+
+
 interface ReceiptScanDialogProps {
   file: File | null;
   previewUrl: string | null;
@@ -137,6 +143,8 @@ export function ReceiptScanDialog({
       setOpen(true);
     }
   };
+
+  
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
