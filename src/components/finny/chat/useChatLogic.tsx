@@ -14,6 +14,7 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
   const { currencyCode } = useCurrency();
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
   const [forceRefresh, setForceRefresh] = useState(0);
+  const [resetInProgress, setResetInProgress] = useState(false);
 
   // Use the message handling hooks
   const {
@@ -59,6 +60,7 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
   const resetChat = useCallback(() => {
     if (user) {
       console.log("Resetting chat...");
+      setResetInProgress(true);
       
       // Clear existing messages from state and storage
       clearChatHistory();
@@ -73,31 +75,33 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
       // Re-initialize the chat with fresh data after a slight delay
       setTimeout(() => {
         initializeChat();
+        setResetInProgress(false);
       }, 500); // Short delay to ensure state is cleared first
     }
   }, [user, clearChatHistory, initializeChat, setMessages, setChatInitialized]);
 
   // Initialize chat when component mounts or user changes
   useEffect(() => {
-    if (user && !chatInitialized) {
+    if (user && !chatInitialized && !resetInProgress) {
+      console.log("Initializing chat for the first time or after reset");
       initializeChat();
     }
-  }, [user, initializeChat, chatInitialized, forceRefresh]);
+  }, [user, initializeChat, chatInitialized, forceRefresh, resetInProgress]);
 
   // Re-initialize chat if name update timestamp changes
   useEffect(() => {
-    if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user) {
+    if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user && !resetInProgress) {
       console.log("Name updated, reinitializing chat with timestamp:", nameUpdateTimestamp);
       resetChat();
     }
-  }, [nameUpdateTimestamp, user, resetChat]);
+  }, [nameUpdateTimestamp, user, resetChat, resetInProgress]);
 
   // Process queued message if available
   useEffect(() => {
-    if (queuedMessage && user && !isLoading) {
+    if (queuedMessage && user && !isLoading && chatInitialized) {
       messageProcessor.handleSendMessage(null, user, currencyCode, queuedMessage);
     }
-  }, [queuedMessage, user, isLoading, currencyCode, messageProcessor]);
+  }, [queuedMessage, user, isLoading, currencyCode, messageProcessor, chatInitialized]);
 
   // Scroll to bottom of messages when messages change
   useEffect(() => {
@@ -131,6 +135,7 @@ export const useChatLogic = (queuedMessage: string | null, nameUpdateTimestamp?:
     handleSendMessage,
     handleQuickReply,
     oldestMessageTime,
-    resetChat
+    resetChat,
+    resetInProgress
   };
 };

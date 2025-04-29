@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,12 @@ export function DangerZone() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
-  const { resetChat } = useFinny(); // Get resetChat from Finny context
+  const { resetChat } = useFinny();
 
   const handleResetData = async () => {
     try {
       setIsResetting(true);
+      toast.info("Starting data reset process...");
       
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -100,18 +100,16 @@ export function DangerZone() {
       localStorage.removeItem('monthsData');
       localStorage.removeItem('currency');
       localStorage.removeItem('theme');
-      
-      // Reset Finny chat history
       localStorage.removeItem('finny_chat_messages');
       
-      // Explicitly reset the Finny chat state
+      // Explicitly call the resetChat function from FinnyProvider
       if (resetChat) {
         resetChat();
       }
       
       toast.success("All data has been successfully reset");
       
-      // Close dialog and navigate to dashboard
+      // Close dialog
       setIsResetDialogOpen(false);
       
       // First navigate to dashboard
@@ -120,7 +118,7 @@ export function DangerZone() {
       // Then reload the page after a short delay to ensure navigation completes
       setTimeout(() => {
         window.location.reload();
-      }, 300);
+      }, 500);
       
     } catch (error) {
       console.error("Error resetting data:", error);

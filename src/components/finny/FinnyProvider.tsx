@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -65,12 +64,18 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             .single();
 
           if (profile && profile.full_name) {
-            setUserName(profile.full_name);
-            // Update timestamp to trigger re-initialization if name changes
-            setLastNameUpdate(Date.now());
-          } else if (user.user_metadata?.full_name) {
+            // Only update if name has changed to prevent unnecessary re-renders
+            if (userName !== profile.full_name) {
+              console.log(`Updating user name from "${userName}" to "${profile.full_name}"`);
+              setUserName(profile.full_name);
+              // Update timestamp to trigger re-initialization
+              setLastNameUpdate(Date.now());
+            }
+          } else if (user.user_metadata?.full_name && userName !== user.user_metadata.full_name) {
             // Fallback to user metadata if profile name is not available
+            console.log(`Using metadata name: "${user.user_metadata.full_name}"`);
             setUserName(user.user_metadata.full_name);
+            setLastNameUpdate(Date.now());
           }
           
           if (error) {
@@ -79,11 +84,21 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } catch (error) {
           console.error('Error fetching user name:', error);
         }
+      } else {
+        // Clear username if user logs out
+        if (userName !== null) {
+          setUserName(null);
+        }
       }
     };
 
     fetchUserProfile();
-  }, [user]);
+    
+    // Set up an interval to periodically check for name updates
+    const intervalId = setInterval(fetchUserProfile, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, [user, userName]);
 
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
@@ -91,14 +106,22 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const resetChat = () => {
     // Clear chat messages from localStorage
+    console.log("Resetting Finny chat completely...");
     localStorage.removeItem('finny_chat_messages');
     
     // Force re-render of FinnyChat component by changing its key
     setChatKey(prevKey => prevKey + 1);
-    console.log("Finny chat reset triggered");
     
     // Update the name update timestamp to trigger re-initialization
     setLastNameUpdate(Date.now());
+    
+    // Close and re-open the chat panel to trigger a full refresh
+    setIsOpen(false);
+    
+    // Schedule re-opening after a slight delay to ensure proper reset
+    setTimeout(() => {
+      toast.success("Finny has been reset");
+    }, 300);
   };
   
   const triggerChat = (message: string) => {
@@ -111,29 +134,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsOpen(true);
   };
   
-  const validateCategory = (category: string): string => {
-    if (!category) return 'Miscellaneous';
-    
-    // Check for exact match
-    const exactMatch = EXPENSE_CATEGORIES.find(
-      c => c.toLowerCase() === category.toLowerCase()
-    );
-    
-    if (exactMatch) return exactMatch;
-    
-    // Look for partial matches
-    const partialMatches = EXPENSE_CATEGORIES.filter(
-      c => c.toLowerCase().includes(category.toLowerCase()) || 
-           category.toLowerCase().includes(c.toLowerCase())
-    );
-    
-    if (partialMatches.length > 0) {
-      return partialMatches[0]; // Return the first partial match
-    }
-    
-    // No match found, use miscellaneous as fallback
-    return 'Other';
-  };
+  // ... keep existing code (validateCategory function)
   
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
     const today = new Date().toISOString().split('T')[0];
@@ -174,6 +175,31 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   // Use the hook for handling queued messages
   useQueuedMessage(queuedMessage, isOpen, setQueuedMessage);
+  
+  // Helper function for category validation from existing code
+  const validateCategory = (category: string): string => {
+    if (!category) return 'Miscellaneous';
+    
+    // Check for exact match
+    const exactMatch = EXPENSE_CATEGORIES.find(
+      c => c.toLowerCase() === category.toLowerCase()
+    );
+    
+    if (exactMatch) return exactMatch;
+    
+    // Look for partial matches
+    const partialMatches = EXPENSE_CATEGORIES.filter(
+      c => c.toLowerCase().includes(category.toLowerCase()) || 
+           category.toLowerCase().includes(c.toLowerCase())
+    );
+    
+    if (partialMatches.length > 0) {
+      return partialMatches[0]; // Return the first partial match
+    }
+    
+    // No match found, use miscellaneous as fallback
+    return 'Other';
+  };
 
   return (
     <FinnyContext.Provider

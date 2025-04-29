@@ -37,6 +37,7 @@ const FinnyChat = ({
   const user = auth?.user || null;
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const initialRenderRef = useRef(true);
 
   const {
     messages,
@@ -50,14 +51,20 @@ const FinnyChat = ({
     handleSendMessage,
     handleQuickReply,
     oldestMessageTime,
-    resetChat
+    resetChat,
+    resetInProgress
   } = useChatLogic(queuedMessage, nameUpdateTimestamp);
 
   // Reset chat when name updates
   useEffect(() => {
-    if (nameUpdateTimestamp && user) {
-      console.log("Name updated, resetting chat");
-      resetChat();
+    if (nameUpdateTimestamp && nameUpdateTimestamp > 0 && user) {
+      // Skip the first render to avoid unnecessary reset
+      if (!initialRenderRef.current) {
+        console.log("Name updated, resetting chat");
+        resetChat();
+      } else {
+        initialRenderRef.current = false;
+      }
     }
   }, [nameUpdateTimestamp, user, resetChat]);
 
@@ -149,13 +156,25 @@ const FinnyChat = ({
 
                     {user && oldestMessageTime && <ChatHistoryBanner oldestMessageTime={oldestMessageTime} />}
                     
-                    {isConnectingToData && user && <div className="flex flex-col items-center justify-center py-6 space-y-3">
-                      <div className="relative w-10 h-10">
-                        <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
-                        <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
+                    {resetInProgress && (
+                      <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                        <div className="relative w-10 h-10">
+                          <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
+                          <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">Resetting Finny...</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
-                    </div>}
+                    )}
+                    
+                    {isConnectingToData && user && !resetInProgress && (
+                      <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                        <div className="relative w-10 h-10">
+                          <div className="absolute inset-0 rounded-full animate-pulse bg-primary/20" />
+                          <Loader2 className="absolute inset-0 w-10 h-10 animate-spin text-primary" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
+                      </div>
+                    )}
                   
                     {messages.map(message => (
                       <FinnyMessage 
@@ -168,9 +187,9 @@ const FinnyChat = ({
                       />
                     ))}
 
-                    {isTyping && <TypingIndicator />}
+                    {isTyping && !resetInProgress && <TypingIndicator />}
                   
-                    {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && (
+                    {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && !resetInProgress && (
                       <QuickReplies 
                         replies={quickReplies} 
                         onSelect={handleQuickReply} 
@@ -189,10 +208,10 @@ const FinnyChat = ({
                   value={newMessage} 
                   onChange={e => setNewMessage(e.target.value)} 
                   onSubmit={handleSendMessage}
-                  disabled={false}
-                  isLoading={isLoading} 
+                  disabled={resetInProgress}
+                  isLoading={isLoading || resetInProgress} 
                   isAuthenticated={!!user} 
-                  isConnecting={isConnectingToData} 
+                  isConnecting={isConnectingToData || resetInProgress} 
                 />
               </div>
             </div>
