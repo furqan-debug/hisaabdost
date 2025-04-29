@@ -8,12 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileImage, ImageOff } from "lucide-react";
+import { Download, FileImage, ImageOff, X } from "lucide-react";
 import { toast } from "sonner";
 import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ViewReceiptDialogProps {
-  receiptUrl?: string | null;
+  receiptUrl?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -27,7 +27,7 @@ export function ViewReceiptDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | undefined | null>(receiptUrl);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(receiptUrl);
   const imageRef = useRef<HTMLImageElement>(null);
   const dialogOpenTime = useRef<number>(0);
   
@@ -157,7 +157,6 @@ export function ViewReceiptDialog({
   // Determine if receipt is a blob URL
   const isBlobUrl = receiptUrl?.startsWith('blob:') || false;
 
-  // If no receipt URL provided, don't render the component
   if (!receiptUrl) return null;
 
   return (
@@ -241,7 +240,16 @@ export function ViewReceiptDialog({
             )}
           </div>
           
-          {/* Removed the duplicate close button here */}
+          {/* Custom close button with focus on proper cleanup */}
+          <Button
+            onClick={handleCloseDialog}
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            aria-label="Close dialog"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogContent>
       </Dialog>
     </>

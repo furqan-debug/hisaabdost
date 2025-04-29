@@ -153,7 +153,7 @@ export function ReceiptScanDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl" hideCloseButton>
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <ScanDialogContent
           previewUrl={previewUrl}
           isScanning={isScanning}
