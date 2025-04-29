@@ -12,7 +12,7 @@ interface ScanDialogContentProps {
   scanProgress: number;
   statusMessage: string;
   scanTimedOut: boolean;
-  scanError: boolean;
+  scanError: boolean; // Changed from string to boolean
   handleScanReceipt: () => void;
   onCleanup: () => void;
   fileExists: boolean;

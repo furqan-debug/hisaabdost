@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
 import { saveExpenseFromScan } from '../services/expenseDbService';
@@ -210,7 +209,7 @@ export function useScanReceipt({
     isScanning,
     scanProgress,
     scanTimedOut,
-    scanError,
+    scanError, // Return as string | null for detailed error messages
     statusMessage,
     handleScanReceipt,
     isAutoProcessing,

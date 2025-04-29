@@ -161,7 +161,7 @@ export function ReceiptScanDialog({
           scanProgress={scanProgress}
           statusMessage={statusMessage}
           scanTimedOut={scanTimedOut}
-          scanError={scanError}
+          scanError={!!scanError} // Fix here: Convert string | null to boolean
           handleScanReceipt={handleScanReceipt}
           onCleanup={() => handleClose(isScanning, isAutoProcessing)}
           fileExists={!!fileRef.current}
