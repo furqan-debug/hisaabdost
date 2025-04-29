@@ -8,7 +8,7 @@ const DialogTrigger = DialogPrimitive.Trigger;
 
 // Enhanced portal with unmount tracking
 const DialogPortal = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Portal>, 
+  React.ComponentRef<typeof DialogPrimitive.Portal>, 
   DialogPrimitive.DialogPortalProps & { onCleanup?: () => void }
 >(({ onCleanup, children, ...props }, forwardedRef) => {
   // Track portal mounted state
@@ -30,12 +30,10 @@ const DialogPortal = React.forwardRef<
         // Store ref locally
         portalRef.current = node;
         
-        // Forward ref if needed - Fix: Type checking for forwardedRef
+        // Forward ref if needed - Fix: Update type handling
         if (typeof forwardedRef === 'function') {
-          // Use type assertion to handle the never type issue
-          forwardedRef(node as any);
+          forwardedRef(node as React.ComponentRef<typeof DialogPrimitive.Portal>);
         } else if (forwardedRef) {
-          // Use type assertion to handle the never type issue
           (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }
       }}>
