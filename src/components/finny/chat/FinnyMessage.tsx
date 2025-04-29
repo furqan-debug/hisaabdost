@@ -34,10 +34,13 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
      formattedContent.toLowerCase().includes("completely understand"));
 
   // Generate visualization data based on content
-  const chartData = useMemo(() => 
-    extractChartData(formattedContent, visualData), 
-    [formattedContent, visualData]
-  );
+  const chartData = useMemo(() => {
+    // Skip chart generation for user messages
+    if (isUser) return [];
+    
+    // Extract chart data from the message
+    return extractChartData(formattedContent, visualData);
+  }, [formattedContent, visualData, isUser]);
 
   return (
     <motion.div
@@ -66,11 +69,13 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
           {formattedContent}
         </div>
         
-        {/* Visual Data */}
-        <MessageVisualization 
-          visualData={visualData} 
-          chartData={chartData} 
-        />
+        {/* Visual Data - Only show for non-user messages with chart data or explicit visualData */}
+        {!isUser && (chartData.length > 0 || visualData) && (
+          <MessageVisualization 
+            visualData={visualData} 
+            chartData={chartData} 
+          />
+        )}
 
         {/* Action result indicators */}
         <ActionIndicator 

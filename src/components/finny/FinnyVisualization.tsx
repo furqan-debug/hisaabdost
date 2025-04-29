@@ -15,8 +15,11 @@ interface FinnyVisualizationProps {
 const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualizationProps) => {
   const { currencyCode } = useCurrency();
   const isMobile = useIsMobile();
-
-  if (!data || data.length === 0) {
+  
+  // Ensure data exists and has valid values
+  const hasValidData = data && data.length > 0 && data.some(item => item.value > 0);
+  
+  if (!hasValidData) {
     return (
       <div className="w-full h-24 flex items-center justify-center bg-muted/30 rounded-md">
         <span className="text-xs text-muted-foreground">No data available for visualization</span>
@@ -30,10 +33,18 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
     color: item.color || CATEGORY_COLORS[item.name as keyof typeof CATEGORY_COLORS] || '#94A3B8'
   }));
 
+  // Custom tooltip formatter for currency display
+  const currencyFormatter = (value: any) => {
+    if (typeof value === 'number') {
+      return formatCurrency(value, currencyCode);
+    }
+    return value;
+  };
+
   if (type === 'pie') {
     return (
       <ResponsiveContainer width="100%" height={height}>
-        <PieChart>
+        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <Pie
             data={processedData}
             cx="50%"
@@ -43,14 +54,17 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
             paddingAngle={2}
             cornerRadius={3}
             dataKey="value"
+            nameKey="name"
+            label={false}
+            isAnimationActive={true}
           >
             {processedData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
           <RechartsTooltip
-            formatter={(value: any) => formatCurrency(value, currencyCode)}
-            labelFormatter={(index: any) => processedData[index]?.name}
+            formatter={currencyFormatter}
+            labelFormatter={(name: any) => name}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -58,13 +72,15 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
   } else {
     return (
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={processedData}>
+        <BarChart data={processedData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
           <XAxis 
             dataKey="name" 
             tick={{ fontSize: 10 }}
             height={isMobile ? 20 : 30} 
             dy={5}
             interval={isMobile ? 1 : 0}
+            tickLine={false}
+            axisLine={false}
           />
           <YAxis 
             tick={{ fontSize: 10 }} 
@@ -73,11 +89,13 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
               if (value >= 1000) return `${Math.floor(value / 1000)}k`;
               return value.toString();
             }}
+            tickLine={false}
+            axisLine={false}
           />
           <RechartsTooltip
-            formatter={(value: any) => formatCurrency(value, currencyCode)}
+            formatter={currencyFormatter}
           />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={true}>
             {processedData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}

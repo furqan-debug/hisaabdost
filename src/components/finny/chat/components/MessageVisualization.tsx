@@ -14,8 +14,26 @@ interface MessageVisualizationProps {
 }
 
 const MessageVisualization = ({ visualData, chartData }: MessageVisualizationProps) => {
+  // Return null if we don't have visualization data or chart data
   if (!visualData && (!chartData || chartData.length === 0)) {
     return null;
+  }
+
+  // Check if we have actual values in the chart data
+  const hasValidData = chartData.some(item => item.value > 0);
+  
+  if (!hasValidData) {
+    return (
+      <Card className="p-3 mt-2 bg-background/90 dark:bg-background/30 border border-muted overflow-hidden">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
+          {visualData?.type === 'category' ? <BarChart3 size={14} /> : <PieChartIcon size={14} />}
+          <span>Finance Visualization</span>
+        </div>
+        <div className="w-full h-24 flex items-center justify-center bg-muted/30 rounded-md">
+          <span className="text-xs text-muted-foreground">No data available for visualization</span>
+        </div>
+      </Card>
+    );
   }
 
   return (
