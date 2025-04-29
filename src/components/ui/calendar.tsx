@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { DayPicker, DropdownProps } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 import { format, setYear, getYear } from "date-fns";
 
 import { cn } from "@/lib/utils";
@@ -19,7 +19,10 @@ function Calendar({
   const [currentMonth, setCurrentMonth] = React.useState<Date>(props.defaultMonth || new Date());
 
   // Custom caption component with month/year dropdown
-  function CustomCaption(props: { 
+  function CustomCaption({ 
+    displayMonth, 
+    goToMonth 
+  }: { 
     displayMonth: Date;
     goToMonth: (month: Date) => void;
   }) {
@@ -28,7 +31,7 @@ function Calendar({
       "July", "August", "September", "October", "November", "December"
     ];
 
-    const currentYear = getYear(props.displayMonth);
+    const currentYear = getYear(displayMonth);
     const startYear = currentYear - 10;
     const endYear = currentYear + 10;
     const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
@@ -36,27 +39,27 @@ function Calendar({
     // Handle month change
     const handleMonthChange = (month: string) => {
       const newMonth = months.indexOf(month);
-      const newDate = new Date(props.displayMonth);
+      const newDate = new Date(displayMonth);
       newDate.setMonth(newMonth);
-      props.goToMonth(newDate);
+      goToMonth(newDate);
       setCurrentMonth(newDate);
     };
 
     // Handle year change
     const handleYearChange = (year: string) => {
-      const newDate = setYear(props.displayMonth, parseInt(year));
-      props.goToMonth(newDate);
+      const newDate = setYear(displayMonth, parseInt(year));
+      goToMonth(newDate);
       setCurrentMonth(newDate);
     };
 
     return (
       <div className="flex items-center justify-center space-x-2">
         <Select
-          value={months[props.displayMonth.getMonth()]}
+          value={months[displayMonth.getMonth()]}
           onValueChange={handleMonthChange}
         >
           <SelectTrigger className="h-8 w-[110px] text-xs sm:text-sm font-medium bg-background">
-            <SelectValue>{months[props.displayMonth.getMonth()]}</SelectValue>
+            <SelectValue>{months[displayMonth.getMonth()]}</SelectValue>
           </SelectTrigger>
           <SelectContent className="max-h-[300px] overflow-y-auto">
             {months.map((month) => (
@@ -131,7 +134,9 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Dropdown: (props: DropdownProps) => <CustomCaption displayMonth={currentMonth} goToMonth={props.goToMonth} />,
+        Caption: ({ displayMonth, goToMonth }) => (
+          <CustomCaption displayMonth={displayMonth} goToMonth={goToMonth} />
+        ),
       }}
       onMonthChange={setCurrentMonth}
       month={currentMonth}
