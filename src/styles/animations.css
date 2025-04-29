@@ -1,3 +1,4 @@
+
 /* Base Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -104,6 +105,21 @@
   }
 }
 
+@keyframes progressFlow {
+  0% {
+    background-position: 0% 50%;
+    background-size: 200% 200%;
+  }
+  50% {
+    background-position: 100% 50%;
+    background-size: 200% 200%;
+  }
+  100% {
+    background-position: 0% 50%;
+    background-size: 200% 200%;
+  }
+}
+
 @keyframes colorPulse {
   0% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -162,6 +178,11 @@
 .animate-gradient {
   background-size: 200% 200%;
   animation: gradientTransition 3s ease infinite;
+}
+
+.animate-progress-flow {
+  background-size: 200% 200%;
+  animation: progressFlow 6s ease infinite;
 }
 
 .animate-color-pulse {

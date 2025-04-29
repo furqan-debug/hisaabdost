@@ -10,120 +10,119 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const animationFrameRef = useRef<number>();
   const lastUpdateTime = useRef<number>(0);
-  const targetProgressRef = useRef<number>(0);
   
-  // Progress stages for a smoother animation flow
-  const progressStepsRef = useRef({
-    initial: 0,     // Start point
-    scanning: 25,   // First milestone
-    processing: 50, // Second milestone
-    analyzing: 75,  // Third milestone
-    complete: 100   // Final value
+  // Use refs to track animation state
+  const currentProgressRef = useRef<number>(0);
+  const targetProgressRef = useRef<number>(0);
+  const previousDirectionRef = useRef<'forward' | 'none'>('none');
+
+  // Define progress milestones
+  const milestones = useRef({
+    initial: 0,     // Starting point
+    stage1: 25,     // First quarter
+    stage2: 50,     // Halfway
+    stage3: 75,     // Third quarter
+    complete: 100   // Final point
   });
 
-  // Initialize animation when scanning starts or stops
+  // Calculate target based on backend progress
+  const calculateTarget = (backendProgress: number) => {
+    // Always move forward, never backward
+    if (backendProgress >= 100) {
+      return 100;
+    } else if (backendProgress >= 75) {
+      return Math.min(95, backendProgress);
+    } else if (backendProgress >= 50) {
+      return Math.min(75, backendProgress);
+    } else if (backendProgress >= 25) {
+      return Math.min(50, backendProgress);
+    } else {
+      return Math.min(25, Math.max(backendProgress * 1.1, 5)); // Ensure at least 5% at start
+    }
+  };
+
   useEffect(() => {
     if (!isScanning) {
+      // Reset progress when not scanning
       setDisplayedProgress(0);
+      currentProgressRef.current = 0;
       targetProgressRef.current = 0;
+      previousDirectionRef.current = 'none';
+      
+      // Clean up any animation frame
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
       return;
     }
 
-    // Reset progress when scanning starts
-    setDisplayedProgress(progressStepsRef.current.initial);
-    targetProgressRef.current = Math.min(25, backendProgress * 1.2); // Initial target
+    // Set initial progress and target
+    if (currentProgressRef.current === 0) {
+      // Starting fresh - begin at 0% and move to at least 5%
+      setDisplayedProgress(0);
+      currentProgressRef.current = 0;
+      targetProgressRef.current = calculateTarget(backendProgress);
+      previousDirectionRef.current = 'forward';
+    } else {
+      // Update the target based on new backend progress
+      const newTarget = calculateTarget(backendProgress);
+      // IMPORTANT: Only update target if it would move forward
+      if (newTarget > targetProgressRef.current) {
+        targetProgressRef.current = newTarget;
+      }
+    }
+
     lastUpdateTime.current = performance.now();
 
-    const animate = (currentTime: number) => {
-      const deltaTime = currentTime - lastUpdateTime.current;
-      lastUpdateTime.current = currentTime;
+    const animate = (timestamp: number) => {
+      const deltaTime = timestamp - lastUpdateTime.current;
+      lastUpdateTime.current = timestamp;
 
-      // Calculate the appropriate target based on backend progress
-      if (backendProgress >= 100) {
-        targetProgressRef.current = 100;
-      } else if (backendProgress >= 75) {
-        targetProgressRef.current = Math.min(backendProgress, 95);
-      } else if (backendProgress >= 50) {
-        targetProgressRef.current = Math.min(backendProgress * 1.05, 75);
-      } else if (backendProgress >= 25) {
-        targetProgressRef.current = Math.min(backendProgress * 1.1, 50);
-      } else {
-        targetProgressRef.current = Math.min(backendProgress * 1.2, 25);
+      // Calculate the distance to target
+      const distanceToTarget = targetProgressRef.current - currentProgressRef.current;
+      
+      // Only move forward, never backward
+      if (distanceToTarget > 0) {
+        // Base speed is 2-10% per second depending on the distance
+        const baseSpeed = Math.min(10, Math.max(2, distanceToTarget / 10));
+        
+        // Calculate actual speed for this frame
+        const frameSpeed = baseSpeed * (deltaTime / 1000);
+        
+        // Apply easing for more natural movement
+        // Slower at beginning and end, faster in the middle
+        const position = currentProgressRef.current / 100;
+        const easing = 0.5 - 0.5 * Math.cos(position * Math.PI);
+        
+        // Move progress forward, never more than the distance to target
+        const movement = Math.min(frameSpeed * (1 + easing), distanceToTarget);
+        
+        // Update the current progress
+        currentProgressRef.current += movement;
+        
+        // Update the state (rounded to 2 decimal places for efficiency)
+        const roundedProgress = Math.round(currentProgressRef.current * 100) / 100;
+        setDisplayedProgress(roundedProgress);
+        
+        previousDirectionRef.current = 'forward';
       }
 
-      setDisplayedProgress(prevProgress => {
-        // Calculate distance to target
-        const distanceToTarget = targetProgressRef.current - prevProgress;
-        
-        // Base speed adjusted by distance (higher speed when further from target)
-        let baseSpeed = 0.02; // 2% per second at minimum
-        
-        // Adaptive speed based on distance to target
-        // This creates a natural acceleration/deceleration effect
-        if (Math.abs(distanceToTarget) > 20) {
-          baseSpeed = 0.05; // 5% per second when far from target
-        } else if (Math.abs(distanceToTarget) > 10) {
-          baseSpeed = 0.035; // 3.5% per second when moderately far from target
-        } else if (Math.abs(distanceToTarget) > 5) {
-          baseSpeed = 0.025; // 2.5% per second when somewhat close to target
-        }
-        
-        // Ensure we have a minimum speed even when very close to target
-        const minSpeed = 0.005; // 0.5% minimum movement per second
-        
-        // Direction-aware speed calculation
-        let speedThisFrame = Math.max(
-          Math.abs(distanceToTarget) * baseSpeed * (deltaTime / 1000),
-          minSpeed * (deltaTime / 1000)
-        );
-        
-        // Cap maximum speed to avoid large jumps
-        speedThisFrame = Math.min(speedThisFrame, 1.5 * (deltaTime / 1000));
-        
-        // Apply direction
-        if (distanceToTarget < 0) speedThisFrame *= -1;
-        
-        // Calculate new progress with easing for smoother motion
-        const easingFactor = 0.92; // Higher values make movement smoother but slower
-        let newProgress = prevProgress + speedThisFrame * (1 - easingFactor) + (distanceToTarget * (deltaTime / 1000) * easingFactor);
-
-        // Handle special case of approaching 100% (completion)
-        if (backendProgress >= 100 && newProgress > 99.5) {
-          return 100; // Jump to exactly 100% to ensure we reach completion
-        }
-        
-        // Ensure we don't exceed boundaries
-        return Math.max(0, Math.min(newProgress, 100));
-      });
-
-      // Continue animation unless we've reached exactly 100%
-      if (displayedProgress !== 100) {
+      // Continue animation until we reach 100% exactly
+      if (currentProgressRef.current < 100) {
         animationFrameRef.current = requestAnimationFrame(animate);
       }
     };
 
-    // Start animation
+    // Start the animation
     animationFrameRef.current = requestAnimationFrame(animate);
 
-    // Cleanup on unmount
+    // Cleanup function
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [isScanning, backendProgress]);
-
-  // Ensure we properly clean up the animation frame on unmount
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   return displayedProgress;
 }

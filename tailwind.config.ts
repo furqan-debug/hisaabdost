@@ -119,6 +119,11 @@ export default {
           '0%': { transform: 'translateY(-100%)' },
           '100%': { transform: 'translateY(100%)' },
         },
+        gradientFlow: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -132,6 +137,7 @@ export default {
         'progress-pulse': 'progressPulse 2s infinite',
         'color-shift': 'colorShift 3s infinite alternate',
         'scan-line': 'scanLine 2s infinite linear',
+        'gradient': 'gradientFlow 6s ease infinite',
       },
       borderRadius: {
         'xl': '1rem',

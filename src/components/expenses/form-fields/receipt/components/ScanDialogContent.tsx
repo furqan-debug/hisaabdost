@@ -13,7 +13,7 @@ interface ScanDialogContentProps {
   scanProgress: number;
   statusMessage: string;
   scanTimedOut: boolean;
-  scanError: boolean; // Changed from string to boolean
+  scanError: boolean;
   handleScanReceipt: () => void;
   onCleanup: () => void;
   fileExists: boolean;
@@ -35,13 +35,13 @@ export function ScanDialogContent({
   processingComplete,
   autoProcess = true
 }: ScanDialogContentProps) {
-  // Use the progress animation hook to get smooth progress display
+  // Use the improved progress animation hook
   const displayedProgress = useProgressAnimation({ 
     isScanning: isScanning || isAutoProcessing, 
     backendProgress: scanProgress 
   });
 
-  // Get gradient styles for smoother color transitions
+  // Get gradient styles for smooth color transitions
   const progressStyles = getProgressStyles(displayedProgress);
 
   // Format progress to whole number for display
@@ -79,7 +79,7 @@ export function ScanDialogContent({
                 <Progress 
                   value={displayedProgress} 
                   className="h-2.5 bg-secondary/30"
-                  indicatorClassName={`bg-gradient-to-r ${progressStyles.className}`}
+                  indicatorClassName={`bg-gradient-to-r ${progressStyles.className} animate-gradient`}
                   indicatorStyle={{ background: progressStyles.background }}
                 />
                 <div className="flex justify-between text-xs mt-2">
