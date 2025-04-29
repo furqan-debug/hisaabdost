@@ -28,18 +28,20 @@ export function CurrencySettings() {
           className="max-h-[300px] overflow-y-auto"
           style={{
             WebkitOverflowScrolling: "touch",
-            touchAction: "pan-y",
-            overscrollBehavior: "contain"
+            overscrollBehavior: "contain",
+            touchAction: "auto", // ensures smooth finger scroll
           }}
         >
-          {CURRENCY_OPTIONS.map((option) => (
-            <SelectItem key={option.code} value={option.code}>
-              <div className="flex items-center">
-                <span className="mr-2">{option.symbol}</span>
-                <span>{option.label}</span>
-              </div>
-            </SelectItem>
-          ))}
+          <div className="max-h-[300px] overflow-y-auto">
+            {CURRENCY_OPTIONS.map((option) => (
+              <SelectItem key={option.code} value={option.code}>
+                <div className="flex items-center">
+                  <span className="mr-2">{option.symbol}</span>
+                  <span>{option.label}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </div>
         </SelectContent>
       </Select>
     </div>
