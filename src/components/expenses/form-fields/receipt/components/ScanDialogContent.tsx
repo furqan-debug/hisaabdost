@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ScanButton } from "./ScanButton";
 import { useProgressAnimation } from "../hooks/useProgressAnimation";
+import { getProgressStyles } from "../utils/progressColors";
 
 interface ScanDialogContentProps {
   previewUrl: string | null;
@@ -40,6 +41,9 @@ export function ScanDialogContent({
     backendProgress: scanProgress 
   });
 
+  // Get gradient styles for smoother color transitions
+  const progressStyles = getProgressStyles(displayedProgress);
+
   // Format progress to whole number for display
   const formattedProgress = Math.round(displayedProgress);
   
@@ -74,10 +78,15 @@ export function ScanDialogContent({
               <div className="w-4/5 px-4">
                 <Progress 
                   value={displayedProgress} 
-                  className="h-2 bg-secondary/30"
-                  indicatorClassName={`${displayedProgress >= 80 ? "bg-green-500" : displayedProgress >= 50 ? "bg-blue-500" : "bg-primary"}`}
+                  className="h-2.5 bg-secondary/30"
+                  indicatorClassName={`bg-gradient-to-r ${progressStyles.className}`}
+                  indicatorStyle={{ background: progressStyles.background }}
                 />
-                <p className="text-center text-sm mt-2">{formattedProgress}% complete</p>
+                <div className="flex justify-between text-xs mt-2">
+                  <span>0%</span>
+                  <span className="font-medium">{formattedProgress}% complete</span>
+                  <span>100%</span>
+                </div>
               </div>
             </div>
           )}

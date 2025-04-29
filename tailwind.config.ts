@@ -103,6 +103,22 @@ export default {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        progressPulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.85' },
+        },
+        colorShift: {
+          '0%': { filter: 'hue-rotate(0deg)' },
+          '100%': { filter: 'hue-rotate(30deg)' },
+        },
+        scanLine: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -112,6 +128,10 @@ export default {
         'pulse': 'pulse 2s infinite',
         'scale-in': 'scaleIn 0.3s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
+        'shimmer': 'shimmer 2s infinite linear',
+        'progress-pulse': 'progressPulse 2s infinite',
+        'color-shift': 'colorShift 3s infinite alternate',
+        'scan-line': 'scanLine 2s infinite linear',
       },
       borderRadius: {
         'xl': '1rem',
