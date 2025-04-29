@@ -8,12 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileImage, ImageOff } from "lucide-react";
+import { Download, FileImage, ImageOff, X } from "lucide-react";
 import { toast } from "sonner";
 import { addBlobUrlReference, markBlobUrlForCleanup } from "@/utils/blobUrlManager";
 
 interface ViewReceiptDialogProps {
-  receiptUrl?: string | null;
+  receiptUrl?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -27,19 +27,19 @@ export function ViewReceiptDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | undefined | null>(receiptUrl);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(receiptUrl);
   const imageRef = useRef<HTMLImageElement>(null);
   const dialogOpenTime = useRef<number>(0);
   
   // Use external or internal state based on what's provided
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setIsOpen = useCallback((value: boolean) => {
+  const setIsOpen = (value: boolean) => {
     if (externalOnOpenChange) {
       externalOnOpenChange(value);
     } else {
       setInternalOpen(value);
     }
-  }, [externalOnOpenChange]);
+  };
   
   // Handle image loading state when dialog opens
   useEffect(() => {
@@ -57,15 +57,14 @@ export function ViewReceiptDialog({
       if (receiptUrl && receiptUrl.startsWith('blob:')) {
         addBlobUrlReference(receiptUrl);
       }
-    } else {
-      // Cleanup when dialog closes
-      if (receiptUrl && receiptUrl.startsWith('blob:')) {
-        // Add a small delay before cleanup to ensure smooth transitions
-        setTimeout(() => {
-          markBlobUrlForCleanup(receiptUrl);
-        }, 300);
-      }
     }
+    
+    return () => {
+      // Clean up blob URL reference when dialog closes
+      if (!isOpen && receiptUrl && receiptUrl.startsWith('blob:')) {
+        markBlobUrlForCleanup(receiptUrl);
+      }
+    };
   }, [isOpen, receiptUrl, imageSrc]);
   
   // Track if component is mounted
@@ -74,12 +73,8 @@ export function ViewReceiptDialog({
     isMounted.current = true;
     return () => {
       isMounted.current = false;
-      // Cleanup on unmount
-      if (receiptUrl && receiptUrl.startsWith('blob:')) {
-        markBlobUrlForCleanup(receiptUrl);
-      }
     };
-  }, [receiptUrl]);
+  }, []);
   
   const handleDownload = useCallback(() => {
     if (!receiptUrl || imageError) return;
@@ -162,7 +157,6 @@ export function ViewReceiptDialog({
   // Determine if receipt is a blob URL
   const isBlobUrl = receiptUrl?.startsWith('blob:') || false;
 
-  // If no receipt URL provided, don't render the component
   if (!receiptUrl) return null;
 
   return (
@@ -245,6 +239,17 @@ export function ViewReceiptDialog({
               </div>
             )}
           </div>
+          
+          {/* Custom close button with focus on proper cleanup */}
+          <Button
+            onClick={handleCloseDialog}
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            aria-label="Close dialog"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogContent>
       </Dialog>
     </>

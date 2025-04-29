@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
-import { cleanupUnusedBlobUrls } from "@/utils/blobUrlManager";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -22,7 +21,7 @@ interface ReceiptScanDialogProps {
   }) => void;
   autoSave?: boolean;
   autoProcess?: boolean;
-  onSuccess?: () => void;
+  onSuccess?: () => void; // Added prop
 }
 
 export function ReceiptScanDialog({
@@ -39,7 +38,6 @@ export function ReceiptScanDialog({
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
   const fileRef = useRef<File | null>(null);
   const fileFingerprint = useRef<string | null>(null);
-  const dialogOpenRef = useRef(false);
   
   // Store the file in ref to avoid dependency changes
   useEffect(() => {
@@ -90,21 +88,6 @@ export function ReceiptScanDialog({
     onCleanup
   });
 
-  // Track dialog open state for cleanup purposes
-  useEffect(() => {
-    dialogOpenRef.current = open;
-    
-    // When dialog closes, run cleanup
-    if (!open && dialogOpenRef.current) {
-      console.log("Dialog closed, triggering cleanup");
-      
-      // Clean up any unused blob URLs
-      setTimeout(() => {
-        cleanupUnusedBlobUrls();
-      }, 500);
-    }
-  }, [open]);
-  
   // Auto-process the receipt when the dialog opens - only once per file
   useEffect(() => {
     // Only run if component is mounted and dialog is open
@@ -151,32 +134,17 @@ export function ReceiptScanDialog({
     if (processingComplete && open && !isScanning && !isAutoProcessing) {
       // Wait a moment to show the success state before closing
       const timer = setTimeout(() => {
-        console.log("Processing complete, closing dialog automatically");
         setOpen(false);
       }, 1500);
       return () => clearTimeout(timer);
     }
   }, [processingComplete, open, isScanning, isAutoProcessing, setOpen]);
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      console.log("ReceiptScanDialog unmounting, cleaning up");
-      // Extra cleanup when component unmounts
-      cleanupUnusedBlobUrls();
-    };
-  }, []);
-
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen) {
       if (handleClose(isScanning, isAutoProcessing)) {
         retryHandler.setProcessing(false);
         setOpen(false);
-        
-        // Force cleanup of blob URLs when dialog is closed
-        setTimeout(() => {
-          cleanupUnusedBlobUrls();
-        }, 300);
       }
     } else {
       setOpen(true);
@@ -185,7 +153,7 @@ export function ReceiptScanDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl" hideCloseButton>
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <ScanDialogContent
           previewUrl={previewUrl}
           isScanning={isScanning}
@@ -193,7 +161,7 @@ export function ReceiptScanDialog({
           scanProgress={scanProgress}
           statusMessage={statusMessage}
           scanTimedOut={scanTimedOut}
-          scanError={!!scanError} // Convert string | null to boolean
+          scanError={!!scanError} // Fix here: Convert string | null to boolean
           handleScanReceipt={handleScanReceipt}
           onCleanup={() => handleClose(isScanning, isAutoProcessing)}
           fileExists={!!fileRef.current}
