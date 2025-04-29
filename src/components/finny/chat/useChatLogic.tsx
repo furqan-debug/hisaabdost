@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -28,6 +29,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnectingToData, setIsConnectingToData] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { currencyCode } = useCurrency();
 
   const {
@@ -41,7 +43,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearLocalStorage
   } = useMessageHandling(setQuickReplies);
 
   useEffect(() => {
@@ -51,9 +54,15 @@ export const useChatLogic = (queuedMessage: string | null) => {
   }, [messages, isTyping]);
 
   useEffect(() => {
-    if (user && messages.length === 0) {
+    // Only initialize if we haven't already and either have no messages or user status changed
+    if (!hasInitialized && user) {
       initializeChat();
-    } else if (!user) {
+      setHasInitialized(true);
+    } else if (!user && hasInitialized) {
+      // Reset initialization state when user logs out
+      setHasInitialized(false);
+      
+      // Show welcome message for non-authenticated users
       const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
@@ -62,9 +71,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
       setMessages([welcomeMessage]);
-      saveMessage(welcomeMessage);
     }
-  }, [user, currencyCode]);
+  }, [user, hasInitialized]);
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
@@ -193,8 +201,17 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   const initializeChat = async () => {
     setIsConnectingToData(true);
-        
+    
     try {
+      // First check if we have any existing messages in storage
+      await loadChatHistory();
+      
+      // If we have chat history, don't show welcome message again
+      if (messages.length > 0) {
+        setIsConnectingToData(false);
+        return;
+      }
+        
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -302,7 +319,15 @@ export const useChatLogic = (queuedMessage: string | null) => {
           timestamp: new Date(),
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
         };
-        setMessages([welcomeMessage]);
+        
+        // Only set the message if we don't already have messages (prevent duplicates)
+        setMessages(prevMessages => {
+          if (prevMessages.length === 0) {
+            return [welcomeMessage];
+          }
+          return prevMessages;
+        });
+        
         saveMessage(welcomeMessage);
         setIsTyping(false);
       }, 1500);
@@ -322,6 +347,29 @@ export const useChatLogic = (queuedMessage: string | null) => {
       setIsConnectingToData(false);
     }
   };
+  
+  const resetChat = () => {
+    clearLocalStorage();
+    setMessages([]);
+    setHasInitialized(false);
+    
+    if (user) {
+      // Re-initialize chat if user is signed in
+      setTimeout(() => {
+        initializeChat();
+      }, 500);
+    } else {
+      // Show auth prompt for non-authenticated users
+      const welcomeMessage = {
+        id: '1',
+        content: FINNY_MESSAGES.AUTH_PROMPT,
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      setMessages([welcomeMessage]);
+    }
+  };
 
   return {
     messages,
@@ -334,6 +382,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime
+    oldestMessageTime,
+    resetChat
   };
 };

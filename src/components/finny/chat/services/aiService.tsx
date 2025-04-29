@@ -17,6 +17,14 @@ export async function processMessageWithAI(
     .select('full_name, age, gender, preferred_currency')
     .eq('id', userId)
     .single();
+
+  console.log("Processing message with AI:", {
+    messageToSend,
+    userId,
+    userProfileFound: !!userProfile,
+    analysisType,
+    specificCategory
+  });
     
   const { data, error } = await supabase.functions.invoke('finny-chat', {
     body: {

@@ -15,6 +15,7 @@ import { Message } from './chat/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
+import { useFinny } from './FinnyProvider';
 
 interface FinnyChatProps {
   isOpen: boolean;
@@ -45,8 +46,16 @@ const FinnyChat = ({
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime
+    oldestMessageTime,
+    resetChat
   } = useChatLogic(null);
+
+  // Effect to reset chat when it's first opened
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Finny chat opened");
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
@@ -121,7 +130,7 @@ const FinnyChat = ({
           <Card className="finny-chat-card flex flex-col h-full">
             <div className="flex flex-col h-full">
               <div className="flex-none">
-                <ChatHeader onClose={onClose} />
+                <ChatHeader onClose={onClose} onReset={resetChat} />
               </div>
               
               <div className="flex-1 overflow-hidden">

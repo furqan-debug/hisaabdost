@@ -1,42 +1,47 @@
 
 import React from 'react';
-import { X, HelpCircle } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatHeaderProps {
   onClose: () => void;
+  onReset?: () => void;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({
-  onClose
-}) => {
+const ChatHeader = ({ onClose, onReset }: ChatHeaderProps) => {
   return (
-    <div className="finny-chat-header py-3 flex items-center justify-between bg-[#1A1F2C] border-b border-gray-800/50 px-4">
-      <div className="flex items-center gap-2.5">
-        <div className="text-lg font-medium text-white flex items-center">
-          <span className="text-yellow-400 mr-2">💰</span>
-          Finny
+    <div className="flex items-center justify-between p-4 finny-chat-header">
+      <div className="flex items-center space-x-3">
+        <div className="relative">
+          <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+            <span className="font-medium text-sm">F</span>
+          </div>
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></span>
         </div>
-        <Badge variant="outline" className="px-2 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-          AI Assistant
-        </Badge>
+        <div>
+          <div className="flex items-center space-x-2">
+            <h3 className="font-medium text-base">Finny</h3>
+            <Badge variant="outline" className="finny-chat-badge text-xs px-1.5">AI</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">Financial Assistant</p>
+        </div>
       </div>
-      <div className="flex items-center gap-1.5">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="text-gray-400 hover:text-white rounded-full p-2 hover:bg-white/5 transition-colors" aria-label="Help">
-                <HelpCircle size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="text-xs max-w-[220px] p-2">
-              <p>Ask Finny about your expenses, budgets, or category-specific insights like "Show my transportation spending"</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <button onClick={onClose} className="text-gray-400 hover:text-white rounded-full p-2 hover:bg-white/5 transition-colors" aria-label="Close chat">
-          <X size={16} />
+      
+      <div className="flex items-center space-x-2">
+        {onReset && (
+          <button
+            onClick={onReset}
+            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+            title="Reset conversation"
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
+        <button
+          onClick={onClose}
+          className="p-1.5 text-muted-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-md transition-colors"
+        >
+          <X size={18} />
         </button>
       </div>
     </div>

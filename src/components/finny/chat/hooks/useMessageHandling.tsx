@@ -23,6 +23,10 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
   useEffect(() => {
     if (user) {
       loadChatHistory();
+    } else {
+      // Clear messages when user logs out
+      setMessages([]);
+      setOldestMessageTime(undefined);
     }
   }, [user]);
 
@@ -54,6 +58,11 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
         }
       }
       
+      // Check if message with same ID already exists, if so, don't add it again
+      if (existingMessages.some(msg => msg.id === message.id)) {
+        return;
+      }
+      
       // Prepare the new message for storage
       const messageForStorage = {
         ...message,
@@ -79,7 +88,7 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     }
   };
 
-  const loadChatHistory = () => {
+  const loadChatHistory = async () => {
     try {
       const savedMessages = localStorage.getItem(LOCAL_STORAGE_MESSAGES_KEY);
       
@@ -122,15 +131,18 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     } catch (error) {
       console.error('Error loading chat history from local storage:', error);
     }
+    
+    return messages.length;
   };
 
-  // Make sure messages are cleared when user logs out
-  useEffect(() => {
-    if (!user) {
-      setMessages([]);
-      setOldestMessageTime(undefined);
+  const clearLocalStorage = () => {
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_MESSAGES_KEY);
+      console.log('Finny chat history cleared');
+    } catch (error) {
+      console.error('Error clearing local storage:', error);
     }
-  }, [user]);
+  };
 
   return {
     messages,
@@ -143,6 +155,7 @@ export const useMessageHandling = (setQuickReplies: (replies: QuickReply[]) => v
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearLocalStorage
   };
 };

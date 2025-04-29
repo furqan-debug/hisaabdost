@@ -17,6 +17,7 @@ interface FinnyContextType {
   addExpense: (amount: number, category: string, description?: string, date?: string) => void;
   setBudget: (amount: number, category: string) => void;
   askFinny: (question: string) => void;
+  resetChat: () => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -28,6 +29,7 @@ const FinnyContext = createContext<FinnyContextType>({
   addExpense: () => {},
   setBudget: () => {},
   askFinny: () => {},
+  resetChat: () => {},
 });
 
 export const useFinny = () => useContext(FinnyContext);
@@ -35,6 +37,7 @@ export const useFinny = () => useContext(FinnyContext);
 export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
+  const [chatKey, setChatKey] = useState<number>(Date.now());
   const auth = useAuth();
   const user = auth?.user || null;
   const { currencyCode } = useCurrency();
@@ -114,6 +117,16 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(question);
   };
   
+  const resetChat = () => {
+    // Force re-render the chat component by changing key
+    setChatKey(Date.now());
+    
+    // Clear any queued message
+    setQueuedMessage(null);
+    
+    toast.success("Finny chat reset successfully");
+  };
+  
   useEffect(() => {
     if (queuedMessage && isOpen) {
       const timer = setTimeout(() => {
@@ -146,11 +159,12 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addExpense,
         setBudget,
         askFinny,
+        resetChat,
       }}
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat isOpen={isOpen} onClose={closeChat} />
+      <FinnyChat key={chatKey} isOpen={isOpen} onClose={closeChat} />
     </FinnyContext.Provider>
   );
 };
