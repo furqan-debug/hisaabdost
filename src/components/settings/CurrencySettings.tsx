@@ -1,13 +1,11 @@
-
 import React from "react";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCurrency } from "@/hooks/use-currency";
 import { CURRENCY_OPTIONS, CurrencyCode } from "@/utils/currencyUtils";
 
@@ -25,17 +23,17 @@ export function CurrencySettings() {
         <SelectTrigger className="w-full h-9">
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
-        <SelectContent>
-          <ScrollArea className="h-[200px]">
-            {CURRENCY_OPTIONS.map((option) => (
-              <SelectItem key={option.code} value={option.code}>
-                <div className="flex items-center">
-                  <span className="mr-2">{option.symbol}</span>
-                  <span>{option.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </ScrollArea>
+
+        {/* ✅ Mobile-friendly scrolling added here */}
+        <SelectContent className="max-h-[300px] overflow-y-auto">
+          {CURRENCY_OPTIONS.map((option) => (
+            <SelectItem key={option.code} value={option.code}>
+              <div className="flex items-center">
+                <span className="mr-2">{option.symbol}</span>
+                <span>{option.label}</span>
+              </div>
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
