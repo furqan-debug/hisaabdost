@@ -112,6 +112,21 @@
     max-width: 100% !important;
     overflow-x: hidden !important;
   }
+  
+  /* Date input styling for mobile */
+  .date-input-custom {
+    @apply w-full rounded-lg border border-input text-sm;
+    appearance: none;
+  }
+  
+  /* Fix Safari date input appearance */
+  .date-input-custom::-webkit-datetime-edit {
+    @apply py-1;
+  }
+  
+  .date-input-custom::-webkit-calendar-picker-indicator {
+    @apply opacity-100 cursor-pointer;
+  }
 }
 
 /* Additional styles for card and glassmorphism effects */
@@ -138,4 +153,15 @@
 
 .budget-header {
   @apply flex items-center justify-between mb-4 pb-2 border-b border-border/20;
+}
+
+/* Date picker popover styling */
+.date-picker-popover {
+  @apply p-0 border border-border rounded-lg shadow-md overflow-hidden;
+  min-width: 300px;
+}
+
+/* Style for date buttons to make them more visible */
+.date-picker-button {
+  @apply w-full flex items-center border border-input bg-background rounded-md px-3 py-2 text-left;
 }

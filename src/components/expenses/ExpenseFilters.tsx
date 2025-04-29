@@ -7,10 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Filter, Calendar } from "lucide-react";
+import { ChevronDown, Filter, Calendar as CalendarIcon, X } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -44,6 +51,31 @@ export function ExpenseFilters({
   const isMobile = useIsMobile();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  const handleDateSelect = (type: 'start' | 'end', date: Date | undefined) => {
+    if (!date) return;
+    
+    const formattedDate = format(date, "yyyy-MM-dd");
+    
+    if (type === 'start') {
+      setDateRange({
+        ...dateRange,
+        start: formattedDate,
+      });
+    } else {
+      setDateRange({
+        ...dateRange,
+        end: formattedDate,
+      });
+    }
+  };
+  
+  const clearDateRange = () => {
+    setDateRange({
+      start: '',
+      end: ''
+    });
+  };
+
   return (
     <div className={cn("space-y-3", className)}>
       {/* Search input always visible */}
@@ -68,7 +100,7 @@ export function ExpenseFilters({
       {!useCustomDateRange && (
         <Alert variant="default" className="bg-muted/40 border-border/40 py-2">
           <AlertDescription className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3 mr-1 text-primary" />
+            <CalendarIcon className="h-3 w-3 mr-1 text-primary" />
             Showing expenses for {format(selectedMonth, 'MMMM yyyy')}. Use a custom range to override.
           </AlertDescription>
         </Alert>
@@ -108,32 +140,82 @@ export function ExpenseFilters({
               "flex gap-2",
               isMobile ? "justify-between" : ""
             )}>
-              <Input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({
-                  ...dateRange,
-                  start: e.target.value
-                })}
-                className={cn(
-                  "rounded-lg",
-                  isMobile ? "w-[48%]" : "w-auto"
-                )}
-              />
-              <Input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({
-                  ...dateRange,
-                  end: e.target.value
-                })}
-                className={cn(
-                  "rounded-lg",
-                  isMobile ? "w-[48%]" : "w-auto"
-                )}
-              />
+              {/* Start date popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-lg justify-start text-left",
+                      isMobile ? "w-[48%]" : "w-auto",
+                      !dateRange.start && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.start ? (
+                      format(new Date(dateRange.start), "MMM d, yyyy")
+                    ) : (
+                      "Start Date"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.start ? new Date(dateRange.start) : undefined}
+                    onSelect={(date) => handleDateSelect('start', date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              {/* End date popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className={cn(
+                      "rounded-lg justify-start text-left",
+                      isMobile ? "w-[48%]" : "w-auto",
+                      !dateRange.end && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.end ? (
+                      format(new Date(dateRange.end), "MMM d, yyyy")
+                    ) : (
+                      "End Date"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.end ? new Date(dateRange.end) : undefined}
+                    onSelect={(date) => handleDateSelect('end', date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
+          
+          {/* Clear dates button (only show when at least one date is selected) */}
+          {(dateRange.start || dateRange.end) && (
+            <div className="flex justify-end">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearDateRange}
+                className="text-xs flex items-center"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear dates
+              </Button>
+            </div>
+          )}
           
           {isMobile && (
             <div className="text-right">

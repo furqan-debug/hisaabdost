@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
@@ -11,14 +11,12 @@ import { ExpenseHeader } from "@/components/expenses/ExpenseHeader";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 
 const Expenses = () => {
   const { user } = useAuth();
-  const { toast: uiToast } = useToast();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   const { refreshTrigger, triggerRefresh } = useExpenseRefresh();
