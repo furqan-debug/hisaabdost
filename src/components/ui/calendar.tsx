@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -40,6 +41,10 @@ function Calendar({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={() => {
+        setShowYearPicker(false);
+        setShowMonthPicker(false);
+      }}
     />
   );
 
@@ -52,7 +57,7 @@ function Calendar({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto touch-scroll-container"
       >
         <div className="grid grid-cols-3 gap-2 p-2">
           {years.map((year) => (
@@ -60,7 +65,7 @@ function Calendar({
               key={year}
               onClick={() => handleYearSelect(year)}
               className={cn(
-                "text-sm py-1 rounded hover:bg-accent text-center",
+                "text-sm py-1.5 rounded hover:bg-accent text-center touch-target",
                 year === currentYear && "bg-primary text-primary-foreground"
               )}
             >
@@ -84,7 +89,7 @@ function Calendar({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto"
+        className="relative z-20 mt-2 bg-background rounded-lg shadow-inner border w-full max-h-[200px] overflow-y-auto touch-scroll-container"
       >
         <div className="grid grid-cols-3 gap-2 p-2">
           {months.map((month, index) => (
@@ -92,11 +97,11 @@ function Calendar({
               key={month}
               onClick={() => handleMonthSelect(index)}
               className={cn(
-                "text-sm py-1 rounded hover:bg-accent text-center",
+                "text-sm py-1.5 rounded hover:bg-accent text-center touch-target",
                 index === currentMonthIndex && "bg-primary text-primary-foreground"
               )}
             >
-              {month}
+              {month.slice(0, 3)}
             </button>
           ))}
         </div>
@@ -104,7 +109,12 @@ function Calendar({
     );
   };
 
-  function CustomCaption({ displayMonth }: CaptionProps) {
+  // Extended CaptionProps to include goToMonth
+  interface CustomCaptionProps extends CaptionProps {
+    goToMonth?: (date: Date) => void;
+  }
+
+  function CustomCaption({ displayMonth }: CustomCaptionProps) {
     const year = getYear(displayMonth);
     const month = format(displayMonth, "MMMM");
 
@@ -113,7 +123,7 @@ function Calendar({
         <div className="flex justify-between items-center w-full px-2 py-3">
           <button
             onClick={handlePrev}
-            className="rounded-full p-2 hover:bg-accent/70 transition"
+            className="rounded-full p-2 hover:bg-accent/70 transition touch-target"
           >
             <ChevronLeft className="h-4 w-4 text-primary" />
           </button>
@@ -141,7 +151,7 @@ function Calendar({
 
           <button
             onClick={handleNext}
-            className="rounded-full p-2 hover:bg-accent/70 transition"
+            className="rounded-full p-2 hover:bg-accent/70 transition touch-target"
           >
             <ChevronRight className="h-4 w-4 text-primary" />
           </button>
@@ -159,7 +169,7 @@ function Calendar({
       month={currentMonth}
       onMonthChange={setCurrentMonth}
       showOutsideDays={showOutsideDays}
-      className={cn("bg-background rounded-xl p-3", className)}
+      className={cn("bg-background rounded-xl p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col",
         month: "space-y-2",
@@ -172,7 +182,7 @@ function Calendar({
           "focus:outline-none focus:ring-2 focus:ring-primary",
           "[&:has([aria-selected])]:bg-primary [&:has([aria-selected])]:text-primary-foreground"
         ),
-        day: "w-full h-full flex items-center justify-center cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground",
+        day: "w-full h-full flex items-center justify-center cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground touch-target",
         day_selected: "bg-primary text-primary-foreground hover:bg-primary",
         day_today: "border border-primary text-accent-foreground",
         day_outside: "text-muted-foreground/50",

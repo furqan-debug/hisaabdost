@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
 import { useMessageHandling } from './hooks/useMessageHandling';
-import { processMessageWithAI } from './services/aiService';
+import { processMessageWithAI, checkUserAuthenticated } from './services/aiService';
 import { updateQuickRepliesForResponse } from './services/quickReplyService';
 import { PATTERNS } from './utils/messagePatterns';
 import { useCurrency } from '@/hooks/use-currency';
@@ -29,6 +29,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const { currencyCode } = useCurrency();
+  const userInitializedRef = useRef(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const {
     messages,
@@ -41,19 +43,36 @@ export const useChatLogic = (queuedMessage: string | null) => {
     setIsTyping,
     oldestMessageTime,
     saveMessage,
-    loadChatHistory
+    loadChatHistory,
+    clearMessages
   } = useMessageHandling(setQuickReplies);
 
+  // Check authentication status on component mount
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isTyping]);
+    const checkAuth = async () => {
+      try {
+        const isAuth = await checkUserAuthenticated();
+        setIsAuthenticated(isAuth);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
+  // Monitor for user changes
   useEffect(() => {
-    if (user && messages.length === 0) {
+    if (user && !userInitializedRef.current) {
+      setIsAuthenticated(true);
+      userInitializedRef.current = true;
       initializeChat();
     } else if (!user) {
+      userInitializedRef.current = false;
+      setIsAuthenticated(false);
+      
+      // Set welcome message for non-authenticated users
       const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
@@ -64,7 +83,18 @@ export const useChatLogic = (queuedMessage: string | null) => {
       setMessages([welcomeMessage]);
       saveMessage(welcomeMessage);
     }
-  }, [user, currencyCode]);
+    
+    // Clean up function for when component unmounts or user changes
+    return () => {
+      userInitializedRef.current = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
@@ -191,9 +221,34 @@ export const useChatLogic = (queuedMessage: string | null) => {
     handleSendMessage(null, reply.action);
   };
 
+  const resetChat = () => {
+    clearMessages();
+    setQuickReplies(DEFAULT_QUICK_REPLIES);
+    userInitializedRef.current = false;
+    
+    // Re-initialize if the user is still logged in
+    if (user) {
+      setTimeout(() => {
+        initializeChat();
+      }, 100);
+    } else {
+      const welcomeMessage = {
+        id: '1',
+        content: FINNY_MESSAGES.AUTH_PROMPT,
+        isUser: false,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      };
+      setMessages([welcomeMessage]);
+      saveMessage(welcomeMessage);
+    }
+  };
+
   const initializeChat = async () => {
+    if (!user) return;
+    
     setIsConnectingToData(true);
-        
+    
     try {
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
@@ -223,9 +278,21 @@ export const useChatLogic = (queuedMessage: string | null) => {
         .eq('user_id', user.id);
         
       if (budgetsError) throw budgetsError;
+
+      // Get user profile to ensure we have the correct name
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      }
       
       const totalMonthlySpending = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
       
+      let userName = userProfile?.full_name || user.user_metadata?.full_name || '';
       let personalizedGreeting = FINNY_MESSAGES.GREETING;
       
       if (monthlyExpenses && monthlyExpenses.length > 0) {
@@ -237,7 +304,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         const topCategory = Object.entries(categoryTotals)
           .sort((a, b) => b[1] - a[1])[0];
         
-        const userName = user?.user_metadata?.full_name || '';
         personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
         
         let contextReplies: QuickReply[] = [];
@@ -305,7 +371,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         setMessages([welcomeMessage]);
         saveMessage(welcomeMessage);
         setIsTyping(false);
-      }, 1500);
+      }, 1000);
       
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -334,6 +400,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime
+    oldestMessageTime,
+    resetChat,
+    isAuthenticated
   };
 };
