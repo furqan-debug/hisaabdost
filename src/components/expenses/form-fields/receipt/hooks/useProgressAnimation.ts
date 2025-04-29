@@ -10,6 +10,13 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const animationFrameRef = useRef<number>();
   const lastUpdateTime = useRef<number>(0);
+  const progressStepsRef = useRef({
+    initial: 5,    // Start at 5%
+    scanning: 30,  // Jump to 30% quickly
+    processing: 60, // Progress to 60% more slowly
+    analyzing: 80,  // Progress to 80% even more slowly
+    complete: 100  // Final value
+  });
 
   useEffect(() => {
     if (!isScanning) {
@@ -20,7 +27,8 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
       return;
     }
 
-    setDisplayedProgress(0);
+    // Reset progress when scanning starts
+    setDisplayedProgress(progressStepsRef.current.initial);
     lastUpdateTime.current = performance.now();
 
     const animate = (currentTime: number) => {
@@ -28,21 +36,35 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
       lastUpdateTime.current = currentTime;
 
       setDisplayedProgress(prevProgress => {
+        // If backend is complete, go to 100%
         if (backendProgress >= 100) {
           return 100;
         }
-
-        let newProgress = prevProgress;
         
-        if (prevProgress < 30) {
-          newProgress += (deltaTime * 0.05); // 5% per second
-        } else if (prevProgress < 60) {
-          newProgress += (deltaTime * 0.03); // 3% per second
-        } else if (prevProgress < 80) {
-          newProgress += (deltaTime * 0.015); // 1.5% per second
+        let newProgress = prevProgress;
+        let speedFactor = 0;
+        
+        // Use different speed factors based on current progress stage
+        if (prevProgress < progressStepsRef.current.scanning) {
+          // Fast initial progress to 30%
+          speedFactor = 0.06; // 6% per second
+        } else if (prevProgress < progressStepsRef.current.processing) {
+          // Medium speed to 60%
+          speedFactor = 0.04; // 4% per second
+        } else if (prevProgress < progressStepsRef.current.analyzing) {
+          // Slower progress to 80%
+          speedFactor = 0.02; // 2% per second
+        } else {
+          // Very slow progress after 80% until completion
+          speedFactor = 0.008; // 0.8% per second
         }
         
-        return Math.min(newProgress, backendProgress >= 100 ? 100 : 80);
+        // Calculate new progress based on time and speed factor
+        newProgress += (deltaTime * speedFactor);
+        
+        // Ensure we don't exceed backend progress or target limits
+        const maxProgress = backendProgress >= 100 ? 100 : progressStepsRef.current.analyzing;
+        return Math.min(newProgress, maxProgress);
       });
 
       if (displayedProgress < 100) {
@@ -57,7 +79,17 @@ export function useProgressAnimation({ isScanning, backendProgress }: UseProgres
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isScanning, backendProgress, displayedProgress]);
+  }, [isScanning, backendProgress]);
+
+  // When backend reports 100%, immediately set displayed to 100%
+  useEffect(() => {
+    if (backendProgress >= 100 && isScanning) {
+      setDisplayedProgress(100);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    }
+  }, [backendProgress, isScanning]);
 
   return displayedProgress;
 }

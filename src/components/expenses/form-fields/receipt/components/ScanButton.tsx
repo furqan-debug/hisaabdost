@@ -30,6 +30,9 @@ export function ScanButton({
     return `Process Receipt${autoSave ? " & Save" : ""}`;
   };
 
+  // Format progress to whole number
+  const formattedProgress = Math.round(scanProgress);
+
   // Determine button variant based on state
   const variant = scanTimedOut ? "destructive" : "default";
 
@@ -45,8 +48,8 @@ export function ScanButton({
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           {buttonText()}
-          {scanProgress > 0 && scanProgress < 100 && (
-            <span className="ml-1 text-xs">({scanProgress}%)</span>
+          {scanProgress > 0 && (
+            <span className="ml-1 text-xs">({formattedProgress}%)</span>
           )}
         </>
       ) : scanTimedOut ? (
