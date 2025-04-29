@@ -24,14 +24,14 @@ export function CurrencySettings() {
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
 
-        {/* ✅ Mobile-friendly scrolling added here */}
-       <SelectContent
-  className="max-h-[300px] overflow-y-auto touch-manipulation"
-  style={{
-    WebkitOverflowScrolling: "touch",
-    overscrollBehavior: "contain"
-  }}
->
+        <SelectContent
+          className="max-h-[300px] overflow-y-auto"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
+            overscrollBehavior: "contain"
+          }}
+        >
           {CURRENCY_OPTIONS.map((option) => (
             <SelectItem key={option.code} value={option.code}>
               <div className="flex items-center">
