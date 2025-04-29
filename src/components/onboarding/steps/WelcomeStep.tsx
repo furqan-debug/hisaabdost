@@ -20,40 +20,39 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
 
   const handleContinue = async () => {
     if (!fullName.trim()) {
-      return; // Don't proceed if name is empty
+      toast.error("Please enter your name");
+      return;
     }
     
     setIsSubmitting(true);
     
     try {
-      // Save the name immediately to the profile
+      // Save the name to the profile
       if (user && fullName.trim()) {
         console.log("Updating user profile with name:", fullName.trim());
         
-        // Update the user's full_name in the profiles table
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ full_name: fullName.trim() })
           .eq('id', user.id);
 
-        // Also update the user metadata for backup
-        await supabase.auth.updateUser({
-          data: { full_name: fullName.trim() }
-        });
-        
-        console.log("Profile updated successfully");
-      }
+        if (error) {
+          console.error("Error updating profile:", error);
+          throw error;
+        }
 
-      // Continue with the onboarding flow after a small delay to ensure the state updates properly
-      setTimeout(() => {
-        console.log("Moving to next step with name:", fullName);
+        console.log("Profile updated successfully");
+        
+        // Move to next step
         onComplete({ fullName });
-        setIsSubmitting(false);
-      }, 100);
-      
+      } else {
+        console.log("Missing user or name", { user, fullName });
+        toast.error("Unable to save your name. Please try again.");
+      }
     } catch (error) {
       console.error("Error updating user name:", error);
       toast.error("Failed to save your name, please try again");
+    } finally {
       setIsSubmitting(false);
     }
   };

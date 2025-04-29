@@ -42,6 +42,16 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     setFormData(updatedData);
     console.log("Updated form data:", updatedData);
 
+    // Move to the next step based on the current step
+    const nextSteps: Record<OnboardingStep, OnboardingStep> = {
+      welcome: 'personal',
+      personal: 'income',
+      income: 'currency',
+      currency: 'complete',
+      complete: 'complete'
+    };
+    
+    // If it's the final step, save all data to the profile
     if (step === 'currency') {
       try {
         console.log("Final step reached, saving all data to profile");
@@ -68,14 +78,6 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         console.error('Error saving onboarding data:', error);
       }
     } else {
-      // Move to the next step based on the current step
-      const nextSteps: Record<OnboardingStep, OnboardingStep> = {
-        welcome: 'personal',
-        personal: 'income',
-        income: 'currency',
-        currency: 'complete',
-        complete: 'complete'
-      };
       console.log(`Moving from ${step} to ${nextSteps[step]}`);
       setCurrentStep(nextSteps[step]);
     }
