@@ -52,14 +52,18 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
         console.log("Profile updated successfully");
       }
 
-      // Continue with the onboarding flow
+      // Continue with the onboarding flow even if there's no user or updating profile fails
       console.log("Completing welcome step with name:", fullName);
-      onComplete({ fullName: fullName.trim() });
+      
+      // Use a slight delay to ensure the UI updates before proceeding
+      setTimeout(() => {
+        onComplete({ fullName: fullName.trim() });
+        setIsSubmitting(false);
+      }, 100);
       
     } catch (error) {
       console.error("Error in welcome step:", error);
       toast.error("Something went wrong. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
