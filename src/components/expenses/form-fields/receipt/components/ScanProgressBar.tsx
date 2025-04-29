@@ -1,23 +1,37 @@
-
-import React from 'react';
-import { Progress } from '@/components/ui/progress';
-import { motion } from 'framer-motion';
-import { useProgressAnimation } from '../hooks/useProgressAnimation';
-import { getProgressStyles } from '../utils/progressColors';
+import React, { useEffect, useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
 
 interface ScanProgressBarProps {
-  progress: number;
-  isScanning?: boolean;
+  isScanning: boolean;
+  processingComplete: boolean;
 }
 
-export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBarProps) {
-  const displayedProgress = useProgressAnimation({ 
-    isScanning, 
-    backendProgress: progress 
-  });
+export function ScanProgressBar({ isScanning, processingComplete }: ScanProgressBarProps) {
+  const [progress, setProgress] = useState(0);
 
-  // Get gradient styles for smooth color transitions
-  const progressStyles = getProgressStyles(displayedProgress);
+  useEffect(() => {
+    if (!isScanning) {
+      setProgress(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (processingComplete) return 100;
+        if (prev >= 90) return prev; // Hold at 90% maximum until real complete
+        return prev + 1; // Smooth +1 every interval
+      });
+    }, 50); // 50ms for very smooth feeling
+
+    return () => clearInterval(interval);
+  }, [isScanning, processingComplete]);
+
+  const getIndicatorClassName = () => {
+    if (progress < 30) return 'bg-amber-500';
+    if (progress < 70) return 'bg-blue-500';
+    return 'bg-emerald-500';
+  };
 
   return (
     <div className="w-full max-w-[300px] px-4">
@@ -25,21 +39,12 @@ export function ScanProgressBar({ progress, isScanning = true }: ScanProgressBar
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="space-y-2"
       >
         <Progress 
-          value={displayedProgress} 
-          className="h-2.5 bg-secondary/30 overflow-hidden" 
-          indicatorClassName={`bg-gradient-to-r ${progressStyles.className}`}
-          indicatorStyle={{ background: progressStyles.background }}
+          value={progress} 
+          className="h-2 bg-secondary" 
+          indicatorClassName={getIndicatorClassName()}
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0%</span>
-          <span className="font-medium text-foreground/80">
-            {Math.round(displayedProgress)}% complete
-          </span>
-          <span>100%</span>
-        </div>
       </motion.div>
     </div>
   );
