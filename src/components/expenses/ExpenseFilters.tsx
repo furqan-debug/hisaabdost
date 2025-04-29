@@ -7,20 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Filter, Calendar as CalendarIcon, X } from "lucide-react";
+import { ChevronDown, Filter } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DateRangePicker } from "@/components/expenses/DateRangePicker";
 
 interface ExpenseFiltersProps {
   searchTerm: string;
@@ -50,24 +45,6 @@ export function ExpenseFilters({
 }: ExpenseFiltersProps) {
   const isMobile = useIsMobile();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  const handleDateSelect = (type: 'start' | 'end', date: Date | undefined) => {
-    if (!date) return;
-    
-    const formattedDate = format(date, "yyyy-MM-dd");
-    
-    if (type === 'start') {
-      setDateRange({
-        ...dateRange,
-        start: formattedDate,
-      });
-    } else {
-      setDateRange({
-        ...dateRange,
-        end: formattedDate,
-      });
-    }
-  };
   
   const clearDateRange = () => {
     setDateRange({
@@ -100,7 +77,6 @@ export function ExpenseFilters({
       {!useCustomDateRange && (
         <Alert variant="default" className="bg-muted/40 border-border/40 py-2">
           <AlertDescription className="flex items-center text-xs text-muted-foreground">
-            <CalendarIcon className="h-3 w-3 mr-1 text-primary" />
             Showing expenses for {format(selectedMonth, 'MMMM yyyy')}. Use a custom range to override.
           </AlertDescription>
         </Alert>
@@ -113,7 +89,7 @@ export function ExpenseFilters({
           isMobile ? "p-2 bg-muted/30 rounded-lg border border-border/40" : ""
         )}>
           <div className={cn(
-            isMobile ? "flex-col space-y-2" : "sm:flex-row sm:items-center sm:justify-between gap-2",
+            isMobile ? "flex-col space-y-2" : "sm:flex-row sm:items-start sm:justify-between gap-2",
             "flex"
           )}>
             <Select
@@ -136,86 +112,18 @@ export function ExpenseFilters({
               </SelectContent>
             </Select>
             
-            <div className={cn(
-              "flex gap-2",
-              isMobile ? "justify-between" : ""
-            )}>
-              {/* Start date popover */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-lg justify-start text-left",
-                      isMobile ? "w-[48%]" : "w-auto",
-                      !dateRange.start && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.start ? (
-                      format(new Date(dateRange.start), "MMM d, yyyy")
-                    ) : (
-                      "Start Date"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.start ? new Date(dateRange.start) : undefined}
-                    onSelect={(date) => handleDateSelect('start', date)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              
-              {/* End date popover */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className={cn(
-                      "rounded-lg justify-start text-left",
-                      isMobile ? "w-[48%]" : "w-auto",
-                      !dateRange.end && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.end ? (
-                      format(new Date(dateRange.end), "MMM d, yyyy")
-                    ) : (
-                      "End Date"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.end ? new Date(dateRange.end) : undefined}
-                    onSelect={(date) => handleDateSelect('end', date)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <DateRangePicker 
+              startDate={dateRange.start}
+              endDate={dateRange.end}
+              onStartDateChange={(value) => setDateRange({...dateRange, start: value})}
+              onEndDateChange={(value) => setDateRange({...dateRange, end: value})}
+              onClear={clearDateRange}
+              label=""
+              className={cn(
+                isMobile ? "w-full" : "w-auto",
+              )}
+            />
           </div>
-          
-          {/* Clear dates button (only show when at least one date is selected) */}
-          {(dateRange.start || dateRange.end) && (
-            <div className="flex justify-end">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearDateRange}
-                className="text-xs flex items-center"
-              >
-                <X className="h-3 w-3 mr-1" />
-                Clear dates
-              </Button>
-            </div>
-          )}
           
           {isMobile && (
             <div className="text-right">

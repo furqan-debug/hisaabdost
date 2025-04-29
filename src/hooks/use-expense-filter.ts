@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useMonthContext } from "./use-month-context";
-import { startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
+import { startOfMonth, endOfMonth, isWithinInterval, format, parseISO } from "date-fns";
 
 type SortField = 'date' | 'amount' | 'category' | 'description';
 type SortOrder = 'asc' | 'desc';
@@ -38,7 +38,9 @@ export function useExpenseFilter(expenses: Expense[]) {
   
   // Update useCustomDateRange whenever dateRange changes
   useEffect(() => {
-    setUseCustomDateRange(!!dateRange.start && !!dateRange.end);
+    const hasCustomRange = !!(dateRange.start && dateRange.end);
+    setUseCustomDateRange(hasCustomRange);
+    console.log("Custom date range active:", hasCustomRange, dateRange);
   }, [dateRange]);
 
   const filteredExpenses = useMemo(() => {
@@ -54,8 +56,13 @@ export function useExpenseFilter(expenses: Expense[]) {
         
         if (useCustomDateRange && dateRange.start && dateRange.end) {
           // Use custom date range if active
-          matchesTimeframe = expenseDate >= new Date(dateRange.start) && 
-                            expenseDate <= new Date(dateRange.end);
+          const startDate = parseISO(dateRange.start);
+          const endDate = parseISO(dateRange.end);
+          
+          // Make sure end date includes the full day
+          endDate.setHours(23, 59, 59, 999);
+          
+          matchesTimeframe = expenseDate >= startDate && expenseDate <= endDate;
         } else {
           // Fall back to selected month
           const monthStart = startOfMonth(selectedMonth);
@@ -89,16 +96,6 @@ export function useExpenseFilter(expenses: Expense[]) {
   const totalFilteredAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   }, [filteredExpenses]);
-
-  // Clear custom date range when month changes, but only if not manually set
-  useEffect(() => {
-    if (!useCustomDateRange) {
-      setDateRange({
-        start: '',
-        end: ''
-      });
-    }
-  }, [selectedMonth, useCustomDateRange]);
 
   return {
     searchTerm,

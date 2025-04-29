@@ -1,5 +1,4 @@
 
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -25,7 +24,8 @@ export function DateField({
   const displayValue = value ? format(new Date(value), "PP") : "";
   
   // Check if this is today's date
-  const isToday = value === new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  const isToday = value === today;
   
   return (
     <div className="space-y-2">
@@ -48,4 +48,3 @@ export function DateField({
     </div>
   );
 }
-

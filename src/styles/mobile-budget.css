@@ -127,6 +127,23 @@
   .date-input-custom::-webkit-calendar-picker-indicator {
     @apply opacity-100 cursor-pointer;
   }
+  
+  /* Date picker popover styles for mobile */
+  .date-picker-popover {
+    @apply p-0 border border-border rounded-md shadow-md;
+    width: 100%;
+    margin: 4px 0;
+    min-width: 280px;
+  }
+  
+  /* Calendar styles for mobile */
+  .rdp {
+    --rdp-cell-size: 36px;
+    --rdp-accent-color: var(--primary);
+    --rdp-background-color: var(--accent);
+    margin: 0;
+    overflow: visible;
+  }
 }
 
 /* Additional styles for card and glassmorphism effects */
@@ -164,4 +181,18 @@
 /* Style for date buttons to make them more visible */
 .date-picker-button {
   @apply w-full flex items-center border border-input bg-background rounded-md px-3 py-2 text-left;
+}
+
+/* Make calendar cells pointer-events-auto so they're clickable in popovers */
+.calendar-cell {
+  @apply pointer-events-auto;
+}
+
+/* Fix calendar positioning on mobile devices */
+.popover-calendar {
+  @apply p-0;
+  max-width: 100%;
+  width: 300px;
+  z-index: 100;
+  pointer-events: auto !important;
 }
