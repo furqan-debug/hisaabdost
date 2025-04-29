@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -100,9 +101,16 @@ export function DangerZone() {
       
       toast.success("All data has been successfully reset");
       
-      // Close dialog and redirect to dashboard (onboarding will show automatically)
+      // Close dialog and navigate to dashboard
       setIsResetDialogOpen(false);
+      
+      // First navigate to dashboard
       navigate('/app/dashboard');
+      
+      // Then reload the page after a short delay to ensure navigation completes
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
       
     } catch (error) {
       console.error("Error resetting data:", error);
