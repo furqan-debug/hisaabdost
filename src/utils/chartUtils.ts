@@ -1,25 +1,26 @@
-
 import { format } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/formatters";
 import { CurrencyCode } from "./currencyUtils";
 
-// Vibrant color palette with better visibility on mobile
+// Enhanced color palette with more distinct colors
 export const CATEGORY_COLORS: Record<string, string> = {
-  "Healthcare": "#7AB2F5",      // Vivid Blue
-  "Groceries": "#FF9F7A",      // Vibrant Peach
-  "Utilities": "#A17FFF",      // Bright Purple
-  "Housing": "#4ADE80",        // Vivid Green
-  "Transportation": "#F87DB5",  // Bright Pink
-  "Entertainment": "#FACC15",   // Vivid Yellow
-  "Shopping": "#FF7A92",       // Bright Rose
-  "Personal": "#9E75FF",       // Bright Purple
-  "Education": "#38BDF8",      // Bright Blue
-  "Travel": "#4ADE80",         // Bright Mint
-  "Insurance": "#F472B6",      // Bright Pink
-  "Debt": "#C084FC",          // Bright Purple
-  "Savings": "#A3E635",       // Bright Lime
-  "Other": "#94A3B8",         // Bright Gray
+  "Food": "#FF9F7A",         // Vibrant Peach
+  "Groceries": "#4ADE80",    // Vivid Green  
+  "Utilities": "#A17FFF",    // Bright Purple
+  "Housing": "#7AB2F5",      // Vivid Blue
+  "Transportation": "#F87DB5", // Bright Pink
+  "Entertainment": "#FACC15", // Vivid Yellow
+  "Shopping": "#FF7A92",     // Bright Rose
+  "Personal": "#9E75FF",     // Bright Purple
+  "Education": "#38BDF8",    // Bright Blue
+  "Travel": "#66CDAA",       // Medium Aquamarine
+  "Insurance": "#F472B6",    // Bright Pink
+  "Debt": "#C084FC",         // Bright Purple
+  "Savings": "#A3E635",      // Bright Lime
+  "Healthcare": "#60A5FA",   // Blue
+  "General": "#FF8042",      // Orange
+  "Other": "#94A3B8",        // Bright Gray
 };
 
 export const formatCurrency = (amount: number, currencyCode?: CurrencyCode) => {

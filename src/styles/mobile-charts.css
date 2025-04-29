@@ -22,11 +22,11 @@
   }
   
   .pie-chart-container {
-    @apply max-w-[280px] mx-auto min-h-[220px] overflow-visible;
+    @apply max-w-[300px] mx-auto min-h-[280px] overflow-visible;
   }
 
   .expense-chart-legend {
-    @apply flex flex-wrap justify-center gap-1.5 mt-2;
+    @apply flex flex-wrap justify-center gap-1.5 mt-4;
   }
 
   .expense-chart-legend-item {
@@ -215,3 +215,10 @@
   @apply mx-auto max-w-[90%] overflow-visible;
 }
 
+/* Make sure the pie chart has enough vertical space */
+.pie-chart-container {
+  min-height: 280px;
+  margin: 0 auto;
+  position: relative;
+  overflow: visible;
+}
