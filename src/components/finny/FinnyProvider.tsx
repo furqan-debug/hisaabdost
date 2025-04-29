@@ -21,6 +21,7 @@ interface FinnyContextType {
   askFinny: (question: string) => void;
   queuedMessage: string | null;
   setQueuedMessage: (message: string | null) => void;
+  resetChat: () => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -33,7 +34,8 @@ const FinnyContext = createContext<FinnyContextType>({
   setBudget: () => {},
   askFinny: () => {},
   queuedMessage: null,
-  setQueuedMessage: () => {}
+  setQueuedMessage: () => {},
+  resetChat: () => {}
 });
 
 export const useFinny = () => useContext(FinnyContext);
@@ -42,6 +44,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [lastNameUpdate, setLastNameUpdate] = useState<number>(0);
+  const [chatKey, setChatKey] = useState<number>(0); // Add a key to force chat component re-render
   
   // Get auth context - now we're sure we're inside the Router context
   const auth = useAuth();
@@ -85,6 +88,18 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const openChat = () => setIsOpen(true);
   const closeChat = () => setIsOpen(false);
   const toggleChat = () => setIsOpen((prev) => !prev);
+  
+  const resetChat = () => {
+    // Clear chat messages from localStorage
+    localStorage.removeItem('finny_chat_messages');
+    
+    // Force re-render of FinnyChat component by changing its key
+    setChatKey(prevKey => prevKey + 1);
+    console.log("Finny chat reset triggered");
+    
+    // Update the name update timestamp to trigger re-initialization
+    setLastNameUpdate(Date.now());
+  };
   
   const triggerChat = (message: string) => {
     if (!user) {
@@ -157,7 +172,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(question);
   };
   
-  // Use the new hook for handling queued messages
+  // Use the hook for handling queued messages
   useQueuedMessage(queuedMessage, isOpen, setQueuedMessage);
 
   return (
@@ -172,12 +187,19 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setBudget,
         askFinny,
         queuedMessage,
-        setQueuedMessage
+        setQueuedMessage,
+        resetChat
       }}
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat isOpen={isOpen} onClose={closeChat} queuedMessage={queuedMessage} nameUpdateTimestamp={lastNameUpdate} />
+      <FinnyChat 
+        key={chatKey} 
+        isOpen={isOpen} 
+        onClose={closeChat} 
+        queuedMessage={queuedMessage} 
+        nameUpdateTimestamp={lastNameUpdate} 
+      />
     </FinnyContext.Provider>
   );
 };
