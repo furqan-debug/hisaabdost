@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useFinny } from "@/components/finny/FinnyProvider";
 
 export function DangerZone() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const navigate = useNavigate();
+  const { resetChat } = useFinny(); // Get resetChat from Finny context
 
   const handleResetData = async () => {
     try {
@@ -98,6 +100,14 @@ export function DangerZone() {
       localStorage.removeItem('monthsData');
       localStorage.removeItem('currency');
       localStorage.removeItem('theme');
+      
+      // Reset Finny chat history
+      localStorage.removeItem('finny_chat_messages');
+      
+      // Explicitly reset the Finny chat state
+      if (resetChat) {
+        resetChat();
+      }
       
       toast.success("All data has been successfully reset");
       
