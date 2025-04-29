@@ -21,7 +21,6 @@ export const useChatInitialization = (
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [chatInitialized, setChatInitialized] = useState(false);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   // Fetch the user's name from the profiles table
   useEffect(() => {
@@ -44,9 +43,6 @@ export const useChatInitialization = (
           if (error) {
             console.error('Error fetching user profile:', error);
           }
-          
-          // Update last fetch time
-          setLastFetchTime(Date.now());
         } catch (error) {
           console.error('Error fetching user name:', error);
         }
@@ -78,9 +74,6 @@ export const useChatInitialization = (
         if (latestProfile && latestProfile.full_name) {
           displayName = latestProfile.full_name;
           setUserName(latestProfile.full_name);
-          console.log("Using latest profile name for greeting:", displayName);
-        } else {
-          console.log("No full_name found in profile, using fallback");
         }
         
         if (error) {
@@ -203,15 +196,13 @@ export const useChatInitialization = (
           timestamp: new Date(),
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
         };
-        
-        console.log("Setting welcome message:", welcomeMessage.id);
         setMessages([welcomeMessage]);
         saveMessage(welcomeMessage);
         setIsTyping(false);
         
         // Mark chat as initialized to prevent duplicate messages
         setChatInitialized(true);
-      }, 1000); // Short delay to ensure state is clear and to show typing indicator
+      }, 1500);
       
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -239,7 +230,6 @@ export const useChatInitialization = (
     initializeChat,
     isConnectingToData,
     userName,
-    chatInitialized,
-    setChatInitialized
+    chatInitialized
   };
 };
