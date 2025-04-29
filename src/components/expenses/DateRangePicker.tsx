@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
+
 interface DateRangePickerProps {
   startDate: string;
   endDate: string;
@@ -15,6 +17,7 @@ interface DateRangePickerProps {
   label?: string;
   className?: string;
 }
+
 export function DateRangePicker({
   startDate,
   endDate,
@@ -26,6 +29,7 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
+
   const handleDateSelect = (type: 'start' | 'end', date: Date | undefined) => {
     if (!date) return;
     const formattedDate = format(date, "yyyy-MM-dd");
@@ -56,6 +60,7 @@ export function DateRangePicker({
       toast.success("Date filter applied");
     }
   };
+
   return <div className={cn("space-y-2", className)}>
       {label && <p className="text-sm font-medium text-foreground mb-2">{label}</p>}
       
@@ -68,7 +73,14 @@ export function DateRangePicker({
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0 bg-background/95 backdrop-blur-sm border border-border date-picker-popover px-[15px] mx-[20px] my-0 py-[2px]">
-            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={date => handleDateSelect('start', date)} initialFocus defaultMonth={startDate ? new Date(startDate) : new Date()} className="mx-[26px] my-[5px]" />
+            <Calendar 
+              mode="single" 
+              selected={startDate ? new Date(startDate) : undefined} 
+              onSelect={date => handleDateSelect('start', date)} 
+              initialFocus 
+              defaultMonth={startDate ? new Date(startDate) : new Date()} 
+              className="mx-[26px] my-[5px]" 
+            />
           </PopoverContent>
         </Popover>
         
@@ -80,7 +92,13 @@ export function DateRangePicker({
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-auto p-0 bg-background/95 backdrop-blur-sm border border-border date-picker-popover">
-            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={date => handleDateSelect('end', date)} initialFocus defaultMonth={endDate ? new Date(endDate) : new Date()} />
+            <Calendar 
+              mode="single" 
+              selected={endDate ? new Date(endDate) : undefined} 
+              onSelect={date => handleDateSelect('end', date)} 
+              initialFocus 
+              defaultMonth={endDate ? new Date(endDate) : new Date()} 
+            />
           </PopoverContent>
         </Popover>
         

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth";
@@ -6,6 +7,7 @@ import { ThemeSettings } from "./settings/ThemeSettings";
 import { ColorSettings } from "./settings/ColorSettings";
 import { CurrencySettings } from "./settings/CurrencySettings";
 import { UserSection } from "./settings/UserSection";
+import { DangerZone } from "./settings/DangerZone";
 import { ScrollArea } from "./ui/scroll-area";
 import { MonthSelector } from "./MonthSelector";
 
@@ -57,6 +59,8 @@ export function SettingsSidebar({
         <ThemeSettings />
         <Separator />
         <ColorSettings />
+        <Separator />
+        <DangerZone />
       </ScrollArea>
       
       <UserSection onSignOut={handleSignOut} />

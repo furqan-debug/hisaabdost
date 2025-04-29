@@ -1,0 +1,130 @@
+import React, { useState } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+export function DangerZone() {
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleResetData = async () => {
+    try {
+      setIsResetting(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to reset your data");
+        setIsResetting(false);
+        return;
+      }
+      
+      // Delete expenses
+      await supabase.from('expenses').delete().eq('user_id', user.id);
+      
+      // Delete budget data
+      await supabase.from('budgets').delete().eq('user_id', user.id);
+      
+      // Delete budget alerts
+      await supabase.from('budget_alerts').delete().eq('user_id', user.id);
+      
+      // Delete goals
+      await supabase.from('goals').delete().eq('user_id', user.id);
+      
+      // Get receipt extractions to delete
+      const { data: receipts } = await supabase
+        .from('receipt_extractions')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      // Delete receipt items for each receipt
+      if (receipts && receipts.length > 0) {
+        for (const receipt of receipts) {
+          await supabase
+            .from('receipt_items')
+            .delete()
+            .eq('receipt_id', receipt.id);
+        }
+      }
+      
+      // Delete receipt extractions
+      await supabase
+        .from('receipt_extractions')
+        .delete()
+        .eq('user_id', user.id);
+      
+      // Reset profile to initial state (keep profile but mark onboarding as incomplete)
+      await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed: false,
+          onboarding_completed_at: null
+        })
+        .eq('id', user.id);
+      
+      // Clear local storage data
+      localStorage.removeItem('monthsData');
+      localStorage.removeItem('currency');
+      localStorage.removeItem('theme');
+      
+      toast.success("All data has been successfully reset");
+      
+      // Close dialog and redirect to dashboard (onboarding will show automatically)
+      setIsResetDialogOpen(false);
+      navigate('/app/dashboard');
+      
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      toast.error("There was an error resetting your data");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  return (
+    <div className="border-t p-4">
+      <h3 className="text-lg font-semibold text-destructive mb-2">Danger Zone</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Actions here can't be undone. Be careful.
+      </p>
+      
+      <Button 
+        variant="destructive"
+        size="sm"
+        className="w-full"
+        onClick={() => setIsResetDialogOpen(true)}
+      >
+        Reset App Data
+      </Button>
+      
+      <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete all your data including expenses, budgets, goals, and uploaded receipts. 
+              Your account will remain, but you'll need to go through the onboarding process again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleResetData();
+              }}
+              disabled={isResetting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isResetting ? "Resetting..." : "Yes, reset everything"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
