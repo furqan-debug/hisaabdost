@@ -1,10 +1,13 @@
 
+
 export function useReceiptDateParser() {
   const parseReceiptDate = (dateString: string): string => {
     try {
       // If no date is provided, return today's date
       if (!dateString || dateString.trim() === '') {
-        return new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+        console.log("No receipt date provided, using today's date:", today);
+        return today;
       }
       
       // If it's already in ISO format YYYY-MM-DD, return it directly

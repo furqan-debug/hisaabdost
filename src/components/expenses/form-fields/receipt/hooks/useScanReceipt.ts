@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
 import { saveExpenseFromScan } from '../services/expenseDbService';
@@ -118,14 +119,24 @@ export function useScanReceipt({
         updateProgress(90, "Extracting expense information...");
         
         const mainItem = selectMainItem(scanResults.items);
+        const currentDate = new Date().toISOString().split('T')[0];
         
+        // Always prioritize the current date if no date was found
         let expenseDetails = {
           description: mainItem.description || "Store Purchase",
           amount: mainItem.amount || "0.00",
-          date: mainItem.date || scanResults.date || new Date().toISOString().split('T')[0],
+          date: mainItem.date || scanResults.date || currentDate,
           category: mainItem.category || "Other",
           paymentMethod: mainItem.paymentMethod || "Card",
         };
+        
+        // Log the date extraction for debugging
+        console.log("Receipt date processing:", {
+          itemDate: mainItem.date,
+          scanResultsDate: scanResults.date,
+          finalDate: expenseDetails.date,
+          usedCurrentDate: !mainItem.date && !scanResults.date
+        });
         
         if (autoSave) {
           try {
@@ -135,7 +146,7 @@ export function useScanReceipt({
               const receiptData = {
                 items: scanResults.items,
                 merchant: scanResults.merchant || mainItem.description || "Store",
-                date: scanResults.date || expenseDetails.date
+                date: scanResults.date || currentDate
               };
               
               const saveSuccess = await saveExpenseFromScan(receiptData);
@@ -209,7 +220,7 @@ export function useScanReceipt({
     isScanning,
     scanProgress,
     scanTimedOut,
-    scanError, // Return as string | null for detailed error messages
+    scanError,
     statusMessage,
     handleScanReceipt,
     isAutoProcessing,

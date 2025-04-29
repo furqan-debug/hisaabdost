@@ -1,4 +1,3 @@
-
 import { extractMerchant } from "./receiptParser/merchantExtractor";
 
 // Improved Date Extraction
@@ -19,9 +18,9 @@ export function extractDate(text: string): string | null {
     const match = text.match(pattern);
     if (match) {
       // Handle special cases like "Today" or "Yesterday"
-      if (match[1].toLowerCase() === 'today') {
+      if (match[1] && match[1].toLowerCase() === 'today') {
         return new Date().toISOString().split('T')[0];
-      } else if (match[1].toLowerCase() === 'yesterday') {
+      } else if (match[1] && match[1].toLowerCase() === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         return yesterday.toISOString().split('T')[0];
@@ -68,7 +67,9 @@ export function extractDate(text: string): string | null {
   }
   
   // No valid date found, return today's date
-  return new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  console.log("No receipt date found, using today's date:", today);
+  return today;
 }
 
 // Improved Amount Extraction
