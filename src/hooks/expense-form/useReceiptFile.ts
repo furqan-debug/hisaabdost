@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { ExpenseFormData } from "./types";
@@ -13,17 +14,6 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const currentBlobUrlRef = useRef<string | null>(null);
-  
-  // Keep track of the current blob URL
-  useEffect(() => {
-    if (formData.receiptUrl && formData.receiptUrl.startsWith('blob:')) {
-      if (currentBlobUrlRef.current && currentBlobUrlRef.current !== formData.receiptUrl) {
-        // If we have a different blob URL, mark the old one for cleanup
-        markBlobUrlForCleanup(currentBlobUrlRef.current);
-      }
-      currentBlobUrlRef.current = formData.receiptUrl;
-    }
-  }, [formData.receiptUrl]);
 
   // Function to process the file and automatically add items to the expense list
   const processReceiptFile = async (file: File) => {
@@ -45,16 +35,9 @@ export function useReceiptFile({ formData, updateField }: UseReceiptFileProps) {
   useEffect(() => {
     return () => {
       console.log("useReceiptFile: Component unmounting, cleaning up blob URLs");
-      
-      // If we have a current blob URL, mark it for cleanup
-      if (currentBlobUrlRef.current) {
-        markBlobUrlForCleanup(currentBlobUrlRef.current);
-      }
-      
-      // Cleanup unused blob URLs
       setTimeout(() => {
-        cleanupUnusedBlobUrls();
-      }, 500);
+        cleanupAllBlobUrls();  // Now this function should be available
+      }, 1000);
     };
   }, []);
 
