@@ -39,9 +39,3 @@ export async function processMessageWithAI(
 
   return data;
 }
-
-// Add a function to check user authentication status
-export async function checkUserAuthenticated() {
-  const { data } = await supabase.auth.getSession();
-  return !!data.session?.user;
-}

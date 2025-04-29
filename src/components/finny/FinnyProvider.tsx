@@ -17,7 +17,6 @@ interface FinnyContextType {
   addExpense: (amount: number, category: string, description?: string, date?: string) => void;
   setBudget: (amount: number, category: string) => void;
   askFinny: (question: string) => void;
-  resetChat: () => void;
 }
 
 const FinnyContext = createContext<FinnyContextType>({
@@ -29,7 +28,6 @@ const FinnyContext = createContext<FinnyContextType>({
   addExpense: () => {},
   setBudget: () => {},
   askFinny: () => {},
-  resetChat: () => {},
 });
 
 export const useFinny = () => useContext(FinnyContext);
@@ -37,7 +35,6 @@ export const useFinny = () => useContext(FinnyContext);
 export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
-  const [key, setKey] = useState(Date.now()); // Key to force re-render when needed
   const auth = useAuth();
   const user = auth?.user || null;
   const { currencyCode } = useCurrency();
@@ -54,21 +51,6 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     setQueuedMessage(message);
     setIsOpen(true);
-  };
-
-  // Reset chat function - clears history and recreates chat component
-  const resetChat = () => {
-    // First close the chat
-    setIsOpen(false);
-    
-    // Clear chat messages from localStorage
-    localStorage.removeItem('finny_chat_messages');
-    
-    // Force re-render of the FinnyChat component
-    setTimeout(() => {
-      setKey(Date.now());
-      toast.success("Chat history has been reset");
-    }, 300);
   };
   
   const validateCategory = (category: string): string => {
@@ -153,14 +135,6 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [queuedMessage, isOpen]);
 
-  // Listen for auth changes
-  useEffect(() => {
-    // Create a unique key when user changes to force re-render
-    if (user) {
-      setKey(Date.now());
-    }
-  }, [user?.id]);
-
   return (
     <FinnyContext.Provider
       value={{
@@ -172,12 +146,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addExpense,
         setBudget,
         askFinny,
-        resetChat,
       }}
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat key={key} isOpen={isOpen} onClose={closeChat} />
+      <FinnyChat isOpen={isOpen} onClose={closeChat} />
     </FinnyContext.Provider>
   );
 };

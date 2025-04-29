@@ -33,7 +33,6 @@ const FinnyChat = ({
   const user = auth?.user || null;
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const chatOpenedRef = useRef(false);
 
   const {
     messages,
@@ -46,11 +45,9 @@ const FinnyChat = ({
     messagesEndRef,
     handleSendMessage,
     handleQuickReply,
-    oldestMessageTime,
-    isAuthenticated
+    oldestMessageTime
   } = useChatLogic(null);
 
-  // Effect to handle swipe down to close on mobile
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
     
@@ -89,15 +86,6 @@ const FinnyChat = ({
       chatContainer.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isMobile, isOpen, onClose]);
-
-  // Track when chat is opened
-  useEffect(() => {
-    if (isOpen && !chatOpenedRef.current) {
-      chatOpenedRef.current = true;
-    } else if (!isOpen) {
-      chatOpenedRef.current = false;
-    }
-  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -174,7 +162,7 @@ const FinnyChat = ({
                         replies={quickReplies} 
                         onSelect={handleQuickReply} 
                         isLoading={isLoading} 
-                        isAuthenticated={isAuthenticated === true} 
+                        isAuthenticated={!!user} 
                       />
                     )}
                   
@@ -190,7 +178,7 @@ const FinnyChat = ({
                   onSubmit={handleSendMessage}
                   disabled={false}
                   isLoading={isLoading} 
-                  isAuthenticated={isAuthenticated === true} 
+                  isAuthenticated={!!user} 
                   isConnecting={isConnectingToData} 
                 />
               </div>
