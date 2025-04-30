@@ -25,7 +25,7 @@ export function CurrencySettings() {
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
 
-        <SelectContent className="touch-scroll">
+        <SelectContent className="overflow-y-auto">
           {CURRENCY_OPTIONS.map((option) => (
             <SelectItem key={option.code} value={option.code}>
               <div className="flex items-center">
