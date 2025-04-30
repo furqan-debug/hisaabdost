@@ -1,4 +1,3 @@
-
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -6,13 +5,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
-export default function CompleteStep()  {
+export default function CompleteStep() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleGetStarted = async () => {
     try {
-      // Force update the onboarding status in the database to ensure it's completed
+      // Ensure onboarding status is saved in the database
       if (user) {
         const { error } = await supabase
           .from('profiles')
@@ -21,23 +20,16 @@ export default function CompleteStep()  {
             onboarding_completed_at: new Date().toISOString()
           })
           .eq('id', user.id);
-          
+
         if (error) throw error;
       }
-      
-      // Show success message
+
       toast.success("Setup completed! Welcome to your dashboard.");
-      
-      // Navigate to dashboard with replace:true to prevent back navigation to onboarding
       navigate("/app/dashboard", { replace: true });
-      
-      // Force a page reload to ensure all components recognize the completed onboarding
-      window.location.reload();
+      window.location.reload(); // Ensures app state reflects onboarding completion
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Something went wrong. Please try again.");
-      
-      // Even if there's an error, try to navigate to dashboard
       navigate("/app/dashboard", { replace: true });
     }
   };
