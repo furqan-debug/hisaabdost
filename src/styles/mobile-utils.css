@@ -114,6 +114,15 @@
       touch-action: pan-y;
     }
   }
+  
+  /* Fix for settings sidebar user section */
+  .settings-user-section-container {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--background);
+    width: 100%;
+    z-index: 10;
+  }
 }
 
 /* Remove scrollbar but keep functionality */

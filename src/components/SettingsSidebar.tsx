@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth";
@@ -32,7 +33,7 @@ export function SettingsSidebar({
   return <div className="flex flex-col h-full bg-background">
       <SettingsHeader onClose={onClose} />
       
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 overflow-y-auto">
         <div className="p-4">
           <div className="pb-4 mb-2 flex items-center gap-3 py-[12px] px-0 my-0">
             <img
@@ -59,6 +60,8 @@ export function SettingsSidebar({
         <ColorSettings />
       </ScrollArea>
       
-      <UserSection onSignOut={handleSignOut} />
+      <div className="mt-auto">
+        <UserSection onSignOut={handleSignOut} />
+      </div>
     </div>;
 }

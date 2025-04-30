@@ -12,7 +12,7 @@ export function UserSection({ onSignOut }: UserSectionProps) {
   const { user } = useAuth();
   
   return (
-    <div className="border-t p-4 mt-auto">
+    <div className="border-t p-4">
       <div className="flex items-center mb-4">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{user?.email}</p>
