@@ -105,39 +105,14 @@
   }
   
   /* Enhanced dropdown touch scrolling */
-  [data-state="open"] .radix-select-viewport,
-  [data-state="open"] [role="listbox"],
-  [data-state="open"] [data-radix-select-viewport] {
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    touch-action: pan-y !important;
-  }
-  
-  /* Better finger scrolling on dropdowns */
-  [role="listbox"] {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    max-height: 40vh !important;
-  }
-  
-  /* Fix for Radix UI viewport scrolling */
-  [data-radix-select-viewport],
-  [data-radix-dropdown-menu-content] {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-  }
-  
-  /* Add momentum scrolling to all scrollable areas */
-  [role="dialog"],
-  [role="menu"],
-  [role="listbox"],
-  .overflow-y-auto,
-  .overflow-auto {
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    overscroll-behavior: contain;
+  [data-state="open"] {
+    .select-viewport,
+    [role="listbox"],
+    [data-radix-select-viewport] {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
   }
 }
 
@@ -204,7 +179,6 @@
   overscroll-behavior-y: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-y;
 }
 
 .touch-scroll-container::-webkit-scrollbar {
@@ -228,7 +202,6 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
-  touch-action: pan-y;
 }
 
 /* Touch-friendly dropdown scrolling */

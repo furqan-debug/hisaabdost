@@ -30,7 +30,7 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
             <SelectTrigger>
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="touch-scroll">
               {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
                 <SelectItem key={currency.code} value={currency.code}>
                   <div className="flex items-center">
