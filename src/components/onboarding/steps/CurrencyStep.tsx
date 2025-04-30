@@ -58,12 +58,11 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button 
-          onClick={handleComplete} 
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Saving..." : "Complete Setup"}
-        </Button>
+        
+        <Button onClick={() => onComplete({ preferredCurrency: currency })}>
+  Complete Setup
+</Button>
+
       </div>
     </div>
   );
