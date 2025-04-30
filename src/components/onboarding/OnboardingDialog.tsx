@@ -26,73 +26,79 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   });
   const { user } = useAuth();
 
-  const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
-    try {
-      // Update the form data with the new data from the completed step
-      const updatedData = { ...formData, ...data };
-      setFormData(updatedData);
-      
-      console.log(`Step "${step}" completed with data:`, data);
-      console.log("Updated form data:", updatedData);
+ const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
+  try {
+    const updatedData = { ...formData, ...data };
+    setFormData(updatedData);
 
-      if (step === 'currency') {
-        if (!user) {
-          console.error("No user found when completing currency step");
-          toast.error("Authentication error. Please try again or refresh the page.");
-          return;
-        }
+    console.log(`Step "${step}" completed with data:`, data);
+    console.log("Updated form data:", updatedData);
 
-        // Update user metadata to ensure the full name is available in user.user_metadata
-        if (updatedData.fullName) {
-          const { error: metadataError } = await supabase.auth.updateUser({
-            data: { full_name: updatedData.fullName }
-          });
-          
-          if (metadataError) {
-            console.error("Error updating user metadata:", metadataError);
-            toast.error("Failed to update your profile information");
-            return;
-          }
-        }
-        
-        // Update the profile table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: updatedData.fullName,
-            age: updatedData.age,
-            gender: updatedData.gender,
-            preferred_currency: updatedData.preferredCurrency,
-            monthly_income: updatedData.monthlyIncome,
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (profileError) {
-          console.error("Error updating profile:", profileError);
-          toast.error("Failed to save your preferences");
-          return;
-        }
-        
-        // If we got here, success! Move to the complete step
-        setCurrentStep('complete');
-      } else {
-        // For other steps, just proceed to the next step
-        const nextSteps: Record<OnboardingStep, OnboardingStep> = {
-          welcome: 'personal',
-          personal: 'income',
-          income: 'currency',
-          currency: 'complete',
-          complete: 'complete'
-        };
-        setCurrentStep(nextSteps[step]);
+    if (step === 'currency') {
+      if (!user?.id) {
+        console.error("No user found when completing currency step");
+        toast.error("Authentication error. Please try again.");
+        return;
       }
-    } catch (error) {
-      console.error(`Error in handleStepComplete for step "${step}":`, error);
-      toast.error("An unexpected error occurred. Please try again.");
+
+      // Optional: Update Supabase auth metadata
+      if (updatedData.fullName) {
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: { full_name: updatedData.fullName }
+        });
+        if (metadataError) {
+          console.error("Metadata update failed:", metadataError);
+          toast.error("Failed to update your profile information.");
+          return;
+        }
+      }
+
+      // Main update to profiles table — validate it worked
+      const { data: updatedProfile, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: updatedData.fullName,
+          age: updatedData.age,
+          gender: updatedData.gender,
+          preferred_currency: updatedData.preferredCurrency,
+          monthly_income: updatedData.monthlyIncome,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+        .select()
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Supabase update error:", profileError);
+        toast.error("Failed to save your preferences.");
+        return;
+      }
+
+      if (!updatedProfile) {
+        console.error("No matching profile row found for user ID:", user.id);
+        toast.error("Profile not found in database.");
+        return;
+      }
+
+      console.log("Profile update successful:", updatedProfile);
+      toast.success("Preferences saved!");
+      setCurrentStep('complete');
+    } else {
+      const nextSteps: Record<OnboardingStep, OnboardingStep> = {
+        welcome: 'personal',
+        personal: 'income',
+        income: 'currency',
+        currency: 'complete',
+        complete: 'complete'
+      };
+      setCurrentStep(nextSteps[step]);
     }
-  };
+  } catch (error) {
+    console.error(`Unexpected error in step "${step}":`, error);
+    toast.error("Something went wrong. Please try again.");
+  }
+};
 
   const steps = {
     welcome: <WelcomeStep onComplete={data => handleStepComplete('welcome', data)} initialData={formData} />,
