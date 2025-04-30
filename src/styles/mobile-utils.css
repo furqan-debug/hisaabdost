@@ -89,9 +89,9 @@
   
   /* Improve touch scrolling on mobile */
   .touch-scroll {
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
   }
 
   /* Fix dropdown scrolling on mobile */
@@ -119,6 +119,14 @@
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
     max-height: 40vh !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  [role="listbox"]::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
   
   /* Fix for Radix UI viewport scrolling */
@@ -127,6 +135,15 @@
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  [data-radix-select-viewport]::-webkit-scrollbar,
+  [data-radix-dropdown-menu-content]::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
   
   /* Add momentum scrolling to all scrollable areas */
@@ -135,20 +152,22 @@
   [role="listbox"],
   .overflow-y-auto,
   .overflow-auto {
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
   }
 }
 
 /* Remove scrollbar but keep functionality */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Make sure all content is visible */
@@ -198,17 +217,20 @@
 
 /* Touch-friendly scrolling container */
 .touch-scroll-container {
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  touch-action: pan-y;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  touch-action: pan-y !important;
+  max-height: 40vh !important;
 }
 
 .touch-scroll-container::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Enhanced mobile dropdown styles */
@@ -221,14 +243,26 @@
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
   }
+  
+  /* Ensure better pointer events for touch */
+  [data-radix-select-viewport],
+  [data-radix-dropdown-menu-content],
+  [role="listbox"] {
+    pointer-events: auto !important;
+  }
+  
+  /* Adjust finger touch area for better scrolling */
+  [role="listbox"] > * {
+    min-height: 40px !important;
+  }
 }
 
 /* Scrollable area with momentum */
 .momentum-scroll {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
 }
 
 /* Touch-friendly dropdown scrolling */
@@ -244,4 +278,6 @@
 
 .touch-scroll::-webkit-scrollbar {
   display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }

@@ -83,21 +83,25 @@ const SelectContent = React.forwardRef<
       style={{
         overscrollBehavior: "contain",
         WebkitOverflowScrolling: "touch",
-        touchAction: "pan-y"
+        touchAction: "pan-y",
+        msOverflowStyle: "none",
+        scrollbarWidth: "none"
       }}
       {...props}
     >
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1 w-full h-full overflow-y-auto touch-scroll",
+          "p-1 w-full h-full overflow-y-auto",
           position === "popper" &&
             "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
         )}
         style={{
           overscrollBehavior: "contain",
           WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y"
+          touchAction: "pan-y",
+          msOverflowStyle: "none",
+          scrollbarWidth: "none"
         }}
       >
         {children}
