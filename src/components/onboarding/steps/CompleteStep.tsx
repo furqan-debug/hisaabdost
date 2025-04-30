@@ -5,10 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CompleteStep } from './steps/CompleteStep';
 
-
-export function CompleteStep() {
+export default function CompleteStep()  {
   const navigate = useNavigate();
   const { user } = useAuth();
 
