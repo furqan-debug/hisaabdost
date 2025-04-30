@@ -70,7 +70,7 @@ export function MonthSelector({ selectedMonth, onChange, className }: MonthSelec
       </SelectTrigger>
       <SelectContent
         align="center"
-        className="w-auto min-w-[180px] p-1 animate-scale-in max-h-[300px] pointer-events-auto touch-scroll-container"
+        className="w-auto min-w-[180px] p-1 animate-scale-in max-h-[300px] pointer-events-auto"
       >
         {groupedMonths.map(([year, yearMonths]) => (
           <SelectGroup key={year}>
