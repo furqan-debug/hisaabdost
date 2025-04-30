@@ -16,11 +16,8 @@ export function IncomeStep({ onComplete, initialData }: IncomeStepProps) {
   const { currencyCode } = useCurrency();
 
   const handleSubmit = () => {
-    // Convert income to a number or null
-    const numericIncome = income ? Number(income) : null;
-    
     onComplete({
-      monthlyIncome: numericIncome
+      monthlyIncome: income ? Number(income) : null
     });
   };
 

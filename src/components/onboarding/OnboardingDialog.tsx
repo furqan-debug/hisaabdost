@@ -27,32 +27,36 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   const { user } = useAuth();
 
   const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
-    const updatedData = { ...formData, ...data };
-    setFormData(updatedData);
+    try {
+      // Update the form data with the new data from the completed step
+      const updatedData = { ...formData, ...data };
+      setFormData(updatedData);
+      
+      console.log(`Step "${step}" completed with data:`, data);
+      console.log("Updated form data:", updatedData);
 
-    if (step === 'currency') {
-      if (!user?.id) {
-        toast.error("User not authenticated. Please sign in again.");
-        return;
-      }
-
-      try {
-        console.log("Saving onboarding data for user:", user.id);
-        console.log("Data being saved:", updatedData);
-
-        // Update user metadata (optional)
-        if (updatedData.fullName) {
-          const { error: userMetaError } = await supabase.auth.updateUser({
-            data: { full_name: updatedData.fullName }
-          });
-
-          if (userMetaError) {
-            console.warn("Metadata update failed", userMetaError);
-          }
+      if (step === 'currency') {
+        if (!user) {
+          console.error("No user found when completing currency step");
+          toast.error("Authentication error. Please try again or refresh the page.");
+          return;
         }
 
-        // Update profile table
-        const { data: updateResult, error: profileError } = await supabase
+        // Update user metadata to ensure the full name is available in user.user_metadata
+        if (updatedData.fullName) {
+          const { error: metadataError } = await supabase.auth.updateUser({
+            data: { full_name: updatedData.fullName }
+          });
+          
+          if (metadataError) {
+            console.error("Error updating user metadata:", metadataError);
+            toast.error("Failed to update your profile information");
+            return;
+          }
+        }
+        
+        // Update the profile table
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             full_name: updatedData.fullName,
@@ -63,32 +67,30 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
-          .eq('id', user.id)
-          .select()
-          .maybeSingle();
+          .eq('id', user.id);
 
         if (profileError) {
-          console.error("Failed to update profile:", profileError);
-          toast.error("Could not complete setup. Please try again.");
+          console.error("Error updating profile:", profileError);
+          toast.error("Failed to save your preferences");
           return;
         }
-
-        // Successfully saved data, now move to complete step
-        toast.success("Preferences saved successfully!");
+        
+        // If we got here, success! Move to the complete step
         setCurrentStep('complete');
-      } catch (error) {
-        toast.error("Unexpected error. Please try again.");
-        console.error("Unexpected error saving onboarding data:", error);
+      } else {
+        // For other steps, just proceed to the next step
+        const nextSteps: Record<OnboardingStep, OnboardingStep> = {
+          welcome: 'personal',
+          personal: 'income',
+          income: 'currency',
+          currency: 'complete',
+          complete: 'complete'
+        };
+        setCurrentStep(nextSteps[step]);
       }
-    } else {
-      const nextSteps: Record<OnboardingStep, OnboardingStep> = {
-        welcome: 'personal',
-        personal: 'income',
-        income: 'currency',
-        currency: 'complete',
-        complete: 'complete'
-      };
-      setCurrentStep(nextSteps[step]);
+    } catch (error) {
+      console.error(`Error in handleStepComplete for step "${step}":`, error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 

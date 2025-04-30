@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingFormData } from "../types";
-import { useState } from "react";
-import { CURRENCY_OPTIONS, CurrencyOption } from "@/utils/currencyUtils";
+import { useState, useEffect } from "react";
+import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
+import { toast } from "sonner";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -12,17 +13,25 @@ interface CurrencyStepProps {
 }
 
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
-  const [currency, setCurrency] = useState(initialData.preferredCurrency);
+  const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "USD");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleComplete = () => {
     setIsSubmitting(true);
     
     try {
-      // Call the onComplete function provided by the parent
+      // Ensure we have a valid currency selected
+      if (!currency) {
+        toast.error("Please select a currency before continuing");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Pass the selected currency to the parent component
       onComplete({ preferredCurrency: currency });
     } catch (error) {
-      console.error("Error when completing currency step:", error);
+      console.error("Error in currency step:", error);
+      toast.error("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -39,16 +48,16 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       <div className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Preferred Currency</label>
-          <Select value={currency} onValueChange={setCurrency}>
+          <Select value={currency} onValueChange={(value: CurrencyCode) => setCurrency(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
             <SelectContent className="touch-scroll">
-              {CURRENCY_OPTIONS.map((currency: CurrencyOption) => (
-                <SelectItem key={currency.code} value={currency.code}>
+              {CURRENCY_OPTIONS.map((currencyOption: CurrencyOption) => (
+                <SelectItem key={currencyOption.code} value={currencyOption.code}>
                   <div className="flex items-center">
-                    <span className="mr-2">{currency.symbol}</span>
-                    <span>{currency.label}</span>
+                    <span className="mr-2">{currencyOption.symbol}</span>
+                    <span>{currencyOption.label}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -58,11 +67,12 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       </div>
 
       <div className="flex justify-end">
-        
-        <Button onClick={() => onComplete({ preferredCurrency: currency })}>
-  Complete Setup
-</Button>
-
+        <Button 
+          onClick={handleComplete}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Processing..." : "Complete Setup"}
+        </Button>
       </div>
     </div>
   );
