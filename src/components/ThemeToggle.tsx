@@ -19,6 +19,31 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   const [colorMode, setColorMode] = useState<"default" | "pink" | "purple">("default");
   const [isOpen, setIsOpen] = useState(false);
+  const [systemTheme, setSystemTheme] = useState<"dark" | "light">("light");
+
+  // Listen for system theme changes
+  useEffect(() => {
+    // Check the initial system preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemTheme(mediaQuery.matches ? "dark" : "light");
+    
+    // Add listener for theme changes
+    const handleChange = (e: MediaQueryListEvent) => {
+      setSystemTheme(e.matches ? "dark" : "light");
+      
+      // If user has selected system theme, update the theme immediately
+      if (theme === 'system') {
+        // This will trigger a re-render with the new system theme
+        setTheme('system');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, [theme, setTheme]);
 
   useEffect(() => {
     setMounted(true);
@@ -33,7 +58,7 @@ export function ThemeToggle() {
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    if (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches === false) {
+    if (newTheme === 'system' && systemTheme === 'light') {
       document.documentElement.classList.add("purple");
       localStorage.setItem("color-theme", "purple");
       setColorMode("purple");
@@ -54,6 +79,9 @@ export function ThemeToggle() {
   };
 
   if (!mounted) return null;
+
+  // Determine the actual theme to display (for UI indication)
+  const displayTheme = theme === 'system' ? systemTheme : resolvedTheme;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -77,19 +105,22 @@ export function ThemeToggle() {
           </DropdownMenuLabel>
           <DropdownMenuItem 
             onClick={() => handleThemeChange("light")}
-            className={cn(resolvedTheme === "light" ? "bg-accent" : "")}
+            className={cn(displayTheme === "light" && theme === "light" ? "bg-accent" : "")}
           >
             <Sun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => handleThemeChange("dark")}
-            className={cn(resolvedTheme === "dark" ? "bg-accent" : "")}
+            className={cn(displayTheme === "dark" && theme === "dark" ? "bg-accent" : "")}
           >
             <Moon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleThemeChange("system")}>
+          <DropdownMenuItem 
+            onClick={() => handleThemeChange("system")}
+            className={cn(theme === "system" ? "bg-accent" : "")}
+          >
             <span className="mr-2 flex h-4 w-4 items-center justify-center">
               <Sun className="h-3 w-3 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-3 w-3 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
