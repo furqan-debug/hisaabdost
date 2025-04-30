@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
@@ -66,12 +67,13 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           .select()
           .maybeSingle();
 
-        if (profileError || !updateResult) {
+        if (profileError) {
           console.error("Failed to update profile:", profileError);
           toast.error("Could not complete setup. Please try again.");
           return;
         }
 
+        // Successfully saved data, now move to complete step
         toast.success("Preferences saved successfully!");
         setCurrentStep('complete');
       } catch (error) {

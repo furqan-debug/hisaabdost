@@ -13,6 +13,19 @@ interface CurrencyStepProps {
 
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
   const [currency, setCurrency] = useState(initialData.preferredCurrency);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleComplete = () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Call the onComplete function provided by the parent
+      onComplete({ preferredCurrency: currency });
+    } catch (error) {
+      console.error("Error when completing currency step:", error);
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -45,8 +58,11 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => onComplete({ preferredCurrency: currency })}>
-          Complete Setup
+        <Button 
+          onClick={handleComplete} 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Complete Setup"}
         </Button>
       </div>
     </div>
