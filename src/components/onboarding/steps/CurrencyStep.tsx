@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingFormData } from "../types";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
-import { toast } from "sonner";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -17,23 +16,21 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleComplete = () => {
+    // Mark as submitting to show the loading state
     setIsSubmitting(true);
     
-    try {
-      // Ensure we have a valid currency selected
-      if (!currency) {
-        toast.error("Please select a currency before continuing");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Pass the selected currency to the parent component
-      onComplete({ preferredCurrency: currency });
-    } catch (error) {
-      console.error("Error in currency step:", error);
-      toast.error("Something went wrong. Please try again.");
+    // Ensure we have a valid currency selected
+    if (!currency) {
+      console.error("No currency selected");
       setIsSubmitting(false);
+      return;
     }
+    
+    // Call the onComplete callback immediately with the selected currency
+    onComplete({ preferredCurrency: currency });
+    
+    // Note: We're not resetting isSubmitting because the component will be unmounted
+    // when moving to the next step
   };
 
   return (
