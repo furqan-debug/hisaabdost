@@ -11,15 +11,6 @@ interface CurrencyStepProps {
   initialData: OnboardingFormData;
 }
 
-const [loading, setLoading] = useState(false);
-
-const handleSubmit = async () => {
-  setLoading(true);
-  await onComplete({ preferredCurrency: currency });
-  setLoading(false);
-};
-
-
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
   const [currency, setCurrency] = useState(initialData.preferredCurrency);
 
@@ -54,9 +45,10 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => onComplete({ preferredCurrency: currency })}>
-          Complete Setup
-        </Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+  {loading ? "Processing..." : "Complete Setup"}
+</Button>
+
       </div>
     </div>
   );
