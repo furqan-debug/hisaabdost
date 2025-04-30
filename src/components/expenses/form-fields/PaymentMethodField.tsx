@@ -31,7 +31,7 @@ export function PaymentMethodField({ value, onChange }: PaymentMethodFieldProps)
         <SelectTrigger id="expense-payment" className="bg-background">
           <SelectValue placeholder="Select payment method" />
         </SelectTrigger>
-        <SelectContent className="touch-scroll-container">
+        <SelectContent className="touch-scroll-container max-h-[40vh]">
           {PAYMENT_METHODS.map((method) => (
             <SelectItem key={method} value={method}>
               {method}
