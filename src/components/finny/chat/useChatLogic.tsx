@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -76,8 +75,14 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
   // Check for user on mount and handle initial message appropriately
   useEffect(() => {
+    // If user is logged in and we're showing auth prompt, replace with a personalized greeting
+    if (user && messages.length === 1 && !messages[0].isUser && messages[0].content.includes("log in first")) {
+      // Remove the auth prompt and trigger reinitialization
+      setMessages([]); 
+      setHasInitialized(false);
+    }
     // If no messages and no user, show auth prompt
-    if (!user && messages.length === 0) {
+    else if (!user && messages.length === 0) {
       const authPromptMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
@@ -87,7 +92,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
       };
       setMessages([authPromptMessage]);
     }
-  }, []);
+  }, [user]);
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
     if (e) e.preventDefault();
@@ -225,6 +230,13 @@ export const useChatLogic = (queuedMessage: string | null) => {
       
       // If we have chat history, don't show welcome message again
       if (messageCount > 0) {
+        // Filter out any auth prompts in the message history if user is authenticated
+        if (user) {
+          setMessages(prevMessages => 
+            prevMessages.filter(msg => !(msg.content.includes("log in first") && !msg.isUser))
+          );
+        }
+        
         setIsConnectingToData(false);
         return;
       }

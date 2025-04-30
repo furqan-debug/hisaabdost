@@ -53,7 +53,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     console.error("Currency context not available:", error);
   }
 
-  const openChat = () => setIsOpen(true);
+  const openChat = () => {
+    console.log("Opening Finny chat, user auth status:", user ? "authenticated" : "not authenticated");
+    setIsOpen(true);
+  };
+  
   const closeChat = () => setIsOpen(false);
   const toggleChat = () => setIsOpen((prev) => !prev);
   
@@ -138,6 +142,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     toast.success("Finny chat reset successfully");
   };
   
+  // Refactor this effect to be more efficient with auth checking
   useEffect(() => {
     if (queuedMessage && isOpen) {
       const timer = setTimeout(() => {

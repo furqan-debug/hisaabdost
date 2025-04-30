@@ -57,10 +57,19 @@ const FinnyChat = ({
     }
   }, [isOpen, user]);
   
+  // Filter out the auth prompt message when user is logged in
+  const filteredMessages = messages.filter(message => {
+    // If user is logged in, filter out the auth prompt message
+    if (user && !message.isUser && message.content.includes("log in first")) {
+      return false;
+    }
+    return true;
+  });
+  
   // Check if this is the initial auth prompt message
-  const isAuthPromptOnly = messages.length === 1 && 
-                           !messages[0].isUser && 
-                           messages[0].content.includes("log in") &&
+  const isAuthPromptOnly = filteredMessages.length === 1 && 
+                           !filteredMessages[0].isUser && 
+                           filteredMessages[0].content.includes("log in") &&
                            !user;
 
   useEffect(() => {
@@ -161,7 +170,7 @@ const FinnyChat = ({
                       <span className="text-xs text-muted-foreground">Connecting to your financial data...</span>
                     </div>}
                   
-                    {messages.map(message => (
+                    {filteredMessages.map(message => (
                       <FinnyMessage 
                         key={message.id} 
                         content={message.content} 
@@ -174,7 +183,7 @@ const FinnyChat = ({
 
                     {isTyping && <TypingIndicator />}
                   
-                    {!isLoading && !isTyping && messages.length > 0 && !messages[messages.length - 1].isUser && (
+                    {!isLoading && !isTyping && filteredMessages.length > 0 && !filteredMessages[filteredMessages.length - 1].isUser && (
                       <QuickReplies 
                         replies={quickReplies} 
                         onSelect={handleQuickReply} 
