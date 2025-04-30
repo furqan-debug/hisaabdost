@@ -1,15 +1,19 @@
 
-
 // Format a price number to a standard string format
 export function formatPrice(price: number, currencyCode = 'USD'): string {
   try {
+    // Check if price is a whole number
+    const isWholeNumber = price === Math.floor(price);
+    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyCode,
+      minimumFractionDigits: isWholeNumber ? 0 : 2,
+      maximumFractionDigits: 2
     }).format(price);
   } catch (e) {
     // Fallback to simple formatting
-    return price.toFixed(2);
+    return price === Math.floor(price) ? price.toFixed(0) : price.toFixed(2);
   }
 }
 
