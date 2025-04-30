@@ -89,30 +89,9 @@
   
   /* Improve touch scrolling on mobile */
   .touch-scroll {
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
-    overscroll-behavior-y: contain !important;
-    overflow-y: auto !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-
-  .touch-scroll::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  /* Enhanced momentum scrolling */
-  .momentum-scroll {
-    -webkit-overflow-scrolling: touch !important;
-    scroll-behavior: smooth !important;
-    overscroll-behavior: contain !important;
-    touch-action: pan-y !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-
-  .momentum-scroll::-webkit-scrollbar {
-    display: none !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
   }
 
   /* Fix dropdown scrolling on mobile */
@@ -139,7 +118,7 @@
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
-    max-height: 50vh !important;
+    max-height: 40vh !important;
   }
   
   /* Fix for Radix UI viewport scrolling */
@@ -156,29 +135,9 @@
   [role="listbox"],
   .overflow-y-auto,
   .overflow-auto {
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
-    overscroll-behavior: contain !important;
-  }
-  
-  /* Fix for iOS specific scrolling issues */
-  .ios-scroll-fix {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  
-  /* Enhanced select dropdown scrolling */
-  [id^="radix-"] {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  
-  /* Make sure dialogs and popups have proper scrolling */
-  [role="dialog"],
-  [role="alertdialog"],
-  [role="listbox"] {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
   }
 }
 
@@ -190,21 +149,6 @@
 
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
-}
-
-/* Enhanced touch scrolling for all devices */
-.touch-scroll-container {
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  touch-action: pan-y !important;
-}
-
-.touch-scroll-container::-webkit-scrollbar {
-  display: none !important;
 }
 
 /* Make sure all content is visible */
@@ -277,21 +221,6 @@
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  
-  /* Enhanced scrolling for popper content and viewport */
-  [data-radix-popper-content-wrapper] [role="listbox"],
-  [data-radix-popper-content-wrapper] div {
-    touch-action: pan-y !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
-  }
-  
-  [data-radix-popper-content-wrapper] [role="listbox"]::-webkit-scrollbar,
-  [data-radix-popper-content-wrapper] div::-webkit-scrollbar {
-    display: none !important;
-  }
 }
 
 /* Scrollable area with momentum */
@@ -308,7 +237,7 @@
   touch-action: pan-y !important;
   overscroll-behavior-y: contain !important;
   overflow-y: auto !important;
-  max-height: 50vh !important;
+  max-height: 40vh !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
