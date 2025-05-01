@@ -44,9 +44,14 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
 
         // Update user metadata to ensure the full name is available in user.user_metadata
         if (updatedData.fullName) {
-          await supabase.auth.updateUser({
+          const { error: userUpdateError } = await supabase.auth.updateUser({
             data: { full_name: updatedData.fullName }
           });
+          
+          if (userUpdateError) {
+            console.error('Error updating user metadata:', userUpdateError);
+            // Continue with profile update anyway
+          }
         }
         
         // Update the profile table with the enhanced query
@@ -75,6 +80,8 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         
         // Successfully updated profile, move to next step
         toast.success('Profile updated successfully');
+        
+        // Explicitly move to the complete step
         setCurrentStep('complete');
       } catch (error) {
         console.error('Error in onboarding completion:', error);

@@ -30,10 +30,10 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       // Set submitting state to show loading indicator
       setIsSubmitting(true);
       
-      // Pass the selected currency to the parent component
+      // Pass the selected currency to the parent component and let it handle the transition
       onComplete({ preferredCurrency: currency });
       
-      // Note: We don't reset isSubmitting here as the parent component
+      // We intentionally don't reset isSubmitting here as the parent component
       // will handle transitioning to the next step or showing errors
     } catch (error) {
       console.error("Error in currency step:", error);
