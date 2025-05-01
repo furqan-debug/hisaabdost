@@ -23,6 +23,34 @@ async function fetchWithRetry(fn: () => Promise<Response>, retries = 3, delay = 
   throw new Error("Max retries reached (OpenAI API)");
 }
 
+// Map AI category terms to your app's known categories
+const CATEGORY_MAP: Record<string, string> = {
+  groceries: "Food",
+  food: "Food",
+  dining: "Food",
+  restaurant: "Food",
+  electronics: "Shopping",
+  clothing: "Shopping",
+  transport: "Transport",
+  fuel: "Transport",
+  petrol: "Transport",
+  rent: "Housing",
+  utility: "Bills",
+  utilities: "Bills",
+  internet: "Bills",
+  medicine: "Health",
+  pharmacy: "Health",
+  doctor: "Health",
+  kitchenware: "Home",
+  household: "Home",
+  home: "Home"
+};
+
+function normalizeCategory(raw: string): string {
+  const key = raw?.toLowerCase().trim();
+  return CATEGORY_MAP[key] || "Other";
+}
+
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
     if (!file || file.size === 0) throw new Error("Invalid file");
@@ -99,6 +127,13 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
         paymentMethod: "Card"
       }];
     }
+
+    // Normalize categories
+    parsed.items = parsed.items.map((item: any) => ({
+      ...item,
+      category: normalizeCategory(item.category),
+      amount: parseFloat(item.amount || "0").toFixed(2)
+    }));
 
     return parsed;
 
