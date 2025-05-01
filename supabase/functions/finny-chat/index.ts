@@ -27,6 +27,14 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
+// ...
+IMPORTANT: If the user doesn’t specify a date when adding an expense, 
+automatically set the date to today’s date in YYYY-MM-DD format.
+
+Format for responses:
+- When you need to perform an action, include a JSON object with the action details…
+
+
 // Define the system message for Finny's personality, capabilities, and personalization
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, and financial goals through natural conversation.
@@ -383,17 +391,24 @@ When responding to the user named ${userName}:
     }
     // Check if there's an action in the AI response
     else if (actionMatch && actionMatch[1]) {
-      try {
-        const actionData = JSON.parse(actionMatch[1]);
-        
-        // Process the action based on its type
-        const actionResult = await processAction(actionData, userId, supabase);
-        
-        // Replace the action marker with a confirmation
-        processedResponse = aiResponse.replace(
-          actionMatch[0], 
-          `✅ ${actionResult}`
-        );
+  try {
+    // parse the assistant’s action
+    const actionData: any = JSON.parse(actionMatch[1]);
+
+    // --- NEW: if it’s an add_expense without a date, use today ---
+    if (actionData.type === 'add_expense' && !actionData.date) {
+      actionData.date = new Date().toISOString().split('T')[0];
+    }
+
+    // now send it on to your processor
+    const actionResult = await processAction(actionData, userId, supabase);
+
+    // replace the marker with the confirmation
+    processedResponse = aiResponse.replace(
+      actionMatch[0],
+      `✅ ${actionResult}`
+    );
+
         
       } catch (actionError) {
         console.error('Error processing action:', actionError);
