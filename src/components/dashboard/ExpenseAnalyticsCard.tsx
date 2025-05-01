@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensePieChart } from "@/components/charts/ExpensePieChart";
@@ -46,10 +47,18 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className={cn("overflow-hidden shadow-sm border-border/50 w-full max-w-md mx-auto")}>      
-      <CardHeader className="pb-2 px-4">
+    <Card className={cn(
+      "overflow-hidden shadow-sm border-border/50", 
+      isMobile && "w-full max-w-md mx-auto"
+    )}>
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2">
-          <CardTitle className="text-lg font-semibold text-center w-full">Expense Analytics</CardTitle>
+          <CardTitle className={cn(
+            "text-lg font-semibold", 
+            isMobile && "text-center w-full"
+          )}>
+            Expense Analytics
+          </CardTitle>
           <div className="flex items-center">
             <div className="bg-background/5 backdrop-blur-sm rounded-lg p-1 flex gap-1">
               <button 
@@ -92,33 +101,42 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 px-4 pb-4">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-[350px]">
-            <p className="text-muted-foreground">Loading analytics...</p>
-          </div>
-        ) : expenses.length === 0 ? (
-          <div className="flex justify-center items-center h-[350px]">
-            <p className="text-muted-foreground">Add some expenses to see analytics</p>
-          </div>
-        ) : (
-          <ScrollArea className="h-[350px] w-full">
-            <div className="flex justify-center items-center w-full">
-              <motion.div 
-                className="w-full max-w-[320px] min-h-[320px]"
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                transition={{ duration: 0.3 }} 
-                key={chartType}
-              >
-                <ChartContainer className="h-full w-full min-h-[320px]" config={chartConfig}>
-                  {renderChart()}
-                </ChartContainer>
-              </motion.div>
-            </div>
-          </ScrollArea>
+      <CardContent className={cn(
+  "pt-2 pb-4 mx-0 overflow-x-hidden",
+  isMobile ? "max-h-[calc(100dvh-180px)] overflow-y-auto px-3" : ""
+)}>
+  {isLoading ? (
+    <div className="flex justify-center items-center h-[350px]">
+      <p className="text-muted-foreground">Loading analytics...</p>
+    </div>
+  ) : expenses.length === 0 ? (
+    <div className="flex justify-center items-center h-[350px]">
+      <p className="text-muted-foreground">Add some expenses to see analytics</p>
+    </div>
+  ) : (
+    <div className="w-full flex flex-col items-center gap-6">
+      <motion.div
+        className={cn(
+          "w-full max-w-[500px] min-h-[320px]",
+          isMobile && "max-w-[300px]"
         )}
-      </CardContent>
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        key={chartType}
+      >
+        <ChartContainer
+          className="h-full w-full min-h-[320px]"
+          config={chartConfig}
+        >
+          {renderChart()}
+        </ChartContainer>
+      </motion.div>
+      {/* Legend renders automatically from ChartContainer in most setups */}
+    </div>
+  )}
+</CardContent>
+
     </Card>
   );
 };
