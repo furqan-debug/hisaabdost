@@ -101,23 +101,25 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className={cn(
-  "pt-2 pb-4 mx-0 overflow-x-hidden",
-  isMobile ? "max-h-[calc(100dvh-180px)] overflow-y-auto px-3" : ""
-)}>
+     <CardContent
+  className={cn(
+    "pt-2 pb-6 px-3",
+    isMobile && "flex flex-col items-center justify-start w-full"
+  )}
+>
   {isLoading ? (
-    <div className="flex justify-center items-center h-[350px]">
+    <div className="flex justify-center items-center min-h-[320px] w-full">
       <p className="text-muted-foreground">Loading analytics...</p>
     </div>
   ) : expenses.length === 0 ? (
-    <div className="flex justify-center items-center h-[350px]">
+    <div className="flex justify-center items-center min-h-[320px] w-full">
       <p className="text-muted-foreground">Add some expenses to see analytics</p>
     </div>
   ) : (
     <div className="w-full flex flex-col items-center gap-6">
       <motion.div
         className={cn(
-          "w-full max-w-[500px] min-h-[320px]",
+          "w-full max-w-[500px]",
           isMobile && "max-w-[300px]"
         )}
         initial={{ opacity: 0 }}
@@ -126,13 +128,12 @@ export const ExpenseAnalyticsCard = ({
         key={chartType}
       >
         <ChartContainer
-          className="h-full w-full min-h-[320px]"
+          className="w-full h-auto"
           config={chartConfig}
         >
           {renderChart()}
         </ChartContainer>
       </motion.div>
-      {/* Legend renders automatically from ChartContainer in most setups */}
     </div>
   )}
 </CardContent>
