@@ -32,15 +32,22 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
 
     if (step === 'currency') {
       try {
+        // Validate user existence
+        if (!user || !user.id) {
+          toast.error('User session not found. Please log in again.');
+          console.error('User not found during onboarding completion');
+          return;
+        }
+
         // Update user metadata to ensure the full name is available in user.user_metadata
-        if (user && updatedData.fullName) {
+        if (updatedData.fullName) {
           await supabase.auth.updateUser({
             data: { full_name: updatedData.fullName }
           });
         }
         
-        // Update the profile table
-        const { error } = await supabase
+        // Update the profile table with the enhanced query
+        const { data: updatedProfile, error } = await supabase
           .from('profiles')
           .update({
             full_name: updatedData.fullName,
@@ -51,13 +58,28 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
-          .eq('id', user?.id);
+          .eq('id', user.id)
+          .select()
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating profile:', error);
+          toast.error('Failed to save your preferences');
+          return;
+        }
+
+        if (!updatedProfile) {
+          console.error('No profile was updated. Profile might not exist for user:', user.id);
+          toast.error('Failed to save your profile. Please try again.');
+          return;
+        }
+
+        console.log('Profile successfully updated:', updatedProfile);
+        toast.success('Profile updated successfully');
         setCurrentStep('complete');
       } catch (error) {
-        toast.error('Failed to save your preferences');
-        console.error('Error saving onboarding data:', error);
+        console.error('Error in onboarding completion:', error);
+        toast.error('An unexpected error occurred. Please try again.');
       }
     } else {
       const nextSteps: Record<OnboardingStep, OnboardingStep> = {
