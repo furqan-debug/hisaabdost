@@ -101,43 +101,48 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-     <CardContent
-  className={cn(
-    "pt-2 pb-6 px-3",
-    isMobile && "flex flex-col items-center justify-start w-full"
-  )}
->
-  {isLoading ? (
-    <div className="flex justify-center items-center min-h-[320px] w-full">
-      <p className="text-muted-foreground">Loading analytics...</p>
-    </div>
-  ) : expenses.length === 0 ? (
-    <div className="flex justify-center items-center min-h-[320px] w-full">
-      <p className="text-muted-foreground">Add some expenses to see analytics</p>
-    </div>
-  ) : (
-    <div className="w-full flex flex-col items-center gap-6">
-      <motion.div
-        className={cn(
-          "w-full max-w-[500px]",
-          isMobile && "max-w-[300px]"
+      <CardContent className={cn(
+        "pt-2 pb-4 mx-0", 
+        isMobile && "flex flex-col items-center justify-center"
+      )}>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[350px]">
+            <p className="text-muted-foreground">Loading analytics...</p>
+          </div>
+        ) : expenses.length === 0 ? (
+          <div className="flex justify-center items-center h-[350px]">
+            <p className="text-muted-foreground">Add some expenses to see analytics</p>
+          </div>
+        ) : (
+          <ScrollArea className={cn(
+            "h-[350px] w-full", 
+            isMobile && "max-w-[350px]"
+          )}>
+            <div className="flex justify-center items-center w-full">
+              <motion.div 
+                className={cn(
+                  "w-full max-w-[500px] min-h-[320px]", 
+                  isMobile && "max-w-[300px]"
+                )} 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ duration: 0.3 }} 
+                key={chartType}
+              >
+                <ChartContainer 
+                  className={cn(
+                    "h-full w-full min-h-[320px]", 
+                    isMobile && "max-w-[300px] mx-auto"
+                  )} 
+                  config={chartConfig}
+                >
+                  {renderChart()}
+                </ChartContainer>
+              </motion.div>
+            </div>
+          </ScrollArea>
         )}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        key={chartType}
-      >
-        <ChartContainer
-          className="w-full h-auto"
-          config={chartConfig}
-        >
-          {renderChart()}
-        </ChartContainer>
-      </motion.div>
-    </div>
-  )}
-</CardContent>
-
+      </CardContent>
     </Card>
   );
 };
