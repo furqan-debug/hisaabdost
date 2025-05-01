@@ -1,4 +1,3 @@
-
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CATEGORY_COLORS, calculatePieChartData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
@@ -48,20 +47,7 @@ export const ExpensePieChart = ({
         bottom: 0,
         left: 0
       }}>
-          <Pie 
-            data={data} 
-            dataKey="value" 
-            nameKey="name" 
-            cx="50%" 
-            cy="50%" 
-            innerRadius={innerRadius} 
-            outerRadius={outerRadius} 
-            paddingAngle={0} 
-            cornerRadius={0}
-            strokeWidth={0}
-            labelLine={false} 
-            label={false}
-          >
+          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={innerRadius} outerRadius={outerRadius} paddingAngle={0} cornerRadius={0} strokeWidth={0} labelLine={false} label={false}>
             {data.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />)}
           </Pie>
           <Tooltip content={({
@@ -90,7 +76,7 @@ export const ExpensePieChart = ({
       </ResponsiveContainer>
       
       {/* Simplified mobile-friendly legend */}
-      {!minifiedMode && <div className="expense-chart-legend my--9\n">
+      {!minifiedMode && <div className="expense-chart-legend my--9\\n">
           {data.slice(0, isMobile ? 4 : 6).map((entry, index) => <div key={index} className="expense-chart-legend-item bg-muted/20 text-foreground">
               <div className="expense-chart-legend-dot" style={{
           backgroundColor: entry.color

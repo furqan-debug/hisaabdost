@@ -71,7 +71,7 @@ export const ExpenseAnalyticsCard = ({
           </div> : expenses.length === 0 ? <div className="flex justify-center items-center h-[350px]">
             <p className="text-muted-foreground">Add some expenses to see analytics</p>
           </div> : <ScrollArea className={cn("h-[350px] w-full", isMobile && "max-w-[350px]")}>
-            <div className="flex justify-center items-center w-full my--2 py-[4px]">
+            <div className="flex justify-center items-center w-full my-0 py-0">
               <motion.div className={cn("w-full max-w-[500px] min-h-[320px]", isMobile && "max-w-[300px]")} initial={{
             opacity: 0
           }} animate={{
