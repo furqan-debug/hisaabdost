@@ -405,22 +405,6 @@ When responding to the user named ${userName}:
   }
 }
 
-if (actionData.type === "add_expense") {
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-
-  const givenDate = new Date(actionData.date);
-  const isInvalidDate = isNaN(givenDate.getTime());
-
-  const isOutdated = givenDate.getFullYear() < today.getFullYear() || 
-                     (givenDate.getFullYear() === today.getFullYear() && givenDate.getMonth() < today.getMonth());
-
-  if (!actionData.date || isInvalidDate || isOutdated) {
-    console.warn(`Fixing date: given=${actionData.date}, replacing with today=${todayStr}`);
-    actionData.date = todayStr;
-  }
-}
-
         
         // Process the action based on its type
         const actionResult = await processAction(actionData, userId, supabase);
