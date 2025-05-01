@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingFormData } from "../types";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
 import { toast } from "sonner";
 
@@ -17,6 +17,9 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleComplete = () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
     
     try {
@@ -29,6 +32,9 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       
       // Pass the selected currency to the parent component
       onComplete({ preferredCurrency: currency });
+      
+      // Note: We don't reset isSubmitting here since the parent component
+      // will handle transitioning to the next step or showing errors
     } catch (error) {
       console.error("Error in currency step:", error);
       toast.error("Something went wrong. Please try again.");
@@ -71,7 +77,7 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
           onClick={handleComplete}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Processing..." : "Complete Setup"}
+          {isSubmitting ? "Saving..." : "Complete Setup"}
         </Button>
       </div>
     </div>
