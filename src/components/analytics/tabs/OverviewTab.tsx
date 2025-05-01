@@ -11,7 +11,7 @@ export function OverviewTab({
   expenses,
   config
 }: OverviewTabProps) {
-  return <Card className="border-0 shadow-sm bg-card/80 py-[5px]">
+  return <Card className="border-0 shadow-sm bg-card/80 px-0 my-px">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">Category Breakdown</CardTitle>
         <CardDescription>Your expenses by category</CardDescription>
