@@ -32,8 +32,8 @@ export function TrendsTab({
           <CardTitle className="text-lg font-medium text-center">Category Trends</CardTitle>
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
-        <CardContent className="pt-0 pb-2 trends-chart-container my-[29px] py-[11px]">
-          <div className="h-[220px] my-[14px] py-[24px]">
+        <CardContent className="pt-0 pb-2 trends-chart-container py-[11px] my-[40px]">
+          <div className="h-[220px] my-[8px] py-[31px]">
             <ChartContainer config={config}>
               <ExpensesLineChart expenses={expenses} />
             </ChartContainer>
