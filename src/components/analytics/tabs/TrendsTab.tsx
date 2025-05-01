@@ -19,12 +19,13 @@ export function TrendsTab({
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-2 trends-chart-container">
-          <div className="h-[220px] mx--4 py-[20px]">
-            <ChartContainer config={config}>
-              <ExpensesBarChart expenses={expenses} />
-            </ChartContainer>
-          </div>
-        </CardContent>
+  <div className="min-h-[320px] px-4 py-4">
+    <ChartContainer config={config}>
+      <ExpensesBarChart expenses={expenses} />
+    </ChartContainer>
+  </div>
+</CardContent>
+
       </Card>
 
       <Card className="border-0 shadow-sm bg-card/80 trends-card">
