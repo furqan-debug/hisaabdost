@@ -33,7 +33,7 @@ export function TrendsTab({
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-2 trends-chart-container my-[29px] py-[11px]">
-          <div className="h-[220px]">
+          <div className="h-[220px] my-[14px] py-[24px]">
             <ChartContainer config={config}>
               <ExpensesLineChart expenses={expenses} />
             </ChartContainer>

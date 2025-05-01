@@ -28,7 +28,7 @@ export function ExpensesLineChart({
   // Find average value for reference line
   const allValues = data.flatMap(item => topCategories.map(cat => item[cat] || 0).filter(val => val > 0));
   const avgValue = allValues.length > 0 ? allValues.reduce((sum, val) => sum + val, 0) / allValues.length : 0;
-  return <div className="w-full h-full mx-- px-[6px] my-0">
+  return <div className="w-full h-full mx-- px-[6px] my-[2px] py-0">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={isMobile ? {
         top: 15,
