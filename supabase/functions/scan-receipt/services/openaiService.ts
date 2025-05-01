@@ -23,32 +23,47 @@ async function fetchWithRetry(fn: () => Promise<Response>, retries = 3, delay = 
   throw new Error("Max retries reached (OpenAI API)");
 }
 
-// Map AI category terms to your app's known categories
+// Accepted categories in your app
+const ALLOWED_CATEGORIES = [
+  "Food",
+  "Rent",
+  "Utilities",
+  "Transportation",
+  "Entertainment",
+  "Shopping",
+  "Other"
+];
+
+// Map AI terms to allowed categories
 const CATEGORY_MAP: Record<string, string> = {
   groceries: "Food",
   food: "Food",
   dining: "Food",
   restaurant: "Food",
-  electronics: "Shopping",
+  eat: "Food",
   clothing: "Shopping",
-  transport: "Transport",
-  fuel: "Transport",
-  petrol: "Transport",
-  rent: "Housing",
-  utility: "Bills",
-  utilities: "Bills",
-  internet: "Bills",
-  medicine: "Health",
-  pharmacy: "Health",
-  doctor: "Health",
-  kitchenware: "Home",
-  household: "Home",
-  home: "Home"
+  clothes: "Shopping",
+  transport: "Transportation",
+  transportation: "Transportation",
+  fuel: "Transportation",
+  petrol: "Transportation",
+  rent: "Rent",
+  utility: "Utilities",
+  utilities: "Utilities",
+  internet: "Utilities",
+  electricity: "Utilities",
+  water: "Utilities",
+  shopping: "Shopping",
+  entertainment: "Entertainment",
+  movies: "Entertainment",
+  cinema: "Entertainment"
 };
 
 function normalizeCategory(raw: string): string {
   const key = raw?.toLowerCase().trim();
-  return CATEGORY_MAP[key] || "Other";
+  const mapped = CATEGORY_MAP[key];
+  if (mapped && ALLOWED_CATEGORIES.includes(mapped)) return mapped;
+  return ALLOWED_CATEGORIES.includes(raw) ? raw : "Other";
 }
 
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
@@ -128,7 +143,7 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
       }];
     }
 
-    // Normalize categories
+    // Normalize categories to ensure they're valid in your app
     parsed.items = parsed.items.map((item: any) => ({
       ...item,
       category: normalizeCategory(item.category),
