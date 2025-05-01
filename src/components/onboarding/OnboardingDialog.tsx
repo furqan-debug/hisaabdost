@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
-import { CompleteStep } from './steps/CompleteStep';
+import { CompleteStep } from './steps/CompleteStep'; // ✅ Ensure this is a named export
 import { OnboardingStep, OnboardingFormData } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
@@ -24,6 +23,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     preferredCurrency: 'USD',
     monthlyIncome: null
   });
+
   const { user } = useAuth();
 
   const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
@@ -32,30 +32,23 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
 
     if (step === 'currency') {
       try {
-        // Validate user existence
-        if (!user || !user.id) {
-          toast.error('User session not found. Please log in again.');
-          console.error('User not found during onboarding completion');
+        if (!user?.id) {
+          toast.error("User not authenticated");
           return;
         }
 
-        console.log('Starting profile update for user:', user.id);
-        console.log('Data being saved:', updatedData);
+        console.log("Submitting onboarding data:", updatedData);
 
-        // Update user metadata to ensure the full name is available in user.user_metadata
+        // Update user metadata (optional)
         if (updatedData.fullName) {
-          const { error: userUpdateError } = await supabase.auth.updateUser({
+          const { error: metaError } = await supabase.auth.updateUser({
             data: { full_name: updatedData.fullName }
           });
-          
-          if (userUpdateError) {
-            console.error('Error updating user metadata:', userUpdateError);
-            // Continue with profile update anyway
-          }
+          if (metaError) console.error("Metadata update failed:", metaError);
         }
-        
-        // Update the profile table with the enhanced query
-        const { data: updatedProfile, error } = await supabase
+
+        // Update profile in Supabase
+        const { data: profileData, error } = await supabase
           .from('profiles')
           .update({
             full_name: updatedData.fullName,
@@ -71,32 +64,30 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           .maybeSingle();
 
         if (error) {
-          console.error('Error updating profile:', error);
-          toast.error('Failed to save your preferences');
+          console.error("Profile update error:", error);
+          toast.error("Failed to save data");
           return;
         }
 
-        console.log('Profile update result:', updatedProfile);
-        
-        // Successfully updated profile, move to next step
-        toast.success('Profile updated successfully');
-        
-        // Explicitly move to the complete step
+        console.log("Profile update success:", profileData);
+        toast.success("Setup complete!");
         setCurrentStep('complete');
-      } catch (error) {
-        console.error('Error in onboarding completion:', error);
-        toast.error('An unexpected error occurred. Please try again.');
+
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        toast.error("Something went wrong");
       }
+
     } else {
-      // For other steps, simply move to the next step
-      const nextSteps: Record<OnboardingStep, OnboardingStep> = {
+      // Move to next step
+      const next: Record<OnboardingStep, OnboardingStep> = {
         welcome: 'personal',
         personal: 'income',
         income: 'currency',
         currency: 'complete',
         complete: 'complete'
       };
-      setCurrentStep(nextSteps[step]);
+      setCurrentStep(next[step]);
     }
   };
 
