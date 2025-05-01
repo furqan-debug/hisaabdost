@@ -20,20 +20,20 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
     // Prevent multiple submissions
     if (isSubmitting) return;
     
-    setIsSubmitting(true);
-    
     try {
       // Ensure we have a valid currency selected
       if (!currency) {
         toast.error("Please select a currency before continuing");
-        setIsSubmitting(false);
         return;
       }
+      
+      // Set submitting state to show loading indicator
+      setIsSubmitting(true);
       
       // Pass the selected currency to the parent component
       onComplete({ preferredCurrency: currency });
       
-      // Note: We don't reset isSubmitting here since the parent component
+      // Note: We don't reset isSubmitting here as the parent component
       // will handle transitioning to the next step or showing errors
     } catch (error) {
       console.error("Error in currency step:", error);
