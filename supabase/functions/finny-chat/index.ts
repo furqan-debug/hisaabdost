@@ -385,6 +385,26 @@ When responding to the user named ${userName}:
     else if (actionMatch && actionMatch[1]) {
       try {
         const actionData = JSON.parse(actionMatch[1]);
+
+        if (actionData.type === "add_expense") {
+  if (!actionData.amount || !actionData.category || !actionData.date) {
+    console.warn("Skipping incomplete add_expense action:", actionData);
+    
+    return new Response(
+      JSON.stringify({ 
+        response: aiResponse,
+        rawResponse: aiResponse
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
+  }
+}
+
         
         // Process the action based on its type
         const actionResult = await processAction(actionData, userId, supabase);
