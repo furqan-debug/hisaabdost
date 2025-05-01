@@ -12,12 +12,12 @@ export function UserSection({ onSignOut }: UserSectionProps) {
 
   return (
     <div
-      className="
-        sticky bottom-0 left-0 right-0 
-        bg-background border-t 
-        p-4 flex-shrink-0
-        z-10
-      "
+      className={
+        `absolute bottom-0 inset-x-0
+         bg-background border-t
+         p-4 flex-shrink-0
+         z-10`
+      }
     >
       <div className="flex items-center mb-4">
         <div className="flex-1 min-w-0">
