@@ -406,11 +406,18 @@ When responding to the user named ${userName}:
 }
 
 if (actionData.type === "add_expense") {
-  const today = new Date().toISOString().split("T")[0];
-  
-  if (!actionData.date || isNaN(new Date(actionData.date).getTime())) {
-    console.warn("Invalid or missing date. Defaulting to today.");
-    actionData.date = today;
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  const givenDate = new Date(actionData.date);
+  const isInvalidDate = isNaN(givenDate.getTime());
+
+  const isOutdated = givenDate.getFullYear() < today.getFullYear() || 
+                     (givenDate.getFullYear() === today.getFullYear() && givenDate.getMonth() < today.getMonth());
+
+  if (!actionData.date || isInvalidDate || isOutdated) {
+    console.warn(`Fixing date: given=${actionData.date}, replacing with today=${todayStr}`);
+    actionData.date = todayStr;
   }
 }
 
