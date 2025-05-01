@@ -405,6 +405,15 @@ When responding to the user named ${userName}:
   }
 }
 
+if (actionData.type === "add_expense") {
+  const today = new Date().toISOString().split("T")[0];
+  
+  if (!actionData.date || isNaN(new Date(actionData.date).getTime())) {
+    console.warn("Invalid or missing date. Defaulting to today.");
+    actionData.date = today;
+  }
+}
+
         
         // Process the action based on its type
         const actionResult = await processAction(actionData, userId, supabase);
