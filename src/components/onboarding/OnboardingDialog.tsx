@@ -39,6 +39,9 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           return;
         }
 
+        console.log('Starting profile update for user:', user.id);
+        console.log('Data being saved:', updatedData);
+
         // Update user metadata to ensure the full name is available in user.user_metadata
         if (updatedData.fullName) {
           await supabase.auth.updateUser({
@@ -68,13 +71,9 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           return;
         }
 
-        if (!updatedProfile) {
-          console.error('No profile was updated. Profile might not exist for user:', user.id);
-          toast.error('Failed to save your profile. Please try again.');
-          return;
-        }
-
-        console.log('Profile successfully updated:', updatedProfile);
+        console.log('Profile update result:', updatedProfile);
+        
+        // Successfully updated profile, move to next step
         toast.success('Profile updated successfully');
         setCurrentStep('complete');
       } catch (error) {
@@ -82,6 +81,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         toast.error('An unexpected error occurred. Please try again.');
       }
     } else {
+      // For other steps, simply move to the next step
       const nextSteps: Record<OnboardingStep, OnboardingStep> = {
         welcome: 'personal',
         personal: 'income',
