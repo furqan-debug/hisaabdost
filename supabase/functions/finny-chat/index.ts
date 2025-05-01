@@ -342,29 +342,8 @@ When responding to the user named ${userName}:
     const aiResponse = result.choices[0].message.content;
 
     // Process goal setting patterns directly if the normal action fails
+    let actionMatch = aiResponse.match(/\[ACTION:(.*?)\]/);
     let processedResponse = aiResponse;
-
-// Match multiple [ACTION:{...}] blocks if present
-const actionMatches = aiResponse.match(/\[ACTION:(\{.*?\})\]/g);
-
-if (actionMatches && actionMatches.length > 0) {
-  for (const match of actionMatches) {
-    try {
-      const jsonPart = match.match(/\[ACTION:(\{.*\})\]/)?.[1];
-      if (jsonPart) {
-        const actionData = JSON.parse(jsonPart);
-        const actionResult = await processAction(actionData, userId, supabase);
-
-        // Replace just this [ACTION:{...}] with ✅ confirmation
-        processedResponse = processedResponse.replace(match, `✅ ${actionResult}`);
-      }
-    } catch (error) {
-      console.error('Error processing action:', error);
-      processedResponse = processedResponse.replace(match, `❌ ${error.message}`);
-    }
-  }
-}
-
     
     // If we have a goal match in the input but no action in the response, try to create a goal action
     if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
