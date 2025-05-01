@@ -84,20 +84,25 @@ async function addExpense(action: any, userId: string, supabase: any) {
     responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
   }
 
-  const { data, error } = await supabase
-    .from('expenses')
-    .insert({
-      user_id: userId,
-      amount: parseFloat(amount),
-      category: validCategory,
-      date,
-      description: description || validCategory,
-      payment: action.paymentMethod || 'Card'
-    });
+ const { data, error } = await supabase
+  .from('expenses')
+  .insert({
+    user_id: userId,
+    amount: parseFloat(amount),
+    category: validCategory,
+    date,
+    description: description || validCategory,
+    payment: action.paymentMethod || 'Card'
+  });
 
-  if (error) {
-    throw new Error(`Failed to add expense: ${error.message}`);
-  }
+if (error) {
+  console.error("INSERT ERROR:", error); // 🔥 ADD THIS
+  throw new Error(`Failed to add expense: ${error.message}`);
+}
+  
+if (!userId) {
+  throw new Error("Missing user ID — cannot insert expense.");
+}
 
   return responseMessage;
 }
