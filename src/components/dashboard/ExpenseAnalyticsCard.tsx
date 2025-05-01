@@ -46,18 +46,10 @@ export const ExpenseAnalyticsCard = ({
   }, {} as Record<string, { color: string }>);
 
   return (
-    <Card className={cn(
-      "overflow-hidden shadow-sm border-border/50 rounded-xl", 
-      isMobile && "w-full max-w-md mx-auto"
-    )}>
-      <CardHeader className="pb-2 pt-4 px-5">
+    <Card className={cn("overflow-hidden shadow-sm border-border/50 w-full max-w-md mx-auto")}>      
+      <CardHeader className="pb-2 px-4">
         <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-2">
-          <CardTitle className={cn(
-            "text-lg font-semibold", 
-            isMobile && "text-center w-full"
-          )}>
-            Expense Analytics
-          </CardTitle>
+          <CardTitle className="text-lg font-semibold text-center w-full">Expense Analytics</CardTitle>
           <div className="flex items-center">
             <div className="bg-background/5 backdrop-blur-sm rounded-lg p-1 flex gap-1">
               <button 
@@ -100,10 +92,7 @@ export const ExpenseAnalyticsCard = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className={cn(
-        "pt-2 pb-6 px-4", 
-        isMobile && "flex flex-col items-center justify-center"
-      )}>
+      <CardContent className="pt-2 px-4 pb-4">
         {isLoading ? (
           <div className="flex justify-center items-center h-[350px]">
             <p className="text-muted-foreground">Loading analytics...</p>
@@ -113,41 +102,21 @@ export const ExpenseAnalyticsCard = ({
             <p className="text-muted-foreground">Add some expenses to see analytics</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full">
-            <motion.div 
-              className={cn(
-                "w-full max-w-[500px] min-h-[320px] px-2", 
-                isMobile && "max-w-[300px] mx-auto"
-              )} 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              transition={{ duration: 0.3 }} 
-              key={chartType}
-            >
-              <ChartContainer 
-                className={cn(
-                  "h-full w-full min-h-[320px]", 
-                  isMobile && "max-w-[300px] mx-auto"
-                )} 
-                config={chartConfig}
+          <ScrollArea className="h-[350px] w-full">
+            <div className="flex justify-center items-center w-full">
+              <motion.div 
+                className="w-full max-w-[320px] min-h-[320px]"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ duration: 0.3 }} 
+                key={chartType}
               >
-                {renderChart()}
-              </ChartContainer>
-            </motion.div>
-
-            {/* Legend scrollable fix */}
-            <ScrollArea className="w-full mt-4 max-h-[100px] px-2">
-              {/* You can customize or extract this legend below the chart */}
-              <div className="flex flex-wrap justify-center gap-3 text-sm">
-                {Object.entries(CATEGORY_COLORS).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: value }}></span>
-                    <span>{key}</span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+                <ChartContainer className="h-full w-full min-h-[320px]" config={chartConfig}>
+                  {renderChart()}
+                </ChartContainer>
+              </motion.div>
+            </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
