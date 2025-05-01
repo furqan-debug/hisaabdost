@@ -1,7 +1,5 @@
-
 // This service handles the communication with OpenAI's API
 
-// Helper function to convert ArrayBuffer to Base64
 function bufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -11,136 +9,101 @@ function bufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
+async function fetchWithRetry(fn: () => Promise<Response>, retries = 3, delay = 1000): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fn();
+      if (res.status !== 429) return res;
+      console.warn(`OpenAI 429 received (attempt ${i + 1}) - retrying...`);
+    } catch (err) {
+      if (i === retries - 1) throw err;
+    }
+    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+  }
+  throw new Error("Max retries reached (OpenAI API)");
+}
+
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
-    console.log(`Processing receipt with OpenAI Vision API: ${file.name} (${file.size} bytes)`);
-    
-    // Validate file before processing
-    if (!file || file.size === 0) {
-      throw new Error("Invalid file: empty or undefined");
-    }
-    
-    if (file.size > 20 * 1024 * 1024) { // 20MB limit
-      throw new Error("File too large for processing");
-    }
-    
-    // Read the file into an ArrayBuffer
+    if (!file || file.size === 0) throw new Error("Invalid file");
+
     const arrayBuffer = await file.arrayBuffer();
-    
-    // Convert ArrayBuffer to Base64
     const base64Image = bufferToBase64(arrayBuffer);
-    
-    // Create the prompt for OpenAI
-    const prompt = "Extract all information from this receipt. Return the results as valid JSON with the following format: { \"date\": \"YYYY-MM-DD\", \"items\": [ { \"description\": \"item name\", \"amount\": \"0.00\", \"category\": \"category\", \"date\": \"YYYY-MM-DD\", \"paymentMethod\": \"Card\" } ] }. Make sure all fields are there and properly filled. If the receipt doesn't have clear items, create a best guess based on the receipt's context.";
-    
-    console.log("Sending request to OpenAI API...");
-    
-    // Call OpenAI's API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o", // Using gpt-4o which supports vision
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: prompt,
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${file.type};base64,${base64Image}`,
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 1500,
-      }),
-    });
-    
+
+    const prompt = `Extract receipt information as JSON in this format:
+{
+  "date": "YYYY-MM-DD",
+  "items": [
+    {
+      "description": "item name",
+      "amount": "0.00",
+      "category": "category",
+      "date": "YYYY-MM-DD",
+      "paymentMethod": "Card"
+    }
+  ]
+}`;
+
+    const requestBody = {
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: { url: `data:${file.type};base64,${base64Image}` }
+            }
+          ]
+        }
+      ],
+      max_tokens: 1500
+    };
+
+    const response = await fetchWithRetry(() =>
+      fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      })
+    );
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`OpenAI API error (${response.status}): ${errorText}`);
-      throw new Error(`OpenAI API responded with status: ${response.status}`);
+      console.error("OpenAI API failed:", response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
-    
-    console.log("OpenAI API response status:", response.status);
-    
-    const responseData = await response.json();
-    const textContent = responseData.choices[0]?.message?.content;
-    
-    if (!textContent) {
-      throw new Error("OpenAI API returned empty response");
+
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content || "";
+
+    const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
+                      content.match(/```\s*([\s\S]*?)\s*```/) ||
+                      content.match(/{[\s\S]*}/);
+
+    const jsonString = jsonMatch?.[1] || jsonMatch?.[0];
+    if (!jsonString) throw new Error("No JSON found in response");
+
+    const parsed = JSON.parse(jsonString);
+
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      parsed.items = [{
+        description: "Unknown Item",
+        amount: parsed.total || "0.00",
+        category: "Other",
+        date: parsed.date || new Date().toISOString().split('T')[0],
+        paymentMethod: "Card"
+      }];
     }
-    
-    // Extract the JSON from the response (it might be wrapped in markdown code blocks)
-    const jsonMatch = textContent.match(/```json\s*([\s\S]*?)\s*```/) || 
-                       textContent.match(/```\s*([\s\S]*?)\s*```/) || 
-                       textContent.match(/{[\s\S]*}/);
-    
-    if (!jsonMatch) {
-      console.error("Could not extract JSON from response:", textContent);
-      throw new Error("Invalid response format from OpenAI API");
-    }
-    
-    const jsonString = jsonMatch[0].startsWith('```') ? jsonMatch[1] : jsonMatch[0];
-    
-    console.log("Attempting to parse JSON response:", jsonString);
-    
-    try {
-      const parsedData = JSON.parse(jsonString);
-      console.log("Successfully parsed response:", parsedData);
-      
-      // Validate the parsed data has the expected structure
-      if (!parsedData.items || !Array.isArray(parsedData.items)) {
-        console.warn("Response missing items array, creating default structure");
-        parsedData.items = [{
-          description: "Store Purchase",
-          amount: parsedData.total || "0.00",
-          category: "Other",
-          date: parsedData.date || new Date().toISOString().split('T')[0],
-          paymentMethod: "Card"
-        }];
-      }
-      
-      return parsedData;
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError, "for text:", jsonString);
-      
-      // Try to find any JSON-like structure in the response
-      const lastResortMatch = textContent.match(/{[\s\S]*?}/);
-      if (lastResortMatch) {
-        try {
-          const lastResortJson = JSON.parse(lastResortMatch[0]);
-          console.warn("Parsed JSON using fallback method:", lastResortJson);
-          return lastResortJson;
-        } catch (e) {
-          console.error("Last resort parsing also failed");
-        }
-      }
-      
-      // Return a minimal fallback structure
-      return {
-        date: new Date().toISOString().split('T')[0],
-        items: [{
-          description: "Receipt Item",
-          amount: "0.00",
-          category: "Other",
-          date: new Date().toISOString().split('T')[0],
-          paymentMethod: "Card"
-        }]
-      };
-    }
+
+    return parsed;
+
   } catch (error) {
-    console.error("Error processing receipt with OpenAI:", error);
-    // Provide fallback data when an error occurs
+    console.error("Final fallback - returning default receipt structure:", error);
     return {
       date: new Date().toISOString().split('T')[0],
       items: [{
