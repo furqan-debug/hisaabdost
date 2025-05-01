@@ -40,14 +40,12 @@ export function ExpensesPieChart({
   return (
     <div className="chart-wrapper relative w-full flex flex-col items-center px-2 pb-6">
       {/* Display the center percentage */}
-     {/* Display the center percentage */}
-<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
-  <span className="text-2xl font-semibold">{mainPercentage}%</span>
-  <div className="text-xs text-muted-foreground mt-1">
-    {data.length > 0 ? data[0].name : "No data"}
-  </div>
-</div>
-
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
+        <span className="text-2xl font-semibold">{mainPercentage}%</span>
+        <div className="text-xs text-muted-foreground mt-1">
+          {data.length > 0 ? data[0].name : "No data"}
+        </div>
+      </div>
       
       <div className="w-full h-[240px]"> {/* Fixed height container */}
         <ResponsiveContainer width="100%" height="100%">
