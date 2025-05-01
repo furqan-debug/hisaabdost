@@ -9,7 +9,7 @@ const ChatHeader = ({
   onClose,
   onReset
 }: ChatHeaderProps) => {
-  return <div className="flex items-center justify-between p-4 finny-chat-header mx--1 px-[19px] py-[14px] ">
+  return <div className="flex items-center justify-between p-2 finny-chat-header mx--2 px-[19px] py-[14px] ">
       <div className="flex items-center space-x-3">
         <div className="relative">
           <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
