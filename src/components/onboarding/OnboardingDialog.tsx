@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 
-interface OnboardingDialogProps {
+interface OnboardingDialogProps { 
   open: boolean;
 }
 
@@ -43,6 +43,14 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
         const { error } = await supabase
           .from('profiles')
           .update({
+          full_name: updatedData.fullName,
+          age: updatedData.age,
+          gender: updatedData.gender,
+          preferred_currency: updatedData.preferredCurrency,
+          monthly_income: updatedData.monthlyIncome,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString()
+        }).eq('id', user.id).select().maybeSingle();
             full_name: updatedData.fullName,
             age: updatedData.age,
             gender: updatedData.gender,
