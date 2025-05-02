@@ -10,8 +10,16 @@ export function formatDate(dateText: string): string {
       return new Date().toISOString().split('T')[0];
     }
     
-    // If it's already in ISO format, return it
+    // If it's already in ISO format, validate it's a reasonable date
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateText)) {
+      const date = new Date(dateText);
+      const year = date.getFullYear();
+      
+      // If the year is too old or in the far future, use today's date
+      if (year < 2020 || year > 2030) {
+        console.warn("Date year out of reasonable range:", year);
+        return new Date().toISOString().split('T')[0];
+      }
       return dateText;
     }
     
@@ -20,7 +28,14 @@ export function formatDate(dateText: string): string {
     if (mmddyyyyMatch) {
       const month = parseInt(mmddyyyyMatch[1]).toString().padStart(2, '0');
       const day = parseInt(mmddyyyyMatch[2]).toString().padStart(2, '0');
-      const year = mmddyyyyMatch[3];
+      const year = parseInt(mmddyyyyMatch[3]);
+      
+      // Validate the year is reasonable
+      if (year < 2020 || year > 2030) {
+        console.warn("Date year out of reasonable range:", year);
+        return new Date().toISOString().split('T')[0];
+      }
+      
       return `${year}-${month}-${day}`;
     }
     
@@ -30,6 +45,13 @@ export function formatDate(dateText: string): string {
     // Check if the date is valid
     if (isNaN(date.getTime())) {
       console.warn("Invalid date format:", dateText);
+      return new Date().toISOString().split('T')[0];
+    }
+    
+    // Check if the year is reasonable
+    const year = date.getFullYear();
+    if (year < 2020 || year > 2030) {
+      console.warn("Date year out of reasonable range:", year);
       return new Date().toISOString().split('T')[0];
     }
     
@@ -72,6 +94,14 @@ export function extractDateFromText(text: string): string | null {
         const date = new Date(dateStr);
         
         if (!isNaN(date.getTime())) {
+          const year = date.getFullYear();
+          
+          // Validate the year is reasonable
+          if (year < 2020 || year > 2030) {
+            console.warn("Extracted date year out of reasonable range:", year);
+            continue;
+          }
+          
           return formatDate(dateStr);
         }
       } catch (e) {

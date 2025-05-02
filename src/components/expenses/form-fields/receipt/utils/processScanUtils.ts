@@ -27,15 +27,29 @@ export async function processScanResults(
     return false;
   }
   
+  // Get current date in YYYY-MM-DD format for default date value
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const todayFormatted = `${yyyy}-${mm}-${dd}`;
+  
   // Default to current date if none found in receipt
-  const receiptDate = scanResult.date ? formatDate(scanResult.date) : new Date().toISOString().split('T')[0];
+  const receiptDate = scanResult.date ? formatDate(scanResult.date) : todayFormatted;
   console.log("Using receipt date:", receiptDate);
+  
+  // Validate the receipt date is reasonable (not too old or in the far future)
+  const receiptYear = new Date(receiptDate).getFullYear();
+  const validatedReceiptDate = (receiptYear < 2020 || receiptYear > 2030) ? todayFormatted : receiptDate;
+  if (validatedReceiptDate !== receiptDate) {
+    console.log(`Receipt date year ${receiptYear} out of reasonable range, using today's date instead`);
+  }
   
   // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
     description: item.name || item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
-    date: formatDate(item.date || receiptDate),
+    date: formatDate(item.date || validatedReceiptDate),
     category: item.category || "Food", // Default to Food if no category
     paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
     receiptUrl: scanResult.receiptUrl || null

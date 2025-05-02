@@ -28,8 +28,8 @@ const EXPENSE_CATEGORIES = [
 ];
 
 // ...
-IMPORTANT: If the user doesn’t specify a date when adding an expense, 
-automatically set the date to today’s date in YYYY-MM-DD format.
+IMPORTANT: If the user doesn't specify a date when adding an expense, 
+automatically set the date to today's date in YYYY-MM-DD format.
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details…
@@ -392,12 +392,16 @@ When responding to the user named ${userName}:
     // Check if there's an action in the AI response
     else if (actionMatch && actionMatch[1]) {
   try {
-    // parse the assistant’s action
+    // parse the assistant's action
     const actionData: any = JSON.parse(actionMatch[1]);
 
-    // --- NEW: if it’s an add_expense without a date, use today ---
+    // --- NEW: if it's an add_expense without a date, use today ---
     if (actionData.type === 'add_expense' && !actionData.date) {
-      actionData.date = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      actionData.date = `${yyyy}-${mm}-${dd}`;
     }
 
     // now send it on to your processor

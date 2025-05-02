@@ -11,9 +11,18 @@ export function useReceiptDateParser() {
         return today;
       }
       
-      // If it's already in ISO format YYYY-MM-DD, return it directly
+      // If it's already in ISO format YYYY-MM-DD, validate the year is reasonable
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        console.log("Date already in ISO format:", dateString);
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        
+        // If the year is unreasonable (too old or far future), use current date
+        if (year < 2020 || year > 2030) {
+          console.log(`Year ${year} is out of reasonable range, using today's date`);
+          return new Date().toISOString().split('T')[0];
+        }
+        
+        console.log("Date already in ISO format and valid:", dateString);
         return dateString;
       }
       
@@ -26,9 +35,15 @@ export function useReceiptDateParser() {
         let day = parseInt(parts[1], 10);
         let year = parseInt(parts[2], 10);
         
-        // Handle 2-digit years
+        // Handle 2-digit years - assume more recent years (2020s) instead of 1900s
         if (year < 100) {
           year = year < 50 ? 2000 + year : 1900 + year;
+        }
+        
+        // Validate year is reasonable
+        if (year < 2020 || year > 2030) {
+          console.log(`Year ${year} is out of reasonable range, using today's date`);
+          return new Date().toISOString().split('T')[0];
         }
         
         // Basic validation
@@ -49,6 +64,14 @@ export function useReceiptDateParser() {
       // Last resort: try the JavaScript Date object
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
+        const year = date.getFullYear();
+        
+        // Validate year is reasonable
+        if (year < 2020 || year > 2030) {
+          console.log(`Year ${year} is out of reasonable range, using today's date`);
+          return new Date().toISOString().split('T')[0];
+        }
+        
         const formattedDate = date.toISOString().split('T')[0];
         console.log("Parsed date using Date object:", formattedDate);
         return formattedDate;

@@ -1,3 +1,4 @@
+
 /**
  * Extracts the date from receipt text
  */
@@ -45,7 +46,14 @@ export function extractDate(text: string, lines: string[] = []): string {
         if (match) {
           try {
             const parsedDate = parseMatchToISODate(match, pattern);
-            if (parsedDate) return parsedDate;
+            if (parsedDate) {
+              // Validate that the parsed date is reasonable (not too old, not in the far future)
+              const dateObj = new Date(parsedDate);
+              const year = dateObj.getFullYear();
+              if (year >= 2020 && year <= 2030) {
+                return parsedDate;
+              }
+            }
           } catch (e) {
             // Continue to next pattern if this one fails
           }
@@ -61,7 +69,14 @@ export function extractDate(text: string, lines: string[] = []): string {
       if (match) {
         try {
           const parsedDate = parseMatchToISODate(match, pattern);
-          if (parsedDate) return parsedDate;
+          if (parsedDate) {
+            // Validate that the parsed date is reasonable (not too old, not in the far future)
+            const dateObj = new Date(parsedDate);
+            const year = dateObj.getFullYear();
+            if (year >= 2020 && year <= 2030) {
+              return parsedDate;
+            }
+          }
         } catch (e) {
           // Continue to next pattern if this one fails
         }
@@ -70,9 +85,14 @@ export function extractDate(text: string, lines: string[] = []): string {
   }
   
   // If no date found, return today's date
-  const today = new Date().toISOString().split('T')[0];
-  console.log("No date found in receipt, using current date:", today);
-  return today;
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  
+  console.log("No date found in receipt, using current date:", todayStr);
+  return todayStr;
 }
 
 /**
@@ -115,7 +135,7 @@ function parseMatchToISODate(match: RegExpMatchArray, pattern: RegExp): string |
     }
     
     // Basic validation - reject clearly invalid dates
-    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 2020 || year > 2030) {
       return null;
     }
     
@@ -129,7 +149,7 @@ function parseMatchToISODate(match: RegExpMatchArray, pattern: RegExp): string |
     let day = parseInt(match[3], 10);
     
     // Validate
-    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 2020 || year > 2030) {
       return null;
     }
     
@@ -169,7 +189,7 @@ function parseMatchToISODate(match: RegExpMatchArray, pattern: RegExp): string |
     }
     
     // Validate
-    if (!month || month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    if (!month || month < 1 || month > 12 || day < 1 || day > 31 || year < 2020 || year > 2030) {
       return null;
     }
     
@@ -180,6 +200,11 @@ function parseMatchToISODate(match: RegExpMatchArray, pattern: RegExp): string |
   try {
     const dateObj = new Date(match[0]);
     if (!isNaN(dateObj.getTime())) {
+      const year = dateObj.getFullYear();
+      // Validate the year
+      if (year < 2020 || year > 2030) {
+        return null;
+      }
       return dateObj.toISOString().split('T')[0];
     }
   } catch (e) {

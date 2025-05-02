@@ -1,3 +1,4 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 // Define the predefined expense categories
@@ -68,7 +69,7 @@ export async function processAction(action: any, userId: string, supabase: any) 
 async function addExpense(action: any, userId: string, supabase: any) {
   const { amount, category, date, description } = action;
   
-  if (!amount || !category || !date) {
+  if (!amount || !category) {
     throw new Error('Missing required fields for expense');
   }
 
@@ -83,6 +84,16 @@ async function addExpense(action: any, userId: string, supabase: any) {
   if (validCategory !== category) {
     responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
   }
+  
+  // If no date is provided, use today's date
+  let expenseDate = date;
+  if (!expenseDate) {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    expenseDate = `${yyyy}-${mm}-${dd}`;
+  }
 
  const { data, error } = await supabase
   .from('expenses')
@@ -90,7 +101,7 @@ async function addExpense(action: any, userId: string, supabase: any) {
     user_id: userId,
     amount: parseFloat(amount),
     category: validCategory,
-    date,
+    date: expenseDate,
     description: description || validCategory,
     payment: action.paymentMethod || 'Card'
   });
