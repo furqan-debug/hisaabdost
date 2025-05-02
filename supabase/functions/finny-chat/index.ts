@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -27,13 +26,14 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
-// ...
-IMPORTANT: If the user doesn't specify a date when adding an expense, 
-automatically set the date to today's date in YYYY-MM-DD format.
-
-Format for responses:
-- When you need to perform an action, include a JSON object with the action details…
-
+// Important instructions for handling dates and responses
+/**
+ * IMPORTANT: If the user doesn't specify a date when adding an expense, 
+ * automatically set the date to today's date in YYYY-MM-DD format.
+ * 
+ * Format for responses:
+ * - When you need to perform an action, include a JSON object with the action details
+ */
 
 // Define the system message for Finny's personality, capabilities, and personalization
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
