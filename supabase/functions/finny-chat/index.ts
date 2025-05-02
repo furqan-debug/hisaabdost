@@ -391,28 +391,33 @@ When responding to the user named ${userName}:
     }
     // Check if there's an action in the AI response
     else if (actionMatch && actionMatch[1]) {
-  try {
-    // parse the assistant's action
-    const actionData: any = JSON.parse(actionMatch[1]);
+      try {
+        // parse the assistant's action
+        const actionData: any = JSON.parse(actionMatch[1]);
 
-    // --- NEW: if it's an add_expense without a date, use today ---
-    if (actionData.type === 'add_expense' && !actionData.date) {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      actionData.date = `${yyyy}-${mm}-${dd}`;
-    }
+        // --- NEW: if it's an add_expense without a date, use today ---
+        if (actionData.type === 'add_expense' && !actionData.date) {
+          const today = new Date();
+          const yyyy = today.getFullYear();
+          const mm = String(today.getMonth() + 1).padStart(2, '0');
+          const dd = String(today.getDate()).padStart(2, '0');
+          actionData.date = `${yyyy}-${mm}-${dd}`;
+        }
 
-    // now send it on to your processor
-    const actionResult = await processAction(actionData, userId, supabase);
+        // now send it on to your processor
+        const actionResult = await processAction(actionData, userId, supabase);
 
-    // replace the marker with the confirmation
-    processedResponse = aiResponse.replace(
-      actionMatch[0],
-      `✅ ${actionResult}`
-    );
+        // replace the marker with the confirmation
+        processedResponse = aiResponse.replace(
+          actionMatch[0],
+          `✅ ${actionResult}`
+        );
 
+        // Add a custom header to signal a successful expense addition when appropriate
+        let responseHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+        if (actionData.type === 'add_expense') {
+          responseHeaders['X-Expense-Added'] = 'true';
+        }
         
       } catch (actionError) {
         console.error('Error processing action:', actionError);
@@ -429,7 +434,8 @@ When responding to the user named ${userName}:
       JSON.stringify({ 
         response: processedResponse,
         rawResponse: aiResponse,
-        visualData: visualData
+        visualData: visualData,
+        action: actionMatch ? JSON.parse(actionMatch[1]) : null // Include action data in response
       }),
       { 
         headers: { 

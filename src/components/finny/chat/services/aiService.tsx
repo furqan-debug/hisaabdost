@@ -50,6 +50,13 @@ export async function processMessageWithAI(
       console.error('Error calling Finny:', error);
       throw new Error(`Failed to get response: ${error.message}`);
     }
+    
+    // Check if the response indicates an expense was added
+    if (data.action && data.action.type === 'add_expense') {
+      console.log('Expense was added, triggering refresh event');
+      const event = new CustomEvent('expense-added');
+      window.dispatchEvent(event);
+    }
 
     return data;
   } catch (error) {

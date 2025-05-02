@@ -93,6 +93,21 @@ async function addExpense(action: any, userId: string, supabase: any) {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     expenseDate = `${yyyy}-${mm}-${dd}`;
+  } else {
+    // Validate the date - make sure it's not too far in the past or future
+    const providedDate = new Date(expenseDate);
+    const currentYear = new Date().getFullYear();
+    
+    // Check if the date is valid and within a reasonable range (2020-2030)
+    if (isNaN(providedDate.getTime()) || providedDate.getFullYear() < 2020 || providedDate.getFullYear() > 2030) {
+      // If invalid date or outside range, use today's date
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      expenseDate = `${yyyy}-${mm}-${dd}`;
+      responseMessage += " (using today's date because the provided date was invalid or outside the reasonable range)";
+    }
   }
 
  const { data, error } = await supabase
@@ -107,7 +122,7 @@ async function addExpense(action: any, userId: string, supabase: any) {
   });
 
 if (error) {
-  console.error("INSERT ERROR:", error); // 🔥 ADD THIS
+  console.error("INSERT ERROR:", error);
   throw new Error(`Failed to add expense: ${error.message}`);
 }
   

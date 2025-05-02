@@ -1,4 +1,3 @@
-
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -57,7 +56,21 @@ export function useFinnyCommand() {
       toast.info(`Using category "${validCategory}" instead of "${category}"`);
     }
     
-    addExpense(amount, validCategory, description, date);
+    // Make sure we use current date if none provided
+    let expenseDate = date;
+    if (!expenseDate) {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      expenseDate = `${yyyy}-${mm}-${dd}`;
+    }
+    
+    addExpense(amount, validCategory, description, expenseDate);
+    
+    // Immediately trigger an expense-added event to refresh the list
+    const event = new CustomEvent('expense-added');
+    window.dispatchEvent(event);
   };
   
   /**
