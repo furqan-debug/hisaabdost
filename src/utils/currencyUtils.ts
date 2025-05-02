@@ -41,7 +41,7 @@ export const CURRENCY_OPTIONS: CurrencyOption[] = [
 ];
 
 // Default currency code
-export const DEFAULT_CURRENCY_CODE: CurrencyCode = 'USD';
+export const DEFAULT_CURRENCY_CODE: CurrencyCode = 'PKR';
 
 // Find currency option by code
 export function getCurrencyByCode(code: CurrencyCode): CurrencyOption {
