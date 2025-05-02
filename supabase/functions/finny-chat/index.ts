@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -26,7 +27,6 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
-// Important instructions for handling dates and responses
 /**
  * IMPORTANT: If the user doesn't specify a date when adding an expense, 
  * automatically set the date to today's date in YYYY-MM-DD format.
@@ -87,6 +87,11 @@ Format for responses:
 - For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Groceries","date":"2023-04-10","description":"Grocery shopping"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
 
+When the user mentions "today", "now", "current", or doesn't specify a date for expenses:
+- ALWAYS use today's date in the format YYYY-MM-DD.
+- DO NOT use dates from the past like 2022 or 2023 unless the user explicitly requests it.
+- For example: [ACTION:{"type":"add_expense","amount":25,"category":"Food","date":"2025-05-02","description":"Lunch"}]
+
 For goal setting specifically:
 - When the user is setting a goal, extract the amount and deadline from their message
 - Format the goal action as: [ACTION:{"type":"set_goal","title":"Savings Goal","targetAmount":1500,"deadline":"2023-12-31","category":"Savings"}]
@@ -101,6 +106,15 @@ When asked about category-specific data:
 
 If you don't have enough information to complete an action, ask follow-up questions. For example:
 "I can add that expense for you. What category should I use?"`;
+
+// Get today's date in YYYY-MM-DD format
+function getTodaysDate(): string {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -281,6 +295,11 @@ All expense categories used: ${userData.uniqueCategories.join(', ')}
 IMPORTANT: Only use these predefined expense categories:
 ${EXPENSE_CATEGORIES.join(', ')}
 
+IMPORTANT: When adding an expense:
+- Today's date is ${getTodaysDate()}
+- Always use this current date when the user says 'today' or doesn't specify a date
+- NEVER use past years like 2022 or 2023 for expenses mentioned as current or recent
+
 When responding to the user named ${userName}:
 1. Use their name (${userName}) occasionally to make interactions personal
 2. Adjust your tone based on their age group (${ageCategory})
@@ -394,14 +413,16 @@ When responding to the user named ${userName}:
       try {
         // parse the assistant's action
         const actionData: any = JSON.parse(actionMatch[1]);
+        let actionDataModified = false;
 
-        // --- NEW: if it's an add_expense without a date, use today ---
-        if (actionData.type === 'add_expense' && !actionData.date) {
-          const today = new Date();
-          const yyyy = today.getFullYear();
-          const mm = String(today.getMonth() + 1).padStart(2, '0');
-          const dd = String(today.getDate()).padStart(2, '0');
-          actionData.date = `${yyyy}-${mm}-${dd}`;
+        // --- If it's an add_expense action ---
+        if (actionData.type === 'add_expense') {
+          // Check if the date is missing or is not this year
+          if (!actionData.date || new Date(actionData.date).getFullYear() !== new Date().getFullYear()) {
+            actionData.date = getTodaysDate();
+            actionDataModified = true;
+            console.log(`Date was missing or invalid, using today's date: ${actionData.date}`);
+          }
         }
 
         // now send it on to your processor

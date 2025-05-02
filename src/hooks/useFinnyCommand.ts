@@ -1,3 +1,4 @@
+
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -42,6 +43,17 @@ export function useFinnyCommand() {
   };
 
   /**
+   * Get today's date in YYYY-MM-DD format
+   */
+  const getTodaysDate = (): string => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  /**
    * Send a command to Finny to add an expense
    */
   const recordExpense = (amount: number, category: string, description?: string, date?: string) => {
@@ -56,21 +68,36 @@ export function useFinnyCommand() {
       toast.info(`Using category "${validCategory}" instead of "${category}"`);
     }
     
-    // Make sure we use current date if none provided
+    // Make sure we use current date if none provided or if date is invalid
     let expenseDate = date;
     if (!expenseDate) {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      expenseDate = `${yyyy}-${mm}-${dd}`;
+      expenseDate = getTodaysDate();
+    } else {
+      // Validate the date
+      try {
+        const dateObj = new Date(expenseDate);
+        if (isNaN(dateObj.getTime()) || dateObj.getFullYear() < 2020 || dateObj.getFullYear() > 2030) {
+          console.log(`Invalid date ${expenseDate}, using today's date instead`);
+          expenseDate = getTodaysDate();
+        }
+      } catch (e) {
+        console.log(`Error parsing date ${expenseDate}, using today's date instead`);
+        expenseDate = getTodaysDate();
+      }
     }
     
     addExpense(amount, validCategory, description, expenseDate);
     
-    // Immediately trigger an expense-added event to refresh the list
+    // Immediately trigger multiple refresh events to ensure the expense list updates
     const event = new CustomEvent('expense-added');
     window.dispatchEvent(event);
+    
+    setTimeout(() => {
+      const updateEvent = new CustomEvent('expenses-updated', { 
+        detail: { timestamp: Date.now() }
+      });
+      window.dispatchEvent(updateEvent);
+    }, 100);
   };
   
   /**

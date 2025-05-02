@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 // Define the predefined expense categories
@@ -37,6 +36,52 @@ function validateCategory(category: string): string {
   
   // No match found, use Other as fallback
   return 'Other';
+}
+
+/**
+ * Get today's date in YYYY-MM-DD format
+ */
+function getTodaysDate(): string {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Validate date format and return today's date if invalid
+ */
+function validateDate(dateStr: string | undefined): string {
+  if (!dateStr) return getTodaysDate();
+  
+  try {
+    const date = new Date(dateStr);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.log(`Invalid date: ${dateStr}, using today's date instead`);
+      return getTodaysDate();
+    }
+    
+    const year = date.getFullYear();
+    
+    // If year is unreasonable (too old or too far in future), use today's date
+    if (year < 2020 || year > 2030) {
+      console.log(`Date year out of reasonable range: ${year}, using today's date instead`);
+      return getTodaysDate();
+    }
+    
+    // Format as YYYY-MM-DD
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+    
+  } catch (error) {
+    console.log(`Error parsing date: ${dateStr}, using today's date instead`);
+    return getTodaysDate();
+  }
 }
 
 export async function processAction(action: any, userId: string, supabase: any) {
@@ -85,29 +130,10 @@ async function addExpense(action: any, userId: string, supabase: any) {
     responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
   }
   
-  // If no date is provided, use today's date
-  let expenseDate = date;
-  if (!expenseDate) {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    expenseDate = `${yyyy}-${mm}-${dd}`;
-  } else {
-    // Validate the date - make sure it's not too far in the past or future
-    const providedDate = new Date(expenseDate);
-    const currentYear = new Date().getFullYear();
-    
-    // Check if the date is valid and within a reasonable range (2020-2030)
-    if (isNaN(providedDate.getTime()) || providedDate.getFullYear() < 2020 || providedDate.getFullYear() > 2030) {
-      // If invalid date or outside range, use today's date
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      expenseDate = `${yyyy}-${mm}-${dd}`;
-      responseMessage += " (using today's date because the provided date was invalid or outside the reasonable range)";
-    }
+  // Validate the date - Use today's date if none provided or invalid
+  const expenseDate = validateDate(date);
+  if (!date || date !== expenseDate) {
+    console.log(`Using date ${expenseDate} instead of provided date: ${date || 'none'}`);
   }
 
  const { data, error } = await supabase

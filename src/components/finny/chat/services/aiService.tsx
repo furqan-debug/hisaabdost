@@ -53,9 +53,22 @@ export async function processMessageWithAI(
     
     // Check if the response indicates an expense was added
     if (data.action && data.action.type === 'add_expense') {
-      console.log('Expense was added, triggering refresh event');
+      console.log('Expense was added, triggering refresh events');
+      
+      // Trigger multiple events to ensure all components refresh
+      // This helps with the issue of expenses not showing up immediately
+      
+      // First event: expense-added (standard)
       const event = new CustomEvent('expense-added');
       window.dispatchEvent(event);
+      
+      // Second event: expenses-updated (used by some components)
+      setTimeout(() => {
+        const updateEvent = new CustomEvent('expenses-updated', { 
+          detail: { timestamp: Date.now() }
+        });
+        window.dispatchEvent(updateEvent);
+      }, 100);
     }
 
     return data;
