@@ -52,6 +52,52 @@ export function useFinnyCommand() {
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   };
+  
+  /**
+   * Validate and format date
+   */
+  const validateDate = (dateStr?: string): string => {
+    if (!dateStr) return getTodaysDate();
+    
+    try {
+      // Check if it's already in ISO format YYYY-MM-DD
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        
+        // If the year is unreasonable (too old or far future), use current date
+        if (year < 2020 || year > 2030) {
+          console.log(`Year ${year} is out of reasonable range, using today's date`);
+          return getTodaysDate();
+        }
+        
+        return dateStr;
+      }
+      
+      // Try to parse the date
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear();
+        
+        // If the year is unreasonable, use current date
+        if (year < 2020 || year > 2030) {
+          console.log(`Year ${year} is out of reasonable range, using today's date`);
+          return getTodaysDate();
+        }
+        
+        // Format as YYYY-MM-DD
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    } catch (error) {
+      console.error("Date validation error:", error);
+    }
+    
+    // Default to today if parsing fails
+    return getTodaysDate();
+  };
 
   /**
    * Send a command to Finny to add an expense
@@ -69,35 +115,52 @@ export function useFinnyCommand() {
     }
     
     // Make sure we use current date if none provided or if date is invalid
-    let expenseDate = date;
-    if (!expenseDate) {
-      expenseDate = getTodaysDate();
-    } else {
-      // Validate the date
-      try {
-        const dateObj = new Date(expenseDate);
-        if (isNaN(dateObj.getTime()) || dateObj.getFullYear() < 2020 || dateObj.getFullYear() > 2030) {
-          console.log(`Invalid date ${expenseDate}, using today's date instead`);
-          expenseDate = getTodaysDate();
-        }
-      } catch (e) {
-        console.log(`Error parsing date ${expenseDate}, using today's date instead`);
-        expenseDate = getTodaysDate();
-      }
-    }
+    const expenseDate = validateDate(date);
+    
+    // Always log the final date being used
+    console.log(`Adding expense with date: ${expenseDate} (Original input: ${date || 'none'})`);
     
     addExpense(amount, validCategory, description, expenseDate);
     
     // Immediately trigger multiple refresh events to ensure the expense list updates
-    const event = new CustomEvent('expense-added');
+    const event = new CustomEvent('expense-added', {
+      detail: {
+        timestamp: Date.now(),
+        amount, 
+        category: validCategory,
+        description, 
+        date: expenseDate
+      }
+    });
     window.dispatchEvent(event);
     
+    // Wait a bit and trigger another event
     setTimeout(() => {
       const updateEvent = new CustomEvent('expenses-updated', { 
-        detail: { timestamp: Date.now() }
+        detail: { 
+          timestamp: Date.now(),
+          amount, 
+          category: validCategory,
+          description, 
+          date: expenseDate
+        }
       });
       window.dispatchEvent(updateEvent);
-    }, 100);
+    }, 300);
+    
+    // Final refresh event
+    setTimeout(() => {
+      const finalEvent = new CustomEvent('expense-refresh', { 
+        detail: { 
+          timestamp: Date.now(),
+          amount, 
+          category: validCategory,
+          description, 
+          date: expenseDate
+        }
+      });
+      window.dispatchEvent(finalEvent);
+    }, 1000);
   };
   
   /**
@@ -116,6 +179,18 @@ export function useFinnyCommand() {
     }
     
     setBudget(amount, validCategory);
+    
+    // Trigger budget update event
+    setTimeout(() => {
+      const budgetEvent = new CustomEvent('budget-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          amount,
+          category: validCategory
+        }
+      });
+      window.dispatchEvent(budgetEvent);
+    }, 300);
   };
   
   /**
@@ -130,6 +205,18 @@ export function useFinnyCommand() {
     const validCategory = validateCategory(category);
     const message = `Delete my ${validCategory} budget`;
     askFinny(message);
+    
+    // Trigger budget update event
+    setTimeout(() => {
+      const budgetEvent = new CustomEvent('budget-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          action: 'delete',
+          category: validCategory
+        }
+      });
+      window.dispatchEvent(budgetEvent);
+    }, 300);
   };
   
   /**
@@ -169,6 +256,19 @@ export function useFinnyCommand() {
     const formattedAmount = formatCurrency(amount, currencyCode);
     const message = `I want to set a financial goal called "${title}" with a target amount of ${formattedAmount}${deadline ? ` by ${deadline}` : ''}`;
     askFinny(message);
+    
+    // Trigger goal update event
+    setTimeout(() => {
+      const goalEvent = new CustomEvent('goal-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          title,
+          amount,
+          deadline
+        }
+      });
+      window.dispatchEvent(goalEvent);
+    }, 300);
   };
   
   /**
@@ -182,6 +282,18 @@ export function useFinnyCommand() {
     
     const message = `Delete my financial goal called "${title}"`;
     askFinny(message);
+    
+    // Trigger goal update event
+    setTimeout(() => {
+      const goalEvent = new CustomEvent('goal-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          action: 'delete',
+          title
+        }
+      });
+      window.dispatchEvent(goalEvent);
+    }, 300);
   };
   
   /**
@@ -194,8 +306,33 @@ export function useFinnyCommand() {
     }
     
     const validCategory = validateCategory(category);
-    const message = `Delete my ${validCategory} expense${date ? ` from ${date}` : ''}`;
+    const validDate = date ? validateDate(date) : undefined;
+    const dateMsg = validDate ? ` from ${validDate}` : '';
+    const message = `Delete my ${validCategory} expense${dateMsg}`;
+    
     askFinny(message);
+    
+    // Trigger expense update events
+    const event = new CustomEvent('expense-deleted', {
+      detail: {
+        timestamp: Date.now(),
+        category: validCategory,
+        date: validDate
+      }
+    });
+    window.dispatchEvent(event);
+    
+    setTimeout(() => {
+      const updateEvent = new CustomEvent('expenses-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          action: 'delete',
+          category: validCategory,
+          date: validDate
+        }
+      });
+      window.dispatchEvent(updateEvent);
+    }, 300);
   };
   
   /**

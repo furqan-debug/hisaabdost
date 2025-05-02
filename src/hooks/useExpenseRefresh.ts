@@ -24,7 +24,10 @@ export function useExpenseRefresh() {
   // Function to handle various expense update events
   const handleExpenseUpdateEvent = useCallback((event: Event) => {
     const eventName = event.type;
-    console.log(`${eventName} event received, preparing to refresh data`);
+    const customEvent = event as CustomEvent;
+    const detail = customEvent.detail || {};
+    
+    console.log(`${eventName} event received, preparing to refresh data`, detail);
     
     // Clear any existing timer
     if (refreshTimerRef.current !== null) {

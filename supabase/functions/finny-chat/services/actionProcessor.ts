@@ -1,46 +1,8 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
-// Define the predefined expense categories
-const EXPENSE_CATEGORIES = [
-  "Food",
-  "Rent",
-  "Utilities",
-  "Transportation",
-  "Entertainment",
-  "Shopping",
-  "Other"
-];
+// Import Supabase client type
+import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
-/**
- * Validate and normalize a category against allowed expense categories
- */
-function validateCategory(category: string): string {
-  if (!category) return 'Other';
-  
-  // Check for exact match
-  const exactMatch = EXPENSE_CATEGORIES.find(
-    c => c.toLowerCase() === category.toLowerCase()
-  );
-  
-  if (exactMatch) return exactMatch;
-  
-  // Look for partial matches
-  const partialMatches = EXPENSE_CATEGORIES.filter(
-    c => c.toLowerCase().includes(category.toLowerCase()) || 
-         category.toLowerCase().includes(c.toLowerCase())
-  );
-  
-  if (partialMatches.length > 0) {
-    return partialMatches[0]; // Return the first partial match
-  }
-  
-  // No match found, use Other as fallback
-  return 'Other';
-}
-
-/**
- * Get today's date in YYYY-MM-DD format
- */
+// Get today's date in YYYY-MM-DD format
 function getTodaysDate(): string {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -49,628 +11,315 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/**
- * Validate date format and return today's date if invalid
- */
-function validateDate(dateStr: string | undefined): string {
-  if (!dateStr) return getTodaysDate();
+// Validate and format date
+function validateAndFormatDate(inputDate: string): string {
+  if (!inputDate) return getTodaysDate();
   
   try {
-    const date = new Date(dateStr);
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      console.log(`Invalid date: ${dateStr}, using today's date instead`);
-      return getTodaysDate();
-    }
-    
-    const year = date.getFullYear();
-    
-    // If year is unreasonable (too old or too far in future), use today's date
-    if (year < 2020 || year > 2030) {
-      console.log(`Date year out of reasonable range: ${year}, using today's date instead`);
-      return getTodaysDate();
-    }
-    
-    // Format as YYYY-MM-DD
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-    
-  } catch (error) {
-    console.log(`Error parsing date: ${dateStr}, using today's date instead`);
-    return getTodaysDate();
-  }
-}
-
-export async function processAction(action: any, userId: string, supabase: any) {
-  switch (action.type) {
-    case 'add_expense':
-      return await addExpense(action, userId, supabase);
-    case 'update_expense':
-      return await updateExpense(action, userId, supabase);
-    case 'delete_expense':
-      return await deleteExpense(action, userId, supabase);
-    case 'set_budget':
-      return await setBudget(action, userId, supabase);
-    case 'update_budget':
-      return await updateBudget(action, userId, supabase);
-    case 'delete_budget':
-      return await deleteBudget(action, userId, supabase);
-    case 'set_goal':
-      return await setGoal(action, userId, supabase);
-    case 'update_goal':
-      return await updateGoal(action, userId, supabase);
-    case 'delete_goal':
-      return await deleteGoal(action, userId, supabase);
-    case 'get_spending':
-      return await getSpending(action, userId, supabase);
-    default:
-      throw new Error(`Unknown action type: ${action.type}`);
-  }
-}
-
-async function addExpense(action: any, userId: string, supabase: any) {
-  const { amount, category, date, description } = action;
-  
-  if (!amount || !category) {
-    throw new Error('Missing required fields for expense');
-  }
-
-  if (parseFloat(amount) <= 0) {
-    throw new Error('Expense amount must be greater than zero');
-  }
-  
-  // Validate the category
-  const validCategory = validateCategory(category);
-  let responseMessage = `I've added the ${validCategory} expense of ${amount}`;
-  
-  if (validCategory !== category) {
-    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
-  }
-  
-  // Validate the date - Use today's date if none provided or invalid
-  const expenseDate = validateDate(date);
-  if (!date || date !== expenseDate) {
-    console.log(`Using date ${expenseDate} instead of provided date: ${date || 'none'}`);
-  }
-
- const { data, error } = await supabase
-  .from('expenses')
-  .insert({
-    user_id: userId,
-    amount: parseFloat(amount),
-    category: validCategory,
-    date: expenseDate,
-    description: description || validCategory,
-    payment: action.paymentMethod || 'Card'
-  });
-
-if (error) {
-  console.error("INSERT ERROR:", error);
-  throw new Error(`Failed to add expense: ${error.message}`);
-}
-  
-if (!userId) {
-  throw new Error("Missing user ID — cannot insert expense.");
-}
-
-  return responseMessage;
-}
-
-async function updateExpense(action: any, userId: string, supabase: any) {
-  const { expenseId, amount, category, date, description } = action;
-  
-  let targetExpenseId = expenseId;
-  
-  if (!targetExpenseId) {
-    if (!category) {
-      throw new Error('Either expense ID or category is required to update an expense');
-    }
-    
-    // Validate the category for lookup
-    const validCategory = validateCategory(category);
-    
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('category', validCategory)
-      .order('created_at', { ascending: false })
-      .limit(1);
-    
-    if (error || !data || data.length === 0) {
-      throw new Error('Could not find the expense to update');
-    }
-    
-    targetExpenseId = data[0].id;
-  }
-
-  const updates: any = {};
-  if (amount !== undefined) {
-    if (parseFloat(amount) <= 0) {
-      throw new Error('Expense amount must be greater than zero');
-    }
-    updates.amount = parseFloat(amount);
-  }
-  if (category) {
-    // Validate the category for the update
-    updates.category = validateCategory(category);
-  }
-  if (date) updates.date = date;
-  if (description) updates.description = description;
-  if (action.paymentMethod) updates.payment = action.paymentMethod;
-
-  const { data, error } = await supabase
-    .from('expenses')
-    .update(updates)
-    .eq('id', targetExpenseId)
-    .eq('user_id', userId);
-
-  if (error) {
-    throw new Error(`Failed to update expense: ${error.message}`);
-  }
-
-  let responseMessage = `I've updated the expense for you`;
-  if (category && updates.category !== category) {
-    responseMessage += ` (using "${updates.category}" as the category instead of "${category}")`;
-  }
-  
-  return responseMessage;
-}
-
-async function deleteExpense(action: any, userId: string, supabase: any) {
-  const { expenseId, category, date } = action;
-  
-  if (!expenseId && !category) {
-    throw new Error('Either expense ID or category is required to delete an expense');
-  }
-
-  if (Array.isArray(expenseId) && expenseId.length > 0) {
-    const { data, error } = await supabase
-      .from('expenses')
-      .delete()
-      .in('id', expenseId)
-      .eq('user_id', userId);
-    
-    if (error) {
-      throw new Error(`Failed to delete expenses: ${error.message}`);
-    }
-    
-    return `I've deleted ${expenseId.length} expenses`;
-  }
-  
-  if (!expenseId) {
-    // Validate the category for lookup
-    const validCategory = validateCategory(category);
-    
-    let query = supabase
-      .from('expenses')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('category', validCategory);
-    
-    if (date) {
-      query = query.eq('date', date);
-    }
-    
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(1);
-    
-    if (error || !data || data.length === 0) {
-      throw new Error('Could not find the expense to delete');
-    }
-    
-    action.expenseId = data[0].id;
-  }
-
-  const { data, error } = await supabase
-    .from('expenses')
-    .delete()
-    .eq('id', action.expenseId)
-    .eq('user_id', userId);
-
-  if (error) {
-    throw new Error(`Failed to delete expense: ${error.message}`);
-  }
-
-  return `I've deleted the expense`;
-}
-
-async function setBudget(action: any, userId: string, supabase: any) {
-  const { category, amount, period } = action;
-  
-  if (!category || !amount) {
-    throw new Error('Missing required fields for budget');
-  }
-
-  if (parseFloat(amount) <= 0) {
-    throw new Error('Budget amount must be greater than zero');
-  }
-  
-  // Validate the category
-  const validCategory = validateCategory(category);
-
-  const { data: existingBudget, error: fetchError } = await supabase
-    .from('budgets')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('category', validCategory);
-
-  if (fetchError) {
-    throw new Error(`Failed to check existing budget: ${fetchError.message}`);
-  }
-
-  let responseMessage;
-  if (existingBudget && existingBudget.length > 0) {
-    const { error } = await supabase
-      .from('budgets')
-      .update({
-        amount: parseFloat(amount),
-        period: period || 'monthly'
-      })
-      .eq('id', existingBudget[0].id)
-      .eq('user_id', userId);
-
-    if (error) {
-      throw new Error(`Failed to update budget: ${error.message}`);
-    }
-
-    responseMessage = `I've updated your ${validCategory} budget to ${amount}`;
-  } else {
-    const { error } = await supabase
-      .from('budgets')
-      .insert({
-        user_id: userId,
-        category: validCategory,
-        amount: parseFloat(amount),
-        period: period || 'monthly'
-      });
-
-    if (error) {
-      throw new Error(`Failed to create budget: ${error.message}`);
-    }
-
-    responseMessage = `I've set your ${validCategory} budget to ${amount}`;
-  }
-  
-  if (validCategory !== category) {
-    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
-  }
-  
-  return responseMessage;
-}
-
-async function updateBudget(action: any, userId: string, supabase: any) {
-  const { category, amount, period } = action;
-  
-  if (!category) {
-    throw new Error('Category is required to update a budget');
-  }
-  
-  // Validate the category
-  const validCategory = validateCategory(category);
-
-  const { data, error: fetchError } = await supabase
-    .from('budgets')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('category', validCategory);
-
-  if (fetchError) {
-    throw new Error(`Failed to find budget: ${fetchError.message}`);
-  }
-
-  if (!data || data.length === 0) {
-    throw new Error(`No budget found for category: ${validCategory}`);
-  }
-
-  const updates: any = {};
-  if (amount !== undefined) {
-    if (parseFloat(amount) <= 0) {
-      throw new Error('Budget amount must be greater than zero');
-    }
-    updates.amount = parseFloat(amount);
-  }
-  if (period) updates.period = period;
-
-  const { error } = await supabase
-    .from('budgets')
-    .update(updates)
-    .eq('id', data[0].id)
-    .eq('user_id', userId);
-
-  if (error) {
-    throw new Error(`Failed to update budget: ${error.message}`);
-  }
-
-  let responseMessage = `I've updated your ${validCategory} budget`;
-  if (validCategory !== category) {
-    responseMessage += ` (using "${validCategory}" as the category instead of "${category}")`;
-  }
-  
-  return responseMessage;
-}
-
-async function deleteBudget(action: any, userId: string, supabase: any) {
-  const { category, budgetId } = action;
-  
-  if (!budgetId && !category) {
-    throw new Error('Either budget ID or category is required to delete a budget');
-  }
-  
-  let targetBudgetId = budgetId;
-  
-  if (!targetBudgetId) {
-    // Validate the category
-    const validCategory = validateCategory(category);
-    
-    const { data, error } = await supabase
-      .from('budgets')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('category', validCategory)
-      .single();
-    
-    if (error || !data) {
-      throw new Error(`Could not find a budget for category: ${validCategory}`);
-    }
-    
-    targetBudgetId = data.id;
-  }
-
-  const { error } = await supabase
-    .from('budgets')
-    .delete()
-    .eq('id', targetBudgetId)
-    .eq('user_id', userId);
-  
-  if (error) {
-    throw new Error(`Failed to delete budget: ${error.message}`);
-  }
-  
-  return `I've deleted the budget`;
-}
-
-async function setGoal(action: any, userId: string, supabase: any) {
-  const { title, targetAmount, deadline, category } = action;
-  
-  const goalTitle = title || "Savings Goal";
-  const targetAmt = targetAmount || 0;
-  
-  if (targetAmt <= 0) {
-    throw new Error('Goal amount must be greater than zero');
-  }
-
-  const { data: existingGoal, error: fetchError } = await supabase
-    .from('goals')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('title', goalTitle);
-
-  if (fetchError) {
-    console.error('Failed to check existing goal:', fetchError);
-    throw new Error(`Failed to check existing goal: ${fetchError.message}`);
-  }
-
-  let formattedDeadline = deadline;
-  if (deadline && typeof deadline === 'string') {
-    if (deadline.includes('/')) {
-      const [month, day, year] = deadline.split('/');
-      formattedDeadline = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    } else if (deadline.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/)) {
-      const parts = deadline.split('/');
-      formattedDeadline = `20${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
-    } else if (deadline.match(/\d{1,2}-\d{1,2}-\d{2,4}/)) {
-      formattedDeadline = deadline;
-    } else {
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
+    // Check if it's already in ISO format YYYY-MM-DD
+    if (inputDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const date = new Date(inputDate);
+      const year = date.getFullYear();
       
-      if (deadline.toLowerCase().includes('january') || deadline.toLowerCase().includes('jan')) {
-        formattedDeadline = `${nextYear}-01-31`;
-      } else if (deadline.toLowerCase().includes('february') || deadline.toLowerCase().includes('feb')) {
-        formattedDeadline = `${nextYear}-02-28`;
-      } else if (deadline.toLowerCase().includes('march') || deadline.toLowerCase().includes('mar')) {
-        formattedDeadline = `${nextYear}-03-31`;
-      } else if (deadline.toLowerCase().includes('april') || deadline.toLowerCase().includes('apr')) {
-        formattedDeadline = `${nextYear}-04-30`;
-      } else if (deadline.toLowerCase().includes('may')) {
-        formattedDeadline = `${nextYear}-05-31`;
-      } else if (deadline.toLowerCase().includes('june') || deadline.toLowerCase().includes('jun')) {
-        formattedDeadline = `${nextYear}-06-30`;
-      } else if (deadline.toLowerCase().includes('july') || deadline.toLowerCase().includes('jul')) {
-        formattedDeadline = `${nextYear}-07-31`;
-      } else if (deadline.toLowerCase().includes('august') || deadline.toLowerCase().includes('aug')) {
-        formattedDeadline = `${nextYear}-08-31`;
-      } else if (deadline.toLowerCase().includes('september') || deadline.toLowerCase().includes('sept') || deadline.toLowerCase().includes('sep')) {
-        formattedDeadline = `${nextYear}-09-30`;
-      } else if (deadline.toLowerCase().includes('october') || deadline.toLowerCase().includes('oct')) {
-        formattedDeadline = `${nextYear}-10-31`;
-      } else if (deadline.toLowerCase().includes('november') || deadline.toLowerCase().includes('nov')) {
-        formattedDeadline = `${nextYear}-11-30`;
-      } else if (deadline.toLowerCase().includes('december') || deadline.toLowerCase().includes('dec')) {
-        formattedDeadline = `${nextYear}-12-31`;
-      } else {
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-        formattedDeadline = oneYearFromNow.toISOString().split('T')[0];
+      // If the year is unreasonable (too old or far future), use current date
+      if (year < 2020 || year > 2030) {
+        console.log(`Year ${year} is out of reasonable range, using today's date`);
+        return getTodaysDate();
       }
+      
+      return inputDate;
     }
-  } else if (!formattedDeadline) {
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-    formattedDeadline = oneYearFromNow.toISOString().split('T')[0];
+    
+    // Try to parse the date
+    const date = new Date(inputDate);
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      
+      // If the year is unreasonable, use current date
+      if (year < 2020 || year > 2030) {
+        console.log(`Year ${year} is out of reasonable range, using today's date`);
+        return getTodaysDate();
+      }
+      
+      // Format as YYYY-MM-DD
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  } catch (error) {
+    console.error("Date validation error:", error);
   }
-
-  console.log(`Setting goal: ${goalTitle} for ${targetAmt} with deadline ${formattedDeadline}`);
-
-  if (existingGoal && existingGoal.length > 0) {
-    const { error } = await supabase
-      .from('goals')
-      .update({
-        target_amount: parseFloat(targetAmt.toString()),
-        deadline: formattedDeadline,
-        category: category || existingGoal[0].category || 'Savings'
-      })
-      .eq('id', existingGoal[0].id)
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Failed to update goal:', error);
-      throw new Error(`Failed to update goal: ${error.message}`);
-    }
-
-    return `I've updated your goal "${goalTitle}" to ${targetAmt}`;
-  } else {
-    const { error } = await supabase
-      .from('goals')
-      .insert({
-        user_id: userId,
-        title: goalTitle,
-        target_amount: parseFloat(targetAmt.toString()),
-        current_amount: 0,
-        deadline: formattedDeadline,
-        category: category || 'Savings'
-      });
-
-    if (error) {
-      console.error('Failed to create goal:', error);
-      throw new Error(`Failed to create goal: ${error.message}`);
-    }
-
-    return `I've set your goal "${goalTitle}" with a target of ${targetAmt}`;
-  }
+  
+  // Default to today if parsing fails
+  return getTodaysDate();
 }
 
-async function updateGoal(action: any, userId: string, supabase: any) {
-  const { goalId, title, targetAmount, currentAmount, deadline, category } = action;
-  
-  let goalQuery = supabase
-    .from('goals')
-    .select('*')
-    .eq('user_id', userId);
-  
-  if (goalId) {
-    goalQuery = goalQuery.eq('id', goalId);
-  } else if (title) {
-    goalQuery = goalQuery.eq('title', title);
-  } else {
-    throw new Error('Either goal ID or title is required to update a goal');
+// Process user actions
+export async function processAction(
+  action: any,
+  userId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  if (!action || !action.type) {
+    throw new Error("Invalid action format");
   }
 
-  const { data, error: fetchError } = await goalQuery;
+  console.log("Processing action:", action);
 
-  if (fetchError) {
-    throw new Error(`Failed to find goal: ${fetchError.message}`);
-  }
+  try {
+    switch (action.type) {
+      case "add_expense": {
+        // Validate and ensure correct date format
+        const validatedDate = validateAndFormatDate(action.date);
+        
+        // Always log the final date being used
+        console.log(`Adding expense with date: ${validatedDate} (Original input: ${action.date})`);
+        
+        // Insert the expense
+        const { data, error } = await supabase
+          .from("expenses")
+          .insert({
+            user_id: userId,
+            amount: action.amount,
+            category: action.category,
+            description: action.description || "",
+            date: validatedDate,
+            payment: action.paymentMethod || "Card",
+            notes: action.notes || null,
+            is_recurring: action.isRecurring || false,
+          })
+          .select();
 
-  if (!data || data.length === 0) {
-    throw new Error('No matching goal found');
-  }
+        if (error) throw error;
 
-  const updates: any = {};
-  if (targetAmount !== undefined) {
-    if (parseFloat(targetAmount) <= 0) {
-      throw new Error('Goal target amount must be greater than zero');
+        // Format response based on action details
+        const formattedDate = validatedDate === getTodaysDate() 
+          ? "today" 
+          : `on ${validatedDate}`;
+          
+        return `I've added the ${action.category} expense of ${action.amount} for ${action.description || "your purchase"} ${formattedDate}.`;
+      }
+
+      case "update_expense": {
+        const { id, ...updateData } = action;
+        
+        // Validate date if present in the update
+        if (updateData.date) {
+          updateData.date = validateAndFormatDate(updateData.date);
+        }
+        
+        const { error } = await supabase
+          .from("expenses")
+          .update(updateData)
+          .eq("id", id)
+          .eq("user_id", userId);
+
+        if (error) throw error;
+
+        return `I've updated the expense details for you.`;
+      }
+
+      case "delete_expense": {
+        // Delete by exact ID if provided
+        if (action.id) {
+          const { error } = await supabase
+            .from("expenses")
+            .delete()
+            .eq("id", action.id)
+            .eq("user_id", userId);
+
+          if (error) throw error;
+
+          return `I've deleted the expense for you.`;
+        } 
+        // Delete by category & date
+        else if (action.category) {
+          let query = supabase
+            .from("expenses")
+            .delete()
+            .eq("user_id", userId)
+            .eq("category", action.category);
+
+          // Add date filter if provided
+          if (action.date) {
+            const validDate = validateAndFormatDate(action.date);
+            query = query.eq("date", validDate);
+          }
+
+          const { error } = await query;
+          if (error) throw error;
+
+          const dateMsg = action.date ? ` from ${action.date}` : "";
+          return `I've deleted the ${action.category} expense${dateMsg}.`;
+        } else {
+          throw new Error("Not enough information to delete an expense.");
+        }
+      }
+
+      case "set_budget":
+      case "update_budget": {
+        // Check if budget exists
+        const { data: existingBudget, error: fetchError } = await supabase
+          .from("budgets")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("category", action.category)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        // Update or insert based on existence
+        if (existingBudget) {
+          const { error } = await supabase
+            .from("budgets")
+            .update({ amount: action.amount })
+            .eq("id", existingBudget.id);
+
+          if (error) throw error;
+          return `I've updated your ${action.category} budget to ${action.amount}.`;
+        } else {
+          const { error } = await supabase.from("budgets").insert({
+            user_id: userId,
+            category: action.category,
+            amount: action.amount,
+          });
+
+          if (error) throw error;
+          return `I've set a budget of ${action.amount} for ${action.category}.`;
+        }
+      }
+
+      case "delete_budget": {
+        const { error } = await supabase
+          .from("budgets")
+          .delete()
+          .eq("user_id", userId)
+          .eq("category", action.category);
+
+        if (error) throw error;
+
+        return `I've deleted the ${action.category} budget.`;
+      }
+
+      case "set_goal": {
+        // Parse and validate the deadline
+        let deadlineDate: string | null = null;
+        
+        if (action.deadline) {
+          try {
+            // Handle natural language dates
+            if (typeof action.deadline === 'string') {
+              if (action.deadline.toLowerCase().includes('end of month') || 
+                  action.deadline.toLowerCase().includes('month end')) {
+                const today = new Date();
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                deadlineDate = lastDay.toISOString().split('T')[0];
+              } 
+              else if (action.deadline.toLowerCase().includes('end of year') || 
+                       action.deadline.toLowerCase().includes('year end')) {
+                const today = new Date();
+                deadlineDate = `${today.getFullYear()}-12-31`;
+              }
+              else if (action.deadline.toLowerCase().includes('next month')) {
+                const today = new Date();
+                today.setMonth(today.getMonth() + 1);
+                deadlineDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              }
+              else {
+                // Try to parse as date
+                const date = new Date(action.deadline);
+                if (!isNaN(date.getTime())) {
+                  deadlineDate = date.toISOString().split('T')[0];
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing goal deadline:", e);
+            deadlineDate = null;
+          }
+        }
+        
+        // Set a default deadline of 3 months from now if parsing failed
+        if (!deadlineDate) {
+          const threeMonthsLater = new Date();
+          threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
+          deadlineDate = threeMonthsLater.toISOString().split('T')[0];
+        }
+
+        // Insert the goal
+        const { error } = await supabase.from("goals").insert({
+          user_id: userId,
+          title: action.title || "Savings Goal",
+          target_amount: action.targetAmount,
+          current_amount: 0, // Start with 0
+          deadline: deadlineDate,
+          category: action.category || "Savings",
+        });
+
+        if (error) throw error;
+
+        return `I've created your ${action.title || 'savings'} goal of ${action.targetAmount} to reach by ${deadlineDate}.`;
+      }
+
+      case "update_goal": {
+        const updateData: any = {};
+        
+        // Only include fields that are provided
+        if (action.title) updateData.title = action.title;
+        if (action.targetAmount !== undefined) updateData.target_amount = action.targetAmount;
+        if (action.currentAmount !== undefined) updateData.current_amount = action.currentAmount;
+        if (action.category) updateData.category = action.category;
+        
+        // Parse deadline if provided
+        if (action.deadline) {
+          try {
+            const date = new Date(action.deadline);
+            if (!isNaN(date.getTime())) {
+              updateData.deadline = date.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            console.error("Error parsing updated goal deadline:", e);
+          }
+        }
+        
+        // Update the goal
+        const { error } = await supabase
+          .from("goals")
+          .update(updateData)
+          .eq("id", action.id)
+          .eq("user_id", userId);
+
+        if (error) throw error;
+        
+        return `I've updated your savings goal.`;
+      }
+
+      case "delete_goal": {
+        let query = supabase
+          .from("goals")
+          .delete()
+          .eq("user_id", userId);
+          
+        if (action.id) {
+          query = query.eq("id", action.id);
+        } else if (action.title) {
+          query = query.ilike("title", `%${action.title}%`);
+        } else {
+          throw new Error("Please provide a goal ID or title to delete.");
+        }
+        
+        const { error } = await query;
+        if (error) throw error;
+        
+        return `I've deleted the goal for you.`;
+      }
+
+      default:
+        throw new Error(`Unsupported action type: ${action.type}`);
     }
-    updates.target_amount = parseFloat(targetAmount);
+  } catch (error) {
+    console.error(`Error processing ${action.type} action:`, error);
+    throw new Error(`Failed to ${action.type.replace('_', ' ')}: ${error.message}`);
   }
-  if (currentAmount !== undefined) updates.current_amount = parseFloat(currentAmount);
-  if (deadline) updates.deadline = deadline;
-  if (category) updates.category = category;
-  if (title && title !== data[0].title) updates.title = title;
-
-  const { error } = await supabase
-    .from('goals')
-    .update(updates)
-    .eq('id', data[0].id)
-    .eq('user_id', userId);
-
-  if (error) {
-    throw new Error(`Failed to update goal: ${error.message}`);
-  }
-
-  return `I've updated your goal "${data[0].title}"`;
-}
-
-async function deleteGoal(action: any, userId: string, supabase: any) {
-  const { goalId, title } = action;
-  
-  if (!goalId && !title) {
-    throw new Error('Either goal ID or title is required to delete a goal');
-  }
-  
-  let goalQuery = supabase
-    .from('goals')
-    .delete()
-    .eq('user_id', userId);
-  
-  if (goalId) {
-    goalQuery = goalQuery.eq('id', goalId);
-  } else {
-    goalQuery = goalQuery.eq('title', title);
-  }
-  
-  const { error } = await goalQuery;
-  
-  if (error) {
-    throw new Error(`Failed to delete goal: ${error.message}`);
-  }
-  
-  return `I've deleted the goal${title ? ` "${title}"` : ''}`;
-}
-
-async function getSpending(action: any, userId: string, supabase: any) {
-  const { category, period } = action;
-  
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-  
-  let query = supabase
-    .from('expenses')
-    .select('amount, category, date')
-    .eq('user_id', userId);
-  
-  if (period === 'current_month' || !period) {
-    query = query
-      .gte('date', firstDayOfMonth)
-      .lte('date', lastDayOfMonth);
-  } else if (period === 'previous_month') {
-    const firstDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-    const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
-    query = query
-      .gte('date', firstDayOfPrevMonth)
-      .lte('date', lastDayOfMonth);
-  } else if (period === 'year_to_date') {
-    const firstDayOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-    query = query
-      .gte('date', firstDayOfYear)
-      .lte('date', lastDayOfMonth);
-  }
-  
-  if (category) {
-    query = query.eq('category', category);
-  }
-  
-  const { data, error } = await query;
-  
-  if (error) {
-    throw new Error(`Failed to get spending data: ${error.message}`);
-  }
-  
-  const total = data.reduce((sum, expense) => sum + Number(expense.amount), 0);
-  
-  const byCategory: Record<string, number> = {};
-  data.forEach(expense => {
-    byCategory[expense.category] = (byCategory[expense.category] || 0) + Number(expense.amount);
-  });
-  
-  const periodText = period === 'previous_month' ? 'last month' : period === 'year_to_date' ? 'this year' : 'this month';
-  const response = `Here's your spending breakdown for ${periodText}: $${total.toFixed(2)} total`;
-  
-  return response;
 }

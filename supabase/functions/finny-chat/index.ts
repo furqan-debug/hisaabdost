@@ -84,7 +84,7 @@ you're adjusting their category to match the allowed ones.
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
-- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Groceries","date":"2023-04-10","description":"Grocery shopping"}]
+- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"2025-05-02","description":"Grocery shopping"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
 
 When the user mentions "today", "now", "current", or doesn't specify a date for expenses:
@@ -181,7 +181,7 @@ serve(async (req) => {
       userGender,
       userPreferredCurrency
     });
-
+      
     // Look for goal setting patterns to extract info directly
     const goalPattern = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: (?:for|to reach|to save))? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
     const goalMatch = message.match(goalPattern);
@@ -371,6 +371,7 @@ When responding to the user named ${userName}:
     // Process goal setting patterns directly if the normal action fails
     let actionMatch = aiResponse.match(/\[ACTION:(.*?)\]/);
     let processedResponse = aiResponse;
+    let action = null;
     
     // If we have a goal match in the input but no action in the response, try to create a goal action
     if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
@@ -386,6 +387,7 @@ When responding to the user named ${userName}:
         
         // Process the goal action directly
         const actionResult = await processAction(goalAction, userId, supabase);
+        action = goalAction;
         
         // Replace or append the confirmation to the response
         if (aiResponse.includes("goal") || aiResponse.includes("saving")) {
@@ -412,33 +414,48 @@ When responding to the user named ${userName}:
     else if (actionMatch && actionMatch[1]) {
       try {
         // parse the assistant's action
-        const actionData: any = JSON.parse(actionMatch[1]);
+        action = JSON.parse(actionMatch[1]);
         let actionDataModified = false;
 
         // --- If it's an add_expense action ---
-        if (actionData.type === 'add_expense') {
-          // Check if the date is missing or is not this year
-          if (!actionData.date || new Date(actionData.date).getFullYear() !== new Date().getFullYear()) {
-            actionData.date = getTodaysDate();
+        if (action.type === 'add_expense') {
+          const todaysDate = getTodaysDate();
+          
+          // Check if the date is missing, invalid, or contains "today" references
+          if (!action.date || 
+              new Date(action.date).getFullYear() !== new Date().getFullYear() ||
+              message.toLowerCase().includes("today") ||
+              message.toLowerCase().includes("now") ||
+              message.toLowerCase().includes("current")) {
+                
+            action.date = todaysDate;
             actionDataModified = true;
-            console.log(`Date was missing or invalid, using today's date: ${actionData.date}`);
+            console.log(`Date was missing, invalid, or "today" was referenced. Using today's date: ${action.date}`);
+          }
+          
+          // Always double check the date format and validity
+          try {
+            const dateObj = new Date(action.date);
+            if (isNaN(dateObj.getTime())) {
+              console.log(`Invalid date found: ${action.date}, using today's date`);
+              action.date = todaysDate;
+              actionDataModified = true;
+            }
+          } catch (e) {
+            console.log(`Error parsing date: ${action.date}, using today's date`);
+            action.date = todaysDate;
+            actionDataModified = true;
           }
         }
 
         // now send it on to your processor
-        const actionResult = await processAction(actionData, userId, supabase);
+        const actionResult = await processAction(action, userId, supabase);
 
         // replace the marker with the confirmation
         processedResponse = aiResponse.replace(
           actionMatch[0],
           `✅ ${actionResult}`
         );
-
-        // Add a custom header to signal a successful expense addition when appropriate
-        let responseHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
-        if (actionData.type === 'add_expense') {
-          responseHeaders['X-Expense-Added'] = 'true';
-        }
         
       } catch (actionError) {
         console.error('Error processing action:', actionError);
@@ -456,7 +473,7 @@ When responding to the user named ${userName}:
         response: processedResponse,
         rawResponse: aiResponse,
         visualData: visualData,
-        action: actionMatch ? JSON.parse(actionMatch[1]) : null // Include action data in response
+        action: action // Include action data in response
       }),
       { 
         headers: { 

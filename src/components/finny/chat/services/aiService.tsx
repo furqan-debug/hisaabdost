@@ -55,20 +55,63 @@ export async function processMessageWithAI(
     if (data.action && data.action.type === 'add_expense') {
       console.log('Expense was added, triggering refresh events');
       
-      // Trigger multiple events to ensure all components refresh
-      // This helps with the issue of expenses not showing up immediately
+      // Dispatch multiple events with different timings to ensure all components refresh
       
-      // First event: expense-added (standard)
-      const event = new CustomEvent('expense-added');
+      // Immediate event dispatch
+      const event = new CustomEvent('expense-added', { 
+        detail: { 
+          timestamp: Date.now(),
+          expenseData: data.action
+        }
+      });
       window.dispatchEvent(event);
       
-      // Second event: expenses-updated (used by some components)
+      // Follow-up event in 300ms
       setTimeout(() => {
         const updateEvent = new CustomEvent('expenses-updated', { 
-          detail: { timestamp: Date.now() }
+          detail: { 
+            timestamp: Date.now(),
+            expenseData: data.action
+          }
         });
         window.dispatchEvent(updateEvent);
-      }, 100);
+      }, 300);
+      
+      // Final refresh event in 1000ms
+      setTimeout(() => {
+        const finalEvent = new CustomEvent('expense-refresh', { 
+          detail: { 
+            timestamp: Date.now(),
+            expenseData: data.action
+          }
+        });
+        window.dispatchEvent(finalEvent);
+      }, 1000);
+    }
+    // Also handle budget and goal changes
+    else if (data.action && 
+      (data.action.type === 'set_budget' || data.action.type === 'update_budget' || 
+       data.action.type === 'delete_budget')) {
+      // Dispatch budget update event
+      const budgetEvent = new CustomEvent('budget-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          budgetData: data.action
+        }
+      });
+      window.dispatchEvent(budgetEvent);
+    }
+    else if (data.action && 
+      (data.action.type === 'set_goal' || data.action.type === 'update_goal' || 
+       data.action.type === 'delete_goal')) {
+      // Dispatch goal update event
+      const goalEvent = new CustomEvent('goal-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          goalData: data.action
+        }
+      });
+      window.dispatchEvent(goalEvent);
     }
 
     return data;
