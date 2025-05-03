@@ -6,6 +6,7 @@ import { WelcomeStep } from './steps/WelcomeStep';
 import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
 import { CompleteStep } from './steps/CompleteStep';
+import { NotificationsStep } from './steps/NotificationsStep';
 import { OnboardingStep, OnboardingFormData } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
@@ -22,7 +23,9 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     age: null,
     gender: 'prefer-not-to-say',
     preferredCurrency: 'PKR',
-    monthlyIncome: null
+    monthlyIncome: null,
+    notificationsEnabled: true,
+    notificationTime: '08:00'
   });
   const { user } = useAuth();
 
@@ -47,12 +50,13 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
       welcome: 'personal',
       personal: 'income',
       income: 'currency',
-      currency: 'complete',
+      currency: 'notifications',
+      notifications: 'complete',
       complete: 'complete'
     };
     
     // If it's the final step, save all data to the profile
-    if (step === 'currency') {
+    if (step === 'notifications') {
       try {
         console.log("Final step reached, saving all data to profile");
         const { error } = await supabase
@@ -63,6 +67,9 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             gender: updatedData.gender,
             preferred_currency: updatedData.preferredCurrency,
             monthly_income: updatedData.monthlyIncome,
+            notifications_enabled: updatedData.notificationsEnabled,
+            notification_time: updatedData.notificationTime + ':00', // Add seconds
+            notification_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
@@ -106,6 +113,11 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
       case 'currency':
         return <CurrencyStep 
           onComplete={(data) => handleStepComplete('currency', data)} 
+          initialData={formData} 
+        />;
+      case 'notifications':
+        return <NotificationsStep 
+          onComplete={(data) => handleStepComplete('notifications', data)} 
           initialData={formData} 
         />;
       case 'complete':

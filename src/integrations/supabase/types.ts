@@ -122,6 +122,27 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_tips: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          tip_text: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          tip_text: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          tip_text?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           category: string
@@ -155,6 +176,44 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_history: {
+        Row: {
+          email_sent: boolean | null
+          expense_total: number | null
+          id: string
+          notification_type: string
+          sent_at: string | null
+          tip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          email_sent?: boolean | null
+          expense_total?: number | null
+          id?: string
+          notification_type: string
+          sent_at?: string | null
+          tip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          email_sent?: boolean | null
+          expense_total?: number | null
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+          tip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_history_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "financial_tips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -165,6 +224,9 @@ export type Database = {
           id: string
           last_login_at: string | null
           monthly_income: number | null
+          notification_time: string | null
+          notification_timezone: string | null
+          notifications_enabled: boolean | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           preferred_currency: string | null
@@ -178,6 +240,9 @@ export type Database = {
           id: string
           last_login_at?: string | null
           monthly_income?: number | null
+          notification_time?: string | null
+          notification_timezone?: string | null
+          notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
@@ -191,6 +256,9 @@ export type Database = {
           id?: string
           last_login_at?: string | null
           monthly_income?: number | null
+          notification_time?: string | null
+          notification_timezone?: string | null
+          notifications_enabled?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
@@ -276,7 +344,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_random_tip: {
+        Args: { category_filter?: string }
+        Returns: string
+      }
+      trigger_daily_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
