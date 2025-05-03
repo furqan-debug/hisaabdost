@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
-import { formatCurrency } from "../../functions/finny-chat/utils/formatters.ts";
+import { formatCurrency } from "./utils/formatters.ts";
 import { format } from "https://esm.sh/date-fns@3.6.0";
 
 // Define CORS headers
