@@ -3,28 +3,31 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useSocialAuth = () => {
-  const signInWithGoogle = async () => {
+  const signInWithPhone = async (phone: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          shouldCreateUser: true,
+          channel: 'sms',
         },
       });
       
       if (error) {
-        console.error("Google auth error:", error);
+        console.error("Phone auth error:", error);
         throw error;
       }
       
-      toast.info("Redirecting to Google...");
+      toast.info("Verification code sent to your phone");
+      return phone;
     } catch (error: any) {
-      console.error("Google auth error:", error);
-      toast.error(error.message || "Error signing in with Google");
+      console.error("Phone auth error:", error);
+      toast.error(error.message || "Error sending verification code");
+      throw error;
     }
   };
 
   return {
-    signInWithGoogle,
+    signInWithPhone,
   };
 };

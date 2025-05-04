@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
@@ -12,9 +13,10 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<string>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -25,18 +27,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, session } = useAuthSession();
   const { signInWithEmail, signUp } = useEmailAuth();
   const { verifyOtp, resendOtp } = useVerification();
-  const { signInWithGoogle } = useSocialAuth();
+  const { signInWithPhone } = useSocialAuth();
   const { signOut } = useSignOut();
   const { showOnboarding } = useOnboarding(user);
+
+  const verifyPhoneOtp = async (phone: string, token: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: "sms"
+      });
+      
+      if (error) throw error;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ 
       user,
       loading,
       signInWithEmail,
-      signInWithGoogle,
+      signInWithPhone,
       signUp,
       verifyOtp,
+      verifyPhoneOtp,
       resendOtp,
       signOut,
     }}>
