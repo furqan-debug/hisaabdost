@@ -10,18 +10,13 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
-import { PhoneLoginForm } from "@/components/auth/PhoneLoginForm";
-import { PhoneVerificationForm } from "@/components/auth/PhoneVerificationForm";
 
 const Auth = () => {
-  const { user, verifyOtp, verifyPhoneOtp, resendOtp } = useAuth();
+  const { user, verifyOtp, resendOtp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
-  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationPhone, setVerificationPhone] = useState("");
   const navigate = useNavigate();
 
   if (user) {
@@ -34,10 +29,6 @@ const Auth = () => {
 
   const handleVerification = async (code: string) => {
     await verifyOtp(verificationEmail, code);
-  };
-
-  const handlePhoneVerification = async (code: string) => {
-    await verifyPhoneOtp(verificationPhone, code);
   };
 
   const handleResendVerification = async () => {
@@ -80,12 +71,8 @@ const Auth = () => {
           key={
             showVerification 
               ? "verification" 
-              : showPhoneVerification
-              ? "phone-verification"
               : showForgotPassword 
               ? "forgot" 
-              : showPhoneLogin 
-              ? "phone-login"
               : isSignUp 
               ? "signup" 
               : "login"
@@ -109,12 +96,8 @@ const Auth = () => {
               <CardTitle className="text-center text-xl md:text-2xl">
                 {showVerification 
                   ? "Verify your email"
-                  : showPhoneVerification
-                  ? "Verify your phone"
                   : showForgotPassword
                   ? "Reset Password"
-                  : showPhoneLogin
-                  ? "Phone Sign In"
                   : isSignUp
                   ? "Create an account"
                   : "Welcome back"}
@@ -122,12 +105,8 @@ const Auth = () => {
               <CardDescription className="text-center">
                 {showVerification 
                   ? `Enter the 6-digit verification code sent to ${verificationEmail}`
-                  : showPhoneVerification
-                  ? `Enter the 6-digit verification code sent to ${verificationPhone}`
                   : showForgotPassword
                   ? "Enter your email and we'll send you a link to reset your password"
-                  : showPhoneLogin
-                  ? "Sign in with your phone number"
                   : isSignUp
                   ? "Sign up to start managing your expenses"
                   : "Sign in to your account"}
@@ -145,34 +124,13 @@ const Auth = () => {
                     setVerificationEmail("");
                   }}
                 />
-              ) : showPhoneVerification ? (
-                <PhoneVerificationForm
-                  phone={verificationPhone}
-                  onVerify={handlePhoneVerification}
-                  onBackToLogin={() => {
-                    setShowPhoneVerification(false);
-                    setVerificationPhone("");
-                  }}
-                />
               ) : showForgotPassword ? (
                 <ForgotPasswordForm
                   onBackToLogin={() => setShowForgotPassword(false)}
                 />
-              ) : showPhoneLogin ? (
-                <PhoneLoginForm
-                  onLoginClick={() => setShowPhoneLogin(false)}
-                  onPhoneLoginSuccess={(phone) => {
-                    setVerificationPhone(phone);
-                    setShowPhoneVerification(true);
-                  }}
-                />
               ) : isSignUp ? (
                 <SignUpForm
                   onLoginClick={() => setIsSignUp(false)}
-                  onPhoneLoginClick={() => {
-                    setIsSignUp(false);
-                    setShowPhoneLogin(true);
-                  }}
                   onSignUpSuccess={(email) => {
                     setVerificationEmail(email);
                     setShowVerification(true);
@@ -182,7 +140,6 @@ const Auth = () => {
                 <LoginForm
                   onForgotPassword={() => setShowForgotPassword(true)}
                   onSignUpClick={() => setIsSignUp(true)}
-                  onPhoneLoginClick={() => setShowPhoneLogin(true)}
                 />
               )}
             </CardContent>

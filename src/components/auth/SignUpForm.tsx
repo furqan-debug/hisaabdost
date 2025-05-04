@@ -18,11 +18,10 @@ const signUpSchema = z.object({
 
 type SignUpFormProps = {
   onLoginClick: () => void;
-  onPhoneLoginClick: () => void;
   onSignUpSuccess: (email: string) => void;
 };
 
-export const SignUpForm = ({ onLoginClick, onPhoneLoginClick, onSignUpSuccess }: SignUpFormProps) => {
+export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) => {
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,23 +160,6 @@ export const SignUpForm = ({ onLoginClick, onPhoneLoginClick, onSignUpSuccess }:
             ) : (
               "Sign up"
             )}
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full relative overflow-hidden group"
-            onClick={onPhoneLoginClick}
-            disabled={loading}
-          >
-            <span className="absolute inset-0 w-0 bg-gradient-to-r from-primary/10 to-primary/5 transition-all duration-[400ms] ease-out group-hover:w-full"></span>
-            <span className="relative flex items-center justify-center">
-              <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 2H8C6.89543 2 6 2.89543 6 4V20C6 21.1046 6.89543 22 8 22H16C17.1046 22 18 21.1046 18 20V4C18 2.89543 17.1046 2 16 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Continue with Phone
-            </span>
           </Button>
           
           <Button
