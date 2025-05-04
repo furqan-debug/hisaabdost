@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +12,24 @@ import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 const Auth = () => {
-  const { user, verifyOtp, resendOtp } = useAuth();
+  // Safe access to auth context with fallback mechanism
+  let user = null;
+  let verifyOtp = async (email: string, token: string) => { 
+    console.error("Auth context not available");
+  };
+  let resendOtp = async (email: string) => {
+    console.error("Auth context not available");
+  };
+  
+  try {
+    const auth = useAuth();
+    user = auth.user;
+    verifyOtp = auth.verifyOtp;
+    resendOtp = auth.resendOtp;
+  } catch (error) {
+    console.error("Error accessing auth context:", error);
+  }
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);

@@ -101,7 +101,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
     const today = new Date().toISOString().split('T')[0];
-    const formattedAmount = formatCurrency(amount, currencyCode as CurrencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
     
     let message = `Add expense of ${formattedAmount} for ${validCategory}`;
@@ -120,7 +120,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   const setBudget = (amount: number, category: string) => {
-    const formattedAmount = formatCurrency(amount, currencyCode as CurrencyCode);
+    const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
     
     let message = `Set a budget of ${formattedAmount} for ${validCategory}`;
