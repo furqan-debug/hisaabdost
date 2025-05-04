@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 /**
  * Hook to send commands to Finny programmatically
@@ -21,7 +22,7 @@ export function useFinnyCommand() {
   }
 
   // Safely access currency context with fallback
-  let currencyCode = 'USD';
+  let currencyCode: CurrencyCode = 'USD';
   try {
     const currencyContext = useCurrency();
     currencyCode = currencyContext.currencyCode;
