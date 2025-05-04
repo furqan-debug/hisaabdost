@@ -8,6 +8,7 @@ import { useSocialAuth } from "@/hooks/auth/useSocialAuth";
 import { useSignOut } from "@/hooks/auth/useSignOut";
 import { useOnboarding } from "@/hooks/auth/useOnboarding";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextType = {
   user: User | null;

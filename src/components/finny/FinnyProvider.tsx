@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import FinnyButton from './FinnyButton';
 import FinnyChat from './FinnyChat';
@@ -40,9 +39,14 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(Date.now());
   
-  // Get user authentication with proper error handling
-  const auth = useAuth();
-  const user = auth?.user || null;
+  // Get user authentication with safe fallback
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user || null;
+  } catch (error) {
+    console.error("Auth context not available:", error);
+  }
   
   // Get currency code with proper error handling
   let currencyCode: CurrencyCode = 'USD'; // Default fallback with proper typing

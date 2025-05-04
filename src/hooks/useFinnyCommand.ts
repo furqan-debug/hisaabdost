@@ -1,4 +1,3 @@
-
 import { useFinny } from '@/components/finny/FinnyProvider';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -11,9 +10,24 @@ import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryFi
  */
 export function useFinnyCommand() {
   const { addExpense, setBudget, askFinny, openChat } = useFinny();
-  const auth = useAuth();
-  const user = auth?.user || null;
-  const { currencyCode } = useCurrency();
+  
+  // Safely access auth context with fallback
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user || null;
+  } catch (error) {
+    console.error("Auth context not available:", error);
+  }
+
+  // Safely access currency context with fallback
+  let currencyCode = 'USD';
+  try {
+    const currencyContext = useCurrency();
+    currencyCode = currencyContext.currencyCode;
+  } catch (error) {
+    console.error("Currency context not available:", error);
+  }
 
   /**
    * Validate a category against allowed expense categories
