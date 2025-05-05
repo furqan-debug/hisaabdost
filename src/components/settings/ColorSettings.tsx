@@ -22,7 +22,7 @@ export function ColorSettings() {
     localStorage.setItem("color-theme", newColor);
     setColorMode(newColor);
   };
-  return <div className="px-4 py-[12px]">
+  return <div className="px-4 py-[13px]">
       <h3 className="text-sm font-medium text-muted-foreground mb-3">Color</h3>
       <div className="flex flex-col gap-2">
         <Button variant="outline" className={`justify-start h-9 ${colorMode === 'default' ? 'bg-accent' : ''}`} onClick={() => handleColorChange('default')}>
