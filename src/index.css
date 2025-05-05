@@ -1,24 +1,25 @@
 
+/* Import base styles */
 @import "./styles/base.css";
-@import "./styles/animations.css";
+
+/* Import component styles */
 @import "./styles/components.css";
+@import "./styles/animations.css";
 @import "./styles/navigation.css";
 @import "./styles/finny-chat.css";
 
-/* Mobile styles - split into component-specific files */
+/* Import mobile-specific styles */
 @import "./styles/mobile.css";
-@import "./styles/mobile-budget.css";
-@import "./styles/mobile-cards.css";
-@import "./styles/mobile-navigation.css";
-@import "./styles/mobile-tables.css";
-@import "./styles/mobile-charts.css";
-@import "./styles/mobile-utils.css";
 
+/* Basic styling */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
 }
 
 /* Set default scrolling behavior with no visible scrollbars */
@@ -38,8 +39,28 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Apply will-change for hardware acceleration on animations */
+.animate-fade,
+.animate-slide,
+.card-hover,
+.transition-all {
+  will-change: transform, opacity;
+}
+
+/* Optimize touch interactions */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
 #root {
   @apply w-full h-full;
+}
+
+/* Hide all console logging in production */
+@media (display-mode: standalone) {
+  console {
+    display: none !important;
+  }
 }
 
 /* Override for the splash screen to ensure it covers everything */
@@ -51,4 +72,20 @@ html, body {
   left: 0;
   width: 100vw;
   height: 100vh;
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  * {
+    /* Reduce expensive box-shadow rendering */
+    box-shadow: none !important;
+    
+    /* Reduce expensive filter operations */
+    filter: none !important;
+  }
+  
+  /* Optimize animations on mobile */
+  .animate-pulse {
+    animation-duration: 3s !important;
+  }
 }

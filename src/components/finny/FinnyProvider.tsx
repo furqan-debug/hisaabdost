@@ -1,12 +1,15 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+
+import React, { createContext, useState, useContext, ReactNode, useEffect, lazy, Suspense } from 'react';
 import FinnyButton from './FinnyButton';
-import FinnyChat from './FinnyChat';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 import { CurrencyCode } from '@/utils/currencyUtils';
+
+// Lazy load the FinnyChat component
+const FinnyChat = lazy(() => import('./FinnyChat'));
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -38,6 +41,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isOpen, setIsOpen] = useState(false);
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(Date.now());
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Get user authentication with safe fallback
   let user = null;
@@ -56,6 +60,13 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   } catch (error) {
     console.error("Currency context not available:", error);
   }
+
+  // Initialize only when needed
+  useEffect(() => {
+    if (!isInitialized && isOpen) {
+      setIsInitialized(true);
+    }
+  }, [isOpen, isInitialized]);
 
   const openChat = () => {
     console.log("Opening Finny chat, user auth status:", user ? "authenticated" : "not authenticated");
@@ -184,7 +195,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     >
       {children}
       <FinnyButton onClick={openChat} isOpen={isOpen} />
-      <FinnyChat key={chatKey} isOpen={isOpen} onClose={closeChat} />
+      {isInitialized && (
+        <Suspense fallback={<div className="hidden">Loading Finny...</div>}>
+          <FinnyChat key={chatKey} isOpen={isOpen} onClose={closeChat} />
+        </Suspense>
+      )}
     </FinnyContext.Provider>
   );
 };

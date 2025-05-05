@@ -7,7 +7,7 @@ import { useVerification } from "@/hooks/auth/useVerification";
 import { useSignOut } from "@/hooks/auth/useSignOut";
 import { useOnboarding } from "@/hooks/auth/useOnboarding";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/clientOptimized";
 
 type AuthContextType = {
   user: User | null;
