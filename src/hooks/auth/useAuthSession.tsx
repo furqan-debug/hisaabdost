@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/clientOptimized";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 // Local storage key for cached user state
@@ -41,12 +41,56 @@ export const useAuthSession = () => {
     // Check for session immediately using cache-first approach
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
+        // First set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log("Auth state change:", event);
+          const user = session?.user ?? null;
+          
+          setUser(user);
+          setSession(session);
+          setCachedUser(user);
+
+          if (user) {
+            try {
+              // Perform user profile updates in the background instead of blocking
+              setTimeout(async () => {
+                try {
+                  // Update last login timestamp and sync user metadata with profiles
+                  const { data: profileData, error: profileCheckError } = await supabase
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', user.id)
+                    .single();
+                    
+                  if (!profileCheckError) {
+                    // Profile exists, update it
+                    await supabase
+                      .from('profiles')
+                      .update({ 
+                        last_login_at: new Date().toISOString(),
+                        // Update profile full_name with user_metadata if available and profile name is empty
+                        ...(user.user_metadata?.full_name && !profileData.full_name ? 
+                          { full_name: user.user_metadata.full_name } : {})
+                      })
+                      .eq('id', user.id);
+                  }
+                } catch (err) {
+                  console.error("Background profile update failed:", err);
+                }
+              }, 2000); // Delay by 2 seconds to prioritize UI loading
+            } catch (error) {
+              console.error("Error in background tasks:", error);
+            }
+          }
+        });
+
+        // Now check for existing session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
         
-        const newUser = session?.user ?? null;
-        setUser(newUser);
-        setCachedUser(newUser);
+        const currentUser = data.session?.user ?? null;
+        setUser(currentUser);
+        setCachedUser(currentUser);
         
         // Only mark loading as complete after session check
         setLoading(false);
@@ -57,53 +101,6 @@ export const useAuthSession = () => {
     };
     
     initAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event);
-      const user = session?.user ?? null;
-      
-      setUser(user);
-      setSession(session);
-      setCachedUser(user);
-
-      if (user) {
-        try {
-          // Perform user profile updates in the background instead of blocking
-          setTimeout(async () => {
-            try {
-              // Update last login timestamp and sync user metadata with profiles
-              const { data: profileData, error: profileCheckError } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', user.id)
-                .single();
-                
-              if (!profileCheckError) {
-                // Profile exists, update it
-                await supabase
-                  .from('profiles')
-                  .update({ 
-                    last_login_at: new Date().toISOString(),
-                    // Update profile full_name with user_metadata if available and profile name is empty
-                    ...(user.user_metadata?.full_name && !profileData.full_name ? 
-                      { full_name: user.user_metadata.full_name } : {})
-                  })
-                  .eq('id', user.id);
-              }
-            } catch (err) {
-              console.error("Background profile update failed:", err);
-            }
-          }, 2000); // Delay by 2 seconds to prioritize UI loading
-        } catch (error) {
-          console.error("Error in background tasks:", error);
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [navigate]);
 
   return {

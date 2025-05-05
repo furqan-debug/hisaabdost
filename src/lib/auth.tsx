@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
@@ -7,7 +7,7 @@ import { useVerification } from "@/hooks/auth/useVerification";
 import { useSignOut } from "@/hooks/auth/useSignOut";
 import { useOnboarding } from "@/hooks/auth/useOnboarding";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
-import { supabase } from "@/integrations/supabase/clientOptimized";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextType = {
   user: User | null;

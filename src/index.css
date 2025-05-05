@@ -10,6 +10,12 @@
 
 /* Import mobile-specific styles */
 @import "./styles/mobile.css";
+@import "./styles/mobile-cards.css";
+@import "./styles/mobile-charts.css";
+@import "./styles/mobile-navigation.css";
+@import "./styles/mobile-tables.css";
+@import "./styles/mobile-utils.css";
+@import "./styles/mobile-budget.css";
 
 /* Basic styling */
 html, body {
@@ -20,6 +26,7 @@ html, body {
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
+  @apply antialiased;
 }
 
 /* Set default scrolling behavior with no visible scrollbars */
@@ -76,16 +83,51 @@ button, a, [role="button"] {
 
 /* Performance optimizations for mobile */
 @media (max-width: 768px) {
-  * {
-    /* Reduce expensive box-shadow rendering */
-    box-shadow: none !important;
-    
-    /* Reduce expensive filter operations */
-    filter: none !important;
-  }
-  
-  /* Optimize animations on mobile */
   .animate-pulse {
     animation-duration: 3s !important;
   }
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.overflow-guard {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+/* Add scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Global touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.touch-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Global hidden scrollbar style */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
