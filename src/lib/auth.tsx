@@ -19,25 +19,42 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create the context with a default value that won't be used
+// but satisfies TypeScript requirements
+const initialContextValue: AuthContextType = {
+  user: null,
+  loading: true,
+  signInWithEmail: async () => { throw new Error("AuthContext not initialized"); },
+  signUp: async () => { throw new Error("AuthContext not initialized"); },
+  verifyOtp: async () => { throw new Error("AuthContext not initialized"); },
+  resendOtp: async () => { throw new Error("AuthContext not initialized"); },
+  signOut: async () => { throw new Error("AuthContext not initialized"); },
+};
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+const AuthContext = createContext<AuthContextType>(initialContextValue);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Log the component render
+  console.log("AuthProvider rendering");
+  
   const { user, loading, session } = useAuthSession();
   const { signInWithEmail, signUp } = useEmailAuth();
   const { verifyOtp, resendOtp } = useVerification();
   const { signOut } = useSignOut();
   const { showOnboarding } = useOnboarding(user);
 
+  const contextValue: AuthContextType = {
+    user,
+    loading,
+    signInWithEmail,
+    signUp,
+    verifyOtp,
+    resendOtp,
+    signOut,
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user,
-      loading,
-      signInWithEmail,
-      signUp,
-      verifyOtp,
-      resendOtp,
-      signOut,
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
       {showOnboarding && user && (
         <OnboardingDialog open={showOnboarding} />
@@ -48,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

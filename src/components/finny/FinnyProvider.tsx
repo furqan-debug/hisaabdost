@@ -23,7 +23,7 @@ interface FinnyContextType {
   resetChat: () => void;
 }
 
-const FinnyContext = createContext<FinnyContextType>({
+const defaultContext: FinnyContextType = {
   isOpen: false,
   openChat: () => {},
   closeChat: () => {},
@@ -33,7 +33,9 @@ const FinnyContext = createContext<FinnyContextType>({
   setBudget: () => {},
   askFinny: () => {},
   resetChat: () => {},
-});
+};
+
+const FinnyContext = createContext<FinnyContextType>(defaultContext);
 
 export const useFinny = () => useContext(FinnyContext);
 
@@ -42,24 +44,24 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [queuedMessage, setQueuedMessage] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState<number>(Date.now());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>('USD'); // Default fallback
   
-  // Get user authentication with safe fallback
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth?.user || null;
-  } catch (error) {
-    console.error("Auth context not available:", error);
-  }
+  // Get user authentication with error handling
+  const auth = useAuth();
+  useEffect(() => {
+    if (auth?.user) {
+      setUser(auth.user);
+    }
+  }, [auth?.user]);
   
   // Get currency code with proper error handling
-  let currencyCode: CurrencyCode = 'USD'; // Default fallback with proper typing
-  try {
-    const { currencyCode: code } = useCurrency();
-    if (code) currencyCode = code;
-  } catch (error) {
-    console.error("Currency context not available:", error);
-  }
+  const currency = useCurrency();
+  useEffect(() => {
+    if (currency?.currencyCode) {
+      setCurrencyCode(currency.currencyCode);
+    }
+  }, [currency?.currencyCode]);
 
   // Initialize only when needed
   useEffect(() => {
