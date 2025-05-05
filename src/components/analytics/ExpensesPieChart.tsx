@@ -27,7 +27,7 @@ export function ExpensesPieChart({
     item.percent = total > 0 ? item.value / total * 100 : 0;
   });
   const mainPercentage = data.length > 0 ? Math.round(data[0].percent) : 0;
-  return <div className="relative w-full flex flex-col items-center pb-6 mx--3 px-[16px]">
+  return <div className="relative w-full flex flex-col items-center pb-6 mx--3 px-[19px]">
       {/* Chart */}
       <div className="relative w-full h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
