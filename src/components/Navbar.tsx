@@ -31,7 +31,7 @@ const Navbar = () => {
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300 py-[13px] mx-0 my-0 font-normal">
-              <Menu className="h-5 w-5" />
+              <Menu className="h-9 w-7 " />
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
