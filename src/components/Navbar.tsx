@@ -27,7 +27,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
-      <div className="flex h-14 items-center px-3 gap-2 max-w-[480px] mx-auto">
+      <div className="flex h-14 items-center gap-2 max-w-[480px] py-[20px] px-0 my-[4px] mx-[7px]">
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300 py-[13px] mx-0 my-0 font-normal">
