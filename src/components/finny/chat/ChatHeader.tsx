@@ -12,10 +12,10 @@ const ChatHeader = ({
   return <div className="flex items-center justify-between px-4 border-b border-border py-[13px]">
       <div className="flex items-center space-x-3">
         <div className="relative">
-          <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center py-0 px-0 my-[6px]">
             <span className="font-medium text-sm">F</span>
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></span>
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background mx-[2px] my-[3px]"></span>
         </div>
         <div>
           <div className="flex items-center space-x-2">
