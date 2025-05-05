@@ -1,15 +1,15 @@
 import React from 'react';
 import { X, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
 interface ChatHeaderProps {
   onClose: () => void;
   onReset?: () => void;
 }
-
-const ChatHeader = ({ onClose, onReset }: ChatHeaderProps) => {
-  return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+const ChatHeader = ({
+  onClose,
+  onReset
+}: ChatHeaderProps) => {
+  return <div className="flex items-center justify-between px-4 border-b border-border py-[13px]">
       <div className="flex items-center space-x-3">
         <div className="relative">
           <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
@@ -27,24 +27,13 @@ const ChatHeader = ({ onClose, onReset }: ChatHeaderProps) => {
       </div>
 
       <div className="flex items-center space-x-2">
-        {onReset && (
-          <button
-            onClick={onReset}
-            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-            title="Reset conversation"
-          >
+        {onReset && <button onClick={onReset} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors" title="Reset conversation">
             <Trash2 size={18} />
-          </button>
-        )}
-        <button
-          onClick={onClose}
-          className="p-1.5 text-muted-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-md transition-colors"
-        >
+          </button>}
+        <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-accent-foreground hover:bg-accent/50 rounded-md transition-colors">
           <X size={18} />
         </button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ChatHeader;
