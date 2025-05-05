@@ -44,7 +44,7 @@ const Navbar = () => {
           <img src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded bg-white shadow-sm" style={{
           filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
         }} />
-          <h2 className="text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+          <h2 className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent py-0 text-xl">
             Hisaab Dost
           </h2>
         </div>
