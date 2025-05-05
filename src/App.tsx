@@ -29,7 +29,7 @@ const queryClient = new QueryClient({
     queries: {
       // Add caching to reduce network requests
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (replaces cacheTime)
       refetchOnWindowFocus: false, // Don't refetch when window regains focus
       retry: 1, // Limit retries to reduce blocking time
     },

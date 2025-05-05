@@ -1,5 +1,5 @@
 
-import { defineConfig, splitVendorChunkPlugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -27,11 +27,25 @@ export default defineConfig(({ mode }) => ({
     // Optimize rollup output
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor': ['react', 'react-router-dom', 'react-dom'],
-          'ui': ['@/components/ui'],
-          'charts': ['recharts'],
-          'animations': ['framer-motion'],
+        // Use function form instead of object form for better compatibility
+        manualChunks: (id) => {
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-router-dom') || 
+              id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@radix-ui') || id.includes('/components/ui/')) {
+            return 'vendor-ui';
+          }
+          if (id.includes('node_modules/recharts')) {
+            return 'vendor-charts';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-animations';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     }
@@ -44,8 +58,7 @@ export default defineConfig(({ mode }) => ({
 
   plugins: [
     react(),
-    // Add vendor chunk splitting
-    splitVendorChunkPlugin(),
+    // Remove splitVendorChunk as it conflicts with manualChunks
     mode === "development" && componentTagger(),
   ].filter(Boolean),
 
