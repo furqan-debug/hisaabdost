@@ -9,18 +9,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell } from "lucide-react";
+import { Bell, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { isPlatform } from "@ionic/react";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export function NotificationSettings() {
   const { user } = useAuth();
+  const { registerNotifications, pushToken } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(!!pushToken);
   const [notificationTime, setNotificationTime] = useState("08:00");
   const [timezone, setTimezone] = useState("");
+  const isMobileApp = isPlatform('capacitor');
   
   useEffect(() => {
     // Get user's current timezone
@@ -93,6 +98,17 @@ export function NotificationSettings() {
     }
   };
   
+  const handleTogglePushNotifications = async (enabled: boolean) => {
+    setPushNotificationsEnabled(enabled);
+    
+    if (enabled) {
+      await registerNotifications();
+      toast.success("Push notifications enabled");
+    } else {
+      toast.info("Please disable notifications from your device settings");
+    }
+  };
+  
   const handleTimeChange = async (time: string) => {
     if (!user?.id) return;
     
@@ -132,6 +148,28 @@ export function NotificationSettings() {
         <Bell className="h-4 w-4 text-muted-foreground" />
         <h3 className="text-sm font-medium">Notifications</h3>
       </div>
+      
+      {isMobileApp && (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <Label htmlFor="push-notifications" className="font-normal flex items-center gap-2">
+                <Smartphone className="h-4 w-4" />
+                Push notifications
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Receive notifications on your device
+              </p>
+            </div>
+            <Switch
+              id="push-notifications"
+              checked={pushNotificationsEnabled}
+              onCheckedChange={handleTogglePushNotifications}
+            />
+          </div>
+          <Separator className="my-4" />
+        </>
+      )}
       
       <div className="flex items-center justify-between mb-6">
         <div>

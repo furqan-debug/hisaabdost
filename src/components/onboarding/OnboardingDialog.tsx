@@ -25,6 +25,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     preferredCurrency: 'PKR',
     monthlyIncome: null,
     notificationsEnabled: true,
+    pushNotificationsEnabled: true,
     notificationTime: '08:00'
   });
   const { user } = useAuth();
@@ -68,6 +69,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             preferred_currency: updatedData.preferredCurrency,
             monthly_income: updatedData.monthlyIncome,
             notifications_enabled: updatedData.notificationsEnabled,
+            push_notifications_enabled: updatedData.pushNotificationsEnabled,
             notification_time: updatedData.notificationTime + ':00', // Add seconds
             notification_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             onboarding_completed: true,

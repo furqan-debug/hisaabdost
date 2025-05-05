@@ -26,7 +26,7 @@ const config: CapacitorConfig = {
     // Optimize hardware acceleration
     hardwareAcceleration: "all"
   },
-  // Enable persistent data caching
+  // Enable persistent data caching and push notifications
   plugins: {
     CapacitorHttp: {
       enabled: true
@@ -35,6 +35,9 @@ const config: CapacitorConfig = {
     WebView: {
       allowFileAccess: true,
       androidScheme: "https",
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   }
 };

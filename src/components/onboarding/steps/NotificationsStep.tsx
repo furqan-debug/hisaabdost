@@ -5,7 +5,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingFormData } from '../types';
-import { Bell } from 'lucide-react';
+import { Bell, Smartphone } from 'lucide-react';
+import { isPlatform } from "@ionic/react";
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 interface NotificationsStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -14,11 +16,20 @@ interface NotificationsStepProps {
 
 export function NotificationsStep({ onComplete, initialData }: NotificationsStepProps) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(initialData.notificationsEnabled ?? true);
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(initialData.pushNotificationsEnabled ?? true);
   const [notificationTime, setNotificationTime] = useState(initialData.notificationTime || '08:00');
+  const isMobileApp = isPlatform('capacitor');
+  const { registerNotifications } = usePushNotifications();
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // If push notifications are enabled and we're on a mobile app, register for them
+    if (pushNotificationsEnabled && isMobileApp) {
+      await registerNotifications();
+    }
+    
     onComplete({
       notificationsEnabled,
+      pushNotificationsEnabled,
       notificationTime
     });
   };
@@ -39,6 +50,25 @@ export function NotificationsStep({ onComplete, initialData }: NotificationsStep
           Get daily summaries of your expenses and personalized financial tips
         </p>
       </div>
+
+      {isMobileApp && (
+        <div className="flex items-center justify-between py-4 border-b">
+          <div>
+            <Label htmlFor="push-notifications-enabled" className="font-medium flex items-center gap-2">
+              <Smartphone className="h-4 w-4" />
+              Enable push notifications
+            </Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              Get instant updates on your device
+            </p>
+          </div>
+          <Switch
+            id="push-notifications-enabled"
+            checked={pushNotificationsEnabled}
+            onCheckedChange={setPushNotificationsEnabled}
+          />
+        </div>
+      )}
 
       <div className="flex items-center justify-between py-4">
         <div>
@@ -77,7 +107,9 @@ export function NotificationsStep({ onComplete, initialData }: NotificationsStep
 
       <div className="flex justify-end pt-4">
         <Button onClick={handleNext}>
-          {notificationsEnabled ? 'Enable notifications' : 'Continue without notifications'}
+          {(notificationsEnabled || (isMobileApp && pushNotificationsEnabled)) 
+            ? 'Enable notifications' 
+            : 'Continue without notifications'}
         </Button>
       </div>
     </div>

@@ -17,12 +17,62 @@ interface User {
   preferred_currency: string;
   notification_time: string;
   notification_timezone: string;
+  push_notifications_enabled: boolean;
 }
 
 interface FinancialTip {
   id: string;
   category: string;
   tip_text: string;
+}
+
+interface PushToken {
+  user_id: string;
+  push_token: string;
+  device_type: string;
+}
+
+// Function to send push notifications using Firebase Cloud Messaging (FCM)
+async function sendPushNotification(
+  token: string, 
+  title: string, 
+  body: string, 
+  data: Record<string, unknown> = {}
+) {
+  try {
+    // Get Firebase server key from environment variable
+    const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
+    
+    if (!firebaseServerKey) {
+      console.error("Firebase server key not found in environment variables");
+      return { success: false, error: "Firebase configuration missing" };
+    }
+    
+    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `key=${firebaseServerKey}`
+      },
+      body: JSON.stringify({
+        to: token,
+        notification: {
+          title,
+          body,
+          sound: "default",
+          badge: "1"
+        },
+        data,
+        priority: "high"
+      })
+    });
+    
+    const result = await response.json();
+    return { success: response.ok, result };
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    return { success: false, error: error.message };
+  }
 }
 
 // Handle HTTP requests
@@ -44,7 +94,7 @@ serve(async (req) => {
     // Get all users with notifications enabled
     const { data: users, error: usersError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, preferred_currency, notification_time, notification_timezone')
+      .select('id, email, full_name, preferred_currency, notification_time, notification_timezone, push_notifications_enabled')
       .eq('notifications_enabled', true);
 
     if (usersError) {
@@ -117,11 +167,46 @@ serve(async (req) => {
         const formattedTotal = formatCurrency(totalSpent, user.preferred_currency);
         const userName = user.full_name?.split(' ')[0] || 'there';
         
+        const notificationTitle = `Expense Summary for ${format(new Date(dateYesterday), 'MMM d')}`;
         const notificationMessage = `Hi ${userName}! You spent ${formattedTotal} yesterday. ${topCategory !== "No expenses" ? `Most spent on: ${topCategory}.` : ''} Tip: ${tip?.tip_text || 'Track your expenses daily for better financial awareness.'}`;
 
-        // TODO: Send the actual email notification here
-        // For now, just log the message and store notification history
-        console.log(`Would send to ${user.email}: ${notificationMessage}`);
+        // For users with push notifications enabled, fetch their tokens and send push notifications
+        let pushResults = [];
+        if (user.push_notifications_enabled) {
+          // Get user's push tokens
+          const { data: pushTokens, error: tokensError } = await supabase
+            .from('profile_push_tokens')
+            .select('push_token, device_type')
+            .eq('user_id', user.id);
+            
+          if (tokensError) {
+            console.error(`Error fetching push tokens for user ${user.id}:`, tokensError);
+          }
+          else if (pushTokens && pushTokens.length > 0) {
+            // Send push notifications to all user devices
+            pushResults = await Promise.all(pushTokens.map(async (tokenData: PushToken) => {
+              const result = await sendPushNotification(
+                tokenData.push_token,
+                notificationTitle,
+                notificationMessage,
+                {
+                  totalSpent,
+                  date: dateYesterday,
+                  topCategory,
+                  tipId: tip?.id
+                }
+              );
+              
+              return {
+                token: tokenData.push_token.substring(0, 8) + '...',
+                deviceType: tokenData.device_type,
+                success: result.success
+              };
+            }));
+            
+            console.log(`Push notification results for user ${user.id}:`, pushResults);
+          }
+        }
 
         // Record the notification in history
         const { error: historyError } = await supabase
@@ -131,7 +216,9 @@ serve(async (req) => {
             notification_type: 'daily_summary',
             expense_total: totalSpent,
             tip_id: tip?.id,
-            email_sent: true
+            email_sent: true,
+            push_sent: pushResults.some(r => r.success) || false,
+            push_attempts: pushResults.length
           });
 
         if (historyError) {
@@ -143,7 +230,8 @@ serve(async (req) => {
           userId: user.id, 
           success: true, 
           totalSpent,
-          message: notificationMessage
+          message: notificationMessage,
+          pushResults
         };
       } catch (error) {
         console.error(`Error processing user ${user.id}:`, error);
