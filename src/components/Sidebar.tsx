@@ -1,3 +1,4 @@
+
 import {
   Sidebar as SidebarComponent,
   SidebarContent,
@@ -40,7 +41,7 @@ const Sidebar = () => {
       <SidebarContent>
         <div className="flex items-center gap-2 px-4 py-6">
           <img
-            src="/lovable-uploads/8d22f3db-ed72-4c4b-a265-1979f7bba8b0.png"
+            src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
             alt="Hisab Dost logo"
             className="h-7 w-7 bg-white rounded shadow-sm"
             style={{ filter: "drop-shadow(0 2px 3px rgba(128,102,255,0.10))" }}

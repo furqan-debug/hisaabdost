@@ -39,7 +39,7 @@ export function SettingsSidebar({
         <div className="p-4">
           <div className="pb-4 mb-2 flex items-center gap-3 py-[12px] px-0 my-0">
             <img
-              src="/lovable-uploads/12aae181-1a03-4067-a879-2f29d4213837.png"
+              src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
               alt="Hisaab Dost logo"
               style={{
                 filter: "drop-shadow(0 2px 3px rgba(128,102,255,0.10))"
