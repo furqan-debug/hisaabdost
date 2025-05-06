@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
 import { CATEGORY_COLORS } from '@/utils/chartUtils';
 import { useCurrency } from '@/hooks/use-currency';
@@ -12,7 +12,7 @@ interface FinnyVisualizationProps {
   height?: number;
 }
 
-const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualizationProps) => {
+const FinnyVisualization = memo(({ data, type = 'pie', height = 120 }: FinnyVisualizationProps) => {
   const { currencyCode } = useCurrency();
   const isMobile = useIsMobile();
   
@@ -105,6 +105,8 @@ const FinnyVisualization = ({ data, type = 'pie', height = 120 }: FinnyVisualiza
       </ResponsiveContainer>
     );
   }
-};
+});
+
+FinnyVisualization.displayName = 'FinnyVisualization';
 
 export default FinnyVisualization;

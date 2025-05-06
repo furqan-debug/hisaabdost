@@ -17,7 +17,13 @@ interface FinnyMessageProps {
   visualData?: any;
 }
 
-const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: FinnyMessageProps) => {
+const FinnyMessage = React.memo(({ 
+  content, 
+  isUser, 
+  timestamp, 
+  hasAction, 
+  visualData 
+}: FinnyMessageProps) => {
   // Remove any action markers from the message content for display
   const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
   
@@ -98,6 +104,8 @@ const FinnyMessage = ({ content, isUser, timestamp, hasAction, visualData }: Fin
       </div>
     </motion.div>
   );
-};
+});
+
+FinnyMessage.displayName = 'FinnyMessage';
 
 export default FinnyMessage;
