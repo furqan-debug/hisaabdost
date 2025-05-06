@@ -31,10 +31,11 @@ export function SettingsSidebar({
     signOut();
   };
 
-  return <div className="flex flex-col h-full bg-background">
+  return (
+    <div className="flex flex-col h-full bg-background relative">
       <SettingsHeader onClose={onClose} />
       
-      <ScrollArea className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1 overflow-y-auto pb-20">
         <div className="p-4">
           <div className="pb-4 mb-2 flex items-center gap-3 py-[12px] px-0 my-0">
             <img
@@ -63,8 +64,7 @@ export function SettingsSidebar({
         <ColorSettings />
       </ScrollArea>
       
-      <div className="mt-auto">
-        <UserSection onSignOut={handleSignOut} />
-      </div>
-    </div>;
+      <UserSection onSignOut={handleSignOut} />
+    </div>
+  );
 }

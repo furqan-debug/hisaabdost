@@ -21,6 +21,9 @@ export const useSignOut = () => {
 
   const signOut = async () => {
     try {
+      // Show loading toast
+      const toastId = toast.loading("Signing out...");
+      
       // Try to clear Finny chat before signing out
       try {
         resetChat();
@@ -33,6 +36,8 @@ export const useSignOut = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Dismiss loading toast and show success
+      toast.dismiss(toastId);
       toast.success("Successfully signed out");
       navigate("/auth");
     } catch (error: any) {
