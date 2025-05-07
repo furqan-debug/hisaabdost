@@ -89,6 +89,7 @@ export const useFinnyChat = () => {
     isInitialized,
     user,
     currencyCode,
-    resetChat
+    resetChat,
+    setIsOpen
   };
 };

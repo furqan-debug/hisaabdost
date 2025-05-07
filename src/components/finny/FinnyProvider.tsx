@@ -23,7 +23,8 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     isInitialized,
     user,
     currencyCode,
-    resetChat
+    resetChat,
+    setIsOpen
   } = useFinnyChat();
 
   const {

@@ -1,4 +1,4 @@
-import { useFinny } from '@/components/finny/FinnyProvider';
+import { useFinny } from '@/components/finny/context/FinnyContext';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';

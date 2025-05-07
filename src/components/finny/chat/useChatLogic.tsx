@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -20,7 +19,7 @@ import {
   Plus
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
-import { useFinny } from '../FinnyProvider';
+import { useFinny } from '../context/FinnyContext';
 
 export const useChatLogic = (queuedMessage: string | null) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
