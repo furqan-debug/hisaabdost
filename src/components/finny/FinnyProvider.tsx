@@ -11,6 +11,10 @@ import { CurrencyCode } from '@/utils/currencyUtils';
 // Lazy load the FinnyChat component
 const FinnyChat = lazy(() => import('./FinnyChat'));
 
+// Constants
+const MAX_DAILY_MESSAGES = 10;
+const DAILY_MESSAGE_COUNT_KEY = 'finny_daily_message_count';
+
 interface FinnyContextType {
   isOpen: boolean;
   openChat: () => void;
@@ -21,6 +25,8 @@ interface FinnyContextType {
   setBudget: (amount: number, category: string) => void;
   askFinny: (question: string) => void;
   resetChat: () => void;
+  remainingDailyMessages: number;
+  isMessageLimitReached: boolean;
 }
 
 const defaultContext: FinnyContextType = {
@@ -33,6 +39,8 @@ const defaultContext: FinnyContextType = {
   setBudget: () => {},
   askFinny: () => {},
   resetChat: () => {},
+  remainingDailyMessages: MAX_DAILY_MESSAGES,
+  isMessageLimitReached: false
 };
 
 const FinnyContext = createContext<FinnyContextType>(defaultContext);
@@ -46,6 +54,9 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isInitialized, setIsInitialized] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>('USD'); // Default fallback
+  const [dailyMessageCount, setDailyMessageCount] = useState(0);
+  const [remainingDailyMessages, setRemainingDailyMessages] = useState(MAX_DAILY_MESSAGES);
+  const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   
   // Get user authentication with error handling
   const auth = useAuth();
@@ -70,6 +81,53 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [isOpen, isInitialized]);
 
+  // Load and initialize daily message count
+  useEffect(() => {
+    if (user) {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const storageKey = `${DAILY_MESSAGE_COUNT_KEY}_${user.id}_${today}`;
+      
+      try {
+        const storedCount = localStorage.getItem(storageKey);
+        const count = storedCount ? parseInt(storedCount, 10) : 0;
+        setDailyMessageCount(count);
+        setRemainingDailyMessages(MAX_DAILY_MESSAGES - count);
+        setIsMessageLimitReached(count >= MAX_DAILY_MESSAGES);
+      } catch (error) {
+        console.error("Error loading message count from storage:", error);
+        // Default to 0 if there's an error
+        setDailyMessageCount(0);
+        setRemainingDailyMessages(MAX_DAILY_MESSAGES);
+        setIsMessageLimitReached(false);
+      }
+    }
+  }, [user]);
+
+  // Update remaining messages and local storage whenever count changes
+  useEffect(() => {
+    if (user) {
+      const today = new Date().toISOString().split('T')[0];
+      const storageKey = `${DAILY_MESSAGE_COUNT_KEY}_${user.id}_${today}`;
+      
+      try {
+        localStorage.setItem(storageKey, dailyMessageCount.toString());
+        setRemainingDailyMessages(MAX_DAILY_MESSAGES - dailyMessageCount);
+        setIsMessageLimitReached(dailyMessageCount >= MAX_DAILY_MESSAGES);
+      } catch (error) {
+        console.error("Error saving message count to storage:", error);
+      }
+    }
+  }, [dailyMessageCount, user]);
+
+  const incrementMessageCount = () => {
+    if (user) {
+      setDailyMessageCount(prevCount => {
+        const newCount = prevCount + 1;
+        return newCount;
+      });
+    }
+  };
+
   const openChat = () => {
     console.log("Opening Finny chat, user auth status:", user ? "authenticated" : "not authenticated");
     setIsOpen(true);
@@ -84,8 +142,14 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return;
     }
     
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
+      return;
+    }
+    
     setQueuedMessage(message);
     setIsOpen(true);
+    incrementMessageCount();
   };
   
   const validateCategory = (category: string): string => {
@@ -113,6 +177,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
+      return;
+    }
+    
     const today = new Date().toISOString().split('T')[0];
     const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
@@ -133,6 +202,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   const setBudget = (amount: number, category: string) => {
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
+      return;
+    }
+    
     const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
     
@@ -146,6 +220,11 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
   
   const askFinny = (question: string) => {
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
+      return;
+    }
+    
     triggerChat(question);
   };
   
@@ -193,6 +272,8 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setBudget,
         askFinny,
         resetChat,
+        remainingDailyMessages,
+        isMessageLimitReached
       }}
     >
       {children}

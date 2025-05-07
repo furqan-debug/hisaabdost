@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
@@ -19,6 +20,7 @@ import {
   Plus
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
+import { useFinny } from '../FinnyProvider';
 
 export const useChatLogic = (queuedMessage: string | null) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
@@ -27,6 +29,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { currencyCode } = useCurrency();
+  const { remainingDailyMessages, isMessageLimitReached } = useFinny();
 
   const {
     messages,
@@ -99,6 +102,11 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
     if (!user) {
       toast.error("Please log in to chat with Finny");
+      return;
+    }
+
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
       return;
     }
 
@@ -195,7 +203,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
   };
 
   const handleQuickReply = (reply: QuickReply) => {
-    if (isLoading || !user) return;
+    if (isLoading || !user || isMessageLimitReached) {
+      if (isMessageLimitReached) {
+        toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      }
+      return;
+    }
     handleSendMessage(null, reply.action);
   };
 
@@ -392,6 +405,8 @@ export const useChatLogic = (queuedMessage: string | null) => {
     handleSendMessage,
     handleQuickReply,
     oldestMessageTime,
-    resetChat
+    resetChat,
+    remainingDailyMessages,
+    isMessageLimitReached
   };
 };

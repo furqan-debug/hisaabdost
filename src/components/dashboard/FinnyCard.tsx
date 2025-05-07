@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export function FinnyCard() {
-  const { openChat } = useFinny();
+  const { openChat, remainingDailyMessages, isMessageLimitReached } = useFinny();
   const { user } = useAuth();
   const [userName, setUserName] = useState<string>("");
   
@@ -34,6 +34,22 @@ export function FinnyCard() {
     fetchUserProfile();
   }, [user]);
 
+  const getMessageText = () => {
+    if (!user) {
+      return "Sign in to access personalized finance assistance";
+    }
+
+    if (isMessageLimitReached) {
+      return "Message limit reached for today. Try again tomorrow!";
+    }
+
+    if (userName) {
+      return `Hello ${userName}! Get instant help with your expenses (${remainingDailyMessages} messages left)`;
+    }
+
+    return `Get instant help with your expenses and budgeting (${remainingDailyMessages} messages left)`;
+  };
+
   return (
     <Card className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-background border-border/50">
       <motion.div
@@ -45,9 +61,7 @@ export function FinnyCard() {
           <div className="space-y-1">
             <h3 className="font-medium text-base">Talk to Finny</h3>
             <p className="text-sm text-muted-foreground">
-              {user 
-                ? userName ? `Hello ${userName}! Get instant help with your expenses` : "Get instant help with your expenses and budgeting"
-                : "Sign in to access personalized finance assistance"}
+              {getMessageText()}
             </p>
           </div>
         </div>
@@ -57,9 +71,10 @@ export function FinnyCard() {
             onClick={openChat}
             variant="default"
             className="w-full sm:w-auto rounded-full transition-all duration-300 hover:shadow-md"
+            disabled={user && isMessageLimitReached}
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            {user ? "Chat Now" : "Try Finny"}
+            {user ? (isMessageLimitReached ? "Limit Reached" : "Chat Now") : "Try Finny"}
           </Button>
         </div>
       </motion.div>
