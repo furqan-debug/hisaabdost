@@ -15,7 +15,8 @@ import {
   Info, 
   ArrowRight, 
   PiggyBank,
-  Trash2
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 
