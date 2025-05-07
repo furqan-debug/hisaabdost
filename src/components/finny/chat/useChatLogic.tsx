@@ -10,16 +10,12 @@ import { updateQuickRepliesForResponse } from './services/quickReplyService';
 import { PATTERNS } from './utils/messagePatterns';
 import { useCurrency } from '@/hooks/use-currency';
 import { 
-  PieChart, 
-  BarChart3, 
-  Plus, 
   Calendar, 
   DollarSign, 
   Info, 
   ArrowRight, 
   PiggyBank,
-  Trash2,
-  ChartPie
+  Trash2
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -127,7 +123,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
       const deleteExpenseMatch = messageText.match(PATTERNS.DELETE_EXPENSE);
       const deleteBudgetMatch = messageText.match(PATTERNS.DELETE_BUDGET);
       const deleteGoalMatch = messageText.match(PATTERNS.DELETE_GOAL);
-      const visualizationMatch = messageText.match(PATTERNS.VISUALIZATION);
       const goalMatch = messageText.match(PATTERNS.GOAL);
 
       let analysisType = "general";
@@ -146,9 +141,6 @@ export const useChatLogic = (queuedMessage: string | null) => {
         specificCategory = categoryMatch[1];
       } else if (summaryMatch) {
         analysisType = "summary";
-      } else if (visualizationMatch) {
-        analysisType = "visualization";
-        specificCategory = visualizationMatch[2];
       } else if (deleteExpenseMatch) {
         analysisType = "delete_expense";
         specificCategory = deleteExpenseMatch[1].trim();
@@ -166,25 +158,12 @@ export const useChatLogic = (queuedMessage: string | null) => {
 
       const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
       
-      const needsVisualization = 
-        messageText.toLowerCase().includes('spending') || 
-        messageText.toLowerCase().includes('budget') ||
-        messageText.toLowerCase().includes('breakdown') ||
-        messageText.toLowerCase().includes('summary') ||
-        messageText.toLowerCase().includes('show me') ||
-        messageText.toLowerCase().includes('visualize') ||
-        messageText.toLowerCase().includes('chart') ||
-        messageText.toLowerCase().includes('graph') ||
-        data.response.includes('$') ||
-        hasAction;
-
       const newMessage = {
         id: Date.now().toString(),
         content: data.response,
         isUser: false,
         timestamp: new Date(),
         hasAction: hasAction,
-        visualData: data.visualData || (needsVisualization ? { type: 'spending-chart', summary: true } : null),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
 
@@ -291,7 +270,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         contextReplies.push({
           text: `${topCategory[0]} analysis`,
           action: `Show my ${topCategory[0].toLowerCase()} spending breakdown`,
-          icon: <BarChart3 size={14} />
+          icon: <Calendar size={14} />
         });
         
         if (budgets && budgets.length > 0) {
@@ -327,7 +306,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
             contextReplies.push({
               text: `${category} breakdown`,
               action: `Show my ${category.toLowerCase()} spending breakdown`,
-              icon: <PieChart size={14} />
+              icon: <Calendar size={14} />
             });
             break;
           }

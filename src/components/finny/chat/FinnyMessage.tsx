@@ -3,26 +3,23 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useCurrency } from '@/hooks/use-currency';
 import MessageAvatar from './components/MessageAvatar';
-import MessageVisualization from './components/MessageVisualization';
 import MessageBadges from './components/MessageBadges';
 import MessageTimestamp from './components/MessageTimestamp';
 import ActionIndicator from './components/ActionIndicator';
-import { extractChartData } from './utils/chartDataExtractor';
 
 interface FinnyMessageProps {
   content: string;
   isUser: boolean;
   timestamp: Date;
   hasAction?: boolean;
-  visualData?: any;
+  visualData?: any; // Keeping this prop to avoid breaking existing code, but we won't use it
 }
 
 const FinnyMessage = React.memo(({ 
   content, 
   isUser, 
   timestamp, 
-  hasAction, 
-  visualData 
+  hasAction
 }: FinnyMessageProps) => {
   // Remove any action markers from the message content for display
   const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
@@ -38,15 +35,6 @@ const FinnyMessage = React.memo(({
      formattedContent.toLowerCase().includes("don't worry") ||
      formattedContent.toLowerCase().includes("sorry to hear") ||
      formattedContent.toLowerCase().includes("completely understand"));
-
-  // Generate visualization data based on content
-  const chartData = useMemo(() => {
-    // Skip chart generation for user messages
-    if (isUser) return [];
-    
-    // Extract chart data from the message
-    return extractChartData(formattedContent, visualData);
-  }, [formattedContent, visualData, isUser]);
 
   return (
     <motion.div
@@ -74,14 +62,6 @@ const FinnyMessage = React.memo(({
         <div className="text-sm whitespace-pre-wrap break-words">
           {formattedContent}
         </div>
-        
-        {/* Visual Data - Only show for non-user messages with chart data or explicit visualData */}
-        {!isUser && (chartData.length > 0 || visualData) && (
-          <MessageVisualization 
-            visualData={visualData} 
-            chartData={chartData} 
-          />
-        )}
 
         {/* Action result indicators */}
         <ActionIndicator 
