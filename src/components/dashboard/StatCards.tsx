@@ -35,6 +35,9 @@ export const StatCards = ({
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { selectedMonth } = useMonthContext();
+  
+  // Get percentage changes from the hook
   const percentageChanges = usePercentageChanges(monthlyExpenses, monthlyIncome, savingsRate);
 
   if (isLoading) {
@@ -46,6 +49,9 @@ export const StatCards = ({
       </div>
     );
   }
+  
+  // Format month name for display
+  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(selectedMonth);
 
   return (
     <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
@@ -57,7 +63,7 @@ export const StatCards = ({
           title="Total Balance"
           value={formatCurrency(totalBalance, currencyCode)}
           icon={Wallet}
-          subtext={isNewUser ? "Add expenses to see your balance" : "Current account balance"}
+          subtext={isNewUser ? "Add expenses to see your balance" : `${monthName} balance`}
         />
       </OnboardingTooltip>
       

@@ -8,8 +8,20 @@ interface PercentageChangeProps {
 }
 
 export const PercentageChange = ({ value, inverse = false }: PercentageChangeProps) => {
+  // If the value is very close to zero, display as "No change"
+  if (Math.abs(value) < 0.1) {
+    return (
+      <div className="text-xs text-muted-foreground mt-1">
+        No change from last month
+      </div>
+    );
+  }
+  
+  // Determine if the change is positive (based on the inverse flag)
   const isPositive = inverse ? value < 0 : value > 0;
   const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
+  
+  // Choose color based on whether the change is positive/negative and if inverse is set
   const textColor = isPositive ? "text-expense-high" : "text-expense-low";
 
   return (

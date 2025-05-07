@@ -23,6 +23,7 @@ export const usePercentageChanges = (monthlyExpenses: number, monthlyIncome: num
       const prevMonthEnd = format(previousMonth, 'yyyy-MM-dd');
 
       try {
+        // Fetch previous month's expenses from the database
         const { data: prevExpenses } = await supabase
           .from('expenses')
           .select('amount')
@@ -30,26 +31,60 @@ export const usePercentageChanges = (monthlyExpenses: number, monthlyIncome: num
           .gte('date', prevMonthStart)
           .lte('date', prevMonthEnd);
 
+        // Calculate previous month's total expenses
         const prevMonthExpenses = prevExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-        const prevMonthIncome = monthlyIncome;
+        
+        // Fetch previous month's income from profiles or budgets
+        const { data: incomeData } = await supabase
+          .from('profiles')
+          .select('monthly_income')
+          .eq('id', user.id)
+          .single();
+
+        // Use the fetched previous month's income or fallback to current income
+        // This is a fallback - ideally, we would store monthly income history
+        const prevMonthIncome = incomeData?.monthly_income || monthlyIncome;
+        
+        // Calculate previous month's savings rate
         const prevSavingsRate = prevMonthIncome > 0 
           ? ((prevMonthIncome - prevMonthExpenses) / prevMonthIncome) * 100 
           : 0;
 
-        const expensesChange = prevMonthExpenses > 0 
-          ? ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 
-          : 0;
-        const incomeChange = prevMonthIncome > 0 
-          ? ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100 
-          : 0;
-        const savingsChange = prevSavingsRate > 0 
-          ? (savingsRate - prevSavingsRate) 
-          : 0;
+        // Calculate percentage changes between current and previous month
+        let expensesChange = 0;
+        let incomeChange = 0;
+        let savingsChange = 0;
+        
+        // Only calculate percentage change if previous values exist
+        if (prevMonthExpenses > 0) {
+          expensesChange = ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100;
+        }
+        
+        if (prevMonthIncome > 0) {
+          incomeChange = ((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100;
+        }
+        
+        if (prevSavingsRate > 0 || savingsRate > 0) {
+          savingsChange = savingsRate - prevSavingsRate;
+        }
 
+        // Update state with calculated percentage changes
         setPercentageChanges({
           expenses: expensesChange,
           income: incomeChange,
           savings: savingsChange
+        });
+        
+        console.log('Percentage changes:', {
+          currentExpenses: monthlyExpenses,
+          previousExpenses: prevMonthExpenses,
+          expensesChange,
+          currentIncome: monthlyIncome,
+          previousIncome: prevMonthIncome,
+          incomeChange,
+          currentSavings: savingsRate,
+          previousSavings: prevSavingsRate,
+          savingsChange
         });
       } catch (error) {
         console.error("Error fetching previous month data:", error);
