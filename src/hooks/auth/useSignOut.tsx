@@ -2,7 +2,7 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useFinny } from "@/components/finny/context/FinnyContext";
+import { useFinny } from "@/components/finny";
 
 export const useSignOut = () => {
   const navigate = useNavigate();
