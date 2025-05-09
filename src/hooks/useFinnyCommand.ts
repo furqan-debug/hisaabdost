@@ -1,3 +1,4 @@
+
 import { useFinny } from '@/components/finny';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';

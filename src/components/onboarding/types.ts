@@ -1,5 +1,5 @@
 
-export type OnboardingStep = 'welcome' | 'personal' | 'income' | 'currency' | 'notifications' | 'complete';
+export type OnboardingStep = 'welcome' | 'personal' | 'income' | 'currency' | 'complete';
 
 export interface OnboardingFormData {
   fullName: string;
@@ -7,7 +7,4 @@ export interface OnboardingFormData {
   gender: string;
   preferredCurrency: string;
   monthlyIncome: number | null;
-  notificationsEnabled: boolean;
-  pushNotificationsEnabled?: boolean;
-  notificationTime: string;
 }

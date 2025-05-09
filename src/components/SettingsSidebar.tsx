@@ -6,7 +6,6 @@ import { SettingsHeader } from "./settings/SettingsHeader";
 import { ThemeSettings } from "./settings/ThemeSettings";
 import { ColorSettings } from "./settings/ColorSettings";
 import { CurrencySettings } from "./settings/CurrencySettings";
-import { NotificationSettings } from "./settings/NotificationSettings";
 import { UserSection } from "./settings/UserSection";
 import { ScrollArea } from "./ui/scroll-area";
 import { MonthSelector } from "./MonthSelector";
@@ -56,8 +55,6 @@ export function SettingsSidebar({
 
         <Separator />
         <CurrencySettings />
-        <Separator />
-        <NotificationSettings />
         <Separator />
         <ThemeSettings />
         <Separator />
