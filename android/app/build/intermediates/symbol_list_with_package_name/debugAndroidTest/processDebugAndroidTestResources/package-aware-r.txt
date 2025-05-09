@@ -1,0 +1,3 @@
+app.lovable.ccb1b3984ebf47e1ac451522f307f140.test
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme
