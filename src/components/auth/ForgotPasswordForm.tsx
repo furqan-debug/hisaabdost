@@ -1,98 +1,130 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft } from "lucide-react";
+import { Platform } from '@capacitor/core';
 
-type ForgotPasswordFormProps = {
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+interface ForgotPasswordFormProps {
   onBackToLogin: () => void;
-};
+}
 
 export const ForgotPasswordForm = ({ onBackToLogin }: ForgotPasswordFormProps) => {
-  const [loading, setLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetSent, setResetSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetEmail || !resetEmail.includes('@')) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
+  const form = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-    setLoading(true);
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      // Determine if running in mobile app or web browser
+      const isNativeMobile = await Platform.is('android') || await Platform.is('ios');
+      
+      // Choose appropriate redirect URL based on platform
+      let redirectTo;
+      
+      if (isNativeMobile) {
+        // Use custom scheme for mobile apps
+        redirectTo = "hisaabdost://reset-password";
+      } else {
+        // Use web URL for browsers
+        redirectTo = window.location.origin + "/auth/reset-password";
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: redirectTo
       });
-      
-      if (error) throw error;
-      
-      setResetSent(true);
-      toast.success("Password reset link sent to your email");
+
+      if (error) {
+        throw error;
+      }
+
+      setEmailSent(true);
+      toast.success("Password reset instructions sent to your email");
     } catch (error: any) {
-      toast.error(error.message || "Failed to send reset link");
+      toast.error(error.message || "Error sending reset email");
+      console.error("Password reset error:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="resetEmail">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            id="resetEmail"
-            type="email"
-            placeholder="you@example.com"
-            value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
-            required
-            className="pl-10"
-          />
+  if (emailSent) {
+    return (
+      <div className="flex flex-col space-y-4 text-center">
+        <div className="p-4 rounded-md bg-primary/10 mb-2">
+          <p className="text-center text-primary font-medium">Check your inbox</p>
         </div>
+        <p>
+          We've sent password reset instructions to your email. Please check your inbox and follow the instructions to reset your password.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          If you don't see the email, check your spam folder.
+        </p>
+        <Button onClick={onBackToLogin} className="mt-4">
+          Return to login
+        </Button>
       </div>
-      
-      {resetSent && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex p-3 rounded-md bg-primary/10 text-primary items-start gap-3"
-        >
-          <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <p className="text-sm">
-            If an account exists with this email, you'll receive a password reset link shortly.
-          </p>
-        </motion.div>
-      )}
+    );
+  }
 
-      <div className="flex flex-col space-y-4">
-        <Button type="submit" className="w-full" disabled={loading || resetSent}>
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <span>Sending...</span>
-            </div>
-          ) : (
-            "Send Reset Link"
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter your email address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full"
-          onClick={onBackToLogin}
-        >
-          Back to login
-        </Button>
-      </div>
-    </form>
+        />
+
+        <div className="flex flex-col space-y-2">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Sending..." : "Send Reset Instructions"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex items-center justify-center gap-2"
+            onClick={onBackToLogin}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to login
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };

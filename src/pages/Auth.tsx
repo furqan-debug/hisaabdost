@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,13 @@ const Auth = () => {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  if (user) {
+  // Check if we're on the auth path explicitly (not reset-password)
+  const isAuthPath = location.pathname === "/auth";
+
+  // Redirect to dashboard if user is authenticated and on regular auth page
+  if (user && isAuthPath) {
     return <Navigate to="/app/dashboard" replace />;
   }
 
