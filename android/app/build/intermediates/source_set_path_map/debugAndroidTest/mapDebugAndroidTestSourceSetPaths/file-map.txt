@@ -1,6 +1,0 @@
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-core-1.6.1-0 C:\Users\Mustafa-PC\.gradle\caches\8.11.1\transforms\0dfb94e8e9f7930d0d4cbce98a17f1aa\transformed\core-1.6.1\res
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-tracing-1.2.0-1 C:\Users\Mustafa-PC\.gradle\caches\8.11.1\transforms\640934fa0c2deb02232fb188bbe4540c\transformed\tracing-1.2.0\res
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-androidTest-2 C:\hisaabdost-main\android\app\build\generated\res\resValues\androidTest\debug
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-mergeDebugAndroidTestResources-3 C:\hisaabdost-main\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-mergeDebugAndroidTestResources-4 C:\hisaabdost-main\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test.app-debugAndroidTest-5 C:\hisaabdost-main\android\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

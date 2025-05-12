@@ -1,2 +1,0 @@
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test:style/WhiteBackgroundTheme = 0x7f010001
-app.lovable.ccb1b3984ebf47e1ac451522f307f140.test:style/WhiteBackgroundDialogTheme = 0x7f010000
