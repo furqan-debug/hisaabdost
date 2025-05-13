@@ -85,9 +85,9 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     exclude: ['@capacitor/core']
   },
 
-  // Use JSON.stringify for all environment variables to avoid syntax errors
+  // Fix: Use direct string value for WS_TOKEN and empty object literal
   define: {
-    '__WS_TOKEN__': JSON.stringify('development-token'),
-    'process.env': JSON.stringify({})
+    __WS_TOKEN__: JSON.stringify('development-token'),
+    'process.env': '{}'
   }
 }));
