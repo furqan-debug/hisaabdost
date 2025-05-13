@@ -1,3 +1,4 @@
+
 import React, { useState, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Import the Index page directly instead of lazy loading it to avoid the dynamic import error
+// Import the Index page directly instead of lazy loading it
 import Index from "@/pages/Index";
 
 // Lazy load other pages for better code splitting
