@@ -4,7 +4,10 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-export default defineConfig(({ mode }) => ({
+// Properly define ConfigEnv type
+import { ConfigEnv } from 'vite';
+
+export default defineConfig(({ mode }: ConfigEnv) => ({
   base: "./",
 
   build: {
@@ -83,7 +86,7 @@ export default defineConfig(({ mode }) => ({
 
   // Fix environment variable handling
   define: {
-    __WS_TOKEN__: JSON.stringify('development-token'),
+    __WS_TOKEN__: JSON.stringify(process.env.WS_TOKEN || 'development-token'),
     // Ensure environment variables are properly stringified
     "process.env": {}
   }
