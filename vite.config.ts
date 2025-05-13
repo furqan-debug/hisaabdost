@@ -48,11 +48,14 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     hmr: {
-      // Ensure HMR works properly
+      // Enhanced HMR config
       protocol: 'ws',
-      timeout: 30000
+      timeout: 30000,
+      host: 'localhost',
+      clientPort: 8080,
+      overlay: true
     },
-    // Add allowed hosts configuration
+    // Expanded allowed hosts configuration
     allowedHosts: [
       'localhost',
       '127.0.0.1',

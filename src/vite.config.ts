@@ -54,7 +54,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Add allowed hosts configuration
+    hmr: {
+      // Enhanced HMR config
+      protocol: 'ws',
+      timeout: 30000,
+      host: 'localhost',
+      overlay: true
+    },
+    // Expanded allowed hosts configuration
     allowedHosts: [
       'localhost',
       '127.0.0.1',
@@ -81,4 +88,9 @@ export default defineConfig(({ mode }) => ({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', '@tanstack/react-query'],
     exclude: ['@capacitor/core']
   },
+
+  // Define global variables
+  define: {
+    __WS_TOKEN__: JSON.stringify('development-token'),
+  }
 }));

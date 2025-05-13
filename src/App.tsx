@@ -14,18 +14,16 @@ import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Import the Index page directly instead of lazy loading it
+// Import all pages directly to avoid dynamic import issues
 import Index from "@/pages/Index";
-
-// Lazy load other pages for better code splitting
-const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
-const Expenses = React.lazy(() => import("@/pages/Expenses"));
-const Budget = React.lazy(() => import("@/pages/Budget"));
-const Analytics = React.lazy(() => import("@/pages/Analytics"));
-const Goals = React.lazy(() => import("@/pages/Goals"));
-const NotFound = React.lazy(() => import("@/pages/NotFound"));
-const Auth = React.lazy(() => import("@/pages/Auth"));
-const ResetPassword = React.lazy(() => import("@/pages/ResetPassword"));
+import Dashboard from "@/pages/Dashboard";
+import Expenses from "@/pages/Expenses";
+import Budget from "@/pages/Budget";
+import Analytics from "@/pages/Analytics";
+import Goals from "@/pages/Goals";
+import NotFound from "@/pages/NotFound";
+import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 
 // Create a client with optimized settings
 const queryClient = new QueryClient({
