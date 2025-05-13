@@ -56,14 +56,7 @@ export default defineConfig(({ mode }) => ({
       overlay: true
     },
     // Expanded allowed hosts configuration
-    allowedHosts: [
-      'localhost',
-      '127.0.0.1',
-      'ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com',
-      'id-preview--ccb1b398-4ebf-47e1-ac45-1522f307f140.lovable.app',
-      '.lovableproject.com',
-      '.lovable.app'
-    ]
+    allowedHosts: 'all'  // Allow all hosts to prevent blocking issues
   },
 
   plugins: [
@@ -88,8 +81,10 @@ export default defineConfig(({ mode }) => ({
     exclude: ["@capacitor/core"]
   },
 
-  // Define global variables that might be missing
+  // Fix environment variable handling
   define: {
     __WS_TOKEN__: JSON.stringify('development-token'),
+    // Ensure environment variables are properly stringified
+    "process.env": {}
   }
 }));
