@@ -7,14 +7,25 @@ import './index.css';
 // Add global error handling
 window.onerror = (message, source, lineno, colno, error) => {
   console.error('Global error caught:', { message, source, lineno, colno, error });
+  // Add fallback UI for critical errors
+  if (document.body && !document.getElementById('error-display')) {
+    const errorDisplay = document.createElement('div');
+    errorDisplay.id = 'error-display';
+    errorDisplay.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:20px;background:#f44336;color:white;z-index:10000;text-align:center;';
+    errorDisplay.textContent = 'Something went wrong. Please refresh the page.';
+    document.body.prepend(errorDisplay);
+  }
   return false;
 };
 
 // Preload critical resources
 const preloadResources = () => {
+  console.log('Preloading application resources...');
+  
   // Preload auth state before rendering
   const preloadAuth = () => {
     try {
+      console.log('Preloading auth state...');
       return JSON.parse(localStorage.getItem('hisaabdost_user_cache') || 'null');
     } catch (e) {
       console.error('Error preloading auth state:', e);
@@ -25,6 +36,7 @@ const preloadResources = () => {
   // Initialize color theme from localStorage before rendering
   const initColorTheme = () => {
     try {
+      console.log('Initializing color theme...');
       const savedColorTheme = localStorage.getItem("color-theme");
       
       // Remove any existing theme classes
@@ -52,6 +64,7 @@ const preloadResources = () => {
 
 // Run initialization
 try {
+  console.log('Starting application initialization...');
   preloadResources();
 } catch (e) {
   console.error('Failed to preload resources:', e);
@@ -60,6 +73,7 @@ try {
 // Use createRoot in non-blocking microtask with error handling
 setTimeout(() => {
   try {
+    console.log('Mounting React application...');
     const rootElement = document.getElementById("root");
     if (rootElement) {
       createRoot(rootElement).render(
@@ -72,6 +86,7 @@ setTimeout(() => {
           <App />
         )
       );
+      console.log('React application mounted successfully');
     } else {
       console.error("Root element not found");
     }

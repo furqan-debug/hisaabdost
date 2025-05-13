@@ -85,9 +85,9 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     exclude: ['@capacitor/core']
   },
 
-  // Define environment variables directly with string literals
+  // Define environment variables - simplifying to absolute string literals
   define: {
-    '__WS_TOKEN__': '"development-token"',
+    '__WS_TOKEN__': "'development-token'", 
     'process.env': '{}'
   }
 }));
