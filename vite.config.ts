@@ -51,7 +51,16 @@ export default defineConfig(({ mode }) => ({
       // Ensure HMR works properly
       protocol: 'ws',
       timeout: 30000
-    }
+    },
+    // Add allowed hosts configuration
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com',
+      'id-preview--ccb1b398-4ebf-47e1-ac45-1522f307f140.lovable.app',
+      '.lovableproject.com',
+      '.lovable.app'
+    ]
   },
 
   plugins: [
