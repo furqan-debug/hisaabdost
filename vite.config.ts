@@ -17,6 +17,30 @@ export default defineConfig(({ mode }) => ({
         drop_console: mode === "production",
         drop_debugger: true
       }
+    },
+    // Add rollup options for better chunk management
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-router-dom') || 
+              id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@radix-ui') || id.includes('/components/ui/')) {
+            return 'vendor-ui';
+          }
+          if (id.includes('node_modules/recharts')) {
+            return 'vendor-charts';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-animations';
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
     }
   },
 

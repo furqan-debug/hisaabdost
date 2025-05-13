@@ -1,4 +1,3 @@
-
 import React, { useState, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,7 +13,10 @@ import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Lazy load pages for better code splitting
+// Import the Index page directly instead of lazy loading it to avoid the dynamic import error
+import Index from "@/pages/Index";
+
+// Lazy load other pages for better code splitting
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
 const Expenses = React.lazy(() => import("@/pages/Expenses"));
 const Budget = React.lazy(() => import("@/pages/Budget"));
@@ -23,7 +25,6 @@ const Goals = React.lazy(() => import("@/pages/Goals"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 const Auth = React.lazy(() => import("@/pages/Auth"));
 const ResetPassword = React.lazy(() => import("@/pages/ResetPassword"));
-const Index = React.lazy(() => import("@/pages/Index"));
 
 // Create a client with optimized settings
 const queryClient = new QueryClient({
@@ -89,11 +90,7 @@ function App() {
                     <Routes>
                       <Route 
                         path="/" 
-                        element={
-                          <Suspense fallback={<LoadingScreen message="Loading..." />}>
-                            <Index />
-                          </Suspense>
-                        } 
+                        element={<Index />} 
                       />
                       <Route 
                         path="/auth" 
