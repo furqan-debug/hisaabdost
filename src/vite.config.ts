@@ -61,8 +61,8 @@ export default defineConfig(({ mode }) => ({
       host: 'localhost',
       overlay: true
     },
-    // Fix host blocking by allowing all hosts
-    allowedHosts: 'all'
+    // Fix host blocking by setting allowedHosts to true instead of 'all'
+    allowedHosts: true
   },
 
   plugins: [

@@ -55,8 +55,8 @@ export default defineConfig(({ mode }) => ({
       clientPort: 8080,
       overlay: true
     },
-    // Expanded allowed hosts configuration
-    allowedHosts: 'all'  // Allow all hosts to prevent blocking issues
+    // Fix host blocking by setting allowedHosts to true instead of 'all'
+    allowedHosts: true
   },
 
   plugins: [
