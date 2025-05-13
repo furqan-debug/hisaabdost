@@ -84,11 +84,9 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     exclude: ["@capacitor/core"]
   },
 
-  // Fix environment variable handling - use hardcoded values instead of string interpolation
+  // Define environment variables directly without any complex processing
   define: {
-    // Use a hardcoded string value to avoid client-side interpolation
-    __WS_TOKEN__: '"development-token"',
-    // Empty process.env object as a literal string to avoid runtime errors
-    "process.env": "{}"
+    '__WS_TOKEN__': JSON.stringify('development-token'),
+    'process.env': '{}'
   }
 }));
