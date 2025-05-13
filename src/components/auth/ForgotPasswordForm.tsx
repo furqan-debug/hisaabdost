@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
-import { Platform } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -43,7 +43,7 @@ export const ForgotPasswordForm = ({ onBackToLogin }: ForgotPasswordFormProps) =
     setIsLoading(true);
     try {
       // Determine if running in mobile app or web browser
-      const isNativeMobile = await Platform.is('android') || await Platform.is('ios');
+      const isNativeMobile = Capacitor.isNativePlatform();
       
       // Choose appropriate redirect URL based on platform
       let redirectTo;
