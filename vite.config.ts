@@ -24,10 +24,13 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     hmr: {
-      // Ensure HMR works properly
       protocol: 'ws',
       timeout: 30000
-    }
+    },
+    watch: {
+      usePolling: true
+    },
+    cors: true
   },
 
   plugins: [
@@ -52,8 +55,9 @@ export default defineConfig(({ mode }) => ({
     exclude: ["@capacitor/core"]
   },
 
-  // Define global variables that might be missing
+  // Define global variables with correct JSON stringification
   define: {
     __WS_TOKEN__: JSON.stringify('development-token'),
+    'process.env': JSON.stringify(process.env)
   }
 }));

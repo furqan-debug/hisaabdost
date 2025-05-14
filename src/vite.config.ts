@@ -54,6 +54,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: {
+      protocol: 'ws',
+      timeout: 30000
+    },
+    watch: {
+      usePolling: true
+    },
+    cors: true
   },
 
   plugins: [
@@ -72,4 +80,10 @@ export default defineConfig(({ mode }) => ({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', '@tanstack/react-query'],
     exclude: ['@capacitor/core']
   },
+  
+  // Define global variables with correct JSON stringification
+  define: {
+    __WS_TOKEN__: JSON.stringify('development-token'),
+    'process.env': JSON.stringify(process.env)
+  }
 }));
