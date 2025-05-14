@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +13,7 @@ const Index = () => {
   
   useEffect(() => {
     if (user && !loading) {
-      navigate('/app/dashboard');
+      navigate('/dashboard');
     }
   }, [user, loading, navigate]);
 

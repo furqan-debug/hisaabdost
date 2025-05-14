@@ -1,5 +1,5 @@
 
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
@@ -12,18 +12,16 @@ import { MonthProvider } from "@/hooks/use-month-context";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { App as CapacitorApp } from '@capacitor/app';
 
-// Import all pages directly to avoid dynamic import issues
-import Index from "@/pages/Index";
-import Dashboard from "@/pages/Dashboard";
-import Expenses from "@/pages/Expenses";
-import Budget from "@/pages/Budget";
-import Analytics from "@/pages/Analytics";
-import Goals from "@/pages/Goals";
-import NotFound from "@/pages/NotFound";
-import Auth from "@/pages/Auth";
-import ResetPassword from "@/pages/ResetPassword";
+// Lazy load pages for better code splitting
+const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
+const Expenses = React.lazy(() => import("@/pages/Expenses"));
+const Budget = React.lazy(() => import("@/pages/Budget"));
+const Analytics = React.lazy(() => import("@/pages/Analytics"));
+const Goals = React.lazy(() => import("@/pages/Goals"));
+const NotFound = React.lazy(() => import("@/pages/NotFound"));
+const Auth = React.lazy(() => import("@/pages/Auth"));
+const Index = React.lazy(() => import("@/pages/Index"));
 
 // Create a client with optimized settings
 const queryClient = new QueryClient({
@@ -41,40 +39,6 @@ const queryClient = new QueryClient({
 function App() {
   const [showSplash, setShowSplash] = useState(true);
 
-  // Handle deep links
-  useEffect(() => {
-    const initDeepLinks = async () => {
-      try {
-        // Set up the deep link listener
-        CapacitorApp.addListener('appUrlOpen', (data: { url: string }) => {
-          console.log('Deep link opened: ', data.url);
-          
-          // Parse the URL
-          const url = new URL(data.url);
-          
-          // Handle password reset deep links
-          if (url.pathname.includes('reset-password') || 
-              url.host === 'reset-password') {
-            
-            // Extract token from the URL if present
-            const params = new URLSearchParams(url.search);
-            const token = params.get('token') || null;
-            
-            // Get the path within your app to navigate to
-            const navigatePath = `/auth/reset-password${token ? `?token=${token}` : ''}`;
-            
-            // Navigate to the path
-            window.location.href = navigatePath;
-          }
-        });
-      } catch (error) {
-        console.error('Error setting up deep link handler:', error);
-      }
-    };
-
-    initDeepLinks();
-  }, []);
-
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
@@ -89,21 +53,17 @@ function App() {
                     <Routes>
                       <Route 
                         path="/" 
-                        element={<Index />} 
+                        element={
+                          <Suspense fallback={<LoadingScreen message="Loading..." />}>
+                            <Index />
+                          </Suspense>
+                        } 
                       />
                       <Route 
                         path="/auth" 
                         element={
                           <Suspense fallback={<LoadingScreen message="Loading authentication..." />}>
                             <Auth />
-                          </Suspense>
-                        } 
-                      />
-                      <Route 
-                        path="/auth/reset-password" 
-                        element={
-                          <Suspense fallback={<LoadingScreen message="Loading password reset..." />}>
-                            <ResetPassword />
                           </Suspense>
                         } 
                       />

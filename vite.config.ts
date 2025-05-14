@@ -4,10 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Properly define ConfigEnv type
-import { ConfigEnv } from 'vite';
-
-export default defineConfig(({ mode }: ConfigEnv) => ({
+export default defineConfig(({ mode }) => ({
   base: "./",
 
   build: {
@@ -20,30 +17,6 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
         drop_console: mode === "production",
         drop_debugger: true
       }
-    },
-    // Add rollup options for better chunk management
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules/react') || 
-              id.includes('node_modules/react-router-dom') || 
-              id.includes('node_modules/react-dom')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/@radix-ui') || id.includes('/components/ui/')) {
-            return 'vendor-ui';
-          }
-          if (id.includes('node_modules/recharts')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-animations';
-          }
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
-        }
-      }
     }
   },
 
@@ -51,15 +24,10 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     host: "::",
     port: 8080,
     hmr: {
-      // Enhanced HMR config
+      // Ensure HMR works properly
       protocol: 'ws',
-      timeout: 30000,
-      host: 'localhost',
-      clientPort: 8080,
-      overlay: true
-    },
-    // Fix host blocking by setting allowedHosts to true
-    allowedHosts: true
+      timeout: 30000
+    }
   },
 
   plugins: [
@@ -84,9 +52,8 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     exclude: ["@capacitor/core"]
   },
 
-  // Properly escape environment variables to prevent syntax errors
+  // Define global variables that might be missing
   define: {
-    __WS_TOKEN__: JSON.stringify("development-token"),
-    'process.env': '{}' 
+    __WS_TOKEN__: JSON.stringify('development-token'),
   }
 }));

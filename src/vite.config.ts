@@ -4,10 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Properly define ConfigEnv type
-import { ConfigEnv } from 'vite';
-
-export default defineConfig(({ mode }: ConfigEnv) => ({
+export default defineConfig(({ mode }) => ({
   // ensure all assets load correctly inside Capacitor's WebView:
   base: "./",
 
@@ -57,15 +54,6 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
   server: {
     host: "::",
     port: 8080,
-    hmr: {
-      // Enhanced HMR config
-      protocol: 'ws',
-      timeout: 30000,
-      host: 'localhost',
-      overlay: true
-    },
-    // Fix host blocking by setting allowedHosts to true
-    allowedHosts: true
   },
 
   plugins: [
@@ -84,10 +72,4 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', '@tanstack/react-query'],
     exclude: ['@capacitor/core']
   },
-
-  // Properly escape environment variables to prevent syntax errors
-  define: {
-    __WS_TOKEN__: JSON.stringify("development-token"),
-    'process.env': '{}'
-  }
 }));
