@@ -20,6 +20,7 @@ const Dashboard = () => {
     monthlyIncome,
     monthlyExpenses,
     totalBalance,
+    walletBalance, // Added wallet balance
     savingsRate,
     chartType,
     setChartType,
@@ -60,6 +61,7 @@ const Dashboard = () => {
       handleExpenseRefresh={handleExpenseRefresh}
       chartType={chartType}
       setChartType={setChartType}
+      walletBalance={walletBalance}
     />
   );
 };

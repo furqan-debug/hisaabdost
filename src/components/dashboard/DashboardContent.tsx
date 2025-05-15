@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -25,6 +26,7 @@ interface DashboardContentProps {
   handleExpenseRefresh: () => void;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
+  walletBalance: number;
 }
 
 export function DashboardContent({
@@ -44,7 +46,8 @@ export function DashboardContent({
   setShowAddExpense,
   handleExpenseRefresh,
   chartType,
-  setChartType
+  setChartType,
+  walletBalance
 }: DashboardContentProps) {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -86,6 +89,7 @@ export function DashboardContent({
           formatPercentage={formatPercentage}
           isNewUser={isNewUser}
           isLoading={isLoading}
+          walletBalance={walletBalance}
         />
       </motion.div>
 

@@ -11,6 +11,7 @@ import { PercentageChange } from "./stats/PercentageChange";
 import { EditableIncomeCard } from "./stats/EditableIncomeCard";
 import { usePercentageChanges } from "@/hooks/usePercentageChanges";
 import { formatCurrency } from "@/utils/formatters";
+import { WalletBalanceCard } from "./wallet/WalletBalanceCard";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -21,6 +22,7 @@ interface StatCardsProps {
   formatPercentage: (value: number) => string;
   isNewUser: boolean;
   isLoading?: boolean;
+  walletBalance: number;
 }
 
 export const StatCards = ({
@@ -32,6 +34,7 @@ export const StatCards = ({
   formatPercentage,
   isNewUser,
   isLoading = false,
+  walletBalance,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
@@ -56,15 +59,10 @@ export const StatCards = ({
   return (
     <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
       <OnboardingTooltip
-        content="Track your remaining balance after expenses"
+        content="Track your wallet balance (Income + Added funds - Expenses)"
         defaultOpen={isNewUser}
       >
-        <StatCard
-          title="Total Balance"
-          value={formatCurrency(totalBalance, currencyCode)}
-          icon={Wallet}
-          subtext={isNewUser ? "Add expenses to see your balance" : `${monthName} balance`}
-        />
+        <WalletBalanceCard walletBalance={walletBalance} />
       </OnboardingTooltip>
       
       <StatCard
