@@ -1,4 +1,3 @@
-
 import { useFinny } from '@/components/finny';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -182,7 +181,7 @@ export function useFinnyCommand() {
   /**
    * Send a command to Finny to set a budget
    */
-  const createBudget = (amount: number, category: string) => {
+  const createBudget = (amount: number, category: string, period: string = "monthly") => {
     if (!user) {
       toast.error('Please log in to use Finny');
       return;
@@ -194,7 +193,8 @@ export function useFinnyCommand() {
       toast.info(`Using category "${validCategory}" instead of "${category}"`);
     }
     
-    setBudget(amount, validCategory);
+    // Pass period to the setBudget function
+    setBudget(amount, validCategory, period);
     
     // Trigger budget update event
     setTimeout(() => {
@@ -202,7 +202,8 @@ export function useFinnyCommand() {
         detail: { 
           timestamp: Date.now(),
           amount,
-          category: validCategory
+          category: validCategory,
+          period
         }
       });
       window.dispatchEvent(budgetEvent);

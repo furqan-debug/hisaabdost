@@ -169,11 +169,14 @@ export async function processAction(
 
         if (fetchError) throw fetchError;
 
+        // Set default period to "monthly" if not specified
+        const period = action.period || "monthly";
+
         // Update or insert based on existence
         if (existingBudget) {
           const { error } = await supabase
             .from("budgets")
-            .update({ amount: action.amount })
+            .update({ amount: action.amount, period: period })
             .eq("id", existingBudget.id);
 
           if (error) throw error;
@@ -183,6 +186,8 @@ export async function processAction(
             user_id: userId,
             category: action.category,
             amount: action.amount,
+            period: period,
+            carry_forward: false
           });
 
           if (error) throw error;
