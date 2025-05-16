@@ -17,6 +17,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
+import { useFinnyCommand } from "@/hooks/useFinnyCommand";
+import { useEffect } from "react";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -28,21 +30,33 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { deleteBudget: finnyDeleteBudget } = useFinnyCommand(); // Get the Finny delete budget command
 
-  const handleDeleteBudget = async (budgetId: string) => {
+  // Listen for budget update events
+  useEffect(() => {
+    const handleBudgetUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+    };
+    
+    window.addEventListener('budget-updated', handleBudgetUpdate);
+    window.addEventListener('budget-deleted', handleBudgetUpdate);
+    window.addEventListener('budget-refresh', handleBudgetUpdate);
+    
+    return () => {
+      window.removeEventListener('budget-updated', handleBudgetUpdate);
+      window.removeEventListener('budget-deleted', handleBudgetUpdate);
+      window.removeEventListener('budget-refresh', handleBudgetUpdate);
+    };
+  }, [queryClient]);
+
+  const handleDeleteBudget = async (budgetId: string, category: string) => {
     try {
-      const { error } = await supabase
-        .from('budgets')
-        .delete()
-        .eq('id', budgetId);
-
-      if (error) throw error;
-
-      await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
+      // Use Finny to delete the budget
+      finnyDeleteBudget(category);
+      
       toast({
-        title: "Budget deleted",
-        description: "The budget has been successfully deleted.",
+        title: "Budget deletion requested",
+        description: `Requesting to delete the ${category} budget via Finny.`,
       });
     } catch (error) {
       console.error('Error deleting budget:', error);
@@ -149,7 +163,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleDeleteBudget(budget.id)}
+                              onClick={() => handleDeleteBudget(budget.id, budget.category)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -241,7 +255,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleDeleteBudget(budget.id)}
+                              onClick={() => handleDeleteBudget(budget.id, budget.category)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />

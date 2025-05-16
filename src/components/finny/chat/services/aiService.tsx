@@ -90,8 +90,9 @@ export async function processMessageWithAI(
     }
     // Also handle budget and goal changes
     else if (data.action && 
-      (data.action.type === 'set_budget' || data.action.type === 'update_budget' || 
-       data.action.type === 'delete_budget')) {
+      (data.action.type === 'set_budget' || data.action.type === 'update_budget')) {
+      console.log('Budget was added or updated, triggering refresh events');
+      
       // Dispatch budget update event
       const budgetEvent = new CustomEvent('budget-updated', { 
         detail: { 
@@ -100,6 +101,38 @@ export async function processMessageWithAI(
         }
       });
       window.dispatchEvent(budgetEvent);
+      
+      // Invalidate budget queries after a short delay
+      setTimeout(() => {
+        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+          detail: {
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(budgetRefreshEvent);
+      }, 500);
+    }
+    else if (data.action && data.action.type === 'delete_budget') {
+      console.log('Budget was deleted, triggering refresh events');
+      
+      // Dispatch budget delete event
+      const budgetDeleteEvent = new CustomEvent('budget-deleted', { 
+        detail: { 
+          timestamp: Date.now(),
+          category: data.action.category
+        }
+      });
+      window.dispatchEvent(budgetDeleteEvent);
+      
+      // Invalidate budget queries after a short delay
+      setTimeout(() => {
+        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+          detail: {
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(budgetRefreshEvent);
+      }, 500);
     }
     else if (data.action && 
       (data.action.type === 'set_goal' || data.action.type === 'update_goal' || 

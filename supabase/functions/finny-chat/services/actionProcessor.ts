@@ -1,4 +1,3 @@
-
 // Import Supabase client type
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
@@ -171,6 +170,7 @@ export async function processAction(
 
         // Set default period to "monthly" if not specified
         const period = action.period || "monthly";
+        console.log(`Setting ${period} budget of ${action.amount} for ${action.category}`);
 
         // Update or insert based on existence
         if (existingBudget) {
@@ -179,7 +179,10 @@ export async function processAction(
             .update({ amount: action.amount, period: period })
             .eq("id", existingBudget.id);
 
-          if (error) throw error;
+          if (error) {
+            console.error("Budget update error:", error);
+            throw error;
+          }
           return `I've updated your ${action.category} budget to ${action.amount}.`;
         } else {
           const { error } = await supabase.from("budgets").insert({
@@ -190,21 +193,34 @@ export async function processAction(
             carry_forward: false
           });
 
-          if (error) throw error;
-          return `I've set a budget of ${action.amount} for ${action.category}.`;
+          if (error) {
+            console.error("Budget creation error:", error);
+            throw error;
+          }
+          return `I've set a ${period} budget of ${action.amount} for ${action.category}.`;
         }
       }
 
       case "delete_budget": {
-        const { error } = await supabase
+        console.log(`Deleting budget for category: ${action.category}`);
+        
+        const { data, error } = await supabase
           .from("budgets")
           .delete()
           .eq("user_id", userId)
-          .eq("category", action.category);
+          .eq("category", action.category)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Budget deletion error:", error);
+          throw error;
+        }
 
-        return `I've deleted the ${action.category} budget.`;
+        if (data && data.length > 0) {
+          return `I've deleted the ${action.category} budget.`;
+        } else {
+          return `I couldn't find a budget for ${action.category} to delete. Please check if the budget category is correct.`;
+        }
       }
 
       case "set_goal": {

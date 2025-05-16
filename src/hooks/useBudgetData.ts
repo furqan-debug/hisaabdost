@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
@@ -6,12 +5,17 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useBudgetData() {
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
   const { user } = useAuth();
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
+  const queryClient = useQueryClient();
+  
+  // Add refresh trigger state
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   // Refs to store previous values to prevent unnecessary updates
   const prevValuesRef = useRef({
@@ -33,9 +37,28 @@ export function useBudgetData() {
   // Update debounce timer ref
   const updateTimerRef = useRef<number | null>(null);
   
+  // Listen for budget update events
+  useEffect(() => {
+    const handleBudgetUpdate = () => {
+      console.log("Budget update detected, refreshing data");
+      queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user?.id] });
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
+    window.addEventListener('budget-updated', handleBudgetUpdate);
+    window.addEventListener('budget-deleted', handleBudgetUpdate);
+    window.addEventListener('budget-refresh', handleBudgetUpdate);
+    
+    return () => {
+      window.removeEventListener('budget-updated', handleBudgetUpdate);
+      window.removeEventListener('budget-deleted', handleBudgetUpdate);
+      window.removeEventListener('budget-refresh', handleBudgetUpdate);
+    };
+  }, [queryClient, monthKey, user?.id]);
+  
   // Query budgets with the monthly income
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', monthKey, user?.id],
+    queryKey: ['budgets', monthKey, user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
@@ -45,7 +68,12 @@ export function useBudgetData() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching budgets:", error);
+        throw error;
+      }
+      
+      console.log(`Fetched ${data?.length || 0} budgets`);
       return data as Budget[];
     },
     enabled: !!user,

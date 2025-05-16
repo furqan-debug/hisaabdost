@@ -9,10 +9,11 @@ interface FinnyContextType {
   isOpen: boolean;
   openChat: () => void;
   closeChat: () => void;
-  toggleChat: () => void; // Add the missing toggleChat property
+  toggleChat: () => void;
   triggerChat?: (message: string) => void;
   addExpense: (amount: number, category: string, description?: string, date?: string) => void;
   setBudget: (amount: number, category: string, period?: string) => void;
+  deleteBudget: (category: string) => void; // Add explicit method to delete budgets
   askFinny: (message: string) => void;
   remainingDailyMessages: number;
   isMessageLimitReached: boolean;
