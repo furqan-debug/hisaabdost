@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { WalletAdditionInput } from "@/hooks/useWalletAdditions";
 import { useCurrency } from "@/hooks/use-currency";
+import { getCurrencyByCode } from "@/utils/currencyUtils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -25,7 +26,9 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
   const [description, setDescription] = useState<string>('');
   const [date, setDate] = useState<Date>(new Date());
   
-  const { currencySymbol } = useCurrency();
+  // Get currency code and then get the symbol from it
+  const { currencyCode } = useCurrency();
+  const currencySymbol = getCurrencyByCode(currencyCode).symbol;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
