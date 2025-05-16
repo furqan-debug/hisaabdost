@@ -51,6 +51,8 @@ export async function processMessageWithAI(
       throw new Error(`Failed to get response: ${error.message}`);
     }
     
+    console.log('Finny response received:', data);
+    
     // Check if the response indicates an expense was added
     if (data.action && data.action.type === 'add_expense') {
       console.log('Expense was added, triggering refresh events');

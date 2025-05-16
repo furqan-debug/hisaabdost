@@ -1,3 +1,4 @@
+
 // Import Supabase client type
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
@@ -90,7 +91,12 @@ export async function processAction(
           })
           .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting expense:", error);
+          throw error;
+        }
+
+        console.log("Expense added successfully:", data);
 
         // Format response based on action details
         const formattedDate = validatedDate === getTodaysDate() 
@@ -114,8 +120,12 @@ export async function processAction(
           .eq("id", id)
           .eq("user_id", userId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating expense:", error);
+          throw error;
+        }
 
+        console.log("Expense updated successfully");
         return `I've updated the expense details for you.`;
       }
 
@@ -128,8 +138,12 @@ export async function processAction(
             .eq("id", action.id)
             .eq("user_id", userId);
 
-          if (error) throw error;
+          if (error) {
+            console.error("Error deleting expense by ID:", error);
+            throw error;
+          }
 
+          console.log("Expense deleted successfully by ID");
           return `I've deleted the expense for you.`;
         } 
         // Delete by category & date
@@ -147,8 +161,12 @@ export async function processAction(
           }
 
           const { error } = await query;
-          if (error) throw error;
+          if (error) {
+            console.error("Error deleting expense by category:", error);
+            throw error;
+          }
 
+          console.log("Expense deleted successfully by category");
           const dateMsg = action.date ? ` from ${action.date}` : "";
           return `I've deleted the ${action.category} expense${dateMsg}.`;
         } else {
@@ -166,7 +184,10 @@ export async function processAction(
           .eq("category", action.category)
           .maybeSingle();
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          console.error("Error checking for existing budget:", fetchError);
+          throw fetchError;
+        }
 
         // Set default period to "monthly" if not specified
         const period = action.period || "monthly";
@@ -174,6 +195,7 @@ export async function processAction(
 
         // Update or insert based on existence
         if (existingBudget) {
+          console.log("Updating existing budget for:", action.category);
           const { error } = await supabase
             .from("budgets")
             .update({ amount: action.amount, period: period })
@@ -183,8 +205,10 @@ export async function processAction(
             console.error("Budget update error:", error);
             throw error;
           }
+          console.log("Budget updated successfully");
           return `I've updated your ${action.category} budget to ${action.amount}.`;
         } else {
+          console.log("Creating new budget for:", action.category);
           const { error } = await supabase.from("budgets").insert({
             user_id: userId,
             category: action.category,
@@ -197,6 +221,7 @@ export async function processAction(
             console.error("Budget creation error:", error);
             throw error;
           }
+          console.log("Budget created successfully");
           return `I've set a ${period} budget of ${action.amount} for ${action.category}.`;
         }
       }
@@ -217,8 +242,10 @@ export async function processAction(
         }
 
         if (data && data.length > 0) {
+          console.log("Budget deleted successfully:", data);
           return `I've deleted the ${action.category} budget.`;
         } else {
+          console.log("No budget found to delete for category:", action.category);
           return `I couldn't find a budget for ${action.category} to delete. Please check if the budget category is correct.`;
         }
       }
@@ -278,8 +305,12 @@ export async function processAction(
           category: action.category || "Savings",
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Goal creation error:", error);
+          throw error;
+        }
 
+        console.log("Goal created successfully");
         return `I've created your ${action.title || 'savings'} goal of ${action.targetAmount} to reach by ${deadlineDate}.`;
       }
 
@@ -311,8 +342,12 @@ export async function processAction(
           .eq("id", action.id)
           .eq("user_id", userId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Goal update error:", error);
+          throw error;
+        }
         
+        console.log("Goal updated successfully");
         return `I've updated your savings goal.`;
       }
 
@@ -331,8 +366,12 @@ export async function processAction(
         }
         
         const { error } = await query;
-        if (error) throw error;
+        if (error) {
+          console.error("Goal deletion error:", error);
+          throw error;
+        }
         
+        console.log("Goal deleted successfully");
         return `I've deleted the goal for you.`;
       }
 

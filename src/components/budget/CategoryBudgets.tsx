@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   // Listen for budget update events
   useEffect(() => {
     const handleBudgetUpdate = () => {
+      console.log("Budget update detected in CategoryBudgets, invalidating queries");
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
     };
     
@@ -51,6 +53,8 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
 
   const handleDeleteBudget = async (budgetId: string, category: string) => {
     try {
+      console.log(`Deleting budget for category: ${category}`);
+      
       // Use Finny to delete the budget
       finnyDeleteBudget(category);
       
@@ -58,6 +62,27 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
         title: "Budget deletion requested",
         description: `Requesting to delete the ${category} budget via Finny.`,
       });
+      
+      // Also delete directly from the database as a fallback
+      const { error } = await supabase
+        .from("budgets")
+        .delete()
+        .eq("id", budgetId);
+      
+      if (error) {
+        console.error("Error deleting budget directly:", error);
+        // We don't need to show an error toast here since Finny should handle it
+      } else {
+        console.log("Budget deleted directly from database");
+        
+        // Manually trigger refresh events
+        setTimeout(() => {
+          const budgetEvent = new CustomEvent('budget-refresh', { 
+            detail: { timestamp: Date.now() }
+          });
+          window.dispatchEvent(budgetEvent);
+        }, 200);
+      }
     } catch (error) {
       console.error('Error deleting budget:', error);
       toast({
