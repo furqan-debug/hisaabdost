@@ -1,10 +1,14 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import FinnyChat from './FinnyChat';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
 import { supabase } from '@/integrations/supabase/client';
+
+// Constants for message limits
+export const MAX_DAILY_MESSAGES = 10;
+export const DAILY_MESSAGE_COUNT_KEY = 'finny_daily_message_count';
 
 interface FinnyContextType {
   isOpen: boolean;
@@ -15,9 +19,10 @@ interface FinnyContextType {
   askFinny: (message: string) => void;
   remainingDailyMessages: number;
   isMessageLimitReached: boolean;
+  resetChat?: () => void; // Add resetChat to the interface
 }
 
-const FinnyContext = createContext<FinnyContextType | undefined>(undefined);
+export const FinnyContext = createContext<FinnyContextType | undefined>(undefined);
 
 const defaultContext: FinnyContextType = {
   isOpen: false,
@@ -28,6 +33,7 @@ const defaultContext: FinnyContextType = {
   askFinny: () => {},
   remainingDailyMessages: 10,
   isMessageLimitReached: false,
+  resetChat: () => {},
 };
 
 export const FinnyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,6 +81,12 @@ export const FinnyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const closeChat = () => {
     setIsOpen(false);
+  };
+  
+  const resetChat = () => {
+    // This function will be called from useSignOut to reset the chat state
+    console.log("Chat reset requested");
+    // Any additional reset logic can be added here
   };
 
   const addExpense = (amount: number, category: string, description?: string, date?: string) => {
@@ -139,11 +151,11 @@ export const FinnyProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     askFinny,
     remainingDailyMessages,
     isMessageLimitReached,
+    resetChat, // Include resetChat in the context value
   };
 
   return (
     <FinnyContext.Provider value={value}>
-      {isOpen && <FinnyChat isOpen={isOpen} onClose={closeChat} />}
       {children}
     </FinnyContext.Provider>
   );

@@ -74,7 +74,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(message);
   };
   
-  const setBudget = (amount: number, category: string) => {
+  const setBudget = (amount: number, category: string, period: string = "monthly") => {
     if (isMessageLimitReached) {
       toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
       return;
@@ -83,7 +83,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
     
-    let message = `Set a budget of ${formattedAmount} for ${validCategory}`;
+    let message = `Set a ${period} budget of ${formattedAmount} for ${validCategory}`;
     
     if (validCategory !== category) {
       message += ` (originally requested as "${category}")`;

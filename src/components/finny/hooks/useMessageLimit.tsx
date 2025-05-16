@@ -1,67 +1,67 @@
 
-import { useState, useEffect } from 'react';
-import { MAX_DAILY_MESSAGES, DAILY_MESSAGE_COUNT_KEY } from '../context/FinnyContext';
+import { useState, useEffect } from "react";
+import { User } from "@supabase/supabase-js";
+import { MAX_DAILY_MESSAGES, DAILY_MESSAGE_COUNT_KEY } from "../context/FinnyContext";
+import { supabase } from "@/integrations/supabase/client";
 
-interface User {
-  id: string;
-}
-
-export const useMessageLimit = (user: User | null) => {
-  const [dailyMessageCount, setDailyMessageCount] = useState(0);
+export function useMessageLimit(user: User | null) {
   const [remainingDailyMessages, setRemainingDailyMessages] = useState(MAX_DAILY_MESSAGES);
   const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
-
-  // Load and initialize daily message count
+  
+  // Load message count from database when user changes
   useEffect(() => {
-    if (user) {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-      const storageKey = `${DAILY_MESSAGE_COUNT_KEY}_${user.id}_${today}`;
-      
-      try {
-        const storedCount = localStorage.getItem(storageKey);
-        const count = storedCount ? parseInt(storedCount, 10) : 0;
-        setDailyMessageCount(count);
-        setRemainingDailyMessages(MAX_DAILY_MESSAGES - count);
-        setIsMessageLimitReached(count >= MAX_DAILY_MESSAGES);
-      } catch (error) {
-        console.error("Error loading message count from storage:", error);
-        // Default to 0 if there's an error
-        setDailyMessageCount(0);
+    const fetchMessageCount = async () => {
+      if (!user) {
+        // Reset message count if not logged in
         setRemainingDailyMessages(MAX_DAILY_MESSAGES);
         setIsMessageLimitReached(false);
+        return;
       }
-    }
+
+      try {
+        // Get today's date range
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+        // Count messages from today
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
+          .gte('created_at', startOfDay.toISOString())
+          .lt('created_at', endOfDay.toISOString());
+
+        if (error) {
+          console.error('Error fetching message count:', error);
+          return;
+        }
+
+        const messageCount = data?.length || 0;
+        const remaining = Math.max(0, MAX_DAILY_MESSAGES - messageCount);
+        
+        setRemainingDailyMessages(remaining);
+        setIsMessageLimitReached(remaining === 0);
+      } catch (error) {
+        console.error('Error checking message limit:', error);
+      }
+    };
+
+    fetchMessageCount();
   }, [user]);
 
-  // Update remaining messages and local storage whenever count changes
-  useEffect(() => {
-    if (user) {
-      const today = new Date().toISOString().split('T')[0];
-      const storageKey = `${DAILY_MESSAGE_COUNT_KEY}_${user.id}_${today}`;
-      
-      try {
-        localStorage.setItem(storageKey, dailyMessageCount.toString());
-        setRemainingDailyMessages(MAX_DAILY_MESSAGES - dailyMessageCount);
-        setIsMessageLimitReached(dailyMessageCount >= MAX_DAILY_MESSAGES);
-      } catch (error) {
-        console.error("Error saving message count to storage:", error);
-      }
-    }
-  }, [dailyMessageCount, user]);
-
+  // Function to increment the message count
   const incrementMessageCount = () => {
-    if (user) {
-      setDailyMessageCount(prevCount => {
-        const newCount = prevCount + 1;
-        return newCount;
-      });
-    }
+    setRemainingDailyMessages(prev => {
+      const newCount = Math.max(0, prev - 1);
+      setIsMessageLimitReached(newCount === 0);
+      return newCount;
+    });
   };
 
   return {
-    dailyMessageCount,
     remainingDailyMessages,
     isMessageLimitReached,
     incrementMessageCount
   };
-};
+}

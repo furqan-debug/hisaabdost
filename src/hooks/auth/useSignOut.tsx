@@ -11,7 +11,7 @@ export const useSignOut = () => {
   // Safely try to get resetChat function
   try {
     const finny = useFinny();
-    if (finny && finny.resetChat) {
+    if (finny && typeof finny.resetChat === 'function') {
       resetChat = finny.resetChat;
     }
   } catch (error) {
@@ -26,7 +26,9 @@ export const useSignOut = () => {
       
       // Try to clear Finny chat before signing out
       try {
-        resetChat();
+        if (typeof resetChat === 'function') {
+          resetChat();
+        }
         localStorage.removeItem('finny_chat_messages');
       } catch (error) {
         console.error("Error resetting chat:", error);
