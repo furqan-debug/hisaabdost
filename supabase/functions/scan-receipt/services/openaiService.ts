@@ -1,3 +1,4 @@
+
 // This service handles the communication with OpenAI's API
 
 function bufferToBase64(buffer: ArrayBuffer): string {
@@ -88,7 +89,7 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
 }`;
 
     const requestBody = {
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
