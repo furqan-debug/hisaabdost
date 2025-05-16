@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -349,7 +348,7 @@ When responding to the user named ${userName}:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + (userContext || '') },
           ...formattedHistory,
