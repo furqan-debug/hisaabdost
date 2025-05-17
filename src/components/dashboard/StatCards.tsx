@@ -1,13 +1,11 @@
 
 import React from "react";
-import { DollarSign, Wallet, ArrowUpRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "./stats/StatCard";
-import { PercentageChange } from "./stats/PercentageChange";
 import { EditableIncomeCard } from "./stats/EditableIncomeCard";
 import { usePercentageChanges } from "@/hooks/usePercentageChanges";
 import { formatCurrency } from "@/utils/formatters";
@@ -47,7 +45,7 @@ export const StatCards = ({
     return (
       <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-[100px]" />
+          <Skeleton key={i} className="h-[150px]" />
         ))}
       </div>
     );
@@ -68,10 +66,11 @@ export const StatCards = ({
       <StatCard
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
-        icon={DollarSign}
-      >
-        <PercentageChange value={percentageChanges.expenses} inverse={true} />
-      </StatCard>
+        subtext={percentageChanges.expenses !== 0 ? 
+          <PercentageChange value={percentageChanges.expenses} inverse={true} /> : 
+          "No change from last month"
+        }
+      />
 
       <EditableIncomeCard
         monthlyIncome={monthlyIncome}
@@ -84,10 +83,45 @@ export const StatCards = ({
       <StatCard
         title="Savings Rate"
         value={formatPercentage(savingsRate)}
-        icon={ArrowUpRight}
-      >
-        <PercentageChange value={percentageChanges.savings} />
-      </StatCard>
+        subtext={
+          <div className="flex items-center">
+            {percentageChanges.savings > 0 ? (
+              <span className="text-green-500 flex items-center">
+                ↑ {Math.abs(percentageChanges.savings).toFixed(1)}% from last month
+              </span>
+            ) : percentageChanges.savings < 0 ? (
+              <span className="text-red-500 flex items-center">
+                ↓ {Math.abs(percentageChanges.savings).toFixed(1)}% from last month
+              </span>
+            ) : (
+              "No change from last month"
+            )}
+          </div>
+        }
+      />
     </div>
   );
 };
+
+// Add the PercentageChange component directly here since it's small and needs to be updated to match the new design
+// This will allow us to use it inside the StatCards component
+function PercentageChange({ value, inverse = false }: { value: number; inverse?: boolean }) {
+  if (value === 0) return null;
+  
+  // For expenses, an increase is negative (red), but for income and savings, an increase is positive (green)
+  const isNegative = inverse ? value > 0 : value < 0;
+  
+  return (
+    <div className="flex items-center">
+      {isNegative ? (
+        <span className="text-red-500 flex items-center">
+          ↓ {Math.abs(value).toFixed(1)}% from last month
+        </span>
+      ) : (
+        <span className="text-green-500 flex items-center">
+          ↑ {Math.abs(value).toFixed(1)}% from last month
+        </span>
+      )}
+    </div>
+  );
+}

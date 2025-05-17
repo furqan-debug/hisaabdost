@@ -38,22 +38,18 @@ export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
       <StatCard
         title="Wallet Balance"
         value={formatCurrency(walletBalance, currencyCode)}
-        icon={Wallet}
-        subtext={totalAdditions > 0 ? `Added funds: ${formatCurrency(totalAdditions, currencyCode)}` : undefined}
-        className="relative"
-      >
-        <div className="absolute top-4 right-4">
-          <Button 
-            variant="ghost" 
-            size="icon-sm" 
+        subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
+        actionElement={
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleOpenAddFunds}
-            className="text-primary hover:text-primary/90 hover:bg-primary/10"
+            className="text-primary hover:bg-primary/10 px-0"
           >
-            <PlusCircle className="h-5 w-5" />
-            <span className="sr-only">Add funds</span>
+            Add Funds
           </Button>
-        </div>
-      </StatCard>
+        }
+      />
       
       <AddFundsDialog 
         isOpen={isAddFundsOpen}
