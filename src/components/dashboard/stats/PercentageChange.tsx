@@ -22,7 +22,7 @@ export const PercentageChange = ({ value, inverse = false }: PercentageChangePro
   const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   // Choose color based on whether the change is positive/negative and if inverse is set
-  const textColor = isPositive ? "text-green-500" : "text-red-500";
+  const textColor = isPositive ? "text-emerald-500" : "text-red-500";
 
   return (
     <div className={`flex items-center ${textColor} text-xs`}>

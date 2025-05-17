@@ -54,13 +54,13 @@ export function DashboardContent({
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.07
+        staggerChildren: 0.05
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { opacity: 0, y: 5 },
     show: { 
       opacity: 1, 
       y: 0,
@@ -70,7 +70,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-4 touch-scroll-container no-scrollbar max-w-5xl mx-auto"
+      className="space-y-6 max-w-5xl mx-auto px-1 py-2"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -132,4 +132,4 @@ export function DashboardContent({
       </div>
     </motion.div>
   );
-};
+}

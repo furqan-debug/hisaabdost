@@ -44,19 +44,16 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-[120px]" />
+          <Skeleton key={i} className="h-32" />
         ))}
       </div>
     );
   }
-  
-  // Format month name for display
-  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(selectedMonth);
 
   return (
-    <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 p-1">
       <OnboardingTooltip
         content="Track your wallet balance (Income + Added funds - Expenses)"
         defaultOpen={isNewUser}

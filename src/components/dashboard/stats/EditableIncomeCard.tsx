@@ -70,7 +70,7 @@ export const EditableIncomeCard = ({
   const changeDisplay = percentageChange !== 0 ? (
     <PercentageChange value={percentageChange} />
   ) : (
-    "No change from last month"
+    <div className="text-xs text-muted-foreground">No change from last month</div>
   );
 
   return (
@@ -84,7 +84,7 @@ export const EditableIncomeCard = ({
             variant="ghost"
             size="sm"
             onClick={() => setOpen(true)}
-            className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs"
+            className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs font-medium"
           >
             <Edit2 className="w-3 h-3 mr-1" /> Edit Income
           </Button>

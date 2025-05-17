@@ -26,17 +26,21 @@ export const StatCard = ({
   const isMobile = useIsMobile();
 
   return (
-    <Card className={`transition-all duration-300 hover:shadow-md ${className}`}>
-      <CardContent className="pt-4 pb-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-          <div className="text-2xl font-semibold">{value}</div>
-          {subtext && <div className="text-xs">{subtext}</div>}
-          {children}
-        </div>
+    <Card className={`bg-card/95 backdrop-blur-md border-border/30 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
+      <CardContent className="pt-6 pb-4">
+        <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
+        <div className="text-2xl md:text-3xl font-bold">{value}</div>
+        
+        {subtext && (
+          <div className="mt-1">
+            {subtext}
+          </div>
+        )}
+        
+        {children}
         
         {actionElement && (
-          <div className="mt-2">
+          <div className="mt-3">
             {actionElement}
           </div>
         )}
