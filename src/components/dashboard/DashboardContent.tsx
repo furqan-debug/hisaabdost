@@ -94,6 +94,10 @@ export function DashboardContent({
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div variants={itemVariants} className="md:col-span-2">
+          <FinnyCard />
+        </motion.div>
+
         <motion.div variants={itemVariants} className="md:col-span-1">
           <AddExpenseButton 
             isNewUser={isNewUser}
@@ -103,10 +107,6 @@ export function DashboardContent({
             setShowAddExpense={setShowAddExpense}
             onAddExpense={handleExpenseRefresh}
           />
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="md:col-span-2">
-          <FinnyCard />
         </motion.div>
       </div>
 
