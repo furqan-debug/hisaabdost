@@ -22,10 +22,11 @@ export const PercentageChange = ({ value, inverse = false }: PercentageChangePro
   const Icon = isPositive ? ArrowUpRight : ArrowDownRight;
   
   // Choose color based on whether the change is positive/negative and if inverse is set
-  const textColor = isPositive ? "text-emerald-500" : "text-red-500";
+  const textColor = isPositive ? "text-emerald-500" : "text-rose-500";
+  const bgColor = isPositive ? "bg-emerald-500/10" : "bg-rose-500/10";
 
   return (
-    <div className={`flex items-center ${textColor} text-xs`}>
+    <div className={`flex items-center ${textColor} text-xs px-2 py-1 rounded-full ${bgColor} w-fit`}>
       <Icon className="h-3 w-3 mr-1" />
       {Math.abs(value).toFixed(1)}% from last month
     </div>

@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CurrencyCode } from "@/utils/currencyUtils";
-import { Edit2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
@@ -18,6 +18,7 @@ interface EditableIncomeCardProps {
   percentageChange: number;
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
+  icon?: React.ReactNode;
 }
 
 export const EditableIncomeCard = ({
@@ -26,6 +27,7 @@ export const EditableIncomeCard = ({
   percentageChange,
   formatCurrency,
   currencyCode,
+  icon,
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -78,6 +80,7 @@ export const EditableIncomeCard = ({
       <StatCard
         title="Monthly Income"
         value={formatCurrency(monthlyIncome, currencyCode)}
+        icon={icon}
         subtext={changeDisplay}
         actionElement={
           <Button
@@ -86,7 +89,7 @@ export const EditableIncomeCard = ({
             onClick={() => setOpen(true)}
             className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs font-medium"
           >
-            <Edit2 className="w-3 h-3 mr-1" /> Edit Income
+            <Pencil className="w-3 h-3 mr-1" /> Edit Income
           </Button>
         }
       />

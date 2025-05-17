@@ -84,11 +84,11 @@ export const AddExpenseButton = ({
 
   return (
     <Card className="h-full">
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <OnboardingTooltip content="Add an expense in different ways" defaultOpen={isNewUser}>
           <div>
-            <h3 className="text-sm font-medium mb-2 flex items-center">
-              <Plus className="h-3 w-3 text-primary mr-1" />
+            <h3 className="text-sm font-medium mb-3 flex items-center">
+              <Plus className="h-4 w-4 text-primary mr-1" />
               Add New Expense
             </h3>
             <div className="grid grid-cols-3 gap-2">
@@ -104,7 +104,7 @@ export const AddExpenseButton = ({
                   onClick={() => handleOpenSheet('manual')} 
                   className="h-14 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all text-xs"
                 >
-                  <Plus className="h-3 w-3 text-primary" />
+                  <Plus className="h-4 w-4 text-primary" />
                   <span>Manual</span>
                 </Button>
               </motion.div>
@@ -121,7 +121,7 @@ export const AddExpenseButton = ({
                   onClick={() => handleOpenSheet('upload')} 
                   className="h-14 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all text-xs"
                 >
-                  <Upload className="h-3 w-3 text-primary" />
+                  <Upload className="h-4 w-4 text-primary" />
                   <span>Upload</span>
                 </Button>
               </motion.div>
@@ -138,7 +138,7 @@ export const AddExpenseButton = ({
                   onClick={() => handleOpenSheet('camera')} 
                   className="h-14 w-full flex flex-col items-center justify-center border-dashed space-y-0.5 hover:bg-accent/30 transition-all text-xs"
                 >
-                  <Camera className="h-3 w-3 text-primary" />
+                  <Camera className="h-4 w-4 text-primary" />
                   <span>Camera</span>
                 </Button>
               </motion.div>
@@ -161,4 +161,4 @@ export const AddExpenseButton = ({
       />
     </Card>
   );
-};
+}

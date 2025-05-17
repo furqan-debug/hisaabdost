@@ -11,6 +11,7 @@ import { usePercentageChanges } from "@/hooks/usePercentageChanges";
 import { formatCurrency } from "@/utils/formatters";
 import { WalletBalanceCard } from "./wallet/WalletBalanceCard";
 import { PercentageChange } from "./stats/PercentageChange";
+import { CreditCard, TrendingDown, BadgeDollarSign, PiggyBank } from "lucide-react";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -58,12 +59,16 @@ export const StatCards = ({
         content="Track your wallet balance (Income + Added funds - Expenses)"
         defaultOpen={isNewUser}
       >
-        <WalletBalanceCard walletBalance={walletBalance} />
+        <WalletBalanceCard 
+          walletBalance={walletBalance} 
+          icon={<CreditCard className="h-4 w-4 text-primary mb-1" />} 
+        />
       </OnboardingTooltip>
       
       <StatCard
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
+        icon={<TrendingDown className="h-4 w-4 text-rose-500 mb-1" />}
         subtext={<PercentageChange value={percentageChanges.expenses} inverse={true} />}
       />
 
@@ -73,11 +78,13 @@ export const StatCards = ({
         percentageChange={percentageChanges.income}
         formatCurrency={formatCurrency}
         currencyCode={currencyCode}
+        icon={<BadgeDollarSign className="h-4 w-4 text-primary mb-1" />}
       />
 
       <StatCard
         title="Savings Rate"
         value={formatPercentage(savingsRate)}
+        icon={<PiggyBank className="h-4 w-4 text-emerald-500 mb-1" />}
         subtext={<PercentageChange value={percentageChanges.savings} />}
       />
     </div>

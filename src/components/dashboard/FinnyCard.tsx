@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFinny } from "@/components/finny";
 import { useAuth } from "@/lib/auth";
@@ -51,11 +51,11 @@ export function FinnyCard() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full bg-card/95 backdrop-blur-md border-primary/10 shadow-sm">
       <CardContent className="p-4 h-full flex flex-col justify-between">
-        <div className="space-y-2">
-          <h3 className="font-medium text-base flex items-center">
-            <span className="text-primary mr-2">✦</span> 
+        <div className="space-y-3">
+          <h3 className="font-medium text-base flex items-center text-primary">
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> 
             Talk to Finny
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -68,7 +68,7 @@ export function FinnyCard() {
           )}
         </div>
         
-        <div className="mt-2">
+        <div className="mt-4">
           <Button
             onClick={openChat}
             variant="outline"

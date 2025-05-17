@@ -70,7 +70,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-6 max-w-5xl mx-auto px-1 py-2"
+      className="space-y-6 max-w-5xl mx-auto px-2 py-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"

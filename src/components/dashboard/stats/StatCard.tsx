@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface StatCardProps {
   title: string;
   value: string;
-  icon?: LucideIcon;
+  icon?: React.ReactNode;
   subtext?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
@@ -17,7 +17,7 @@ interface StatCardProps {
 export const StatCard = ({ 
   title, 
   value, 
-  icon: Icon, 
+  icon, 
   subtext, 
   children,
   className = "",
@@ -27,12 +27,16 @@ export const StatCard = ({
 
   return (
     <Card className={`bg-card/95 backdrop-blur-md border-border/30 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
-      <CardContent className="pt-6 pb-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
-        <div className="text-2xl md:text-3xl font-bold">{value}</div>
+      <CardContent className="pt-5 pb-4">
+        <div className="flex items-center gap-1 mb-1">
+          {icon && <span>{icon}</span>}
+          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+        </div>
+        
+        <div className="text-2xl md:text-3xl font-bold mt-1">{value}</div>
         
         {subtext && (
-          <div className="mt-1">
+          <div className="mt-2">
             {subtext}
           </div>
         )}
