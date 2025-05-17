@@ -38,15 +38,19 @@ export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
       <StatCard
         title="Wallet Balance"
         value={formatCurrency(walletBalance, currencyCode)}
-        subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
+        subtext={totalAdditions > 0 ? 
+          <span className="text-xs text-muted-foreground">
+            Includes {formatCurrency(totalAdditions, currencyCode)} in added funds
+          </span> : undefined
+        }
         actionElement={
           <Button
             variant="ghost"
             size="sm"
             onClick={handleOpenAddFunds}
-            className="text-primary hover:bg-primary/10 px-0"
+            className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs"
           >
-            Add Funds
+            <PlusCircle className="w-3 h-3 mr-1" /> Add Funds
           </Button>
         }
       />

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -44,40 +44,43 @@ export function FinnyCard() {
     }
 
     if (userName) {
-      return `Hello ${userName}! Get instant help with your expenses (${remainingDailyMessages} messages left)`;
+      return `Need help with budgeting or expenses? Ask me anything!`;
     }
 
-    return `Get instant help with your expenses and budgeting (${remainingDailyMessages} messages left)`;
+    return `Get expert financial advice and insights about your spending`;
   };
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-background border-border/50">
-      <motion.div
-        className="p-4 flex flex-col gap-3"
-        whileHover={{ scale: 1.01 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h3 className="font-medium text-base">Talk to Finny</h3>
-            <p className="text-sm text-muted-foreground">
-              {getMessageText()}
+    <Card className="h-full">
+      <CardContent className="p-4 h-full flex flex-col justify-between">
+        <div className="space-y-2">
+          <h3 className="font-medium text-base flex items-center">
+            <span className="text-primary mr-2">✦</span> 
+            Talk to Finny
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {getMessageText()}
+          </p>
+          {!isMessageLimitReached && user && (
+            <p className="text-xs text-muted-foreground">
+              {remainingDailyMessages} messages remaining today
             </p>
-          </div>
+          )}
         </div>
         
-        <div>
+        <div className="mt-2">
           <Button
             onClick={openChat}
-            variant="default"
-            className="w-full sm:w-auto rounded-full transition-all duration-300 hover:shadow-md"
+            variant="outline"
+            size="sm"
+            className="w-full border-primary/30 text-primary hover:bg-primary/5 hover:text-primary hover:border-primary"
             disabled={user && isMessageLimitReached}
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
+            <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
             {user ? (isMessageLimitReached ? "Limit Reached" : "Chat Now") : "Try Finny"}
           </Button>
         </div>
-      </motion.div>
+      </CardContent>
     </Card>
   );
 }

@@ -54,23 +54,23 @@ export function DashboardContent({
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.07
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 10 },
     show: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.2, ease: "easeOut" }
     }
   };
 
   return (
     <motion.div 
-      className="space-y-5 touch-scroll-container no-scrollbar"
+      className="space-y-4 touch-scroll-container no-scrollbar max-w-5xl mx-auto"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -93,39 +93,43 @@ export function DashboardContent({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <AddExpenseButton 
-          isNewUser={isNewUser}
-          expenseToEdit={expenseToEdit}
-          showAddExpense={showAddExpense}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-          onAddExpense={handleExpenseRefresh}
-        />
-      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div variants={itemVariants} className="md:col-span-1">
+          <AddExpenseButton 
+            isNewUser={isNewUser}
+            expenseToEdit={expenseToEdit}
+            showAddExpense={showAddExpense}
+            setExpenseToEdit={setExpenseToEdit}
+            setShowAddExpense={setShowAddExpense}
+            onAddExpense={handleExpenseRefresh}
+          />
+        </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <FinnyCard />
-      </motion.div>
+        <motion.div variants={itemVariants} className="md:col-span-2">
+          <FinnyCard />
+        </motion.div>
+      </div>
 
-      <motion.div variants={itemVariants}>
-        <RecentExpensesCard 
-          expenses={expenses}
-          isNewUser={isNewUser}
-          isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
-          setShowAddExpense={setShowAddExpense}
-        />
-      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <motion.div variants={itemVariants}>
+          <RecentExpensesCard 
+            expenses={expenses}
+            isNewUser={isNewUser}
+            isLoading={isExpensesLoading}
+            setExpenseToEdit={setExpenseToEdit}
+            setShowAddExpense={setShowAddExpense}
+          />
+        </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <ExpenseAnalyticsCard 
-          expenses={expenses}
-          isLoading={isExpensesLoading}
-          chartType={chartType}
-          setChartType={setChartType}
-        />
-      </motion.div>
+        <motion.div variants={itemVariants}>
+          <ExpenseAnalyticsCard 
+            expenses={expenses}
+            isLoading={isExpensesLoading}
+            chartType={chartType}
+            setChartType={setChartType}
+          />
+        </motion.div>
+      </div>
     </motion.div>
   );
-}
+};

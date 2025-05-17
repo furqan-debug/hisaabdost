@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { supabase } from "@/integrations/supabase/client";
+import { CalendarIcon } from "lucide-react";
 
 interface DashboardHeaderProps {
   isNewUser: boolean;
@@ -38,17 +39,30 @@ export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
   }, [user]);
   
   return (
-    <header className="space-y-1">
-      <h1 className="text-2xl font-bold text-foreground">
-        {isNewUser ? `Welcome, ${userName || 'there'}!` : isCurrentMonth ? 'Dashboard' : `${format(selectedMonth, 'MMMM yyyy')}`}
-      </h1>
-      <p className="text-muted-foreground text-sm">
-        {isNewUser 
-          ? "Let's start tracking your expenses. Add your first expense to get started!"
-          : isCurrentMonth 
-            ? "Here's an overview of your expenses" 
-            : `Viewing your financial data for ${format(selectedMonth, 'MMMM yyyy')}`}
-      </p>
+    <header className="mb-4">
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-xl font-semibold">
+          {isNewUser ? 
+            `Welcome, ${userName || 'there'}!` : 
+            isCurrentMonth ? 
+              'Financial Overview' : 
+              format(selectedMonth, 'MMMM yyyy')
+          }
+        </h1>
+        
+        {!isCurrentMonth && (
+          <div className="flex items-center text-xs text-muted-foreground">
+            <CalendarIcon className="h-3 w-3 mr-1" />
+            <span>{format(selectedMonth, 'MMMM yyyy')}</span>
+          </div>
+        )}
+      </div>
+      
+      {isNewUser && (
+        <p className="text-sm text-muted-foreground mt-1">
+          Let's start tracking your expenses. Add your first expense to get started!
+        </p>
+      )}
     </header>
   );
 };

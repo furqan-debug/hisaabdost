@@ -2,7 +2,7 @@
 import React from "react";
 import { StatCard } from "./StatCard";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { PercentageChange } from "./PercentageChange";
@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CurrencyCode } from "@/utils/currencyUtils";
+import { Edit2 } from "lucide-react";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
@@ -83,15 +84,15 @@ export const EditableIncomeCard = ({
             variant="ghost"
             size="sm"
             onClick={() => setOpen(true)}
-            className="text-primary hover:bg-primary/10 px-0"
+            className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs"
           >
-            Edit Income
+            <Edit2 className="w-3 h-3 mr-1" /> Edit Income
           </Button>
         }
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Update Monthly Income</DialogTitle>
           </DialogHeader>
