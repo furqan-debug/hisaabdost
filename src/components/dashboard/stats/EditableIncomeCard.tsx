@@ -19,6 +19,7 @@ interface EditableIncomeCardProps {
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
   icon?: React.ReactNode;
+  className?: string; // Added className prop to the interface
 }
 
 export const EditableIncomeCard = ({
@@ -28,6 +29,7 @@ export const EditableIncomeCard = ({
   formatCurrency,
   currencyCode,
   icon,
+  className, // Added className to the props destructuring
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -82,6 +84,7 @@ export const EditableIncomeCard = ({
         value={formatCurrency(monthlyIncome, currencyCode)}
         icon={icon}
         subtext={changeDisplay}
+        className={className} // Pass the className to the StatCard
         actionElement={
           <Button
             variant="ghost"
