@@ -1,54 +1,36 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import React from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
-  value: string;
+  value: React.ReactNode;
+  subtext?: React.ReactNode; // Updated to accept React elements
   icon?: React.ReactNode;
-  subtext?: React.ReactNode;
-  children?: React.ReactNode;
   className?: string;
   actionElement?: React.ReactNode;
 }
 
-export const StatCard = ({ 
-  title, 
-  value, 
-  icon, 
-  subtext, 
-  children,
-  className = "",
-  actionElement
-}: StatCardProps) => {
-  const isMobile = useIsMobile();
-
+export function StatCard({
+  title,
+  value,
+  subtext,
+  icon,
+  className,
+  actionElement,
+}: StatCardProps) {
   return (
-    <Card className={`bg-card/95 backdrop-blur-md border-border/30 shadow-sm hover:shadow-md transition-all duration-300 ${className}`}>
-      <CardContent className="pt-5 pb-4">
-        <div className="flex items-center gap-1 mb-1">
+    <Card className={cn("overflow-hidden", className)}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2">
           {icon && <span>{icon}</span>}
           <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
         </div>
-        
-        <div className="text-2xl md:text-3xl font-bold mt-1">{value}</div>
-        
-        {subtext && (
-          <div className="mt-2">
-            {subtext}
-          </div>
-        )}
-        
-        {children}
-        
-        {actionElement && (
-          <div className="mt-3">
-            {actionElement}
-          </div>
-        )}
+        <div className="mt-2 font-semibold">{value}</div>
+        {subtext && <div className="text-xs text-muted-foreground">{subtext}</div>}
+        {actionElement && <div>{actionElement}</div>}
       </CardContent>
     </Card>
   );
-};
+}
