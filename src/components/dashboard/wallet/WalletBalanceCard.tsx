@@ -41,12 +41,13 @@ export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
         subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
         actionElement={
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={handleOpenAddFunds}
-            className="text-primary hover:bg-primary/10 px-0"
+            className="w-full text-primary hover:bg-primary/10 flex items-center justify-center gap-1"
           >
-            Add Funds
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Funds</span>
           </Button>
         }
       />

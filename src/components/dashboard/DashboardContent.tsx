@@ -70,7 +70,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-5 touch-scroll-container no-scrollbar"
+      className="space-y-5 py-2 touch-scroll-container no-scrollbar"
       variants={containerVariants}
       initial="hidden"
       animate="show"

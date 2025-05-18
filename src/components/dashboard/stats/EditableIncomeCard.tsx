@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CurrencyCode } from "@/utils/currencyUtils";
+import { Pencil } from "lucide-react";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
@@ -17,6 +18,7 @@ interface EditableIncomeCardProps {
   percentageChange: number;
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
+  className?: string;
 }
 
 export const EditableIncomeCard = ({
@@ -25,6 +27,7 @@ export const EditableIncomeCard = ({
   percentageChange,
   formatCurrency,
   currencyCode,
+  className = "",
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -66,26 +69,22 @@ export const EditableIncomeCard = ({
     }
   };
 
-  const changeDisplay = percentageChange !== 0 ? (
-    <PercentageChange value={percentageChange} />
-  ) : (
-    "No change from last month"
-  );
-
   return (
     <>
       <StatCard
         title="Monthly Income"
         value={formatCurrency(monthlyIncome, currencyCode)}
-        subtext={changeDisplay}
+        subtext={<PercentageChange value={percentageChange} />}
+        className={className}
         actionElement={
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setOpen(true)}
-            className="text-primary hover:bg-primary/10 px-0"
+            className="w-full text-primary hover:bg-primary/10 flex items-center justify-center gap-1"
           >
-            Edit Income
+            <Pencil className="h-4 w-4" />
+            <span>Edit Income</span>
           </Button>
         }
       />
@@ -103,6 +102,7 @@ export const EditableIncomeCard = ({
                 onChange={(e) => setIncome(e.target.value)}
                 step="0.01"
                 min="0"
+                className="text-lg"
               />
               <p className="text-sm text-muted-foreground">
                 Enter your monthly income before taxes and deductions.

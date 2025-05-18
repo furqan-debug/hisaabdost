@@ -10,6 +10,7 @@ import { EditableIncomeCard } from "./stats/EditableIncomeCard";
 import { usePercentageChanges } from "@/hooks/usePercentageChanges";
 import { formatCurrency } from "@/utils/formatters";
 import { WalletBalanceCard } from "./wallet/WalletBalanceCard";
+import { PercentageChange } from "./stats/PercentageChange";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -43,21 +44,18 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-[150px]" />
         ))}
       </div>
     );
   }
-  
-  // Format month name for display
-  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(selectedMonth);
 
   return (
-    <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
       <OnboardingTooltip
-        content="Track your wallet balance (Income + Added funds - Expenses)"
+        content="Track your wallet balance including income and added funds"
         defaultOpen={isNewUser}
       >
         <WalletBalanceCard walletBalance={walletBalance} />
@@ -66,10 +64,7 @@ export const StatCards = ({
       <StatCard
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
-        subtext={percentageChanges.expenses !== 0 ? 
-          <PercentageChange value={percentageChanges.expenses} inverse={true} /> : 
-          "No change from last month"
-        }
+        subtext={<PercentageChange value={percentageChanges.expenses} inverse={true} />}
       />
 
       <EditableIncomeCard
@@ -78,50 +73,14 @@ export const StatCards = ({
         percentageChange={percentageChanges.income}
         formatCurrency={formatCurrency}
         currencyCode={currencyCode}
+        className=""
       />
 
       <StatCard
         title="Savings Rate"
         value={formatPercentage(savingsRate)}
-        subtext={
-          <div className="flex items-center">
-            {percentageChanges.savings > 0 ? (
-              <span className="text-green-500 flex items-center">
-                ↑ {Math.abs(percentageChanges.savings).toFixed(1)}% from last month
-              </span>
-            ) : percentageChanges.savings < 0 ? (
-              <span className="text-red-500 flex items-center">
-                ↓ {Math.abs(percentageChanges.savings).toFixed(1)}% from last month
-              </span>
-            ) : (
-              "No change from last month"
-            )}
-          </div>
-        }
+        subtext={<PercentageChange value={percentageChanges.savings} />}
       />
     </div>
   );
 };
-
-// Add the PercentageChange component directly here since it's small and needs to be updated to match the new design
-// This will allow us to use it inside the StatCards component
-function PercentageChange({ value, inverse = false }: { value: number; inverse?: boolean }) {
-  if (value === 0) return null;
-  
-  // For expenses, an increase is negative (red), but for income and savings, an increase is positive (green)
-  const isNegative = inverse ? value > 0 : value < 0;
-  
-  return (
-    <div className="flex items-center">
-      {isNegative ? (
-        <span className="text-red-500 flex items-center">
-          ↓ {Math.abs(value).toFixed(1)}% from last month
-        </span>
-      ) : (
-        <span className="text-green-500 flex items-center">
-          ↑ {Math.abs(value).toFixed(1)}% from last month
-        </span>
-      )}
-    </div>
-  );
-}
