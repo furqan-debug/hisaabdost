@@ -9,7 +9,6 @@ import { Expense } from "@/components/expenses/types";
 import { ExpenseForm } from "@/components/expenses/ExpenseForm";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
-import { WalletBalanceCard } from "@/components/dashboard/wallet/WalletBalanceCard";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -52,8 +51,6 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   walletBalance,
   setMonthlyIncome
 }) => {
-  const [showBalanceCard, setShowBalanceCard] = useState(true);
-
   return (
     <div className="flex flex-col space-y-6">
       <DashboardHeader 
@@ -70,13 +67,11 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         setMonthlyIncome={setMonthlyIncome}
         savingsRate={savingsRate}
         formatPercentage={formatPercentage}
+        isNewUser={isNewUser}
+        walletBalance={walletBalance}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {showBalanceCard && (
-          <WalletBalanceCard walletBalance={walletBalance} />
-        )}
-
         <Card className="md:col-span-2 bg-card/95 backdrop-blur-md border-border/30 shadow-sm">
           <CardContent className="p-4">
             <ExpensesChart

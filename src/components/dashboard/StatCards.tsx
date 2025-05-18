@@ -9,9 +9,8 @@ import { StatCard } from "./stats/StatCard";
 import { EditableIncomeCard } from "./stats/EditableIncomeCard";
 import { usePercentageChanges } from "@/hooks/usePercentageChanges";
 import { formatCurrency } from "@/utils/formatters";
-import { WalletBalanceCard } from "./wallet/WalletBalanceCard";
 import { PercentageChange } from "./stats/PercentageChange";
-import { CreditCard, TrendingDown, BadgeDollarSign, PiggyBank } from "lucide-react";
+import { TrendingDown, BadgeDollarSign, PiggyBank } from "lucide-react";
 
 interface StatCardsProps {
   totalBalance: number;
@@ -45,8 +44,8 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+        {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-32" />
         ))}
       </div>
@@ -54,17 +53,7 @@ export const StatCards = ({
   }
 
   return (
-    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 p-1">
-      <OnboardingTooltip
-        content="Track your wallet balance (Income + Added funds - Expenses)"
-        defaultOpen={isNewUser}
-      >
-        <WalletBalanceCard 
-          walletBalance={walletBalance} 
-          icon={<CreditCard className="h-4 w-4 text-primary mb-1" />} 
-        />
-      </OnboardingTooltip>
-      
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-3 p-1">
       <StatCard
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
