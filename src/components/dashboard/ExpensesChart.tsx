@@ -30,7 +30,7 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
           )}></span>
           Expense Trends
         </h3>
-        <div className="flex gap-1 bg-background/50 p-1 rounded-lg">
+        <div className="flex gap-1 bg-card/80 p-1 rounded-lg shadow-sm">
           <Button
             variant={chartType === "bar" ? "default" : "ghost"}
             size="icon-sm"
@@ -56,7 +56,7 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
         </div>
       </div>
       
-      <div className="bg-card/50 rounded-lg p-3">
+      <div className="bg-card/80 rounded-lg p-4 shadow-sm border border-border/20">
         {isLoading ? (
           <div className="flex items-center justify-center h-[250px]">
             <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>

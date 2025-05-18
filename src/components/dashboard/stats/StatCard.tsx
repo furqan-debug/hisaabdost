@@ -29,7 +29,7 @@ export function StatCard({
         </div>
         <div className="mt-2 font-semibold">{value}</div>
         {subtext && <div className="text-xs text-muted-foreground">{subtext}</div>}
-        {actionElement && <div>{actionElement}</div>}
+        {actionElement && <div className="mt-2">{actionElement}</div>}
       </CardContent>
     </Card>
   );

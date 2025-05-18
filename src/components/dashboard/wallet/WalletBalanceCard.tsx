@@ -12,9 +12,10 @@ import { motion } from "framer-motion";
 interface WalletBalanceCardProps {
   walletBalance: number;
   icon?: React.ReactNode;
+  className?: string;
 }
 
-export function WalletBalanceCard({ walletBalance, icon }: WalletBalanceCardProps) {
+export function WalletBalanceCard({ walletBalance, icon, className }: WalletBalanceCardProps) {
   const { currencyCode } = useCurrency();
   const { 
     totalAdditions, 
@@ -27,44 +28,33 @@ export function WalletBalanceCard({ walletBalance, icon }: WalletBalanceCardProp
   const handleAddFunds = (addition: WalletAdditionInput) => {
     addFunds(addition);
   };
-  
-  // Create a motivational message based on the total additions
-  const getMotivationalMessage = () => {
-    if (totalAdditions > 0) {
-      return (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1"
-        >
-          You've added {formatCurrency(totalAdditions, currencyCode)} this month. Keep it up! 🎉
-        </motion.div>
-      );
-    }
-    return null;
-  };
 
   return (
     <>
       <StatCard
         title="Wallet Balance"
         icon={icon}
-        value={
-          <span className="text-xl md:text-2xl font-bold">{formatCurrency(walletBalance, currencyCode)}</span>
-        }
+        value={formatCurrency(walletBalance, currencyCode)}
+        className={className}
         subtext={
-          <div className="mt-1">
-            {getMotivationalMessage()}
-          </div>
+          totalAdditions > 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs text-emerald-600 dark:text-emerald-400 font-medium"
+            >
+              +{formatCurrency(totalAdditions, currencyCode)} this month
+            </motion.div>
+          ) : null
         }
         actionElement={
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => setIsAddFundsOpen(true)}
-            className="text-primary hover:bg-primary/10 px-3 py-1 h-auto flex items-center text-xs font-medium mt-2"
+            className="w-full justify-center text-xs font-medium"
           >
-            <PlusCircle className="w-3 h-3 mr-1" /> Add Funds ➕ to stay on track
+            <PlusCircle className="w-3 h-3 mr-1" /> Add Funds
           </Button>
         }
       />

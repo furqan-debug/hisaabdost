@@ -60,6 +60,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         savingsRate={savingsRate}
       />
       
+      {/* Financial Overview - 4 Key Boxes */}
       <BalanceOverview
         totalBalance={totalBalance}
         monthlyExpenses={monthlyExpenses}
@@ -71,6 +72,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         walletBalance={walletBalance}
       />
 
+      {/* Data Visualization and AI Assistant */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 bg-card/95 backdrop-blur-md border-border/30 shadow-sm">
           <CardContent className="p-4">
@@ -86,6 +88,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         <FinnyCard />
       </div>
 
+      {/* Recent Expenses and Add Expense Button */}
       <RecentExpenses
         expenses={expenses}
         isLoading={isExpensesLoading}

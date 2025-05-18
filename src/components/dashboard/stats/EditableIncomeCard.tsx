@@ -19,7 +19,7 @@ interface EditableIncomeCardProps {
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
   icon?: React.ReactNode;
-  className?: string; // Added className prop to the interface
+  className?: string;
 }
 
 export const EditableIncomeCard = ({
@@ -29,7 +29,7 @@ export const EditableIncomeCard = ({
   formatCurrency,
   currencyCode,
   icon,
-  className, // Added className to the props destructuring
+  className,
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -71,26 +71,20 @@ export const EditableIncomeCard = ({
     }
   };
 
-  const changeDisplay = percentageChange !== 0 ? (
-    <PercentageChange value={percentageChange} />
-  ) : (
-    <div className="text-xs text-muted-foreground">No change from last month</div>
-  );
-
   return (
     <>
       <StatCard
         title="Monthly Income"
         value={formatCurrency(monthlyIncome, currencyCode)}
         icon={icon}
-        subtext={changeDisplay}
-        className={className} // Pass the className to the StatCard
+        subtext={percentageChange !== 0 ? <PercentageChange value={percentageChange} /> : null}
+        className={className}
         actionElement={
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setOpen(true)}
-            className="text-primary hover:bg-primary/10 px-2 py-1 h-auto flex items-center text-xs font-medium"
+            className="w-full justify-center text-xs font-medium"
           >
             <Pencil className="w-3 h-3 mr-1" /> Edit Income
           </Button>
@@ -111,9 +105,6 @@ export const EditableIncomeCard = ({
                 step="0.01"
                 min="0"
               />
-              <p className="text-sm text-muted-foreground">
-                Enter your monthly income before taxes and deductions.
-              </p>
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" type="button" onClick={() => setOpen(false)}>
