@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceOverview } from "@/components/dashboard/BalanceOverview";
@@ -6,7 +7,7 @@ import { ExpensesChart } from "@/components/dashboard/ExpensesChart";
 import { RecentExpenses } from "@/components/dashboard/RecentExpenses";
 import { Expense } from "@/components/expenses/types";
 import { ExpenseForm } from "@/components/expenses/ExpenseForm";
-import { AddExpenseSheet } from "@/components/AddExpenseSheet";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { WalletBalanceCard } from "@/components/dashboard/wallet/WalletBalanceCard";
 

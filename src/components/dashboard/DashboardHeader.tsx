@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarIcon, SmilePlus, Rocket, MoneyBag } from "lucide-react";
+import { CalendarIcon, SmilePlus, Rocket, Wallet } from "lucide-react";
 
 interface DashboardHeaderProps {
   isNewUser: boolean;
@@ -100,12 +100,12 @@ export const DashboardHeader = ({
       
       // Warning financial status
       if (monthlyExpenses > monthlyIncome * 0.85 && monthlyExpenses < monthlyIncome) {
-        return <MoneyBag className="h-5 w-5 text-amber-500" />;
+        return <Wallet className="h-5 w-5 text-amber-500" />;
       }
       
       // Bad financial status
       if (monthlyExpenses > monthlyIncome) {
-        return <MoneyBag className="h-5 w-5 text-rose-500" />;
+        return <Wallet className="h-5 w-5 text-rose-500" />;
       }
     }
     
