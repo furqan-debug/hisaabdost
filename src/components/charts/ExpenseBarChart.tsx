@@ -10,12 +10,21 @@ import { motion } from "framer-motion";
 
 interface ExpenseBarChartProps {
   expenses: Expense[];
+  isLoading?: boolean;
 }
 
-export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
+export const ExpenseBarChart = ({ expenses, isLoading }: ExpenseBarChartProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const data = processMonthlyData(expenses);
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[250px] md:h-[300px]">
+        <p className="text-muted-foreground">Loading chart data...</p>
+      </div>
+    );
+  }
   
   // Filter out zero-value categories for cleaner display
   const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => {
