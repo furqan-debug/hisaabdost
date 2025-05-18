@@ -1,21 +1,17 @@
 
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/dashboard/stats/StatCard";
 import { AddFundsDialog } from "@/components/dashboard/wallet/AddFundsDialog";
 import { useWalletAdditions, type WalletAdditionInput } from "@/hooks/useWalletAdditions";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
-import React from "react";
-import { motion } from "framer-motion";
 
 interface WalletBalanceCardProps {
   walletBalance: number;
-  icon?: React.ReactNode;
-  className?: string;
 }
 
-export function WalletBalanceCard({ walletBalance, icon, className }: WalletBalanceCardProps) {
+export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
   const { currencyCode } = useCurrency();
   const { 
     totalAdditions, 
@@ -24,6 +20,14 @@ export function WalletBalanceCard({ walletBalance, icon, className }: WalletBala
     setIsAddFundsOpen, 
     isAdding 
   } = useWalletAdditions();
+  
+  const handleOpenAddFunds = () => {
+    setIsAddFundsOpen(true);
+  };
+
+  const handleCloseAddFunds = () => {
+    setIsAddFundsOpen(false);
+  };
 
   const handleAddFunds = (addition: WalletAdditionInput) => {
     addFunds(addition);
@@ -33,35 +37,23 @@ export function WalletBalanceCard({ walletBalance, icon, className }: WalletBala
     <>
       <StatCard
         title="Wallet Balance"
-        icon={icon}
         value={formatCurrency(walletBalance, currencyCode)}
-        className={className}
-        subtext={
-          totalAdditions > 0 ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xs text-emerald-600 dark:text-emerald-400 font-medium"
-            >
-              +{formatCurrency(totalAdditions, currencyCode)} this month
-            </motion.div>
-          ) : null
-        }
+        subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
         actionElement={
           <Button
-            variant="default"
+            variant="ghost"
             size="sm"
-            onClick={() => setIsAddFundsOpen(true)}
-            className="w-full justify-center text-xs font-medium"
+            onClick={handleOpenAddFunds}
+            className="text-primary hover:bg-primary/10 px-0"
           >
-            <PlusCircle className="w-3 h-3 mr-1" /> Add Funds
+            Add Funds
           </Button>
         }
       />
       
       <AddFundsDialog 
         isOpen={isAddFundsOpen}
-        onClose={() => setIsAddFundsOpen(false)}
+        onClose={handleCloseAddFunds}
         onAddFunds={handleAddFunds}
         isAdding={isAdding}
       />

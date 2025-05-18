@@ -41,9 +41,7 @@ const Layout = () => {
         isMobile={isMobile} 
         pageTransition={pageTransition}
       >
-        <div className="py-4">
-          <Outlet />
-        </div>
+        <Outlet />
       </LayoutContainer>
       {isMobile && <BottomNavigation />}
     </LayoutWrapper>

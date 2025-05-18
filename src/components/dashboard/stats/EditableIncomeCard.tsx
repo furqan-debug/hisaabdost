@@ -2,7 +2,7 @@
 import React from "react";
 import { StatCard } from "./StatCard";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { PercentageChange } from "./PercentageChange";
@@ -10,7 +10,6 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CurrencyCode } from "@/utils/currencyUtils";
-import { Pencil } from "lucide-react";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
@@ -18,8 +17,6 @@ interface EditableIncomeCardProps {
   percentageChange: number;
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
-  icon?: React.ReactNode;
-  className?: string;
 }
 
 export const EditableIncomeCard = ({
@@ -28,8 +25,6 @@ export const EditableIncomeCard = ({
   percentageChange,
   formatCurrency,
   currencyCode,
-  icon,
-  className,
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -71,28 +66,32 @@ export const EditableIncomeCard = ({
     }
   };
 
+  const changeDisplay = percentageChange !== 0 ? (
+    <PercentageChange value={percentageChange} />
+  ) : (
+    "No change from last month"
+  );
+
   return (
     <>
       <StatCard
         title="Monthly Income"
         value={formatCurrency(monthlyIncome, currencyCode)}
-        icon={icon}
-        subtext={percentageChange !== 0 ? <PercentageChange value={percentageChange} /> : null}
-        className={className}
+        subtext={changeDisplay}
         actionElement={
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setOpen(true)}
-            className="w-full justify-center text-xs font-medium"
+            className="text-primary hover:bg-primary/10 px-0"
           >
-            <Pencil className="w-3 h-3 mr-1" /> Edit Income
+            Edit Income
           </Button>
         }
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Monthly Income</DialogTitle>
           </DialogHeader>
@@ -105,6 +104,9 @@ export const EditableIncomeCard = ({
                 step="0.01"
                 min="0"
               />
+              <p className="text-sm text-muted-foreground">
+                Enter your monthly income before taxes and deductions.
+              </p>
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" type="button" onClick={() => setOpen(false)}>

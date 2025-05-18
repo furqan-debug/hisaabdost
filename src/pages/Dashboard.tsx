@@ -59,7 +59,7 @@ const Dashboard = () => {
       showAddExpense={showAddExpense}
       setShowAddExpense={setShowAddExpense}
       handleExpenseRefresh={handleExpenseRefresh}
-      chartType={chartType as "bar" | "line"}
+      chartType={chartType}
       setChartType={setChartType}
       walletBalance={walletBalance}
     />
