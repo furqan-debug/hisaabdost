@@ -1,12 +1,14 @@
-
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { StatCards } from "@/components/dashboard/StatCards";
-import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
-import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
-import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
+import { BalanceOverview } from "@/components/dashboard/BalanceOverview";
+import { Card, CardContent } from "@/components/ui/card";
+import { ExpensesChart } from "@/components/dashboard/ExpensesChart";
+import { RecentExpenses } from "@/components/dashboard/RecentExpenses";
+import { Expense } from "@/components/expenses/types";
+import { ExpenseForm } from "@/components/expenses/ExpenseForm";
+import { AddExpenseSheet } from "@/components/AddExpenseSheet";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
+import { WalletBalanceCard } from "@/components/dashboard/wallet/WalletBalanceCard";
 
 interface DashboardContentProps {
   isNewUser: boolean;
@@ -14,28 +16,27 @@ interface DashboardContentProps {
   totalBalance: number;
   monthlyExpenses: number;
   monthlyIncome: number;
-  setMonthlyIncome: (income: number) => void;
   savingsRate: number;
   formatPercentage: (value: number) => string;
-  expenses: any[];
+  expenses: Expense[];
   isExpensesLoading: boolean;
-  expenseToEdit: any;
-  setExpenseToEdit: (expense: any) => void;
+  expenseToEdit?: Expense;
+  setExpenseToEdit: React.Dispatch<React.SetStateAction<Expense | undefined>>;
   showAddExpense: boolean;
-  setShowAddExpense: (show: boolean) => void;
+  setShowAddExpense: React.Dispatch<React.SetStateAction<boolean>>;
   handleExpenseRefresh: () => void;
-  chartType: 'pie' | 'bar' | 'line';
-  setChartType: (type: 'pie' | 'bar' | 'line') => void;
+  chartType: "bar" | "line";
+  setChartType: (type: "bar" | "line") => void;
+  setMonthlyIncome: (income: number) => void;
   walletBalance: number;
 }
 
-export function DashboardContent({
+export const DashboardContent: React.FC<DashboardContentProps> = ({
   isNewUser,
   isLoading,
   totalBalance,
   monthlyExpenses,
   monthlyIncome,
-  setMonthlyIncome,
   savingsRate,
   formatPercentage,
   expenses,
@@ -47,89 +48,56 @@ export function DashboardContent({
   handleExpenseRefresh,
   chartType,
   setChartType,
-  walletBalance
-}: DashboardContentProps) {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 5 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.2, ease: "easeOut" }
-    }
-  };
+  walletBalance,
+  setMonthlyIncome
+}) => {
+  const [showBalanceCard, setShowBalanceCard] = useState(true);
 
   return (
-    <motion.div 
-      className="space-y-6 max-w-5xl mx-auto px-2 py-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={itemVariants}>
-        <DashboardHeader isNewUser={isNewUser} />
-      </motion.div>
+    <div className="flex flex-col space-y-6">
+      <DashboardHeader 
+        isNewUser={isNewUser} 
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        savingsRate={savingsRate}
+      />
       
-      <motion.div variants={itemVariants}>
-        <StatCards 
-          totalBalance={totalBalance}
-          monthlyExpenses={monthlyExpenses}
-          monthlyIncome={monthlyIncome}
-          setMonthlyIncome={setMonthlyIncome}
-          savingsRate={savingsRate}
-          formatPercentage={formatPercentage}
-          isNewUser={isNewUser}
-          isLoading={isLoading}
-          walletBalance={walletBalance}
-        />
-      </motion.div>
+      <BalanceOverview
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div variants={itemVariants} className="md:col-span-2">
-          <FinnyCard />
-        </motion.div>
+        {showBalanceCard && (
+          <WalletBalanceCard walletBalance={walletBalance} />
+        )}
 
-        <motion.div variants={itemVariants} className="md:col-span-1">
-          <AddExpenseButton 
-            isNewUser={isNewUser}
-            expenseToEdit={expenseToEdit}
-            showAddExpense={showAddExpense}
-            setExpenseToEdit={setExpenseToEdit}
-            setShowAddExpense={setShowAddExpense}
-            onAddExpense={handleExpenseRefresh}
-          />
-        </motion.div>
+        <Card className="md:col-span-2 bg-card/95 backdrop-blur-md border-border/30 shadow-sm">
+          <CardContent className="p-4">
+            <ExpensesChart
+              expenses={expenses}
+              isLoading={isExpensesLoading}
+              chartType={chartType}
+              setChartType={setChartType}
+            />
+          </CardContent>
+        </Card>
+
+        <FinnyCard />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <motion.div variants={itemVariants}>
-          <RecentExpensesCard 
-            expenses={expenses}
-            isNewUser={isNewUser}
-            isLoading={isExpensesLoading}
-            setExpenseToEdit={setExpenseToEdit}
-            setShowAddExpense={setShowAddExpense}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <ExpenseAnalyticsCard 
-            expenses={expenses}
-            isLoading={isExpensesLoading}
-            chartType={chartType}
-            setChartType={setChartType}
-          />
-        </motion.div>
-      </div>
-    </motion.div>
+      <RecentExpenses
+        expenses={expenses}
+        isLoading={isExpensesLoading}
+        expenseToEdit={expenseToEdit}
+        setExpenseToEdit={setExpenseToEdit}
+        setShowAddExpense={setShowAddExpense}
+        handleExpenseRefresh={handleExpenseRefresh}
+      />
+    </div>
   );
-}
+};
