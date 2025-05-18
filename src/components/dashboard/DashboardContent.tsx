@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceOverview } from "@/components/dashboard/BalanceOverview";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
   setMonthlyIncome
 }) => {
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-6 p-1">
       <DashboardHeader 
         isNewUser={isNewUser} 
         monthlyExpenses={monthlyExpenses}
@@ -71,7 +71,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
         walletBalance={walletBalance}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 bg-card/95 backdrop-blur-md border-border/30 shadow-sm">
           <CardContent className="p-4">
             <ExpensesChart

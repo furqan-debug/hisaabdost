@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useCurrency } from "@/hooks/use-currency";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
@@ -21,7 +20,7 @@ interface StatCardsProps {
   formatPercentage: (value: number) => string;
   isNewUser: boolean;
   isLoading?: boolean;
-  walletBalance: number;
+  className?: string;
 }
 
 export const StatCards = ({
@@ -33,9 +32,8 @@ export const StatCards = ({
   formatPercentage,
   isNewUser,
   isLoading = false,
-  walletBalance,
+  className = "",
 }: StatCardsProps) => {
-  const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const { selectedMonth } = useMonthContext();
   
@@ -44,7 +42,7 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+      <div className={`grid gap-4 grid-cols-1 md:grid-cols-3 ${className}`}>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-32" />
         ))}
@@ -53,12 +51,13 @@ export const StatCards = ({
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-3 p-1">
+    <div className={`grid gap-4 grid-cols-1 md:grid-cols-3 ${className}`}>
       <StatCard
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
         icon={<TrendingDown className="h-4 w-4 text-rose-500 mb-1" />}
         subtext={<PercentageChange value={percentageChanges.expenses} inverse={true} />}
+        className="bg-gradient-to-br from-card to-card/95 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200"
       />
 
       <EditableIncomeCard
@@ -68,6 +67,7 @@ export const StatCards = ({
         formatCurrency={formatCurrency}
         currencyCode={currencyCode}
         icon={<BadgeDollarSign className="h-4 w-4 text-primary mb-1" />}
+        className="bg-gradient-to-br from-card to-card/95 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200"
       />
 
       <StatCard
@@ -75,6 +75,7 @@ export const StatCards = ({
         value={formatPercentage(savingsRate)}
         icon={<PiggyBank className="h-4 w-4 text-emerald-500 mb-1" />}
         subtext={<PercentageChange value={percentageChanges.savings} />}
+        className="bg-gradient-to-br from-card to-card/95 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200"
       />
     </div>
   );
