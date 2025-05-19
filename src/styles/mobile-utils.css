@@ -171,6 +171,11 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* New: Safe area adjustment for top status bar */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
 /* Prevent scrolling when splash screen is active */
 .no-scroll {
   overflow: hidden !important;

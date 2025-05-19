@@ -24,7 +24,12 @@ const config: CapacitorConfig = {
     // Improve scroll performance
     overscrollHistory: false,
     // Optimize hardware acceleration
-    hardwareAcceleration: "all"
+    hardwareAcceleration: "all",
+    // Handle status bar properly
+    navigationBarColor: "#ffffff",
+    statusBarStyle: "dark",
+    statusBarBackgroundColor: "#ffffff",
+    statusBarOverlaysWebView: true
   },
   // Enable persistent data caching and push notifications
   plugins: {
@@ -38,6 +43,13 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
+    },
+    // Add status bar configuration
+    StatusBar: {
+      style: "dark",
+      backgroundColor: "#ffffff",
+      overlaysWebView: true,
+      animated: true
     }
   }
 };
