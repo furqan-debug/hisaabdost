@@ -143,7 +143,7 @@ const FinnyChat = ({
           }}
         >
           <Card className="finny-chat-card flex flex-col h-full">
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full keyboard-aware">
               <div className="flex-none">
                 <ChatHeader onClose={onClose} onReset={resetChat} />
               </div>

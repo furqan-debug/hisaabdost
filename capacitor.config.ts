@@ -29,7 +29,9 @@ const config: CapacitorConfig = {
     navigationBarColor: "#ffffff",
     statusBarStyle: "dark",
     statusBarBackgroundColor: "#ffffff",
-    statusBarOverlaysWebView: true
+    statusBarOverlaysWebView: true,
+    // Add keyboard resize mode for better input handling
+    resizeOnFullScreen: true
   },
   // Enable persistent data caching and push notifications
   plugins: {
@@ -50,6 +52,12 @@ const config: CapacitorConfig = {
       backgroundColor: "#ffffff",
       overlaysWebView: true,
       animated: true
+    },
+    // Add keyboard configuration for better input visibility
+    Keyboard: {
+      resize: true,
+      resizeOnFullScreen: true,
+      style: "dark"
     }
   }
 };

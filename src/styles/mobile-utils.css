@@ -123,6 +123,33 @@
     width: 100%;
     z-index: 10;
   }
+  
+  /* Keyboard visibility fixes */
+  input[type="text"],
+  textarea {
+    position: relative;
+    z-index: 5;
+  }
+  
+  /* Avoid keyboard overlap */
+  .keyboard-avoid {
+    position: sticky;
+    bottom: 0;
+    z-index: 99;
+  }
+  
+  /* Adjust content when keyboard is open */
+  .keyboard-aware {
+    position: relative;
+  }
+  
+  /* Chat input visibility fix */
+  .chat-input-visible {
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    background-color: var(--background);
+  }
 }
 
 /* Remove scrollbar but keep functionality */
@@ -209,6 +236,17 @@
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
   }
+  
+  /* Improve input visibility when keyboard is open */
+  .ios-keyboard-open .finny-chat-input,
+  .android-keyboard-open .finny-chat-input {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+    z-index: 9999;
+  }
 }
 
 /* Scrollable area with momentum */
@@ -231,4 +269,24 @@
 
 .touch-scroll::-webkit-scrollbar {
   display: none !important;
+}
+
+/* Ensure input is visible when keyboard is open */
+.android-input-fix {
+  position: relative; 
+  z-index: 999;
+  background-color: var(--background);
+}
+
+/* Android keyboard adjustment */
+.android-keyboard-open .chat-container {
+  height: calc(100vh - var(--keyboard-height, 0px)) !important;
+  overflow-y: auto;
+}
+
+/* Dynamic height adjustment for keyboard */
+@supports (height: 100dvh) {
+  .dynamic-height-container {
+    height: 100dvh;
+  }
 }
