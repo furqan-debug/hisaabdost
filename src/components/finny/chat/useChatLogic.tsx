@@ -20,15 +20,19 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useFinny } from '../context/FinnyContext';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
-export const useChatLogic = (queuedMessage: string | null) => {
+export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: CurrencyCode) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const { currencyCode } = useCurrency();
+  const { currencyCode: contextCurrencyCode } = useCurrency();
   const { remainingDailyMessages, isMessageLimitReached } = useFinny();
+  
+  // Use the passed currency code if provided, otherwise use the one from context
+  const currencyCode = userCurrencyCode || contextCurrencyCode;
 
   const {
     messages,
@@ -160,6 +164,7 @@ export const useChatLogic = (queuedMessage: string | null) => {
         specificCategory = deleteGoalMatch[1].trim();
       }
 
+      console.log(`Using currency ${currencyCode} for Finny chat`);
       const data = await processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode);
       
       setIsTyping(false);

@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SendHorizontal } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCurrency } from '@/hooks/use-currency';
+import { getCurrencyByCode } from '@/utils/currencyUtils';
 
 interface ChatInputProps {
   value: string;
@@ -27,6 +29,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
+  const currencySymbol = getCurrencyByCode(currencyCode).symbol;
 
   // Calculate final disabled state
   const isDisabled = disabled || isLoading || isConnecting || !isAuthenticated;

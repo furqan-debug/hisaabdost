@@ -21,8 +21,19 @@ const FinnyMessage = React.memo(({
   timestamp, 
   hasAction
 }: FinnyMessageProps) => {
+  const { currencyCode } = useCurrency();
+  
   // Remove any action markers from the message content for display
-  const formattedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
+  const formattedContent = useMemo(() => {
+    // Replace any USD currency symbols with the proper currency symbol based on selected currency
+    let processedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
+    
+    // Check for success/error indicators
+    const isSuccess = processedContent.includes('✅');
+    const isError = processedContent.includes('❌');
+
+    return processedContent;
+  }, [content, currencyCode]);
   
   // Check for success/error indicators
   const isSuccess = formattedContent.includes('✅');

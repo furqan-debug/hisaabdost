@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { updateQuickRepliesForResponse } from './quickReplyService';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 export async function processMessageWithAI(
   messageToSend: string,
@@ -9,7 +10,7 @@ export async function processMessageWithAI(
   recentMessages: Message[],
   analysisType = "general",
   specificCategory: string | null = null,
-  currencyCode = 'USD'
+  currencyCode: CurrencyCode = 'USD'
 ) {
   if (!userId) {
     console.error("Cannot process AI message: User ID is null or undefined");
@@ -29,8 +30,13 @@ export async function processMessageWithAI(
       userId,
       userProfileFound: !!userProfile,
       analysisType,
-      specificCategory
+      specificCategory,
+      currencyCode,
+      profileCurrency: userProfile?.preferred_currency
     });
+    
+    // Always use the passed currencyCode, but if not provided, fall back to profile preferred_currency
+    const effectiveCurrencyCode = currencyCode || userProfile?.preferred_currency || 'USD';
       
     const { data, error } = await supabase.functions.invoke('finny-chat', {
       body: {
@@ -39,7 +45,7 @@ export async function processMessageWithAI(
         chatHistory: recentMessages,
         analysisType,
         specificCategory,
-        currencyCode: userProfile?.preferred_currency || currencyCode,
+        currencyCode: effectiveCurrencyCode,
         userName: userProfile?.full_name,
         userAge: userProfile?.age,
         userGender: userProfile?.gender,
@@ -51,7 +57,7 @@ export async function processMessageWithAI(
       throw new Error(`Failed to get response: ${error.message}`);
     }
     
-    console.log('Finny response received:', data);
+    console.log('Finny response received with currency:', effectiveCurrencyCode);
     
     // Check if the response indicates an expense was added
     if (data.action && data.action.type === 'add_expense') {
