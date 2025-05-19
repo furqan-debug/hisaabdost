@@ -93,6 +93,11 @@ export function DashboardContent({
         />
       </motion.div>
 
+      {/* Swapped order: First FinnyCard (Talk to Finny) then AddExpenseButton */}
+      <motion.div variants={itemVariants}>
+        <FinnyCard />
+      </motion.div>
+
       <motion.div variants={itemVariants}>
         <AddExpenseButton 
           isNewUser={isNewUser}
@@ -102,10 +107,6 @@ export function DashboardContent({
           setShowAddExpense={setShowAddExpense}
           onAddExpense={handleExpenseRefresh}
         />
-      </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <FinnyCard />
       </motion.div>
 
       <motion.div variants={itemVariants}>
