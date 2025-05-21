@@ -89,6 +89,18 @@ export const ExpenseRow = memo(function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
+          {/* Add a receipt icon indicator if receipt is available */}
+          {expense.receiptUrl && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleViewReceipt}
+            >
+              <FileImage className="h-4 w-4 text-muted-foreground" />
+              <span className="sr-only">View Receipt</span>
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
