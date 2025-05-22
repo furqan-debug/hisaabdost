@@ -87,7 +87,9 @@ const AddExpenseSheet = ({
           processReceiptFile(initialFile).catch(err => {
             console.error("Error processing receipt file:", err);
             setProcessingError("Failed to process receipt image");
-            processingFiles.delete(fingerprint);
+            if (initialFileFingerprint.current) {
+              processingFiles.delete(initialFileFingerprint.current);
+            }
           });
         }, 100);
         
@@ -155,7 +157,7 @@ const AddExpenseSheet = ({
       onAddExpense(); // Call without arguments to trigger a general refresh
     }
     
-    // Close the sheet after a delay
+    // Close the sheet automatically after a delay
     setTimeout(() => {
       if (onOpenChange) {
         onOpenChange(false);
@@ -163,7 +165,7 @@ const AddExpenseSheet = ({
       if (onClose) {
         onClose();
       }
-    }, 1000);
+    }, 1500);
   };
 
   // Handle sheet close

@@ -58,10 +58,10 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
-    refetchInterval: 5000,
+    refetchInterval: 5000, // Poll every 5 seconds
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 0,
+    staleTime: 0, // Always consider data stale to ensure fresh data
   });
 
   const {
@@ -91,6 +91,7 @@ const Expenses = () => {
 
   const handleExpenseAdded = () => {
     refetch();
+    // Add a second refetch with delay to catch any pending database operations
     setTimeout(() => {
       refetch();
       triggerRefresh();
@@ -121,9 +122,11 @@ const Expenses = () => {
     exportExpensesToPDF(filteredExpenses);
   };
 
+  // Listen for receipt scanning and expense update events
   useEffect(() => {
-    const handleReceiptScan = () => {
-      console.log("Receipt scan detected, refreshing expenses list");
+    const handleReceiptScan = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("Receipt scan detected, refreshing expenses list", customEvent.detail);
       refetch();
       setTimeout(() => {
         refetch();
@@ -131,8 +134,9 @@ const Expenses = () => {
       }, 1000);
     };
     
-    const handleExpensesUpdated = () => {
-      console.log("Expenses updated event detected, refreshing list");
+    const handleExpensesUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("Expenses updated event detected, refreshing list", customEvent.detail);
       refetch();
       setTimeout(() => {
         refetch();
@@ -143,6 +147,7 @@ const Expenses = () => {
     window.addEventListener('receipt-scanned', handleReceiptScan);
     window.addEventListener('expenses-updated', handleExpensesUpdated);
     
+    // Initial fetch
     refetch();
     
     return () => {
