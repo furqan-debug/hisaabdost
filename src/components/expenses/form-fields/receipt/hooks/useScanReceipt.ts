@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
-import { saveExpenseFromScan } from '../services/expenseDbService';
+import { processScanResults } from '../utils/processScanUtils';
 import { toast } from 'sonner';
 import { selectMainItem } from '../utils/itemSelectionUtils';
 
@@ -77,14 +77,14 @@ export function useScanReceipt({
     setScanTimedOut(true);
     setIsScanning(false);
     setIsAutoProcessing(false);
-    toast.error("Receipt scan timed out. Please try again.");
+    toast.error("Receipt scan timed out. Using fallback data.");
   }, []);
   
   const errorScan = useCallback((message: string) => {
     setScanError(message);
     setIsScanning(false);
     setIsAutoProcessing(false);
-    toast.error("Error scanning receipt: " + message);
+    toast.error("Using fallback data: " + message);
   }, []);
   
   const endScan = useCallback(() => {
@@ -115,10 +115,25 @@ export function useScanReceipt({
         onError: errorScan
       });
       
-      if (scanResults?.success && scanResults.items && scanResults.items.length > 0) {
+      // Always process the results, even if there were errors or timeouts
+      // We're now always returning success=true from scanReceipt with fallback data
+      if (scanResults) {
         updateProgress(90, "Extracting expense information...");
         
-        const mainItem = selectMainItem(scanResults.items);
+        // Include the receiptUrl in the scan results if it's not already there
+        if (!scanResults.receiptUrl && receiptUrl) {
+          scanResults.receiptUrl = receiptUrl;
+        }
+        
+        // If we have items, ensure each item has the receiptUrl
+        if (scanResults.items) {
+          scanResults.items = scanResults.items.map(item => ({
+            ...item,
+            receiptUrl: item.receiptUrl || scanResults.receiptUrl
+          }));
+        }
+        
+        const mainItem = selectMainItem(scanResults.items || []);
         const currentDate = new Date().toISOString().split('T')[0];
         
         // Always prioritize the current date if no date was found
@@ -142,7 +157,7 @@ export function useScanReceipt({
           try {
             updateProgress(95, "Saving expenses to database...");
             
-            if (processAllItems && scanResults.items.length >= 1) {
+            if (processAllItems && scanResults.items && scanResults.items.length >= 1) {
               // Always process all items from the receipt
               const receiptData = {
                 items: scanResults.items,
@@ -151,7 +166,7 @@ export function useScanReceipt({
                 receiptUrl: scanResults.receiptUrl
               };
               
-              const saveSuccess = await saveExpenseFromScan(receiptData);
+              const saveSuccess = await processScanResults(receiptData, true, onCapture, setOpen);
               
               if (saveSuccess) {
                 updateProgress(100, "All expenses saved successfully!");
@@ -205,16 +220,7 @@ export function useScanReceipt({
           setProcessingComplete(true);
           return true;
         }
-      } else if (scanResults?.isTimeout) {
-        timeoutScan();
-        return false;
-      } else if (scanResults?.error) {
-        errorScan(scanResults.error);
-        return false;
-      } else {
-        errorScan("Failed to extract data from receipt");
-        return false;
-      }
+      } 
     } catch (error) {
       console.error("Error in receipt scanning:", error);
       errorScan("An unexpected error occurred");
