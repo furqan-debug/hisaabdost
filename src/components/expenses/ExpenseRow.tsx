@@ -58,6 +58,9 @@ export const ExpenseRow = memo(function ExpenseRow({
     toggleExpenseSelection(expense.id);
   }, [expense.id, toggleExpenseSelection]);
   
+  // Check if the expense has a receipt
+  const hasReceipt = Boolean(expense.receiptUrl);
+  
   return (
     <TableRow>
       <TableCell className="w-[30px]">
@@ -89,15 +92,16 @@ export const ExpenseRow = memo(function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
-          {/* Add a receipt icon indicator if receipt is available */}
-          {expense.receiptUrl && (
+          {/* Receipt icon indicator - Make it more visible and clickable */}
+          {hasReceipt && (
             <Button 
               variant="ghost" 
               size="icon"
               className="h-8 w-8"
               onClick={handleViewReceipt}
+              title="View Receipt"
             >
-              <FileImage className="h-4 w-4 text-muted-foreground" />
+              <FileImage className="h-4 w-4 text-primary" />
               <span className="sr-only">View Receipt</span>
             </Button>
           )}
@@ -108,7 +112,8 @@ export const ExpenseRow = memo(function ExpenseRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {expense.receiptUrl && (
+              {/* Always show View Receipt option when receipt exists */}
+              {hasReceipt && (
                 <DropdownMenuItem onClick={handleViewReceipt}>
                   <FileImage className="h-4 w-4 mr-2" />
                   View Receipt
@@ -129,7 +134,8 @@ export const ExpenseRow = memo(function ExpenseRow({
           </DropdownMenu>
         </div>
 
-        {expense.receiptUrl && (
+        {/* Only render the dialog component when there's a receipt */}
+        {hasReceipt && expense.receiptUrl && (
           <ViewReceiptDialog 
             receiptUrl={expense.receiptUrl} 
             open={receiptDialogOpen}
