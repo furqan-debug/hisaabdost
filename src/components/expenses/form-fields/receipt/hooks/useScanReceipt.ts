@@ -1,20 +1,9 @@
 
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
-import { saveExpenseFromScan } from '../services/expenseDbService';
+import { processScanResults } from '../utils/processScanUtils';
 import { toast } from 'sonner';
 import { selectMainItem } from '../utils/itemSelectionUtils';
-
-interface ScanResult {
-  date?: string;
-  total?: string;
-  items?: any[];
-  merchant?: string;
-  receiptUrl?: string;
-  success?: boolean;
-  isTimeout?: boolean;
-  error?: string;
-}
 
 interface UseScanReceiptProps {
   file: File | null;
@@ -39,7 +28,7 @@ export function useScanReceipt({
   setOpen,
   autoSave = true,
   onSuccess,
-  processAllItems = true // Changed to true by default to ensure automatic processing
+  processAllItems = true
 }: UseScanReceiptProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
@@ -107,7 +96,7 @@ export function useScanReceipt({
     const receiptUrl = file ? URL.createObjectURL(file) : undefined;
     
     try {
-      const scanResults: ScanResult = await scanReceipt({
+      const scanResults = await scanReceipt({
         file,
         receiptUrl,
         onProgress: updateProgress,
@@ -143,40 +132,21 @@ export function useScanReceipt({
             updateProgress(95, "Saving expenses to database...");
             
             if (processAllItems && scanResults.items.length >= 1) {
-              // Always process all items from the receipt
-              const receiptData = {
-                items: scanResults.items,
-                merchant: scanResults.merchant || mainItem.description || "Store",
-                date: scanResults.date || currentDate,
-                receiptUrl: scanResults.receiptUrl
-              };
+              // Process all items from the receipt
+              const success = await processScanResults(
+                scanResults,
+                true,
+                onCapture,
+                setOpen
+              );
               
-              const saveSuccess = await saveExpenseFromScan(receiptData);
-              
-              if (saveSuccess) {
+              if (success) {
                 updateProgress(100, "All expenses saved successfully!");
                 setProcessingComplete(true);
                 
                 if (onSuccess) {
                   onSuccess();
                 }
-                
-                // Dispatch event to refresh expense list
-                const event = new CustomEvent('receipt-scanned', { 
-                  detail: { items: scanResults.items, timestamp: Date.now() } 
-                });
-                window.dispatchEvent(event);
-                
-                // Also dispatch the standard expenses-updated event
-                const updateEvent = new CustomEvent('expenses-updated', { 
-                  detail: { timestamp: Date.now() } 
-                });
-                window.dispatchEvent(updateEvent);
-                
-                // Close the dialog automatically after successful processing
-                setTimeout(() => {
-                  setOpen(false);
-                }, 1500);
                 
                 return true;
               } else {

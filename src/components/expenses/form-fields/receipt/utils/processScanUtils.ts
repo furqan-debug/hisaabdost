@@ -4,11 +4,24 @@ import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define the ScanResult interface to match the actual data structure
+export interface ScanResult {
+  success: boolean;
+  date?: string;
+  items?: any[];
+  total?: string;
+  merchant?: string;
+  receiptUrl?: string;
+  error?: string;
+  isTimeout?: boolean;
+  warning?: string;
+}
+
 /**
  * Process the results of the receipt scan
  */
 export async function processScanResults(
-  scanResult: any,
+  scanResult: ScanResult,
   autoSave: boolean,
   onCapture?: (expenseDetails: {
     description: string;
@@ -47,7 +60,7 @@ export async function processScanResults(
   
   // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
-    description: item.name || item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
+    description: item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
     date: formatDate(item.date || validatedReceiptDate),
     category: item.category || "Food", // Default to Food if no category

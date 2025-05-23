@@ -74,22 +74,24 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     const arrayBuffer = await file.arrayBuffer();
     const base64Image = bufferToBase64(arrayBuffer);
 
+    console.log(`Processing receipt image with OpenAI: ${file.name} (${file.size} bytes)`);
+
     const prompt = `Extract receipt information as JSON in this format:
 {
   "date": "YYYY-MM-DD",
+  "merchant": "Store Name",
   "items": [
     {
       "description": "item name",
       "amount": "0.00",
-      "category": "category",
-      "date": "YYYY-MM-DD",
-      "paymentMethod": "Card"
+      "category": "category"
     }
-  ]
+  ],
+  "total": "0.00"
 }`;
 
     const requestBody = {
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o", // Using gpt-4o for vision capabilities
       messages: [
         {
           role: "user",
@@ -124,6 +126,7 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
 
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content || "";
+    console.log("OpenAI raw response:", content.substring(0, 200) + "...");
 
     const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
                       content.match(/```\s*([\s\S]*?)\s*```/) ||
@@ -133,10 +136,12 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     if (!jsonString) throw new Error("No JSON found in response");
 
     const parsed = JSON.parse(jsonString);
+    console.log("Parsed receipt data:", JSON.stringify(parsed).substring(0, 200) + "...");
 
+    // Ensure items array exists
     if (!parsed.items || !Array.isArray(parsed.items)) {
       parsed.items = [{
-        description: "Unknown Item",
+        description: parsed.merchant || "Store Purchase",
         amount: parsed.total || "0.00",
         category: "Other",
         date: parsed.date || new Date().toISOString().split('T')[0],
@@ -148,22 +153,35 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     parsed.items = parsed.items.map((item: any) => ({
       ...item,
       category: normalizeCategory(item.category),
-      amount: parseFloat(item.amount || "0").toFixed(2)
+      amount: parseFloat(item.amount || "0").toFixed(2),
+      date: parsed.date || new Date().toISOString().split('T')[0],
+      paymentMethod: "Card"
     }));
 
-    return parsed;
+    // Add receipt URL placeholder (will be replaced later)
+    parsed.receiptUrl = "pending_upload";
+    
+    return {
+      ...parsed,
+      success: true
+    };
 
   } catch (error) {
-    console.error("Final fallback - returning default receipt structure:", error);
+    console.error("OpenAI processing failed - returning default receipt structure:", error);
+    const currentDate = new Date().toISOString().split('T')[0];
     return {
-      date: new Date().toISOString().split('T')[0],
+      date: currentDate,
+      merchant: "Store",
       items: [{
         description: "Store Purchase",
         amount: "0.00",
         category: "Other",
-        date: new Date().toISOString().split('T')[0],
+        date: currentDate,
         paymentMethod: "Card"
-      }]
+      }],
+      total: "0.00",
+      success: false,
+      error: error.message || "Unknown error in receipt processing"
     };
   }
 }
