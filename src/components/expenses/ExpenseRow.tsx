@@ -112,13 +112,6 @@ export const ExpenseRow = memo(function ExpenseRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {/* Always show View Receipt option when receipt exists */}
-              {hasReceipt && (
-                <DropdownMenuItem onClick={handleViewReceipt}>
-                  <FileImage className="h-4 w-4 mr-2 text-primary" />
-                  View Receipt
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
