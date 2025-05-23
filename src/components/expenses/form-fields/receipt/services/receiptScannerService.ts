@@ -1,5 +1,6 @@
 
 import { ScanResult, processScanResults } from '../utils/processScanUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScanOptions {
   file: File | null;
@@ -34,9 +35,6 @@ export async function scanReceipt({
     formData.append('retry', '0');
     formData.append('enhanced', 'true'); // Request enhanced processing
 
-    // Get Supabase URL from the window location
-    const supabaseUrl = getScanEndpoint();
-
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
     // Start a timer for the scan
@@ -51,27 +49,28 @@ export async function scanReceipt({
       }, timeoutDuration);
     });
 
-    // Fetch promise
-    const fetchPromise = fetch(supabaseUrl, {
-      method: 'POST',
+    // Use Supabase client to call the edge function with proper authentication
+    const fetchPromise = supabase.functions.invoke('scan-receipt', {
       body: formData,
+      headers: {
+        'X-Processing-Level': 'high',
+      }
     }).then(async (response) => {
       // Update progress based on response status
       if (onProgress) onProgress(60, "Processing receipt text...");
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Scan API error:", response.status, errorText);
-        if (onError) onError(`Server error: ${response.status}`);
+      if (response.error) {
+        console.error("Scan API error:", response.error);
+        if (onError) onError(`Server error: ${response.error.message}`);
         return { 
           success: false, 
-          error: `Server error: ${response.status}`,
+          error: `Server error: ${response.error.message}`,
           receiptUrl
         };
       }
 
       try {
-        const data = await response.json();
+        const data = response.data;
         console.log("Receipt scan API response:", data);
 
         if (data.isTimeout) {
@@ -150,20 +149,4 @@ export async function scanReceipt({
       receiptUrl
     };
   }
-}
-
-/**
- * Get the scan endpoint URL dynamically
- */
-function getScanEndpoint(): string {
-  // Get the hostname
-  const host = window.location.hostname;
-  
-  // If we're on localhost, use the dev endpoint
-  if (host === 'localhost' || host === '127.0.0.1') {
-    return 'https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt';
-  }
-  
-  // In production, use the project's domain
-  return 'https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt';
 }
