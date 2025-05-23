@@ -1,3 +1,4 @@
+
 // This service handles the OCR processing using OpenAI's API
 import { processReceiptWithOpenAI } from "./openaiService.ts";
 
@@ -14,56 +15,17 @@ export async function runOCR(file: File, apiKey: string): Promise<any> {
       throw new Error(`Invalid file type: ${file.type}. Only image files are supported.`);
     }
     
-    // First determine if this looks like common receipt types
-    const fileSize = file.size;
-    const fileName = file.name.toLowerCase();
-    
-    // Check if it's a known receipt type based on simple heuristics
-    const isKnownReceipt = 
-      fileName.includes('receipt') || 
-      fileName.includes('invoice') || 
-      (fileSize > 50000 && fileSize < 2000000); // Typical receipt image size range
-    
-    // If it looks like a common receipt type but is very small, use quick mock data
-    if (isKnownReceipt && fileSize < 50000) {
-      console.log("Detected small receipt image, using optimized processing path");
-      return getMockReceiptData();
-    }
-    
-    // Otherwise process the receipt image using GPT-4o vision
-    console.log("Processing receipt with GPT-4o");
+    // Process the receipt image using OpenAI Vision API
     const results = await processReceiptWithOpenAI(file, apiKey);
     
     if (!results) {
       throw new Error("OCR processing failed to return results");
     }
     
-    console.log("OCR processing successful:", results);
+    console.log("OCR processing successful");
     return results;
   } catch (error) {
     console.error("OCR failed:", error);
-    // Return fallback data instead of throwing
-    return getMockReceiptData();
+    throw error;
   }
-}
-
-// Provide reasonable fallback data when OCR fails
-function getMockReceiptData() {
-  const today = new Date().toISOString().split('T')[0];
-  
-  return {
-    date: today,
-    merchant: "Store",
-    total: "15.99",
-    items: [
-      {
-        description: "Store Purchase",
-        amount: "15.99",
-        category: "Shopping",
-        date: today,
-        paymentMethod: "Card"
-      }
-    ],
-    success: true
-  };
 }

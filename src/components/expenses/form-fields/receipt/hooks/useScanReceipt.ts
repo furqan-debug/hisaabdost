@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
-import { processScanResults } from '../utils/processScanUtils';
+import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { selectMainItem } from '../utils/itemSelectionUtils';
 
@@ -9,7 +9,7 @@ interface ScanResult {
   date?: string;
   total?: string;
   items?: any[];
-  merchant?: string;
+  merchant?: string;  // Add merchant property to the interface
   receiptUrl?: string;
   success?: boolean;
   isTimeout?: boolean;
@@ -39,7 +39,7 @@ export function useScanReceipt({
   setOpen,
   autoSave = true,
   onSuccess,
-  processAllItems = true // Changed to true by default to ensure automatic processing
+  processAllItems = false
 }: UseScanReceiptProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isAutoProcessing, setIsAutoProcessing] = useState(false);
@@ -77,14 +77,14 @@ export function useScanReceipt({
     setScanTimedOut(true);
     setIsScanning(false);
     setIsAutoProcessing(false);
-    toast.error("Receipt scan timed out. Using fallback data.");
+    toast.error("Receipt scan timed out. Please try again.");
   }, []);
   
   const errorScan = useCallback((message: string) => {
     setScanError(message);
     setIsScanning(false);
     setIsAutoProcessing(false);
-    toast.error("Using fallback data: " + message);
+    toast.error("Error scanning receipt: " + message);
   }, []);
   
   const endScan = useCallback(() => {
@@ -95,12 +95,12 @@ export function useScanReceipt({
   const handleScanReceipt = useCallback(async () => {
     if (!file) {
       toast.error("No receipt file selected");
-      return false;
+      return;
     }
     
     if (isScanning) {
       toast.info("Scan already in progress");
-      return false;
+      return;
     }
     
     startScan();
@@ -115,31 +115,16 @@ export function useScanReceipt({
         onError: errorScan
       });
       
-      // Always process the results, even if there were errors or timeouts
-      // We're now always returning success=true from scanReceipt with fallback data
-      if (scanResults) {
+      if (scanResults?.success && scanResults.items && scanResults.items.length > 0) {
         updateProgress(90, "Extracting expense information...");
         
-        // Include the receiptUrl in the scan results if it's not already there
-        if (!scanResults.receiptUrl && receiptUrl) {
-          scanResults.receiptUrl = receiptUrl;
-        }
-        
-        // If we have items, ensure each item has the receiptUrl
-        if (scanResults.items) {
-          scanResults.items = scanResults.items.map(item => ({
-            ...item,
-            receiptUrl: item.receiptUrl || scanResults.receiptUrl
-          }));
-        }
-        
-        const mainItem = selectMainItem(scanResults.items || []);
+        const mainItem = selectMainItem(scanResults.items);
         const currentDate = new Date().toISOString().split('T')[0];
         
         // Always prioritize the current date if no date was found
         let expenseDetails = {
-          description: mainItem.description || scanResults.merchant || "Store Purchase",
-          amount: mainItem.amount || scanResults.total || "0.00",
+          description: mainItem.description || "Store Purchase",
+          amount: mainItem.amount || "0.00",
           date: mainItem.date || scanResults.date || currentDate,
           category: mainItem.category || "Other",
           paymentMethod: mainItem.paymentMethod || "Card",
@@ -157,16 +142,14 @@ export function useScanReceipt({
           try {
             updateProgress(95, "Saving expenses to database...");
             
-            if (processAllItems && scanResults.items && scanResults.items.length >= 1) {
-              // Always process all items from the receipt
+            if (processAllItems && scanResults.items.length > 1) {
               const receiptData = {
                 items: scanResults.items,
                 merchant: scanResults.merchant || mainItem.description || "Store",
-                date: scanResults.date || currentDate,
-                receiptUrl: scanResults.receiptUrl
+                date: scanResults.date || currentDate
               };
               
-              const saveSuccess = await processScanResults(receiptData, true, onCapture, setOpen);
+              const saveSuccess = await saveExpenseFromScan(receiptData);
               
               if (saveSuccess) {
                 updateProgress(100, "All expenses saved successfully!");
@@ -176,28 +159,13 @@ export function useScanReceipt({
                   onSuccess();
                 }
                 
-                // Dispatch event to refresh expense list
                 const event = new CustomEvent('receipt-scanned', { 
                   detail: { items: scanResults.items, timestamp: Date.now() } 
                 });
                 window.dispatchEvent(event);
-                
-                // Also dispatch the standard expenses-updated event
-                const updateEvent = new CustomEvent('expenses-updated', { 
-                  detail: { timestamp: Date.now() } 
-                });
-                window.dispatchEvent(updateEvent);
-                
-                // Close the dialog automatically after successful processing
-                setTimeout(() => {
-                  setOpen(false);
-                }, 1500);
-                
-                return true;
               } else {
-                updateProgress(100, "Failed to save all expenses");
+                updateProgress(100, "Failed to save all expenses, but form updated");
                 errorScan("Failed to save expenses to database");
-                return false;
               }
             } else {
               if (onCapture) {
@@ -206,30 +174,30 @@ export function useScanReceipt({
               
               updateProgress(100, "Receipt processed successfully!");
               setProcessingComplete(true);
-              return true;
             }
           } catch (error) {
             console.error("Error saving expenses:", error);
             updateProgress(100, "Error saving to database");
             errorScan("Failed to save to database");
-            return false;
           }
         } else if (onCapture) {
           onCapture(expenseDetails);
           updateProgress(100, "Receipt processed successfully!");
           setProcessingComplete(true);
-          return true;
         }
-      } 
+      } else if (scanResults?.isTimeout) {
+        timeoutScan();
+      } else if (scanResults?.error) {
+        errorScan(scanResults.error);
+      } else {
+        errorScan("Failed to extract data from receipt");
+      }
     } catch (error) {
       console.error("Error in receipt scanning:", error);
       errorScan("An unexpected error occurred");
-      return false;
     } finally {
       endScan();
     }
-    
-    return false;
   }, [
     file,
     isScanning,
@@ -241,12 +209,11 @@ export function useScanReceipt({
     onCapture,
     onSuccess,
     endScan,
-    processAllItems,
-    setOpen
+    processAllItems
   ]);
   
   const autoProcessReceipt = useCallback(() => {
-    return handleScanReceipt();
+    handleScanReceipt();
   }, [handleScanReceipt]);
   
   return {

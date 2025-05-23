@@ -1,5 +1,6 @@
 
 import { formatDate } from './dateUtils';
+import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,26 +21,10 @@ export async function processScanResults(
 ): Promise<boolean> {
   console.log("Processing scan result:", scanResult);
   
-  // Always ensure we have an items array, even if empty
-  if (!scanResult || !scanResult.items) {
-    scanResult = {
-      ...scanResult,
-      items: []
-    };
-  }
-  
-  // If empty items, create a default one
-  if (scanResult.items.length === 0) {
-    console.log("No items found in scan result, creating default item");
-    
-    scanResult.items = [{
-      description: scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase",
-      amount: scanResult.total?.toString() || "0.00",
-      date: scanResult.date || new Date().toISOString().split('T')[0],
-      category: "Food",
-      paymentMethod: "Card",
-      receiptUrl: scanResult.receiptUrl || null
-    }];
+  if (!scanResult || !scanResult.items || scanResult.items.length === 0) {
+    console.log("No items found in scan result");
+    toast.error("No items found in receipt");
+    return false;
   }
   
   // Get current date in YYYY-MM-DD format for default date value
@@ -60,14 +45,14 @@ export async function processScanResults(
     console.log(`Receipt date year ${receiptYear} out of reasonable range, using today's date instead`);
   }
   
-  // Format all items for saving, ensuring all required fields are present and receiptUrl is set
+  // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
     description: item.name || item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
     amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
     date: formatDate(item.date || validatedReceiptDate),
     category: item.category || "Food", // Default to Food if no category
     paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
-    receiptUrl: item.receiptUrl || scanResult.receiptUrl || null // Make sure receiptUrl is passed
+    receiptUrl: scanResult.receiptUrl || null
   }));
   
   // Log the formatted items
@@ -94,7 +79,7 @@ export async function processScanResults(
       user_id: user.id
     }));
     
-    // Always save all expenses from receipt
+    // Always save all expenses automatically regardless of autoSave flag
     if (formattedItems.length > 0) {
       try {
         // Insert expenses directly into the database
@@ -103,10 +88,10 @@ export async function processScanResults(
           .insert(itemsWithUserId.map(item => ({
             user_id: item.user_id,
             description: item.description,
-            amount: parseFloat(item.amount) || 0, // Ensure we have a valid number
+            amount: parseFloat(item.amount),
             date: item.date,
             category: item.category || 'Food',
-            receipt_url: item.receiptUrl, // Make sure receiptUrl is passed
+            receipt_url: item.receiptUrl,
             payment: item.paymentMethod,
             is_recurring: false
           })));

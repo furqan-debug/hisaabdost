@@ -41,7 +41,7 @@ export function ReceiptSection({
       <p className="text-sm text-muted-foreground mb-3">
         {isManualForm 
           ? "Upload a receipt image to attach to this expense" 
-          : "Upload a receipt image and we'll automatically extract and save all items as expenses"}
+          : "Upload a receipt image and we'll automatically extract all items as expenses"}
       </p>
       <ReceiptField 
         receiptUrl={receiptUrl} 
@@ -49,7 +49,7 @@ export function ReceiptSection({
         setFileInputRef={setFileInputRef}
         setCameraInputRef={setCameraInputRef}
         onCapture={onCapture}
-        autoProcess={!isManualForm} // Always auto-process when not in manual form
+        autoProcess={!isManualForm} // Only auto-process when not in manual form
       />
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">

@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { useEffect, useRef, useState } from "react";
@@ -32,8 +31,8 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = true, // Default to true for automatic saving
-  autoProcess = true, // Default to true for automatic processing
+  autoSave = true,
+  autoProcess = true,
   onSuccess
 }: ReceiptScanDialogProps) {
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
@@ -65,7 +64,7 @@ export function ReceiptScanDialog({
     autoSave,
     setOpen,
     onSuccess,
-    processAllItems: true // Always process all items from the receipt
+    processAllItems: true
   });
 
   const retryHandler = useReceiptRetry({
@@ -124,18 +123,12 @@ export function ReceiptScanDialog({
   // Close dialog after processing completes
   useEffect(() => {
     if (processingComplete && open && !isScanning && !isAutoProcessing) {
-      // Trigger the success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-      // Close the dialog with a slight delay
       const timer = setTimeout(() => {
         setOpen(false);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [processingComplete, open, isScanning, isAutoProcessing, setOpen, onSuccess]);
+  }, [processingComplete, open, isScanning, isAutoProcessing, setOpen]);
 
   const handleDialogClose = (isOpen: boolean) => {
     if (!isOpen && handleClose(isScanning, isAutoProcessing)) {
