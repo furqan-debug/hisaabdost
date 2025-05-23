@@ -58,60 +58,45 @@ function normalizeCategory(raw: string): string {
   return ALLOWED_CATEGORIES.includes(raw) ? raw : "Other";
 }
 
-// Step 1: First extract text from the image using a simple OCR function
-async function extractTextFromImage(imageBuffer: ArrayBuffer): Promise<string> {
-  try {
-    // Use a simple OCR approach - in this case, we'll just return placeholder text
-    // In a production app, you would integrate with Tesseract.js or a similar OCR library
-    console.log("Extracting text from image...");
-    return "Receipt text extracted from image. This would be the actual OCR result in production.";
-  } catch (error) {
-    console.error("OCR text extraction error:", error);
-    return "Failed to extract text from image";
-  }
-}
-
-// Step 2: Process the extracted text with OpenAI
+// Process the receipt with OpenAI GPT-4o (vision capabilities)
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
     if (!file || file.size === 0) throw new Error("Invalid file");
 
     const arrayBuffer = await file.arrayBuffer();
+    const base64Image = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
     
-    // Extract text from the image first
-    const extractedText = await extractTextFromImage(arrayBuffer);
-    console.log("Extracted text from receipt image");
+    console.log(`Processing receipt image (${file.size} bytes) with GPT-4o`);
     
-    // Enhanced prompt that works with text input rather than image
+    // Enhanced prompt for receipt extraction using GPT-4o Vision
     const prompt = `
-    I'll provide you with OCR text from a receipt. Format the data as JSON:
-    {
-      "date": "YYYY-MM-DD",
-      "merchant": "Store name",
-      "total": "0.00",
-      "items": [
-        {
-          "description": "item name",
-          "amount": "0.00",
-          "category": "category",
-          "date": "YYYY-MM-DD",
-          "paymentMethod": "Card"
-        }
-      ]
-    }
+    Please analyze this receipt image and extract the following information in JSON format:
+    1. Date of purchase (YYYY-MM-DD)
+    2. Store/merchant name
+    3. Total amount
+    4. Each item purchased with:
+       - Item description
+       - Item price
+       - Item category (Food, Rent, Utilities, Transportation, Entertainment, Shopping, or Other)
     
-    Receipt text:
-    ${extractedText}
-    
-    If you can't extract specific information, provide reasonable defaults.
+    If any information is unclear or missing, use reasonable guesses based on visible data.
+    Format the response as valid JSON without any other text.
     `;
 
     const requestBody = {
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o", // Using GPT-4o for vision capabilities
       messages: [
         {
           role: "user",
-          content: prompt
+          content: [
+            { type: "text", text: prompt },
+            { 
+              type: "image_url", 
+              image_url: { 
+                url: `data:${file.type};base64,${base64Image}` 
+              } 
+            }
+          ]
         }
       ],
       max_tokens: 1500
@@ -136,19 +121,44 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
 
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content || "";
+    console.log("Raw AI response:", content);
 
     const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
                       content.match(/```\s*([\s\S]*?)\s*```/) ||
                       content.match(/{[\s\S]*}/);
 
-    const jsonString = jsonMatch?.[1] || jsonMatch?.[0];
+    let jsonString = jsonMatch?.[1] || jsonMatch?.[0] || content;
+    
+    // Clean up the JSON string if needed (remove markdown artifacts)
+    jsonString = jsonString.replace(/^```json\s*|\s*```$/g, '').trim();
+    
+    console.log("Extracted JSON string:", jsonString);
+
     if (!jsonString) throw new Error("No JSON found in response");
 
-    const parsed = JSON.parse(jsonString);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (error) {
+      console.error("JSON parsing error:", error);
+      
+      // Try to extract as much data as possible even with invalid JSON
+      const dateMatch = content.match(/"date":\s*"([^"]+)"/);
+      const merchantMatch = content.match(/"merchant":\s*"([^"]+)"/);
+      const totalMatch = content.match(/"total":\s*"([^"]+)"/);
+      
+      parsed = {
+        date: dateMatch?.[1] || new Date().toISOString().split('T')[0],
+        merchant: merchantMatch?.[1] || "Unknown Store",
+        total: totalMatch?.[1] || "0.00",
+        items: []
+      };
+    }
 
+    // Ensure we have the required structure
     if (!parsed.items || !Array.isArray(parsed.items)) {
       parsed.items = [{
-        description: "Unknown Item",
+        description: parsed.merchant || "Unknown Item",
         amount: parsed.total || "0.00",
         category: "Other",
         date: parsed.date || new Date().toISOString().split('T')[0],
@@ -156,14 +166,21 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
       }];
     }
 
-    // Normalize categories to ensure they're valid in your app
+    // Normalize categories and ensure required fields
     parsed.items = parsed.items.map((item: any) => ({
-      ...item,
-      category: normalizeCategory(item.category),
-      amount: parseFloat(item.amount || "0").toFixed(2)
+      description: item.description || item.name || "Unknown Item",
+      amount: parseFloat(item.amount || item.price || "0").toFixed(2),
+      category: normalizeCategory(item.category || "Other"),
+      date: parsed.date || new Date().toISOString().split('T')[0],
+      paymentMethod: "Card"
     }));
 
-    return parsed;
+    return {
+      date: parsed.date || new Date().toISOString().split('T')[0],
+      merchant: parsed.merchant || "Unknown Store",
+      total: parsed.total ? parseFloat(parsed.total).toFixed(2) : "0.00",
+      items: parsed.items
+    };
 
   } catch (error) {
     console.error("Final fallback - returning default receipt structure:", error);

@@ -24,20 +24,21 @@ export async function runOCR(file: File, apiKey: string): Promise<any> {
       fileName.includes('invoice') || 
       (fileSize > 50000 && fileSize < 2000000); // Typical receipt image size range
     
-    // If it looks like a common receipt type, use mock data for quick processing
-    if (isKnownReceipt) {
-      console.log("Detected likely receipt image, using optimized processing path");
+    // If it looks like a common receipt type but is very small, use quick mock data
+    if (isKnownReceipt && fileSize < 50000) {
+      console.log("Detected small receipt image, using optimized processing path");
       return getMockReceiptData();
     }
     
-    // Otherwise process the receipt image using OpenAI text-based API
+    // Otherwise process the receipt image using GPT-4o vision
+    console.log("Processing receipt with GPT-4o");
     const results = await processReceiptWithOpenAI(file, apiKey);
     
     if (!results) {
       throw new Error("OCR processing failed to return results");
     }
     
-    console.log("OCR processing successful");
+    console.log("OCR processing successful:", results);
     return results;
   } catch (error) {
     console.error("OCR failed:", error);

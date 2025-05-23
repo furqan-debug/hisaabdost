@@ -37,7 +37,8 @@ export async function processMessageWithAI(
     
     // Always use the passed currencyCode, but if not provided, fall back to profile preferred_currency
     const effectiveCurrencyCode = currencyCode || userProfile?.preferred_currency || 'USD';
-      
+    
+    // Specify GPT-3.5-turbo model explicitly for chat
     const { data, error } = await supabase.functions.invoke('finny-chat', {
       body: {
         message: messageToSend,
@@ -49,6 +50,7 @@ export async function processMessageWithAI(
         userName: userProfile?.full_name,
         userAge: userProfile?.age,
         userGender: userProfile?.gender,
+        model: "gpt-3.5-turbo", // Explicitly request GPT-3.5-turbo model
       },
     });
 

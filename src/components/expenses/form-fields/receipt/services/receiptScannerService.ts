@@ -78,7 +78,7 @@ export async function scanReceipt({
       (fileSize > 50000 && fileSize < 2000000); // Typical receipt image size range
   
   // If it's likely a common receipt, use a faster path with mock data
-  if (quickProcessing) {
+  if (quickProcessing && fileSize < 50000) {
     console.log("Using optimized receipt processing path");
     onProgress?.(30, "Processing receipt...");
     await new Promise(resolve => setTimeout(resolve, 1000)); // Brief delay for UX
@@ -173,7 +173,7 @@ export async function scanReceipt({
       formData.append('retry', retryCount.toString());
       formData.append('enhanced', 'true');
       
-      onProgress?.(30, "Processing receipt image...");
+      onProgress?.(30, "Processing receipt image with AI...");
       
       // Set up abort controller for timeout handling
       const controller = new AbortController();
@@ -285,6 +285,7 @@ export async function scanReceipt({
           items: Array.isArray(data.items) ? data.items : [],
           date: data.date || new Date().toISOString().split('T')[0],
           total: data.total || "0.00",
+          merchant: data.merchant || "Store",
           receiptUrl: sanitizedReceiptUrl
         };
         
