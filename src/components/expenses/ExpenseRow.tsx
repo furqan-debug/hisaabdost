@@ -58,8 +58,8 @@ export const ExpenseRow = memo(function ExpenseRow({
     toggleExpenseSelection(expense.id);
   }, [expense.id, toggleExpenseSelection]);
   
-  // Check if the expense has a receipt
-  const hasReceipt = Boolean(expense.receiptUrl);
+  // Check if the expense has a receipt - ensure proper type checking
+  const hasReceipt = typeof expense.receiptUrl === 'string' && expense.receiptUrl.trim() !== '';
   
   return (
     <TableRow>
@@ -97,11 +97,11 @@ export const ExpenseRow = memo(function ExpenseRow({
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 text-primary hover:text-primary/80"
               onClick={handleViewReceipt}
               title="View Receipt"
             >
-              <FileImage className="h-4 w-4 text-primary" />
+              <FileImage className="h-4 w-4" />
               <span className="sr-only">View Receipt</span>
             </Button>
           )}
@@ -115,7 +115,7 @@ export const ExpenseRow = memo(function ExpenseRow({
               {/* Always show View Receipt option when receipt exists */}
               {hasReceipt && (
                 <DropdownMenuItem onClick={handleViewReceipt}>
-                  <FileImage className="h-4 w-4 mr-2" />
+                  <FileImage className="h-4 w-4 mr-2 text-primary" />
                   View Receipt
                 </DropdownMenuItem>
               )}
