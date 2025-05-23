@@ -4,7 +4,7 @@ import { saveExpenseFromScan } from '../services/expenseDbService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Define the ScanResult interface to match the actual data structure
+// Define the ScanResult interface with consistent optional properties
 export interface ScanResult {
   success: boolean;
   date?: string;

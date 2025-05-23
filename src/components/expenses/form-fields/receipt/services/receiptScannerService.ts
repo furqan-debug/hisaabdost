@@ -126,7 +126,8 @@ export async function scanReceipt({
     // Race between the fetch and the timeout
     const result = await Promise.race([fetchPromise, timeoutPromise]);
 
-    if (result.isTimeout) {
+    // Use optional chaining and provide default value for isTimeout check
+    if (result.isTimeout === true) {
       console.log("Scan timed out");
       if (onTimeout) onTimeout();
     } else if (!result.success) {
