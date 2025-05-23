@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -9,6 +10,7 @@ interface ScanReceiptOptions {
   onError?: (error: string) => void;
 }
 
+// Updated ScanResult interface to include all required properties
 interface ScanResult {
   success: boolean;
   items?: Array<{
@@ -22,6 +24,10 @@ interface ScanResult {
   date?: string;
   error?: string;
   isTimeout?: boolean;
+  merchant?: string;  // Added this property
+  total?: string;     // Added this property
+  receiptUrl?: string; // Added this property
+  warning?: string;   // Added this property
 }
 
 const MAX_RETRIES = 2;
