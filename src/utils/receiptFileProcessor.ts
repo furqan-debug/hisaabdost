@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { 
   createManagedBlobUrl, 
@@ -40,7 +41,7 @@ export function generateFileFingerprint(file: File): string {
 }
 
 /**
- * Process a receipt file - create local preview and upload to storage
+ * Process a receipt file - upload to storage and return permanent URL
  * @param file The receipt file to process
  * @param userId The user ID for storage paths
  * @param currentBlobUrl Reference to the current blob URL
@@ -115,70 +116,39 @@ export async function processReceiptFile(
     if (setIsUploading) setIsUploading(true);
     
     try {
-      // Create local blob URL for immediate preview only
-      const localUrl = createManagedBlobUrl(file);
-      
       // Clean up previous blob URL if it exists
       if (currentBlobUrl && currentBlobUrl.startsWith('blob:')) {
         console.log(`Marking previous blob URL for cleanup: ${currentBlobUrl}`);
-        setTimeout(() => {
-          markBlobUrlForCleanup(currentBlobUrl);
-        }, 500);
+        markBlobUrlForCleanup(currentBlobUrl);
       }
       
-      // Set form with file but NOT the blob URL in receiptUrl
+      // Set form with file but clear receiptUrl initially
       updateField('receiptFile', file);
+      updateField('receiptUrl', ''); // Clear any previous URL
       
-      // Show a temporary preview by setting receiptUrl to the blob URL temporarily
-      // This will be replaced with the permanent URL once upload completes
-      updateField('receiptUrl', localUrl);
+      // Upload directly to Supabase - no blob URL storage
+      console.log("Starting Supabase upload...");
+      const supabaseUrl = await uploadToSupabase(file, userId);
       
-      try {
-        // Upload to Supabase and get permanent URL
-        const supabaseUrl = await uploadToSupabase(file, userId);
+      if (supabaseUrl) {
+        console.log(`Successfully uploaded to Supabase: ${supabaseUrl}`);
         
-        if (supabaseUrl) {
-          console.log(`Successfully uploaded to Supabase: ${supabaseUrl}`);
-          
-          // Clean up the blob URL since we have a permanent URL
-          markBlobUrlForCleanup(localUrl);
-          
-          // Update form with the permanent Supabase URL
-          updateField('receiptUrl', supabaseUrl);
-          
-          // Cache the permanent URL
-          processedFiles.set(fileFingerprint, { 
-            timestamp: Date.now(), 
-            inProgress: false,
-            receiptUrl: supabaseUrl 
-          });
-          
-          return supabaseUrl;
-        } else {
-          // Upload failed - clear the receipt URL completely
-          console.error("Supabase upload failed, clearing receipt URL");
-          toast.error("Failed to upload receipt. Please try again.");
-          
-          // Clean up the blob URL
-          markBlobUrlForCleanup(localUrl);
-          
-          // Clear the receipt URL from the form (don't store blob URLs)
-          updateField('receiptUrl', '');
-          
-          // Mark as processed but failed
-          processedFiles.set(fileFingerprint, { 
-            timestamp: Date.now(), 
-            inProgress: false
-          });
-          
-          return null;
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
+        // Update form with the permanent Supabase URL
+        updateField('receiptUrl', supabaseUrl);
+        
+        // Cache the permanent URL
+        processedFiles.set(fileFingerprint, { 
+          timestamp: Date.now(), 
+          inProgress: false,
+          receiptUrl: supabaseUrl 
+        });
+        
+        toast.success("Receipt uploaded successfully");
+        return supabaseUrl;
+      } else {
+        // Upload failed - clear everything
+        console.error("Supabase upload failed");
         toast.error("Failed to upload receipt. Please try again.");
-        
-        // Clean up the blob URL
-        markBlobUrlForCleanup(localUrl);
         
         // Clear the receipt URL from the form
         updateField('receiptUrl', '');
@@ -190,9 +160,6 @@ export async function processReceiptFile(
         });
         
         return null;
-      } finally {
-        // Clean up any unused blob URLs after a delay
-        setTimeout(cleanupUnusedBlobUrls, 2000);
       }
     } catch (error) {
       // Mark as no longer in progress in case of error
@@ -203,6 +170,8 @@ export async function processReceiptFile(
       throw error;
     } finally {
       if (setIsUploading) setIsUploading(false);
+      // Clean up any unused blob URLs after a delay
+      setTimeout(cleanupUnusedBlobUrls, 2000);
     }
   } catch (error) {
     console.error("Error processing receipt file:", error);

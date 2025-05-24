@@ -26,9 +26,10 @@ export function ViewReceiptDialog({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Check if the URL is a blob URL (which would be invalid)
+  // Check if the URL is a blob URL or invalid
   const isBlobUrl = receiptUrl?.startsWith('blob:');
-  const hasValidUrl = receiptUrl && !isBlobUrl;
+  const isSupabaseUrl = receiptUrl?.includes('supabase');
+  const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
 
   const handleImageLoad = () => {
     setIsLoading(false);
@@ -42,8 +43,8 @@ export function ViewReceiptDialog({
   };
 
   const handleRetry = () => {
-    if (!hasValidUrl) {
-      return; // Don't retry if URL is invalid
+    if (!hasValidUrl || isBlobUrl) {
+      return; // Don't retry if URL is invalid or blob
     }
     setIsLoading(true);
     setImageError(false);
@@ -51,7 +52,7 @@ export function ViewReceiptDialog({
   };
 
   const handleDownload = () => {
-    if (!hasValidUrl) {
+    if (!hasValidUrl || isBlobUrl) {
       return;
     }
     
@@ -96,6 +97,20 @@ export function ViewReceiptDialog({
     onOpenChange(false);
   };
 
+  // Determine error message based on URL type
+  const getErrorMessage = () => {
+    if (isBlobUrl) {
+      return "Receipt image is no longer available. The temporary preview has expired.";
+    }
+    if (!hasValidUrl) {
+      return "No receipt image available.";
+    }
+    return "Failed to load receipt image. The image may be missing or inaccessible.";
+  };
+
+  const canRetry = hasValidUrl && !isBlobUrl && isSupabaseUrl;
+  const canDownload = hasValidUrl && !isBlobUrl && isSupabaseUrl;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
@@ -107,13 +122,13 @@ export function ViewReceiptDialog({
         </DialogHeader>
         
         <div className="relative flex flex-col items-center justify-center min-h-[200px]">
-          {isLoading && !imageError && hasValidUrl && (
+          {isLoading && !imageError && hasValidUrl && !isBlobUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           )}
           
-          {!imageError && hasValidUrl ? (
+          {!imageError && hasValidUrl && !isBlobUrl ? (
             <img
               key={`${receiptUrl}-${retryCount}`} // Force reload on retry
               src={receiptUrl}
@@ -127,12 +142,9 @@ export function ViewReceiptDialog({
             <div className="p-8 text-center border border-dashed rounded-md bg-muted/30">
               <FileImage className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                {isBlobUrl 
-                  ? "Receipt image is no longer available. The temporary preview has expired."
-                  : "Failed to load receipt image. The image may be missing or inaccessible."
-                }
+                {getErrorMessage()}
               </p>
-              {hasValidUrl && (
+              {canRetry && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -146,7 +158,7 @@ export function ViewReceiptDialog({
             </div>
           )}
           
-          {!isLoading && !imageError && hasValidUrl && (
+          {!isLoading && !imageError && hasValidUrl && !isBlobUrl && (
             <p className="mt-2 text-sm text-muted-foreground">
               Click outside or press ESC to close
             </p>
@@ -158,7 +170,7 @@ export function ViewReceiptDialog({
             Close
           </Button>
           
-          {!imageError && hasValidUrl && (
+          {canDownload && !imageError && (
             <Button 
               variant="secondary" 
               onClick={handleDownload}

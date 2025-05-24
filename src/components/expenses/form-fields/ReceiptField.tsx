@@ -41,7 +41,6 @@ export function ReceiptField({
   // State for receipt scanning dialog
   const [scanDialogOpen, setScanDialogOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [processingStarted, setProcessingStarted] = useState(false);
   const currentFileFingerprint = useRef<string | null>(null);
   
@@ -95,9 +94,7 @@ export function ReceiptField({
     // Flag that we've started processing to prevent reopening
     setProcessingStarted(true);
     
-    // Create a preview URL for the file
-    const previewUrl = URL.createObjectURL(file);
-    setFilePreviewUrl(previewUrl);
+    // Store the file for scanning but don't create blob URLs
     setReceiptFile(file);
     
     // Only open scan dialog for auto-processing
@@ -116,7 +113,7 @@ export function ReceiptField({
   
   // Handle retrying the scan with the existing file
   const handleRetryScan = () => {
-    if (receiptFile && filePreviewUrl) {
+    if (receiptFile) {
       setScanDialogOpen(true);
     }
   };
@@ -130,10 +127,6 @@ export function ReceiptField({
       currentFileFingerprint.current = null;
     }
     
-    if (filePreviewUrl) {
-      URL.revokeObjectURL(filePreviewUrl);
-      setFilePreviewUrl(null);
-    }
     setReceiptFile(null);
     setProcessingStarted(false); // Allow new uploads after cleanup
   };
@@ -141,9 +134,6 @@ export function ReceiptField({
   // Clean up resources when component unmounts
   useEffect(() => {
     return () => {
-      if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-      }
       // Clean up processing cache
       if (currentFileFingerprint.current) {
         processingCache.delete(currentFileFingerprint.current);
@@ -192,7 +182,7 @@ export function ReceiptField({
       {receiptFile && autoProcess && (
         <ReceiptScanDialog
           file={receiptFile}
-          previewUrl={filePreviewUrl}
+          previewUrl={null}
           open={scanDialogOpen}
           setOpen={setScanDialogOpen}
           onCleanup={handleCleanup}
