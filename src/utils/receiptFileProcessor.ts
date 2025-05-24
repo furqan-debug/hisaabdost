@@ -96,8 +96,8 @@ export async function processReceiptFile(
       if (timeSinceLastProcess < 10000) { // 10 seconds
         console.log(`File already processed recently (${timeSinceLastProcess}ms ago): ${fileFingerprint}`);
         
-        // If we have a saved receipt URL, return it immediately
-        if (fileData.receiptUrl) {
+        // If we have a saved receipt URL and it's not a blob URL, return it immediately
+        if (fileData.receiptUrl && !fileData.receiptUrl.startsWith('blob:')) {
           console.log(`Using cached receipt URL: ${fileData.receiptUrl}`);
           updateField('receiptUrl', fileData.receiptUrl);
           return fileData.receiptUrl;
@@ -118,7 +118,7 @@ export async function processReceiptFile(
     if (setIsUploading) setIsUploading(true);
     
     try {
-      // Create local blob URL for preview
+      // Create local blob URL for immediate preview
       const localUrl = createManagedBlobUrl(file);
       
       // Clean up previous blob URL if it exists but after a delay
@@ -143,18 +143,16 @@ export async function processReceiptFile(
         
         // If upload was successful, update the form with the permanent URL
         if (supabaseUrl) {
-          console.log(`Updating receipt URL from blob to Supabase URL: ${supabaseUrl}`);
+          console.log(`Successfully uploaded to Supabase: ${supabaseUrl}`);
           
-          // Mark the blob URL for cleanup, but don't revoke it immediately
-          // in case it's still being displayed
+          // Mark the blob URL for cleanup
           markBlobUrlForCleanup(localUrl);
-          // And mark again for the reference we added above
-          markBlobUrlForCleanup(localUrl);
+          markBlobUrlForCleanup(localUrl); // Remove the extra reference
           
+          // Update form with permanent URL
           updateField('receiptUrl', supabaseUrl);
           
-          // Update the processed files map to indicate successful processing
-          // and store the final URL for potential reuse
+          // Update the processed files map with the permanent URL
           processedFiles.set(fileFingerprint, { 
             timestamp: Date.now(), 
             inProgress: false,
@@ -163,32 +161,43 @@ export async function processReceiptFile(
           
           return supabaseUrl;
         } else {
-          console.log("Using local blob URL as fallback since Supabase upload failed");
-          // Remove the extra reference as we're keeping the blob URL
-          markBlobUrlForCleanup(localUrl);
+          // Upload failed - don't store blob URL in database
+          console.error("Supabase upload failed, not storing receipt URL");
+          toast.error("Failed to upload receipt. Please try again.");
           
-          // Update processed files map with failure status but keep the blob URL
+          // Clean up the blob URL
+          markBlobUrlForCleanup(localUrl);
+          markBlobUrlForCleanup(localUrl); // Remove the extra reference
+          
+          // Clear the receipt URL from the form
+          updateField('receiptUrl', '');
+          
+          // Mark as processed but failed
           processedFiles.set(fileFingerprint, { 
             timestamp: Date.now(), 
-            inProgress: false,
-            receiptUrl: localUrl 
+            inProgress: false
           });
           
-          return localUrl;
+          return null;
         }
       } catch (error) {
         console.error("Upload error:", error);
-        // Remove the extra reference since upload failed
-        markBlobUrlForCleanup(localUrl);
+        toast.error("Failed to upload receipt. Please try again.");
         
-        // Mark as processed but not in progress
+        // Clean up the blob URL
+        markBlobUrlForCleanup(localUrl);
+        markBlobUrlForCleanup(localUrl); // Remove the extra reference
+        
+        // Clear the receipt URL from the form
+        updateField('receiptUrl', '');
+        
+        // Mark as processed but failed
         processedFiles.set(fileFingerprint, { 
           timestamp: Date.now(), 
-          inProgress: false,
-          receiptUrl: localUrl 
+          inProgress: false
         });
         
-        return localUrl;
+        return null;
       } finally {
         // Clean up any unused blob URLs after a delay
         setTimeout(cleanupUnusedBlobUrls, 2000);
