@@ -92,19 +92,6 @@ export const ExpenseRow = memo(function ExpenseRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 justify-end">
-          {/* Receipt icon indicator - Make it more visible and clickable */}
-          {hasReceipt && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8 text-primary hover:text-primary/80"
-              onClick={handleViewReceipt}
-              title="View Receipt"
-            >
-              <FileImage className="h-4 w-4" />
-              <span className="sr-only">View Receipt</span>
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -112,6 +99,12 @@ export const ExpenseRow = memo(function ExpenseRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {hasReceipt && (
+                <DropdownMenuItem onClick={handleViewReceipt}>
+                  <FileImage className="h-4 w-4 mr-2" />
+                  View Receipt
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
