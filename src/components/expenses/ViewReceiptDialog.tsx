@@ -26,6 +26,10 @@ export function ViewReceiptDialog({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
+  // Check if the URL is a blob URL (which would be invalid)
+  const isBlobUrl = receiptUrl?.startsWith('blob:');
+  const hasValidUrl = receiptUrl && !isBlobUrl;
+
   const handleImageLoad = () => {
     setIsLoading(false);
     setImageError(false);
@@ -38,12 +42,19 @@ export function ViewReceiptDialog({
   };
 
   const handleRetry = () => {
+    if (!hasValidUrl) {
+      return; // Don't retry if URL is invalid
+    }
     setIsLoading(true);
     setImageError(false);
     setRetryCount(prev => prev + 1);
   };
 
   const handleDownload = () => {
+    if (!hasValidUrl) {
+      return;
+    }
+    
     try {
       // Create a temporary anchor element
       const a = document.createElement('a');
@@ -71,11 +82,22 @@ export function ViewReceiptDialog({
   React.useEffect(() => {
     if (open) {
       resetStates();
+      // If blob URL, immediately show error
+      if (isBlobUrl) {
+        setIsLoading(false);
+        setImageError(true);
+      }
     }
-  }, [open, receiptUrl]);
+  }, [open, receiptUrl, isBlobUrl]);
+
+  const handleClose = () => {
+    // Clean up state before closing
+    resetStates();
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center">
@@ -85,13 +107,13 @@ export function ViewReceiptDialog({
         </DialogHeader>
         
         <div className="relative flex flex-col items-center justify-center min-h-[200px]">
-          {isLoading && !imageError && (
+          {isLoading && !imageError && hasValidUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           )}
           
-          {!imageError ? (
+          {!imageError && hasValidUrl ? (
             <img
               key={`${receiptUrl}-${retryCount}`} // Force reload on retry
               src={receiptUrl}
@@ -105,21 +127,26 @@ export function ViewReceiptDialog({
             <div className="p-8 text-center border border-dashed rounded-md bg-muted/30">
               <FileImage className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Failed to load receipt image. The image may be missing or inaccessible.
+                {isBlobUrl 
+                  ? "Receipt image is no longer available. The temporary preview has expired."
+                  : "Failed to load receipt image. The image may be missing or inaccessible."
+                }
               </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRetry}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Try Again
-              </Button>
+              {hasValidUrl && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetry}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Try Again
+                </Button>
+              )}
             </div>
           )}
           
-          {!isLoading && !imageError && (
+          {!isLoading && !imageError && hasValidUrl && (
             <p className="mt-2 text-sm text-muted-foreground">
               Click outside or press ESC to close
             </p>
@@ -127,11 +154,11 @@ export function ViewReceiptDialog({
         </div>
         
         <DialogFooter className="flex flex-row justify-between sm:justify-between">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleClose}>
             Close
           </Button>
           
-          {!imageError && (
+          {!imageError && hasValidUrl && (
             <Button 
               variant="secondary" 
               onClick={handleDownload}

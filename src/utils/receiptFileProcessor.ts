@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { 
   createManagedBlobUrl, 
@@ -10,7 +9,6 @@ import { uploadToSupabase } from "./supabaseUploader";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
 
 // Cache to prevent duplicate processing of the same file
-// Using a more robust implementation with timestamps and processing status
 const processedFiles = new Map<string, { 
   timestamp: number, 
   inProgress: boolean,
@@ -83,7 +81,6 @@ export async function processReceiptFile(
     lastProcessTime = now;
     
     // Check if we've already processed this exact file recently
-    // or if a processing operation is in progress
     const fileData = processedFiles.get(fileFingerprint);
     if (fileData) {
       if (fileData.inProgress) {
@@ -96,9 +93,9 @@ export async function processReceiptFile(
       if (timeSinceLastProcess < 10000) { // 10 seconds
         console.log(`File already processed recently (${timeSinceLastProcess}ms ago): ${fileFingerprint}`);
         
-        // If we have a saved receipt URL and it's not a blob URL, return it immediately
-        if (fileData.receiptUrl && !fileData.receiptUrl.startsWith('blob:')) {
-          console.log(`Using cached receipt URL: ${fileData.receiptUrl}`);
+        // Only return cached URL if it's a permanent Supabase URL
+        if (fileData.receiptUrl && !fileData.receiptUrl.startsWith('blob:') && fileData.receiptUrl.includes('supabase')) {
+          console.log(`Using cached Supabase URL: ${fileData.receiptUrl}`);
           updateField('receiptUrl', fileData.receiptUrl);
           return fileData.receiptUrl;
         }
@@ -109,7 +106,7 @@ export async function processReceiptFile(
     
     console.log(`Processing receipt file: ${file.name} (${file.size} bytes), fingerprint: ${fileFingerprint}`);
     
-    // Mark as in progress and update timestamp
+    // Mark as in progress
     processedFiles.set(fileFingerprint, { 
       timestamp: now, 
       inProgress: true 
@@ -118,41 +115,38 @@ export async function processReceiptFile(
     if (setIsUploading) setIsUploading(true);
     
     try {
-      // Create local blob URL for immediate preview
+      // Create local blob URL for immediate preview only
       const localUrl = createManagedBlobUrl(file);
       
-      // Clean up previous blob URL if it exists but after a delay
-      if (currentBlobUrl) {
-        console.log(`Marking previous URL for cleanup: ${currentBlobUrl}`);
-        // Wait a bit before marking for cleanup to avoid flickering
+      // Clean up previous blob URL if it exists
+      if (currentBlobUrl && currentBlobUrl.startsWith('blob:')) {
+        console.log(`Marking previous blob URL for cleanup: ${currentBlobUrl}`);
         setTimeout(() => {
           markBlobUrlForCleanup(currentBlobUrl);
         }, 500);
       }
       
-      // Update form with local URL for immediate preview
-      updateField('receiptUrl', localUrl);
+      // Set form with file but NOT the blob URL in receiptUrl
       updateField('receiptFile', file);
       
-      // Add an extra reference to keep the blob URL alive during the upload
-      addBlobUrlReference(localUrl);
+      // Show a temporary preview by setting receiptUrl to the blob URL temporarily
+      // This will be replaced with the permanent URL once upload completes
+      updateField('receiptUrl', localUrl);
       
       try {
-        // Attempt to upload to Supabase and get permanent URL
+        // Upload to Supabase and get permanent URL
         const supabaseUrl = await uploadToSupabase(file, userId);
         
-        // If upload was successful, update the form with the permanent URL
         if (supabaseUrl) {
           console.log(`Successfully uploaded to Supabase: ${supabaseUrl}`);
           
-          // Mark the blob URL for cleanup
+          // Clean up the blob URL since we have a permanent URL
           markBlobUrlForCleanup(localUrl);
-          markBlobUrlForCleanup(localUrl); // Remove the extra reference
           
-          // Update form with permanent URL
+          // Update form with the permanent Supabase URL
           updateField('receiptUrl', supabaseUrl);
           
-          // Update the processed files map with the permanent URL
+          // Cache the permanent URL
           processedFiles.set(fileFingerprint, { 
             timestamp: Date.now(), 
             inProgress: false,
@@ -161,15 +155,14 @@ export async function processReceiptFile(
           
           return supabaseUrl;
         } else {
-          // Upload failed - don't store blob URL in database
-          console.error("Supabase upload failed, not storing receipt URL");
+          // Upload failed - clear the receipt URL completely
+          console.error("Supabase upload failed, clearing receipt URL");
           toast.error("Failed to upload receipt. Please try again.");
           
           // Clean up the blob URL
           markBlobUrlForCleanup(localUrl);
-          markBlobUrlForCleanup(localUrl); // Remove the extra reference
           
-          // Clear the receipt URL from the form
+          // Clear the receipt URL from the form (don't store blob URLs)
           updateField('receiptUrl', '');
           
           // Mark as processed but failed
@@ -186,7 +179,6 @@ export async function processReceiptFile(
         
         // Clean up the blob URL
         markBlobUrlForCleanup(localUrl);
-        markBlobUrlForCleanup(localUrl); // Remove the extra reference
         
         // Clear the receipt URL from the form
         updateField('receiptUrl', '');
