@@ -28,13 +28,13 @@ export function ViewReceiptDialog({
 
   console.log("ViewReceiptDialog received URL:", receiptUrl);
   
-  // Check URL validity - prioritize Supabase URLs as they are permanent
+  // Check URL validity - Supabase URLs are always valid and permanent
   const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
-  const isSupabaseUrl = receiptUrl?.includes('supabase.co');
+  const isSupabaseUrl = receiptUrl?.includes('supabase.co') || receiptUrl?.includes('.supabase.co');
   const isBlobUrl = receiptUrl?.startsWith('blob:');
   const isHttpUrl = receiptUrl?.startsWith('http');
   
-  // Supabase URLs are always valid, blob URLs are temporary, other HTTP URLs may be valid
+  // Supabase URLs are always permanent and valid
   const isValidImageUrl = hasValidUrl && (isSupabaseUrl || isBlobUrl || isHttpUrl);
   const isPermanentUrl = isSupabaseUrl || (isHttpUrl && !isBlobUrl);
   
@@ -108,17 +108,16 @@ export function ViewReceiptDialog({
     onOpenChange(false);
   };
 
-  // Determine error message - only show "expired" message for actual blob URLs
+  // Determine error message - be more specific about error types
   const getErrorMessage = () => {
     if (!hasValidUrl) {
       return "No receipt image available.";
     }
+    // Only show expired message for actual blob URLs that start with blob:
     if (isBlobUrl) {
       return "Receipt image URL is temporary and may have expired. Please re-upload the receipt.";
     }
-    if (!isHttpUrl) {
-      return "Invalid receipt image URL format.";
-    }
+    // For all other URL types (including Supabase), show generic error
     return "Failed to load receipt image. Please try again.";
   };
 
