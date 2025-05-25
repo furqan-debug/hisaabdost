@@ -26,26 +26,41 @@ export function ViewReceiptDialog({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Check if the URL is a blob URL or invalid
+  // Debug the URL
+  console.log("ViewReceiptDialog URL:", receiptUrl);
+  
+  // Check URL type
   const isBlobUrl = receiptUrl?.startsWith('blob:');
   const isSupabaseUrl = receiptUrl?.includes('supabase');
   const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
+  const isHttpUrl = receiptUrl?.startsWith('http');
+
+  console.log("URL analysis:", {
+    isBlobUrl,
+    isSupabaseUrl,
+    hasValidUrl,
+    isHttpUrl,
+    url: receiptUrl
+  });
 
   const handleImageLoad = () => {
+    console.log("Image loaded successfully");
     setIsLoading(false);
     setImageError(false);
   };
 
-  const handleImageError = () => {
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error("Image failed to load:", receiptUrl, e);
     setIsLoading(false);
     setImageError(true);
-    console.error("Failed to load receipt image:", receiptUrl);
   };
 
   const handleRetry = () => {
     if (!hasValidUrl || isBlobUrl) {
-      return; // Don't retry if URL is invalid or blob
+      console.log("Cannot retry: invalid URL or blob URL");
+      return;
     }
+    console.log("Retrying image load");
     setIsLoading(true);
     setImageError(false);
     setRetryCount(prev => prev + 1);
@@ -53,21 +68,20 @@ export function ViewReceiptDialog({
 
   const handleDownload = () => {
     if (!hasValidUrl || isBlobUrl) {
+      console.log("Cannot download: invalid URL or blob URL");
       return;
     }
     
     try {
-      // Create a temporary anchor element
       const a = document.createElement('a');
       a.href = receiptUrl;
-      a.download = 'receipt-image.jpg'; // Default filename
-      a.target = '_blank'; // Open in new tab as fallback
+      a.download = 'receipt-image.jpg';
+      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
     } catch (error) {
       console.error("Download failed:", error);
-      // Fallback: open in new tab
       window.open(receiptUrl, '_blank');
     }
   };
@@ -79,12 +93,14 @@ export function ViewReceiptDialog({
     setRetryCount(0);
   };
 
-  // Reset when dialog opens or URL changes
   React.useEffect(() => {
     if (open) {
+      console.log("Dialog opened, resetting states");
       resetStates();
+      
       // If blob URL, immediately show error
       if (isBlobUrl) {
+        console.log("Blob URL detected, showing error immediately");
         setIsLoading(false);
         setImageError(true);
       }
@@ -92,24 +108,27 @@ export function ViewReceiptDialog({
   }, [open, receiptUrl, isBlobUrl]);
 
   const handleClose = () => {
-    // Clean up state before closing
     resetStates();
     onOpenChange(false);
   };
 
   // Determine error message based on URL type
   const getErrorMessage = () => {
+    if (!hasValidUrl) {
+      return "No receipt image available.";
+    }
     if (isBlobUrl) {
       return "Receipt image is no longer available. The temporary preview has expired.";
     }
-    if (!hasValidUrl) {
-      return "No receipt image available.";
+    if (!isHttpUrl) {
+      return "Invalid receipt image URL.";
     }
     return "Failed to load receipt image. The image may be missing or inaccessible.";
   };
 
-  const canRetry = hasValidUrl && !isBlobUrl && isSupabaseUrl;
-  const canDownload = hasValidUrl && !isBlobUrl && isSupabaseUrl;
+  const canRetry = hasValidUrl && !isBlobUrl && isHttpUrl;
+  const canDownload = hasValidUrl && !isBlobUrl && isHttpUrl;
+  const shouldShowImage = hasValidUrl && !isBlobUrl && isHttpUrl;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -122,15 +141,15 @@ export function ViewReceiptDialog({
         </DialogHeader>
         
         <div className="relative flex flex-col items-center justify-center min-h-[200px]">
-          {isLoading && !imageError && hasValidUrl && !isBlobUrl && (
+          {isLoading && !imageError && shouldShowImage && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           )}
           
-          {!imageError && hasValidUrl && !isBlobUrl ? (
+          {!imageError && shouldShowImage ? (
             <img
-              key={`${receiptUrl}-${retryCount}`} // Force reload on retry
+              key={`${receiptUrl}-${retryCount}`}
               src={receiptUrl}
               alt="Receipt"
               className="max-h-[60vh] max-w-full object-contain rounded-md border"
@@ -158,7 +177,7 @@ export function ViewReceiptDialog({
             </div>
           )}
           
-          {!isLoading && !imageError && hasValidUrl && !isBlobUrl && (
+          {!isLoading && !imageError && shouldShowImage && (
             <p className="mt-2 text-sm text-muted-foreground">
               Click outside or press ESC to close
             </p>
