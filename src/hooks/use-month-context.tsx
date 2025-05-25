@@ -7,6 +7,7 @@ interface MonthData {
   monthlyExpenses: number;
   totalBalance: number;
   savingsRate: number;
+  walletBalance: number; // Added walletBalance
   // Budget-related data
   totalBudget: number;
   remainingBudget: number;
@@ -30,6 +31,7 @@ const DEFAULT_MONTH_DATA: MonthData = {
   monthlyExpenses: 0,
   totalBalance: 0,
   savingsRate: 0,
+  walletBalance: 0, // Added walletBalance default
   totalBudget: 0,
   remainingBudget: 0,
   budgetUsagePercentage: 0,

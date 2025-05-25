@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,18 +8,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { SettingsSidebar } from "./SettingsSidebar";
+
 const Navbar = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
-  const {
-    selectedMonth,
-    setSelectedMonth
-  } = useMonthContext();
+  const { selectedMonth, setSelectedMonth } = useMonthContext();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -26,7 +23,9 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+  
+  return (
+    <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300 safe-area-top">
       <div className="flex h-14 items-center gap-2 max-w-[480px] px-0 mx-[7px] my-0">
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
@@ -36,14 +35,23 @@ const Navbar = () => {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0 overflow-hidden">
-            <SettingsSidebar selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} onClose={() => setSettingsOpen(false)} />
+            <SettingsSidebar 
+              selectedMonth={selectedMonth} 
+              onMonthChange={setSelectedMonth} 
+              onClose={() => setSettingsOpen(false)} 
+            />
           </SheetContent>
         </Sheet>
         
         <div className="flex-1 flex items-center">
-          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded bg-white shadow-sm" style={{
-          filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
-        }} />
+          <img 
+            src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" 
+            alt="Hisaab Dost logo" 
+            className="h-8 w-8 mr-2 rounded bg-white shadow-sm" 
+            style={{
+              filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
+            }} 
+          />
           <h2 className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent py-0 text-xl">
             Hisaab Dost
           </h2>
@@ -75,6 +83,8 @@ const Navbar = () => {
           </DropdownMenu>
         </div>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;

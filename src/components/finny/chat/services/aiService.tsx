@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { updateQuickRepliesForResponse } from './quickReplyService';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 export async function processMessageWithAI(
   messageToSend: string,
@@ -9,7 +10,7 @@ export async function processMessageWithAI(
   recentMessages: Message[],
   analysisType = "general",
   specificCategory: string | null = null,
-  currencyCode = 'USD'
+  currencyCode: CurrencyCode = 'USD'
 ) {
   if (!userId) {
     console.error("Cannot process AI message: User ID is null or undefined");
@@ -29,8 +30,13 @@ export async function processMessageWithAI(
       userId,
       userProfileFound: !!userProfile,
       analysisType,
-      specificCategory
+      specificCategory,
+      currencyCode,
+      profileCurrency: userProfile?.preferred_currency
     });
+    
+    // Always use the passed currencyCode, but if not provided, fall back to profile preferred_currency
+    const effectiveCurrencyCode = currencyCode || userProfile?.preferred_currency || 'USD';
       
     const { data, error } = await supabase.functions.invoke('finny-chat', {
       body: {
@@ -39,7 +45,7 @@ export async function processMessageWithAI(
         chatHistory: recentMessages,
         analysisType,
         specificCategory,
-        currencyCode: userProfile?.preferred_currency || currencyCode,
+        currencyCode: effectiveCurrencyCode,
         userName: userProfile?.full_name,
         userAge: userProfile?.age,
         userGender: userProfile?.gender,
@@ -50,6 +56,8 @@ export async function processMessageWithAI(
       console.error('Error calling Finny:', error);
       throw new Error(`Failed to get response: ${error.message}`);
     }
+    
+    console.log('Finny response received with currency:', effectiveCurrencyCode);
     
     // Check if the response indicates an expense was added
     if (data.action && data.action.type === 'add_expense') {
@@ -90,8 +98,9 @@ export async function processMessageWithAI(
     }
     // Also handle budget and goal changes
     else if (data.action && 
-      (data.action.type === 'set_budget' || data.action.type === 'update_budget' || 
-       data.action.type === 'delete_budget')) {
+      (data.action.type === 'set_budget' || data.action.type === 'update_budget')) {
+      console.log('Budget was added or updated, triggering refresh events');
+      
       // Dispatch budget update event
       const budgetEvent = new CustomEvent('budget-updated', { 
         detail: { 
@@ -100,6 +109,38 @@ export async function processMessageWithAI(
         }
       });
       window.dispatchEvent(budgetEvent);
+      
+      // Invalidate budget queries after a short delay
+      setTimeout(() => {
+        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+          detail: {
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(budgetRefreshEvent);
+      }, 500);
+    }
+    else if (data.action && data.action.type === 'delete_budget') {
+      console.log('Budget was deleted, triggering refresh events');
+      
+      // Dispatch budget delete event
+      const budgetDeleteEvent = new CustomEvent('budget-deleted', { 
+        detail: { 
+          timestamp: Date.now(),
+          category: data.action.category
+        }
+      });
+      window.dispatchEvent(budgetDeleteEvent);
+      
+      // Invalidate budget queries after a short delay
+      setTimeout(() => {
+        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+          detail: {
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(budgetRefreshEvent);
+      }, 500);
     }
     else if (data.action && 
       (data.action.type === 'set_goal' || data.action.type === 'update_goal' || 

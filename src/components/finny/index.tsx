@@ -1,3 +1,3 @@
 
 export { FinnyProvider } from './FinnyProvider';
-export { useFinny } from './context/FinnyContext';
+export { useFinny, FinnyContext } from './context/FinnyContext';

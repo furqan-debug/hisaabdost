@@ -1,7 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SendHorizontal } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCurrency } from '@/hooks/use-currency';
+import { getCurrencyByCode } from '@/utils/currencyUtils';
+
 interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -12,6 +16,7 @@ interface ChatInputProps {
   isAuthenticated?: boolean;
   isConnecting?: boolean;
 }
+
 const ChatInput: React.FC<ChatInputProps> = ({
   value,
   onChange,
@@ -24,6 +29,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
+  const currencySymbol = getCurrencyByCode(currencyCode).symbol;
 
   // Calculate final disabled state
   const isDisabled = disabled || isLoading || isConnecting || !isAuthenticated;
@@ -34,13 +41,30 @@ const ChatInput: React.FC<ChatInputProps> = ({
       inputRef.current.focus();
     }
   }, []);
-  return <div className="finny-chat-input my-[4px]">
+
+  return (
+    <div className="finny-chat-input my-[4px] keyboard-avoid">
       <form onSubmit={onSubmit} className="finny-chat-input-container px-[2px] my-[3px] py-[7px]">
-        <input type="text" ref={inputRef} value={value} onChange={onChange} disabled={isDisabled} className="w-full" placeholder={isConnecting ? 'Connecting...' : isAuthenticated ? placeholder : 'Please log in to chat...'} />
-        <Button type="submit" size="icon" disabled={isDisabled || !value.trim()} className="rounded-full h-10 w-10 bg-green-500 hover:bg-green-600 text-white py-0 px-[9px]">
+        <input 
+          type="text" 
+          ref={inputRef} 
+          value={value} 
+          onChange={onChange} 
+          disabled={isDisabled} 
+          className="w-full" 
+          placeholder={isConnecting ? 'Connecting...' : isAuthenticated ? placeholder : 'Please log in to chat...'} 
+        />
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={isDisabled || !value.trim()} 
+          className="rounded-full h-10 w-10 bg-green-500 hover:bg-green-600 text-white py-0 px-[9px]"
+        >
           <SendHorizontal size={18} className="py-0" />
         </Button>
       </form>
-    </div>;
+    </div>
+  );
 };
+
 export default ChatInput;

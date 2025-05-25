@@ -58,6 +58,9 @@ export const ExpenseRow = memo(function ExpenseRow({
     toggleExpenseSelection(expense.id);
   }, [expense.id, toggleExpenseSelection]);
   
+  // Check if the expense has a receipt - ensure proper type checking
+  const hasReceipt = typeof expense.receiptUrl === 'string' && expense.receiptUrl.trim() !== '';
+  
   return (
     <TableRow>
       <TableCell className="w-[30px]">
@@ -96,7 +99,7 @@ export const ExpenseRow = memo(function ExpenseRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {expense.receiptUrl && (
+              {hasReceipt && (
                 <DropdownMenuItem onClick={handleViewReceipt}>
                   <FileImage className="h-4 w-4 mr-2" />
                   View Receipt
@@ -117,7 +120,8 @@ export const ExpenseRow = memo(function ExpenseRow({
           </DropdownMenu>
         </div>
 
-        {expense.receiptUrl && (
+        {/* Only render the dialog component when there's a receipt */}
+        {hasReceipt && expense.receiptUrl && (
           <ViewReceiptDialog 
             receiptUrl={expense.receiptUrl} 
             open={receiptDialogOpen}

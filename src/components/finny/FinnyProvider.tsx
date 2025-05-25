@@ -74,7 +74,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     triggerChat(message);
   };
   
-  const setBudget = (amount: number, category: string) => {
+  const setBudget = (amount: number, category: string, period: string = "monthly") => {
     if (isMessageLimitReached) {
       toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
       return;
@@ -83,13 +83,42 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const formattedAmount = formatCurrency(amount, currencyCode);
     const validCategory = validateCategory(category);
     
-    let message = `Set a budget of ${formattedAmount} for ${validCategory}`;
+    let message = `Set a ${period} budget of ${formattedAmount} for ${validCategory}`;
     
     if (validCategory !== category) {
       message += ` (originally requested as "${category}")`;
     }
     
     triggerChat(message);
+  };
+  
+  // Add explicit method to delete budgets
+  const deleteBudget = (category: string) => {
+    if (isMessageLimitReached) {
+      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      return;
+    }
+    
+    const validCategory = validateCategory(category);
+    let message = `Delete my ${validCategory} budget`;
+    
+    if (validCategory !== category) {
+      message += ` (originally requested as "${category}")`;
+    }
+    
+    triggerChat(message);
+    
+    // Trigger budget update event
+    setTimeout(() => {
+      const budgetEvent = new CustomEvent('budget-updated', { 
+        detail: { 
+          timestamp: Date.now(),
+          action: 'delete',
+          category: validCategory
+        }
+      });
+      window.dispatchEvent(budgetEvent);
+    }, 300);
   };
   
   const askFinny = (question: string) => {
@@ -111,6 +140,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         triggerChat,
         addExpense,
         setBudget,
+        deleteBudget,
         askFinny,
         resetChat,
         remainingDailyMessages,

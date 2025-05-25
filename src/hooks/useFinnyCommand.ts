@@ -1,4 +1,3 @@
-
 import { useFinny } from '@/components/finny';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -11,7 +10,7 @@ import { CurrencyCode } from '@/utils/currencyUtils';
  * Hook to send commands to Finny programmatically
  */
 export function useFinnyCommand() {
-  const { addExpense, setBudget, askFinny, openChat } = useFinny();
+  const { addExpense, setBudget, deleteBudget, askFinny, openChat } = useFinny();
   
   // Safely access auth context with fallback
   let user = null;
@@ -182,7 +181,7 @@ export function useFinnyCommand() {
   /**
    * Send a command to Finny to set a budget
    */
-  const createBudget = (amount: number, category: string) => {
+  const createBudget = (amount: number, category: string, period: string = "monthly") => {
     if (!user) {
       toast.error('Please log in to use Finny');
       return;
@@ -194,7 +193,8 @@ export function useFinnyCommand() {
       toast.info(`Using category "${validCategory}" instead of "${category}"`);
     }
     
-    setBudget(amount, validCategory);
+    // Pass period to the setBudget function
+    setBudget(amount, validCategory, period);
     
     // Trigger budget update event
     setTimeout(() => {
@@ -202,7 +202,8 @@ export function useFinnyCommand() {
         detail: { 
           timestamp: Date.now(),
           amount,
-          category: validCategory
+          category: validCategory,
+          period
         }
       });
       window.dispatchEvent(budgetEvent);
@@ -212,27 +213,14 @@ export function useFinnyCommand() {
   /**
    * Delete a budget by category
    */
-  const deleteBudget = (category: string) => {
+  const deleteBudget_ = (category: string) => {
     if (!user) {
       toast.error('Please log in to use Finny');
       return;
     }
     
     const validCategory = validateCategory(category);
-    const message = `Delete my ${validCategory} budget`;
-    askFinny(message);
-    
-    // Trigger budget update event
-    setTimeout(() => {
-      const budgetEvent = new CustomEvent('budget-updated', { 
-        detail: { 
-          timestamp: Date.now(),
-          action: 'delete',
-          category: validCategory
-        }
-      });
-      window.dispatchEvent(budgetEvent);
-    }, 300);
+    deleteBudget(validCategory);
   };
   
   /**
@@ -366,7 +354,7 @@ export function useFinnyCommand() {
   return {
     recordExpense,
     createBudget,
-    deleteBudget,
+    deleteBudget: deleteBudget_,
     askFinny,
     requestSpendingSummary,
     requestCategoryAnalysis,

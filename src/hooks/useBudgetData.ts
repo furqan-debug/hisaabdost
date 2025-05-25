@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
 import { format, startOfMonth, endOfMonth } from "date-fns";
@@ -12,6 +12,10 @@ export function useBudgetData() {
   const { user } = useAuth();
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
+  const queryClient = useQueryClient();
+  
+  // Add refresh trigger state
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
   
   // Refs to store previous values to prevent unnecessary updates
   const prevValuesRef = useRef({
@@ -33,27 +37,58 @@ export function useBudgetData() {
   // Update debounce timer ref
   const updateTimerRef = useRef<number | null>(null);
   
+  // Listen for budget update events
+  useEffect(() => {
+    // Handler function for budget events
+    const handleBudgetUpdate = (e: Event) => {
+      console.log("Budget update detected, refreshing data", e);
+      // Force refetch by invalidating the query and updating refresh trigger
+      queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user?.id] });
+      setRefreshTrigger(Date.now());
+    };
+    
+    // Add event listeners
+    window.addEventListener('budget-updated', handleBudgetUpdate);
+    window.addEventListener('budget-deleted', handleBudgetUpdate);
+    window.addEventListener('budget-refresh', handleBudgetUpdate);
+    
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('budget-updated', handleBudgetUpdate);
+      window.removeEventListener('budget-deleted', handleBudgetUpdate);
+      window.removeEventListener('budget-refresh', handleBudgetUpdate);
+    };
+  }, [queryClient, monthKey, user?.id]);
+  
   // Query budgets with the monthly income
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', monthKey, user?.id],
+    queryKey: ['budgets', monthKey, user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
+      console.log("Fetching budgets for user:", user.id);
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching budgets:", error);
+        throw error;
+      }
+      
+      console.log(`Fetched ${data?.length || 0} budgets:`, data);
       return data as Budget[];
     },
     enabled: !!user,
+    // Adding staleTime to prevent frequent refetches
+    staleTime: 1000, // 1 second
   });
   
   // Query to get monthly income specifically
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id],
+    queryKey: ['monthly_income', user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
@@ -70,7 +105,7 @@ export function useBudgetData() {
   });
 
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', monthKey, user?.id],
+    queryKey: ['expenses', monthKey, user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
@@ -85,6 +120,7 @@ export function useBudgetData() {
         .lte('date', monthEnd.toISOString().split('T')[0]);
 
       if (error) throw error;
+      console.log(`Fetched ${data?.length || 0} expenses for ${monthKey}`);
       return data;
     },
     enabled: !!user,
@@ -122,7 +158,7 @@ export function useBudgetData() {
     const monthlyIncome = incomeData.monthlyIncome || 0;
     
     // Calculate new values
-    const totalBudget = budgets?.reduce((sum, budget) => sum + budget.amount, 0) || 0;
+    const totalBudget = budgets?.reduce((sum, budget) => sum + Number(budget.amount), 0) || 0;
     const totalSpent = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
     const remainingBalance = totalBudget - totalSpent;
     const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
@@ -135,6 +171,14 @@ export function useBudgetData() {
       Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01;
     
     if (!hasChanged && monthlyIncome === stableValues.monthlyIncome) return;
+    
+    console.log('Budget data changed, updating values:', {
+      totalBudget,
+      totalSpent,
+      remainingBalance,
+      usagePercentage,
+      monthlyIncome
+    });
     
     // Store new values in ref
     prevValuesRef.current = {

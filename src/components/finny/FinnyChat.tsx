@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatHistoryBanner } from './chat/ChatHistoryBanner';
 import { useAuth } from '@/lib/auth';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface FinnyChatProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ const FinnyChat = ({
   
   // Get user authentication status
   const { user } = useAuth();
+  // Get user currency preference
+  const { currencyCode } = useCurrency();
 
   const {
     messages,
@@ -48,14 +51,14 @@ const FinnyChat = ({
     handleQuickReply,
     oldestMessageTime,
     resetChat
-  } = useChatLogic(null);
+  } = useChatLogic(null, currencyCode);
 
   // Effect to reset chat when it's first opened
   useEffect(() => {
     if (isOpen) {
-      console.log("Finny chat opened, user status:", user ? "logged in" : "not logged in");
+      console.log("Finny chat opened, user status:", user ? "logged in" : "not logged in", "currency:", currencyCode);
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, currencyCode]);
   
   // Filter out the auth prompt message when user is logged in
   const filteredMessages = messages.filter(message => {
@@ -143,7 +146,7 @@ const FinnyChat = ({
           }}
         >
           <Card className="finny-chat-card flex flex-col h-full">
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full keyboard-aware">
               <div className="flex-none">
                 <ChatHeader onClose={onClose} onReset={resetChat} />
               </div>

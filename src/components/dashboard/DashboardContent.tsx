@@ -1,3 +1,4 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -25,6 +26,7 @@ interface DashboardContentProps {
   handleExpenseRefresh: () => void;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
+  walletBalance: number;
 }
 
 export function DashboardContent({
@@ -44,7 +46,8 @@ export function DashboardContent({
   setShowAddExpense,
   handleExpenseRefresh,
   chartType,
-  setChartType
+  setChartType,
+  walletBalance
 }: DashboardContentProps) {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -67,7 +70,7 @@ export function DashboardContent({
 
   return (
     <motion.div 
-      className="space-y-5 touch-scroll-container no-scrollbar"
+      className="space-y-5 py-2 touch-scroll-container no-scrollbar"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -86,7 +89,13 @@ export function DashboardContent({
           formatPercentage={formatPercentage}
           isNewUser={isNewUser}
           isLoading={isLoading}
+          walletBalance={walletBalance}
         />
+      </motion.div>
+
+      {/* Swapped order: First FinnyCard (Talk to Finny) then AddExpenseButton */}
+      <motion.div variants={itemVariants}>
+        <FinnyCard />
       </motion.div>
 
       <motion.div variants={itemVariants}>
@@ -98,10 +107,6 @@ export function DashboardContent({
           setShowAddExpense={setShowAddExpense}
           onAddExpense={handleExpenseRefresh}
         />
-      </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <FinnyCard />
       </motion.div>
 
       <motion.div variants={itemVariants}>

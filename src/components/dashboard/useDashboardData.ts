@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,12 +7,14 @@ import { Expense } from "@/components/expenses/types";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
+import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 
 export function useDashboardData() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
+  const { totalAdditions } = useWalletAdditions();
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
@@ -129,6 +132,7 @@ export function useDashboardData() {
   // Calculate financial metrics for the current month
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
+  const walletBalance = monthlyIncome + totalAdditions - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
   // Update month data when income or expenses change
@@ -137,9 +141,10 @@ export function useDashboardData() {
       monthlyIncome,
       monthlyExpenses,
       totalBalance,
+      walletBalance,
       savingsRate
     });
-  }, [monthlyIncome, monthlyExpenses, currentMonthKey, updateMonthData]);
+  }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData]);
 
   // Listen for expense update events and refresh data
   useEffect(() => {
@@ -168,6 +173,8 @@ export function useDashboardData() {
     monthlyIncome,
     monthlyExpenses,
     totalBalance,
+    walletBalance,
+    totalAdditions,
     savingsRate,
     chartType,
     setChartType,

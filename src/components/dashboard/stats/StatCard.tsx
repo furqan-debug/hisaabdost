@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -7,10 +7,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface StatCardProps {
   title: string;
   value: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   subtext?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  actionElement?: React.ReactNode;
 }
 
 export const StatCard = ({ 
@@ -19,21 +20,24 @@ export const StatCard = ({
   icon: Icon, 
   subtext, 
   children,
-  className = "" 
+  className = "",
+  actionElement
 }: StatCardProps) => {
   const isMobile = useIsMobile();
 
   return (
-    <Card className={`transition-all duration-300 hover:shadow-md relative ${className}`}>
-      <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isMobile ? 'p-3' : ''}`}>
-        <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
-        <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
+    <Card className={`transition-all duration-300 hover:shadow-md h-full ${className}`}>
+      <CardContent className="pt-6 pb-4 flex flex-col h-full">
+        <h3 className="text-md font-medium text-muted-foreground mb-2">{title}</h3>
+        <div className="text-3xl font-bold mb-2">
           {value}
         </div>
-        {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
+        {subtext && <p className="text-sm text-muted-foreground">{subtext}</p>}
         {children}
+        
+        <div className="mt-auto pt-2">
+          {actionElement}
+        </div>
       </CardContent>
     </Card>
   );

@@ -39,6 +39,20 @@ export function markBlobUrlForCleanup(url: string | null | undefined): void {
         inUse: newRefCount > 0,
         references: newRefCount
       });
+      
+      // If no references, clean up immediately to prevent memory leaks
+      if (newRefCount === 0) {
+        setTimeout(() => {
+          try {
+            URL.revokeObjectURL(url);
+            blobUrlRegistry.delete(url);
+            logDebug("Immediately cleaned up blob URL with zero references:", url);
+          } catch (error) {
+            console.error("Error revoking blob URL:", error);
+            blobUrlRegistry.delete(url);
+          }
+        }, 100); // Small delay to allow any pending operations
+      }
     }
   }
 }
@@ -87,6 +101,7 @@ export function cleanupBlobUrl(
       }
     } catch (error) {
       console.error("Error revoking blob URL:", error);
+      blobUrlRegistry.delete(url);
     }
   } else {
     markBlobUrlForCleanup(url);
@@ -101,12 +116,11 @@ export function cleanupUnusedBlobUrls(): void {
   
   // Get the current time
   const now = Date.now();
-  const staleThresholdMs = 5000; // 5 seconds
+  const staleThresholdMs = 2000; // Reduced to 2 seconds for faster cleanup
   
   let cleaned = 0;
   blobUrlRegistry.forEach((info, url) => {
-    // Only clean up URLs that have been unused for at least 5 seconds
-    // and have no references
+    // Clean up URLs that have been unused for at least 2 seconds and have no references
     if (!info.inUse && info.references === 0 && (now - info.created > staleThresholdMs)) {
       try {
         logDebug(`Cleaning up unused blob URL: ${url} (age: ${now - info.created}ms)`);
@@ -169,3 +183,8 @@ function logDebug(...args: any[]): void {
     console.log(...args);
   }
 }
+
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+  cleanupUnusedBlobUrls();
+}, 5000); // Run every 5 seconds

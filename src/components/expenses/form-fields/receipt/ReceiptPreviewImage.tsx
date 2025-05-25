@@ -6,19 +6,32 @@ interface ReceiptPreviewImageProps {
   url: string | null;
   className?: string;
   onLoad?: () => void;
+  onError?: () => void;
 }
 
 export function ReceiptPreviewImage({ 
   url, 
   className,
-  onLoad 
+  onLoad,
+  onError
 }: ReceiptPreviewImageProps) {
   const [hasError, setHasError] = useState(false);
   
   if (!url) return null;
   
-  // Handle blob URL formatting
-  const isBlobUrl = url.startsWith('blob:');
+  console.log("ReceiptPreviewImage rendering URL:", url);
+  
+  const handleError = () => {
+    console.log("ReceiptPreviewImage error for URL:", url);
+    setHasError(true);
+    if (onError) onError();
+  };
+
+  const handleLoad = () => {
+    console.log("ReceiptPreviewImage loaded successfully for URL:", url);
+    setHasError(false);
+    if (onLoad) onLoad();
+  };
   
   return (
     <div className={cn("w-full flex justify-center", className)}>
@@ -31,15 +44,10 @@ export function ReceiptPreviewImage({
           src={url} 
           alt="Receipt preview" 
           className="max-h-52 rounded-md object-contain border bg-background" 
-          onError={() => setHasError(true)}
-          onLoad={onLoad}
+          onError={handleError}
+          onLoad={handleLoad}
           loading="lazy"
         />
-      )}
-      {isBlobUrl && (
-        <div className="absolute bottom-0 w-full text-center text-xs text-muted-foreground p-1 bg-black/20">
-          Preview only
-        </div>
       )}
     </div>
   );

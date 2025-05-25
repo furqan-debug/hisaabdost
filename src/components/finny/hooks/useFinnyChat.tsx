@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
@@ -28,6 +28,7 @@ export const useFinnyChat = () => {
   useEffect(() => {
     if (currency?.currencyCode) {
       setCurrencyCode(currency.currencyCode);
+      console.log("Currency updated in useFinnyChat:", currency.currencyCode);
     }
   }, [currency?.currencyCode]);
 
@@ -61,7 +62,7 @@ export const useFinnyChat = () => {
   }, [queuedMessage, isOpen]);
 
   const openChat = () => {
-    console.log("Opening Finny chat, user auth status:", user ? "authenticated" : "not authenticated");
+    console.log("Opening Finny chat, user auth status:", user ? "authenticated" : "not authenticated", "currency:", currencyCode);
     setIsOpen(true);
   };
   
