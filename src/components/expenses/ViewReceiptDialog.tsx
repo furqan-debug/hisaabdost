@@ -28,12 +28,15 @@ export function ViewReceiptDialog({
 
   console.log("ViewReceiptDialog received URL:", receiptUrl);
   
-  // Check URL validity - accept both Supabase URLs and blob URLs
+  // Check URL validity - prioritize Supabase URLs as they are permanent
   const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
   const isSupabaseUrl = receiptUrl?.includes('supabase.co');
   const isBlobUrl = receiptUrl?.startsWith('blob:');
   const isHttpUrl = receiptUrl?.startsWith('http');
+  
+  // Supabase URLs are always valid, blob URLs are temporary, other HTTP URLs may be valid
   const isValidImageUrl = hasValidUrl && (isSupabaseUrl || isBlobUrl || isHttpUrl);
+  const isPermanentUrl = isSupabaseUrl || (isHttpUrl && !isBlobUrl);
   
   console.log("URL analysis:", {
     hasValidUrl,
@@ -41,6 +44,7 @@ export function ViewReceiptDialog({
     isBlobUrl,
     isHttpUrl,
     isValidImageUrl,
+    isPermanentUrl,
     url: receiptUrl
   });
 
@@ -68,8 +72,8 @@ export function ViewReceiptDialog({
   };
 
   const handleDownload = () => {
-    if (!isValidImageUrl) {
-      console.log("Cannot download: invalid URL");
+    if (!isPermanentUrl) {
+      console.log("Cannot download: URL is not permanent");
       return;
     }
     
@@ -104,7 +108,7 @@ export function ViewReceiptDialog({
     onOpenChange(false);
   };
 
-  // Determine error message
+  // Determine error message - only show "expired" message for actual blob URLs
   const getErrorMessage = () => {
     if (!hasValidUrl) {
       return "No receipt image available.";
@@ -119,7 +123,7 @@ export function ViewReceiptDialog({
   };
 
   const canRetry = isValidImageUrl;
-  const canDownload = isValidImageUrl && !isBlobUrl;
+  const canDownload = isPermanentUrl;
   const shouldShowImage = isValidImageUrl;
 
   return (
