@@ -1,5 +1,5 @@
 
-import { ReceiptPreviewImage } from "./components/ReceiptPreviewImage";
+import { ReceiptPreviewImage } from "./ReceiptPreviewImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 
