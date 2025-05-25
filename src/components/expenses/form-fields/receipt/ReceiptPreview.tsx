@@ -18,6 +18,8 @@ export function ReceiptPreview({
 }: ReceiptPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log("ReceiptPreview received URL:", receiptUrl);
+
   if (!receiptUrl) {
     return (
       <div className="rounded-md border bg-muted h-[150px] flex items-center justify-center">
@@ -27,6 +29,12 @@ export function ReceiptPreview({
   }
 
   const handleImageLoad = () => {
+    console.log("ReceiptPreview image loaded");
+    setIsLoading(false);
+  };
+
+  const handleImageError = () => {
+    console.log("ReceiptPreview image failed to load");
     setIsLoading(false);
   };
 
@@ -42,7 +50,8 @@ export function ReceiptPreview({
       )}
       <ReceiptPreviewImage 
         url={receiptUrl} 
-        onLoad={handleImageLoad} 
+        onLoad={handleImageLoad}
+        onError={handleImageError}
         className={`w-full h-auto object-contain ${className}`}
       />
       {!disabled && onReplace && (

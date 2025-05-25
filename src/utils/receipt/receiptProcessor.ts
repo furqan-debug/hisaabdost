@@ -19,9 +19,10 @@ export async function processReceiptFile(
       return null;
     }
     
+    console.log(`processReceiptFile: Starting to process ${file.name} (${file.size} bytes)`);
+    
     // Generate file fingerprint
     const fileFingerprint = generateFileFingerprint(file);
-    console.log(`Processing file: ${file.name} (${fileFingerprint})`);
     
     // Check if we can process this file
     if (!canProcessFile(fileFingerprint)) {
@@ -43,9 +44,8 @@ export async function processReceiptFile(
     if (setIsUploading) setIsUploading(true);
     
     try {
-      // Set form with file and clear receiptUrl initially
+      // Set form with file first - DON'T create blob URL
       updateField('receiptFile', file);
-      updateField('receiptUrl', '');
       
       console.log("Starting Supabase upload...");
       const supabaseUrl = await uploadToSupabase(file, userId);
@@ -53,7 +53,7 @@ export async function processReceiptFile(
       if (supabaseUrl) {
         console.log(`Upload successful: ${supabaseUrl}`);
         
-        // Update form with permanent URL
+        // Update form with permanent Supabase URL only
         updateField('receiptUrl', supabaseUrl);
         
         // Cache the result

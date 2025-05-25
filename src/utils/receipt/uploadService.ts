@@ -13,7 +13,7 @@ export function generateFileFingerprint(file: File): string {
 }
 
 /**
- * Upload a file to Supabase storage
+ * Upload a file to Supabase storage and return permanent URL
  */
 export async function uploadToSupabase(
   file: File,
@@ -58,7 +58,7 @@ export async function uploadToSupabase(
 }
 
 /**
- * Perform the actual upload to Supabase
+ * Perform the actual upload to Supabase storage
  */
 async function performUpload(
   file: File, 
@@ -102,7 +102,7 @@ async function performUpload(
       .from(bucketName)
       .getPublicUrl(storagePath);
       
-    console.log(`Upload successful! URL: ${publicUrl}`);
+    console.log(`Upload successful! Public URL: ${publicUrl}`);
     return publicUrl;
   } catch (error) {
     console.error("Upload error:", error);

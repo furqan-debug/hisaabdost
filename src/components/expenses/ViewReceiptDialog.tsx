@@ -27,48 +27,46 @@ export function ViewReceiptDialog({
   const [retryCount, setRetryCount] = useState(0);
 
   // Debug the URL
-  console.log("ViewReceiptDialog URL:", receiptUrl);
+  console.log("ViewReceiptDialog received URL:", receiptUrl);
   
-  // Check URL type
-  const isBlobUrl = receiptUrl?.startsWith('blob:');
-  const isSupabaseUrl = receiptUrl?.includes('supabase');
+  // Check URL validity
   const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
+  const isSupabaseUrl = receiptUrl?.includes('supabase.co');
   const isHttpUrl = receiptUrl?.startsWith('http');
-
+  
   console.log("URL analysis:", {
-    isBlobUrl,
-    isSupabaseUrl,
     hasValidUrl,
+    isSupabaseUrl,
     isHttpUrl,
     url: receiptUrl
   });
 
   const handleImageLoad = () => {
-    console.log("Image loaded successfully");
+    console.log("Receipt image loaded successfully");
     setIsLoading(false);
     setImageError(false);
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error("Image failed to load:", receiptUrl, e);
+    console.error("Receipt image failed to load:", receiptUrl, e);
     setIsLoading(false);
     setImageError(true);
   };
 
   const handleRetry = () => {
-    if (!hasValidUrl || isBlobUrl) {
-      console.log("Cannot retry: invalid URL or blob URL");
+    if (!hasValidUrl || !isHttpUrl) {
+      console.log("Cannot retry: invalid URL");
       return;
     }
-    console.log("Retrying image load");
+    console.log("Retrying image load, attempt:", retryCount + 1);
     setIsLoading(true);
     setImageError(false);
     setRetryCount(prev => prev + 1);
   };
 
   const handleDownload = () => {
-    if (!hasValidUrl || isBlobUrl) {
-      console.log("Cannot download: invalid URL or blob URL");
+    if (!hasValidUrl || !isHttpUrl) {
+      console.log("Cannot download: invalid URL");
       return;
     }
     
@@ -87,48 +85,39 @@ export function ViewReceiptDialog({
   };
 
   // Reset states when dialog opens/closes or URL changes
-  const resetStates = () => {
+  React.useEffect(() => {
+    if (open && hasValidUrl) {
+      console.log("Dialog opened with URL:", receiptUrl);
+      setIsLoading(true);
+      setImageError(false);
+      setRetryCount(0);
+    }
+  }, [open, receiptUrl, hasValidUrl]);
+
+  const handleClose = () => {
     setIsLoading(true);
     setImageError(false);
     setRetryCount(0);
-  };
-
-  React.useEffect(() => {
-    if (open) {
-      console.log("Dialog opened, resetting states");
-      resetStates();
-      
-      // If blob URL, immediately show error
-      if (isBlobUrl) {
-        console.log("Blob URL detected, showing error immediately");
-        setIsLoading(false);
-        setImageError(true);
-      }
-    }
-  }, [open, receiptUrl, isBlobUrl]);
-
-  const handleClose = () => {
-    resetStates();
     onOpenChange(false);
   };
 
-  // Determine error message based on URL type
+  // Determine error message and availability
   const getErrorMessage = () => {
     if (!hasValidUrl) {
       return "No receipt image available.";
     }
-    if (isBlobUrl) {
-      return "Receipt image is no longer available. The temporary preview has expired.";
-    }
     if (!isHttpUrl) {
       return "Invalid receipt image URL.";
     }
-    return "Failed to load receipt image. The image may be missing or inaccessible.";
+    if (!isSupabaseUrl) {
+      return "Receipt image URL is not accessible.";
+    }
+    return "Failed to load receipt image. Please try again.";
   };
 
-  const canRetry = hasValidUrl && !isBlobUrl && isHttpUrl;
-  const canDownload = hasValidUrl && !isBlobUrl && isHttpUrl;
-  const shouldShowImage = hasValidUrl && !isBlobUrl && isHttpUrl;
+  const canRetry = hasValidUrl && isHttpUrl;
+  const canDownload = hasValidUrl && isHttpUrl && isSupabaseUrl;
+  const shouldShowImage = hasValidUrl && isHttpUrl;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
