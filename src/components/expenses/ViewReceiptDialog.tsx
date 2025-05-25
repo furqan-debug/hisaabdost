@@ -26,18 +26,21 @@ export function ViewReceiptDialog({
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Debug the URL
   console.log("ViewReceiptDialog received URL:", receiptUrl);
   
-  // Check URL validity
+  // Check URL validity - accept both Supabase URLs and blob URLs
   const hasValidUrl = receiptUrl && receiptUrl.trim() !== '';
   const isSupabaseUrl = receiptUrl?.includes('supabase.co');
+  const isBlobUrl = receiptUrl?.startsWith('blob:');
   const isHttpUrl = receiptUrl?.startsWith('http');
+  const isValidImageUrl = hasValidUrl && (isSupabaseUrl || isBlobUrl || isHttpUrl);
   
   console.log("URL analysis:", {
     hasValidUrl,
     isSupabaseUrl,
+    isBlobUrl,
     isHttpUrl,
+    isValidImageUrl,
     url: receiptUrl
   });
 
@@ -54,7 +57,7 @@ export function ViewReceiptDialog({
   };
 
   const handleRetry = () => {
-    if (!hasValidUrl || !isHttpUrl) {
+    if (!isValidImageUrl) {
       console.log("Cannot retry: invalid URL");
       return;
     }
@@ -65,7 +68,7 @@ export function ViewReceiptDialog({
   };
 
   const handleDownload = () => {
-    if (!hasValidUrl || !isHttpUrl) {
+    if (!isValidImageUrl) {
       console.log("Cannot download: invalid URL");
       return;
     }
@@ -101,23 +104,23 @@ export function ViewReceiptDialog({
     onOpenChange(false);
   };
 
-  // Determine error message and availability
+  // Determine error message
   const getErrorMessage = () => {
     if (!hasValidUrl) {
       return "No receipt image available.";
     }
-    if (!isHttpUrl) {
-      return "Invalid receipt image URL.";
+    if (isBlobUrl) {
+      return "Receipt image URL is temporary and may have expired. Please re-upload the receipt.";
     }
-    if (!isSupabaseUrl) {
-      return "Receipt image URL is not accessible.";
+    if (!isHttpUrl) {
+      return "Invalid receipt image URL format.";
     }
     return "Failed to load receipt image. Please try again.";
   };
 
-  const canRetry = hasValidUrl && isHttpUrl;
-  const canDownload = hasValidUrl && isHttpUrl && isSupabaseUrl;
-  const shouldShowImage = hasValidUrl && isHttpUrl;
+  const canRetry = isValidImageUrl;
+  const canDownload = isValidImageUrl && !isBlobUrl;
+  const shouldShowImage = isValidImageUrl;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

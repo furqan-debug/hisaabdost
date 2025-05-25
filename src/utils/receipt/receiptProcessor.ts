@@ -44,7 +44,7 @@ export async function processReceiptFile(
     if (setIsUploading) setIsUploading(true);
     
     try {
-      // Set form with file first - DON'T create blob URL
+      // Set form with file first
       updateField('receiptFile', file);
       
       console.log("Starting Supabase upload...");
@@ -53,14 +53,19 @@ export async function processReceiptFile(
       if (supabaseUrl) {
         console.log(`Upload successful: ${supabaseUrl}`);
         
-        // Update form with permanent Supabase URL only
-        updateField('receiptUrl', supabaseUrl);
-        
-        // Cache the result
-        markFileComplete(fileFingerprint, supabaseUrl);
-        
-        toast.success("Receipt uploaded successfully");
-        return supabaseUrl;
+        // CRITICAL: Only update with permanent Supabase URL, never blob URLs
+        if (supabaseUrl.includes('supabase.co')) {
+          updateField('receiptUrl', supabaseUrl);
+          markFileComplete(fileFingerprint, supabaseUrl);
+          toast.success("Receipt uploaded successfully");
+          return supabaseUrl;
+        } else {
+          console.error("Invalid URL returned from upload:", supabaseUrl);
+          toast.error("Upload failed - invalid URL returned");
+          updateField('receiptUrl', '');
+          markFileComplete(fileFingerprint);
+          return null;
+        }
       } else {
         console.error("Upload failed");
         toast.error("Failed to upload receipt. Please try again.");
