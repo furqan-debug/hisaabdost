@@ -91,15 +91,15 @@ export function ViewReceiptDialog({
     }
   };
 
-  // Reset states when dialog opens/closes or URL changes
+  // Reset states when dialog opens - ALWAYS reset imageError to false
   React.useEffect(() => {
-    if (open && hasValidUrl) {
-      console.log("Dialog opened with URL:", receiptUrl);
+    if (open) {
+      console.log("Dialog opened, resetting states for URL:", receiptUrl);
       setIsLoading(true);
-      setImageError(false);
+      setImageError(false); // Always reset to false when dialog opens
       setRetryCount(0);
     }
-  }, [open, receiptUrl, hasValidUrl]);
+  }, [open, receiptUrl]); // Depend on both open and receiptUrl
 
   const handleClose = () => {
     setIsLoading(true);
@@ -123,7 +123,7 @@ export function ViewReceiptDialog({
 
   const canRetry = isValidImageUrl;
   const canDownload = isPermanentUrl;
-  const shouldShowImage = isValidImageUrl;
+  const shouldShowImage = isValidImageUrl && !imageError; // Only show image if no error
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -136,13 +136,13 @@ export function ViewReceiptDialog({
         </DialogHeader>
         
         <div className="relative flex flex-col items-center justify-center min-h-[200px]">
-          {isLoading && !imageError && shouldShowImage && (
+          {isLoading && shouldShowImage && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           )}
           
-          {!imageError && shouldShowImage ? (
+          {shouldShowImage ? (
             <img
               key={`${receiptUrl}-${retryCount}`}
               src={receiptUrl}
@@ -172,7 +172,7 @@ export function ViewReceiptDialog({
             </div>
           )}
           
-          {!isLoading && !imageError && shouldShowImage && (
+          {!isLoading && shouldShowImage && (
             <p className="mt-2 text-sm text-muted-foreground">
               Click outside or press ESC to close
             </p>
