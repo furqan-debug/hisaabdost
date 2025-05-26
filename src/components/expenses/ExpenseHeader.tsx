@@ -55,6 +55,14 @@ export function ExpenseHeader({
     triggerCameraCapture
   } = useExpenseFile();
 
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = handleFileChange(e);
+    if (file) {
+      // Automatically open the sheet with the selected file and appropriate mode
+      setShowAddExpense(true);
+    }
+  };
+
   const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
     setCaptureMode(mode);
@@ -84,6 +92,13 @@ export function ExpenseHeader({
     } finally {
       setTimeout(() => setIsExporting(null), 1000);
     }
+  };
+
+  const handleSheetClose = () => {
+    setShowAddExpense(false);
+    setSelectedFile(null);
+    setCaptureMode('manual');
+    onExpenseEditClose();
   };
 
   const buttonVariants = {
@@ -273,14 +288,14 @@ export function ExpenseHeader({
         )}
         
         <ReceiptFileInput 
-          onChange={handleFileChange} 
+          onChange={handleFileSelection} 
           inputRef={fileInputRef} 
           id="receipt-upload-button" 
           useCamera={false} 
         />
         
         <ReceiptFileInput 
-          onChange={handleFileChange} 
+          onChange={handleFileSelection} 
           inputRef={cameraInputRef} 
           id="camera-capture-button" 
           useCamera={true} 
@@ -289,7 +304,7 @@ export function ExpenseHeader({
         <AddExpenseSheet 
           onAddExpense={onAddExpense}
           expenseToEdit={expenseToEdit}
-          onClose={onExpenseEditClose}
+          onClose={handleSheetClose}
           open={showAddExpense || expenseToEdit !== undefined}
           onOpenChange={setShowAddExpense}
           initialCaptureMode={captureMode}
