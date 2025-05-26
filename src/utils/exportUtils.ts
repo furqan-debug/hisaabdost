@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "@/components/ui/use-toast";
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 // Helper to get formatted date for filenames
 const getFormattedDate = () => format(new Date(), 'yyyy-MM-dd');
@@ -11,7 +13,45 @@ const getFormattedDate = () => format(new Date(), 'yyyy-MM-dd');
 // Helper to get Hisaab Dost branded filename with date
 const getBrandedFilename = (fileType: string) => `Hisaab_Dost_Expenses_${getFormattedDate()}.${fileType}`;
 
-export const exportExpensesToCSV = (expenses: Expense[]) => {
+// Mobile-specific file download
+const downloadFileOnMobile = async (content: string, filename: string, mimeType: string) => {
+  try {
+    // Write file to device storage
+    const result = await Filesystem.writeFile({
+      path: filename,
+      data: content,
+      directory: Directory.Documents,
+      encoding: mimeType.includes('pdf') ? Encoding.UTF8 : Encoding.UTF8
+    });
+
+    toast({
+      title: "Success",
+      description: `File saved to Documents folder: ${filename}`,
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Mobile file save error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to save file on mobile device",
+      variant: "destructive"
+    });
+    throw error;
+  }
+};
+
+// Web-specific file download (existing functionality)
+const downloadFileOnWeb = (content: string, filename: string, mimeType: string) => {
+  const blob = new Blob([content], { type: mimeType });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
+
+export const exportExpensesToCSV = async (expenses: Expense[]) => {
   try {
     // Add Hisaab Dost branding in header
     const headers = ['Date', 'Description', 'Category', 'Amount'];
@@ -28,16 +68,21 @@ export const exportExpensesToCSV = (expenses: Expense[]) => {
       ].join(','))
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = getBrandedFilename('csv');
-    link.click();
+    const filename = getBrandedFilename('csv');
+
+    // Check if running on mobile platform
+    if (Capacitor.isNativePlatform()) {
+      await downloadFileOnMobile(csvContent, filename, 'text/csv;charset=utf-8;');
+    } else {
+      downloadFileOnWeb(csvContent, filename, 'text/csv;charset=utf-8;');
+    }
     
-    toast({
-      title: "Success",
-      description: "CSV file exported successfully"
-    });
+    if (!Capacitor.isNativePlatform()) {
+      toast({
+        title: "Success",
+        description: "CSV file exported successfully"
+      });
+    }
   } catch (error) {
     console.error('Error exporting CSV:', error);
     toast({
@@ -48,7 +93,7 @@ export const exportExpensesToCSV = (expenses: Expense[]) => {
   }
 };
 
-export const exportExpensesToPDF = (expenses: Expense[]) => {
+export const exportExpensesToPDF = async (expenses: Expense[]) => {
   try {
     // Create new PDF document
     const doc = new jsPDF();
@@ -94,13 +139,34 @@ export const exportExpensesToPDF = (expenses: Expense[]) => {
     doc.setFont('helvetica', 'bold');
     doc.text(`Total: ${total.toFixed(2)}`, 150, finalY + 10);
     
-    // Save PDF
-    doc.save(getBrandedFilename('pdf'));
-    
-    toast({
-      title: "Success",
-      description: "PDF file exported successfully"
-    });
+    const filename = getBrandedFilename('pdf');
+
+    // Check if running on mobile platform
+    if (Capacitor.isNativePlatform()) {
+      // For mobile, get PDF as base64 string
+      const pdfOutput = doc.output('datauristring');
+      const base64Data = pdfOutput.split(',')[1]; // Remove data:application/pdf;base64, prefix
+      
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8
+      });
+
+      toast({
+        title: "Success",
+        description: `PDF saved to Documents folder: ${filename}`
+      });
+    } else {
+      // Save PDF for web
+      doc.save(filename);
+      
+      toast({
+        title: "Success",
+        description: "PDF file exported successfully"
+      });
+    }
   } catch (error) {
     console.error('Error exporting PDF:', error);
     toast({

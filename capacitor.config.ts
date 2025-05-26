@@ -58,6 +58,10 @@ const config: CapacitorConfig = {
       resize: true,
       resizeOnFullScreen: true,
       style: "dark"
+    },
+    // Add Filesystem plugin configuration
+    Filesystem: {
+      androidRequestLegacyExternalStorage: true
     }
   }
 };
