@@ -4,8 +4,6 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "@/components/ui/use-toast";
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 // Helper to get formatted date for filenames
 const getFormattedDate = () => format(new Date(), 'yyyy-MM-dd');
@@ -13,9 +11,25 @@ const getFormattedDate = () => format(new Date(), 'yyyy-MM-dd');
 // Helper to get Hisaab Dost branded filename with date
 const getBrandedFilename = (fileType: string) => `Hisaab_Dost_Expenses_${getFormattedDate()}.${fileType}`;
 
+// Check if Capacitor is available and we're on a native platform
+const isNativePlatform = () => {
+  try {
+    // Dynamic import to avoid build errors if Capacitor is not available
+    return typeof window !== 'undefined' && 
+           window.Capacitor && 
+           window.Capacitor.isNativePlatform && 
+           window.Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
 // Mobile-specific file download
 const downloadFileOnMobile = async (content: string, filename: string, mimeType: string) => {
   try {
+    // Dynamic import to avoid build errors
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    
     // Write file to device storage
     const result = await Filesystem.writeFile({
       path: filename,
@@ -32,12 +46,12 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     return result;
   } catch (error) {
     console.error('Mobile file save error:', error);
+    // Fallback to web download if mobile fails
+    downloadFileOnWeb(content, filename, mimeType);
     toast({
-      title: "Error",
-      description: "Failed to save file on mobile device",
-      variant: "destructive"
+      title: "Info",
+      description: "Downloaded using browser download instead of mobile storage",
     });
-    throw error;
   }
 };
 
@@ -71,13 +85,10 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
     const filename = getBrandedFilename('csv');
 
     // Check if running on mobile platform
-    if (Capacitor.isNativePlatform()) {
+    if (isNativePlatform()) {
       await downloadFileOnMobile(csvContent, filename, 'text/csv;charset=utf-8;');
     } else {
       downloadFileOnWeb(csvContent, filename, 'text/csv;charset=utf-8;');
-    }
-    
-    if (!Capacitor.isNativePlatform()) {
       toast({
         title: "Success",
         description: "CSV file exported successfully"
@@ -142,22 +153,35 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
     const filename = getBrandedFilename('pdf');
 
     // Check if running on mobile platform
-    if (Capacitor.isNativePlatform()) {
-      // For mobile, get PDF as base64 string
-      const pdfOutput = doc.output('datauristring');
-      const base64Data = pdfOutput.split(',')[1]; // Remove data:application/pdf;base64, prefix
-      
-      await Filesystem.writeFile({
-        path: filename,
-        data: base64Data,
-        directory: Directory.Documents,
-        encoding: Encoding.UTF8
-      });
+    if (isNativePlatform()) {
+      try {
+        // Dynamic import to avoid build errors
+        const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+        
+        // For mobile, get PDF as base64 string
+        const pdfOutput = doc.output('datauristring');
+        const base64Data = pdfOutput.split(',')[1]; // Remove data:application/pdf;base64, prefix
+        
+        await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8
+        });
 
-      toast({
-        title: "Success",
-        description: `PDF saved to Documents folder: ${filename}`
-      });
+        toast({
+          title: "Success",
+          description: `PDF saved to Documents folder: ${filename}`
+        });
+      } catch (error) {
+        console.error('Mobile PDF save error:', error);
+        // Fallback to web download
+        doc.save(filename);
+        toast({
+          title: "Info",
+          description: "Downloaded using browser download instead of mobile storage"
+        });
+      }
     } else {
       // Save PDF for web
       doc.save(filename);
