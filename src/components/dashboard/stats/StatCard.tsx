@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon, Info } from "lucide-react";
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { OnboardingTooltip } from "@/components/OnboardingTooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface StatCardProps {
   title: string;
@@ -34,9 +34,19 @@ export const StatCard = ({
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-md font-medium text-muted-foreground">{title}</h3>
           {infoTooltip && (
-            <OnboardingTooltip content={infoTooltip}>
-              <Info className="h-4 w-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
-            </OnboardingTooltip>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">{title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {infoTooltip}
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
         <div className="text-3xl font-bold mb-2">

@@ -39,7 +39,7 @@ export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
         title="Wallet Balance"
         value={formatCurrency(walletBalance, currencyCode)}
         subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
-        infoTooltip="Your available wallet balance including income and any manually added funds. This represents money you can spend"
+        infoTooltip="Your wallet balance represents the total amount of money you have available to spend. This includes your monthly income plus any additional funds you've manually added (like bonuses, gifts, or transfers from savings). This is your current spending power and helps you track how much money you have left for expenses this month."
         actionElement={
           <Button
             variant="outline"
