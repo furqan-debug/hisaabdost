@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info, Loader2 } from 'lucide-react';
@@ -32,6 +32,9 @@ const FinnyChat = ({
 }: FinnyChatProps) => {
   const isMobile = useIsMobile();
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isAtTop, setIsAtTop] = useState(true);
   
   // Get user authentication status
   const { user } = useAuth();
@@ -60,6 +63,20 @@ const FinnyChat = ({
     }
   }, [isOpen, user, currencyCode]);
   
+  // Monitor scroll position to determine if user is at the top
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    const handleScroll = () => {
+      const scrollTop = scrollArea.scrollTop;
+      setIsAtTop(scrollTop <= 10); // Consider "at top" if within 10px of top
+    };
+
+    scrollArea.addEventListener('scroll', handleScroll);
+    return () => scrollArea.removeEventListener('scroll', handleScroll);
+  }, []);
+  
   // Filter out the auth prompt message when user is logged in
   const filteredMessages = messages.filter(message => {
     // If user is logged in, filter out the auth prompt message
@@ -75,44 +92,67 @@ const FinnyChat = ({
                            filteredMessages[0].content.includes("log in") &&
                            !user;
 
+  // Improved pull-to-close gesture handling - only on header
   useEffect(() => {
-    const chatContainer = chatContainerRef.current;
+    const header = headerRef.current;
     
-    if (!isMobile || !chatContainer || !isOpen) return;
+    if (!isMobile || !header || !isOpen) return;
 
     let startY = 0;
+    let currentY = 0;
     let isDragging = false;
+    let startTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Only start gesture if we're at the top of the chat
+      if (!isAtTop) return;
+      
       startY = e.touches[0].clientY;
+      currentY = startY;
       isDragging = false;
+      startTime = Date.now();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      const currentY = e.touches[0].clientY;
-      const deltaY = currentY - startY;
+      // Only process if we started at the top
+      if (!isAtTop) return;
       
-      if (deltaY > 50) {
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      const deltaTime = Date.now() - startTime;
+      
+      // More restrictive conditions for pull-to-close:
+      // 1. Must drag down at least 100px (increased from 50px)
+      // 2. Must be a reasonably fast gesture (within 800ms)
+      // 3. Must maintain downward direction
+      if (deltaY > 100 && deltaTime < 800 && deltaY > 0) {
         isDragging = true;
       }
     };
 
     const handleTouchEnd = () => {
-      if (isDragging) {
+      // Only close if all conditions are met and we're still at the top
+      if (isDragging && isAtTop) {
         onClose();
       }
+      
+      // Reset state
+      isDragging = false;
+      startY = 0;
+      currentY = 0;
     };
 
-    chatContainer.addEventListener('touchstart', handleTouchStart);
-    chatContainer.addEventListener('touchmove', handleTouchMove);
-    chatContainer.addEventListener('touchend', handleTouchEnd);
+    // Add touch listeners only to the header
+    header.addEventListener('touchstart', handleTouchStart, { passive: true });
+    header.addEventListener('touchmove', handleTouchMove, { passive: true });
+    header.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      chatContainer.removeEventListener('touchstart', handleTouchStart);
-      chatContainer.removeEventListener('touchmove', handleTouchMove);
-      chatContainer.removeEventListener('touchend', handleTouchEnd);
+      header.removeEventListener('touchstart', handleTouchStart);
+      header.removeEventListener('touchmove', handleTouchMove);
+      header.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isMobile, isOpen, onClose]);
+  }, [isMobile, isOpen, onClose, isAtTop]);
 
   return (
     <AnimatePresence>
@@ -147,12 +187,12 @@ const FinnyChat = ({
         >
           <Card className="finny-chat-card flex flex-col h-full">
             <div className="flex flex-col h-full keyboard-aware">
-              <div className="flex-none">
+              <div className="flex-none" ref={headerRef}>
                 <ChatHeader onClose={onClose} onReset={resetChat} />
               </div>
               
               <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full no-scrollbar touch-scroll-container">
+                <ScrollArea className="h-full no-scrollbar touch-scroll-container" ref={scrollAreaRef}>
                   <div className="finny-messages-container">
                     {!user && !isAuthPromptOnly && (
                       <Alert variant="default" className="mb-4 bg-muted/50 border-primary/20 rounded-lg">
