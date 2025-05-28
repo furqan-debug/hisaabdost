@@ -65,6 +65,7 @@ export const StatCards = ({
         title="Monthly Expenses"
         value={formatCurrency(monthlyExpenses, currencyCode)}
         subtext={<PercentageChange value={percentageChanges.expenses} inverse={true} />}
+        infoTooltip="Total amount spent this month across all categories and payment methods"
       />
 
       <EditableIncomeCard
@@ -74,12 +75,14 @@ export const StatCards = ({
         formatCurrency={formatCurrency}
         currencyCode={currencyCode}
         className=""
+        infoTooltip="Your monthly income before taxes. Click 'Edit Income' to update this amount"
       />
 
       <StatCard
         title="Savings Rate"
         value={formatPercentage(savingsRate)}
         subtext={<PercentageChange value={percentageChanges.savings} />}
+        infoTooltip="Percentage of income saved this month. Calculated as (Income - Expenses) / Income"
       />
     </div>
   );

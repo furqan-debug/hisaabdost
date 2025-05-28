@@ -19,6 +19,7 @@ interface EditableIncomeCardProps {
   formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
   currencyCode: CurrencyCode;
   className?: string;
+  infoTooltip?: string;
 }
 
 export const EditableIncomeCard = ({
@@ -28,6 +29,7 @@ export const EditableIncomeCard = ({
   formatCurrency,
   currencyCode,
   className = "",
+  infoTooltip,
 }: EditableIncomeCardProps) => {
   const [open, setOpen] = useState(false);
   const [income, setIncome] = useState(monthlyIncome.toString());
@@ -76,6 +78,7 @@ export const EditableIncomeCard = ({
         value={formatCurrency(monthlyIncome, currencyCode)}
         subtext={<PercentageChange value={percentageChange} />}
         className={className}
+        infoTooltip={infoTooltip}
         actionElement={
           <Button
             variant="outline"
