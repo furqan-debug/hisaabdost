@@ -35,10 +35,18 @@ export const InfoPopover = ({ title, content, cardType = 'wallet', children }: I
         {children}
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 p-0 border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-md"
-        side="top"
+        className="w-80 p-0 border-0 shadow-xl bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999
+        }}
         align="center"
-        sideOffset={8}
+        side="top"
+        sideOffset={0}
+        avoidCollisions={false}
       >
         <div className="relative p-5 rounded-lg">
           {/* Decorative sparkles */}
