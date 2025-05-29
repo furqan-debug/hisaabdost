@@ -66,6 +66,7 @@ export const StatCards = ({
         value={formatCurrency(monthlyExpenses, currencyCode)}
         subtext={<PercentageChange value={percentageChanges.expenses} inverse={true} />}
         infoTooltip="This shows the total amount you've spent this month across all categories and payment methods. It includes all your recorded expenses like groceries, dining, transportation, utilities, and other purchases. The percentage change compares this month's spending to the previous month, helping you track if you're spending more or less than usual."
+        cardType="expenses"
       />
 
       <EditableIncomeCard
@@ -83,6 +84,7 @@ export const StatCards = ({
         value={formatPercentage(savingsRate)}
         subtext={<PercentageChange value={percentageChanges.savings} />}
         infoTooltip="Your savings rate shows what percentage of your income you're saving each month. It's calculated as (Monthly Income - Monthly Expenses) ÷ Monthly Income × 100. A higher savings rate indicates better financial health and progress toward your financial goals. Financial experts typically recommend a savings rate of 10-20% or more for long-term financial stability."
+        cardType="savings"
       />
     </div>
   );

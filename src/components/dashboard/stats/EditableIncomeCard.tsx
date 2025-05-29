@@ -79,6 +79,7 @@ export const EditableIncomeCard = ({
         subtext={<PercentageChange value={percentageChange} />}
         className={className}
         infoTooltip={infoTooltip}
+        cardType="income"
         actionElement={
           <Button
             variant="outline"
