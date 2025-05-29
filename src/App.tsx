@@ -21,7 +21,6 @@ const Analytics = React.lazy(() => import("@/pages/Analytics"));
 const Goals = React.lazy(() => import("@/pages/Goals"));
 const NotFound = React.lazy(() => import("@/pages/NotFound"));
 const Auth = React.lazy(() => import("@/pages/Auth"));
-const Index = React.lazy(() => import("@/pages/Index"));
 
 // Create a client with optimized settings
 const queryClient = new QueryClient({
@@ -53,11 +52,7 @@ function App() {
                     <Routes>
                       <Route 
                         path="/" 
-                        element={
-                          <Suspense fallback={<LoadingScreen message="Loading..." />}>
-                            <Index />
-                          </Suspense>
-                        } 
+                        element={<Navigate to="/auth" replace />}
                       />
                       <Route 
                         path="/auth" 
@@ -118,7 +113,7 @@ function App() {
                           }
                         />
                       </Route>
-                      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                      <Route path="*" element={<Navigate to="/auth" replace />} />
                     </Routes>
                     <Toaster />
                   </FinnyProvider>
