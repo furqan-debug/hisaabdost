@@ -1,8 +1,10 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
 import { fetchUserFinancialData } from "./services/userDataService.ts";
 import { formatCurrency } from "./utils/formatters.ts";
+import { extractExpenseFromMessage, isExpenseMessage } from "./utils/expenseExtractor.ts";
 
 // Define CORS headers
 const corsHeaders = {
@@ -26,13 +28,14 @@ const EXPENSE_CATEGORIES = [
   "Other"
 ];
 
-/**
- * IMPORTANT: If the user doesn't specify a date when adding an expense, 
- * automatically set the date to today's date in YYYY-MM-DD format.
- * 
- * Format for responses:
- * - When you need to perform an action, include a JSON object with the action details
- */
+// Get today's date in YYYY-MM-DD format
+function getTodaysDate(): string {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 // Define the system message for Finny's personality, capabilities, and personalization
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
@@ -63,6 +66,9 @@ You should:
 - Offer helpful follow-ups after performing tasks
 - Confirm actions before saving
 - Ask for missing information when needed
+
+IMPORTANT EXPENSE HANDLING:
+When an expense has been automatically detected and added from the user's message, DO NOT ask follow-up questions. Simply acknowledge the expense was added and provide confirmation.
 
 You can perform these actions:
 1. Add new expenses
@@ -105,15 +111,6 @@ When asked about category-specific data:
 
 If you don't have enough information to complete an action, ask follow-up questions. For example:
 "I can add that expense for you. What category should I use?"`;
-
-// Get today's date in YYYY-MM-DD format
-function getTodaysDate(): string {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -180,6 +177,42 @@ serve(async (req) => {
       userGender,
       userPreferredCurrency
     });
+
+    // PRE-PROCESS: Check if this is an automatic expense message
+    let autoExpenseData = null;
+    let processedMessage = message;
+    let hasAutoExpense = false;
+
+    if (isExpenseMessage(message)) {
+      autoExpenseData = extractExpenseFromMessage(message);
+      if (autoExpenseData && autoExpenseData.confidence > 0.5) {
+        console.log("Auto-extracted expense:", autoExpenseData);
+        
+        // Create the expense action
+        const expenseAction = {
+          type: "add_expense",
+          amount: autoExpenseData.amount,
+          category: autoExpenseData.category,
+          description: autoExpenseData.description,
+          date: getTodaysDate()
+        };
+
+        try {
+          // Process the expense immediately
+          const actionResult = await processAction(expenseAction, userId, supabase);
+          hasAutoExpense = true;
+          
+          // Modify the message to inform AI that expense was already added
+          processedMessage = `User message: "${message}"\n\nNOTE: I have automatically detected and added this expense:\n- Amount: ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)}\n- Category: ${autoExpenseData.category}\n- Description: ${autoExpenseData.description}\n- Date: ${getTodaysDate()}\n\nPlease acknowledge this addition and provide a brief, friendly confirmation. Do not ask follow-up questions since the expense was successfully added.`;
+          
+          console.log("Auto-expense processed successfully:", actionResult);
+        } catch (autoExpenseError) {
+          console.error("Failed to auto-process expense:", autoExpenseError);
+          // Continue with normal processing if auto-expense fails
+          hasAutoExpense = false;
+        }
+      }
+    }
       
     // Look for goal setting patterns to extract info directly
     const goalPattern = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: (?:for|to reach|to save))? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
@@ -352,7 +385,7 @@ When responding to the user named ${userName}:
         messages: [
           { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + (userContext || '') },
           ...formattedHistory,
-          { role: 'user', content: message }
+          { role: 'user', content: processedMessage }
         ],
         temperature: 0.7,
       }),
@@ -372,8 +405,23 @@ When responding to the user named ${userName}:
     let processedResponse = aiResponse;
     let action = null;
     
+    // If we already processed an auto-expense, include it in the response
+    if (hasAutoExpense && autoExpenseData) {
+      action = {
+        type: "add_expense",
+        amount: autoExpenseData.amount,
+        category: autoExpenseData.category,
+        description: autoExpenseData.description,
+        date: getTodaysDate()
+      };
+      
+      // Add confirmation checkmark if not already present
+      if (!processedResponse.includes("✅")) {
+        processedResponse = `✅ Added ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)} ${autoExpenseData.category} expense for today!\n\n${processedResponse}`;
+      }
+    }
     // If we have a goal match in the input but no action in the response, try to create a goal action
-    if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
+    else if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
       try {
         console.log("Creating goal action from pattern match");
         const goalAction = {
@@ -409,8 +457,8 @@ When responding to the user named ${userName}:
         }
       }
     }
-    // Check if there's an action in the AI response
-    else if (actionMatch && actionMatch[1]) {
+    // Check if there's an action in the AI response (only if we haven't already processed an auto-expense)
+    else if (!hasAutoExpense && actionMatch && actionMatch[1]) {
       try {
         // parse the assistant's action
         action = JSON.parse(actionMatch[1]);
