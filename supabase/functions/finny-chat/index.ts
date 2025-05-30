@@ -137,7 +137,7 @@ serve(async (req) => {
       throw new Error('User ID is required');
     }
 
-    console.log("Request details:", { message, analysisType, specificCategory });
+    console.log("Request details:", { message, analysisType, specificCategory, currencyCode });
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -159,7 +159,9 @@ serve(async (req) => {
     const userName = userProfile?.full_name || 'there';
     const userAge = userProfile?.age || null;
     const userGender = userProfile?.gender || 'prefer-not-to-say';
-    const userPreferredCurrency = userProfile?.preferred_currency || currencyCode;
+    
+    // Use the currency code from the request, fall back to user profile, then to USD
+    const userPreferredCurrency = currencyCode || userProfile?.preferred_currency || 'USD';
     
     // Determine age category for personalization
     let ageCategory = "unknown";
@@ -175,7 +177,8 @@ serve(async (req) => {
       userAge, 
       ageCategory,
       userGender,
-      userPreferredCurrency
+      userPreferredCurrency,
+      requestCurrency: currencyCode
     });
 
     // PRE-PROCESS: Check if this is an automatic expense message
@@ -331,6 +334,7 @@ IMPORTANT: When adding an expense:
 - Today's date is ${getTodaysDate()}
 - Always use this current date when the user says 'today' or doesn't specify a date
 - NEVER use past years like 2022 or 2023 for expenses mentioned as current or recent
+- Always format currency amounts using ${userPreferredCurrency} format
 
 When responding to the user named ${userName}:
 1. Use their name (${userName}) occasionally to make interactions personal
@@ -415,7 +419,7 @@ When responding to the user named ${userName}:
         date: getTodaysDate()
       };
       
-      // Add confirmation checkmark if not already present
+      // Add confirmation checkmark with proper currency formatting
       if (!processedResponse.includes("✅")) {
         processedResponse = `✅ Added ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)} ${autoExpenseData.category} expense for today!\n\n${processedResponse}`;
       }
