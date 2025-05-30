@@ -10,7 +10,7 @@ const Index = () => {
   const user = auth?.user || null;
   const loading = auth?.loading || false;
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     if (user && !loading) {
       navigate('/dashboard');
