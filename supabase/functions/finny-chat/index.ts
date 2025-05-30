@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -68,10 +67,10 @@ You should:
 - Ask for missing information when needed
 
 IMPORTANT EXPENSE HANDLING:
-When an expense has been automatically detected and added from the user's message, DO NOT ask follow-up questions. Simply acknowledge the expense was added and provide confirmation.
+When an expense has been automatically detected and added from the user's message, DO NOT ask follow-up questions. Simply acknowledge the expense was added and provide confirmation with a clean, short description.
 
 You can perform these actions:
-1. Add new expenses
+1. Add new expenses (with clean, short descriptions)
 2. Edit or delete expenses
 3. Set and update budgets
 4. Track and manage goals
@@ -87,9 +86,15 @@ you must suggest the closest matching category from the allowed list. Use the "O
 category as a fallback when no good match can be found. Always inform the user when 
 you're adjusting their category to match the allowed ones.
 
+EXPENSE DESCRIPTIONS: Always use clean, short descriptions for expenses:
+- "Petrol" instead of "I bought petrol for my car"
+- "Chicken" instead of "chicken khaya"
+- "Groceries" instead of "grocery shopping"
+- "Movie" instead of "went to see a movie"
+
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
-- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"2025-05-02","description":"Grocery shopping"}]
+- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"2025-05-02","description":"Chicken"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
 
 When the user mentions "today", "now", "current", or doesn't specify a date for expenses:
@@ -191,12 +196,12 @@ serve(async (req) => {
       if (autoExpenseData && autoExpenseData.confidence > 0.5) {
         console.log("Auto-extracted expense:", autoExpenseData);
         
-        // Create the expense action
+        // Create the expense action with clean description
         const expenseAction = {
           type: "add_expense",
           amount: autoExpenseData.amount,
           category: autoExpenseData.category,
-          description: autoExpenseData.description,
+          description: autoExpenseData.description, // This will now be clean and short
           date: getTodaysDate()
         };
 
@@ -206,7 +211,7 @@ serve(async (req) => {
           hasAutoExpense = true;
           
           // Modify the message to inform AI that expense was already added
-          processedMessage = `User message: "${message}"\n\nNOTE: I have automatically detected and added this expense:\n- Amount: ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)}\n- Category: ${autoExpenseData.category}\n- Description: ${autoExpenseData.description}\n- Date: ${getTodaysDate()}\n\nPlease acknowledge this addition and provide a brief, friendly confirmation. Do not ask follow-up questions since the expense was successfully added.`;
+          processedMessage = `User message: "${message}"\n\nNOTE: I have automatically detected and added this expense:\n- Amount: ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)}\n- Category: ${autoExpenseData.category}\n- Description: ${autoExpenseData.description}\n- Date: ${getTodaysDate()}\n\nPlease acknowledge this addition with a brief, friendly confirmation using the clean description. Do not ask follow-up questions since the expense was successfully added.`;
           
           console.log("Auto-expense processed successfully:", actionResult);
         } catch (autoExpenseError) {
@@ -415,13 +420,13 @@ When responding to the user named ${userName}:
         type: "add_expense",
         amount: autoExpenseData.amount,
         category: autoExpenseData.category,
-        description: autoExpenseData.description,
+        description: autoExpenseData.description, // Clean description
         date: getTodaysDate()
       };
       
-      // Add confirmation checkmark with proper currency formatting
+      // Add confirmation checkmark with proper currency formatting and clean description
       if (!processedResponse.includes("✅")) {
-        processedResponse = `✅ Added ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)} ${autoExpenseData.category} expense for today!\n\n${processedResponse}`;
+        processedResponse = `✅ Added ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)} ${autoExpenseData.category} expense: ${autoExpenseData.description}\n\n${processedResponse}`;
       }
     }
     // If we have a goal match in the input but no action in the response, try to create a goal action

@@ -7,51 +7,126 @@ export interface ExpenseData {
   confidence: number;
 }
 
-// Common expense keywords mapped to categories
-const EXPENSE_KEYWORDS: Record<string, string[]> = {
-  "Food": [
-    // English
-    "food", "eat", "ate", "lunch", "dinner", "breakfast", "snack", "meal", "restaurant", 
-    "cafe", "coffee", "pizza", "burger", "sandwich", "grocery", "groceries",
-    // Urdu/Hindi
-    "khana", "khaya", "nashta", "dophar", "raat", "bakra", "gosht", "chawal", "daal",
-    "sabzi", "roti", "naan", "biryani", "karahi", "tikka", "kebab", "chai", "dudh",
-    // More food items
-    "chicken", "beef", "mutton", "fish", "vegetables", "fruit", "bread", "rice"
-  ],
-  "Transportation": [
-    // English
-    "taxi", "uber", "fuel", "gas", "petrol", "bus", "train", "flight", "parking", "toll",
-    // Urdu/Hindi
-    "rickshaw", "qingqi", "metro", "bus", "gari", "petrol", "diesel", "parking"
-  ],
-  "Shopping": [
-    // English
-    "shopping", "clothes", "shirt", "shoes", "buy", "bought", "purchase", "store", "mall",
-    // Urdu/Hindi
-    "kapray", "jooty", "kharida", "dukan", "bazaar", "market"
-  ],
-  "Entertainment": [
-    // English
-    "movie", "cinema", "game", "concert", "show", "ticket", "netflix", "spotify",
-    // Urdu/Hindi
-    "film", "tamasha", "khel", "ticket"
-  ],
-  "Health": [
-    // English
-    "doctor", "medicine", "hospital", "pharmacy", "checkup", "treatment", "dentist",
-    // Urdu/Hindi
-    "doctor", "dawai", "hospital", "ilaj", "dant"
-  ],
-  "Utilities": [
-    // English
-    "electricity", "gas", "water", "internet", "phone", "wifi", "bill",
-    // Urdu/Hindi
-    "bijli", "gas", "pani", "internet", "phone", "bill"
-  ]
+// Predefined expense categories - only these are allowed
+const PREDEFINED_CATEGORIES = [
+  "Food",
+  "Transportation", 
+  "Shopping",
+  "Entertainment",
+  "Utilities",
+  "Rent",
+  "Other"
+];
+
+// Common expense keywords mapped to categories with clean descriptions
+const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; cleanNames: Record<string, string> }> = {
+  "Food": {
+    category: "Food",
+    keywords: [
+      // English
+      "food", "eat", "ate", "lunch", "dinner", "breakfast", "snack", "meal", "restaurant", 
+      "cafe", "coffee", "pizza", "burger", "sandwich", "grocery", "groceries", "chicken",
+      "beef", "mutton", "fish", "vegetables", "fruit", "bread", "rice",
+      // Urdu/Hindi
+      "khana", "khaya", "nashta", "dophar", "raat", "bakra", "gosht", "chawal", "daal",
+      "sabzi", "roti", "naan", "biryani", "karahi", "tikka", "kebab", "chai", "dudh"
+    ],
+    cleanNames: {
+      "bakra": "Goat",
+      "bakra khaya": "Goat",
+      "gosht": "Meat", 
+      "gosht khaya": "Meat",
+      "chicken": "Chicken",
+      "chicken khaya": "Chicken",
+      "biryani": "Biryani",
+      "biryani khaya": "Biryani", 
+      "chai": "Tea",
+      "chai pi": "Tea",
+      "coffee": "Coffee",
+      "pizza": "Pizza",
+      "burger": "Burger",
+      "lunch": "Lunch",
+      "dinner": "Dinner", 
+      "breakfast": "Breakfast",
+      "grocery": "Groceries",
+      "groceries": "Groceries"
+    }
+  },
+  "Transportation": {
+    category: "Transportation",
+    keywords: [
+      // English
+      "taxi", "uber", "fuel", "gas", "petrol", "bus", "train", "flight", "parking", "toll",
+      // Urdu/Hindi
+      "rickshaw", "qingqi", "metro", "bus", "gari", "petrol", "diesel"
+    ],
+    cleanNames: {
+      "petrol": "Petrol",
+      "petrol dala": "Petrol",
+      "petrol dalwaya": "Petrol",
+      "fuel": "Fuel",
+      "gas": "Gas", 
+      "taxi": "Taxi",
+      "uber": "Uber",
+      "rickshaw": "Rickshaw",
+      "bus": "Bus",
+      "parking": "Parking"
+    }
+  },
+  "Shopping": {
+    category: "Shopping", 
+    keywords: [
+      // English
+      "shopping", "clothes", "shirt", "shoes", "buy", "bought", "purchase", "store", "mall",
+      // Urdu/Hindi
+      "kapray", "jooty", "kharida", "dukan", "bazaar", "market"
+    ],
+    cleanNames: {
+      "shopping": "Shopping",
+      "clothes": "Clothes",
+      "kapray": "Clothes",
+      "shoes": "Shoes", 
+      "jooty": "Shoes",
+      "shirt": "Shirt"
+    }
+  },
+  "Entertainment": {
+    category: "Entertainment",
+    keywords: [
+      // English 
+      "movie", "cinema", "game", "concert", "show", "ticket", "netflix", "spotify",
+      // Urdu/Hindi
+      "film", "tamasha", "khel", "ticket"
+    ],
+    cleanNames: {
+      "movie": "Movie",
+      "cinema": "Cinema",
+      "film": "Movie",
+      "game": "Game",
+      "ticket": "Ticket"
+    }
+  },
+  "Utilities": {
+    category: "Utilities",
+    keywords: [
+      // English
+      "electricity", "gas", "water", "internet", "phone", "wifi", "bill",
+      // Urdu/Hindi 
+      "bijli", "gas", "pani", "internet", "phone", "bill"
+    ],
+    cleanNames: {
+      "electricity": "Electricity",
+      "bijli": "Electricity", 
+      "water": "Water",
+      "pani": "Water",
+      "internet": "Internet",
+      "phone": "Phone",
+      "bill": "Bill"
+    }
+  }
 };
 
-// Currency patterns
+// Currency patterns for amount extraction
 const CURRENCY_PATTERNS = [
   { pattern: /(\d+(?:\.\d+)?)\s*(?:rs|rupees?|₹)/i, multiplier: 1, currency: 'PKR' },
   { pattern: /(\d+(?:\.\d+)?)\s*(?:\$|dollars?|usd)/i, multiplier: 1, currency: 'USD' },
@@ -78,17 +153,17 @@ export function categorizeExpense(text: string): { category: string; confidence:
   const lowerText = text.toLowerCase();
   const scores: Record<string, number> = {};
   
-  // Calculate scores for each category
-  for (const [category, keywords] of Object.entries(EXPENSE_KEYWORDS)) {
+  // Calculate scores for each predefined category
+  for (const [categoryName, categoryData] of Object.entries(EXPENSE_KEYWORDS)) {
     let score = 0;
-    for (const keyword of keywords) {
+    for (const keyword of categoryData.keywords) {
       if (lowerText.includes(keyword.toLowerCase())) {
         // Give higher score for exact matches and longer keywords
         score += keyword.length * (lowerText.split(keyword.toLowerCase()).length - 1);
       }
     }
     if (score > 0) {
-      scores[category] = score;
+      scores[categoryName] = score;
     }
   }
   
@@ -101,56 +176,48 @@ export function categorizeExpense(text: string): { category: string; confidence:
     scores[a[0]] > scores[b[0]] ? a : b
   )[0];
   
+  // Only return categories that are in our predefined list
+  if (!PREDEFINED_CATEGORIES.includes(bestCategory)) {
+    return { category: "Other", confidence: 0 };
+  }
+  
   const maxScore = Math.max(...Object.values(scores));
   const confidence = Math.min(maxScore / 10, 1); // Normalize confidence score
   
   return { category: bestCategory, confidence };
 }
 
-// Generate a clean description from the original text
+// Generate a clean, short description from the original text
 export function generateDescription(text: string, category: string): string {
   const lowerText = text.toLowerCase();
   
-  // Remove currency amounts from description
-  let cleanText = text;
-  for (const { pattern } of CURRENCY_PATTERNS) {
-    cleanText = cleanText.replace(pattern, '').trim();
+  // Find the category data
+  const categoryData = EXPENSE_KEYWORDS[category];
+  if (!categoryData) {
+    return category; // Fallback to category name
   }
   
-  // Common description mappings
-  const descriptionMappings: Record<string, string> = {
-    "bakra khaya": "Goat meat",
-    "gosht khaya": "Meat",
-    "chicken khaya": "Chicken",
-    "biryani khaya": "Biryani",
-    "chai pi": "Tea",
-    "coffee pi": "Coffee",
-    "petrol dala": "Fuel",
-    "rickshaw liya": "Rickshaw ride",
-    "dukan se khareeda": "Shopping",
-    "kapray kharide": "Clothes shopping"
-  };
-  
-  // Check for direct mappings
-  for (const [key, value] of Object.entries(descriptionMappings)) {
-    if (lowerText.includes(key)) {
-      return value;
+  // Check for direct clean name mappings
+  for (const [key, cleanName] of Object.entries(categoryData.cleanNames)) {
+    if (lowerText.includes(key.toLowerCase())) {
+      return cleanName;
     }
   }
   
-  // Generate based on category and clean up text
-  cleanText = cleanText
-    .replace(/\b(ka|ki|ke|se|me|aaj|kal|today|yesterday)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  if (cleanText.length < 3) {
-    return category === "Food" ? "Food expense" : 
-           category === "Transportation" ? "Transportation expense" :
-           `${category} expense`;
+  // Check for keyword matches and return clean names
+  for (const keyword of categoryData.keywords) {
+    if (lowerText.includes(keyword.toLowerCase())) {
+      const cleanName = categoryData.cleanNames[keyword];
+      if (cleanName) {
+        return cleanName;
+      }
+      // If no clean name mapping, capitalize the keyword
+      return keyword.charAt(0).toUpperCase() + keyword.slice(1);
+    }
   }
   
-  return cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+  // Fallback to category name if no specific item found
+  return category;
 }
 
 // Main extraction function
@@ -162,8 +229,8 @@ export function extractExpenseFromMessage(message: string): ExpenseData | null {
   
   const categoryData = categorizeExpense(message);
   
-  // Only auto-extract if we have reasonable confidence
-  if (categoryData.confidence < 0.3) {
+  // Only auto-extract if we have reasonable confidence and it's a predefined category
+  if (categoryData.confidence < 0.3 || !PREDEFINED_CATEGORIES.includes(categoryData.category)) {
     return null;
   }
   
@@ -181,7 +248,7 @@ export function extractExpenseFromMessage(message: string): ExpenseData | null {
 export function isExpenseMessage(message: string): boolean {
   const hasAmount = extractAmount(message) !== null;
   const hasExpenseKeywords = Object.values(EXPENSE_KEYWORDS)
-    .flat()
+    .flatMap(cat => cat.keywords)
     .some(keyword => message.toLowerCase().includes(keyword.toLowerCase()));
   
   return hasAmount && hasExpenseKeywords;
