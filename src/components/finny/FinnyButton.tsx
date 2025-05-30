@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { BotMessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/lib/auth';
 
 interface FinnyButtonProps {
   onClick: () => void;
@@ -17,6 +18,7 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const { user } = useAuth();
 
   // Animation will run only on the initial render
   useEffect(() => {
@@ -28,8 +30,8 @@ const FinnyButton = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Don't show the button when chat is open
-  if (isOpen) return null;
+  // Don't show the button when chat is open or user is not authenticated
+  if (isOpen || !user) return null;
   
   return (
     <motion.div 
