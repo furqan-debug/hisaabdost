@@ -33,13 +33,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
-        <AuthProvider>
-          <MonthProvider>
-            <FinnyProvider>
-              <SidebarProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
+        <BrowserRouter>
+          <AuthProvider>
+            <MonthProvider>
+              <FinnyProvider>
+                <SidebarProvider>
+                  <Toaster />
+                  <Sonner />
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
@@ -54,11 +54,11 @@ const App = () => (
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </BrowserRouter>
-              </SidebarProvider>
-            </FinnyProvider>
-          </MonthProvider>
-        </AuthProvider>
+                </SidebarProvider>
+              </FinnyProvider>
+            </MonthProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
