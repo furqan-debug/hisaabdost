@@ -18,37 +18,47 @@ import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { MonthProvider } from "./hooks/use-month-context";
 import { FinnyProvider } from "./components/finny";
+import { AuthProvider } from "./lib/auth";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
-        <MonthProvider>
-          <FinnyProvider>
-            <SidebarProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/app" element={<Layout />}>
-                    <Route index element={<Navigate to="/app/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="expenses" element={<Expenses />} />
-                    <Route path="budget" element={<Budget />} />
-                    <Route path="analytics" element={<Analytics />} />
-                    <Route path="goals" element={<Goals />} />
-                    <Route path="history" element={<History />} />
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </SidebarProvider>
-          </FinnyProvider>
-        </MonthProvider>
+        <AuthProvider>
+          <MonthProvider>
+            <FinnyProvider>
+              <SidebarProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/app" element={<Layout />}>
+                      <Route index element={<Navigate to="/app/dashboard" replace />} />
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="expenses" element={<Expenses />} />
+                      <Route path="budget" element={<Budget />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="goals" element={<Goals />} />
+                      <Route path="history" element={<History />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </SidebarProvider>
+            </FinnyProvider>
+          </MonthProvider>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

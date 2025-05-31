@@ -38,19 +38,20 @@ const preloadResources = () => {
 // Run initialization
 preloadResources();
 
-// Use createRoot in non-blocking microtask
-setTimeout(() => {
-  const rootElement = document.getElementById("root");
-  if (rootElement) {
-    createRoot(rootElement).render(
-      // Remove React.StrictMode in production to prevent double rendering/effects
-      import.meta.env.DEV ? (
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      ) : (
+// Get root element and render app
+const rootElement = document.getElementById("root");
+
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(
+    import.meta.env.DEV ? (
+      <React.StrictMode>
         <App />
-      )
-    );
-  }
-}, 0);
+      </React.StrictMode>
+    ) : (
+      <App />
+    )
+  );
+} else {
+  console.error('Root element not found');
+}

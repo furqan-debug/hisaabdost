@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Calendar, Receipt, Wallet, Target, BarChart2, User, Trash2 } from 'lucide-react';
+import { Search, Filter, Calendar, Receipt, Wallet, Target, BarChart2, User } from 'lucide-react';
 import { format, parseISO, isWithinInterval, subDays, subMonths } from 'date-fns';
 
 interface ActivityLog {
