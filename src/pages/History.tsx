@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +23,7 @@ interface ActivityLog {
 
 const History = () => {
   const { user } = useAuth();
-  const { currency } = useCurrency();
+  const { currencyCode } = useCurrency();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -244,7 +243,7 @@ const History = () => {
                   {activity.amount && (
                     <div className="text-right">
                       <p className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(activity.amount, currency)}
+                        {formatCurrency(activity.amount, currencyCode)}
                       </p>
                     </div>
                   )}
