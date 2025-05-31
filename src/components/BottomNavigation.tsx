@@ -1,8 +1,9 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
+import { Home, Receipt, Wallet, BarChart2, Target, History } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+
 const navItems = [{
   icon: Home,
   label: "Home",
@@ -20,10 +21,11 @@ const navItems = [{
   label: "Analytics",
   path: "/app/analytics"
 }, {
-  icon: Target,
-  label: "Goals",
-  path: "/app/goals"
+  icon: History,
+  label: "History",
+  path: "/app/history"
 }];
+
 export function BottomNavigation() {
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -57,4 +59,3 @@ export function BottomNavigation() {
       </div>
     </div>;
 }
-;
