@@ -32,26 +32,26 @@ export const StatCard = ({
   
   return (
     <Card className={`transition-all duration-300 hover:shadow-md h-full ${className}`}>
-      <CardContent className="pt-6 pb-4 flex flex-col h-full">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-md font-medium text-muted-foreground">{title}</h3>
+      <CardContent className="pt-4 pb-3 px-3 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
           {infoTooltip && (
             <InfoPopover
               title={title}
               content={infoTooltip}
               cardType={cardType}
             >
-              <Info className="h-4 w-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+              <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
             </InfoPopover>
           )}
         </div>
-        <div className="text-3xl font-bold mb-2">
+        <div className="text-2xl font-bold mb-1.5">
           {value}
         </div>
-        {subtext && <p className="text-sm text-muted-foreground">{subtext}</p>}
+        {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
         {children}
         
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-1.5">
           {actionElement}
         </div>
       </CardContent>

@@ -44,16 +44,16 @@ export const StatCards = ({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-[150px]" />
+          <Skeleton key={i} className="h-[120px]" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
+    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
       <OnboardingTooltip
         content="Track your wallet balance including income and added funds"
         defaultOpen={isNewUser}
