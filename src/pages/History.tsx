@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,12 +32,12 @@ const History = () => {
   const [dateFilter, setDateFilter] = useState('all');
 
   const actionTypeConfig = {
-    expense: { icon: Receipt, color: 'bg-red-100 text-red-800', label: 'Expense' },
-    budget: { icon: BarChart2, color: 'bg-blue-100 text-blue-800', label: 'Budget' },
-    goal: { icon: Target, color: 'bg-green-100 text-green-800', label: 'Goal' },
-    wallet: { icon: Wallet, color: 'bg-purple-100 text-purple-800', label: 'Wallet' },
-    income: { icon: DollarSign, color: 'bg-yellow-100 text-yellow-800', label: 'Income' },
-    profile: { icon: User, color: 'bg-gray-100 text-gray-800', label: 'Profile' }
+    expense: { icon: Receipt, color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', label: 'Expense' },
+    budget: { icon: BarChart2, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', label: 'Budget' },
+    goal: { icon: Target, color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', label: 'Goal' },
+    wallet: { icon: Wallet, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300', label: 'Wallet' },
+    income: { icon: DollarSign, color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', label: 'Income' },
+    profile: { icon: User, color: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300', label: 'Profile' }
   };
 
   useEffect(() => {
@@ -122,7 +121,7 @@ const History = () => {
   const getActionBadge = (actionType: string) => {
     const config = actionTypeConfig[actionType as keyof typeof actionTypeConfig];
     return (
-      <Badge variant="secondary" className={config?.color || 'bg-gray-100 text-gray-800'}>
+      <Badge variant="secondary" className={config?.color || 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300'}>
         {config?.label || actionType}
       </Badge>
     );
@@ -148,10 +147,10 @@ const History = () => {
       
       return (
         <div className="text-right">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-foreground">
             {formatCurrency(activity.amount, currencyCode)}
           </p>
-          <p className={`text-xs ${changeAmount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-xs ${changeAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {changeAmount > 0 ? '+' : ''}{formatCurrency(changeAmount, currencyCode)}
           </p>
         </div>
@@ -160,7 +159,7 @@ const History = () => {
     
     return (
       <div className="text-right">
-        <p className="text-sm font-semibold text-gray-900">
+        <p className="text-sm font-semibold text-foreground">
           {formatCurrency(activity.amount, currencyCode)}
         </p>
       </div>
@@ -179,9 +178,9 @@ const History = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Calendar className="h-5 w-5" />
             Activity History
           </CardTitle>
@@ -189,38 +188,38 @@ const History = () => {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search activities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-background border-border text-foreground">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="expense">Expenses</SelectItem>
-                <SelectItem value="budget">Budget</SelectItem>
-                <SelectItem value="goal">Goals</SelectItem>
-                <SelectItem value="wallet">Wallet</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all" className="text-foreground">All Types</SelectItem>
+                <SelectItem value="expense" className="text-foreground">Expenses</SelectItem>
+                <SelectItem value="budget" className="text-foreground">Budget</SelectItem>
+                <SelectItem value="goal" className="text-foreground">Goals</SelectItem>
+                <SelectItem value="wallet" className="text-foreground">Wallet</SelectItem>
+                <SelectItem value="income" className="text-foreground">Income</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-background border-border text-foreground">
                 <SelectValue placeholder="Filter by date" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="week">Last 7 days</SelectItem>
-                <SelectItem value="month">Last month</SelectItem>
-                <SelectItem value="quarter">Last 3 months</SelectItem>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all" className="text-foreground">All Time</SelectItem>
+                <SelectItem value="week" className="text-foreground">Last 7 days</SelectItem>
+                <SelectItem value="month" className="text-foreground">Last month</SelectItem>
+                <SelectItem value="quarter" className="text-foreground">Last 3 months</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -228,7 +227,7 @@ const History = () => {
 
         <CardContent>
           {filteredActivities.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No activities found</p>
               {(searchTerm || typeFilter !== 'all' || dateFilter !== 'all') && (
@@ -240,30 +239,30 @@ const History = () => {
               {filteredActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50">
                       {getActionIcon(activity.action_type)}
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {getActionBadge(activity.action_type)}
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-muted-foreground">
                           {formatDate(activity.created_at)}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted-foreground">
                           {formatTime(activity.created_at)}
                         </span>
                       </div>
                       
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {activity.action_description}
                       </p>
                       
                       {activity.category && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Category: {activity.category}
                         </p>
                       )}
