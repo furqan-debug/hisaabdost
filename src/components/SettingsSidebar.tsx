@@ -54,113 +54,109 @@ const SettingsSidebar = ({ isOpen, onClose }: SettingsSidebarProps) => {
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
-        <div className="h-full flex flex-col">
-          <SheetHeader className="p-6 pb-4 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
-                  alt="Hisab Dost logo"
-                  className="h-8 w-8 bg-white rounded shadow-sm"
-                />
-                <SheetTitle className="text-xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
-                  Hisaab Dost
-                </SheetTitle>
-              </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </SheetHeader>
+    <div className="h-full flex flex-col">
+      <div className="p-6 pb-4 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
+              alt="Hisab Dost logo"
+              className="h-8 w-8 bg-white rounded shadow-sm"
+            />
+            <h2 className="text-xl font-bold bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+              Hisaab Dost
+            </h2>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Date Range Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground">Date Range</h3>
-              </div>
-              <MonthSelector
-                selectedMonth={selectedMonth}
-                onChange={handleMonthChange}
-              />
-            </div>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Date Range Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground">Date Range</h3>
+          </div>
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            onChange={handleMonthChange}
+          />
+        </div>
 
-            {/* Currency Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground">Currency</h3>
-              </div>
-              <Select value={currencyCode} onValueChange={setCurrencyCode}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
-                      {currency.symbol} {currency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Currency Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground">Currency</h3>
+          </div>
+          <Select value={currencyCode} onValueChange={setCurrencyCode}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency.code} value={currency.code}>
+                  {currency.symbol} {currency.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-            {/* Theme Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Palette className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground">Theme</h3>
-              </div>
-              <div className="space-y-2">
-                <Button
-                  variant={theme === 'light' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setTheme('light')}
-                >
-                  <Sun className="mr-2 h-4 w-4" />
-                  Light
-                </Button>
-                <Button
-                  variant={theme === 'dark' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setTheme('dark')}
-                >
-                  <Moon className="mr-2 h-4 w-4" />
-                  Dark
-                </Button>
-                <Button
-                  variant={theme === 'system' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setTheme('system')}
-                >
-                  <Monitor className="mr-2 h-4 w-4" />
-                  System (light)
-                </Button>
-              </div>
-            </div>
-
-            {/* History Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground">History</h3>
-              </div>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={handleHistoryClick}
-              >
-                <History className="mr-2 h-4 w-4" />
-                View Activity History
-              </Button>
-            </div>
+        {/* Theme Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground">Theme</h3>
+          </div>
+          <div className="space-y-2">
+            <Button
+              variant={theme === 'light' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setTheme('light')}
+            >
+              <Sun className="mr-2 h-4 w-4" />
+              Light
+            </Button>
+            <Button
+              variant={theme === 'dark' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setTheme('dark')}
+            >
+              <Moon className="mr-2 h-4 w-4" />
+              Dark
+            </Button>
+            <Button
+              variant={theme === 'system' ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setTheme('system')}
+            >
+              <Monitor className="mr-2 h-4 w-4" />
+              System (light)
+            </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        {/* History Section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <History className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground">History</h3>
+          </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={handleHistoryClick}
+          >
+            <History className="mr-2 h-4 w-4" />
+            View Activity History
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
