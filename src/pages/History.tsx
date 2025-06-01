@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Calendar, Receipt, Wallet, Target, BarChart2, User } from 'lucide-react';
+import { Search, Filter, Calendar, Receipt, Wallet, Target, BarChart2, User, DollarSign } from 'lucide-react';
 import { format, parseISO, isWithinInterval, subDays, subMonths } from 'date-fns';
 
 interface ActivityLog {
@@ -37,7 +37,7 @@ const History = () => {
     budget: { icon: BarChart2, color: 'bg-blue-100 text-blue-800', label: 'Budget' },
     goal: { icon: Target, color: 'bg-green-100 text-green-800', label: 'Goal' },
     wallet: { icon: Wallet, color: 'bg-purple-100 text-purple-800', label: 'Wallet' },
-    income: { icon: User, color: 'bg-yellow-100 text-yellow-800', label: 'Income' },
+    income: { icon: DollarSign, color: 'bg-yellow-100 text-yellow-800', label: 'Income' },
     profile: { icon: User, color: 'bg-gray-100 text-gray-800', label: 'Profile' }
   };
 
@@ -136,6 +136,35 @@ const History = () => {
   const formatTime = (dateString: string) => {
     const date = parseISO(dateString);
     return format(date, 'HH:mm');
+  };
+
+  const getAmountDisplay = (activity: ActivityLog) => {
+    if (!activity.amount) return null;
+    
+    // For income activities, show the change amount if available
+    if (activity.action_type === 'income' && activity.metadata?.change_amount !== undefined) {
+      const changeAmount = activity.metadata.change_amount;
+      if (changeAmount === 0) return formatCurrency(activity.amount, currencyCode);
+      
+      return (
+        <div className="text-right">
+          <p className="text-sm font-semibold text-gray-900">
+            {formatCurrency(activity.amount, currencyCode)}
+          </p>
+          <p className={`text-xs ${changeAmount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {changeAmount > 0 ? '+' : ''}{formatCurrency(changeAmount, currencyCode)}
+          </p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="text-right">
+        <p className="text-sm font-semibold text-gray-900">
+          {formatCurrency(activity.amount, currencyCode)}
+        </p>
+      </div>
+    );
   };
 
   if (loading) {
@@ -241,13 +270,7 @@ const History = () => {
                     </div>
                   </div>
 
-                  {activity.amount && (
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(activity.amount, currencyCode)}
-                      </p>
-                    </div>
-                  )}
+                  {getAmountDisplay(activity)}
                 </div>
               ))}
             </div>

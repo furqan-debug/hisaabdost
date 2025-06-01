@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { logWalletActivity } from "@/services/activityLogService";
 
 export type WalletAddition = {
   id: string;
@@ -77,8 +78,16 @@ export function useWalletAdditions() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      
+      // Log the wallet activity
+      try {
+        await logWalletActivity(data.amount, data.description || 'Added funds to wallet');
+      } catch (error) {
+        console.error('Failed to log wallet activity:', error);
+      }
+      
       toast({
         title: "Success",
         description: "Funds added successfully"

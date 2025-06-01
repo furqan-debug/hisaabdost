@@ -1,23 +1,23 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { StatCard } from "./StatCard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { PercentageChange } from "./PercentageChange";
-import { useMutation } from "@tanstack/react-query";
+import { Label } from "@/components/ui/label";
+import { Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CurrencyCode } from "@/utils/currencyUtils";
-import { Pencil } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { PercentageChange } from "./PercentageChange";
+import { logIncomeActivity } from "@/services/activityLogService";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
   setMonthlyIncome: (income: number) => void;
-  percentageChange: number;
-  formatCurrency: (value: number, currencyCode: CurrencyCode) => string;
-  currencyCode: CurrencyCode;
+  percentageChange?: number;
+  formatCurrency: (amount: number, currency: string) => string;
+  currencyCode: string;
   className?: string;
   infoTooltip?: string;
 }
@@ -29,100 +29,146 @@ export const EditableIncomeCard = ({
   formatCurrency,
   currencyCode,
   className = "",
-  infoTooltip,
+  infoTooltip
 }: EditableIncomeCardProps) => {
-  const [open, setOpen] = useState(false);
-  const [income, setIncome] = useState(monthlyIncome.toString());
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(monthlyIncome.toString());
+  const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
 
-  const { mutate: updateIncome, isPending } = useMutation({
-    mutationFn: async (newIncome: number) => {
-      if (!user) return;
+  const handleSave = async () => {
+    const newIncome = parseFloat(inputValue);
+    if (isNaN(newIncome) || newIncome < 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid positive number",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      // First try to update the budgets table
-      const { data: budgetData, error: budgetError } = await supabase
+    setIsUpdating(true);
+    try {
+      // Update in the budgets table first
+      const { error: budgetError } = await supabase
         .from('budgets')
-        .update({ monthly_income: newIncome })
-        .eq('user_id', user.id)
-        .limit(1)
-        .select();
+        .upsert({
+          user_id: user?.id,
+          monthly_income: newIncome,
+          category: 'income',
+          period: 'monthly',
+          amount: 0
+        });
 
-      // If there's no budget data, update the profiles table instead
-      if (!budgetData || budgetData.length === 0) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ monthly_income: newIncome })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
+      if (budgetError) {
+        console.warn('Could not update budgets table:', budgetError);
       }
-    },
-    onSuccess: () => {
-      setMonthlyIncome(parseFloat(income));
-      setOpen(false);
-    },
-  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsedIncome = parseFloat(income);
-    if (!isNaN(parsedIncome) && parsedIncome >= 0) {
-      updateIncome(parsedIncome);
+      // Also update in profiles table as fallback
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user?.id,
+          monthly_income: newIncome
+        });
+
+      if (profileError) {
+        console.warn('Could not update profiles table:', profileError);
+      }
+
+      // Log the income activity
+      try {
+        await logIncomeActivity(newIncome, monthlyIncome);
+      } catch (logError) {
+        console.error('Failed to log income activity:', logError);
+      }
+
+      setMonthlyIncome(newIncome);
+      setIsOpen(false);
+      
+      toast({
+        title: "Income Updated",
+        description: `Monthly income updated to ${formatCurrency(newIncome, currencyCode)}`
+      });
+    } catch (error) {
+      console.error('Error updating income:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update income. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  return (
-    <>
-      <StatCard
-        title="Monthly Income"
-        value={formatCurrency(monthlyIncome, currencyCode)}
-        subtext={<PercentageChange value={percentageChange} />}
-        className={className}
-        infoTooltip={infoTooltip}
-        cardType="income"
-        actionElement={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setOpen(true)}
-            className="w-full text-primary hover:bg-primary/10 flex items-center justify-center gap-1"
-          >
-            <Pencil className="h-4 w-4" />
-            <span>Edit Income</span>
-          </Button>
-        }
-      />
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow empty string, numbers, and decimal points
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setInputValue(value);
+    }
+  };
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Monthly Income</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="number"
-                value={income}
-                onChange={(e) => setIncome(e.target.value)}
-                step="0.01"
-                min="0"
-                className="text-lg"
-              />
-              <p className="text-sm text-muted-foreground">
-                Enter your monthly income before taxes and deductions.
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" type="button" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Updating..." : "Save"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+  const actionElement = (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-7 px-2 text-xs hover:bg-muted/50 transition-colors"
+          onClick={() => setInputValue(monthlyIncome.toString())}
+        >
+          <Edit className="h-3 w-3 mr-1" />
+          Edit Income
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Update Monthly Income</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="income">Monthly Income ({currencyCode})</Label>
+            <Input
+              id="income"
+              type="text"
+              inputMode="decimal"
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder="Enter your monthly income"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={isUpdating}
+            >
+              {isUpdating ? 'Updating...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <StatCard
+      title="Monthly Income"
+      value={formatCurrency(monthlyIncome, currencyCode)}
+      subtext={percentageChange !== undefined ? <PercentageChange value={percentageChange} /> : undefined}
+      actionElement={actionElement}
+      className={className}
+      infoTooltip={infoTooltip}
+      cardType="income"
+    />
   );
 };

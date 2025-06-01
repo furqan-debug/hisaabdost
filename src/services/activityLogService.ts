@@ -82,17 +82,27 @@ export const logGoalActivity = async (action: 'created' | 'updated', goal: {
 export const logWalletActivity = async (amount: number, description?: string) => {
   await logActivity({
     action_type: 'wallet',
-    action_description: description ? `Added funds: ${description}` : 'Added funds to wallet',
-    amount,
-    category: 'Wallet'
+    action_description: description || `Added ${amount > 0 ? 'funds' : 'deducted funds'} to wallet`,
+    amount: Math.abs(amount),
+    category: 'Wallet',
+    metadata: { transaction_type: amount > 0 ? 'addition' : 'deduction' }
   });
 };
 
-export const logIncomeActivity = async (oldAmount: number, newAmount: number) => {
+export const logIncomeActivity = async (newAmount: number, oldAmount?: number) => {
+  const description = oldAmount 
+    ? `Updated monthly income from ${oldAmount} to ${newAmount}`
+    : `Set monthly income to ${newAmount}`;
+    
   await logActivity({
     action_type: 'income',
-    action_description: `Updated monthly income from ${oldAmount} to ${newAmount}`,
+    action_description: description,
     amount: newAmount,
-    metadata: { old_amount: oldAmount, new_amount: newAmount }
+    category: 'Income',
+    metadata: { 
+      old_amount: oldAmount || 0, 
+      new_amount: newAmount,
+      change_amount: newAmount - (oldAmount || 0)
+    }
   });
 };
