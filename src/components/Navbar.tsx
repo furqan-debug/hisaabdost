@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { SettingsSidebar } from "./SettingsSidebar";
+import SettingsSidebar from "./SettingsSidebar";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -36,8 +35,7 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0 overflow-hidden">
             <SettingsSidebar 
-              selectedMonth={selectedMonth} 
-              onMonthChange={setSelectedMonth} 
+              isOpen={settingsOpen}
               onClose={() => setSettingsOpen(false)} 
             />
           </SheetContent>
