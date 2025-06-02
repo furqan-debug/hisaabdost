@@ -1,37 +1,35 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Info, Sparkles, Wallet, TrendingUp, DollarSign, PiggyBank } from "lucide-react";
 import { LucideIcon } from "lucide-react";
-
 interface InfoPopoverProps {
   title: string;
   content: string;
   cardType?: 'wallet' | 'expenses' | 'income' | 'savings';
   children: React.ReactNode;
 }
-
 const cardIcons: Record<string, LucideIcon> = {
   wallet: Wallet,
   expenses: TrendingUp,
   income: DollarSign,
   savings: PiggyBank
 };
-
 const cardColors: Record<string, string> = {
   wallet: "text-blue-500",
-  expenses: "text-red-500", 
+  expenses: "text-red-500",
   income: "text-green-500",
   savings: "text-purple-500"
 };
-
-export const InfoPopover = ({ title, content, cardType = 'wallet', children }: InfoPopoverProps) => {
+export const InfoPopover = ({
+  title,
+  content,
+  cardType = 'wallet',
+  children
+}: InfoPopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const IconComponent = cardIcons[cardType];
   const iconColor = cardColors[cardType];
-
-  return (
-    <>
+  return <>
       <div onClick={() => setIsOpen(true)} className="cursor-pointer">
         {children}
       </div>
@@ -41,7 +39,7 @@ export const InfoPopover = ({ title, content, cardType = 'wallet', children }: I
           <div className="relative p-5 rounded-lg">
             {/* Decorative sparkles */}
             <div className="absolute top-2 right-2">
-              <Sparkles className="h-4 w-4 text-yellow-400 animate-pulse" />
+              <Sparkles className="h-4 w-4 text-yellow-400 animate-pulse py-0 mx-[38px] my-[16px] px-0" />
             </div>
             
             {/* Header with icon */}
@@ -79,6 +77,5 @@ export const InfoPopover = ({ title, content, cardType = 'wallet', children }: I
           </div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
