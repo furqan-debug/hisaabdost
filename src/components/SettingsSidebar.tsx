@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User } from 'lucide-react';
