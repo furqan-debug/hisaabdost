@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Info, Sparkles, Wallet, TrendingUp, DollarSign, PiggyBank } from "lucide-react";
