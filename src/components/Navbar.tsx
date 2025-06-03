@@ -1,24 +1,22 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, Menu, User } from "lucide-react";
+import { LogOut, Menu, Bell, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SettingsSidebar from "./SettingsSidebar";
+
 const Navbar = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
-  const {
-    selectedMonth,
-    setSelectedMonth
-  } = useMonthContext();
+  const { selectedMonth, setSelectedMonth } = useMonthContext();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -26,12 +24,25 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300 safe-area-top">
-      <div className="flex h-14 items-center gap-2 max-w-[480px] px-0 mx-[7px] my-0">
+
+  const handleLogoClick = () => {
+    window.location.href = '/app/dashboard';
+  };
+
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email.charAt(0).toUpperCase();
+  };
+
+  return (
+    <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300 safe-area-top">
+      <div className="flex h-14 items-center justify-between max-w-[480px] px-4 mx-auto">
+        {/* Left: Menu Button */}
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300 py-[13px] mx-0 my-0 font-normal">
-              <Menu className="h-9 w-7 " />
+            <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300">
+              <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
           </SheetTrigger>
@@ -40,20 +51,42 @@ const Navbar = () => {
           </SheetContent>
         </Sheet>
         
-        <div className="flex-1 flex items-center">
-          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded bg-white shadow-sm" style={{
-          filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
-        }} />
-          <h2 className="font-semibold whitespace-nowrap overflow-hidden text-ellipsis bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent py-0 text-xl">
+        {/* Center: Logo and Title */}
+        <div 
+          className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200" 
+          onClick={handleLogoClick}
+        >
+          <img 
+            src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" 
+            alt="Hisaab Dost logo" 
+            className="h-8 w-8 mr-2 rounded bg-white shadow-sm" 
+            style={{
+              filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
+            }} 
+          />
+          <h2 className="font-semibold text-lg bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
             Hisaab Dost
           </h2>
         </div>
         
-        <div className="flex items-center gap-1">
-          <DropdownMenu className="py-[4px]">
+        {/* Right: Notification and User Avatar */}
+        <div className="flex items-center gap-2">
+          {/* Optional Notification Icon */}
+          <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300">
+            <Bell className="h-4 w-4" />
+            <span className="sr-only">Notifications</span>
+          </Button>
+
+          {/* User Avatar Dropdown */}
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="glass" size="icon-sm" className="rounded-full transition-all duration-300 h-7 w-7">
-                <User className="h-4 w-4" />
+              <Button variant="ghost" size="icon-sm" className="rounded-full h-8 w-8 p-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="" alt={user?.email || "User"} />
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
                 <span className="sr-only">User menu</span>
               </Button>
             </DropdownMenuTrigger>
@@ -75,6 +108,8 @@ const Navbar = () => {
           </DropdownMenu>
         </div>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;
