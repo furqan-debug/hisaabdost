@@ -1,7 +1,9 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { CATEGORY_COLORS, formatCurrency } from "@/utils/chartUtils";
+import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency } from "@/utils/formatters";
 import { motion } from "framer-motion";
 
 interface Expense {
@@ -15,6 +17,7 @@ interface ExpensesPieChartProps {
 
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
+  const { currencyCode } = useCurrency();
 
   const data = Object.entries(
     expenses.reduce((acc, expense) => {
@@ -89,7 +92,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
                       </p>
                     </div>
                     <p className="text-lg font-bold text-foreground">
-                      {formatCurrency(Number(data.value))}
+                      {formatCurrency(Number(data.value), currencyCode)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {data.payload.percent.toFixed(1)}% of total spending
@@ -149,7 +152,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
                     {entry.percent.toFixed(0)}%
                   </span>
                   <span className="text-xs font-semibold text-foreground">
-                    {formatCurrency(entry.value)}
+                    {formatCurrency(entry.value, currencyCode)}
                   </span>
                 </div>
               </div>
@@ -166,7 +169,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
         >
           <div className="text-sm text-muted-foreground">Total Expenses</div>
           <div className="text-2xl font-bold text-primary">
-            {formatCurrency(total)}
+            {formatCurrency(total, currencyCode)}
           </div>
         </motion.div>
       </motion.div>
