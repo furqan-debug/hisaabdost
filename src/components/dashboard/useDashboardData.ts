@@ -8,6 +8,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
+import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -137,6 +138,14 @@ export function useDashboardData() {
   const totalBalance = monthlyIncome - monthlyExpenses;
   const walletBalance = monthlyIncome + totalAdditions - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+
+  // Setup notification triggers
+  useNotificationTriggers({
+    budgets: [], // Will be populated when budget data is available
+    monthlyExpenses,
+    monthlyIncome,
+    walletBalance,
+  });
 
   // Update month data when income or expenses change
   useEffect(() => {

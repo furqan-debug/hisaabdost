@@ -1,54 +1,50 @@
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth";
-import { format } from "date-fns";
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface DashboardHeaderProps {
   isNewUser: boolean;
 }
 
-export const DashboardHeader = ({ isNewUser }: DashboardHeaderProps) => {
-  const { user } = useAuth();
+export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
   const { selectedMonth } = useMonthContext();
-  const [userName, setUserName] = useState<string>("");
-  const isCurrentMonth = selectedMonth.getMonth() === new Date().getMonth() && 
-                        selectedMonth.getFullYear() === new Date().getFullYear();
-  
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-          
-        if (!error && data) {
-          setUserName(data.full_name || '');
-        } else {
-          // Fallback to user metadata if profile data is not available
-          setUserName(user.user_metadata?.full_name || 'there');
-        }
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user]);
-  
+
   return (
-    <header className="space-y-1">
-      <h1 className="text-2xl font-bold text-foreground">
-        {isNewUser ? `Welcome, ${userName || 'there'}!` : isCurrentMonth ? 'Dashboard' : `${format(selectedMonth, 'MMMM yyyy')}`}
-      </h1>
-      <p className="text-muted-foreground text-sm">
-        {isNewUser 
-          ? "Let's start tracking your expenses. Add your first expense to get started!"
-          : isCurrentMonth 
-            ? "Here's an overview of your expenses" 
-            : `Viewing your financial data for ${format(selectedMonth, 'MMMM yyyy')}`}
-      </p>
-    </header>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-background/95 to-background/80 backdrop-blur-sm">
+        <CardContent className="py-4 px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">
+                  {isNewUser ? "Welcome to your Dashboard!" : "Financial Overview"}
+                </h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{format(selectedMonth, 'MMMM yyyy')}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Add notification bell */}
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
-};
+}

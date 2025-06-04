@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
@@ -150,6 +149,18 @@ export function useBudgetData() {
     link.click();
   };
 
+  // Transform budgets data for notification triggers
+  const budgetNotificationData = budgets?.map(budget => {
+    const categoryExpenses = expenses?.filter(expense => expense.category === budget.category) || [];
+    const spent = categoryExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+    
+    return {
+      category: budget.category,
+      budget: Number(budget.amount),
+      spent,
+    };
+  }) || [];
+
   // Calculate and debounce summary data updates
   useEffect(() => {
     if (isLoading || !budgets || !expenses || !incomeData) return;
@@ -225,6 +236,7 @@ export function useBudgetData() {
     expenses,
     isLoading,
     exportBudgetData,
+    budgetNotificationData,
     ...stableValues
   };
 }
