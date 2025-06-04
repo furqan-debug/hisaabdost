@@ -8,7 +8,15 @@ export type NotificationType =
   | 'monthly-reset'
   | 'budget-exceeded'
   | 'low-balance'
-  | 'savings-goal';
+  | 'savings-goal'
+  | 'leftover-added'
+  | 'unusual-expense'
+  | 'budget-reminder'
+  | 'daily-expense-reminder'
+  | 'weekly-summary'
+  | 'monthly-comparison'
+  | 'category-insight'
+  | 'progress-update';
 
 export interface NotificationTrigger {
   type: NotificationType;
@@ -16,10 +24,16 @@ export interface NotificationTrigger {
   amount?: number;
   percentage?: number;
   monthName?: string;
+  comparisonData?: {
+    current: number;
+    previous: number;
+    change: number;
+  };
 }
 
 export class NotificationService {
   private static readonly NOTIFICATION_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+  private static readonly WEEKLY_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days
   private static lastNotifications: Record<string, number> = {};
 
   static canSendNotification(type: NotificationType, category?: string): boolean {
@@ -27,12 +41,18 @@ export class NotificationService {
     const lastSent = this.lastNotifications[key] || 0;
     const now = Date.now();
     
-    // Allow immediate sending for monthly reset
-    if (type === 'monthly-reset') {
-      return true;
+    // Different cooldown periods for different notification types
+    let cooldownPeriod = this.NOTIFICATION_COOLDOWN;
+    
+    if (['weekly-summary', 'monthly-comparison'].includes(type)) {
+      cooldownPeriod = this.WEEKLY_COOLDOWN;
     }
     
-    return (now - lastSent) > this.NOTIFICATION_COOLDOWN;
+    if (['monthly-reset', 'leftover-added'].includes(type)) {
+      return true; // Allow immediate sending for monthly events
+    }
+    
+    return (now - lastSent) > cooldownPeriod;
   }
 
   static markNotificationSent(type: NotificationType, category?: string): void {
@@ -73,6 +93,66 @@ export class NotificationService {
           description: `Welcome to ${trigger.monthName}! Your expenses and budget tracking have been reset for the new month.`,
         };
 
+      case 'leftover-added':
+        return {
+          type: 'success',
+          title: 'Leftover Budget Added',
+          description: `${trigger.amount?.toFixed(2)} from last month's unused budget has been added to your wallet automatically.`,
+        };
+
+      case 'unusual-expense':
+        return {
+          type: 'warning',
+          title: 'Unusual Daily Expense',
+          description: `Today's spending of ${trigger.amount?.toFixed(2)} is significantly higher than your usual daily average.`,
+        };
+
+      case 'budget-reminder':
+        return {
+          type: 'info',
+          title: 'Set Monthly Budget',
+          description: `Don't forget to set your budget for this month to better track your spending.`,
+        };
+
+      case 'daily-expense-reminder':
+        return {
+          type: 'info',
+          title: 'Daily Expense Reminder',
+          description: `Remember to log your expenses for today to keep your financial tracking accurate.`,
+        };
+
+      case 'weekly-summary':
+        return {
+          type: 'info',
+          title: 'Weekly Spending Summary',
+          description: `You've spent ${trigger.amount?.toFixed(2)} this week. Check your analytics for detailed insights.`,
+        };
+
+      case 'monthly-comparison':
+        return {
+          type: 'info',
+          title: 'Monthly Spending Update',
+          description: trigger.comparisonData?.change && trigger.comparisonData.change > 0 
+            ? `You've spent ${Math.abs(trigger.comparisonData.change).toFixed(2)} more than last month.`
+            : `Great job! You've saved ${Math.abs(trigger.comparisonData?.change || 0).toFixed(2)} compared to last month.`,
+        };
+
+      case 'category-insight':
+        return {
+          type: 'success',
+          title: `${trigger.category} Spending Insight`,
+          description: trigger.comparisonData?.change && trigger.comparisonData.change < 0
+            ? `Your ${trigger.category} expenses dropped by ${Math.abs(trigger.comparisonData.change).toFixed(2)} this month. Well done!`
+            : `Your ${trigger.category} expenses increased by ${trigger.comparisonData?.change?.toFixed(2)} this month.`,
+        };
+
+      case 'progress-update':
+        return {
+          type: 'success',
+          title: 'Savings Progress',
+          description: `Great progress! You've saved ${trigger.percentage}% towards your goal this month.`,
+        };
+
       case 'low-balance':
         return {
           type: 'warning',
@@ -84,7 +164,7 @@ export class NotificationService {
         return {
           type: 'success',
           title: 'Savings Milestone',
-          description: `Great job! You've saved ${trigger.percentage}% towards your monthly goal.`,
+          description: `Congratulations! You've reached ${trigger.percentage}% of your savings goal.`,
         };
 
       default:
@@ -111,5 +191,14 @@ export class NotificationService {
     if (budget <= 0) return false;
     const percentage = (spent / budget) * 100;
     return percentage > 100;
+  }
+
+  static shouldTriggerUnusualExpense(todayExpenses: number, dailyAverage: number): boolean {
+    return todayExpenses > dailyAverage * 2 && dailyAverage > 0; // 2x the average
+  }
+
+  static calculateSavingsRate(income: number, expenses: number): number {
+    if (income <= 0) return 0;
+    return ((income - expenses) / income) * 100;
   }
 }

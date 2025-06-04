@@ -5,6 +5,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
+import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 
 /**
  * Dashboard page component that displays financial overview
@@ -20,7 +21,7 @@ const Dashboard = () => {
     monthlyIncome,
     monthlyExpenses,
     totalBalance,
-    walletBalance, // Added wallet balance
+    walletBalance,
     savingsRate,
     chartType,
     setChartType,
@@ -35,6 +36,15 @@ const Dashboard = () => {
 
   // Calculate insights based on expenses
   const insights = useAnalyticsInsights(expenses);
+
+  // Setup notification triggers for dashboard
+  useNotificationTriggers({
+    monthlyExpenses,
+    monthlyIncome,
+    walletBalance,
+    expenses,
+    previousMonthExpenses: 0, // Would need to fetch from previous month
+  });
 
   // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {

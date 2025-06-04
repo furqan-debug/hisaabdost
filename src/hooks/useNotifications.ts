@@ -16,6 +16,10 @@ interface NotificationSettings {
   budgetWarnings: boolean;
   overspendingAlerts: boolean;
   monthlyReset: boolean;
+  dailyReminders: boolean;
+  weeklyReports: boolean;
+  categoryInsights: boolean;
+  savingsUpdates: boolean;
 }
 
 export function useNotifications() {
@@ -24,6 +28,10 @@ export function useNotifications() {
     budgetWarnings: true,
     overspendingAlerts: true,
     monthlyReset: true,
+    dailyReminders: true,
+    weeklyReports: true,
+    categoryInsights: true,
+    savingsUpdates: true,
   });
 
   // Load notifications from localStorage
@@ -72,11 +80,24 @@ export function useNotifications() {
 
     setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep only last 50
 
-    // Show toast notification
+    // Show toast notification based on type
+    const getToastVariant = (type: string) => {
+      switch (type) {
+        case 'error':
+        case 'warning':
+          return 'destructive';
+        case 'success':
+          return 'default';
+        case 'info':
+        default:
+          return 'default';
+      }
+    };
+
     toast({
       title: notification.title,
       description: notification.description,
-      variant: notification.type === 'error' || notification.type === 'warning' ? 'destructive' : 'default',
+      variant: getToastVariant(notification.type),
     });
 
     return newNotification.id;
