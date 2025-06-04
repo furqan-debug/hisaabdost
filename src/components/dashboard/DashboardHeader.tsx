@@ -5,7 +5,6 @@ import { Calendar, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface DashboardHeaderProps {
   isNewUser: boolean;
@@ -36,11 +35,6 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
                   <span>{format(selectedMonth, 'MMMM yyyy')}</span>
                 </div>
               </div>
-            </div>
-            
-            {/* Add notification bell */}
-            <div className="flex items-center gap-2">
-              <NotificationBell />
             </div>
           </div>
         </CardContent>

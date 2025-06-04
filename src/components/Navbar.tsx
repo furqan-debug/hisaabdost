@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, Menu, Bell, User } from "lucide-react";
+import { LogOut, Menu, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import SettingsSidebar from "./SettingsSidebar";
 
 const Navbar = () => {
@@ -71,11 +72,8 @@ const Navbar = () => {
         
         {/* Right: Notification and User Avatar */}
         <div className="flex items-center gap-2">
-          {/* Optional Notification Icon */}
-          <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300">
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Notifications</span>
-          </Button>
+          {/* Notification Bell */}
+          <NotificationBell />
 
           {/* User Avatar Dropdown */}
           <DropdownMenu>
