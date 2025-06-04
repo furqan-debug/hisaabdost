@@ -1,6 +1,6 @@
 
 import { formatDistanceToNow } from 'date-fns';
-import { X, Check, Trash2 } from 'lucide-react';
+import { X, Check, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +20,12 @@ export function NotificationList({ onClose }: NotificationListProps) {
     removeNotification,
     clearAll,
   } = useNotifications();
+
+  const handleDebugClear = () => {
+    localStorage.removeItem('app-notifications');
+    clearAll();
+    console.log('Debug: Cleared all notification data');
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -50,6 +56,8 @@ export function NotificationList({ onClose }: NotificationListProps) {
         return cn(baseClasses, !read && 'border-l-4 border-l-blue-500');
     }
   };
+
+  console.log('NotificationList render - notifications:', notifications, 'unreadCount:', unreadCount);
 
   return (
     <div className="w-full">
@@ -90,6 +98,15 @@ export function NotificationList({ onClose }: NotificationListProps) {
           <div className="p-8 text-center text-muted-foreground">
             <div className="text-4xl mb-2">🔔</div>
             <p className="text-sm">No notifications yet</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDebugClear}
+              className="mt-2 h-6 px-2 text-xs text-muted-foreground"
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Reset notifications
+            </Button>
           </div>
         ) : (
           <div className="divide-y">
@@ -97,7 +114,7 @@ export function NotificationList({ onClose }: NotificationListProps) {
               <div
                 key={notification.id}
                 className={cn(
-                  'p-4 hover:bg-muted/50 transition-colors',
+                  'p-4 hover:bg-muted/50 transition-colors group',
                   getNotificationBgColor(notification.type, notification.read || false)
                 )}
               >
