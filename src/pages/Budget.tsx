@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
 import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
+import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 
 export interface Budget {
@@ -17,6 +18,10 @@ export interface Budget {
 }
 
 const Budget = () => {
+  const [showBudgetForm, setShowBudgetForm] = useState(false);
+  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+
   const {
     budgets,
     expenses,
@@ -38,6 +43,27 @@ const Budget = () => {
     walletBalance: remainingBalance,
   });
 
+  const handleAddBudget = () => {
+    setEditingBudget(null);
+    setShowBudgetForm(true);
+  };
+
+  const handleEditBudget = (budget: Budget) => {
+    setEditingBudget(budget);
+    setShowBudgetForm(true);
+  };
+
+  const handleBudgetFormClose = () => {
+    setShowBudgetForm(false);
+    setEditingBudget(null);
+  };
+
+  const handleBudgetSuccess = () => {
+    handleBudgetFormClose();
+    // Trigger a refresh of budget data
+    window.dispatchEvent(new Event('budget-updated'));
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -54,11 +80,13 @@ const Budget = () => {
 
   return (
     <div className="space-y-6">
-      <BudgetHeader onExport={exportBudgetData} />
+      <BudgetHeader 
+        onAddBudget={handleAddBudget}
+        onExport={exportBudgetData} 
+      />
       
       <BudgetSummaryCards 
         totalBudget={totalBudget}
-        totalSpent={totalSpent}
         remainingBalance={remainingBalance}
         usagePercentage={usagePercentage}
         monthlyIncome={monthlyIncome}
@@ -66,8 +94,18 @@ const Budget = () => {
       
       <BudgetTabs 
         budgets={budgets || []}
-        expenses={expenses || []}
-        isLoading={isLoading}
+        onEditBudget={handleEditBudget}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      <BudgetForm
+        open={showBudgetForm}
+        onOpenChange={setShowBudgetForm}
+        budget={editingBudget}
+        onSuccess={handleBudgetSuccess}
+        monthlyIncome={monthlyIncome}
+        totalBudget={totalBudget}
       />
     </div>
   );

@@ -59,14 +59,29 @@ export function BudgetForm({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  
+  // Convert Budget period to form period, defaulting weekly to monthly
+  const getFormDefaultValues = (budget: Budget | null) => {
+    if (!budget) {
+      return {
+        category: "",
+        amount: 0,
+        period: "monthly" as const,
+        carry_forward: false,
+      };
+    }
+    
+    return {
+      category: budget.category,
+      amount: budget.amount,
+      period: budget.period === "weekly" ? "monthly" : budget.period,
+      carry_forward: budget.carry_forward,
+    };
+  };
+
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
-    defaultValues: budget || {
-      category: "",
-      amount: 0,
-      period: "monthly",
-      carry_forward: false,
-    },
+    defaultValues: getFormDefaultValues(budget),
   });
 
   const currentAmount = watch("amount");
