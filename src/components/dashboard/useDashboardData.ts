@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +7,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
+import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -15,6 +15,9 @@ export function useDashboardData() {
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
   const { totalAdditions } = useWalletAdditions();
+  
+  // Initialize month carryover functionality
+  useMonthCarryover();
   
   // Get current month's data from context
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
