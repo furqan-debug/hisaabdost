@@ -1,13 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings } from 'lucide-react';
+import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrency } from '@/hooks/use-currency';
-import { useMonthContext } from '@/hooks/use-month-context';
-import { MonthSelector } from './MonthSelector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useSignOut } from '@/hooks/auth/useSignOut';
@@ -23,7 +20,6 @@ const SettingsSidebar = ({
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
   const { currencyCode, setCurrencyCode } = useCurrency();
-  const { selectedMonth, setSelectedMonth } = useMonthContext();
   const { user } = useAuth();
   const { signOut } = useSignOut();
   const navigate = useNavigate();
@@ -51,11 +47,7 @@ const SettingsSidebar = ({
     { code: 'OMR', name: 'Omani Rial', symbol: '﷼' }
   ];
 
-  const handleMonthChange = (date: Date) => {
-    setSelectedMonth(date);
-  };
-
-  const handleHistoryClick = () => {
+  const handleMonthlySummaryClick = () => {
     navigate('/app/history');
     onClose();
   };
@@ -83,19 +75,6 @@ const SettingsSidebar = ({
       {/* Content - Scrollable */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-0">
-          
-          {/* Date Range */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h2 className="font-medium">Date Range</h2>
-            </div>
-            <div className="ml-11">
-              <MonthSelector selectedMonth={selectedMonth} onChange={handleMonthChange} />
-            </div>
-          </div>
 
           {/* Currency */}
           <div className="p-6 border-b">
@@ -162,7 +141,7 @@ const SettingsSidebar = ({
             </div>
           </div>
 
-          {/* History */}
+          {/* Activity */}
           <div className="p-6 border-b">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
@@ -174,10 +153,10 @@ const SettingsSidebar = ({
               <Button 
                 variant="ghost" 
                 className="w-full justify-start" 
-                onClick={handleHistoryClick}
+                onClick={handleMonthlySummaryClick}
               >
                 <History className="w-4 h-4 mr-3" />
-                View History
+                Monthly Summary
               </Button>
             </div>
           </div>
