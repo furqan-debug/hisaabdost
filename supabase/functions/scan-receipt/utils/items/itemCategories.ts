@@ -20,7 +20,7 @@ const categoryMap: Record<string, string[]> = {
     "garbage", "trash", "waste", "internet", "wifi", "phone", "mobile", 
     "cell", "cable", "tv", "television", "streaming", "subscription"
   ],
-  "Housing": [
+  "Rent": [
     "rent", "mortgage", "house", "apartment", "condo", "housing", "property", 
     "maintenance", "repair", "improvement", "furniture", "decor", "appliance", 
     "cleaning", "service", "lawn", "garden", "home", "insurance"
@@ -30,7 +30,7 @@ const categoryMap: Record<string, string[]> = {
     "game", "sport", "hobby", "book", "music", "subscription", "streaming", 
     "netflix", "hulu", "spotify", "disney", "amazon", "apple", "video", "audio"
   ],
-  "Health": [
+  "Healthcare": [
     "doctor", "medical", "medicine", "health", "dental", "vision", "prescription", 
     "drug", "fitness", "gym", "exercise", "vitamin", "supplement", "therapy", 
     "hospital", "clinic", "insurance"
@@ -41,18 +41,14 @@ const categoryMap: Record<string, string[]> = {
     "phone", "retail", "store", "mall", "online", "amazon", "ebay", "etsy", 
     "walmart", "target", "best buy", "apple", "purchase", "shopping"
   ],
-  "Personal": [
+  "Other": [
+    "office", "supply", "business", "professional", "service", "consulting", 
+    "software", "subscription", "license", "fee", "dues", "membership",
+    "bill", "payment", "fee", "subscription", "insurance", "tax", "loan", 
+    "credit", "debt", "finance", "interest", "bank", "service",
     "haircut", "salon", "spa", "beauty", "cosmetic", "makeup", "skincare", 
     "personal", "care", "hygiene", "toiletry", "laundry", "dry clean", 
     "service", "education", "course", "class", "tuition", "school", "college"
-  ],
-  "Business": [
-    "office", "supply", "business", "professional", "service", "consulting", 
-    "software", "subscription", "license", "fee", "dues", "membership"
-  ],
-  "Bills": [
-    "bill", "payment", "fee", "subscription", "insurance", "tax", "loan", 
-    "credit", "debt", "finance", "interest", "bank", "service"
   ]
 };
 

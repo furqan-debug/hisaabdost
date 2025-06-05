@@ -19,11 +19,12 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 // Define the predefined expense categories
 const EXPENSE_CATEGORIES = [
   "Food",
-  "Rent",
+  "Rent", 
   "Utilities",
   "Transportation",
   "Entertainment",
   "Shopping",
+  "Healthcare",
   "Other"
 ];
 

@@ -2,7 +2,7 @@
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 
 export const validateCategory = (category: string): string => {
-  if (!category) return 'Miscellaneous';
+  if (!category) return 'Other';
   
   // Check for exact match
   const exactMatch = EXPENSE_CATEGORIES.find(
@@ -21,6 +21,6 @@ export const validateCategory = (category: string): string => {
     return partialMatches[0]; // Return the first partial match
   }
   
-  // No match found, use miscellaneous as fallback
+  // No match found, use Other as fallback
   return 'Other';
 };

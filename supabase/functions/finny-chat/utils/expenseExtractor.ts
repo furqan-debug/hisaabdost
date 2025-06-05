@@ -10,11 +10,12 @@ export interface ExpenseData {
 // Predefined expense categories - only these are allowed
 const PREDEFINED_CATEGORIES = [
   "Food",
-  "Transportation", 
-  "Shopping",
-  "Entertainment",
-  "Utilities",
   "Rent",
+  "Utilities", 
+  "Transportation",
+  "Entertainment",
+  "Shopping",
+  "Healthcare",
   "Other"
 ];
 
@@ -122,6 +123,37 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
       "internet": "Internet",
       "phone": "Phone",
       "bill": "Bill"
+    }
+  },
+  "Rent": {
+    category: "Rent",
+    keywords: [
+      // English
+      "rent", "mortgage", "house", "apartment", "condo", "housing", "property"
+    ],
+    cleanNames: {
+      "rent": "Rent",
+      "mortgage": "Mortgage",
+      "house": "House",
+      "apartment": "Apartment"
+    }
+  },
+  "Healthcare": {
+    category: "Healthcare",
+    keywords: [
+      // English
+      "doctor", "medical", "medicine", "health", "dental", "vision", "prescription", 
+      "drug", "fitness", "gym", "exercise", "vitamin", "supplement", "therapy", 
+      "hospital", "clinic", "insurance"
+    ],
+    cleanNames: {
+      "doctor": "Doctor",
+      "medical": "Medical",
+      "medicine": "Medicine",
+      "health": "Health",
+      "dental": "Dental",
+      "fitness": "Fitness",
+      "gym": "Gym"
     }
   }
 };
