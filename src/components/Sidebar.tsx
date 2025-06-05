@@ -1,3 +1,4 @@
+
 import {
   Sidebar as SidebarComponent,
   SidebarContent,
@@ -14,7 +15,7 @@ import {
   Wallet,
   Receipt,
   Target,
-  Calendar,
+  History,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { MonthSelector } from "./MonthSelector";
@@ -26,7 +27,7 @@ const menuItems = [
   { icon: Wallet, label: "Budget", path: "/app/budget" },
   { icon: BarChart2, label: "Analytics", path: "/app/analytics" },
   { icon: Target, label: "Goals", path: "/app/goals" },
-  { icon: Calendar, label: "Monthly Summary", path: "/app/history" },
+  { icon: History, label: "History", path: "/app/history" },
 ];
 
 const Sidebar = () => {

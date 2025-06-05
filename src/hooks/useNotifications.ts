@@ -42,19 +42,12 @@ export function useNotifications() {
     if (savedNotifications) {
       try {
         const parsed = JSON.parse(savedNotifications);
-        const validNotifications = parsed.map((n: any) => ({
+        setNotifications(parsed.map((n: any) => ({
           ...n,
-          timestamp: new Date(n.timestamp),
-          read: n.read || false // Ensure read property exists
-        })).filter((n: any) => n.id && n.title); // Filter out invalid notifications
-        
-        setNotifications(validNotifications);
-        console.log('Loaded notifications:', validNotifications);
+          timestamp: new Date(n.timestamp)
+        })));
       } catch (error) {
         console.error('Error loading notifications:', error);
-        // Clear corrupted data
-        localStorage.removeItem('app-notifications');
-        setNotifications([]);
       }
     }
     
@@ -69,10 +62,7 @@ export function useNotifications() {
 
   // Save notifications to localStorage
   useEffect(() => {
-    if (notifications.length > 0) {
-      localStorage.setItem('app-notifications', JSON.stringify(notifications));
-      console.log('Saved notifications to localStorage:', notifications);
-    }
+    localStorage.setItem('app-notifications', JSON.stringify(notifications));
   }, [notifications]);
 
   // Save settings to localStorage
@@ -88,13 +78,7 @@ export function useNotifications() {
       read: false,
     };
 
-    console.log('Adding new notification:', newNotification);
-
-    setNotifications(prev => {
-      const updated = [newNotification, ...prev].slice(0, 50); // Keep only last 50
-      console.log('Updated notifications list:', updated);
-      return updated;
-    });
+    setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep only last 50
 
     // Show toast notification based on type
     const getToastVariant = (type: string) => {
@@ -120,42 +104,22 @@ export function useNotifications() {
   }, []);
 
   const markAsRead = useCallback((id: string) => {
-    console.log('Marking notification as read:', id);
-    setNotifications(prev => {
-      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-      console.log('Updated notifications after mark as read:', updated);
-      return updated;
-    });
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }, []);
 
   const markAllAsRead = useCallback(() => {
-    console.log('Marking all notifications as read');
-    setNotifications(prev => {
-      const updated = prev.map(n => ({ ...n, read: true }));
-      console.log('Updated notifications after mark all as read:', updated);
-      return updated;
-    });
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
   const removeNotification = useCallback((id: string) => {
-    console.log('Removing notification:', id);
-    setNotifications(prev => {
-      const updated = prev.filter(n => n.id !== id);
-      console.log('Updated notifications after removal:', updated);
-      return updated;
-    });
+    setNotifications(prev => prev.filter(n => n.id !== id));
   }, []);
 
   const clearAll = useCallback(() => {
-    console.log('Clearing all notifications');
     setNotifications([]);
-    localStorage.removeItem('app-notifications');
   }, []);
 
-  // Calculate unread count from actual notifications
   const unreadCount = notifications.filter(n => !n.read).length;
-  
-  console.log('Current notifications count:', notifications.length, 'Unread count:', unreadCount);
 
   return {
     notifications,
