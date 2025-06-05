@@ -104,8 +104,66 @@ export function useWalletAdditions() {
     }
   });
 
+  // Delete funds mutation
+  const deleteFundsMutation = useMutation({
+    mutationFn: async (additionId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // First get the addition details for logging
+      const { data: addition, error: fetchError } = await supabase
+        .from('wallet_additions')
+        .select('*')
+        .eq('id', additionId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete the addition
+      const { error: deleteError } = await supabase
+        .from('wallet_additions')
+        .delete()
+        .eq('id', additionId)
+        .eq('user_id', user.id);
+
+      if (deleteError) throw deleteError;
+      
+      return addition;
+    },
+    onSuccess: async (deletedAddition) => {
+      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      
+      // Log the wallet activity
+      try {
+        await logWalletActivity(
+          -deletedAddition.amount, 
+          `Removed wallet addition: ${deletedAddition.description || 'Added funds'}`
+        );
+      } catch (error) {
+        console.error('Failed to log wallet activity:', error);
+      }
+      
+      toast({
+        title: "Success",
+        description: "Wallet addition deleted successfully"
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting funds:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete wallet addition. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const addFunds = (addition: WalletAdditionInput) => {
     addFundsMutation.mutate(addition);
+  };
+
+  const deleteFunds = (additionId: string) => {
+    deleteFundsMutation.mutate(additionId);
   };
 
   return {
@@ -113,8 +171,10 @@ export function useWalletAdditions() {
     totalAdditions,
     isLoading,
     addFunds,
+    deleteFunds,
     isAddFundsOpen,
     setIsAddFundsOpen,
-    isAdding: addFundsMutation.isPending
+    isAdding: addFundsMutation.isPending,
+    isDeleting: deleteFundsMutation.isPending
   };
 }
