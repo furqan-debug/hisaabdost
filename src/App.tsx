@@ -12,6 +12,7 @@ import Budget from "./pages/Budget";
 import Analytics from "./pages/Analytics";
 import Goals from "./pages/Goals";
 import History from "./pages/History";
+import ManageFunds from "./pages/ManageFunds";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
                       <Route path="analytics" element={<Analytics />} />
                       <Route path="goals" element={<Goals />} />
                       <Route path="history" element={<History />} />
+                      <Route path="manage-funds" element={<ManageFunds />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>

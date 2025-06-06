@@ -32,7 +32,7 @@ export function useWalletAdditions() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions
+  // Query wallet additions for current month
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
@@ -48,6 +48,28 @@ export function useWalletAdditions() {
 
       if (error) {
         console.error('Error fetching wallet additions:', error);
+        return [];
+      }
+
+      return data as WalletAddition[];
+    },
+    enabled: !!user,
+  });
+
+  // Query all wallet additions (for manage funds page)
+  const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
+    queryKey: ['wallet-additions-all', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('wallet_additions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all wallet additions:', error);
         return [];
       }
 
@@ -104,17 +126,76 @@ export function useWalletAdditions() {
     }
   });
 
+  // Delete funds mutation
+  const deleteFundsMutation = useMutation({
+    mutationFn: async (fundId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // First get the fund details for logging
+      const { data: fund, error: fetchError } = await supabase
+        .from('wallet_additions')
+        .select('*')
+        .eq('id', fundId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      
+      // Delete the fund entry
+      const { error } = await supabase
+        .from('wallet_additions')
+        .delete()
+        .eq('id', fundId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return fund;
+    },
+    onSuccess: async (deletedFund) => {
+      // Invalidate all wallet-related queries
+      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      
+      // Log the wallet activity as a deduction
+      try {
+        await logWalletActivity(-deletedFund.amount, `Deleted fund entry: ${deletedFund.description || 'Added funds'}`);
+      } catch (error) {
+        console.error('Failed to log wallet activity:', error);
+      }
+      
+      toast({
+        title: "Success",
+        description: "Fund entry deleted successfully"
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting funds:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete fund entry. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const addFunds = (addition: WalletAdditionInput) => {
     addFundsMutation.mutate(addition);
   };
 
+  const deleteFunds = (fundId: string) => {
+    deleteFundsMutation.mutate(fundId);
+  };
+
   return {
     walletAdditions,
+    allWalletAdditions,
     totalAdditions,
     isLoading,
+    isLoadingAll,
     addFunds,
+    deleteFunds,
     isAddFundsOpen,
     setIsAddFundsOpen,
-    isAdding: addFundsMutation.isPending
+    isAdding: addFundsMutation.isPending,
+    isDeleting: deleteFundsMutation.isPending
   };
 }
