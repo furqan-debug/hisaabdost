@@ -43,6 +43,7 @@ export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
         cardType="wallet"
         actionElement={
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleOpenAddFunds}

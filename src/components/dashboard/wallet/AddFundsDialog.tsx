@@ -39,7 +39,7 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
     
     onAddFunds({
       amount: Number(amount),
-      description,
+      description: description || 'Added funds',
       date: format(date, 'yyyy-MM-dd')
     });
 
@@ -49,8 +49,16 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
     setDate(new Date());
   };
 
+  // Reset form when dialog closes
+  const handleClose = () => {
+    setAmount('');
+    setDescription('');
+    setDate(new Date());
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Funds to Wallet</DialogTitle>
@@ -76,6 +84,7 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
                 step="0.01"
                 min="0"
                 required
+                autoComplete="off"
               />
             </div>
           </div>
@@ -85,6 +94,7 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
             <Popover>
               <PopoverTrigger asChild>
                 <Button
+                  type="button"
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
@@ -114,11 +124,12 @@ export function AddFundsDialog({ isOpen, onClose, onAddFunds, isAdding }: AddFun
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this for?"
               rows={3}
+              autoComplete="off"
             />
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isAdding}>
               Cancel
             </Button>
             <Button type="submit" disabled={isAdding || !amount || Number(amount) <= 0}>

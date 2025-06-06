@@ -54,6 +54,10 @@ export function useWalletAdditions() {
       return data as WalletAddition[];
     },
     enabled: !!user,
+    // Prevent automatic refetch that might trigger unwanted side effects
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
   });
 
   // Query all wallet additions (for manage funds page)
@@ -76,6 +80,10 @@ export function useWalletAdditions() {
       return data as WalletAddition[];
     },
     enabled: !!user,
+    // Prevent automatic refetch that might trigger unwanted side effects
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
   });
 
   // Calculate total additions
@@ -101,6 +109,7 @@ export function useWalletAdditions() {
       return data;
     },
     onSuccess: async (data) => {
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
       // Log the wallet activity
