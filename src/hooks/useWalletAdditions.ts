@@ -131,15 +131,11 @@ export function useWalletAdditions() {
     mutationFn: async (fundId: string) => {
       if (!user) throw new Error('User not authenticated');
       
-      // First get the fund details for logging
-      const { data: fund, error: fetchError } = await supabase
-        .from('wallet_additions')
-        .select('*')
-        .eq('id', fundId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
+      // First get the fund details for logging - find it in the current data
+      const fund = allWalletAdditions.find(f => f.id === fundId);
+      if (!fund) {
+        throw new Error('Fund not found');
+      }
       
       // Delete the fund entry
       const { error } = await supabase
