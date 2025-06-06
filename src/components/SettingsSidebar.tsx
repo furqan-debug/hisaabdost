@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings } from 'lucide-react';
+import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrency } from '@/hooks/use-currency';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,6 +49,11 @@ const SettingsSidebar = ({
 
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
+    onClose();
+  };
+
+  const handleManageFundsClick = () => {
+    navigate('/app/manage-funds');
     onClose();
   };
 
@@ -149,7 +154,7 @@ const SettingsSidebar = ({
               </div>
               <h2 className="font-medium">Activity</h2>
             </div>
-            <div className="ml-11">
+            <div className="ml-11 space-y-2">
               <Button 
                 variant="ghost" 
                 className="w-full justify-start" 
@@ -157,6 +162,14 @@ const SettingsSidebar = ({
               >
                 <History className="w-4 h-4 mr-3" />
                 Monthly Summary
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                onClick={handleManageFundsClick}
+              >
+                <Wallet className="w-4 h-4 mr-3" />
+                Manage Funds
               </Button>
             </div>
           </div>
