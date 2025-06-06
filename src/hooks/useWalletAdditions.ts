@@ -104,65 +104,8 @@ export function useWalletAdditions() {
     }
   });
 
-  // Delete funds mutation
-  const deleteFundsMutation = useMutation({
-    mutationFn: async (fundId: string) => {
-      if (!user) throw new Error('User not authenticated');
-      
-      // First get the fund details for logging
-      const { data: fundData, error: fetchError } = await supabase
-        .from('wallet_additions')
-        .select('*')
-        .eq('id', fundId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-      
-      // Delete the fund entry
-      const { error } = await supabase
-        .from('wallet_additions')
-        .delete()
-        .eq('id', fundId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      return fundData;
-    },
-    onSuccess: async (deletedFund) => {
-      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
-      
-      // Log the wallet activity for deletion
-      try {
-        await logWalletActivity(
-          -deletedFund.amount, 
-          `Deleted fund entry: ${deletedFund.description || 'Fund removal'}`
-        );
-      } catch (error) {
-        console.error('Failed to log wallet activity:', error);
-      }
-      
-      toast({
-        title: "Success",
-        description: "Fund entry deleted successfully"
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting fund:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete fund entry. Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
-
   const addFunds = (addition: WalletAdditionInput) => {
     addFundsMutation.mutate(addition);
-  };
-
-  const deleteFunds = (fundId: string) => {
-    deleteFundsMutation.mutate(fundId);
   };
 
   return {
@@ -170,10 +113,8 @@ export function useWalletAdditions() {
     totalAdditions,
     isLoading,
     addFunds,
-    deleteFunds,
     isAddFundsOpen,
     setIsAddFundsOpen,
-    isAdding: addFundsMutation.isPending,
-    isDeleting: deleteFundsMutation.isPending
+    isAdding: addFundsMutation.isPending
   };
 }
