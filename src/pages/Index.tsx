@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { ArrowRight, ChartPie, Brain, Flag, ShieldCheck, Wallet, Star, CreditCard } from "lucide-react";
 
+
 const Index = () => {
   const auth = useAuth();
   const user = auth?.user || null;
