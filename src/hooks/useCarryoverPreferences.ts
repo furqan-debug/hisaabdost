@@ -22,6 +22,7 @@ export function useCarryoverPreferences() {
     queryFn: async () => {
       if (!user) return null;
 
+      console.log('Fetching carryover preferences');
       const { data, error } = await supabase
         .from('user_carryover_preferences')
         .select('*')
@@ -33,6 +34,7 @@ export function useCarryoverPreferences() {
         return null;
       }
 
+      console.log('Carryover preferences:', data);
       return data as CarryoverPreferences | null;
     },
     enabled: !!user,
@@ -42,6 +44,8 @@ export function useCarryoverPreferences() {
   const updatePreferencesMutation = useMutation({
     mutationFn: async (updates: Partial<CarryoverPreferences>) => {
       if (!user) throw new Error('User not authenticated');
+
+      console.log('Updating carryover preferences:', updates);
 
       if (preferences) {
         // Update existing preferences
@@ -55,7 +59,11 @@ export function useCarryoverPreferences() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating preferences:', error);
+          throw error;
+        }
+        console.log('Preferences updated:', data);
         return data;
       } else {
         // Create new preferences
@@ -69,7 +77,11 @@ export function useCarryoverPreferences() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error creating preferences:', error);
+          throw error;
+        }
+        console.log('Preferences created:', data);
         return data;
       }
     },
@@ -80,11 +92,14 @@ export function useCarryoverPreferences() {
 
   // Helper to check if a month has been processed
   const isMonthProcessed = (monthKey: string) => {
-    return preferences?.processed_months?.includes(monthKey) ?? false;
+    const processed = preferences?.processed_months?.includes(monthKey) ?? false;
+    console.log(`Month ${monthKey} processed:`, processed);
+    return processed;
   };
 
   // Helper to mark a month as processed
   const markMonthAsProcessed = (monthKey: string) => {
+    console.log(`Marking month ${monthKey} as processed`);
     const currentProcessedMonths = preferences?.processed_months ?? [];
     if (!currentProcessedMonths.includes(monthKey)) {
       updatePreferencesMutation.mutate({
@@ -97,6 +112,7 @@ export function useCarryoverPreferences() {
   const checkCarryoverExists = async (monthKey: string) => {
     if (!user) return false;
 
+    console.log(`Checking if carryover exists for month: ${monthKey}`);
     const { data, error } = await supabase
       .from('wallet_additions')
       .select('id')
@@ -111,7 +127,9 @@ export function useCarryoverPreferences() {
       return false;
     }
 
-    return data && data.length > 0;
+    const exists = data && data.length > 0;
+    console.log(`Carryover exists for ${monthKey}:`, exists);
+    return exists;
   };
 
   return {

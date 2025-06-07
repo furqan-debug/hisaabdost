@@ -43,6 +43,7 @@ export function useWalletAdditions() {
     queryFn: async () => {
       if (!user) return [];
 
+      console.log('Fetching wallet additions for current month');
       const { data, error } = await supabase
         .from('wallet_additions')
         .select('*')
@@ -57,6 +58,7 @@ export function useWalletAdditions() {
         return [];
       }
 
+      console.log(`Found ${data?.length || 0} wallet additions`);
       return data as WalletAddition[];
     },
     enabled: !!user,
@@ -71,6 +73,7 @@ export function useWalletAdditions() {
     queryFn: async () => {
       if (!user) return [];
 
+      console.log('Fetching all wallet additions');
       const { data, error } = await supabase
         .from('wallet_additions')
         .select('*')
@@ -83,6 +86,7 @@ export function useWalletAdditions() {
         return [];
       }
 
+      console.log(`Found ${data?.length || 0} total wallet additions`);
       return data as WalletAddition[];
     },
     enabled: !!user,
@@ -99,6 +103,7 @@ export function useWalletAdditions() {
     mutationFn: async (addition: WalletAdditionInput) => {
       if (!user) throw new Error('User not authenticated');
       
+      console.log('Adding funds:', addition);
       const { data, error } = await supabase
         .from('wallet_additions')
         .insert({
@@ -112,10 +117,16 @@ export function useWalletAdditions() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding funds:', error);
+        throw error;
+      }
+      
+      console.log('Funds added successfully:', data);
       return data;
     },
     onSuccess: async (data) => {
+      // Invalidate all wallet-related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
       // Log the wallet activity with fund type
@@ -129,10 +140,13 @@ export function useWalletAdditions() {
         console.error('Failed to log wallet activity:', error);
       }
       
-      toast({
-        title: "Success",
-        description: "Funds added successfully"
-      });
+      // Only show toast for manual additions to avoid spam
+      if (data.fund_type === 'manual') {
+        toast({
+          title: "Success",
+          description: "Funds added successfully"
+        });
+      }
       setIsAddFundsOpen(false);
     },
     onError: (error) => {
@@ -150,6 +164,8 @@ export function useWalletAdditions() {
     mutationFn: async (fundId: string) => {
       if (!user) throw new Error('User not authenticated');
       
+      console.log('Deleting fund:', fundId);
+      
       // First get the fund details
       const fund = allWalletAdditions.find(f => f.id === fundId);
       if (!fund) {
@@ -164,7 +180,11 @@ export function useWalletAdditions() {
           .eq('id', fundId)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error soft deleting carryover fund:', error);
+          throw error;
+        }
+        console.log('Carryover fund soft deleted');
       } else {
         // Hard delete manual funds
         const { error } = await supabase
@@ -173,12 +193,19 @@ export function useWalletAdditions() {
           .eq('id', fundId)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error hard deleting manual fund:', error);
+          throw error;
+        }
+        console.log('Manual fund hard deleted');
       }
       
       return fund;
     },
     onSuccess: async (deletedFund) => {
+      console.log('Fund deleted successfully, refreshing data');
+      
+      // Invalidate all wallet-related queries to refresh data immediately
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
       // Log the wallet activity as a deduction with fund type
@@ -212,6 +239,7 @@ export function useWalletAdditions() {
   };
 
   const deleteFunds = (fundId: string) => {
+    console.log('Delete funds called for:', fundId);
     deleteFundsMutation.mutate(fundId);
   };
 
