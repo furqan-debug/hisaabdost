@@ -38,6 +38,7 @@ export function useCarryoverPreferences() {
       return data as CarryoverPreferences | null;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to reduce repeated fetches
   });
 
   // Create or update preferences mutation
@@ -93,19 +94,24 @@ export function useCarryoverPreferences() {
   // Helper to check if a month has been processed
   const isMonthProcessed = (monthKey: string) => {
     const processed = preferences?.processed_months?.includes(monthKey) ?? false;
-    console.log(`Month ${monthKey} processed:`, processed);
+    console.log(`Month ${monthKey} processed status:`, processed);
     return processed;
   };
 
-  // Helper to mark a month as processed
+  // Helper to mark a month as processed (with duplicate prevention)
   const markMonthAsProcessed = (monthKey: string) => {
-    console.log(`Marking month ${monthKey} as processed`);
+    console.log(`Attempting to mark month ${monthKey} as processed`);
     const currentProcessedMonths = preferences?.processed_months ?? [];
-    if (!currentProcessedMonths.includes(monthKey)) {
-      updatePreferencesMutation.mutate({
-        processed_months: [...currentProcessedMonths, monthKey],
-      });
+    
+    if (currentProcessedMonths.includes(monthKey)) {
+      console.log(`Month ${monthKey} already marked as processed, skipping`);
+      return;
     }
+    
+    console.log(`Marking month ${monthKey} as processed`);
+    updatePreferencesMutation.mutate({
+      processed_months: [...currentProcessedMonths, monthKey],
+    });
   };
 
   // Helper to check if carryover exists for a month
