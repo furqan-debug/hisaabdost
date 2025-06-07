@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +17,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startOfMonth } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
-import { useFinnyCommand } from "@/hooks/useFinnyCommand";
 import { useEffect } from "react";
 
 interface CategoryBudgetsProps {
@@ -31,7 +29,6 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
-  const { deleteBudget: finnyDeleteBudget } = useFinnyCommand(); // Get the Finny delete budget command
 
   // Listen for budget update events
   useEffect(() => {
@@ -55,25 +52,25 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
     try {
       console.log(`Deleting budget for category: ${category}`);
       
-      // Use Finny to delete the budget
-      finnyDeleteBudget(category);
-      
-      toast({
-        title: "Budget deletion requested",
-        description: `Requesting to delete the ${category} budget via Finny.`,
-      });
-      
-      // Also delete directly from the database as a fallback
+      // Delete directly from the database
       const { error } = await supabase
         .from("budgets")
         .delete()
         .eq("id", budgetId);
       
       if (error) {
-        console.error("Error deleting budget directly:", error);
-        // We don't need to show an error toast here since Finny should handle it
+        console.error("Error deleting budget:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete the budget. Please try again.",
+          variant: "destructive",
+        });
       } else {
-        console.log("Budget deleted directly from database");
+        console.log("Budget deleted successfully");
+        toast({
+          title: "Success",
+          description: `${category} budget deleted successfully.`,
+        });
         
         // Manually trigger refresh events
         setTimeout(() => {
