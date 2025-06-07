@@ -21,7 +21,7 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="sm"
-          className="relative h-9 w-9 p-0"
+          className="relative h-9 w-9 p-0 hover:bg-muted/50 transition-colors"
         >
           {unreadCount > 0 ? (
             <BellDot className="h-4 w-4" />
@@ -31,14 +31,18 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center font-medium shadow-sm"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent 
+        className="w-96 p-0 border-0 shadow-none bg-transparent" 
+        align="end"
+        sideOffset={8}
+      >
         <NotificationList onClose={() => setIsOpen(false)} />
       </PopoverContent>
     </Popover>
