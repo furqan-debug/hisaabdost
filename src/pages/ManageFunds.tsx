@@ -31,15 +31,23 @@ const ManageFunds = () => {
   const totalFunds = allWalletAdditions.reduce((sum, addition) => sum + Number(addition.amount), 0);
 
   const handleDeleteClick = (fund: any) => {
+    console.log('Delete button clicked for fund:', fund);
     setSelectedFund(fund);
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedFund) {
-      deleteFunds(selectedFund.id);
-      setDeleteDialogOpen(false);
-      setSelectedFund(null);
+      console.log('Confirming delete for fund:', selectedFund.id);
+      try {
+        await deleteFunds(selectedFund.id);
+        console.log('Delete completed successfully');
+      } catch (error) {
+        console.error('Delete failed:', error);
+      } finally {
+        setDeleteDialogOpen(false);
+        setSelectedFund(null);
+      }
     }
   };
 

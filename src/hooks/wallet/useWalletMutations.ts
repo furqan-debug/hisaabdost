@@ -75,28 +75,36 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
     mutationFn: async (fundId: string) => {
       if (!user) throw new Error('User not authenticated');
       
-      console.log('Deleting fund:', fundId);
+      console.log('Starting delete process for fund ID:', fundId);
       
-      // First get the fund details
+      // First get the fund details from our local data
       const fund = allWalletAdditions.find(f => f.id === fundId);
       if (!fund) {
+        console.error('Fund not found in local data:', fundId);
         throw new Error('Fund not found');
       }
       
+      console.log('Found fund to delete:', fund);
+      
       if (fund.fund_type === 'carryover') {
+        console.log('Soft deleting carryover fund...');
         // Soft delete carryover funds by marking them as deleted by user
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('wallet_additions')
           .update({ is_deleted_by_user: true })
           .eq('id', fundId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
         if (error) {
           console.error('Error soft deleting carryover fund:', error);
           throw error;
         }
-        console.log('Carryover fund soft deleted');
+        console.log('Carryover fund soft deleted successfully:', data);
+        return fund;
       } else {
+        console.log('Hard deleting manual fund...');
         // Hard delete manual funds
         const { error } = await supabase
           .from('wallet_additions')
@@ -108,16 +116,15 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
           console.error('Error hard deleting manual fund:', error);
           throw error;
         }
-        console.log('Manual fund hard deleted');
+        console.log('Manual fund hard deleted successfully');
+        return fund;
       }
-      
-      return fund;
     },
     onSuccess: async (deletedFund) => {
-      console.log('Fund deleted successfully, refreshing data');
+      console.log('Delete mutation successful, invalidating queries...');
       
       // Invalidate all wallet-related queries to refresh data immediately
-      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
       // Log the wallet activity as a deduction with fund type
       try {
@@ -132,11 +139,11 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       
       toast({
         title: "Success",
-        description: "Fund entry deleted successfully"
+        description: `Fund entry deleted successfully`
       });
     },
     onError: (error) => {
-      console.error('Error deleting funds:', error);
+      console.error('Delete mutation failed:', error);
       toast({
         title: "Error",
         description: "Failed to delete fund entry. Please try again.",
