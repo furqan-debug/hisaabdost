@@ -6,11 +6,9 @@ import { useState } from "react";
 import { subMonths, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
-import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { motion } from "framer-motion";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
-import { InsightsDisplay } from "@/components/analytics/InsightsDisplay";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
 
@@ -50,8 +48,6 @@ export default function Analytics() {
     const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
     return matchesSearch && matchesCategory;
   }) || [];
-
-  const insights = useAnalyticsInsights(filteredExpenses);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -113,10 +109,6 @@ export default function Analytics() {
             useCustomDateRange={useCustomDateRange}
             className="mx-0 px-0"
           />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <InsightsDisplay insights={insights} />
         </motion.div>
 
         <motion.div variants={itemVariants}>

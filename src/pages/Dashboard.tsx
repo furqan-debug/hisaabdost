@@ -4,9 +4,9 @@ import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
+import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 
 /**
  * Dashboard page component that displays financial overview
@@ -35,9 +35,6 @@ const Dashboard = () => {
     setMonthlyIncome
   } = useDashboardData();
 
-  // Calculate insights based on expenses
-  const insights = useAnalyticsInsights(expenses);
-
   // Setup notification triggers for dashboard
   useNotificationTriggers({
     monthlyExpenses,
@@ -49,6 +46,9 @@ const Dashboard = () => {
 
   // Setup month carryover logic
   useMonthCarryover();
+
+  // Setup analytics notifications - this will send insights as notifications
+  useAnalyticsNotifications({ expenses });
 
   // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {
