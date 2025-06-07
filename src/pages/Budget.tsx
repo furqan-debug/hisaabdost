@@ -66,7 +66,7 @@ const Budget = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="min-h-screen bg-background p-4 space-y-6">
         <div className="h-32 bg-muted/20 rounded-lg animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -79,34 +79,37 @@ const Budget = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <BudgetHeader 
-        onAddBudget={handleAddBudget}
-        onExport={exportBudgetData} 
-      />
-      
-      <BudgetSummaryCards 
-        totalBudget={totalBudget}
-        remainingBalance={remainingBalance}
-        usagePercentage={usagePercentage}
-        monthlyIncome={monthlyIncome}
-      />
-      
-      <BudgetTabs 
-        budgets={budgets || []}
-        onEditBudget={handleEditBudget}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto max-w-7xl px-4 py-6 space-y-6">
+        <BudgetHeader 
+          onAddBudget={handleAddBudget}
+          onExport={exportBudgetData} 
+        />
+        
+        <BudgetSummaryCards 
+          totalBudget={totalBudget}
+          remainingBalance={remainingBalance}
+          usagePercentage={usagePercentage}
+          monthlyIncome={monthlyIncome}
+          isLoading={isLoading}
+        />
+        
+        <BudgetTabs 
+          budgets={budgets || []}
+          onEditBudget={handleEditBudget}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-      <BudgetForm
-        open={showBudgetForm}
-        onOpenChange={setShowBudgetForm}
-        budget={editingBudget}
-        onSuccess={handleBudgetSuccess}
-        monthlyIncome={monthlyIncome}
-        totalBudget={totalBudget}
-      />
+        <BudgetForm
+          open={showBudgetForm}
+          onOpenChange={setShowBudgetForm}
+          budget={editingBudget}
+          onSuccess={handleBudgetSuccess}
+          monthlyIncome={monthlyIncome}
+          totalBudget={totalBudget}
+        />
+      </div>
     </div>
   );
 };

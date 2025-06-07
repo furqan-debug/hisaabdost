@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetOverview } from "@/components/budget/BudgetOverview";
 import { CategoryBudgets } from "@/components/budget/CategoryBudgets";
@@ -44,54 +45,52 @@ export const BudgetTabs = ({
   ];
 
   return (
-    <div className="w-full space-y-4 mt-4">
-      <motion.div 
-        className="w-full flex justify-center"
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+    <motion.div 
+      className="w-full space-y-6"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Tabs 
+        value={stableActiveTab} 
+        onValueChange={handleValueChange} 
+        className="w-full"
       >
-        <Tabs 
-          value={stableActiveTab} 
-          onValueChange={handleValueChange} 
-          className="w-full max-w-2xl mx-auto"
-        >
-          <TabsList className="bg-background border border-border/40 p-1 rounded-full w-full justify-center gap-1.5 relative">
+        <div className="w-full flex justify-center mb-6">
+          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl grid w-full max-w-md grid-cols-4 gap-1">
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id}
                 value={tab.id} 
-                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all
-                          data-[state=active]:bg-primary data-[state=active]:text-primary-foreground
-                          data-[state=active]:shadow-sm hover:bg-muted/50"
+                className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+                          data-[state=active]:bg-background data-[state=active]:text-foreground
+                          data-[state=active]:shadow-sm hover:bg-background/50"
               >
                 <tab.icon className="w-4 h-4" />
-                <span className={isMobile ? "hidden sm:inline" : "inline"}>
-                  {tab.label}
-                </span>
+                {!isMobile && <span>{tab.label}</span>}
               </TabsTrigger>
             ))}
           </TabsList>
+        </div>
 
-          <div className="mt-4 px-2 tab-content-mobile">
-            <TabsContent value="overview" className="mt-0 space-y-4">
-              <BudgetOverview budgets={budgets} />
-            </TabsContent>
+        <div className="w-full">
+          <TabsContent value="overview" className="mt-0 space-y-4">
+            <BudgetOverview budgets={budgets} />
+          </TabsContent>
 
-            <TabsContent value="categories" className="mt-0 space-y-4">
-              <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
-            </TabsContent>
+          <TabsContent value="categories" className="mt-0 space-y-4">
+            <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
+          </TabsContent>
 
-            <TabsContent value="transactions" className="mt-0 space-y-4">
-              <BudgetTransactions budgets={budgets} />
-            </TabsContent>
+          <TabsContent value="transactions" className="mt-0 space-y-4">
+            <BudgetTransactions budgets={budgets} />
+          </TabsContent>
 
-            <TabsContent value="comparison" className="mt-0 space-y-4">
-              <BudgetComparison budgets={budgets} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </motion.div>
-    </div>
+          <TabsContent value="comparison" className="mt-0 space-y-4">
+            <BudgetComparison budgets={budgets} />
+          </TabsContent>
+        </div>
+      </Tabs>
+    </motion.div>
   );
 };
