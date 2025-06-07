@@ -6,6 +6,7 @@ export interface ActivityLogData {
   action_description: string;
   amount?: number;
   category?: string;
+  fund_type?: string;
   metadata?: any;
 }
 
@@ -79,13 +80,17 @@ export const logGoalActivity = async (action: 'created' | 'updated', goal: {
   });
 };
 
-export const logWalletActivity = async (amount: number, description?: string) => {
+export const logWalletActivity = async (amount: number, description?: string, fundType?: string) => {
   await logActivity({
     action_type: 'wallet',
-    action_description: description || `Added ${amount > 0 ? 'funds' : 'deducted funds'} to wallet`,
+    action_description: description || `${amount > 0 ? 'Added' : 'Deducted'} funds ${amount > 0 ? 'to' : 'from'} wallet`,
     amount: Math.abs(amount),
     category: 'Wallet',
-    metadata: { transaction_type: amount > 0 ? 'addition' : 'deduction' }
+    fund_type: fundType,
+    metadata: { 
+      transaction_type: amount > 0 ? 'addition' : 'deduction',
+      fund_type: fundType 
+    }
   });
 };
 

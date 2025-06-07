@@ -16,6 +16,7 @@ export type Database = {
           amount: number | null
           category: string | null
           created_at: string
+          fund_type: string | null
           id: string
           metadata: Json | null
           user_id: string
@@ -26,6 +27,7 @@ export type Database = {
           amount?: number | null
           category?: string | null
           created_at?: string
+          fund_type?: string | null
           id?: string
           metadata?: Json | null
           user_id: string
@@ -36,6 +38,7 @@ export type Database = {
           amount?: number | null
           category?: string | null
           created_at?: string
+          fund_type?: string | null
           id?: string
           metadata?: Json | null
           user_id?: string
@@ -372,29 +375,65 @@ export type Database = {
           },
         ]
       }
+      user_carryover_preferences: {
+        Row: {
+          auto_carryover_enabled: boolean | null
+          created_at: string | null
+          id: string
+          processed_months: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_carryover_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          processed_months?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_carryover_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          processed_months?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallet_additions: {
         Row: {
           amount: number
+          carryover_month: string | null
           created_at: string
           date: string
           description: string | null
+          fund_type: string | null
           id: string
+          is_deleted_by_user: boolean | null
           user_id: string
         }
         Insert: {
           amount: number
+          carryover_month?: string | null
           created_at?: string
           date?: string
           description?: string | null
+          fund_type?: string | null
           id?: string
+          is_deleted_by_user?: boolean | null
           user_id: string
         }
         Update: {
           amount?: number
+          carryover_month?: string | null
           created_at?: string
           date?: string
           description?: string | null
+          fund_type?: string | null
           id?: string
+          is_deleted_by_user?: boolean | null
           user_id?: string
         }
         Relationships: []

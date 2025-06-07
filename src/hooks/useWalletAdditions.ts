@@ -14,12 +14,17 @@ export type WalletAddition = {
   description?: string;
   date: string;
   created_at: string;
+  fund_type?: 'manual' | 'carryover';
+  carryover_month?: string;
+  is_deleted_by_user?: boolean;
 };
 
 export type WalletAdditionInput = {
   amount: number;
   description?: string;
   date?: string;
+  fund_type?: 'manual' | 'carryover';
+  carryover_month?: string;
 };
 
 export function useWalletAdditions() {
@@ -32,7 +37,7 @@ export function useWalletAdditions() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month
+  // Query wallet additions for current month (excluding deleted carryover funds)
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
@@ -44,6 +49,7 @@ export function useWalletAdditions() {
         .eq('user_id', user.id)
         .gte('date', firstDayOfMonth)
         .lte('date', lastDayOfMonth)
+        .neq('is_deleted_by_user', true)
         .order('date', { ascending: false });
 
       if (error) {
@@ -54,13 +60,12 @@ export function useWalletAdditions() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    // Prevent automatic refetch that might trigger unwanted side effects
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
   });
 
-  // Query all wallet additions (for manage funds page)
+  // Query all wallet additions (for manage funds page, excluding soft-deleted)
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
@@ -70,6 +75,7 @@ export function useWalletAdditions() {
         .from('wallet_additions')
         .select('*')
         .eq('user_id', user.id)
+        .neq('is_deleted_by_user', true)
         .order('date', { ascending: false });
 
       if (error) {
@@ -80,7 +86,6 @@ export function useWalletAdditions() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    // Prevent automatic refetch that might trigger unwanted side effects
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
@@ -101,6 +106,8 @@ export function useWalletAdditions() {
           amount: addition.amount,
           description: addition.description || 'Added funds',
           date: addition.date || new Date().toISOString().split('T')[0],
+          fund_type: addition.fund_type || 'manual',
+          carryover_month: addition.carryover_month,
         })
         .select()
         .single();
@@ -109,12 +116,15 @@ export function useWalletAdditions() {
       return data;
     },
     onSuccess: async (data) => {
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
-      // Log the wallet activity
+      // Log the wallet activity with fund type
       try {
-        await logWalletActivity(data.amount, data.description || 'Added funds to wallet');
+        await logWalletActivity(
+          data.amount, 
+          data.description || 'Added funds to wallet',
+          data.fund_type || 'manual'
+        );
       } catch (error) {
         console.error('Failed to log wallet activity:', error);
       }
@@ -135,34 +145,49 @@ export function useWalletAdditions() {
     }
   });
 
-  // Delete funds mutation
+  // Delete funds mutation (soft delete for carryover funds, hard delete for manual funds)
   const deleteFundsMutation = useMutation({
     mutationFn: async (fundId: string) => {
       if (!user) throw new Error('User not authenticated');
       
-      // First get the fund details for logging - find it in the current data
+      // First get the fund details
       const fund = allWalletAdditions.find(f => f.id === fundId);
       if (!fund) {
         throw new Error('Fund not found');
       }
       
-      // Delete the fund entry
-      const { error } = await supabase
-        .from('wallet_additions')
-        .delete()
-        .eq('id', fundId)
-        .eq('user_id', user.id);
+      if (fund.fund_type === 'carryover') {
+        // Soft delete carryover funds by marking them as deleted by user
+        const { error } = await supabase
+          .from('wallet_additions')
+          .update({ is_deleted_by_user: true })
+          .eq('id', fundId)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Hard delete manual funds
+        const { error } = await supabase
+          .from('wallet_additions')
+          .delete()
+          .eq('id', fundId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      }
+      
       return fund;
     },
     onSuccess: async (deletedFund) => {
-      // Invalidate all wallet-related queries
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
-      // Log the wallet activity as a deduction
+      // Log the wallet activity as a deduction with fund type
       try {
-        await logWalletActivity(-deletedFund.amount, `Deleted fund entry: ${deletedFund.description || 'Added funds'}`);
+        await logWalletActivity(
+          -deletedFund.amount, 
+          `Deleted ${deletedFund.fund_type === 'carryover' ? 'carryover' : 'manual'} fund entry: ${deletedFund.description || 'Added funds'}`,
+          deletedFund.fund_type || 'manual'
+        );
       } catch (error) {
         console.error('Failed to log wallet activity:', error);
       }

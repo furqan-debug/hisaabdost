@@ -6,6 +6,7 @@ import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useAnalyticsInsights } from "@/hooks/useAnalyticsInsights";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 
 /**
  * Dashboard page component that displays financial overview
@@ -45,6 +46,9 @@ const Dashboard = () => {
     expenses,
     previousMonthExpenses: 0, // Would need to fetch from previous month
   });
+
+  // Setup month carryover logic
+  useMonthCarryover();
 
   // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {

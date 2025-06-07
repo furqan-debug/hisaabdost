@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Trash2, Wallet, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Trash2, Wallet, Calendar, FileText, ArrowDownToLine, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletAdditions } from '@/hooks/useWalletAdditions';
 import { useCurrency } from '@/hooks/use-currency';
@@ -45,6 +45,14 @@ const ManageFunds = () => {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const getFundTypeIcon = (fundType: string) => {
+    return fundType === 'carryover' ? ArrowDownToLine : Plus;
+  };
+
+  const getFundTypeBadgeVariant = (fundType: string) => {
+    return fundType === 'carryover' ? 'secondary' : 'default';
   };
 
   if (isLoadingAll) {
@@ -122,46 +130,57 @@ const ManageFunds = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {allWalletAdditions.map((fund) => (
-                <Card key={fund.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-3">
-                          <div className="text-lg font-semibold">
-                            {formatCurrency(fund.amount, currencyCode)}
+              {allWalletAdditions.map((fund) => {
+                const FundIcon = getFundTypeIcon(fund.fund_type || 'manual');
+                
+                return (
+                  <Card key={fund.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <div className="text-lg font-semibold">
+                              {formatCurrency(fund.amount, currencyCode)}
+                            </div>
+                            <Badge 
+                              variant={getFundTypeBadgeVariant(fund.fund_type || 'manual')} 
+                              className="flex items-center gap-1"
+                            >
+                              <FundIcon className="h-3 w-3" />
+                              {fund.fund_type === 'carryover' ? 'Carryover' : 'Manual'}
+                            </Badge>
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(fund.date), 'MMM dd, yyyy')}
+                            </Badge>
                           </div>
-                          <Badge variant="secondary" className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {format(new Date(fund.date), 'MMM dd, yyyy')}
-                          </Badge>
+                          
+                          {fund.description && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <FileText className="h-3 w-3" />
+                              {fund.description}
+                            </div>
+                          )}
+                          
+                          <div className="text-xs text-muted-foreground">
+                            Added on {format(new Date(fund.created_at), 'MMM dd, yyyy \'at\' h:mm a')}
+                          </div>
                         </div>
                         
-                        {fund.description && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <FileText className="h-3 w-3" />
-                            {fund.description}
-                          </div>
-                        )}
-                        
-                        <div className="text-xs text-muted-foreground">
-                          Added on {format(new Date(fund.created_at), 'MMM dd, yyyy \'at\' h:mm a')}
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(fund)}
+                          disabled={isDeleting}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteClick(fund)}
-                        disabled={isDeleting}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
@@ -176,6 +195,11 @@ const ManageFunds = () => {
               Are you sure you want to delete this fund entry? This will remove{' '}
               <strong>{selectedFund && formatCurrency(selectedFund.amount, currencyCode)}</strong>{' '}
               from your wallet balance and cannot be undone.
+              {selectedFund?.fund_type === 'carryover' && (
+                <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-sm">
+                  <strong>Note:</strong> This is a carryover fund. Deleting it will prevent it from being automatically re-added in the future.
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrency } from '@/hooks/use-currency';
+import { useCarryoverPreferences } from '@/hooks/useCarryoverPreferences';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -20,6 +22,7 @@ const SettingsSidebar = ({
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
   const { currencyCode, setCurrencyCode } = useCurrency();
+  const { preferences, updatePreferences, isUpdating } = useCarryoverPreferences();
   const { user } = useAuth();
   const { signOut } = useSignOut();
   const navigate = useNavigate();
@@ -60,6 +63,10 @@ const SettingsSidebar = ({
   const handleSignOut = async () => {
     await signOut();
     onClose();
+  };
+
+  const handleCarryoverToggle = (enabled: boolean) => {
+    updatePreferences({ auto_carryover_enabled: enabled });
   };
 
   return (
@@ -107,6 +114,31 @@ const SettingsSidebar = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Wallet Settings */}
+          <div className="p-6 border-b">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <ArrowRightLeft className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="font-medium">Wallet</h2>
+            </div>
+            <div className="ml-11">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="font-medium">Auto Carryover</p>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically carry over leftover balance to next month
+                  </p>
+                </div>
+                <Switch
+                  checked={preferences?.auto_carryover_enabled ?? true}
+                  onCheckedChange={handleCarryoverToggle}
+                  disabled={isUpdating}
+                />
+              </div>
             </div>
           </div>
 
