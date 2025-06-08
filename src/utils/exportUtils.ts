@@ -1,4 +1,3 @@
-
 import { Expense } from "@/components/expenses/types";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
@@ -27,9 +26,8 @@ const isNativePlatform = () => {
 const isAndroid = () => {
   try {
     return typeof window !== 'undefined' && 
-           window.Capacitor && 
-           window.Capacitor.getPlatform && 
-           window.Capacitor.getPlatform() === 'android';
+           navigator.userAgent.toLowerCase().includes('android') &&
+           isNativePlatform();
   } catch {
     return false;
   }
