@@ -79,27 +79,33 @@ const Budget = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-7xl px-4 py-6 space-y-6">
-        <BudgetHeader 
-          onAddBudget={handleAddBudget}
-          onExport={exportBudgetData} 
-        />
+    <div className="min-h-screen bg-background w-full max-w-full overflow-hidden">
+      <div className="container mx-auto max-w-7xl px-4 py-6 space-y-6 w-full max-w-full overflow-hidden">
+        <div className="w-full max-w-full overflow-hidden">
+          <BudgetHeader 
+            onAddBudget={handleAddBudget}
+            onExport={exportBudgetData} 
+          />
+        </div>
         
-        <BudgetSummaryCards 
-          totalBudget={totalBudget}
-          remainingBalance={remainingBalance}
-          usagePercentage={usagePercentage}
-          monthlyIncome={monthlyIncome}
-          isLoading={isLoading}
-        />
+        <div className="w-full max-w-full overflow-hidden">
+          <BudgetSummaryCards 
+            totalBudget={totalBudget}
+            remainingBalance={remainingBalance}
+            usagePercentage={usagePercentage}
+            monthlyIncome={monthlyIncome}
+            isLoading={isLoading}
+          />
+        </div>
         
-        <BudgetTabs 
-          budgets={budgets || []}
-          onEditBudget={handleEditBudget}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        <div className="w-full max-w-full overflow-hidden">
+          <BudgetTabs 
+            budgets={budgets || []}
+            onEditBudget={handleEditBudget}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </div>
 
         <BudgetForm
           open={showBudgetForm}

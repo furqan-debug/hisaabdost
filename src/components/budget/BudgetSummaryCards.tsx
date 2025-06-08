@@ -30,11 +30,11 @@ export const BudgetSummaryCards = ({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="w-full space-y-4">
         <Skeleton className="h-12 w-full" />
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div className="w-full grid gap-3 grid-cols-2 md:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-[100px]" />
+            <Skeleton key={i} className="h-[100px] w-full" />
           ))}
         </div>
       </div>
@@ -42,9 +42,9 @@ export const BudgetSummaryCards = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       {exceedsBudget && (
-        <Alert variant="destructive" className="rounded-lg">
+        <Alert variant="destructive" className="rounded-lg w-full">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Warning: Your total budget exceeds your monthly income by {formatCurrency(totalBudget - monthlyIncome, currencyCode)}
@@ -52,54 +52,54 @@ export const BudgetSummaryCards = ({
         </Alert>
       )}
       
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2 px-4 pt-4">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+      <div className="w-full grid gap-3 grid-cols-2 md:grid-cols-4">
+        <Card className="w-full shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-2 px-3 pt-3 md:px-4 md:pt-4">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground truncate">
               Total Budget
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
-            <div className="text-lg md:text-2xl font-bold text-foreground">
+          <CardContent className="pt-0 px-3 pb-3 md:px-4 md:pb-4">
+            <div className="text-base md:text-2xl font-bold text-foreground break-all">
               {formatCurrency(totalBudget, currencyCode)}
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2 px-4 pt-4">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+        <Card className="w-full shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-2 px-3 pt-3 md:px-4 md:pt-4">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground truncate">
               Total Spent
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
-            <div className="text-lg md:text-2xl font-bold text-foreground">
+          <CardContent className="pt-0 px-3 pb-3 md:px-4 md:pb-4">
+            <div className="text-base md:text-2xl font-bold text-foreground break-all">
               {formatCurrency(totalSpent, currencyCode)}
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2 px-4 pt-4">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+        <Card className="w-full shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-2 px-3 pt-3 md:px-4 md:pt-4">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground truncate">
               Remaining
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
-            <div className={`text-lg md:text-2xl font-bold ${remainingBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
+          <CardContent className="pt-0 px-3 pb-3 md:px-4 md:pb-4">
+            <div className={`text-base md:text-2xl font-bold break-all ${remainingBalance < 0 ? 'text-destructive' : 'text-foreground'}`}>
               {formatCurrency(remainingBalance, currencyCode)}
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2 px-4 pt-4">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+        <Card className="w-full shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-2 px-3 pt-3 md:px-4 md:pt-4">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground truncate">
               Usage
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
-            <div className={`text-lg md:text-2xl font-bold ${usagePercentage > 100 ? 'text-destructive' : 'text-foreground'}`}>
+          <CardContent className="pt-0 px-3 pb-3 md:px-4 md:pb-4">
+            <div className={`text-base md:text-2xl font-bold ${usagePercentage > 100 ? 'text-destructive' : 'text-foreground'}`}>
               {usagePercentage.toFixed(1)}%
             </div>
           </CardContent>
