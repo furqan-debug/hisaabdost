@@ -38,8 +38,8 @@ const App = () => {
   useEffect(() => {
     // Simulate app initialization time
     const initializeApp = async () => {
-      // Wait for minimum splash duration
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Wait for minimum splash duration (reduced for faster loading)
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Check if critical resources are loaded
       if (document.readyState === 'complete') {
@@ -51,6 +51,11 @@ const App = () => {
           window.removeEventListener('load', handleLoad);
         };
         window.addEventListener('load', handleLoad);
+        
+        // Fallback timeout to prevent infinite loading
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
       }
     };
 
@@ -70,9 +75,9 @@ const App = () => {
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
           <BrowserRouter>
-            <AuthProvider>
-              <MonthProvider>
-                <FinnyProvider>
+            <FinnyProvider>
+              <AuthProvider>
+                <MonthProvider>
                   <SidebarProvider>
                     <Toaster />
                     <Sonner />
@@ -93,9 +98,9 @@ const App = () => {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </SidebarProvider>
-                </FinnyProvider>
-              </MonthProvider>
-            </AuthProvider>
+                </MonthProvider>
+              </AuthProvider>
+            </FinnyProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

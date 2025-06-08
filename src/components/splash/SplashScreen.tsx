@@ -18,14 +18,14 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     // Show content after a brief delay
     const contentTimer = setTimeout(() => {
       setShowContent(true);
-    }, 300);
+    }, 200);
 
-    // Complete splash screen after timeout
+    // Complete splash screen after timeout (reduced for faster experience)
     const completeTimer = setTimeout(() => {
       // Remove no-scroll class when splash screen completes
       document.body.classList.remove('no-scroll');
       onComplete();
-    }, 3000);
+    }, 2000);
 
     return () => {
       clearTimeout(contentTimer);
@@ -36,16 +36,16 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
 
   const containerVariants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 1 } },
-    exit: { opacity: 0, transition: { duration: 0.5 } }
+    animate: { opacity: 1, transition: { duration: 0.8 } },
+    exit: { opacity: 0, transition: { duration: 0.4 } }
   };
 
   const backgroundVariants = {
     animate: {
-      scale: [1, 1.03, 1],
-      rotate: [0, 2, -2, 0],
+      scale: [1, 1.02, 1],
+      rotate: [0, 1, -1, 0],
       transition: {
-        duration: 15,
+        duration: 12,
         repeat: Infinity,
         ease: "easeInOut"
       }
@@ -61,7 +61,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         type: "spring",
         stiffness: 200,
         damping: 15,
-        duration: 1
+        duration: 0.8
       }
     }
   };
@@ -69,10 +69,10 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const pulseVariants = {
     initial: { scale: 1, opacity: 0.5 },
     animate: {
-      scale: [1, 1.5, 1],
-      opacity: [0.5, 0.8, 0.5],
+      scale: [1, 1.3, 1],
+      opacity: [0.5, 0.7, 0.5],
       transition: {
-        duration: 4,
+        duration: 3,
         times: [0, 0.5, 1],
         repeat: Infinity,
         ease: "easeInOut"
@@ -83,14 +83,14 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const textContainerVariants = {
     animate: {
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.8
+        staggerChildren: 0.08,
+        delayChildren: 0.6
       }
     }
   };
 
   const letterVariants = {
-    initial: { y: 50, opacity: 0 },
+    initial: { y: 40, opacity: 0 },
     animate: {
       y: 0,
       opacity: 1,
@@ -103,13 +103,13 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   };
 
   const taglineVariants = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 0, y: 15 },
     animate: {
       opacity: 1,
       y: 0,
       transition: {
-        delay: 1.5,
-        duration: 0.7,
+        delay: 1.2,
+        duration: 0.6,
         ease: "easeOut"
       }
     }
@@ -136,7 +136,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
 
       {/* Logo with pulse effect */}
       {showContent && (
-        <div className="relative mb-10 z-10">
+        <div className="relative mb-8 z-10">
           <motion.div
             className="absolute inset-0 bg-purple-400/20 rounded-full blur-2xl -z-10"
             variants={pulseVariants}
@@ -149,7 +149,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
             animate="animate"
             src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
             alt="Hisaab Dost Logo"
-            className="w-28 h-28 relative z-10"
+            className="w-24 h-24 relative z-10"
           />
         </div>
       )}
@@ -160,13 +160,13 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           variants={textContainerVariants}
           initial="initial"
           animate="animate"
-          className="flex justify-center mb-4 z-10"
+          className="flex justify-center mb-3 z-10"
         >
           {title.map((letter, index) => (
             <motion.span
               key={index}
               variants={letterVariants}
-              className="text-5xl font-bold text-[#6E59A5] inline-block"
+              className="text-4xl font-bold text-[#6E59A5] inline-block"
               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
             >
               {letter === " " ? "\u00A0" : letter}
@@ -181,7 +181,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           variants={taglineVariants}
           initial="initial"
           animate="animate"
-          className="text-lg font-medium tracking-wide text-[#7E69AB] z-10"
+          className="text-base font-medium tracking-wide text-[#7E69AB] z-10"
           style={{ textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
         >
           Master your home budget with ease
