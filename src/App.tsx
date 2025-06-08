@@ -32,22 +32,22 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    // Simulate app initialization time and show splash screen
-    const initTimer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000); // Show splash for 3 seconds during app load
-
-    return () => clearTimeout(initTimer);
+    // Check if user has seen splash before
+    const hasSeenSplash = localStorage.getItem('hasSeenSplash');
+    if (hasSeenSplash) {
+      setShowSplash(false);
+    }
   }, []);
 
   const handleSplashComplete = () => {
-    setIsLoading(false);
+    localStorage.setItem('hasSeenSplash', 'true');
+    setShowSplash(false);
   };
 
-  if (isLoading) {
+  if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
