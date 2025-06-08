@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Mail, Key, User } from "lucide-react";
+import { Mail, Key, User, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +25,7 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
@@ -66,13 +67,13 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="space-y-5">
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-3 rounded-md bg-destructive/10 text-destructive text-sm"
+              className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm"
             >
               {error}
             </motion.div>
@@ -84,13 +85,13 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel className="text-sm font-medium text-foreground">Full Name</FormLabel>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <FormControl>
                       <Input
                         placeholder="John Doe"
-                        className="pl-10"
+                        className="pl-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -107,14 +108,14 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-sm font-medium text-foreground">Email</FormLabel>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="you@example.com"
-                        className="pl-10"
+                        className="pl-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -131,17 +132,30 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-sm font-medium text-foreground">Password</FormLabel>
                   <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <FormControl>
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-12 pr-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
                     </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -150,8 +164,8 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
           </motion.div>
         </div>
 
-        <div className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={loading}>
+        <div className="flex flex-col space-y-4 pt-2">
+          <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
@@ -162,10 +176,19 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
             )}
           </Button>
           
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/30" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+          
           <Button
             type="button"
-            variant="link"
-            className="w-full"
+            variant="outline"
+            className="w-full h-12 text-base border-border/50 hover:bg-muted/50"
             onClick={onLoginClick}
           >
             Already have an account? Sign in

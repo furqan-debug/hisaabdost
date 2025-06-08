@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Mail, Key } from "lucide-react";
+import { Mail, Key, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ type LoginFormProps = {
 export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) => {
   const { signInWithEmail } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -57,22 +58,22 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="space-y-5">
           <motion.div variants={inputVariants} custom={0}>
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-sm font-medium text-foreground">Email</FormLabel>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="you@example.com"
-                        className="pl-10"
+                        className="pl-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -89,23 +90,36 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-sm font-medium text-foreground">Password</FormLabel>
                   <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <FormControl>
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10"
+                        className="pl-12 pr-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
                     </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right mt-2">
                     <Button 
                       type="button" 
                       variant="link" 
-                      className="text-xs p-0 h-auto"
+                      className="text-xs p-0 h-auto text-primary hover:text-primary/80"
                       onClick={onForgotPassword}
                     >
                       Forgot password?
@@ -118,8 +132,8 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
           </motion.div>
         </div>
 
-        <div className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={loading}>
+        <div className="flex flex-col space-y-4 pt-2">
+          <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
@@ -130,10 +144,19 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
             )}
           </Button>
           
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/30" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+          
           <Button
             type="button"
-            variant="link"
-            className="w-full"
+            variant="outline"
+            className="w-full h-12 text-base border-border/50 hover:bg-muted/50"
             onClick={onSignUpClick}
           >
             Don't have an account? Sign up

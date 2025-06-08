@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -9,6 +10,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+
 const Auth = () => {
   // Safe access to auth context with fallback mechanism
   let user = null;
@@ -26,23 +28,25 @@ const Auth = () => {
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const navigate = useNavigate();
+
   if (user) {
     return <Navigate to="/app/dashboard" replace />;
   }
-  const handleGoBack = () => {
-    navigate('/');
-  };
+
   const handleVerification = async (code: string) => {
     await verifyOtp(verificationEmail, code);
   };
+
   const handleResendVerification = async () => {
     await resendOtp(verificationEmail);
   };
+
   const cardVariants = {
     hidden: {
       opacity: 0,
@@ -65,44 +69,110 @@ const Auth = () => {
       }
     }
   };
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/20 relative">
-      
 
-      <AnimatePresence mode="wait">
-        <motion.div key={showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"} initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="w-full max-w-md">
-          <Card className="border-primary/10 shadow-lg backdrop-blur bg-card/90">
-            <CardHeader className="space-y-2">
-              <motion.div initial={{
-              opacity: 0,
-              scale: 0.9
-            }} animate={{
-              opacity: 1,
-              scale: 1
-            }} transition={{
-              duration: 0.5
-            }} className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                <User className="h-6 w-6 text-primary" />
-              </motion.div>
-              <CardTitle className="text-center text-xl md:text-2xl">
-                {showVerification ? "Verify your email" : showForgotPassword ? "Reset Password" : isSignUp ? "Create an account" : "Welcome back"}
-              </CardTitle>
-              <CardDescription className="text-center">
-                {showVerification ? `Enter the 6-digit verification code sent to ${verificationEmail}` : showForgotPassword ? "Enter your email and we'll send you a link to reset your password" : isSignUp ? "Sign up to start managing your expenses" : "Sign in to your account"}
-              </CardDescription>
-            </CardHeader>
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      </div>
 
-            <CardContent>
-              {showVerification ? <VerificationForm email={verificationEmail} onVerify={handleVerification} onResend={handleResendVerification} onBackToLogin={() => {
-              setShowVerification(false);
-              setVerificationEmail("");
-            }} /> : showForgotPassword ? <ForgotPasswordForm onBackToLogin={() => setShowForgotPassword(false)} /> : isSignUp ? <SignUpForm onLoginClick={() => setIsSignUp(false)} onSignUpSuccess={email => {
-              setVerificationEmail(email);
-              setShowVerification(true);
-            }} /> : <LoginForm onForgotPassword={() => setShowForgotPassword(true)} onSignUpClick={() => setIsSignUp(true)} />}
-            </CardContent>
-          </Card>
+      <div className="relative z-10 w-full max-w-md">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={cardVariants}
+            className="w-full"
+          >
+            <Card className="border-0 shadow-2xl backdrop-blur-sm bg-card/95 overflow-hidden">
+              {/* Card Header */}
+              <CardHeader className="space-y-4 text-center pb-6 pt-8 px-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4 ring-8 ring-primary/5"
+                >
+                  <User className="h-8 w-8 text-primary" />
+                </motion.div>
+
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    {showVerification 
+                      ? "Verify your email" 
+                      : showForgotPassword 
+                        ? "Reset Password" 
+                        : isSignUp 
+                          ? "Create an account" 
+                          : "Welcome back"
+                    }
+                  </CardTitle>
+                  <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                    {showVerification 
+                      ? `Enter the 6-digit verification code sent to ${verificationEmail}` 
+                      : showForgotPassword 
+                        ? "Enter your email and we'll send you a link to reset your password" 
+                        : isSignUp 
+                          ? "Sign up to start managing your expenses" 
+                          : "Sign in to your account"
+                    }
+                  </CardDescription>
+                </div>
+              </CardHeader>
+
+              {/* Card Content */}
+              <CardContent className="px-8 pb-8">
+                {showVerification ? (
+                  <VerificationForm
+                    email={verificationEmail}
+                    onVerify={handleVerification}
+                    onResend={handleResendVerification}
+                    onBackToLogin={() => {
+                      setShowVerification(false);
+                      setVerificationEmail("");
+                    }}
+                  />
+                ) : showForgotPassword ? (
+                  <ForgotPasswordForm
+                    onBackToLogin={() => setShowForgotPassword(false)}
+                  />
+                ) : isSignUp ? (
+                  <SignUpForm
+                    onLoginClick={() => setIsSignUp(false)}
+                    onSignUpSuccess={(email) => {
+                      setVerificationEmail(email);
+                      setShowVerification(true);
+                    }}
+                  />
+                ) : (
+                  <LoginForm
+                    onForgotPassword={() => setShowForgotPassword(true)}
+                    onSignUpClick={() => setIsSignUp(true)}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Footer text */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-8"
+        >
+          <p className="text-sm text-muted-foreground">
+            Secure authentication powered by Supabase
+          </p>
         </motion.div>
-      </AnimatePresence>
-    </div>;
+      </div>
+    </div>
+  );
 };
+
 export default Auth;
