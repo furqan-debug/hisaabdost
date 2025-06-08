@@ -28,52 +28,57 @@ const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
-// Mobile-specific file download using Capacitor
-const downloadFileOnMobile = async (content: string, filename: string, mimeType: string) => {
+// Enhanced mobile file download using Capacitor with proper Android handling
+const downloadFileOnMobile = async (content: string, filename: string, mimeType: string, isBase64: boolean = false) => {
   try {
     const { Filesystem, Directory } = await import('@capacitor/filesystem');
     const { Share } = await import('@capacitor/share');
     
     console.log('Attempting to save file on mobile:', filename);
     
-    // Write file to Documents directory
+    // For Android, use Downloads directory for better user access
+    const directory = Directory.Downloads;
+    
+    // Write file to Downloads directory
     const result = await Filesystem.writeFile({
       path: filename,
       data: content,
-      directory: Directory.Documents,
-      encoding: mimeType.includes('base64') ? undefined : undefined,
+      directory: directory,
+      encoding: isBase64 ? undefined : undefined, // Let Capacitor handle encoding
     });
 
-    console.log('File written successfully:', result);
+    console.log('File written successfully to Downloads:', result);
 
-    // Try to share the file so user can save it to their preferred location
-    try {
-      const fileUri = await Filesystem.getUri({
-        directory: Directory.Documents,
-        path: filename
-      });
-      
-      await Share.share({
-        title: 'Export File',
-        text: `Your exported ${filename}`,
-        url: fileUri.uri,
-      });
-      
-      toast({
-        title: "Success",
-        description: `File saved and shared: ${filename}`,
-      });
-    } catch (shareError) {
-      console.log('Share failed, file still saved:', shareError);
-      toast({
-        title: "Success", 
-        description: `File saved to Documents: ${filename}`,
-      });
-    }
+    // Get the file URI for sharing
+    const fileUri = await Filesystem.getUri({
+      directory: directory,
+      path: filename
+    });
+    
+    console.log('File URI:', fileUri.uri);
+
+    // Share the file so user can access it easily
+    await Share.share({
+      title: 'Hisaab Dost Export',
+      text: `Your exported file: ${filename}`,
+      url: fileUri.uri,
+    });
+    
+    toast({
+      title: "Success!",
+      description: `File saved to Downloads folder and shared: ${filename}`,
+    });
 
     return result;
   } catch (error) {
     console.error('Mobile file save error:', error);
+    
+    // Show more specific error message
+    toast({
+      title: "Download Failed",
+      description: "Unable to save to device. Trying alternative method...",
+      variant: "destructive"
+    });
     
     // Fallback to web download
     console.log('Falling back to web download');
@@ -83,7 +88,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
   }
 };
 
-// Web-specific file download with mobile improvements - now handles both string and Blob content
+// Web-specific file download with enhanced mobile support
 const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: string) => {
   try {
     console.log('Attempting web download:', filename, mimeType);
@@ -91,31 +96,47 @@ const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: s
     // Create blob with proper MIME type
     const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
     
-    // For mobile browsers, try to open in new tab if download fails
+    // Enhanced mobile browser handling
     if (isMobileDevice()) {
       try {
         const dataUrl = URL.createObjectURL(blob);
         
-        // Try traditional download first
+        // Create a hidden download link
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = filename;
         link.style.display = 'none';
+        
+        // Add to DOM and trigger download
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
         
-        // Clean up after a delay
-        setTimeout(() => URL.revokeObjectURL(dataUrl), 1000);
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(dataUrl);
+        }, 1000);
+        
+        // Try to open in new tab as backup
+        setTimeout(() => {
+          const newWindow = window.open(dataUrl, '_blank');
+          if (!newWindow) {
+            console.log('Popup blocked, showing instructions');
+            toast({
+              title: "Download Ready",
+              description: "If download didn't start, please check your browser's download settings.",
+            });
+          }
+        }, 500);
         
         toast({
           title: "Download Started",
-          description: "Check your downloads folder or browser notifications",
+          description: "Check your Downloads folder or browser notifications",
         });
       } catch (mobileError) {
         console.error('Mobile web download failed:', mobileError);
         
-        // Last resort: try to open in new window
+        // Last resort: direct blob URL
         const dataUrl = URL.createObjectURL(blob);
         window.open(dataUrl, '_blank');
         
@@ -153,9 +174,12 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
   try {
     console.log('Starting CSV export for', expenses.length, 'expenses');
     
+    // Add UTF-8 BOM for proper encoding
+    const BOM = '\uFEFF';
+    
     // Add Hisaab Dost branding in header
     const headers = ['Date', 'Description', 'Category', 'Amount'];
-    const csvContent = [
+    const csvContent = BOM + [
       'Hisaab Dost - Expense Report',
       `Generated on: ${format(new Date(), 'PPP')}`,
       '',
@@ -176,7 +200,7 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
     // Check if running on mobile platform
     if (isNativePlatform()) {
       console.log('Using native platform download');
-      await downloadFileOnMobile(csvContent, filename, mimeType);
+      await downloadFileOnMobile(csvContent, filename, mimeType, false);
     } else {
       console.log('Using web download');
       downloadFileOnWeb(csvContent, filename, mimeType);
@@ -184,7 +208,7 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
   } catch (error) {
     console.error('Error exporting CSV:', error);
     toast({
-      title: "Error",
+      title: "Export Failed",
       description: "Failed to export CSV. Please try again.",
       variant: "destructive"
     });
@@ -251,7 +275,7 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
         const pdfOutput = doc.output('datauristring');
         const base64Data = pdfOutput.split(',')[1]; // Remove data:application/pdf;base64, prefix
         
-        await downloadFileOnMobile(base64Data, filename, 'application/pdf;base64');
+        await downloadFileOnMobile(base64Data, filename, 'application/pdf', true);
       } catch (error) {
         console.error('Native PDF save error, falling back:', error);
         // Fallback to web download
@@ -277,7 +301,7 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
   } catch (error) {
     console.error('Error exporting PDF:', error);
     toast({
-      title: "Error",
+      title: "Export Failed",
       description: "Failed to export PDF. Please try again.",
       variant: "destructive"
     });

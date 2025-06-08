@@ -59,9 +59,14 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true,
       style: "dark"
     },
-    // Add Filesystem plugin configuration
+    // Enhanced Filesystem plugin configuration for Android
     Filesystem: {
-      androidRequestLegacyExternalStorage: true
+      androidRequestLegacyExternalStorage: true,
+      androidScheme: "https"
+    },
+    // Enhanced Share plugin configuration
+    Share: {
+      enabled: true
     }
   }
 };
