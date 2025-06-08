@@ -57,9 +57,9 @@ export const BudgetTabs = ({
   }} transition={{
     duration: 0.3
   }}>
-      <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full max-w-full ">
-        <div className="w-full flex justify-center mb-6 py-[2px] ">
-          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl grid w-full max-w-md grid-cols- gap-1 mx-2 px-[6px] py-0">
+      <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full max-w-full">
+        <div className="w-full flex justify-center mb-6">
+          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl grid w-full max-w-md grid-cols-4 gap-1 mx-2 py-0">
             {tabs.map(tab => <TabsTrigger key={tab.id} value={tab.id} className="flex flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/50 py-2 min-h-[60px]">
                 <tab.icon className="w-4 h-4 flex-shrink-0" />
                 <span className={`text-center leading-tight ${isMobile ? "text-[10px]" : "text-xs"}`}>
@@ -76,7 +76,7 @@ export const BudgetTabs = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="categories" className="mt-0 max-w-full max-w-full overflow-hidden px-0">
+          <TabsContent value="categories" className="mt-0 w-full max-w-full overflow-hidden">
             <div className="w-full max-w-full overflow-hidden">
               <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
             </div>
