@@ -62,12 +62,12 @@ export const BudgetTabs = ({
               <TabsTrigger 
                 key={tab.id}
                 value={tab.id} 
-                className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+                className="flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium transition-all
                           data-[state=active]:bg-background data-[state=active]:text-foreground
                           data-[state=active]:shadow-sm hover:bg-background/50"
               >
                 <tab.icon className="w-4 h-4" />
-                {!isMobile && <span>{tab.label}</span>}
+                <span className={isMobile ? "text-[10px]" : "text-xs"}>{tab.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
