@@ -25,7 +25,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
       // Remove no-scroll class when splash screen completes
       document.body.classList.remove('no-scroll');
       onComplete();
-    }, 5000);
+    }, 3000);
 
     return () => {
       clearTimeout(contentTimer);
@@ -118,77 +118,75 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const title = "Hisaab Dost".split("");
 
   return (
-    <AnimatePresence>
+    <motion.div
+      key="splash"
+      variants={containerVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden z-50"
+      style={{ position: 'fixed', height: '100vh', width: '100vw' }}
+    >
+      {/* Animated pastel background */}
       <motion.div
-        key="splash"
-        variants={containerVariants}
-        initial="initial"
+        className="absolute inset-0 bg-gradient-to-br from-[#F2FCE2] to-[#E5DEFF]"
+        variants={backgroundVariants}
         animate="animate"
-        exit="exit"
-        className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
-        style={{ position: 'fixed', height: '100vh', width: '100vw' }}
-      >
-        {/* Animated pastel background */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-[#F2FCE2] to-[#E5DEFF]"
-          variants={backgroundVariants}
-          animate="animate"
-        />
+      />
 
-        {/* Logo with pulse effect */}
-        {showContent && (
-          <div className="relative mb-10 z-10">
-            <motion.div
-              className="absolute inset-0 bg-purple-400/20 rounded-full blur-2xl -z-10"
-              variants={pulseVariants}
-              initial="initial"
-              animate="animate"
-            />
-            <motion.img
-              variants={logoVariants}
-              initial="initial"
-              animate="animate"
-              src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
-              alt="Hisaab Dost Logo"
-              className="w-28 h-28 relative z-10"
-            />
-          </div>
-        )}
-
-        {/* App Title */}
-        {showContent && (
+      {/* Logo with pulse effect */}
+      {showContent && (
+        <div className="relative mb-10 z-10">
           <motion.div
-            variants={textContainerVariants}
+            className="absolute inset-0 bg-purple-400/20 rounded-full blur-2xl -z-10"
+            variants={pulseVariants}
             initial="initial"
             animate="animate"
-            className="flex justify-center mb-4 z-10"
-          >
-            {title.map((letter, index) => (
-              <motion.span
-                key={index}
-                variants={letterVariants}
-                className="text-5xl font-bold text-[#6E59A5] inline-block"
-                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-              >
-                {letter === " " ? "\u00A0" : letter}
-              </motion.span>
-            ))}
-          </motion.div>
-        )}
+          />
+          <motion.img
+            variants={logoVariants}
+            initial="initial"
+            animate="animate"
+            src="/lovable-uploads/c7ab51e7-0804-495b-a69f-879166069459.png"
+            alt="Hisaab Dost Logo"
+            className="w-28 h-28 relative z-10"
+          />
+        </div>
+      )}
 
-        {/* Tagline */}
-        {showContent && (
-          <motion.p
-            variants={taglineVariants}
-            initial="initial"
-            animate="animate"
-            className="text-lg font-medium tracking-wide text-[#7E69AB] z-10"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-          >
-            Master your home budget with ease
-          </motion.p>
-        )}
-      </motion.div>
-    </AnimatePresence>
+      {/* App Title */}
+      {showContent && (
+        <motion.div
+          variants={textContainerVariants}
+          initial="initial"
+          animate="animate"
+          className="flex justify-center mb-4 z-10"
+        >
+          {title.map((letter, index) => (
+            <motion.span
+              key={index}
+              variants={letterVariants}
+              className="text-5xl font-bold text-[#6E59A5] inline-block"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+            >
+              {letter === " " ? "\u00A0" : letter}
+            </motion.span>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Tagline */}
+      {showContent && (
+        <motion.p
+          variants={taglineVariants}
+          initial="initial"
+          animate="animate"
+          className="text-lg font-medium tracking-wide text-[#7E69AB] z-10"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+        >
+          Master your home budget with ease
+        </motion.p>
+      )}
+    </motion.div>
   );
 };

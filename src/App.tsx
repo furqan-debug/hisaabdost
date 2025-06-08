@@ -19,6 +19,8 @@ import { SidebarProvider } from "./components/ui/sidebar";
 import { MonthProvider } from "./hooks/use-month-context";
 import { FinnyProvider } from "./components/finny";
 import { AuthProvider } from "./lib/auth";
+import { SplashScreen } from "./components/splash/SplashScreen";
+import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,41 +31,76 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <MonthProvider>
-              <FinnyProvider>
-                <SidebarProvider>
-                  <Toaster />
-                  <Sonner />
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/auth" replace />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-                    <Route path="/app" element={<Layout />}>
-                      <Route index element={<Navigate to="/app/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="expenses" element={<Expenses />} />
-                      <Route path="budget" element={<Budget />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="goals" element={<Goals />} />
-                      <Route path="history" element={<History />} />
-                      <Route path="manage-funds" element={<ManageFunds />} />
-                    </Route>
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </SidebarProvider>
-              </FinnyProvider>
-            </MonthProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Simulate app initialization time
+    const initializeApp = async () => {
+      // Wait for minimum splash duration
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      // Check if critical resources are loaded
+      if (document.readyState === 'complete') {
+        setIsLoading(false);
+      } else {
+        // Wait for document to be ready
+        const handleLoad = () => {
+          setIsLoading(false);
+          window.removeEventListener('load', handleLoad);
+        };
+        window.addEventListener('load', handleLoad);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
+  if (showSplash || isLoading) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <MonthProvider>
+                <FinnyProvider>
+                  <SidebarProvider>
+                    <Toaster />
+                    <Sonner />
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/auth" replace />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+                      <Route path="/app" element={<Layout />}>
+                        <Route index element={<Navigate to="/app/dashboard" replace />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="expenses" element={<Expenses />} />
+                        <Route path="budget" element={<Budget />} />
+                        <Route path="analytics" element={<Analytics />} />
+                        <Route path="goals" element={<Goals />} />
+                        <Route path="history" element={<History />} />
+                        <Route path="manage-funds" element={<ManageFunds />} />
+                      </Route>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </SidebarProvider>
+                </FinnyProvider>
+              </MonthProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
