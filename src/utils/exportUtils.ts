@@ -1,4 +1,3 @@
-
 import { Expense } from "@/components/expenses/types";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
@@ -36,18 +35,17 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     
     console.log('Attempting to save file on mobile:', filename);
     
-    // For Android, use Downloads directory for better user access
-    const directory = Directory.Downloads;
+    // Use Documents directory which is available on all platforms
+    const directory = Directory.Documents;
     
-    // Write file to Downloads directory
+    // Write file to Documents directory
     const result = await Filesystem.writeFile({
       path: filename,
       data: content,
       directory: directory,
-      encoding: isBase64 ? undefined : undefined, // Let Capacitor handle encoding
     });
 
-    console.log('File written successfully to Downloads:', result);
+    console.log('File written successfully to Documents:', result);
 
     // Get the file URI for sharing
     const fileUri = await Filesystem.getUri({
@@ -57,7 +55,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     
     console.log('File URI:', fileUri.uri);
 
-    // Share the file so user can access it easily
+    // Share the file so user can save it to Downloads or other location
     await Share.share({
       title: 'Hisaab Dost Export',
       text: `Your exported file: ${filename}`,
@@ -66,7 +64,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     
     toast({
       title: "Success!",
-      description: `File saved to Downloads folder and shared: ${filename}`,
+      description: `File saved and shared: ${filename}. You can save it to Downloads from the share menu.`,
     });
 
     return result;
