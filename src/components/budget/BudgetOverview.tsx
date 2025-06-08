@@ -26,124 +26,108 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (filteredBudgets.length === 0) {
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-muted"></div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-medium text-foreground">No budget categories found</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Add your first budget to see an overview here
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="bg-card/95 backdrop-blur-sm border-border/40">
+        <CardHeader>
+          <CardTitle>Budget Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-full py-8 px-4 text-center space-y-3">
+            <p className="text-muted-foreground">No budget categories found</p>
+            <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <motion.div 
-            className="w-full space-y-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="rounded-xl bg-background/50 p-4 sm:p-6 border border-border/30">
-              <div className="w-full h-[280px] sm:h-[320px] relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
-                  <p className="text-xl sm:text-2xl font-semibold text-foreground">
-                    {formatCurrency(totalBudget, currencyCode)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Total Budget
-                  </p>
-                </div>
-                
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie 
-                      data={data} 
-                      cx="50%" 
-                      cy="50%" 
-                      innerRadius={isMobile ? 55 : 75}
-                      outerRadius={isMobile ? 80 : 105}
-                      paddingAngle={2}
-                      dataKey="value"
-                      cornerRadius={4}
-                      strokeWidth={1}
-                      stroke="hsl(var(--background))"
-                    >
-                      {data.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          fill={CATEGORY_COLORS[entry.name]} 
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0].payload;
-                        return (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-lg"
-                          >
-                            <p className="text-sm font-medium text-foreground">{data.name}</p>
-                            <p className="text-sm text-foreground">{formatCurrency(data.value, currencyCode)}</p>
-                            <p className="text-xs text-muted-foreground">{data.percentage}% of total</p>
-                          </motion.div>
-                        );
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+    <Card className="bg-card/95 backdrop-blur-sm border-border/40">
+      <CardHeader>
+        <CardTitle>Budget Overview</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <motion.div 
+          className="h-full space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="rounded-xl bg-background/50 p-6">
+            <div className="w-full h-[300px] relative pie-chart-container">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
+                <p className="text-2xl font-semibold">
+                  {formatCurrency(totalBudget, currencyCode)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Total Budget
+                </p>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
-                {data.map((entry, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-card/60 border border-border/30"
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie 
+                    data={data} 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius={isMobile ? 60 : 80}
+                    outerRadius={isMobile ? 85 : 110}
+                    paddingAngle={3}
+                    dataKey="value"
+                    cornerRadius={6}
+                    strokeWidth={2}
+                    stroke="white"
                   >
-                    <div 
-                      className="w-4 h-4 rounded-full flex-shrink-0" 
-                      style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-muted-foreground">{entry.percentage}%</p>
-                        <p className="text-xs font-medium text-foreground">
-                          {formatCurrency(entry.value, currencyCode)}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    {data.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`}
+                        fill={CATEGORY_COLORS[entry.name]} 
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0].payload;
+                      return (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-lg border bg-card/95 backdrop-blur-sm p-3 shadow-sm"
+                        >
+                          <p className="text-sm font-medium">{data.name}</p>
+                          <p className="text-sm">{formatCurrency(data.value, currencyCode)}</p>
+                          <p className="text-xs text-muted-foreground">{data.percentage}% of total</p>
+                        </motion.div>
+                      );
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-          </motion.div>
-        </CardContent>
-      </Card>
-    </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-6">
+              {data.map((entry, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-card/50"
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{entry.name}</p>
+                    <p className="text-xs text-muted-foreground">{entry.percentage}%</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </CardContent>
+    </Card>
   );
 }

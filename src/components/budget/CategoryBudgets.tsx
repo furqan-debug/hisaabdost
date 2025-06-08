@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/formatters";
 import { Progress } from "@/components/ui/progress";
-import { MoreVertical, Pencil, Trash2, Layers } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,21 +133,14 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
   if (filteredBudgets.length === 0) {
     return (
       <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Categories</CardTitle>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Budget Categories</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                <Layers className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-medium text-foreground">No budget categories found</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Add your first budget to start tracking your spending by category
-                </p>
-              </div>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+              <p className="text-muted-foreground mb-2">No budget categories found</p>
+              <p className="text-sm text-muted-foreground">Add your first budget to start tracking your spending by category</p>
             </div>
           </CardContent>
         </Card>
@@ -157,14 +150,14 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+      <Card className="w-full">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Budget Categories</CardTitle>
+          <CardTitle>Budget Categories</CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
+        <CardContent className="pt-0 px-3 sm:px-6">
           <div className="w-full space-y-4">
             {isMobile ? (
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-3 overflow-hidden">
                 {filteredBudgets.map((budget) => {
                   const spentAmount = getSpentAmount(budget.category);
                   const remainingAmount = Number(budget.amount) - spentAmount;
@@ -176,12 +169,12 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                   return (
                     <Card 
                       key={budget.id} 
-                      className={`w-full bg-background/50 border-border/40 shadow-sm ${isOverBudget ? 'border-l-4 border-l-red-500' : ''}`}
+                      className={`w-full bg-card/50 border-border/50 overflow-hidden ${isOverBudget ? 'border-l-4 border-l-red-500' : ''}`}
                     >
-                      <CardContent className="p-4 space-y-4">
+                      <CardContent className="p-4 space-y-3 w-full">
                         <div className="flex justify-between items-start w-full">
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <h3 className="font-semibold text-base text-foreground truncate">{budget.category}</h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">{budget.category}</h3>
                             <p className="text-xs text-muted-foreground capitalize">{budget.period}</p>
                           </div>
                           <DropdownMenu>
@@ -206,30 +199,30 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
                           </DropdownMenu>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3 w-full">
-                          <div className="bg-card/60 p-3 rounded-lg border border-border/30">
-                            <p className="text-muted-foreground text-xs mb-1">Budgeted</p>
-                            <p className="font-semibold text-sm text-foreground truncate">{formatCurrency(Number(budget.amount), currencyCode)}</p>
+                        <div className="grid grid-cols-2 gap-2 w-full">
+                          <div className="bg-background/50 p-2 rounded-md min-w-0">
+                            <p className="text-muted-foreground text-xs">Budgeted</p>
+                            <p className="font-medium text-xs truncate">{formatCurrency(Number(budget.amount), currencyCode)}</p>
                           </div>
-                          <div className="bg-card/60 p-3 rounded-lg border border-border/30">
-                            <p className="text-muted-foreground text-xs mb-1">Spent</p>
-                            <p className={`font-semibold text-sm truncate ${isOverBudget ? 'text-red-500' : 'text-foreground'}`}>{formatCurrency(spentAmount, currencyCode)}</p>
+                          <div className="bg-background/50 p-2 rounded-md min-w-0">
+                            <p className="text-muted-foreground text-xs">Spent</p>
+                            <p className={`font-medium text-xs truncate ${isOverBudget ? 'text-red-500' : ''}`}>{formatCurrency(spentAmount, currencyCode)}</p>
                           </div>
-                          <div className="bg-card/60 p-3 rounded-lg border border-border/30">
-                            <p className="text-muted-foreground text-xs mb-1">Remaining</p>
-                            <p className={`font-semibold text-sm truncate ${remainingAmount < 0 ? 'text-red-500' : 'text-foreground'}`}>{formatCurrency(remainingAmount, currencyCode)}</p>
+                          <div className="bg-background/50 p-2 rounded-md min-w-0">
+                            <p className="text-muted-foreground text-xs">Remaining</p>
+                            <p className={`font-medium text-xs truncate ${remainingAmount < 0 ? 'text-red-500' : ''}`}>{formatCurrency(remainingAmount, currencyCode)}</p>
                           </div>
-                          <div className="bg-card/60 p-3 rounded-lg border border-border/30">
-                            <p className="text-muted-foreground text-xs mb-1">Progress</p>
-                            <p className="font-semibold text-sm">{progress.toFixed(0)}%</p>
+                          <div className="bg-background/50 p-2 rounded-md min-w-0">
+                            <p className="text-muted-foreground text-xs">Progress</p>
+                            <p className="font-medium text-xs">{progress.toFixed(0)}%</p>
                           </div>
                         </div>
                         
                         <div className="w-full">
                           <Progress 
                             value={progress} 
-                            className={`w-full h-3 ${isOverBudget ? 'bg-red-200' : 'bg-muted'}`} 
-                            indicatorClassName={isOverBudget ? 'bg-red-500' : 'bg-primary'}
+                            className={`w-full h-2 ${isOverBudget ? 'bg-red-200' : ''}`} 
+                            indicatorClassName={isOverBudget ? 'bg-red-500' : undefined}
                           />
                         </div>
                       </CardContent>
@@ -262,20 +255,20 @@ export function CategoryBudgets({ budgets, onEditBudget }: CategoryBudgetsProps)
 
                       return (
                         <TableRow key={budget.id} className={isOverBudget ? 'bg-red-50/10' : undefined}>
-                          <TableCell className="font-medium">{budget.category}</TableCell>
+                          <TableCell>{budget.category}</TableCell>
                           <TableCell className="capitalize">{budget.period}</TableCell>
-                          <TableCell className="font-medium">{formatCurrency(Number(budget.amount), currencyCode)}</TableCell>
-                          <TableCell className={isOverBudget ? 'text-red-500 font-medium' : 'font-medium'}>
+                          <TableCell>{formatCurrency(Number(budget.amount), currencyCode)}</TableCell>
+                          <TableCell className={isOverBudget ? 'text-red-500 font-medium' : undefined}>
                             {formatCurrency(spentAmount, currencyCode)}
                           </TableCell>
-                          <TableCell className={remainingAmount < 0 ? 'text-red-500 font-medium' : 'font-medium'}>
+                          <TableCell className={remainingAmount < 0 ? 'text-red-500 font-medium' : undefined}>
                             {formatCurrency(remainingAmount, currencyCode)}
                           </TableCell>
                           <TableCell className="w-[200px]">
                             <Progress 
                               value={progress} 
-                              className={`h-3 ${isOverBudget ? 'bg-red-200' : 'bg-muted'}`} 
-                              indicatorClassName={isOverBudget ? 'bg-red-500' : 'bg-primary'}
+                              className={isOverBudget ? 'bg-red-200' : undefined} 
+                              indicatorClassName={isOverBudget ? 'bg-red-500' : undefined}
                             />
                           </TableCell>
                           <TableCell>
