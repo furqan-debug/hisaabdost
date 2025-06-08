@@ -7,6 +7,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, PieChart as PieChartIcon } from "lucide-react";
 
 interface BudgetOverviewProps {
   budgets: Budget[];
@@ -21,71 +22,69 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   const data = filteredBudgets.map(budget => ({
     name: budget.category,
     value: budget.amount,
-    percentage: totalBudget > 0 ? (budget.amount / totalBudget * 100).toFixed(0) : "0"
+    percentage: totalBudget > 0 ? (budget.amount / totalBudget * 100).toFixed(1) : "0"
   }));
 
   if (filteredBudgets.length === 0) {
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-muted"></div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-medium text-foreground">No budget categories found</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Add your first budget to see an overview here
-                </p>
-              </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full"
+      >
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-4">
+              <PieChartIcon className="w-8 h-8 text-primary" />
             </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Budget Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center pb-8">
+            <p className="text-lg font-medium text-muted-foreground mb-2">No budgets created yet</p>
+            <p className="text-sm text-muted-foreground/80">
+              Create your first budget to see a beautiful overview here
+            </p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full"
+    >
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/20">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary/30 to-primary/20 rounded-lg flex items-center justify-center">
+              <PieChartIcon className="w-5 h-5 text-primary" />
+            </div>
+            Budget Overview
+          </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <motion.div 
-            className="w-full space-y-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="rounded-xl bg-background/50 p-4 sm:p-6 border border-border/30">
-              <div className="w-full h-[280px] sm:h-[320px] relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
-                  <p className="text-xl sm:text-2xl font-semibold text-foreground">
-                    {formatCurrency(totalBudget, currencyCode)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Total Budget
-                  </p>
-                </div>
-                
+        <CardContent className="p-6">
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Chart Section */}
+            <div className="relative">
+              <div className="aspect-square max-w-[350px] mx-auto relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-full"></div>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie 
                       data={data} 
                       cx="50%" 
                       cy="50%" 
-                      innerRadius={isMobile ? 55 : 75}
-                      outerRadius={isMobile ? 80 : 105}
-                      paddingAngle={2}
+                      innerRadius={isMobile ? 60 : 80}
+                      outerRadius={isMobile ? 90 : 120}
+                      paddingAngle={3}
                       dataKey="value"
-                      cornerRadius={4}
-                      strokeWidth={1}
-                      stroke="hsl(var(--background))"
+                      cornerRadius={6}
+                      strokeWidth={0}
                     >
                       {data.map((entry, index) => (
                         <Cell 
@@ -99,51 +98,67 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                         if (!active || !payload?.length) return null;
                         const data = payload[0].payload;
                         return (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-lg"
-                          >
-                            <p className="text-sm font-medium text-foreground">{data.name}</p>
-                            <p className="text-sm text-foreground">{formatCurrency(data.value, currencyCode)}</p>
+                          <div className="bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl p-4 shadow-xl">
+                            <p className="font-semibold text-foreground">{data.name}</p>
+                            <p className="text-primary font-bold">{formatCurrency(data.value, currencyCode)}</p>
                             <p className="text-xs text-muted-foreground">{data.percentage}% of total</p>
-                          </motion.div>
+                          </div>
                         );
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
+                
+                {/* Center Total */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                      {formatCurrency(totalBudget, currencyCode)}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-medium mt-1">
+                      Total Budget
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Legend Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-6">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Budget Breakdown</h3>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                 {data.map((entry, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-card/60 border border-border/30"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-background/80 to-background/60 border border-border/30 hover:border-border/60 hover:shadow-md transition-all duration-200"
                   >
                     <div 
-                      className="w-4 h-4 rounded-full flex-shrink-0" 
+                      className="w-4 h-4 rounded-full shadow-sm" 
                       style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
                     />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-muted-foreground">{entry.percentage}%</p>
-                        <p className="text-xs font-medium text-foreground">
-                          {formatCurrency(entry.value, currencyCode)}
-                        </p>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">{entry.name}</p>
+                      <p className="text-sm text-muted-foreground">{entry.percentage}% of total</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-foreground">
+                        {formatCurrency(entry.value, currencyCode)}
+                      </p>
                     </div>
                   </motion.div>
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

@@ -9,8 +9,9 @@ import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
-import { Receipt, Calendar, Tag } from "lucide-react";
+import { Receipt, Calendar, Tag, CreditCard, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -46,70 +47,76 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full"
+      >
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Budget Transactions</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-lg" />
-              ))}
-            </div>
+          <CardContent className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   if (!hasBudgets) {
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                <Receipt className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-medium text-foreground">No budget categories set up yet</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Create a budget first to see your transactions against your budget
-                </p>
-              </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full"
+      >
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-4">
+              <Receipt className="w-8 h-8 text-primary" />
             </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Budget Transactions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center pb-8">
+            <p className="text-lg font-medium text-muted-foreground mb-2">No budget categories set up yet</p>
+            <p className="text-sm text-muted-foreground/80">
+              Create a budget first to see your transactions against your budget
+            </p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   if (expenses.length === 0) {
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                <Receipt className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-medium text-foreground">No transactions found</p>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  Add some expenses to see them here
-                </p>
-              </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full"
+      >
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-primary" />
             </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Budget Transactions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center pb-8">
+            <p className="text-lg font-medium text-muted-foreground mb-2">No transactions found</p>
+            <p className="text-sm text-muted-foreground/80">
+              Add some expenses to see them here
+            </p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
@@ -118,96 +125,141 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   };
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full"
+    >
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/20">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary/30 to-primary/20 rounded-lg flex items-center justify-center">
+              <Receipt className="w-5 h-5 text-primary" />
+            </div>
+            Budget Transactions
+          </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <div className="w-full space-y-3">
-            {isMobile ? (
-              <div className="w-full space-y-3">
-                {expenses.map((transaction) => {
-                  const relatedBudget = getBudgetForExpense(transaction);
-                  const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
-                  
-                  return (
-                    <Card key={transaction.id} className="w-full bg-background/50 border-border/40 shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start w-full mb-3">
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <h4 className="font-medium text-foreground truncate">{transaction.description}</h4>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Calendar className="w-3 h-3" />
-                              <span>{format(new Date(transaction.date), 'MMM dd, yyyy')}</span>
+        <CardContent className="p-6">
+          {isMobile ? (
+            <div className="space-y-4">
+              {expenses.map((transaction, index) => {
+                const relatedBudget = getBudgetForExpense(transaction);
+                const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
+                
+                return (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="bg-gradient-to-br from-background/90 to-background/70 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+                      <CardContent className="p-5">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                              <CreditCard className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-semibold text-foreground truncate">{transaction.description}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right font-semibold text-foreground ml-3">
-                            {formatCurrency(Number(transaction.amount), currencyCode)}
+                          <div className="text-right ml-3">
+                            <p className="font-bold text-lg text-foreground">
+                              {formatCurrency(Number(transaction.amount), currencyCode)}
+                            </p>
                           </div>
                         </div>
                         
-                        <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Tag className="w-3 h-3" />
-                            <span className="capitalize">{transaction.category}</span>
+                        <div className="flex items-center justify-between pt-3 border-t border-border/30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-lg flex items-center justify-center">
+                              <Tag className="w-3 h-3 text-secondary-foreground" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground capitalize">{transaction.category}</span>
                           </div>
                           {relatedBudget && (
-                            <div className="text-xs text-muted-foreground">
-                              Budget: {formatCurrency(budgetAmount, currencyCode)}
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Budget</p>
+                              <p className="text-sm font-medium text-foreground">
+                                {formatCurrency(budgetAmount, currencyCode)}
+                              </p>
                             </div>
                           )}
                         </div>
                       </CardContent>
                     </Card>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="w-full overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Budget</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {expenses.map((transaction) => {
-                      const relatedBudget = getBudgetForExpense(transaction);
-                      const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
-                      
-                      return (
-                        <TableRow key={transaction.id}>
-                          <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
-                          <TableCell className="capitalize">{transaction.category}</TableCell>
-                          <TableCell>{transaction.description}</TableCell>
-                          <TableCell className="font-medium">{formatCurrency(Number(transaction.amount), currencyCode)}</TableCell>
-                          <TableCell>
-                            {relatedBudget ? (
-                              <div className="flex flex-col">
-                                <span className="font-medium">{formatCurrency(budgetAmount, currencyCode)}</span>
-                                <span className="text-xs text-muted-foreground capitalize">
-                                  {relatedBudget.period}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">No budget</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-background/50 to-background/30 rounded-xl border border-border/30 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-muted/50 to-muted/30 border-b border-border/30">
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Category</TableHead>
+                    <TableHead className="font-semibold">Description</TableHead>
+                    <TableHead className="font-semibold">Amount</TableHead>
+                    <TableHead className="font-semibold">Budget</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {expenses.map((transaction, index) => {
+                    const relatedBudget = getBudgetForExpense(transaction);
+                    const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
+                    
+                    return (
+                      <motion.tr 
+                        key={transaction.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="group hover:bg-muted/30 transition-colors"
+                      >
+                        <TableCell className="font-medium">
+                          {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
+                              <Tag className="w-3 h-3 text-primary" />
+                            </div>
+                            <span className="capitalize font-medium">{transaction.category}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{transaction.description}</TableCell>
+                        <TableCell className="font-bold text-lg">
+                          {formatCurrency(Number(transaction.amount), currencyCode)}
+                        </TableCell>
+                        <TableCell>
+                          {relatedBudget ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="font-semibold">{formatCurrency(budgetAmount, currencyCode)}</span>
+                              <span className="text-xs text-muted-foreground capitalize bg-muted/50 px-2 py-1 rounded-full">
+                                {relatedBudget.period}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm italic">No budget set</span>
+                          )}
+                        </TableCell>
+                      </motion.tr>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
