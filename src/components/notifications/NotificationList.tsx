@@ -76,87 +76,89 @@ export function NotificationList({ onClose }: NotificationListProps) {
       </div>
 
       {/* Content */}
-      <ScrollArea className="max-h-96">
-        {notifications.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="flex items-center justify-center w-16 h-16 bg-muted/30 rounded-full mx-auto mb-4">
-              <Bell className="w-6 h-6 text-muted-foreground" />
+      <div className="h-96 overflow-hidden">
+        <ScrollArea className="h-full w-full">
+          {notifications.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="flex items-center justify-center w-16 h-16 bg-muted/30 rounded-full mx-auto mb-4">
+                <Bell className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <h4 className="text-base font-medium text-foreground mb-2">No notifications</h4>
+              <p className="text-sm text-muted-foreground">You're all caught up! Check back later for updates.</p>
             </div>
-            <h4 className="text-base font-medium text-foreground mb-2">No notifications</h4>
-            <p className="text-sm text-muted-foreground">You're all caught up! Check back later for updates.</p>
-          </div>
-        ) : (
-          <div className="p-2">
-            {notifications.map((notification, index) => (
-              <div
-                key={notification.id}
-                className={cn(
-                  'group relative p-4 rounded-lg transition-all duration-200 hover:bg-muted/30 mb-2',
-                  !notification.read && 'bg-primary/5 border border-primary/20'
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Icon */}
-                  <div className="flex-shrink-0 mt-1">
-                    <div className={cn(
-                      'flex items-center justify-center w-8 h-8 rounded-full text-sm',
-                      notification.type === 'success' && 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-                      notification.type === 'warning' && 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
-                      notification.type === 'error' && 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-                      notification.type === 'info' && 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                    )}>
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4 className={cn(
-                        'text-sm font-medium leading-5',
-                        !notification.read ? 'text-foreground' : 'text-muted-foreground'
+          ) : (
+            <div className="p-2">
+              {notifications.map((notification, index) => (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    'group relative p-4 rounded-lg transition-all duration-200 hover:bg-muted/30 mb-2',
+                    !notification.read && 'bg-primary/5 border border-primary/20'
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Icon */}
+                    <div className="flex-shrink-0 mt-1">
+                      <div className={cn(
+                        'flex items-center justify-center w-8 h-8 rounded-full text-sm',
+                        notification.type === 'success' && 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+                        notification.type === 'warning' && 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        notification.type === 'error' && 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+                        notification.type === 'info' && 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                       )}>
-                        {notification.title}
-                      </h4>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {!notification.read && (
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4 className={cn(
+                          'text-sm font-medium leading-5',
+                          !notification.read ? 'text-foreground' : 'text-muted-foreground'
+                        )}>
+                          {notification.title}
+                        </h4>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!notification.read && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => markAsRead(notification.id)}
+                              className="h-7 w-7 p-0 hover:bg-background"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => markAsRead(notification.id)}
-                            className="h-7 w-7 p-0 hover:bg-background"
+                            onClick={() => removeNotification(notification.id)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-background"
                           >
-                            <Check className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeNotification(notification.id)}
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-background"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </div>
                       </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-2 pr-4">
+                        {notification.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed mb-2 pr-4">
-                      {notification.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
-                    </p>
                   </div>
-                </div>
 
-                {/* Unread indicator */}
-                {!notification.read && (
-                  <div className="absolute left-2 top-4 w-2 h-2 bg-primary rounded-full"></div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+                  {/* Unread indicator */}
+                  {!notification.read && (
+                    <div className="absolute left-2 top-4 w-2 h-2 bg-primary rounded-full"></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
 
       {/* Footer */}
       {notifications.length > 0 && (
