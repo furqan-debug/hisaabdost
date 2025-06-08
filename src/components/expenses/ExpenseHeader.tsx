@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Plus, Upload, Camera } from "lucide-react";
+import { Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,12 +9,7 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { useExpenseFile } from "@/hooks/use-expense-file";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ExportActions } from "@/components/expenses/header/ExportActions";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -85,12 +80,12 @@ export function ExpenseHeader({
     setIsExporting(type);
     try {
       if (type === 'csv') {
-        exportToCSV();
+        await exportToCSV();
       } else if (type === 'pdf') {
-        exportToPDF();
+        await exportToPDF();
       }
     } finally {
-      setTimeout(() => setIsExporting(null), 1000);
+      setTimeout(() => setIsExporting(null), 2000);
     }
   };
 
@@ -199,93 +194,22 @@ export function ExpenseHeader({
           </Button>
         )}
         
-        {isMobile ? (
-          <>
-            {selectedExpenses.size > 0 && (
-              <Button 
-                variant="destructive"
-                onClick={onDeleteSelected}
-                size="sm"
-                className="whitespace-nowrap rounded-lg"
-              >
-                Delete ({selectedExpenses.size})
-              </Button>
-            )}
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  className="rounded-lg"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="sr-only">Export</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem 
-                  onClick={() => handleExport('csv')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'csv' ? 'Exporting...' : 'Export CSV'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleExport('pdf')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'Export PDF'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <>
-            {selectedExpenses.size > 0 && (
-              <Button 
-                variant="destructive"
-                onClick={onDeleteSelected}
-                className="whitespace-nowrap rounded-lg"
-              >
-                Delete Selected ({selectedExpenses.size})
-              </Button>
-            )}
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-lg"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem 
-                  onClick={() => handleExport('csv')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'csv' ? 'Exporting...' : 'CSV'}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleExport('pdf')}
-                  disabled={isExporting !== null}
-                  className="cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>{isExporting === 'pdf' ? 'Exporting...' : 'PDF'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+        {selectedExpenses.size > 0 && (
+          <Button 
+            variant="destructive"
+            onClick={onDeleteSelected}
+            size={isMobile ? "sm" : "default"}
+            className="whitespace-nowrap rounded-lg"
+          >
+            Delete {isMobile ? `(${selectedExpenses.size})` : `Selected (${selectedExpenses.size})`}
+          </Button>
         )}
+        
+        <ExportActions 
+          isMobile={isMobile}
+          isExporting={isExporting}
+          handleExport={handleExport}
+        />
         
         <ReceiptFileInput 
           onChange={handleFileSelection} 

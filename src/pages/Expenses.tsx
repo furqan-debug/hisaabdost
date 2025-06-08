@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -114,12 +113,20 @@ const Expenses = () => {
     }
   };
 
-  const exportToCSV = () => {
-    exportExpensesToCSV(filteredExpenses);
+  const exportToCSV = async () => {
+    try {
+      await exportExpensesToCSV(filteredExpenses);
+    } catch (error) {
+      console.error('Export CSV failed:', error);
+    }
   };
 
-  const exportToPDF = () => {
-    exportExpensesToPDF(filteredExpenses);
+  const exportToPDF = async () => {
+    try {
+      await exportExpensesToPDF(filteredExpenses);
+    } catch (error) {
+      console.error('Export PDF failed:', error);
+    }
   };
 
   // Listen for receipt scanning and expense update events

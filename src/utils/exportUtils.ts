@@ -14,7 +14,6 @@ const getBrandedFilename = (fileType: string) => `Hisaab_Dost_Expenses_${getForm
 // Check if Capacitor is available and we're on a native platform
 const isNativePlatform = () => {
   try {
-    // Dynamic import to avoid build errors if Capacitor is not available
     return typeof window !== 'undefined' && 
            window.Capacitor && 
            window.Capacitor.isNativePlatform && 
@@ -24,20 +23,20 @@ const isNativePlatform = () => {
   }
 };
 
-// Mobile-specific file download
-const downloadFileOnMobile = async (content: string, filename: string, mimeType: string) => {
+// Mobile-specific file download using Capacitor
+const downloadFileOnMobile = async (content: string, filename: string, isBase64: boolean = false) => {
   try {
-    // Dynamic import to avoid build errors
-    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
     
-    // Write file to device storage
     const result = await Filesystem.writeFile({
       path: filename,
       data: content,
       directory: Directory.Documents,
-      encoding: mimeType.includes('pdf') ? Encoding.UTF8 : Encoding.UTF8
+      encoding: isBase64 ? undefined : undefined, // Let Capacitor handle encoding
     });
 
+    console.log('File saved successfully:', result);
+    
     toast({
       title: "Success",
       description: `File saved to Documents folder: ${filename}`,
@@ -46,23 +45,42 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     return result;
   } catch (error) {
     console.error('Mobile file save error:', error);
-    // Fallback to web download if mobile fails
-    downloadFileOnWeb(content, filename, mimeType);
+    
+    // Show user-friendly error message
     toast({
-      title: "Info",
-      description: "Downloaded using browser download instead of mobile storage",
+      title: "Error",
+      description: "Failed to save file to device storage. Please check permissions.",
+      variant: "destructive"
     });
+    
+    throw error;
   }
 };
 
-// Web-specific file download (existing functionality)
+// Web-specific file download (fallback)
 const downloadFileOnWeb = (content: string, filename: string, mimeType: string) => {
-  const blob = new Blob([content], { type: mimeType });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  try {
+    const blob = new Blob([content], { type: mimeType });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    
+    toast({
+      title: "Success",
+      description: "File downloaded successfully"
+    });
+  } catch (error) {
+    console.error('Web download error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to download file",
+      variant: "destructive"
+    });
+  }
 };
 
 export const exportExpensesToCSV = async (expenses: Expense[]) => {
@@ -76,7 +94,7 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
       headers.join(','),
       ...expenses.map(exp => [
         format(new Date(exp.date), 'yyyy-MM-dd'),
-        `"${exp.description}"`,
+        `"${exp.description.replace(/"/g, '""')}"`, // Escape quotes properly
         exp.category,
         exp.amount
       ].join(','))
@@ -86,13 +104,9 @@ export const exportExpensesToCSV = async (expenses: Expense[]) => {
 
     // Check if running on mobile platform
     if (isNativePlatform()) {
-      await downloadFileOnMobile(csvContent, filename, 'text/csv;charset=utf-8;');
+      await downloadFileOnMobile(csvContent, filename, false);
     } else {
       downloadFileOnWeb(csvContent, filename, 'text/csv;charset=utf-8;');
-      toast({
-        title: "Success",
-        description: "CSV file exported successfully"
-      });
     }
   } catch (error) {
     console.error('Error exporting CSV:', error);
@@ -155,24 +169,11 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
     // Check if running on mobile platform
     if (isNativePlatform()) {
       try {
-        // Dynamic import to avoid build errors
-        const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-        
         // For mobile, get PDF as base64 string
         const pdfOutput = doc.output('datauristring');
         const base64Data = pdfOutput.split(',')[1]; // Remove data:application/pdf;base64, prefix
         
-        await Filesystem.writeFile({
-          path: filename,
-          data: base64Data,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8
-        });
-
-        toast({
-          title: "Success",
-          description: `PDF saved to Documents folder: ${filename}`
-        });
+        await downloadFileOnMobile(base64Data, filename, true);
       } catch (error) {
         console.error('Mobile PDF save error:', error);
         // Fallback to web download
