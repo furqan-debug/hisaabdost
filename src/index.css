@@ -1,104 +1,133 @@
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import base styles */
+@import "./styles/base.css";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+/* Import component styles */
+@import "./styles/components.css";
+@import "./styles/animations.css";
+@import "./styles/navigation.css";
+@import "./styles/finny-chat.css";
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 58%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 224 71.4% 4.1%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 224 71.4% 4.1%;
-    --sidebar-primary-foreground: 210 20% 98%;
-    --sidebar-accent: 216 12.2% 83.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 216 12.2% 83.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+/* Import mobile-specific styles */
+@import "./styles/mobile.css";
+@import "./styles/mobile-cards.css";
+@import "./styles/mobile-charts.css";
+@import "./styles/mobile-navigation.css";
+@import "./styles/mobile-tables.css";
+@import "./styles/mobile-utils.css";
+@import "./styles/mobile-budget.css";
 
-  .pink {
-    --primary: 330 81% 60%;
-    --ring: 330 81% 60%;
-  }
+/* Basic styling */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  @apply antialiased;
+}
 
-  .purple {
-    --primary: 271 81% 56%;
-    --ring: 271 81% 56%;
+/* Set default scrolling behavior with no visible scrollbars */
+:root {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+:root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Ensure all scrollable elements have touch-friendly scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Apply will-change for hardware acceleration on animations */
+.animate-fade,
+.animate-slide,
+.card-hover,
+.transition-all {
+  will-change: transform, opacity;
+}
+
+/* Optimize touch interactions */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+#root {
+  @apply w-full h-full;
+}
+
+/* Hide all console logging in production */
+@media (display-mode: standalone) {
+  console {
+    display: none !important;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
-  }
-}
-
-/* Splash Screen Styles */
-.no-scroll {
-  overflow: hidden;
+/* Override for the splash screen to ensure it covers everything */
+.fixed.inset-0 {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  .animate-pulse {
+    animation-duration: 3s !important;
+  }
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.overflow-guard {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+/* Add scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Global touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.touch-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Global hidden scrollbar style */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
