@@ -17,11 +17,38 @@ export const useOnboarding = (user: User | null) => {
 
         if (profile && !profile.onboarding_completed) {
           setShowOnboarding(true);
+        } else {
+          setShowOnboarding(false);
         }
+      } else {
+        setShowOnboarding(false);
       }
     };
 
     checkOnboardingStatus();
+
+    // Set up real-time subscription to listen for onboarding completion
+    const channel = supabase
+      .channel('onboarding-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user?.id}`,
+        },
+        (payload) => {
+          if (payload.new.onboarding_completed) {
+            setShowOnboarding(false);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return { showOnboarding };

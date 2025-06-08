@@ -28,15 +28,20 @@ export function CompleteStep() {
       // Show success message
       toast.success("Setup completed! Welcome to your dashboard.");
       
-      // Navigate to dashboard with replace:true to prevent back navigation to onboarding
-      navigate("/app/dashboard", { replace: true });
+      // Use setTimeout to ensure the database update is processed
+      // and the onboarding hook can detect the change
+      setTimeout(() => {
+        navigate("/app/dashboard", { replace: true });
+      }, 100);
       
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Something went wrong. Please try again.");
       
       // Even if there's an error, try to navigate to dashboard
-      navigate("/app/dashboard", { replace: true });
+      setTimeout(() => {
+        navigate("/app/dashboard", { replace: true });
+      }, 100);
     }
   };
 
