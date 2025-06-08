@@ -1,3 +1,4 @@
+
 import { Expense } from "@/components/expenses/types";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
@@ -22,6 +23,18 @@ const isNativePlatform = () => {
   }
 };
 
+// Check if we're on Android specifically
+const isAndroid = () => {
+  try {
+    return typeof window !== 'undefined' && 
+           window.Capacitor && 
+           window.Capacitor.getPlatform && 
+           window.Capacitor.getPlatform() === 'android';
+  } catch {
+    return false;
+  }
+};
+
 // Check if we're on a mobile device (even in browser)
 const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -35,46 +48,92 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     
     console.log('Attempting to save file on mobile:', filename);
     
-    // Use Documents directory which is available on all platforms
-    const directory = Directory.Documents;
+    let savedPath = '';
+    let savedUri = '';
     
-    // Write file to Documents directory
-    const result = await Filesystem.writeFile({
-      path: filename,
-      data: content,
-      directory: directory,
-    });
-
-    console.log('File written successfully to Documents:', result);
-
-    // Get the file URI for sharing
-    const fileUri = await Filesystem.getUri({
-      directory: directory,
-      path: filename
-    });
+    if (isAndroid()) {
+      try {
+        // For Android, try to write to external storage first
+        const externalResult = await Filesystem.writeFile({
+          path: filename,
+          data: content,
+          directory: Directory.ExternalStorage,
+          recursive: true
+        });
+        
+        savedPath = externalResult.uri;
+        console.log('File saved to external storage:', savedPath);
+        
+        // Get URI for external storage file
+        const externalUri = await Filesystem.getUri({
+          directory: Directory.ExternalStorage,
+          path: filename
+        });
+        savedUri = externalUri.uri;
+        
+      } catch (externalError) {
+        console.log('External storage failed, trying Documents:', externalError);
+        
+        // Fallback to Documents directory
+        const docResult = await Filesystem.writeFile({
+          path: filename,
+          data: content,
+          directory: Directory.Documents,
+        });
+        
+        savedPath = docResult.uri;
+        console.log('File saved to Documents:', savedPath);
+        
+        // Get URI for documents file
+        const docUri = await Filesystem.getUri({
+          directory: Directory.Documents,
+          path: filename
+        });
+        savedUri = docUri.uri;
+      }
+    } else {
+      // For iOS, use Documents directory
+      const result = await Filesystem.writeFile({
+        path: filename,
+        data: content,
+        directory: Directory.Documents,
+      });
+      
+      savedPath = result.uri;
+      console.log('File saved to Documents:', savedPath);
+      
+      // Get URI for documents file
+      const docUri = await Filesystem.getUri({
+        directory: Directory.Documents,
+        path: filename
+      });
+      savedUri = docUri.uri;
+    }
     
-    console.log('File URI:', fileUri.uri);
+    console.log('File URI for sharing:', savedUri);
 
-    // Share the file so user can save it to Downloads or other location
+    // Always share the file so user can save it to Downloads
     await Share.share({
       title: 'Hisaab Dost Export',
       text: `Your exported file: ${filename}`,
-      url: fileUri.uri,
+      url: savedUri,
+      dialogTitle: 'Save or Share your exported file'
     });
     
     toast({
-      title: "Success!",
-      description: `File saved and shared: ${filename}. You can save it to Downloads from the share menu.`,
+      title: "File Ready!",
+      description: isAndroid() 
+        ? `File saved! Use the share dialog to save to Downloads or share with other apps.`
+        : `File saved and ready to share: ${filename}`,
     });
 
-    return result;
+    return { uri: savedPath };
   } catch (error) {
     console.error('Mobile file save error:', error);
     
-    // Show more specific error message
     toast({
-      title: "Download Failed",
-      description: "Unable to save to device. Trying alternative method...",
+      title: "Save Failed",
+      description: "Unable to save to device. Trying browser download...",
       variant: "destructive"
     });
     
@@ -115,7 +174,7 @@ const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: s
           URL.revokeObjectURL(dataUrl);
         }, 1000);
         
-        // Try to open in new tab as backup
+        // Try to open in new tab as backup for mobile browsers
         setTimeout(() => {
           const newWindow = window.open(dataUrl, '_blank');
           if (!newWindow) {
