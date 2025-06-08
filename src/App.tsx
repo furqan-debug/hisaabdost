@@ -14,7 +14,6 @@ import Goals from "./pages/Goals";
 import History from "./pages/History";
 import ManageFunds from "./pages/ManageFunds";
 import Auth from "./pages/Auth";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { MonthProvider } from "./hooks/use-month-context";
@@ -42,7 +41,7 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                   <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<Navigate to="/auth" replace />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
                     <Route path="/app" element={<Layout />}>
