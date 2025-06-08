@@ -38,20 +38,20 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full"
+        className="min-h-[600px] flex items-center justify-center"
       >
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
-          <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-4">
-              <BarChart3 className="w-8 h-8 text-primary" />
+        <Card className="w-full max-w-md mx-auto text-center border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+          <CardHeader className="pb-8 pt-12">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-100 to-cyan-100 dark:from-indigo-900/30 dark:to-cyan-900/30 rounded-3xl flex items-center justify-center mb-6">
+              <BarChart3 className="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
               Monthly Budget Comparison
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-center pb-8">
-            <p className="text-lg font-medium text-muted-foreground mb-2">Not enough data for comparison</p>
-            <p className="text-sm text-muted-foreground/80">
+          <CardContent className="pb-12">
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">Not enough data for comparison</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
               {budgets.length === 0 
                 ? "Add your first budget to see monthly comparisons" 
                 : "Add budgets across different months to see comparisons"}
@@ -77,34 +77,40 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full"
+      className="space-y-8"
     >
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/20">
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary/30 to-primary/20 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-primary" />
+      <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-cyan-50 dark:from-indigo-950/50 dark:to-cyan-950/50 border-b border-gray-200 dark:border-gray-700 pb-6">
+          <CardTitle className="text-3xl font-bold flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-cyan-600 rounded-2xl flex items-center justify-center">
+              <BarChart3 className="w-6 h-6 text-white" />
             </div>
-            Monthly Budget Comparison
+            <span className="bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Monthly Budget Comparison
+            </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-6">
+        
+        <CardContent className="p-8">
+          <div className="space-y-8">
             {/* Legend */}
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap gap-4 justify-center">
               {topCategories.map((category, index) => (
                 <motion.div 
                   key={category}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-center gap-3 bg-gradient-to-r from-background/80 to-background/60 px-4 py-2 rounded-full border border-border/30 shadow-sm"
+                  className="flex items-center gap-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-750 px-6 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                 >
                   <div 
-                    className="w-3 h-3 rounded-full shadow-sm" 
+                    className="w-4 h-4 rounded-full shadow-md" 
                     style={{ backgroundColor: CATEGORY_COLORS[category] }}
                   />
-                  <span className="text-sm font-medium text-foreground">{category}</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{category}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                    {formatCurrency(getCategoryTotal(category), currencyCode)}
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -114,24 +120,23 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-background/50 to-background/30 p-6 rounded-xl border border-border/30"
+              className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg"
             >
-              <div className="w-full h-[350px] sm:h-[450px]">
+              <div className="w-full h-[400px] sm:h-[500px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={data}
                     margin={{
-                      top: 20,
-                      right: isMobile ? 10 : 30,
-                      left: isMobile ? 10 : 20,
-                      bottom: isMobile ? 50 : 70
+                      top: 30,
+                      right: isMobile ? 20 : 40,
+                      left: isMobile ? 20 : 30,
+                      bottom: isMobile ? 60 : 80
                     }}
-                    barCategoryGap={isMobile ? "15%" : "25%"}
+                    barCategoryGap={isMobile ? "20%" : "30%"}
                   >
                     <CartesianGrid 
                       strokeDasharray="3 3" 
-                      stroke="hsl(var(--border))" 
-                      opacity={0.3}
+                      stroke="rgba(156, 163, 175, 0.3)" 
                       horizontal={true}
                       vertical={false}
                     />
@@ -140,11 +145,11 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                       axisLine={false}
                       tickLine={false}
                       tick={{
-                        fontSize: isMobile ? 11 : 13,
-                        fill: "hsl(var(--muted-foreground))",
-                        fontWeight: 500,
+                        fontSize: isMobile ? 12 : 14,
+                        fill: "rgb(107, 114, 128)",
+                        fontWeight: 600,
                       }}
-                      height={60}
+                      height={80}
                       interval={0}
                       angle={isMobile ? -45 : -30}
                       textAnchor="end"
@@ -153,18 +158,17 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                       axisLine={false}
                       tickLine={false}
                       tick={{
-                        fontSize: isMobile ? 10 : 12,
-                        fill: "hsl(var(--muted-foreground))",
-                        fontWeight: 500,
+                        fontSize: isMobile ? 11 : 13,
+                        fill: "rgb(107, 114, 128)",
+                        fontWeight: 600,
                       }}
                       tickFormatter={(value) => `${Math.round(value)}`}
-                      width={isMobile ? 50 : 70}
+                      width={isMobile ? 60 : 80}
                     />
                     <Tooltip
                       cursor={{ 
-                        fill: "hsl(var(--muted))", 
-                        opacity: 0.1,
-                        radius: 4 
+                        fill: "rgba(59, 130, 246, 0.1)",
+                        radius: 8 
                       }}
                       content={({ active, payload, label }) => {
                         if (!active || !payload || !payload.length) return null;
@@ -172,23 +176,34 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                           entry => Number(entry.value) > 0
                         );
                         return (
-                          <div className="bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl p-4 shadow-xl">
-                            <div className="font-bold text-lg mb-3 text-foreground">{label}</div>
-                            <div className="space-y-2">
+                          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-2xl">
+                            <div className="font-bold text-xl mb-4 text-gray-900 dark:text-white">{label}</div>
+                            <div className="space-y-3">
                               {filteredPayload.map((entry, idx) => (
-                                <div className="flex items-center justify-between gap-4" key={entry.name}>
-                                  <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-between gap-6" key={entry.name}>
+                                  <div className="flex items-center gap-3">
                                     <div 
-                                      className="w-3 h-3 rounded-full" 
+                                      className="w-4 h-4 rounded-full shadow-md" 
                                       style={{backgroundColor: entry.color}} 
                                     />
-                                    <span className="text-sm font-medium text-foreground">{entry.name}</span>
+                                    <span className="text-sm font-bold text-gray-900 dark:text-white">{entry.name}</span>
                                   </div>
-                                  <span className="text-sm font-bold text-foreground">
+                                  <span className="text-sm font-bold text-gray-900 dark:text-white">
                                     {formatCurrency(Number(entry.value), currencyCode)}
                                   </span>
                                 </div>
                               ))}
+                              <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex justify-between">
+                                  <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Total:</span>
+                                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                                    {formatCurrency(
+                                      filteredPayload.reduce((sum, entry) => sum + Number(entry.value), 0),
+                                      currencyCode
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );
@@ -199,8 +214,8 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
                         key={category}
                         dataKey={category}
                         fill={CATEGORY_COLORS[category]}
-                        radius={[3, 3, 0, 0]} 
-                        maxBarSize={isMobile ? 30 : 40}
+                        radius={[6, 6, 0, 0]} 
+                        maxBarSize={isMobile ? 35 : 50}
                       />
                     ))}
                   </BarChart>
