@@ -30,9 +30,9 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-none"
+        className="w-full"
       >
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm mx-auto">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center mb-4">
               <PieChartIcon className="w-8 h-8 text-primary" />
@@ -56,10 +56,10 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-none"
+      className="w-full"
     >
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm overflow-hidden mx-auto">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/20 px-6 py-4">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/20">
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-primary/30 to-primary/20 rounded-lg flex items-center justify-center">
               <PieChartIcon className="w-5 h-5 text-primary" />
@@ -67,11 +67,11 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
             Budget Overview
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-8">
-          <div className="grid lg:grid-cols-2 gap-12">
+        <CardContent className="p-6">
+          <div className="grid lg:grid-cols-2 gap-8">
             {/* Chart Section */}
-            <div className="relative flex justify-center">
-              <div className="aspect-square w-full max-w-[400px] relative">
+            <div className="relative">
+              <div className="aspect-square max-w-[350px] mx-auto relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-full"></div>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -79,8 +79,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                       data={data} 
                       cx="50%" 
                       cy="50%" 
-                      innerRadius={isMobile ? 70 : 90}
-                      outerRadius={isMobile ? 110 : 140}
+                      innerRadius={isMobile ? 60 : 80}
+                      outerRadius={isMobile ? 90 : 120}
                       paddingAngle={3}
                       dataKey="value"
                       cornerRadius={6}
@@ -112,7 +112,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                 {/* Center Total */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <p className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                       {formatCurrency(totalBudget, currencyCode)}
                     </p>
                     <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -124,31 +124,31 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
             </div>
             
             {/* Legend Section */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center gap-2 mb-6">
                 <TrendingUp className="w-5 h-5 text-primary" />
-                <h3 className="text-xl font-semibold">Budget Breakdown</h3>
+                <h3 className="text-lg font-semibold">Budget Breakdown</h3>
               </div>
               
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                 {data.map((entry, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="group flex items-center gap-4 p-5 rounded-xl bg-gradient-to-r from-background/80 to-background/60 border border-border/30 hover:border-border/60 hover:shadow-md transition-all duration-200"
+                    className="group flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-background/80 to-background/60 border border-border/30 hover:border-border/60 hover:shadow-md transition-all duration-200"
                   >
                     <div 
-                      className="w-5 h-5 rounded-full shadow-sm flex-shrink-0" 
+                      className="w-4 h-4 rounded-full shadow-sm" 
                       style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate text-lg">{entry.name}</p>
+                      <p className="font-semibold text-foreground truncate">{entry.name}</p>
                       <p className="text-sm text-muted-foreground">{entry.percentage}% of total</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-foreground text-lg">
+                      <p className="font-bold text-foreground">
                         {formatCurrency(entry.value, currencyCode)}
                       </p>
                     </div>
