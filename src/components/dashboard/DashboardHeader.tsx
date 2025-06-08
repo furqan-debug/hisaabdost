@@ -1,58 +1,52 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
-
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 interface DashboardHeaderProps {
   isNewUser: boolean;
 }
-
-export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
-  const { selectedMonth } = useMonthContext();
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="border-0 shadow-sm bg-background">
-        <CardContent className="py-6 px-6">
-          <div className="space-y-2">
-            {/* Main title */}
-            <motion.h1 
-              className="text-3xl md:text-4xl font-bold text-foreground"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              Dashboard
-            </motion.h1>
+export function DashboardHeader({
+  isNewUser
+}: DashboardHeaderProps) {
+  const {
+    selectedMonth
+  } = useMonthContext();
+  return <motion.div initial={{
+    opacity: 0,
+    y: -10
+  }} animate={{
+    opacity: 1,
+    y: 0
+  }} transition={{
+    duration: 0.3
+  }}>
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-background/95 to-background/80 backdrop-blur-sm px-0 mx--6">
+        <CardContent className="py-4 px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">
+                  {isNewUser ? "Welcome to your Dashboard!" : "Financial Overview"}
+                </h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{format(selectedMonth, 'MMMM yyyy')}</span>
+                </div>
+              </div>
+            </div>
             
-            {/* Subtitle with month overview */}
-            <motion.p 
-              className="text-lg text-muted-foreground font-medium"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {format(selectedMonth, 'MMMM yyyy')} Overview
-            </motion.p>
-            
-            {/* Date indicator */}
-            <motion.p 
-              className="text-sm text-muted-foreground/70"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {format(selectedMonth, 'EEEE, MMMM do, yyyy')}
-            </motion.p>
+            {/* Add notification bell */}
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+            </div>
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>;
 }
