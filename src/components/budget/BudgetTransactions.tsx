@@ -9,9 +9,8 @@ import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
-import { Receipt, Calendar, Tag, ShoppingBag } from "lucide-react";
+import { Receipt, Calendar, Tag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -47,15 +46,17 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4 max-w-7xl mx-auto">
-        <Card className="shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-xl">Budget Transactions</CardTitle>
+      <div className="w-full max-w-full overflow-hidden">
+        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg" />
-            ))}
+          <CardContent className="px-4 sm:px-6">
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -64,21 +65,23 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (!hasBudgets) {
     return (
-      <div className="min-h-[500px] flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg text-center shadow-lg border-0">
+      <div className="w-full max-w-full overflow-hidden">
+        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
           <CardHeader className="pb-4">
-            <div className="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-4">
-              <Receipt className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-            </div>
-            <CardTitle className="text-2xl text-gray-900 dark:text-white">
-              Budget Transactions
-            </CardTitle>
+            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">No budget categories set up yet</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Create a budget first to see your transactions against your budget
-            </p>
+          <CardContent className="px-4 sm:px-6">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                <Receipt className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-foreground">No budget categories set up yet</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Create a budget first to see your transactions against your budget
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -87,21 +90,23 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
 
   if (expenses.length === 0) {
     return (
-      <div className="min-h-[500px] flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg text-center shadow-lg border-0">
+      <div className="w-full max-w-full overflow-hidden">
+        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
           <CardHeader className="pb-4">
-            <div className="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4">
-              <ShoppingBag className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-            </div>
-            <CardTitle className="text-2xl text-gray-900 dark:text-white">
-              Budget Transactions
-            </CardTitle>
+            <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">No transactions found</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Add some expenses to see them here
-            </p>
+          <CardContent className="px-4 sm:px-6">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                <Receipt className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-foreground">No transactions found</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Add some expenses to see them here
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -113,137 +118,96 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   };
 
   return (
-    <div className="space-y-6 p-4 max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card className="shadow-lg border-0 bg-white dark:bg-gray-800">
-          <CardHeader className="pb-6">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Receipt className="w-5 h-5 text-purple-600" />
-              Budget Transactions
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent>
+    <div className="w-full max-w-full overflow-hidden">
+      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">Budget Transactions</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 sm:px-6">
+          <div className="w-full space-y-3">
             {isMobile ? (
-              <div className="space-y-4">
-                {expenses.map((transaction, index) => {
+              <div className="w-full space-y-3">
+                {expenses.map((transaction) => {
                   const relatedBudget = getBudgetForExpense(transaction);
                   const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
                   
                   return (
-                    <motion.div
-                      key={transaction.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <Card className="bg-gray-50 dark:bg-gray-700/50 border-0 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-start gap-3 flex-1">
-                              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                                <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 dark:text-white">{transaction.description}</h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Calendar className="w-4 h-4 text-gray-500" />
-                                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    {format(new Date(transaction.date), 'MMM dd, yyyy')}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg text-gray-900 dark:text-white">
-                                {formatCurrency(Number(transaction.amount), currencyCode)}
-                              </p>
+                    <Card key={transaction.id} className="w-full bg-background/50 border-border/40 shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start w-full mb-3">
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <h4 className="font-medium text-foreground truncate">{transaction.description}</h4>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Calendar className="w-3 h-3" />
+                              <span>{format(new Date(transaction.date), 'MMM dd, yyyy')}</span>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
-                            <div className="flex items-center gap-2">
-                              <Tag className="w-4 h-4 text-green-600" />
-                              <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{transaction.category}</span>
-                            </div>
-                            {relatedBudget && (
-                              <div className="text-right bg-blue-50 dark:bg-blue-950/30 px-3 py-1 rounded-lg">
-                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Budget</p>
-                                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                  {formatCurrency(budgetAmount, currencyCode)}
-                                </p>
-                              </div>
-                            )}
+                          <div className="text-right font-semibold text-foreground ml-3">
+                            {formatCurrency(Number(transaction.amount), currencyCode)}
                           </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Tag className="w-3 h-3" />
+                            <span className="capitalize">{transaction.category}</span>
+                          </div>
+                          {relatedBudget && (
+                            <div className="text-xs text-muted-foreground">
+                              Budget: {formatCurrency(budgetAmount, currencyCode)}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
             ) : (
-              <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg overflow-hidden">
+              <div className="w-full overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-100 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-500">
-                      <TableHead className="font-semibold text-gray-900 dark:text-white py-3">Date</TableHead>
-                      <TableHead className="font-semibold text-gray-900 dark:text-white">Category</TableHead>
-                      <TableHead className="font-semibold text-gray-900 dark:text-white">Description</TableHead>
-                      <TableHead className="font-semibold text-gray-900 dark:text-white">Amount</TableHead>
-                      <TableHead className="font-semibold text-gray-900 dark:text-white">Budget</TableHead>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Budget</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {expenses.map((transaction, index) => {
+                    {expenses.map((transaction) => {
                       const relatedBudget = getBudgetForExpense(transaction);
                       const budgetAmount = relatedBudget ? Number(relatedBudget.amount) : 0;
                       
                       return (
-                        <motion.tr 
-                          key={transaction.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors"
-                        >
-                          <TableCell className="font-medium text-gray-900 dark:text-white py-3">
-                            {format(new Date(transaction.date), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Tag className="w-4 h-4 text-blue-600" />
-                              <span className="capitalize font-medium text-gray-900 dark:text-white">{transaction.category}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium text-gray-900 dark:text-white">{transaction.description}</TableCell>
-                          <TableCell className="font-bold text-gray-900 dark:text-white">
-                            {formatCurrency(Number(transaction.amount), currencyCode)}
-                          </TableCell>
+                        <TableRow key={transaction.id}>
+                          <TableCell>{format(new Date(transaction.date), 'MMM dd, yyyy')}</TableCell>
+                          <TableCell className="capitalize">{transaction.category}</TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell className="font-medium">{formatCurrency(Number(transaction.amount), currencyCode)}</TableCell>
                           <TableCell>
                             {relatedBudget ? (
-                              <div className="flex flex-col gap-1">
-                                <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(budgetAmount, currencyCode)}</span>
-                                <span className="text-xs text-gray-600 dark:text-gray-400 capitalize bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{formatCurrency(budgetAmount, currencyCode)}</span>
+                                <span className="text-xs text-muted-foreground capitalize">
                                   {relatedBudget.period}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-gray-500 dark:text-gray-400 text-sm italic bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">No budget set</span>
+                              <span className="text-muted-foreground text-xs">No budget</span>
                             )}
                           </TableCell>
-                        </motion.tr>
+                        </TableRow>
                       );
                     })}
                   </TableBody>
                 </Table>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, PieChart as PieChartIcon, Target } from "lucide-react";
 
 interface BudgetOverviewProps {
   budgets: Budget[];
@@ -16,33 +15,34 @@ interface BudgetOverviewProps {
 export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
-  
+
   const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference");
   const totalBudget = filteredBudgets.reduce((sum, budget) => sum + budget.amount, 0);
-  
   const data = filteredBudgets.map(budget => ({
     name: budget.category,
     value: budget.amount,
-    percentage: totalBudget > 0 ? (budget.amount / totalBudget * 100).toFixed(1) : "0"
+    percentage: totalBudget > 0 ? (budget.amount / totalBudget * 100).toFixed(0) : "0"
   }));
 
   if (filteredBudgets.length === 0) {
     return (
-      <div className="min-h-[500px] flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg text-center shadow-lg border-0">
+      <div className="w-full max-w-full overflow-hidden">
+        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
           <CardHeader className="pb-4">
-            <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
-              <PieChartIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            </div>
-            <CardTitle className="text-2xl text-gray-900 dark:text-white">
-              Budget Overview
-            </CardTitle>
+            <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">No budgets created yet</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Create your first budget to see insights here
-            </p>
+          <CardContent className="px-4 sm:px-6">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                <div className="w-8 h-8 rounded-full bg-muted"></div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-foreground">No budget categories found</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Add your first budget to see an overview here
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -50,106 +50,100 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <div className="space-y-6 p-4 max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid lg:grid-cols-2 gap-8"
-      >
-        {/* Chart Section */}
-        <Card className="shadow-lg border-0 bg-white dark:bg-gray-800">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Target className="w-5 h-5 text-blue-600" />
-              Budget Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center p-6">
-            <div className="relative w-full max-w-[350px] h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie 
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={140}
-                    paddingAngle={3}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-                          <p className="font-semibold text-gray-900 dark:text-white">{data.name}</p>
-                          <p className="text-blue-600 dark:text-blue-400 font-bold">{formatCurrency(data.value, currencyCode)}</p>
-                          <p className="text-gray-500 dark:text-gray-400 text-sm">{data.percentage}% of total</p>
-                        </div>
-                      );
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              
-              {/* Center Total */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+    <div className="w-full max-w-full overflow-hidden">
+      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">Budget Overview</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 sm:px-6">
+          <motion.div 
+            className="w-full space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="rounded-xl bg-background/50 p-4 sm:p-6 border border-border/30">
+              <div className="w-full h-[280px] sm:h-[320px] relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
+                  <p className="text-xl sm:text-2xl font-semibold text-foreground">
                     {formatCurrency(totalBudget, currencyCode)}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Total Budget
                   </p>
                 </div>
+                
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie 
+                      data={data} 
+                      cx="50%" 
+                      cy="50%" 
+                      innerRadius={isMobile ? 55 : 75}
+                      outerRadius={isMobile ? 80 : 105}
+                      paddingAngle={2}
+                      dataKey="value"
+                      cornerRadius={4}
+                      strokeWidth={1}
+                      stroke="hsl(var(--background))"
+                    >
+                      {data.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`}
+                          fill={CATEGORY_COLORS[entry.name]} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const data = payload[0].payload;
+                        return (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-lg"
+                          >
+                            <p className="text-sm font-medium text-foreground">{data.name}</p>
+                            <p className="text-sm text-foreground">{formatCurrency(data.value, currencyCode)}</p>
+                            <p className="text-xs text-muted-foreground">{data.percentage}% of total</p>
+                          </motion.div>
+                        );
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+                {data.map((entry, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-card/60 border border-border/30"
+                  >
+                    <div 
+                      className="w-4 h-4 rounded-full flex-shrink-0" 
+                      style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{entry.name}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-muted-foreground">{entry.percentage}%</p>
+                        <p className="text-xs font-medium text-foreground">
+                          {formatCurrency(entry.value, currencyCode)}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Legend Section */}
-        <Card className="shadow-lg border-0 bg-white dark:bg-gray-800">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              Budget Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 max-h-[350px] overflow-y-auto">
-            {data.map((entry, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
-                  />
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{entry.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{entry.percentage}% of budget</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(entry.value, currencyCode)}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </CardContent>
-        </Card>
-      </motion.div>
+          </motion.div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
