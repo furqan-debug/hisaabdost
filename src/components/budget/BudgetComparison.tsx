@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { format, parseISO } from "date-fns";
-import clsx from "clsx";
+import { TrendingUp } from "lucide-react";
 
 interface BudgetComparisonProps {
   budgets: Budget[];
@@ -34,13 +34,27 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
 
   if (budgets.length === 0 || Object.keys(budgetsByMonth).length <= 1) {
     return (
-      <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] py-8 px-4 text-center">
-        <p className="text-muted-foreground mb-2">Not enough data for monthly comparison</p>
-        <p className="text-sm text-muted-foreground">
-          {budgets.length === 0 
-            ? "Add your first budget to see monthly comparisons" 
-            : "Add budgets across different months to see comparisons"}
-        </p>
+      <div className="w-full max-w-full overflow-hidden">
+        <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold">Monthly Budget Comparison</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                <TrendingUp className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-foreground">Not enough data for comparison</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {budgets.length === 0 
+                    ? "Add your first budget to see monthly comparisons" 
+                    : "Add budgets across different months to see comparisons"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -57,94 +71,98 @@ export function BudgetComparison({ budgets }: BudgetComparisonProps) {
     .slice(0, isMobile ? 4 : 6);
 
   return (
-    <Card className="overflow-hidden rounded-xl shadow-md border bg-card">
-      <CardHeader>
-        <CardTitle>Monthly Budget Comparison</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 justify-center">
-          {topCategories.map(category => (
-            <div key={category} className="flex items-center gap-1 text-xs font-medium whitespace-nowrap">
-              <span className="block w-3 h-3 rounded-full mr-1" style={{
-                backgroundColor: CATEGORY_COLORS[category]
-              }} />
-              <span className="truncate">{category}</span>
-            </div>
-          ))}
-        </div>
-        
-        <div className={clsx(
-          "w-full py-2 px-2 md:px-6 rounded-lg bg-[hsl(var(--muted)/0.5)] border border-border/50",
-          "backdrop-blur-sm h-[270px] md:h-[350px]"
-        )}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              layout="horizontal" 
-              data={data}
-              margin={{
-                top: 10,
-                right: isMobile ? 8 : 30,
-                left: isMobile ? 10 : 20,
-                bottom: isMobile ? 30 : 40
-              }}
-              barCategoryGap={isMobile ? "20%" : "30%"}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.11} />
-              <XAxis 
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fontSize: isMobile ? 11 : 13,
-                  fill: "var(--muted-foreground)",
-                }}
-                height={40}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{
-                  fontSize: isMobile ? 10 : 12,
-                  fill: "var(--muted-foreground)",
-                }}
-                tickFormatter={(value) => `${value}`}
-                width={isMobile ? 50 : 70}
-              />
-              <Tooltip
-                cursor={{ fill: "var(--muted)", opacity: 0.25 }}
-                content={({ active, payload, label }) => {
-                  if (!active || !payload || !payload.length) return null;
-                  const filteredPayload = payload.filter(
-                    entry => Number(entry.value) > 0
-                  );
-                  return (
-                    <div className="rounded-lg border bg-background/95 p-2 shadow-md text-xs backdrop-blur-sm">
-                      <div className="font-semibold mb-1">{label}</div>
-                      {filteredPayload.map((entry, idx) => (
-                        <div className="flex items-center gap-1 my-0.5" key={entry.name}>
-                          <span className="block w-2.5 h-2.5 rounded-full" style={{backgroundColor: entry.color}} />
-                          <span>{entry.name}:</span>
-                          <span className="ml-1 font-semibold">{formatCurrency(Number(entry.value), currencyCode)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }}
-              />
+    <div className="w-full max-w-full overflow-hidden">
+      <Card className="w-full bg-card/50 backdrop-blur-sm border-border/40">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">Monthly Budget Comparison</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 sm:px-6">
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-3 justify-center">
               {topCategories.map(category => (
-                <Bar
-                  key={category}
-                  dataKey={category}
-                  fill={CATEGORY_COLORS[category]}
-                  radius={[4, 4, 4, 4]} 
-                  maxBarSize={isMobile ? 20 : 30}
-                  className="transition-all"
-                />
+                <div key={category} className="flex items-center gap-2 text-xs font-medium bg-background/50 px-3 py-1.5 rounded-full border border-border/30">
+                  <span className="block w-3 h-3 rounded-full" style={{
+                    backgroundColor: CATEGORY_COLORS[category]
+                  }} />
+                  <span className="truncate">{category}</span>
+                </div>
               ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+            </div>
+            
+            <div className="w-full p-4 rounded-xl bg-background/50 border border-border/30">
+              <div className="w-full h-[300px] sm:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data}
+                    margin={{
+                      top: 20,
+                      right: isMobile ? 10 : 30,
+                      left: isMobile ? 10 : 20,
+                      bottom: isMobile ? 40 : 60
+                    }}
+                    barCategoryGap={isMobile ? "20%" : "30%"}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis 
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fontSize: isMobile ? 11 : 12,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
+                      height={50}
+                      interval={0}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fontSize: isMobile ? 10 : 12,
+                        fill: "hsl(var(--muted-foreground))",
+                      }}
+                      tickFormatter={(value) => `${Math.round(value)}`}
+                      width={isMobile ? 50 : 70}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.2 }}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || !payload.length) return null;
+                        const filteredPayload = payload.filter(
+                          entry => Number(entry.value) > 0
+                        );
+                        return (
+                          <div className="rounded-lg border bg-background/95 backdrop-blur-sm p-3 shadow-lg">
+                            <div className="font-semibold mb-2 text-foreground">{label}</div>
+                            {filteredPayload.map((entry, idx) => (
+                              <div className="flex items-center gap-2 my-1" key={entry.name}>
+                                <span className="block w-3 h-3 rounded-full" style={{backgroundColor: entry.color}} />
+                                <span className="text-sm text-foreground">{entry.name}:</span>
+                                <span className="ml-auto font-semibold text-foreground">{formatCurrency(Number(entry.value), currencyCode)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }}
+                    />
+                    {topCategories.map(category => (
+                      <Bar
+                        key={category}
+                        dataKey={category}
+                        fill={CATEGORY_COLORS[category]}
+                        radius={[2, 2, 0, 0]} 
+                        maxBarSize={isMobile ? 25 : 35}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
