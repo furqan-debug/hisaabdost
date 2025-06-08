@@ -12,7 +12,7 @@ export function CompleteStep() {
 
   const handleGetStarted = async () => {
     try {
-      // Force update the onboarding status in the database to ensure it's completed
+      // Update the onboarding status in the database
       if (user) {
         const { error } = await supabase
           .from('profiles')
@@ -31,8 +31,6 @@ export function CompleteStep() {
       // Navigate to dashboard with replace:true to prevent back navigation to onboarding
       navigate("/app/dashboard", { replace: true });
       
-      // Force a page reload to ensure all components recognize the completed onboarding
-      window.location.reload();
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Something went wrong. Please try again.");
