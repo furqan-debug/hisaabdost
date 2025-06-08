@@ -83,13 +83,13 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
   }
 };
 
-// Web-specific file download with mobile improvements
-const downloadFileOnWeb = (content: string, filename: string, mimeType: string) => {
+// Web-specific file download with mobile improvements - now handles both string and Blob content
+const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: string) => {
   try {
     console.log('Attempting web download:', filename, mimeType);
     
     // Create blob with proper MIME type
-    const blob = new Blob([content], { type: mimeType });
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
     
     // For mobile browsers, try to open in new tab if download fails
     if (isMobileDevice()) {
@@ -256,7 +256,6 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
         console.error('Native PDF save error, falling back:', error);
         // Fallback to web download
         const pdfBlob = doc.output('blob');
-        const pdfDataUrl = URL.createObjectURL(pdfBlob);
         downloadFileOnWeb(pdfBlob, filename, 'application/pdf');
       }
     } else {
