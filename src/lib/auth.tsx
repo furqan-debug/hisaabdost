@@ -20,7 +20,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   sendPasswordResetCode: (email: string) => Promise<void>;
   verifyPasswordResetCode: (email: string, token: string) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
+  updatePassword: (email: string, code: string, newPassword: string) => Promise<void>;
 };
 
 // Create the context with a default value that won't be used
