@@ -1,15 +1,11 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const usePasswordReset = () => {
   const sendPasswordResetCode = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
       
       if (error) {
@@ -33,7 +29,7 @@ export const usePasswordReset = () => {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type: "email"
+        type: "recovery"
       });
       
       if (error) {
