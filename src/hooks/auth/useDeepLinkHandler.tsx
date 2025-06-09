@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
-import { App, type PluginListenerHandle } from '@capacitor/app';
+import { App } from '@capacitor/app';
+import { PluginListenerHandle } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 
 interface DeepLinkData {
