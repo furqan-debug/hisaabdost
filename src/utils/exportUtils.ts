@@ -41,7 +41,7 @@ const isMobileDevice = () => {
 // Enhanced mobile file download using Capacitor with proper Android handling
 const downloadFileOnMobile = async (content: string, filename: string, mimeType: string, isBase64: boolean = false) => {
   try {
-    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
     const { Share } = await import('@capacitor/share');
     
     console.log('Attempting to save file on mobile:', filename);
@@ -56,7 +56,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
           path: filename,
           data: content,
           directory: Directory.Documents,
-          encoding: isBase64 ? undefined : 'utf8'
+          encoding: isBase64 ? undefined : Encoding.UTF8
         });
         
         savedPath = docResult.uri;
@@ -77,7 +77,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
           path: filename,
           data: content,
           directory: Directory.Cache,
-          encoding: isBase64 ? undefined : 'utf8'
+          encoding: isBase64 ? undefined : Encoding.UTF8
         });
         
         savedPath = cacheResult.uri;
@@ -96,7 +96,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
         path: filename,
         data: content,
         directory: Directory.Documents,
-        encoding: isBase64 ? undefined : 'utf8'
+        encoding: isBase64 ? undefined : Encoding.UTF8
       });
       
       savedPath = result.uri;
@@ -342,6 +342,76 @@ export const exportExpensesToPDF = async (expenses: Expense[]) => {
     toast({
       title: "Export Failed",
       description: "Failed to export PDF. Please try again.",
+      variant: "destructive"
+    });
+  }
+};
+
+// Web-specific file download with enhanced mobile support
+const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: string) => {
+  try {
+    console.log('Attempting web download:', filename, mimeType);
+    
+    // Create blob with proper MIME type
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+    
+    // Enhanced mobile browser handling
+    if (isMobileDevice()) {
+      try {
+        const dataUrl = URL.createObjectURL(blob);
+        
+        // Create a hidden download link
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        link.style.display = 'none';
+        
+        // Add to DOM and trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(dataUrl);
+        }, 1000);
+        
+        toast({
+          title: "Download Started",
+          description: "Check your Downloads folder or browser notifications",
+        });
+      } catch (mobileError) {
+        console.error('Mobile web download failed:', mobileError);
+        
+        // Last resort: direct blob URL
+        const dataUrl = URL.createObjectURL(blob);
+        window.open(dataUrl, '_blank');
+        
+        toast({
+          title: "File Opened",
+          description: "File opened in new tab. Use browser menu to save.",
+        });
+      }
+    } else {
+      // Desktop browser - standard download
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      
+      toast({
+        title: "Success",
+        description: "File downloaded successfully"
+      });
+    }
+  } catch (error) {
+    console.error('Web download error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to download file. Please try again.",
       variant: "destructive"
     });
   }
