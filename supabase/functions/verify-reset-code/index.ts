@@ -7,9 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface VerifyCodeRequest {
+interface VerifyTokenRequest {
   email: string;
-  code: string;
+  token: string;
 }
 
 const supabaseAdmin = createClient(
@@ -23,43 +23,43 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, code }: VerifyCodeRequest = await req.json();
+    const { email, token }: VerifyTokenRequest = await req.json();
 
-    if (!email || !code) {
+    if (!email || !token) {
       return new Response(
-        JSON.stringify({ error: "Email and code are required" }),
+        JSON.stringify({ error: "Email and token are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Find the code
+    // Find the token
     const { data: resetCodes, error: selectError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
       .eq("email", email)
-      .eq("code", code)
+      .eq("token", token)
       .eq("used", false)
       .order("created_at", { ascending: false })
       .limit(1);
 
     if (selectError) {
-      console.error("Error finding reset code:", selectError);
+      console.error("Error finding reset token:", selectError);
       return new Response(
-        JSON.stringify({ error: "Failed to verify code" }),
+        JSON.stringify({ error: "Failed to verify token" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!resetCodes || resetCodes.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Invalid or expired code" }),
+        JSON.stringify({ error: "Invalid or expired reset link" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const resetCode = resetCodes[0];
 
-    // Check if code has expired
+    // Check if token has expired
     const now = new Date();
     const expiresAt = new Date(resetCode.expires_at);
     
@@ -71,18 +71,18 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", resetCode.id);
 
       return new Response(
-        JSON.stringify({ error: "Code has expired" }),
+        JSON.stringify({ error: "Reset link has expired" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Code is valid - return success but don't mark as used yet
+    // Token is valid - return success but don't mark as used yet
     // It will be marked as used when the password is actually updated
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Code verified successfully",
-        codeId: resetCode.id
+        message: "Reset link verified successfully",
+        tokenId: resetCode.id
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

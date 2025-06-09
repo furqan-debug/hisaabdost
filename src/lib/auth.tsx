@@ -20,6 +20,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   sendPasswordResetCode: (email: string) => Promise<void>;
   verifyPasswordResetCode: (email: string, token: string) => Promise<void>;
+  verifyPasswordResetToken: (email: string, token: string) => Promise<void>;
   updatePassword: (email: string, code: string, newPassword: string) => Promise<void>;
 };
 
@@ -35,6 +36,7 @@ const initialContextValue: AuthContextType = {
   signOut: async () => { throw new Error("AuthContext not initialized"); },
   sendPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
   verifyPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
+  verifyPasswordResetToken: async () => { throw new Error("AuthContext not initialized"); },
   updatePassword: async () => { throw new Error("AuthContext not initialized"); },
 };
 
@@ -49,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { verifyOtp, resendOtp } = useVerification();
   const { signOut } = useSignOut();
   const { showOnboarding } = useOnboarding(user);
-  const { sendPasswordResetCode, verifyPasswordResetCode, updatePassword } = usePasswordReset();
+  const { sendPasswordResetCode, verifyPasswordResetCode, verifyPasswordResetToken, updatePassword } = usePasswordReset();
 
   const contextValue: AuthContextType = {
     user,
@@ -61,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     sendPasswordResetCode,
     verifyPasswordResetCode,
+    verifyPasswordResetToken,
     updatePassword,
   };
 

@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface UpdatePasswordRequest {
   email: string;
-  code: string;
+  token: string;
   newPassword: string;
 }
 
@@ -24,11 +24,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, code, newPassword }: UpdatePasswordRequest = await req.json();
+    const { email, token, newPassword }: UpdatePasswordRequest = await req.json();
 
-    if (!email || !code || !newPassword) {
+    if (!email || !token || !newPassword) {
       return new Response(
-        JSON.stringify({ error: "Email, code, and new password are required" }),
+        JSON.stringify({ error: "Email, token, and new password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -40,34 +40,34 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify the code is still valid and unused
+    // Verify the token is still valid and unused
     const { data: resetCodes, error: selectError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
       .eq("email", email)
-      .eq("code", code)
+      .eq("token", token)
       .eq("used", false)
       .order("created_at", { ascending: false })
       .limit(1);
 
     if (selectError) {
-      console.error("Error finding reset code:", selectError);
+      console.error("Error finding reset token:", selectError);
       return new Response(
-        JSON.stringify({ error: "Failed to verify code" }),
+        JSON.stringify({ error: "Failed to verify token" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (!resetCodes || resetCodes.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Invalid or expired code" }),
+        JSON.stringify({ error: "Invalid or expired reset link" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const resetCode = resetCodes[0];
 
-    // Check if code has expired
+    // Check if token has expired
     const now = new Date();
     const expiresAt = new Date(resetCode.expires_at);
     
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
         .eq("id", resetCode.id);
 
       return new Response(
-        JSON.stringify({ error: "Code has expired" }),
+        JSON.stringify({ error: "Reset link has expired" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -117,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Mark the code as used and invalidate all other codes for this email
+    // Mark the token as used and invalidate all other tokens for this email
     await supabaseAdmin
       .from("password_reset_codes")
       .update({ used: true })

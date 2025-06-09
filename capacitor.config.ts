@@ -61,7 +61,16 @@ const config: CapacitorConfig = {
     // Enhanced Share plugin configuration
     Share: {
       enabled: true
+    },
+    // App plugin for deep link handling
+    App: {
+      enabled: true
     }
+  },
+  
+  // Deep link configuration
+  server: {
+    androidScheme: "https"
   }
 };
 

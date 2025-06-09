@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
+import { useDeepLinkHandler } from "@/hooks/auth/useDeepLinkHandler";
 
 const Auth = () => {
   // Safe access to auth context with fallback mechanism
@@ -20,10 +22,10 @@ const Auth = () => {
   let resendOtp = async (email: string) => {
     console.error("Auth context not available");
   };
-  let verifyPasswordResetCode = async (email: string, token: string) => {
+  let verifyPasswordResetToken = async (email: string, token: string) => {
     console.error("Auth context not available");
   };
-  let updatePassword = async (email: string, code: string, newPassword: string) => {
+  let updatePassword = async (email: string, token: string, newPassword: string) => {
     console.error("Auth context not available");
   };
   let sendPasswordResetCode = async (email: string) => {
@@ -35,13 +37,16 @@ const Auth = () => {
     user = auth.user;
     verifyOtp = auth.verifyOtp;
     resendOtp = auth.resendOtp;
-    verifyPasswordResetCode = auth.verifyPasswordResetCode;
+    verifyPasswordResetToken = auth.verifyPasswordResetToken;
     updatePassword = auth.updatePassword;
     sendPasswordResetCode = auth.sendPasswordResetCode;
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
 
+  const [searchParams] = useSearchParams();
+  const { deepLinkData, isFromDeepLink, clearDeepLinkData } = useDeepLinkHandler();
+  
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
@@ -49,8 +54,26 @@ const Auth = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [resetEmail, setResetEmail] = useState("");
-  const [resetCode, setResetCode] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const navigate = useNavigate();
+
+  // Handle deep link for password reset
+  useEffect(() => {
+    const isResetFromParams = searchParams.get('reset') === 'true';
+    
+    if (isFromDeepLink && deepLinkData.token && deepLinkData.email) {
+      setResetEmail(deepLinkData.email);
+      setResetToken(deepLinkData.token);
+      setShowNewPassword(true);
+      setShowForgotPassword(false);
+      setShowPasswordReset(false);
+      setShowVerification(false);
+      setIsSignUp(false);
+    } else if (isResetFromParams && !isFromDeepLink) {
+      // Handle web fallback case
+      setShowForgotPassword(true);
+    }
+  }, [isFromDeepLink, deepLinkData, searchParams]);
 
   if (user) {
     return <Navigate to="/app/dashboard" replace />;
@@ -66,13 +89,13 @@ const Auth = () => {
 
   const handlePasswordResetCodeSent = (email: string) => {
     setResetEmail(email);
-    setShowForgotPassword(false);
-    setShowPasswordReset(true);
+    // Note: No automatic transition since user needs to click email link
+    // Deep link will handle the transition to new password form
   };
 
   const handlePasswordResetVerification = async (code: string) => {
-    await verifyPasswordResetCode(resetEmail, code);
-    setResetCode(code);
+    await verifyPasswordResetToken(resetEmail, code);
+    setResetToken(code);
     setShowPasswordReset(false);
     setShowNewPassword(true);
   };
@@ -81,8 +104,10 @@ const Auth = () => {
     await sendPasswordResetCode(resetEmail);
   };
 
-  const handlePasswordUpdate = async (email: string, code: string, newPassword: string) => {
-    await updatePassword(email, code, newPassword);
+  const handlePasswordUpdate = async (email: string, token: string, newPassword: string) => {
+    await updatePassword(email, token, newPassword);
+    // Clear deep link data after successful password update
+    clearDeepLinkData();
   };
 
   const resetToLogin = () => {
@@ -93,6 +118,8 @@ const Auth = () => {
     setShowNewPassword(false);
     setVerificationEmail("");
     setResetEmail("");
+    setResetToken("");
+    clearDeepLinkData();
   };
 
   const cardVariants = {
@@ -129,9 +156,9 @@ const Auth = () => {
 
   const getCardDescription = () => {
     if (showVerification) return `Enter the 6-digit verification code sent to ${verificationEmail}`;
-    if (showForgotPassword) return "Enter your email and we'll send you a verification code to reset your password";
+    if (showForgotPassword) return "Enter your email and we'll send you a reset link";
     if (showPasswordReset) return `Enter the 6-digit code sent to ${resetEmail}`;
-    if (showNewPassword) return "Enter your new password";
+    if (showNewPassword) return isFromDeepLink ? "Enter your new password to complete the reset" : "Enter your new password";
     if (isSignUp) return "Sign up to start managing your expenses";
     return "Sign in to your account";
   };
@@ -181,7 +208,7 @@ const Auth = () => {
                 {showNewPassword ? (
                   <NewPasswordForm
                     email={resetEmail}
-                    code={resetCode}
+                    token={resetToken}
                     onPasswordUpdate={handlePasswordUpdate}
                     onBackToLogin={resetToLogin}
                   />

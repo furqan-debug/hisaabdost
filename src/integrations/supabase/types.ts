@@ -252,27 +252,30 @@ export type Database = {
       }
       password_reset_codes: {
         Row: {
-          code: string
+          code: string | null
           created_at: string
           email: string
           expires_at: string
           id: string
+          token: string
           used: boolean
         }
         Insert: {
-          code: string
+          code?: string | null
           created_at?: string
           email: string
           expires_at: string
           id?: string
+          token: string
           used?: boolean
         }
         Update: {
-          code?: string
+          code?: string | null
           created_at?: string
           email?: string
           expires_at?: string
           id?: string
+          token?: string
           used?: boolean
         }
         Relationships: []

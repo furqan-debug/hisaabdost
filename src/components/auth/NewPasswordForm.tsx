@@ -8,12 +8,12 @@ import { motion } from "framer-motion";
 
 type NewPasswordFormProps = {
   email: string;
-  code: string;
-  onPasswordUpdate: (email: string, code: string, password: string) => Promise<void>;
+  token: string; // Changed from code to token
+  onPasswordUpdate: (email: string, token: string, password: string) => Promise<void>;
   onBackToLogin: () => void;
 };
 
-export const NewPasswordForm = ({ email, code, onPasswordUpdate, onBackToLogin }: NewPasswordFormProps) => {
+export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin }: NewPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +37,7 @@ export const NewPasswordForm = ({ email, code, onPasswordUpdate, onBackToLogin }
 
     setLoading(true);
     try {
-      await onPasswordUpdate(email, code, newPassword);
+      await onPasswordUpdate(email, token, newPassword);
       setSuccess(true);
       
       // Redirect to login after a short delay
