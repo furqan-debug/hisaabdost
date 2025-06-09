@@ -127,7 +127,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "HisaabDost <onboarding@resend.dev>",
+        from: "HisaabDost <noreply@hisaabdost.com>",
         to: [email],
         subject: "Reset Your HisaabDost Password",
         html: emailHtml,
