@@ -10,6 +10,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
 
 const Auth = () => {
   // Safe access to auth context with fallback mechanism
@@ -20,11 +21,19 @@ const Auth = () => {
   let resendOtp = async (email: string) => {
     console.error("Auth context not available");
   };
+  let verifyPasswordResetCode = async (email: string, token: string) => {
+    console.error("Auth context not available");
+  };
+  let updatePassword = async (newPassword: string) => {
+    console.error("Auth context not available");
+  };
   try {
     const auth = useAuth();
     user = auth.user;
     verifyOtp = auth.verifyOtp;
     resendOtp = auth.resendOtp;
+    verifyPasswordResetCode = auth.verifyPasswordResetCode;
+    updatePassword = auth.updatePassword;
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
@@ -32,7 +41,10 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const navigate = useNavigate();
 
   if (user) {
@@ -45,6 +57,37 @@ const Auth = () => {
 
   const handleResendVerification = async () => {
     await resendOtp(verificationEmail);
+  };
+
+  const handlePasswordResetCodeSent = (email: string) => {
+    setResetEmail(email);
+    setShowForgotPassword(false);
+    setShowPasswordReset(true);
+  };
+
+  const handlePasswordResetVerification = async (code: string) => {
+    await verifyPasswordResetCode(resetEmail, code);
+    setShowPasswordReset(false);
+    setShowNewPassword(true);
+  };
+
+  const handlePasswordResetResend = async () => {
+    const { sendPasswordResetCode } = useAuth();
+    await sendPasswordResetCode(resetEmail);
+  };
+
+  const handlePasswordUpdate = async (newPassword: string) => {
+    await updatePassword(newPassword);
+  };
+
+  const resetToLogin = () => {
+    setIsSignUp(false);
+    setShowForgotPassword(false);
+    setShowVerification(false);
+    setShowPasswordReset(false);
+    setShowNewPassword(false);
+    setVerificationEmail("");
+    setResetEmail("");
   };
 
   const cardVariants = {
@@ -70,6 +113,24 @@ const Auth = () => {
     }
   };
 
+  const getCardTitle = () => {
+    if (showVerification) return "Verify your email";
+    if (showForgotPassword) return "Reset Password";
+    if (showPasswordReset) return "Enter Reset Code";
+    if (showNewPassword) return "Create New Password";
+    if (isSignUp) return "Create an account";
+    return "Welcome back";
+  };
+
+  const getCardDescription = () => {
+    if (showVerification) return `Enter the 6-digit verification code sent to ${verificationEmail}`;
+    if (showForgotPassword) return "Enter your email and we'll send you a verification code to reset your password";
+    if (showPasswordReset) return `Enter the 6-digit code sent to ${resetEmail}`;
+    if (showNewPassword) return "Enter your new password";
+    if (isSignUp) return "Sign up to start managing your expenses";
+    return "Sign in to your account";
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
       {/* Background decoration */}
@@ -81,7 +142,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <AnimatePresence mode="wait">
           <motion.div
-            key={showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"}
+            key={showNewPassword ? "newpassword" : showPasswordReset ? "passwordreset" : showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"}
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -102,31 +163,32 @@ const Auth = () => {
 
                 <div className="space-y-2">
                   <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                    {showVerification 
-                      ? "Verify your email" 
-                      : showForgotPassword 
-                        ? "Reset Password" 
-                        : isSignUp 
-                          ? "Create an account" 
-                          : "Welcome back"
-                    }
+                    {getCardTitle()}
                   </CardTitle>
                   <CardDescription className="text-base text-muted-foreground leading-relaxed">
-                    {showVerification 
-                      ? `Enter the 6-digit verification code sent to ${verificationEmail}` 
-                      : showForgotPassword 
-                        ? "Enter your email and we'll send you a link to reset your password" 
-                        : isSignUp 
-                          ? "Sign up to start managing your expenses" 
-                          : "Sign in to your account"
-                    }
+                    {getCardDescription()}
                   </CardDescription>
                 </div>
               </CardHeader>
 
               {/* Card Content */}
               <CardContent className="px-8 pb-8">
-                {showVerification ? (
+                {showNewPassword ? (
+                  <NewPasswordForm
+                    onPasswordUpdate={handlePasswordUpdate}
+                    onBackToLogin={resetToLogin}
+                  />
+                ) : showPasswordReset ? (
+                  <VerificationForm
+                    email={resetEmail}
+                    onVerify={handlePasswordResetVerification}
+                    onResend={handlePasswordResetResend}
+                    onBackToLogin={() => {
+                      setShowPasswordReset(false);
+                      setShowForgotPassword(true);
+                    }}
+                  />
+                ) : showVerification ? (
                   <VerificationForm
                     email={verificationEmail}
                     onVerify={handleVerification}
@@ -139,6 +201,7 @@ const Auth = () => {
                 ) : showForgotPassword ? (
                   <ForgotPasswordForm
                     onBackToLogin={() => setShowForgotPassword(false)}
+                    onCodeSent={handlePasswordResetCodeSent}
                   />
                 ) : isSignUp ? (
                   <SignUpForm

@@ -6,6 +6,7 @@ import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
 import { useVerification } from "@/hooks/auth/useVerification";
 import { useSignOut } from "@/hooks/auth/useSignOut";
 import { useOnboarding } from "@/hooks/auth/useOnboarding";
+import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +18,9 @@ type AuthContextType = {
   verifyOtp: (email: string, token: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  sendPasswordResetCode: (email: string) => Promise<void>;
+  verifyPasswordResetCode: (email: string, token: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
 };
 
 // Create the context with a default value that won't be used
@@ -29,6 +33,9 @@ const initialContextValue: AuthContextType = {
   verifyOtp: async () => { throw new Error("AuthContext not initialized"); },
   resendOtp: async () => { throw new Error("AuthContext not initialized"); },
   signOut: async () => { throw new Error("AuthContext not initialized"); },
+  sendPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
+  verifyPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
+  updatePassword: async () => { throw new Error("AuthContext not initialized"); },
 };
 
 const AuthContext = createContext<AuthContextType>(initialContextValue);
@@ -42,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { verifyOtp, resendOtp } = useVerification();
   const { signOut } = useSignOut();
   const { showOnboarding } = useOnboarding(user);
+  const { sendPasswordResetCode, verifyPasswordResetCode, updatePassword } = usePasswordReset();
 
   const contextValue: AuthContextType = {
     user,
@@ -51,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyOtp,
     resendOtp,
     signOut,
+    sendPasswordResetCode,
+    verifyPasswordResetCode,
+    updatePassword,
   };
 
   return (
