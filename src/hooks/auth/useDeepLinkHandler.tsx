@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { App } from '@capacitor/app';
+import { App, type PluginListenerHandle } from '@capacitor/app';
 import { useNavigate } from 'react-router-dom';
 
 interface DeepLinkData {
@@ -14,24 +14,30 @@ export const useDeepLinkHandler = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let listenerHandle: PluginListenerHandle | null = null;
+
     // Handle app opened via deep link
-    const handleAppUrlOpen = App.addListener('appUrlOpen', (event) => {
-      console.log('App opened via deep link:', event.url);
-      
-      if (event.url.includes('reset-password')) {
-        const url = new URL(event.url);
-        const token = url.searchParams.get('token');
-        const email = url.searchParams.get('email');
+    const setupListener = async () => {
+      listenerHandle = await App.addListener('appUrlOpen', (event) => {
+        console.log('App opened via deep link:', event.url);
         
-        if (token && email) {
-          setDeepLinkData({ token, email });
-          setIsFromDeepLink(true);
+        if (event.url.includes('reset-password')) {
+          const url = new URL(event.url);
+          const token = url.searchParams.get('token');
+          const email = url.searchParams.get('email');
           
-          // Navigate to auth page with reset flow
-          navigate('/auth?reset=true');
+          if (token && email) {
+            setDeepLinkData({ token, email });
+            setIsFromDeepLink(true);
+            
+            // Navigate to auth page with reset flow
+            navigate('/auth?reset=true');
+          }
         }
-      }
-    });
+      });
+    };
+
+    setupListener();
 
     // Check if app was opened with a URL initially
     App.getLaunchUrl().then(result => {
@@ -55,7 +61,9 @@ export const useDeepLinkHandler = () => {
     });
 
     return () => {
-      handleAppUrlOpen.remove();
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
     };
   }, [navigate]);
 
