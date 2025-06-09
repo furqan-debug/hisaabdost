@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 // Local storage key for cached user state
 const USER_CACHE_KEY = "hisaabdost_user_cache";
@@ -35,7 +34,6 @@ export const useAuthSession = () => {
   const [user, setUser] = useState<User | null>(getCachedUser());
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("Setting up auth session listener");
@@ -113,7 +111,7 @@ export const useAuthSession = () => {
         subscription.unsubscribe();
       }
     };
-  }, [navigate]);
+  }, []);
 
   return {
     user,
