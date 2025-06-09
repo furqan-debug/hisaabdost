@@ -1,3 +1,4 @@
+
 import { Expense } from "@/components/expenses/types";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
@@ -10,7 +11,7 @@ const getFormattedDate = () => format(new Date(), 'yyyy-MM-dd');
 // Helper to get Hisaab Dost branded filename with date
 const getBrandedFilename = (fileType: string) => `Hisaab_Dost_Expenses_${getFormattedDate()}.${fileType}`;
 
-// Check if Capacitor is available and we're on a native platform
+// Enhanced platform detection
 const isNativePlatform = () => {
   try {
     return typeof window !== 'undefined' && 
@@ -26,8 +27,7 @@ const isNativePlatform = () => {
 const isAndroid = () => {
   try {
     return typeof window !== 'undefined' && 
-           navigator.userAgent.toLowerCase().includes('android') &&
-           isNativePlatform();
+           navigator.userAgent.toLowerCase().includes('android');
   } catch {
     return false;
   }
@@ -51,32 +51,12 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     
     if (isAndroid()) {
       try {
-        // For Android, try to write to external storage first
-        const externalResult = await Filesystem.writeFile({
-          path: filename,
-          data: content,
-          directory: Directory.ExternalStorage,
-          recursive: true
-        });
-        
-        savedPath = externalResult.uri;
-        console.log('File saved to external storage:', savedPath);
-        
-        // Get URI for external storage file
-        const externalUri = await Filesystem.getUri({
-          directory: Directory.ExternalStorage,
-          path: filename
-        });
-        savedUri = externalUri.uri;
-        
-      } catch (externalError) {
-        console.log('External storage failed, trying Documents:', externalError);
-        
-        // Fallback to Documents directory
+        // For Android, try to write to Documents directory first
         const docResult = await Filesystem.writeFile({
           path: filename,
           data: content,
           directory: Directory.Documents,
+          encoding: isBase64 ? undefined : 'utf8'
         });
         
         savedPath = docResult.uri;
@@ -88,6 +68,27 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
           path: filename
         });
         savedUri = docUri.uri;
+        
+      } catch (docError) {
+        console.log('Documents directory failed, trying Cache:', docError);
+        
+        // Fallback to Cache directory
+        const cacheResult = await Filesystem.writeFile({
+          path: filename,
+          data: content,
+          directory: Directory.Cache,
+          encoding: isBase64 ? undefined : 'utf8'
+        });
+        
+        savedPath = cacheResult.uri;
+        console.log('File saved to Cache:', savedPath);
+        
+        // Get URI for cache file
+        const cacheUri = await Filesystem.getUri({
+          directory: Directory.Cache,
+          path: filename
+        });
+        savedUri = cacheUri.uri;
       }
     } else {
       // For iOS, use Documents directory
@@ -95,6 +96,7 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
         path: filename,
         data: content,
         directory: Directory.Documents,
+        encoding: isBase64 ? undefined : 'utf8'
       });
       
       savedPath = result.uri;
@@ -119,10 +121,8 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     });
     
     toast({
-      title: "File Ready!",
-      description: isAndroid() 
-        ? `File saved! Use the share dialog to save to Downloads or share with other apps.`
-        : `File saved and ready to share: ${filename}`,
+      title: "Export Complete!",
+      description: `File exported successfully. Use the share dialog to save to Downloads or share with other apps.`,
     });
 
     return { uri: savedPath };
@@ -130,14 +130,10 @@ const downloadFileOnMobile = async (content: string, filename: string, mimeType:
     console.error('Mobile file save error:', error);
     
     toast({
-      title: "Save Failed",
-      description: "Unable to save to device. Trying browser download...",
+      title: "Export Failed",
+      description: "Unable to export file on mobile. Please try again.",
       variant: "destructive"
     });
-    
-    // Fallback to web download
-    console.log('Falling back to web download');
-    downloadFileOnWeb(content, filename, mimeType);
     
     throw error;
   }
@@ -171,18 +167,6 @@ const downloadFileOnWeb = (content: string | Blob, filename: string, mimeType: s
           document.body.removeChild(link);
           URL.revokeObjectURL(dataUrl);
         }, 1000);
-        
-        // Try to open in new tab as backup for mobile browsers
-        setTimeout(() => {
-          const newWindow = window.open(dataUrl, '_blank');
-          if (!newWindow) {
-            console.log('Popup blocked, showing instructions');
-            toast({
-              title: "Download Ready",
-              description: "If download didn't start, please check your browser's download settings.",
-            });
-          }
-        }, 500);
         
         toast({
           title: "Download Started",
