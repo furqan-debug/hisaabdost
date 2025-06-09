@@ -50,9 +50,20 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify user exists
-    const { data: user } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-    if (!user.user) {
+    // Verify user exists using the correct admin method
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (userError) {
+      console.error("Error listing users:", userError);
+      return new Response(
+        JSON.stringify({ error: "Failed to verify user" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userExists = userData.users.some(user => user.email === email);
+    
+    if (!userExists) {
       // For security, we don't reveal if the email exists or not
       return new Response(
         JSON.stringify({ success: true, message: "If the email exists, a reset code has been sent" }),

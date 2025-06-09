@@ -83,10 +83,20 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get the user
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // Get all users and find the one with the matching email
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (userError || !userData.user) {
+    if (userError) {
+      console.error("Error listing users:", userError);
+      return new Response(
+        JSON.stringify({ error: "Failed to find user" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const user = userData.users.find(u => u.email === email);
+    
+    if (!user) {
       return new Response(
         JSON.stringify({ error: "User not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -95,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update the user's password
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      userData.user.id,
+      user.id,
       { password: newPassword }
     );
 
