@@ -23,6 +23,8 @@ const generateResetToken = (): string => {
 const sendResetEmail = async (email: string, resetToken: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
+  console.log("Checking Resend API key availability:", resendApiKey ? "Found" : "Not found");
+  
   if (!resendApiKey) {
     console.log("No Resend API key found, logging reset link instead");
     const resetLink = `hisaabdost://reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
@@ -116,6 +118,8 @@ const sendResetEmail = async (email: string, resetToken: string) => {
   `;
 
   try {
+    console.log("Attempting to send email via Resend API");
+    
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -123,15 +127,19 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "HisaabDost <noreply@resend.dev>",
+        from: "HisaabDost <onboarding@resend.dev>",
         to: [email],
         subject: "Reset Your HisaabDost Password",
         html: emailHtml,
       }),
     });
 
+    const responseData = await response.text();
+    console.log("Resend API response status:", response.status);
+    console.log("Resend API response:", responseData);
+
     if (!response.ok) {
-      throw new Error(`Email service error: ${response.status}`);
+      throw new Error(`Email service error: ${response.status} - ${responseData}`);
     }
 
     console.log("Reset email sent successfully to:", email);
