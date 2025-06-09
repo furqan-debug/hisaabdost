@@ -7,11 +7,13 @@ import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 type NewPasswordFormProps = {
-  onPasswordUpdate: (password: string) => Promise<void>;
+  email: string;
+  code: string;
+  onPasswordUpdate: (email: string, code: string, password: string) => Promise<void>;
   onBackToLogin: () => void;
 };
 
-export const NewPasswordForm = ({ onPasswordUpdate, onBackToLogin }: NewPasswordFormProps) => {
+export const NewPasswordForm = ({ email, code, onPasswordUpdate, onBackToLogin }: NewPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +37,7 @@ export const NewPasswordForm = ({ onPasswordUpdate, onBackToLogin }: NewPassword
 
     setLoading(true);
     try {
-      await onPasswordUpdate(newPassword);
+      await onPasswordUpdate(email, code, newPassword);
       setSuccess(true);
       
       // Redirect to login after a short delay

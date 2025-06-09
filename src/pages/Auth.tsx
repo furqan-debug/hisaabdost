@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -24,9 +23,13 @@ const Auth = () => {
   let verifyPasswordResetCode = async (email: string, token: string) => {
     console.error("Auth context not available");
   };
-  let updatePassword = async (newPassword: string) => {
+  let updatePassword = async (email: string, code: string, newPassword: string) => {
     console.error("Auth context not available");
   };
+  let sendPasswordResetCode = async (email: string) => {
+    console.error("Auth context not available");
+  };
+  
   try {
     const auth = useAuth();
     user = auth.user;
@@ -34,6 +37,7 @@ const Auth = () => {
     resendOtp = auth.resendOtp;
     verifyPasswordResetCode = auth.verifyPasswordResetCode;
     updatePassword = auth.updatePassword;
+    sendPasswordResetCode = auth.sendPasswordResetCode;
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
@@ -45,6 +49,7 @@ const Auth = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
   const navigate = useNavigate();
 
   if (user) {
@@ -67,17 +72,17 @@ const Auth = () => {
 
   const handlePasswordResetVerification = async (code: string) => {
     await verifyPasswordResetCode(resetEmail, code);
+    setResetCode(code);
     setShowPasswordReset(false);
     setShowNewPassword(true);
   };
 
   const handlePasswordResetResend = async () => {
-    const { sendPasswordResetCode } = useAuth();
     await sendPasswordResetCode(resetEmail);
   };
 
-  const handlePasswordUpdate = async (newPassword: string) => {
-    await updatePassword(newPassword);
+  const handlePasswordUpdate = async (email: string, code: string, newPassword: string) => {
+    await updatePassword(email, code, newPassword);
   };
 
   const resetToLogin = () => {
@@ -175,6 +180,8 @@ const Auth = () => {
               <CardContent className="px-8 pb-8">
                 {showNewPassword ? (
                   <NewPasswordForm
+                    email={resetEmail}
+                    code={resetCode}
                     onPasswordUpdate={handlePasswordUpdate}
                     onBackToLogin={resetToLogin}
                   />
