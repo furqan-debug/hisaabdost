@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+
+import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,29 +33,31 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <TooltipProvider>
-          <AuthProvider>
-            <FinnyProvider>
-              <div className="App">
-                <Routes>
-                  <Route path="/" element={<Navigate to="/auth" replace />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/auth/reset-password" element={<ResetPassword />} />
-                  <Route path="/app" element={<Layout />}>
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="expenses" element={<Expenses />} />
-                    <Route path="analytics" element={<Analytics />} />
-                    <Route path="budget" element={<Budget />} />
-                    <Route path="goals" element={<Goals />} />
-                    <Route path="history" element={<History />} />
-                    <Route path="manage-funds" element={<ManageFunds />} />
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Toaster />
-              </div>
-            </FinnyProvider>
-          </AuthProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <FinnyProvider>
+                <div className="App">
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/auth" replace />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/auth/reset-password" element={<ResetPassword />} />
+                    <Route path="/app" element={<Layout />}>
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="expenses" element={<Expenses />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="budget" element={<Budget />} />
+                      <Route path="goals" element={<Goals />} />
+                      <Route path="history" element={<History />} />
+                      <Route path="manage-funds" element={<ManageFunds />} />
+                      <Route index element={<Navigate to="dashboard" replace />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <Toaster />
+                </div>
+              </FinnyProvider>
+            </AuthProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
