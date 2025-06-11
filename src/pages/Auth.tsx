@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -57,11 +56,14 @@ const Auth = () => {
   const [resetToken, setResetToken] = useState("");
   const navigate = useNavigate();
 
-  // Handle deep link for password reset
+  // Handle deep link for password reset and URL parameters
   useEffect(() => {
     const isResetFromParams = searchParams.get('reset') === 'true';
+    const tokenFromParams = searchParams.get('token');
+    const emailFromParams = searchParams.get('email');
     
     if (isFromDeepLink && deepLinkData.token && deepLinkData.email) {
+      // Handle mobile deep link
       setResetEmail(deepLinkData.email);
       setResetToken(deepLinkData.token);
       setShowNewPassword(true);
@@ -69,8 +71,17 @@ const Auth = () => {
       setShowPasswordReset(false);
       setShowVerification(false);
       setIsSignUp(false);
+    } else if (tokenFromParams && emailFromParams) {
+      // Handle web reset link with token and email in URL
+      setResetEmail(emailFromParams);
+      setResetToken(tokenFromParams);
+      setShowNewPassword(true);
+      setShowForgotPassword(false);
+      setShowPasswordReset(false);
+      setShowVerification(false);
+      setIsSignUp(false);
     } else if (isResetFromParams && !isFromDeepLink) {
-      // Handle web fallback case
+      // Handle web fallback case without token
       setShowForgotPassword(true);
     }
   }, [isFromDeepLink, deepLinkData, searchParams]);

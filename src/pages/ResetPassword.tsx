@@ -1,18 +1,23 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Download } from "lucide-react";
+import { Smartphone, Download, Globe } from "lucide-react";
+import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
+import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const email = searchParams.get('email');
+  const [showWebForm, setShowWebForm] = useState(false);
+  const [appOpenAttempted, setAppOpenAttempted] = useState(false);
+  const { updatePassword } = usePasswordReset();
 
   useEffect(() => {
-    // Try to open the mobile app
-    if (token && email) {
+    // Try to open the mobile app automatically
+    if (token && email && !appOpenAttempted) {
       const deepLink = `hisaabdost://reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       
       // Create a hidden link and click it to try opening the app
@@ -22,11 +27,53 @@ const ResetPassword = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      setAppOpenAttempted(true);
+      
+      // After a short delay, show the web form option
+      setTimeout(() => {
+        setShowWebForm(true);
+      }, 3000);
     }
-  }, [token, email]);
+  }, [token, email, appOpenAttempted]);
+
+  const handlePasswordUpdate = async (email: string, token: string, newPassword: string) => {
+    await updatePassword(email, token, newPassword);
+  };
+
+  const resetToLogin = () => {
+    window.location.href = '/auth';
+  };
 
   if (!token || !email) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (showWebForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
+              <Globe className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle>Reset Your Password</CardTitle>
+            <CardDescription>
+              Enter your new password below to complete the reset process.
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <NewPasswordForm
+              email={email}
+              token={token}
+              onPasswordUpdate={handlePasswordUpdate}
+              onBackToLogin={resetToLogin}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -75,6 +122,20 @@ const ResetPassword = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Download HisaabDost
               </Button>
+              
+              <div className="pt-4 border-t">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Can't access the mobile app?
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowWebForm(true)}
+                  className="w-full"
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  Reset Password in Browser
+                </Button>
+              </div>
             </div>
           </div>
           
