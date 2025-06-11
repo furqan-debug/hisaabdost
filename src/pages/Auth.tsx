@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -9,8 +10,6 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
-import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
-import { useDeepLinkHandler } from "@/hooks/auth/useDeepLinkHandler";
 
 const Auth = () => {
   // Safe access to auth context with fallback mechanism
@@ -19,12 +18,6 @@ const Auth = () => {
     console.error("Auth context not available");
   };
   let resendOtp = async (email: string) => {
-    console.error("Auth context not available");
-  };
-  let verifyPasswordResetToken = async (email: string, token: string) => {
-    console.error("Auth context not available");
-  };
-  let updatePassword = async (email: string, token: string, newPassword: string) => {
     console.error("Auth context not available");
   };
   let sendPasswordResetCode = async (email: string) => {
@@ -36,55 +29,16 @@ const Auth = () => {
     user = auth.user;
     verifyOtp = auth.verifyOtp;
     resendOtp = auth.resendOtp;
-    verifyPasswordResetToken = auth.verifyPasswordResetToken;
-    updatePassword = auth.updatePassword;
     sendPasswordResetCode = auth.sendPasswordResetCode;
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
 
-  const [searchParams] = useSearchParams();
-  const { deepLinkData, isFromDeepLink, clearDeepLinkData } = useDeepLinkHandler();
-  
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetToken, setResetToken] = useState("");
   const navigate = useNavigate();
-
-  // Handle deep link for password reset and URL parameters
-  useEffect(() => {
-    const isResetFromParams = searchParams.get('reset') === 'true';
-    const tokenFromParams = searchParams.get('token');
-    const emailFromParams = searchParams.get('email');
-    
-    if (isFromDeepLink && deepLinkData.token && deepLinkData.email) {
-      // Handle mobile deep link
-      setResetEmail(deepLinkData.email);
-      setResetToken(deepLinkData.token);
-      setShowNewPassword(true);
-      setShowForgotPassword(false);
-      setShowPasswordReset(false);
-      setShowVerification(false);
-      setIsSignUp(false);
-    } else if (tokenFromParams && emailFromParams) {
-      // Handle web reset link with token and email in URL
-      setResetEmail(emailFromParams);
-      setResetToken(tokenFromParams);
-      setShowNewPassword(true);
-      setShowForgotPassword(false);
-      setShowPasswordReset(false);
-      setShowVerification(false);
-      setIsSignUp(false);
-    } else if (isResetFromParams && !isFromDeepLink) {
-      // Handle web fallback case without token
-      setShowForgotPassword(true);
-    }
-  }, [isFromDeepLink, deepLinkData, searchParams]);
 
   if (user) {
     return <Navigate to="/app/dashboard" replace />;
@@ -99,38 +53,14 @@ const Auth = () => {
   };
 
   const handlePasswordResetCodeSent = (email: string) => {
-    setResetEmail(email);
-    // Note: No automatic transition since user needs to click email link
-    // Deep link will handle the transition to new password form
-  };
-
-  const handlePasswordResetVerification = async (code: string) => {
-    await verifyPasswordResetToken(resetEmail, code);
-    setResetToken(code);
-    setShowPasswordReset(false);
-    setShowNewPassword(true);
-  };
-
-  const handlePasswordResetResend = async () => {
-    await sendPasswordResetCode(resetEmail);
-  };
-
-  const handlePasswordUpdate = async (email: string, token: string, newPassword: string) => {
-    await updatePassword(email, token, newPassword);
-    // Clear deep link data after successful password update
-    clearDeepLinkData();
+    // Just show success message, user will get email with web link
   };
 
   const resetToLogin = () => {
     setIsSignUp(false);
     setShowForgotPassword(false);
     setShowVerification(false);
-    setShowPasswordReset(false);
-    setShowNewPassword(false);
     setVerificationEmail("");
-    setResetEmail("");
-    setResetToken("");
-    clearDeepLinkData();
   };
 
   const cardVariants = {
@@ -159,8 +89,6 @@ const Auth = () => {
   const getCardTitle = () => {
     if (showVerification) return "Verify your email";
     if (showForgotPassword) return "Reset Password";
-    if (showPasswordReset) return "Enter Reset Code";
-    if (showNewPassword) return "Create New Password";
     if (isSignUp) return "Create an account";
     return "Welcome back";
   };
@@ -168,8 +96,6 @@ const Auth = () => {
   const getCardDescription = () => {
     if (showVerification) return `Enter the 6-digit verification code sent to ${verificationEmail}`;
     if (showForgotPassword) return "Enter your email and we'll send you a reset link";
-    if (showPasswordReset) return `Enter the 6-digit code sent to ${resetEmail}`;
-    if (showNewPassword) return isFromDeepLink ? "Enter your new password to complete the reset" : "Enter your new password";
     if (isSignUp) return "Sign up to start managing your expenses";
     return "Sign in to your account";
   };
@@ -185,7 +111,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <AnimatePresence mode="wait">
           <motion.div
-            key={showNewPassword ? "newpassword" : showPasswordReset ? "passwordreset" : showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"}
+            key={showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"}
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -216,24 +142,7 @@ const Auth = () => {
 
               {/* Card Content */}
               <CardContent className="px-8 pb-8">
-                {showNewPassword ? (
-                  <NewPasswordForm
-                    email={resetEmail}
-                    token={resetToken}
-                    onPasswordUpdate={handlePasswordUpdate}
-                    onBackToLogin={resetToLogin}
-                  />
-                ) : showPasswordReset ? (
-                  <VerificationForm
-                    email={resetEmail}
-                    onVerify={handlePasswordResetVerification}
-                    onResend={handlePasswordResetResend}
-                    onBackToLogin={() => {
-                      setShowPasswordReset(false);
-                      setShowForgotPassword(true);
-                    }}
-                  />
-                ) : showVerification ? (
+                {showVerification ? (
                   <VerificationForm
                     email={verificationEmail}
                     onVerify={handleVerification}

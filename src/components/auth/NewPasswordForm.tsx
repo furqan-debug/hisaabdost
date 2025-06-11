@@ -3,12 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Lock, Eye, EyeOff } from "lucide-react";
 
 type NewPasswordFormProps = {
   email: string;
-  token: string; // Changed from code to token
+  token: string;
   onPasswordUpdate: (email: string, token: string, password: string) => Promise<void>;
   onBackToLogin: () => void;
 };
@@ -19,7 +18,6 @@ export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const passwordsMatch = newPassword === confirmPassword && newPassword.length > 0;
   const isValidPassword = newPassword.length >= 6;
@@ -27,23 +25,13 @@ export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isValidPassword) {
-      return;
-    }
-    
-    if (!passwordsMatch) {
+    if (!isValidPassword || !passwordsMatch) {
       return;
     }
 
     setLoading(true);
     try {
       await onPasswordUpdate(email, token, newPassword);
-      setSuccess(true);
-      
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        onBackToLogin();
-      }, 2000);
     } catch (error) {
       // Error is handled in the hook
     } finally {
@@ -106,24 +94,11 @@ export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin 
         )}
       </div>
 
-      {success && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex p-3 rounded-md bg-primary/10 text-primary items-start gap-3"
-        >
-          <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <p className="text-sm">
-            Password updated successfully! Redirecting you to login...
-          </p>
-        </motion.div>
-      )}
-
       <div className="flex flex-col space-y-4">
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={loading || !isValidPassword || !passwordsMatch || success}
+          disabled={loading || !isValidPassword || !passwordsMatch}
         >
           {loading ? (
             <div className="flex items-center gap-2">

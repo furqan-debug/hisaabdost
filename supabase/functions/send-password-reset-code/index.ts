@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -26,13 +27,12 @@ const sendResetEmail = async (email: string, resetToken: string) => {
   
   if (!resendApiKey) {
     console.log("No Resend API key found, logging reset link instead");
-    const resetLink = `hisaabdost://reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
     console.log(`Password reset link for ${email}: ${resetLink}`);
     return;
   }
 
-  const resetLink = `hisaabdost://reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-  const webFallbackLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+  const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -52,7 +52,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         
         <p style="font-size: 16px; margin-bottom: 25px;">
           We received a request to reset your password for your HisaabDost account. 
-          Click the button below to reset your password:
+          Click the button below to reset your password in your web browser:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
@@ -66,34 +66,16 @@ const sendResetEmail = async (email: string, resetToken: string) => {
                     font-size: 16px;
                     display: inline-block;
                     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-            Reset Password in App
+            Reset Password
           </a>
         </div>
         
         <p style="font-size: 14px; color: #666; margin: 25px 0;">
-          If the button doesn't work, you can also copy and paste this link into your mobile device:
+          If the button doesn't work, you can copy and paste this link into your browser:
         </p>
         
         <div style="background: #fff; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; word-break: break-all; font-family: monospace; font-size: 12px;">
           ${resetLink}
-        </div>
-        
-        <p style="font-size: 14px; color: #666; margin: 25px 0;">
-          If you don't have the HisaabDost app installed, you can reset your password using this web link:
-        </p>
-        
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${webFallbackLink}" 
-             style="background: #f0f0f0; 
-                    color: #333; 
-                    padding: 12px 25px; 
-                    text-decoration: none; 
-                    border-radius: 6px; 
-                    font-size: 14px;
-                    display: inline-block;
-                    border: 2px solid #ddd;">
-            Reset Password in Browser
-          </a>
         </div>
         
         <div style="border-top: 1px solid #ddd; margin-top: 30px; padding-top: 20px;">
@@ -104,6 +86,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
             <li>This link will expire in 15 minutes for security</li>
             <li>If you didn't request this reset, please ignore this email</li>
             <li>Never share this link with anyone</li>
+            <li>After resetting your password, you can use it to log in to the mobile app</li>
           </ul>
         </div>
         
