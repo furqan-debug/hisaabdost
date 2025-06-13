@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useSignOut } from '@/hooks/auth/useSignOut';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/utils/currencyUtils';
+import { toast } from '@/components/ui/use-toast';
 
 interface SettingsSidebarProps {
   isOpen: boolean;
@@ -48,9 +49,25 @@ const SettingsSidebar = ({
   };
 
   const handleCurrencyChange = (value: string) => {
-    console.log('Currency changed to:', value);
-    setCurrencyCode(value as CurrencyCode);
+    console.log('Currency changing from:', currencyCode, 'to:', value);
+    try {
+      setCurrencyCode(value as CurrencyCode);
+      console.log('Currency change successful');
+      toast({
+        title: "Currency Updated",
+        description: `Currency changed to ${value}`,
+      });
+    } catch (error) {
+      console.error('Error changing currency:', error);
+      toast({
+        title: "Error",
+        description: "Failed to change currency",
+        variant: "destructive"
+      });
+    }
   };
+
+  console.log('Current currency code in settings:', currencyCode);
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -80,13 +97,18 @@ const SettingsSidebar = ({
               <h2 className="font-medium">Currency</h2>
             </div>
             <div className="ml-11">
+              <p className="text-xs text-muted-foreground mb-2">Current: {currencyCode}</p>
               <Select value={currencyCode} onValueChange={handleCurrencyChange}>
-                <SelectTrigger className="w-full bg-background">
+                <SelectTrigger className="w-full bg-background border-input">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 bg-popover border shadow-lg z-50">
+                <SelectContent className="max-h-60 bg-popover border shadow-lg z-[9999]">
                   {CURRENCY_OPTIONS.map(currency => (
-                    <SelectItem key={currency.code} value={currency.code}>
+                    <SelectItem 
+                      key={currency.code} 
+                      value={currency.code}
+                      className="cursor-pointer hover:bg-accent focus:bg-accent"
+                    >
                       <div className="flex items-center gap-3">
                         <span className="font-medium text-muted-foreground min-w-[24px]">
                           {currency.symbol}
