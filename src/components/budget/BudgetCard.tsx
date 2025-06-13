@@ -14,10 +14,10 @@ interface BudgetCardProps {
 
 export function BudgetCard({ title, budgeted, spent, remaining, progress }: BudgetCardProps) {
   const isOverBudget = spent > budgeted;
-  const { currencyCode } = useCurrency();
+  const { currencyCode, version } = useCurrency();
   
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" key={`budget-card-${title}-${version}`}>
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-medium">{title}</CardTitle>

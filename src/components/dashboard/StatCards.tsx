@@ -36,7 +36,7 @@ export const StatCards = ({
   walletBalance,
 }: StatCardsProps) => {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
+  const { currencyCode, version } = useCurrency();
   const { selectedMonth } = useMonthContext();
   
   // Get percentage changes from the hook
@@ -53,7 +53,7 @@ export const StatCards = ({
   }
 
   return (
-    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5">
+    <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5" key={`stat-cards-${version}`}>
       <OnboardingTooltip
         content="Track your wallet balance including income and added funds"
         defaultOpen={isNewUser}

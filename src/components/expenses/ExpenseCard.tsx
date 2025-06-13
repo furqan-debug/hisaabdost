@@ -23,7 +23,7 @@ export function ExpenseCard({
   onClick 
 }: ExpenseCardProps) {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
+  const { currencyCode, version } = useCurrency();
   
   // Get category color based on category name
   const getCategoryColor = () => {
@@ -49,6 +49,7 @@ export function ExpenseCard({
         isMobile ? "my-2" : ""
       )} 
       onClick={onClick}
+      key={`expense-card-${description}-${amount}-${version}`}
     >
       <CardContent className="p-0">
         <div className="flex items-center">

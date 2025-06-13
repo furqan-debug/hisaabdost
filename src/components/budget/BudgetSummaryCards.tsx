@@ -23,7 +23,7 @@ export const BudgetSummaryCards = ({
   isLoading = false
 }: BudgetSummaryCardsProps) => {
   const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
+  const { currencyCode, version } = useCurrency();
   
   const exceedsBudget = totalBudget > monthlyIncome && monthlyIncome > 0;
   const totalSpent = totalBudget - remainingBalance;
@@ -42,7 +42,7 @@ export const BudgetSummaryCards = ({
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4" key={`budget-summary-${version}`}>
       {exceedsBudget && (
         <Alert variant="destructive" className="rounded-lg w-full">
           <AlertCircle className="h-4 w-4" />

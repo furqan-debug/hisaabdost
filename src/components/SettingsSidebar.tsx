@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -23,29 +22,11 @@ const SettingsSidebar = ({
   onClose
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
-  const { currencyCode, setCurrencyCode } = useCurrency();
+  const { currencyCode, setCurrencyCode, version } = useCurrency();
   const { preferences, updatePreferences, isUpdating } = useCarryoverPreferences();
   const { user } = useAuth();
   const { signOut } = useSignOut();
   const navigate = useNavigate();
-  
-  // Local state to force re-renders
-  const [localCurrency, setLocalCurrency] = useState(currencyCode);
-
-  // Sync local state with context
-  useEffect(() => {
-    setLocalCurrency(currencyCode);
-  }, [currencyCode]);
-
-  // Listen for currency changes
-  useEffect(() => {
-    const handleCurrencyChange = (e: CustomEvent) => {
-      setLocalCurrency(e.detail);
-    };
-
-    window.addEventListener('currency-changed', handleCurrencyChange as EventListener);
-    return () => window.removeEventListener('currency-changed', handleCurrencyChange as EventListener);
-  }, []);
 
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
@@ -67,12 +48,9 @@ const SettingsSidebar = ({
   };
 
   const handleCurrencyChange = (value: string) => {
-    console.log('Currency changing from:', localCurrency, 'to:', value);
+    console.log('Currency changing from:', currencyCode, 'to:', value);
     try {
       const newCurrency = value as CurrencyCode;
-      
-      // Update local state immediately for UI feedback
-      setLocalCurrency(newCurrency);
       
       // Update the context
       setCurrencyCode(newCurrency);
@@ -92,7 +70,7 @@ const SettingsSidebar = ({
     }
   };
 
-  console.log('Current currency code in settings:', localCurrency);
+  console.log('Current currency code in settings:', currencyCode, 'version:', version);
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -122,11 +100,11 @@ const SettingsSidebar = ({
               <h2 className="font-medium">Currency</h2>
             </div>
             <div className="ml-11">
-              <p className="text-xs text-muted-foreground mb-2">Current: {localCurrency}</p>
+              <p className="text-xs text-muted-foreground mb-2">Current: {currencyCode}</p>
               <Select 
-                value={localCurrency} 
+                value={currencyCode} 
                 onValueChange={handleCurrencyChange}
-                key={`currency-select-${localCurrency}`}
+                key={`currency-select-${currencyCode}-${version}`}
               >
                 <SelectTrigger className="w-full bg-background border-input">
                   <SelectValue placeholder="Select currency" />
