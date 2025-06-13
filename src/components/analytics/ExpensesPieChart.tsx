@@ -42,7 +42,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const mainCategory = data.length > 0 ? data[0].name : "No data";
 
   return (
-    <div className="relative w-full flex flex-col items-center pb-6 px-4">
+    <div className="w-full flex flex-col items-center space-y-6 px-4 py-2">
       {/* Chart Container */}
       <div className="relative w-full h-[280px] flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
@@ -128,7 +128,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.3 }}
-        className="mt-8 w-full"
+        className="w-full"
       >
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-lg mx-auto">
           {data.slice(0, isMobile ? 4 : 6).map((entry, index) => (
