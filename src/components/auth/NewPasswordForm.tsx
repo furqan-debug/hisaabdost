@@ -9,10 +9,9 @@ type NewPasswordFormProps = {
   email: string;
   token: string;
   onPasswordUpdate: (email: string, token: string, password: string) => Promise<void>;
-  onBackToLogin: () => void;
 };
 
-export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin }: NewPasswordFormProps) => {
+export const NewPasswordForm = ({ email, token, onPasswordUpdate }: NewPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -94,32 +93,20 @@ export const NewPasswordForm = ({ email, token, onPasswordUpdate, onBackToLogin 
         )}
       </div>
 
-      <div className="flex flex-col space-y-4">
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={loading || !isValidPassword || !passwordsMatch}
-        >
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <span>Updating Password...</span>
-            </div>
-          ) : (
-            "Update Password"
-          )}
-        </Button>
-        
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full"
-          onClick={onBackToLogin}
-          disabled={loading}
-        >
-          Back to login
-        </Button>
-      </div>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || !isValidPassword || !passwordsMatch}
+      >
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+            <span>Updating Password...</span>
+          </div>
+        ) : (
+          "Update Password"
+        )}
+      </Button>
     </form>
   );
 };

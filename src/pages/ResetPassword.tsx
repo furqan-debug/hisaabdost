@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { CheckCircle, Lock } from "lucide-react";
 import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
 import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
@@ -17,10 +16,6 @@ const ResetPassword = () => {
   const handlePasswordUpdate = async (email: string, token: string, newPassword: string) => {
     await updatePassword(email, token, newPassword);
     setPasswordUpdated(true);
-  };
-
-  const handleGoToLogin = () => {
-    window.location.href = '/auth';
   };
 
   if (!token || !email) {
@@ -40,15 +35,6 @@ const ResetPassword = () => {
               Your password has been updated. You can now log in to the mobile app using your new password.
             </CardDescription>
           </CardHeader>
-          
-          <CardContent className="text-center">
-            <Button 
-              onClick={handleGoToLogin}
-              className="w-full"
-            >
-              Go to Login
-            </Button>
-          </CardContent>
         </Card>
       </div>
     );
@@ -72,7 +58,6 @@ const ResetPassword = () => {
             email={email}
             token={token}
             onPasswordUpdate={handlePasswordUpdate}
-            onBackToLogin={handleGoToLogin}
           />
         </CardContent>
       </Card>
