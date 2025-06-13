@@ -22,11 +22,12 @@
   }
   
   .pie-chart-container {
-    @apply max-w-[300px] mx-auto min-h-[280px] overflow-visible;
+    @apply max-w-[300px] mx-auto overflow-visible;
+    min-height: auto !important;
   }
 
   .expense-chart-legend {
-    @apply flex flex-wrap justify-center gap-1.5 mt-4;
+    @apply flex flex-wrap justify-center gap-1.5 mt-3;
   }
 
   .expense-chart-legend-item {
@@ -72,15 +73,23 @@
   .recharts-layer.recharts-cartesian-axis-tick text {
     @apply fill-current opacity-80 text-[10px];
   }
+
+  /* Remove forced heights that cause scrolling */
+  .analytics-overview-card {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+  }
 }
 
 /* Chart improvements for all screen sizes */
 .chart-wrapper {
-  @apply w-full h-full relative px-0 overflow-visible;
+  @apply w-full relative px-0 overflow-visible;
+  height: auto !important;
 }
 
 .recharts-default-legend {
-  @apply flex flex-wrap justify-center gap-1.5 mt-4;
+  @apply flex flex-wrap justify-center gap-1.5 mt-3;
 }
 
 .recharts-layer.recharts-pie-labels text {
@@ -215,10 +224,12 @@
   @apply mx-auto max-w-[90%] overflow-visible;
 }
 
-/* Make sure the pie chart has enough vertical space */
-.pie-chart-container {
-  min-height: 280px;
-  margin: 0 auto;
-  position: relative;
-  overflow: visible;
+/* Ensure no internal scrolling in analytics cards */
+.analytics-overview-card,
+.analytics-overview-card .chart-container,
+.analytics-overview-card .recharts-wrapper {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }

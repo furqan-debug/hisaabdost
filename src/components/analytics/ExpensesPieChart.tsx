@@ -42,9 +42,9 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const mainCategory = data.length > 0 ? data[0].name : "No data";
 
   return (
-    <div className="w-full flex flex-col items-center space-y-6 px-4 py-2">
-      {/* Chart Container */}
-      <div className="relative w-full h-[280px] flex items-center justify-center">
+    <div className="w-full flex flex-col items-center px-4 py-2">
+      {/* Chart Container - Responsive height */}
+      <div className="relative w-full flex items-center justify-center" style={{ height: isMobile ? '240px' : '280px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -53,8 +53,8 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={isMobile ? 70 : 85}
-              outerRadius={isMobile ? 95 : 120}
+              innerRadius={isMobile ? 60 : 85}
+              outerRadius={isMobile ? 85 : 120}
               paddingAngle={2}
               startAngle={90}
               endAngle={-270}
@@ -110,9 +110,11 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.3 }}
-            className="bg-background/80 backdrop-blur-sm rounded-full p-4 shadow-sm border"
+            className="bg-background/80 backdrop-blur-sm rounded-full p-3 shadow-sm border"
           >
-            <div className="text-3xl font-bold text-primary">{mainPercentage}%</div>
+            <div className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-primary`}>
+              {mainPercentage}%
+            </div>
             <div className="text-sm text-muted-foreground mt-1 font-medium">
               {mainCategory}
             </div>
@@ -123,14 +125,14 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
         </div>
       </div>
 
-      {/* Enhanced Legend */}
+      {/* Compact Legend */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.3 }}
-        className="w-full"
+        className="w-full mt-4"
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-lg mx-auto">
+        <div className={`grid gap-2 max-w-lg mx-auto ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
           {data.slice(0, isMobile ? 4 : 6).map((entry, index) => (
             <motion.div
               key={index}
@@ -140,7 +142,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
               className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
             >
               <div 
-                className="w-3 h-3 rounded-full flex-shrink-0" 
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
                 style={{ backgroundColor: entry.color }}
               />
               <div className="flex-1 min-w-0">
@@ -160,15 +162,15 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
           ))}
         </div>
 
-        {/* Total Display */}
+        {/* Compact Total Display */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.3 }}
-          className="mt-6 text-center p-3 rounded-lg bg-primary/5 border border-primary/10"
+          className="mt-4 text-center p-3 rounded-lg bg-primary/5 border border-primary/10"
         >
           <div className="text-sm text-muted-foreground">Total Expenses</div>
-          <div className="text-2xl font-bold text-primary">
+          <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-primary`}>
             {formatCurrency(total, currencyCode)}
           </div>
         </motion.div>
