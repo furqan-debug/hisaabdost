@@ -33,24 +33,25 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
 
-  // Custom setter that also saves to localStorage
+  // Custom setter that also saves to localStorage and forces global update
   const setCurrencyCode = (code: CurrencyCode) => {
     console.log('Setting currency code:', code);
     try {
-      // Update state first
+      // Update state
       setCurrencyCodeState(code);
       
       // Save to localStorage
       localStorage.setItem('preferred-currency', code);
       console.log('Currency saved to localStorage:', code);
       
-      // Dispatch custom event to notify other components
+      // Dispatch custom event to notify other components immediately
       window.dispatchEvent(new CustomEvent('currency-changed', { detail: code }));
       
-      // Force a re-render by triggering a state update
+      // Force a page reload to ensure all components get the new currency
+      // This is a simple solution to ensure all formatCurrency calls update
       setTimeout(() => {
-        setCurrencyCodeState(code);
-      }, 0);
+        window.location.reload();
+      }, 100);
       
     } catch (error) {
       console.error('Error saving currency to localStorage:', error);
