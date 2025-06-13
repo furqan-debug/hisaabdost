@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft } from 'lucide-react';
