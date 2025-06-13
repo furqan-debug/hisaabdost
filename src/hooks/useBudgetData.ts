@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
@@ -5,6 +6,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
+import { exportExpensesToCSV } from "@/utils/exportUtils";
 
 export function useBudgetData() {
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
@@ -128,25 +130,28 @@ export function useBudgetData() {
   // Define isLoading variable before it's used
   const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading || incomeLoading;
 
-  const exportBudgetData = () => {
+  const exportBudgetData = async () => {
     if (!budgets) return;
 
-    const csvContent = [
-      ['Category', 'Amount', 'Period', 'Carry Forward', 'Created At'].join(','),
-      ...budgets.map(budget => [
-        budget.category,
-        budget.amount,
-        budget.period,
-        budget.carry_forward,
-        format(new Date(budget.created_at), 'yyyy-MM-dd')
-      ].join(','))
-    ].join('\n');
+    console.log('Starting budget export for mobile...');
+    
+    // Convert budget data to expense-like format for the mobile-optimized export function
+    const budgetExpenses = budgets.map(budget => ({
+      id: budget.id,
+      date: budget.created_at,
+      description: `Budget: ${budget.category}`,
+      category: budget.category,
+      amount: Number(budget.amount),
+      payment: budget.period,
+      notes: `Period: ${budget.period}, Carry Forward: ${budget.carry_forward}`,
+      user_id: budget.user_id,
+      created_at: budget.created_at,
+      is_recurring: false,
+      receipt_url: ''
+    }));
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `budget_data_${format(selectedMonth, 'yyyy-MM')}.csv`;
-    link.click();
+    // Use the mobile-optimized CSV export function
+    await exportExpensesToCSV(budgetExpenses);
   };
 
   // Transform budgets data for notification triggers
