@@ -63,17 +63,17 @@ export const BudgetTabs = ({
       transition={{ duration: 0.3 }}
     >
       <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full max-w-full">
-        <div className="w-full flex justify-center mb-6">
-          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl w-full max-w-4xl h-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 w-full">
+        <div className="w-full flex justify-center mb-8">
+          <TabsList className="inline-flex bg-background/60 backdrop-blur-md border border-border/30 p-1.5 rounded-2xl shadow-lg overflow-x-auto">
+            <div className="flex gap-1 min-w-max">
               {tabs.map(tab => (
                 <TabsTrigger 
                   key={tab.id} 
                   value={tab.id} 
-                  className="flex items-center justify-center gap-2 rounded-lg px-2 py-3 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/50 min-h-[50px] whitespace-nowrap flex-col md:flex-row"
+                  className="inline-flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-accent/50 whitespace-nowrap min-w-[120px] justify-center"
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-center leading-tight">
+                  <span className="font-medium">
                     {tab.label}
                   </span>
                 </TabsTrigger>
@@ -84,27 +84,47 @@ export const BudgetTabs = ({
 
         <div className="w-full max-w-full overflow-hidden">
           <TabsContent value="overview" className="mt-0 w-full max-w-full overflow-hidden">
-            <div className="w-full max-w-full overflow-hidden">
+            <motion.div 
+              className="w-full max-w-full overflow-hidden"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <BudgetOverview budgets={budgets} />
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="categories" className="mt-0 w-full max-w-full overflow-hidden">
-            <div className="w-full max-w-full overflow-hidden">
+            <motion.div 
+              className="w-full max-w-full overflow-hidden"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="transactions" className="mt-0 w-full max-w-full overflow-hidden">
-            <div className="w-full max-w-full overflow-hidden">
+            <motion.div 
+              className="w-full max-w-full overflow-hidden"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <BudgetTransactions budgets={budgets} />
-            </div>
+            </motion.div>
           </TabsContent>
 
           <TabsContent value="comparison" className="mt-0 w-full max-w-full overflow-hidden">
-            <div className="w-full max-w-full overflow-hidden">
+            <motion.div 
+              className="w-full max-w-full overflow-hidden"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <BudgetComparison budgets={budgets} />
-            </div>
+            </motion.div>
           </TabsContent>
         </div>
       </Tabs>
