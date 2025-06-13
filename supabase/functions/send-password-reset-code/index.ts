@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -27,12 +26,12 @@ const sendResetEmail = async (email: string, resetToken: string) => {
   
   if (!resendApiKey) {
     console.log("No Resend API key found, logging reset link instead");
-    const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
     console.log(`Password reset link for ${email}: ${resetLink}`);
     return;
   }
 
-  const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+  const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -52,7 +51,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         
         <p style="font-size: 16px; margin-bottom: 25px;">
           We received a request to reset your password for your HisaabDost account. 
-          Click the button below to reset your password in your web browser:
+          Click the button below to reset your password:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
