@@ -42,9 +42,9 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const mainCategory = data.length > 0 ? data[0].name : "No data";
 
   return (
-    <div className="w-full flex flex-col items-center px-4 py-2">
-      {/* Chart Container - Responsive height */}
-      <div className="relative w-full flex items-center justify-center" style={{ height: isMobile ? '240px' : '280px' }}>
+    <div className="w-full space-y-4">
+      {/* Chart Container */}
+      <div className="relative w-full flex items-center justify-center h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -125,14 +125,14 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
         </div>
       </div>
 
-      {/* Compact Legend */}
+      {/* Category Legend */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.3 }}
-        className="w-full mt-4"
+        className="w-full"
       >
-        <div className={`grid gap-2 max-w-lg mx-auto ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        <div className={`grid gap-2 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
           {data.slice(0, isMobile ? 4 : 6).map((entry, index) => (
             <motion.div
               key={index}
@@ -161,19 +161,19 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
             </motion.div>
           ))}
         </div>
+      </motion.div>
 
-        {/* Compact Total Display */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.3 }}
-          className="mt-4 text-center p-3 rounded-lg bg-primary/5 border border-primary/10"
-        >
-          <div className="text-sm text-muted-foreground">Total Expenses</div>
-          <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-primary`}>
-            {formatCurrency(total, currencyCode)}
-          </div>
-        </motion.div>
+      {/* Total Expenses */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.3 }}
+        className="text-center p-3 rounded-lg bg-primary/5 border border-primary/10"
+      >
+        <div className="text-sm text-muted-foreground">Total Expenses</div>
+        <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-primary`}>
+          {formatCurrency(total, currencyCode)}
+        </div>
       </motion.div>
     </div>
   );

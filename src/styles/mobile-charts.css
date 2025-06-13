@@ -23,6 +23,7 @@
   
   .pie-chart-container {
     @apply max-w-[300px] mx-auto overflow-visible;
+    height: auto !important;
     min-height: auto !important;
   }
 
@@ -62,7 +63,8 @@
   }
 
   .trends-chart-wrapper {
-    @apply h-[220px] w-full overflow-visible;
+    @apply w-full overflow-visible;
+    height: auto !important;
   }
   
   .trends-chart-container {
@@ -217,7 +219,8 @@
 }
 
 .trends-chart-wrapper {
-  @apply relative w-full h-[220px] overflow-visible;
+  @apply relative w-full overflow-visible;
+  height: auto !important;
 }
 
 .trends-chart-container {
@@ -231,5 +234,21 @@
   height: auto !important;
   min-height: auto !important;
   max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Specific fixes for Category Breakdown card */
+.category-breakdown-card {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.category-breakdown-card .chart-container,
+.category-breakdown-card .recharts-wrapper,
+.category-breakdown-card .recharts-responsive-container {
+  height: auto !important;
+  min-height: auto !important;
   overflow: visible !important;
 }

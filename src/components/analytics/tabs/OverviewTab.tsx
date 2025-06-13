@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensesPieChart } from "../ExpensesPieChart";
-import { ChartContainer } from "@/components/ui/chart";
 
 interface OverviewTabProps {
   expenses: any[];
@@ -24,10 +23,8 @@ export function OverviewTab({
           Detailed view of your spending by category
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-2 pb-4">
-        <ChartContainer config={config} className="w-full">
-          <ExpensesPieChart expenses={expenses} />
-        </ChartContainer>
+      <CardContent className="px-4 pb-4">
+        <ExpensesPieChart expenses={expenses} />
       </CardContent>
     </Card>
   );
