@@ -6,7 +6,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
-import { exportExpensesToCSV } from "@/utils/exportUtils";
+import { toast } from "@/components/ui/use-toast";
 
 export function useBudgetData() {
   const { selectedMonth, getCurrentMonthData, isLoading: isMonthDataLoading, updateMonthData } = useMonthContext();
@@ -131,27 +131,85 @@ export function useBudgetData() {
   const isLoading = budgetsLoading || expensesLoading || isMonthDataLoading || incomeLoading;
 
   const exportBudgetData = async () => {
-    if (!budgets) return;
+    if (!budgets || budgets.length === 0) {
+      toast({
+        title: "No Budget Data",
+        description: "No budget data available to export.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    console.log('Starting budget export for mobile...');
-    
-    // Convert budget data to expense-like format for the mobile-optimized export function
-    const budgetExpenses = budgets.map(budget => ({
-      id: budget.id,
-      date: budget.created_at,
-      description: `Budget: ${budget.category}`,
-      category: budget.category,
-      amount: Number(budget.amount),
-      payment: budget.period,
-      notes: `Period: ${budget.period}, Carry Forward: ${budget.carry_forward}`,
-      user_id: budget.user_id,
-      created_at: budget.created_at,
-      is_recurring: false,
-      receipt_url: ''
-    }));
+    try {
+      console.log('Starting budget export...');
+      
+      // Add UTF-8 BOM for proper encoding
+      const BOM = '\uFEFF';
+      
+      // Calculate spending for each budget category
+      const budgetWithSpending = budgets.map(budget => {
+        const categoryExpenses = expenses?.filter(expense => expense.category === budget.category) || [];
+        const totalSpent = categoryExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        const remaining = Number(budget.amount) - totalSpent;
+        const usagePercentage = Number(budget.amount) > 0 ? (totalSpent / Number(budget.amount)) * 100 : 0;
+        
+        return {
+          category: budget.category,
+          budgetAmount: Number(budget.amount),
+          period: budget.period,
+          totalSpent: totalSpent,
+          remaining: remaining,
+          usagePercentage: usagePercentage.toFixed(1),
+          carryForward: budget.carry_forward ? 'Yes' : 'No',
+          createdAt: format(new Date(budget.created_at), 'yyyy-MM-dd')
+        };
+      });
+      
+      // Add Hisaab Dost branding in header
+      const headers = ['Category', 'Budget Amount', 'Period', 'Total Spent', 'Remaining', 'Usage %', 'Carry Forward', 'Created Date'];
+      const csvContent = BOM + [
+        'Hisaab Dost - Budget Report',
+        `Generated on: ${format(new Date(), 'PPP')}`,
+        `Report Period: ${format(selectedMonth, 'MMMM yyyy')}`,
+        '',
+        headers.join(','),
+        ...budgetWithSpending.map(budget => [
+          `"${budget.category}"`,
+          budget.budgetAmount,
+          budget.period,
+          budget.totalSpent,
+          budget.remaining,
+          `${budget.usagePercentage}%`,
+          budget.carryForward,
+          budget.createdAt
+        ].join(','))
+      ].join('\n');
 
-    // Use the mobile-optimized CSV export function
-    await exportExpensesToCSV(budgetExpenses);
+      const filename = `Hisaab_Dost_Budget_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      toast({
+        title: "Export Complete",
+        description: "Budget data exported successfully as CSV file.",
+      });
+
+    } catch (error) {
+      console.error('Error exporting budget data:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export budget data. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Transform budgets data for notification triggers
