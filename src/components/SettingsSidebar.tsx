@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -27,6 +28,24 @@ const SettingsSidebar = ({
   const { user } = useAuth();
   const { signOut } = useSignOut();
   const navigate = useNavigate();
+  
+  // Local state to force re-renders
+  const [localCurrency, setLocalCurrency] = useState(currencyCode);
+
+  // Sync local state with context
+  useEffect(() => {
+    setLocalCurrency(currencyCode);
+  }, [currencyCode]);
+
+  // Listen for currency changes
+  useEffect(() => {
+    const handleCurrencyChange = (e: CustomEvent) => {
+      setLocalCurrency(e.detail);
+    };
+
+    window.addEventListener('currency-changed', handleCurrencyChange as EventListener);
+    return () => window.removeEventListener('currency-changed', handleCurrencyChange as EventListener);
+  }, []);
 
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
@@ -48,17 +67,20 @@ const SettingsSidebar = ({
   };
 
   const handleCurrencyChange = (value: string) => {
-    console.log('Currency changing from:', currencyCode, 'to:', value);
+    console.log('Currency changing from:', localCurrency, 'to:', value);
     try {
       const newCurrency = value as CurrencyCode;
       
-      // Update the context - this will also reload the page
+      // Update local state immediately for UI feedback
+      setLocalCurrency(newCurrency);
+      
+      // Update the context
       setCurrencyCode(newCurrency);
       
-      console.log('Currency change initiated');
+      console.log('Currency change completed');
       toast({
         title: "Currency Updated",
-        description: `Currency changed to ${value}. Page will refresh to apply changes.`,
+        description: `Currency changed to ${value}`,
       });
     } catch (error) {
       console.error('Error changing currency:', error);
@@ -70,7 +92,7 @@ const SettingsSidebar = ({
     }
   };
 
-  console.log('Current currency code in settings:', currencyCode);
+  console.log('Current currency code in settings:', localCurrency);
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -100,11 +122,11 @@ const SettingsSidebar = ({
               <h2 className="font-medium">Currency</h2>
             </div>
             <div className="ml-11">
-              <p className="text-xs text-muted-foreground mb-2">Current: {currencyCode}</p>
+              <p className="text-xs text-muted-foreground mb-2">Current: {localCurrency}</p>
               <Select 
-                value={currencyCode} 
+                value={localCurrency} 
                 onValueChange={handleCurrencyChange}
-                key={`currency-select-${currencyCode}`}
+                key={`currency-select-${localCurrency}`}
               >
                 <SelectTrigger className="w-full bg-background border-input">
                   <SelectValue placeholder="Select currency" />
