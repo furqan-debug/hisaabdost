@@ -64,19 +64,21 @@ export const BudgetTabs = ({
     >
       <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full max-w-full">
         <div className="w-full flex justify-center mb-6">
-          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl w-full max-w-2xl grid grid-cols-4 gap-1 mx-2">
-            {tabs.map(tab => (
-              <TabsTrigger 
-                key={tab.id} 
-                value={tab.id} 
-                className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/50 min-h-[44px] whitespace-nowrap"
-              >
-                <tab.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="text-center leading-tight">
-                  {tab.label}
-                </span>
-              </TabsTrigger>
-            ))}
+          <TabsList className="bg-muted/50 backdrop-blur-sm border border-border/40 p-1 rounded-xl w-full max-w-4xl h-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 w-full">
+              {tabs.map(tab => (
+                <TabsTrigger 
+                  key={tab.id} 
+                  value={tab.id} 
+                  className="flex items-center justify-center gap-2 rounded-lg px-2 py-3 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm hover:bg-background/50 min-h-[50px] whitespace-nowrap flex-col md:flex-row"
+                >
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-center leading-tight">
+                    {tab.label}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </div>
           </TabsList>
         </div>
 
