@@ -29,6 +29,14 @@ const SettingsSidebar = ({
   const { signOut } = useSignOut();
   const navigate = useNavigate();
 
+  // Local state to force re-renders when currency changes
+  const [localCurrency, setLocalCurrency] = useState(currencyCode);
+
+  // Sync local state with context
+  useEffect(() => {
+    setLocalCurrency(currencyCode);
+  }, [currencyCode]);
+
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
     onClose();
@@ -51,7 +59,14 @@ const SettingsSidebar = ({
   const handleCurrencyChange = (value: string) => {
     console.log('Currency changing from:', currencyCode, 'to:', value);
     try {
-      setCurrencyCode(value as CurrencyCode);
+      const newCurrency = value as CurrencyCode;
+      
+      // Update local state immediately for UI responsiveness
+      setLocalCurrency(newCurrency);
+      
+      // Update the context
+      setCurrencyCode(newCurrency);
+      
       console.log('Currency change successful');
       toast({
         title: "Currency Updated",
@@ -59,6 +74,8 @@ const SettingsSidebar = ({
       });
     } catch (error) {
       console.error('Error changing currency:', error);
+      // Revert local state on error
+      setLocalCurrency(currencyCode);
       toast({
         title: "Error",
         description: "Failed to change currency",
@@ -67,7 +84,7 @@ const SettingsSidebar = ({
     }
   };
 
-  console.log('Current currency code in settings:', currencyCode);
+  console.log('Current currency code in settings:', currencyCode, 'local:', localCurrency);
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -97,8 +114,12 @@ const SettingsSidebar = ({
               <h2 className="font-medium">Currency</h2>
             </div>
             <div className="ml-11">
-              <p className="text-xs text-muted-foreground mb-2">Current: {currencyCode}</p>
-              <Select value={currencyCode} onValueChange={handleCurrencyChange}>
+              <p className="text-xs text-muted-foreground mb-2">Current: {localCurrency}</p>
+              <Select 
+                value={localCurrency} 
+                onValueChange={handleCurrencyChange}
+                key={`currency-select-${localCurrency}`}
+              >
                 <SelectTrigger className="w-full bg-background border-input">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>

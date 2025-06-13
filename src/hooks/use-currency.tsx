@@ -37,26 +37,38 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setCurrencyCode = (code: CurrencyCode) => {
     console.log('Setting currency code:', code);
     try {
+      // Update state first
       setCurrencyCodeState(code);
+      
+      // Save to localStorage
       localStorage.setItem('preferred-currency', code);
       console.log('Currency saved to localStorage:', code);
       
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('currency-changed', { detail: code }));
+      
+      // Force a re-render by triggering a state update
+      setTimeout(() => {
+        setCurrencyCodeState(code);
+      }, 0);
+      
     } catch (error) {
       console.error('Error saving currency to localStorage:', error);
     }
   };
 
-  // Save to localStorage when changed
+  // Listen for storage changes from other tabs/windows
   useEffect(() => {
-    try {
-      localStorage.setItem('preferred-currency', currencyCode);
-      console.log('Currency persisted:', currencyCode);
-    } catch (error) {
-      console.error('Error persisting currency:', error);
-    }
-  }, [currencyCode]);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'preferred-currency' && e.newValue) {
+        console.log('Currency changed in another tab:', e.newValue);
+        setCurrencyCodeState(e.newValue as CurrencyCode);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   console.log('CurrencyProvider rendering with currency:', currencyCode);
 
