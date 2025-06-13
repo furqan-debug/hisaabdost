@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { useSignOut } from '@/hooks/auth/useSignOut';
+import { CURRENCY_OPTIONS, CurrencyCode } from '@/utils/currencyUtils';
 
 interface SettingsSidebarProps {
   isOpen: boolean;
@@ -26,29 +27,6 @@ const SettingsSidebar = ({
   const { user } = useAuth();
   const { signOut } = useSignOut();
   const navigate = useNavigate();
-
-  const currencies = [
-    { code: 'USD', name: 'US Dollar', symbol: '$' },
-    { code: 'EUR', name: 'Euro', symbol: '€' },
-    { code: 'GBP', name: 'British Pound', symbol: '£' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
-    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-    { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-    { code: 'PKR', name: 'Pakistani Rupee', symbol: 'Rs' },
-    { code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳' },
-    { code: 'LKR', name: 'Sri Lankan Rupee', symbol: 'Rs' },
-    { code: 'NPR', name: 'Nepalese Rupee', symbol: 'Rs' },
-    { code: 'AFN', name: 'Afghan Afghani', symbol: '؋' },
-    { code: 'SAR', name: 'Saudi Riyal', symbol: '﷼' },
-    { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-    { code: 'QAR', name: 'Qatari Riyal', symbol: '﷼' },
-    { code: 'KWD', name: 'Kuwaiti Dinar', symbol: 'د.ك' },
-    { code: 'BHD', name: 'Bahraini Dinar', symbol: '.د.ب' },
-    { code: 'OMR', name: 'Omani Rial', symbol: '﷼' }
-  ];
 
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
@@ -67,6 +45,11 @@ const SettingsSidebar = ({
 
   const handleCarryoverToggle = (enabled: boolean) => {
     updatePreferences({ auto_carryover_enabled: enabled });
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    console.log('Currency changed to:', value);
+    setCurrencyCode(value as CurrencyCode);
   };
 
   return (
@@ -97,18 +80,18 @@ const SettingsSidebar = ({
               <h2 className="font-medium">Currency</h2>
             </div>
             <div className="ml-11">
-              <Select value={currencyCode} onValueChange={setCurrencyCode}>
-                <SelectTrigger className="w-full">
+              <Select value={currencyCode} onValueChange={handleCurrencyChange}>
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {currencies.map(currency => (
+                <SelectContent className="max-h-60 bg-popover border shadow-lg z-50">
+                  {CURRENCY_OPTIONS.map(currency => (
                     <SelectItem key={currency.code} value={currency.code}>
                       <div className="flex items-center gap-3">
                         <span className="font-medium text-muted-foreground min-w-[24px]">
                           {currency.symbol}
                         </span>
-                        <span>{currency.name}</span>
+                        <span>{currency.label}</span>
                       </div>
                     </SelectItem>
                   ))}
