@@ -16,8 +16,9 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference");
+  const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference" && budget.category !== "income");
   const totalBudget = filteredBudgets.reduce((sum, budget) => sum + budget.amount, 0);
+  
   const data = filteredBudgets.map(budget => ({
     name: budget.category,
     value: budget.amount,
@@ -47,22 +48,13 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       </CardHeader>
       <CardContent>
         <motion.div 
-          className="h-full space-y-6"
+          className="space-y-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
           <div className="rounded-xl bg-background/50 p-6">
-            <div className="w-full h-[300px] relative pie-chart-container">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
-                <p className="text-2xl font-semibold">
-                  {formatCurrency(totalBudget, currencyCode)}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Total Budget
-                </p>
-              </div>
-              
+            <div className="w-full h-[300px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie 
@@ -103,6 +95,16 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                   />
                 </PieChart>
               </ResponsiveContainer>
+              
+              {/* Center total display */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
+                <p className="text-2xl font-semibold">
+                  {formatCurrency(totalBudget, currencyCode)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Total Budget
+                </p>
+              </div>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-6">
