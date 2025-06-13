@@ -32,11 +32,11 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     .slice(0, isMobile ? 3 : 5);
   
   return (
-    <div className="w-full h-full trends-chart-wrapper">
+    <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
-          margin={isMobile ? { top: 10, right: 10, left: -15, bottom: 5 } : { top: 20, right: 30, left: 0, bottom: 5 }}
+          margin={isMobile ? { top: 20, right: 10, left: -10, bottom: 20 } : { top: 20, right: 30, left: 0, bottom: 5 }}
           barCategoryGap={isMobile ? "20%" : "30%"}
           maxBarSize={isMobile ? 28 : 40}
         >
@@ -48,7 +48,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
             dy={8}
             interval={isMobile ? "preserveStartEnd" : 0}
-            height={25}
+            height={40}
           />
           <YAxis 
             tickFormatter={(value) => {
@@ -79,7 +79,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 <motion.div 
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="tooltip-card bg-popover text-popover-foreground"
+                  className="rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur-sm"
                 >
                   <div className="text-sm font-medium mb-1">{label}</div>
                   <div className="space-y-1">
@@ -117,11 +117,11 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       </ResponsiveContainer>
       
       {/* Mobile-friendly legend */}
-      <div className="chart-legend-row">
+      <div className="flex flex-wrap justify-center gap-2 mt-3">
         {topCategories.slice(0, isMobile ? 3 : 5).map(category => (
           <div 
             key={category} 
-            className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+            className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
             style={{ background: (CATEGORY_COLORS[category] || "#eee") + "22" }}
           >
             <span 
