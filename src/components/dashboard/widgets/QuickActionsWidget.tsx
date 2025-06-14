@@ -2,25 +2,21 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload, Camera, PieChart, TrendingUp, Calculator } from 'lucide-react';
+import { Plus, Upload, Camera, PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface QuickActionsWidgetProps {
   onAddExpense: () => void;
   onUploadReceipt: () => void;
   onTakePhoto: () => void;
-  onViewAnalytics: () => void;
-  onViewTrends: () => void;
-  onOpenCalculator: () => void;
+  onAddBudget: () => void;
 }
 
 export function QuickActionsWidget({
   onAddExpense,
   onUploadReceipt,
   onTakePhoto,
-  onViewAnalytics,
-  onViewTrends,
-  onOpenCalculator
+  onAddBudget
 }: QuickActionsWidgetProps) {
   const actions = [
     {
@@ -45,25 +41,11 @@ export function QuickActionsWidget({
       description: 'Camera capture'
     },
     {
-      title: 'Analytics',
-      icon: PieChart,
-      onClick: onViewAnalytics,
+      title: 'Add Budget',
+      icon: PlusCircle,
+      onClick: onAddBudget,
       color: 'bg-orange-500 hover:bg-orange-600',
-      description: 'View insights'
-    },
-    {
-      title: 'Trends',
-      icon: TrendingUp,
-      onClick: onViewTrends,
-      color: 'bg-indigo-500 hover:bg-indigo-600',
-      description: 'Spending patterns'
-    },
-    {
-      title: 'Calculator',
-      icon: Calculator,
-      onClick: onOpenCalculator,
-      color: 'bg-pink-500 hover:bg-pink-600',
-      description: 'Quick math'
+      description: 'Set new budget'
     }
   ];
 
@@ -88,7 +70,7 @@ export function QuickActionsWidget({
         <CardTitle className="text-lg">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {actions.map((action, index) => (
             <motion.div
               key={action.title}

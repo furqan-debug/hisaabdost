@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -117,64 +116,19 @@ export function EnhancedDashboardContent({
         description: "Opening camera for receipt...",
       });
     },
-    onViewAnalytics: () => {
-      console.log('View analytics clicked - navigating to expenses');
+    onAddBudget: () => {
+      console.log('Add budget clicked - navigating to budget page');
       try {
-        navigate('/app/expenses');
+        navigate('/app/budget');
         toast({
-          title: "Analytics",
-          description: "Navigating to analytics page...",
+          title: "Add Budget",
+          description: "Navigating to budget page...",
         });
       } catch (error) {
         console.error('Navigation error:', error);
         toast({
           title: "Navigation Error",
-          description: "Could not navigate to analytics page",
-          variant: "destructive"
-        });
-      }
-    },
-    onViewTrends: () => {
-      console.log('View trends clicked - navigating to history');
-      try {
-        navigate('/app/history');
-        toast({
-          title: "Trends",
-          description: "Navigating to trends page...",
-        });
-      } catch (error) {
-        console.error('Navigation error:', error);
-        toast({
-          title: "Navigation Error",
-          description: "Could not navigate to trends page",
-          variant: "destructive"
-        });
-      }
-    },
-    onOpenCalculator: () => {
-      console.log('Calculator clicked - opening calculator');
-      try {
-        const result = prompt('Enter calculation (e.g., 100+50):');
-        if (result && result.trim()) {
-          // Basic validation for safe evaluation
-          const sanitized = result.replace(/[^0-9+\-*/().\s]/g, '');
-          if (sanitized) {
-            const calculation = Function('"use strict"; return (' + sanitized + ')')();
-            alert(`Result: ${calculation}`);
-            toast({
-              title: "Calculator",
-              description: `${sanitized} = ${calculation}`,
-            });
-          } else {
-            throw new Error('Invalid characters in calculation');
-          }
-        }
-      } catch (error) {
-        console.error('Calculator error:', error);
-        alert('Invalid calculation. Please use only numbers and operators (+, -, *, /, parentheses).');
-        toast({
-          title: "Calculator Error",
-          description: "Invalid calculation format",
+          description: "Could not navigate to budget page",
           variant: "destructive"
         });
       }
