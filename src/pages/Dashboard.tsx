@@ -16,6 +16,7 @@ const Dashboard = () => {
   const { isLoading: isMonthDataLoading } = useMonthContext();
   const {
     expenses,
+    allExpenses,
     isExpensesLoading,
     isLoading,
     isNewUser,
@@ -67,6 +68,7 @@ const Dashboard = () => {
       savingsRate={savingsRate}
       formatPercentage={formatPercentage}
       expenses={expenses}
+      allExpenses={allExpenses}
       isExpensesLoading={isExpensesLoading}
       expenseToEdit={expenseToEdit}
       setExpenseToEdit={setExpenseToEdit}

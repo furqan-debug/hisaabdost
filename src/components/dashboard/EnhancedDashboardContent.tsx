@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -26,6 +25,7 @@ interface EnhancedDashboardContentProps {
   savingsRate: number;
   formatPercentage: (value: number) => string;
   expenses: any[];
+  allExpenses: any[];
   isExpensesLoading: boolean;
   expenseToEdit: any;
   setExpenseToEdit: (expense: any) => void;
@@ -47,6 +47,7 @@ export function EnhancedDashboardContent({
   savingsRate,
   formatPercentage,
   expenses,
+  allExpenses,
   isExpensesLoading,
   expenseToEdit,
   setExpenseToEdit,
@@ -191,7 +192,7 @@ export function EnhancedDashboardContent({
 
             <motion.div variants={itemVariants}>
               <SpendingTrendsWidget 
-                expenses={expenses}
+                expenses={allExpenses}
                 isLoading={isExpensesLoading}
               />
             </motion.div>
@@ -249,7 +250,7 @@ export function EnhancedDashboardContent({
 
             <motion.div variants={itemVariants}>
               <SpendingTrendsWidget 
-                expenses={expenses}
+                expenses={allExpenses}
                 isLoading={isExpensesLoading}
               />
             </motion.div>

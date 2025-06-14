@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/components/expenses/types";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
@@ -90,9 +91,10 @@ export function useDashboardData() {
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+    queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
   };
   
-  // Fetch expenses from Supabase using React Query, filtered by selected month
+  // Fetch current month's expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger, user?.id],
     queryFn: async () => {
@@ -117,6 +119,47 @@ export function useDashboardData() {
       }
       
       console.log(`Fetched ${data.length} expenses for the month`);
+      
+      return data.map(exp => ({
+        id: exp.id,
+        amount: Number(exp.amount),
+        description: exp.description,
+        date: exp.date,
+        category: exp.category,
+        paymentMethod: exp.payment || undefined,
+        notes: exp.notes || undefined,
+        isRecurring: exp.is_recurring || false,
+        receiptUrl: exp.receipt_url || undefined,
+      }));
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ALL expenses for the last 6 months for spending trends
+  const { data: allExpenses = [] } = useQuery({
+    queryKey: ['all_expenses', refreshTrigger, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      console.log("Fetching all expenses for spending trends");
+      
+      // Get expenses from 6 months ago to now
+      const sixMonthsAgo = subMonths(new Date(), 5);
+      const startDate = startOfMonth(sixMonthsAgo);
+      
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .order('date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching all expenses:', error);
+        return [];
+      }
+      
+      console.log(`Fetched ${data.length} total expenses for spending trends`);
       
       return data.map(exp => ({
         id: exp.id,
@@ -163,6 +206,7 @@ export function useDashboardData() {
     if (refreshTrigger > 0) {
       console.log("Refresh trigger changed, invalidating expense queries");
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+      queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
   }, [refreshTrigger, queryClient, selectedMonth]);
 
@@ -179,6 +223,7 @@ export function useDashboardData() {
 
   return {
     expenses,
+    allExpenses, // Add all expenses for spending trends
     isExpensesLoading,
     isLoading,
     isNewUser,
