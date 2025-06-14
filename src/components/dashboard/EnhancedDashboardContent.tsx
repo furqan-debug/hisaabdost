@@ -14,6 +14,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface EnhancedDashboardContentProps {
   isNewUser: boolean;
@@ -93,36 +94,89 @@ export function EnhancedDashboardContent({
 
   const quickActions = {
     onAddExpense: () => {
-      console.log('Add expense clicked');
+      console.log('Add expense clicked - opening dialog');
       setShowAddExpense(true);
+      toast({
+        title: "Add Expense",
+        description: "Opening expense form...",
+      });
     },
     onUploadReceipt: () => {
-      console.log('Upload receipt clicked');
+      console.log('Upload receipt clicked - opening bulk upload');
       setShowBulkUpload(true);
+      toast({
+        title: "Upload Receipt",
+        description: "Opening receipt upload...",
+      });
     },
     onTakePhoto: () => {
-      console.log('Take photo clicked');
+      console.log('Take photo clicked - opening expense form with camera');
       setShowAddExpense(true);
+      toast({
+        title: "Take Photo",
+        description: "Opening camera for receipt...",
+      });
     },
     onViewAnalytics: () => {
-      console.log('View analytics clicked');
-      navigate('/app/expenses');
+      console.log('View analytics clicked - navigating to expenses');
+      try {
+        navigate('/app/expenses');
+        toast({
+          title: "Analytics",
+          description: "Navigating to analytics page...",
+        });
+      } catch (error) {
+        console.error('Navigation error:', error);
+        toast({
+          title: "Navigation Error",
+          description: "Could not navigate to analytics page",
+          variant: "destructive"
+        });
+      }
     },
     onViewTrends: () => {
-      console.log('View trends clicked');
-      navigate('/app/history');
+      console.log('View trends clicked - navigating to history');
+      try {
+        navigate('/app/history');
+        toast({
+          title: "Trends",
+          description: "Navigating to trends page...",
+        });
+      } catch (error) {
+        console.error('Navigation error:', error);
+        toast({
+          title: "Navigation Error",
+          description: "Could not navigate to trends page",
+          variant: "destructive"
+        });
+      }
     },
     onOpenCalculator: () => {
-      console.log('Calculator clicked');
-      // Simple calculator functionality
-      const result = prompt('Enter calculation (e.g., 100+50):');
-      if (result) {
-        try {
-          const calculation = eval(result);
-          alert(`Result: ${calculation}`);
-        } catch (error) {
-          alert('Invalid calculation');
+      console.log('Calculator clicked - opening calculator');
+      try {
+        const result = prompt('Enter calculation (e.g., 100+50):');
+        if (result && result.trim()) {
+          // Basic validation for safe evaluation
+          const sanitized = result.replace(/[^0-9+\-*/().\s]/g, '');
+          if (sanitized) {
+            const calculation = Function('"use strict"; return (' + sanitized + ')')();
+            alert(`Result: ${calculation}`);
+            toast({
+              title: "Calculator",
+              description: `${sanitized} = ${calculation}`,
+            });
+          } else {
+            throw new Error('Invalid characters in calculation');
+          }
         }
+      } catch (error) {
+        console.error('Calculator error:', error);
+        alert('Invalid calculation. Please use only numbers and operators (+, -, *, /, parentheses).');
+        toast({
+          title: "Calculator Error",
+          description: "Invalid calculation format",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -130,6 +184,10 @@ export function EnhancedDashboardContent({
   const handleViewModeChange = (mode: 'grid' | 'list') => {
     console.log('View mode changed to:', mode);
     setViewMode(mode);
+    toast({
+      title: "View Mode",
+      description: `Switched to ${mode} view`,
+    });
   };
 
   return (
@@ -148,6 +206,7 @@ export function EnhancedDashboardContent({
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleViewModeChange('grid')}
+              type="button"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -155,6 +214,7 @@ export function EnhancedDashboardContent({
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => handleViewModeChange('list')}
+              type="button"
             >
               <List className="h-4 w-4" />
             </Button>

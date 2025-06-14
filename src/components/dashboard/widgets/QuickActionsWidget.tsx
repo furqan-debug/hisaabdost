@@ -67,9 +67,19 @@ export function QuickActionsWidget({
     }
   ];
 
-  const handleActionClick = (action: typeof actions[0]) => {
+  const handleActionClick = (action: typeof actions[0], event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     console.log(`Quick action clicked: ${action.title}`);
-    action.onClick();
+    
+    // Add a small delay to ensure the click is registered
+    setTimeout(() => {
+      try {
+        action.onClick();
+      } catch (error) {
+        console.error(`Error executing ${action.title}:`, error);
+      }
+    }, 50);
   };
 
   return (
@@ -88,10 +98,11 @@ export function QuickActionsWidget({
             >
               <Button
                 variant="outline"
-                onClick={() => handleActionClick(action)}
-                className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={(e) => handleActionClick(action, e)}
+                className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95"
+                type="button"
               >
-                <div className={`p-2 rounded-lg ${action.color} text-white`}>
+                <div className={`p-2 rounded-lg ${action.color} text-white transition-colors`}>
                   <action.icon className="h-5 w-5" />
                 </div>
                 <div className="text-center">
