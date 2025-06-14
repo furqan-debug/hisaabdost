@@ -21,7 +21,7 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
       className="relative overflow-hidden"
     >
       <Card className="border-0 shadow-lg bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm">
-        <CardContent className="py-8 px-6 relative">
+        <CardContent className="py-4 md:py-8 px-3 md:px-6 relative">
           {/* Subtle background pattern */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute top-4 right-4 w-32 h-32 bg-primary rounded-full blur-3xl"></div>
@@ -30,8 +30,8 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
           
           <div className="relative z-10">
             {/* Main Header Section */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="space-y-3">
+            <div className="flex items-start justify-between mb-3 md:mb-4">
+              <div className="space-y-2 md:space-y-3 flex-1 min-w-0">
                 {/* Welcome Message */}
                 <motion.div 
                   className="flex items-center gap-2"
@@ -39,17 +39,17 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <TrendingUp className="h-5 w-5" />
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0">
+                    <TrendingUp className="h-3 w-3 md:h-5 md:w-5" />
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {isNewUser ? "Welcome to your financial journey!" : "Welcome back!"}
+                  <span className="text-xs md:text-sm font-medium text-muted-foreground truncate">
+                    {isNewUser ? "Welcome to your journey!" : "Welcome back!"}
                   </span>
                 </motion.div>
                 
                 {/* Main Title */}
                 <motion.h1 
-                  className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent leading-tight"
+                  className="text-2xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent leading-tight"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
@@ -60,13 +60,13 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
               
               {/* Date Badge */}
               <motion.div 
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-muted/50 border"
+                className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-full bg-muted/50 border flex-shrink-0 ml-2"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">
+                <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+                <span className="text-xs md:text-sm font-medium text-muted-foreground whitespace-nowrap">
                   {format(selectedMonth, 'MMM yyyy')}
                 </span>
               </motion.div>
@@ -74,26 +74,28 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
             
             {/* Subtitle Section */}
             <motion.div 
-              className="space-y-2"
+              className="space-y-1 md:space-y-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
               {/* Month Overview */}
-              <p className="text-xl font-semibold text-muted-foreground">
+              <p className="text-base md:text-xl font-semibold text-muted-foreground">
                 {format(selectedMonth, 'MMMM yyyy')} Overview
               </p>
               
               {/* Current Date */}
-              <p className="text-sm text-muted-foreground/80 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                {format(new Date(), 'EEEE, MMMM do, yyyy')}
+              <p className="text-xs md:text-sm text-muted-foreground/80 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0"></span>
+                <span className="truncate">
+                  {format(new Date(), 'EEEE, MMMM do, yyyy')}
+                </span>
               </p>
-            </motion.div>
+            </div>
             
             {/* Progress Indicator */}
             <motion.div 
-              className="mt-6 flex items-center gap-3"
+              className="mt-4 md:mt-6 flex items-center gap-2 md:gap-3"
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: "100%" }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -106,7 +108,7 @@ export function DashboardHeader({ isNewUser }: DashboardHeaderProps) {
                   transition={{ delay: 0.8, duration: 1 }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground font-medium">
+              <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                 Day {new Date().getDate()} of {format(selectedMonth, 'MMMM')}
               </span>
             </motion.div>
