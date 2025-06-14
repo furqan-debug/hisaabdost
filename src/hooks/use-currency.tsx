@@ -5,7 +5,6 @@ import { CurrencyCode, DEFAULT_CURRENCY_CODE } from '@/utils/currencyUtils';
 interface CurrencyContextType {
   currencyCode: CurrencyCode;
   setCurrencyCode: (code: CurrencyCode) => void;
-  // Add a version counter to force re-renders
   version: number;
 }
 
@@ -20,10 +19,13 @@ export const useCurrency = () => {
   if (!context) {
     throw new Error('useCurrency must be used within a CurrencyProvider');
   }
+  console.log('useCurrency called with:', context);
   return context;
 };
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('CurrencyProvider mounting...');
+  
   // Initialize from localStorage if available
   const [currencyCode, setCurrencyCodeState] = useState<CurrencyCode>(() => {
     try {
@@ -47,7 +49,11 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrencyCodeState(code);
       
       // Increment version to force re-renders
-      setVersion(prev => prev + 1);
+      setVersion(prev => {
+        const newVersion = prev + 1;
+        console.log('Incrementing version to:', newVersion);
+        return newVersion;
+      });
       
       // Save to localStorage
       localStorage.setItem('preferred-currency', code);

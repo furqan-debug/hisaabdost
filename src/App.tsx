@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "next-themes";
 import { FinnyProvider } from "@/components/finny";
 import { MonthProvider } from "@/hooks/use-month-context";
+import { CurrencyProvider } from "@/hooks/use-currency";
 import Dashboard from "@/pages/Dashboard";
 import Expenses from "@/pages/Expenses";
 import Analytics from "@/pages/Analytics";
@@ -36,29 +37,31 @@ function App() {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <MonthProvider>
-                <FinnyProvider>
-                  <div className="App">
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/auth" replace />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/auth/reset-password" element={<ResetPassword />} />
-                      <Route path="/app" element={<Layout />}>
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="expenses" element={<Expenses />} />
-                        <Route path="analytics" element={<Analytics />} />
-                        <Route path="budget" element={<Budget />} />
-                        <Route path="goals" element={<Goals />} />
-                        <Route path="history" element={<History />} />
-                        <Route path="manage-funds" element={<ManageFunds />} />
-                        <Route index element={<Navigate to="dashboard" replace />} />
-                      </Route>
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
-                  </div>
-                </FinnyProvider>
-              </MonthProvider>
+              <CurrencyProvider>
+                <MonthProvider>
+                  <FinnyProvider>
+                    <div className="App">
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/auth" replace />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/auth/reset-password" element={<ResetPassword />} />
+                        <Route path="/app" element={<Layout />}>
+                          <Route path="dashboard" element={<Dashboard />} />
+                          <Route path="expenses" element={<Expenses />} />
+                          <Route path="analytics" element={<Analytics />} />
+                          <Route path="budget" element={<Budget />} />
+                          <Route path="goals" element={<Goals />} />
+                          <Route path="history" element={<History />} />
+                          <Route path="manage-funds" element={<ManageFunds />} />
+                          <Route index element={<Navigate to="dashboard" replace />} />
+                        </Route>
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <Toaster />
+                    </div>
+                  </FinnyProvider>
+                </MonthProvider>
+              </CurrencyProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
