@@ -1,8 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft } from 'lucide-react';
+import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft, Calendar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCarryoverPreferences } from '@/hooks/useCarryoverPreferences';
@@ -12,7 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useSignOut } from '@/hooks/auth/useSignOut';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/utils/currencyUtils';
 import { toast } from '@/components/ui/use-toast';
-import { useIncomeDate } from '@/hooks/useIncomeDate'; // <-- FIXED: use import, not require
+import { useIncomeDate } from '@/hooks/useIncomeDate';
 
 interface SettingsSidebarProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ const SettingsSidebar = ({
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
   const { currencyCode, setCurrencyCode, version } = useCurrency();
-  const { incomeDate, setIncomeDate, isLoading: isLoadingIncomeDate, isUpdating: isUpdatingIncomeDate } = useIncomeDate(); // <-- FIXED
+  const { incomeDate, setIncomeDate, isLoading: isLoadingIncomeDate, isUpdating: isUpdatingIncomeDate } = useIncomeDate();
   const { preferences, updatePreferences, isUpdating } = useCarryoverPreferences();
   const { user } = useAuth();
   const { signOut } = useSignOut();
@@ -73,9 +74,26 @@ const SettingsSidebar = ({
     }
   };
 
-  const handleIncomeDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = Number(e.target.value);
-    if (value >= 1 && value <= 31) setIncomeDate(value);
+  const handleIncomeDateChange = (value: string) => {
+    const dateValue = Number(value);
+    if (dateValue >= 1 && dateValue <= 31) {
+      setIncomeDate(dateValue);
+      toast({
+        title: "Income Date Updated",
+        description: `Income date set to ${dateValue}${dateValue === 1 ? 'st' : dateValue === 2 ? 'nd' : dateValue === 3 ? 'rd' : 'th'} of each month`,
+      });
+    }
+  };
+
+  // Generate ordinal suffix for date display
+  const getOrdinalSuffix = (day: number) => {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   };
 
   console.log('Current currency code in settings:', currencyCode, 'version:', version);
@@ -137,34 +155,71 @@ const SettingsSidebar = ({
             </div>
           </div>
 
-          {/* Income Settings */}
+          {/* Income Settings - Improved UI/UX */}
           <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
-                <span className="font-bold text-yellow-600 dark:text-yellow-400">₹</span>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <h2 className="font-medium">Income Settings</h2>
+              <div>
+                <h2 className="font-medium">Income Settings</h2>
+                <p className="text-xs text-muted-foreground">Configure your income cycle</p>
+              </div>
             </div>
-            <div className="ml-11 space-y-2">
-              <label htmlFor="income-date-select" className="text-sm font-medium">
-                Your income day
-              </label>
-              <select
-                id="income-date-select"
-                className="mt-1 block w-full rounded border px-3 py-1.5 bg-background border-input focus:outline-none focus:ring ring-primary/30 transition-all"
-                value={incomeDate}
-                onChange={handleIncomeDateChange}
-                disabled={isLoadingIncomeDate || isUpdatingIncomeDate}
-              >
-                {Array.from({ length: 31 }).map((_, idx) => (
-                  <option key={idx + 1} value={idx + 1}>
-                    {idx + 1}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Set the date you typically receive your main income. This will adjust monthly tracking and reports to match your personal income cycle.
-              </p>
+            
+            <div className="ml-11 space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="income-date-select" className="text-sm font-medium text-foreground">
+                    Your income day
+                  </label>
+                  <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
+                    {incomeDate}{getOrdinalSuffix(incomeDate)} of month
+                  </span>
+                </div>
+                
+                <Select 
+                  value={incomeDate.toString()} 
+                  onValueChange={handleIncomeDateChange}
+                  disabled={isLoadingIncomeDate || isUpdatingIncomeDate}
+                >
+                  <SelectTrigger className="w-full bg-background border-input hover:border-ring transition-colors">
+                    <SelectValue placeholder="Select income date" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 bg-popover border shadow-lg z-[9999]">
+                    {Array.from({ length: 31 }).map((_, idx) => {
+                      const day = idx + 1;
+                      return (
+                        <SelectItem 
+                          key={day} 
+                          value={day.toString()}
+                          className="cursor-pointer hover:bg-accent focus:bg-accent"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>{day}</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {day}{getOrdinalSuffix(day)}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                
+                <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">💡 Tip:</span> Set the date you typically receive your main income. This helps align monthly tracking and reports with your personal income cycle for better budget management.
+                  </p>
+                </div>
+                
+                {(isLoadingIncomeDate || isUpdatingIncomeDate) && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span>{isLoadingIncomeDate ? 'Loading...' : 'Updating...'}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -298,3 +353,4 @@ const SettingsSidebar = ({
 };
 
 export default SettingsSidebar;
+
