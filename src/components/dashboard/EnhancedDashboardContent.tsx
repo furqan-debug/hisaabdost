@@ -92,18 +92,44 @@ export function EnhancedDashboardContent({
   };
 
   const quickActions = {
-    onAddExpense: () => setShowAddExpense(true),
-    onUploadReceipt: () => setShowBulkUpload(true),
-    onTakePhoto: () => {
-      // This would trigger camera capture
+    onAddExpense: () => {
+      console.log('Add expense clicked');
       setShowAddExpense(true);
     },
-    onViewAnalytics: () => navigate('/app/expenses'),
-    onViewTrends: () => navigate('/app/history'),
+    onUploadReceipt: () => {
+      console.log('Upload receipt clicked');
+      setShowBulkUpload(true);
+    },
+    onTakePhoto: () => {
+      console.log('Take photo clicked');
+      setShowAddExpense(true);
+    },
+    onViewAnalytics: () => {
+      console.log('View analytics clicked');
+      navigate('/app/expenses');
+    },
+    onViewTrends: () => {
+      console.log('View trends clicked');
+      navigate('/app/history');
+    },
     onOpenCalculator: () => {
-      // This could open a calculator modal or navigate to a calculator page
-      console.log('Opening calculator...');
+      console.log('Calculator clicked');
+      // Simple calculator functionality
+      const result = prompt('Enter calculation (e.g., 100+50):');
+      if (result) {
+        try {
+          const calculation = eval(result);
+          alert(`Result: ${calculation}`);
+        } catch (error) {
+          alert('Invalid calculation');
+        }
+      }
     }
+  };
+
+  const handleViewModeChange = (mode: 'grid' | 'list') => {
+    console.log('View mode changed to:', mode);
+    setViewMode(mode);
   };
 
   return (
@@ -121,14 +147,14 @@ export function EnhancedDashboardContent({
             <Button
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('grid')}
+              onClick={() => handleViewModeChange('grid')}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('list')}
+              onClick={() => handleViewModeChange('list')}
             >
               <List className="h-4 w-4" />
             </Button>

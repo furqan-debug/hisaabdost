@@ -67,8 +67,13 @@ export function QuickActionsWidget({
     }
   ];
 
+  const handleActionClick = (action: typeof actions[0]) => {
+    console.log(`Quick action clicked: ${action.title}`);
+    action.onClick();
+  };
+
   return (
-    <Card>
+    <Card className="cursor-default">
       <CardHeader>
         <CardTitle className="text-lg">Quick Actions</CardTitle>
       </CardHeader>
@@ -83,8 +88,8 @@ export function QuickActionsWidget({
             >
               <Button
                 variant="outline"
-                onClick={action.onClick}
-                className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200"
+                onClick={() => handleActionClick(action)}
+                className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200 cursor-pointer"
               >
                 <div className={`p-2 rounded-lg ${action.color} text-white`}>
                   <action.icon className="h-5 w-5" />
