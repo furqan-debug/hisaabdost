@@ -1,0 +1,144 @@
+
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useCurrency } from '@/hooks/use-currency';
+import { formatCurrency } from '@/utils/formatters';
+
+interface SpendingTrendsWidgetProps {
+  data: Array<{
+    date: string;
+    amount: number;
+    month: string;
+  }>;
+  isLoading?: boolean;
+}
+
+export function SpendingTrendsWidget({ data, isLoading }: SpendingTrendsWidgetProps) {
+  const { currencyCode } = useCurrency();
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Spending Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">Loading trends...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getTrend = () => {
+    if (data.length < 2) return { direction: 'neutral', percentage: 0 };
+    
+    const current = data[data.length - 1]?.amount || 0;
+    const previous = data[data.length - 2]?.amount || 0;
+    
+    if (previous === 0) return { direction: 'neutral', percentage: 0 };
+    
+    const percentage = ((current - previous) / previous) * 100;
+    
+    return {
+      direction: percentage > 5 ? 'up' : percentage < -5 ? 'down' : 'neutral',
+      percentage: Math.abs(percentage)
+    };
+  };
+
+  const trend = getTrend();
+
+  const getTrendIcon = () => {
+    switch (trend.direction) {
+      case 'up':
+        return <TrendingUp className="h-4 w-4 text-red-500" />;
+      case 'down':
+        return <TrendingDown className="h-4 w-4 text-green-500" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getTrendColor = () => {
+    switch (trend.direction) {
+      case 'up':
+        return 'text-red-500';
+      case 'down':
+        return 'text-green-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getTrendText = () => {
+    switch (trend.direction) {
+      case 'up':
+        return `${trend.percentage.toFixed(1)}% increase`;
+      case 'down':
+        return `${trend.percentage.toFixed(1)}% decrease`;
+      default:
+        return 'Stable spending';
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">Spending Trends</CardTitle>
+        <div className={`flex items-center gap-2 ${getTrendColor()}`}>
+          {getTrendIcon()}
+          <span className="text-sm font-medium">{getTrendText()}</span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {data.length > 0 ? (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="month" 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => formatCurrency(value, currencyCode)}
+                />
+                <Tooltip
+                  formatter={(value: number) => [formatCurrency(value, currencyCode), 'Spent']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <div className="mb-2">📈</div>
+              <div className="text-sm">No spending data available yet</div>
+              <div className="text-xs">Add some expenses to see trends</div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

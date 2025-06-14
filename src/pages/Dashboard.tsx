@@ -2,7 +2,7 @@
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
-import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import { EnhancedDashboardContent } from "@/components/dashboard/EnhancedDashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
@@ -10,7 +10,7 @@ import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 
 /**
  * Dashboard page component that displays financial overview
- * and expense analytics.
+ * and expense analytics with enhanced widgets and features.
  */
 const Dashboard = () => {
   const { isLoading: isMonthDataLoading } = useMonthContext();
@@ -55,9 +55,9 @@ const Dashboard = () => {
     return <DashboardSkeleton />;
   }
 
-  // Render dashboard content
+  // Render enhanced dashboard content
   return (
-    <DashboardContent 
+    <EnhancedDashboardContent 
       isNewUser={isNewUser}
       isLoading={isLoading}
       totalBalance={totalBalance}
