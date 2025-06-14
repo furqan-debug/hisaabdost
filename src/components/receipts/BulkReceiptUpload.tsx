@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X, FileImage, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { processReceiptFile } from '@/utils/receipt/receiptProcessor';
+import { uploadToSupabase } from '@/utils/receipt/uploadService';
 import { useAuth } from '@/lib/auth';
 import { Progress } from '@/components/ui/progress';
 
@@ -19,6 +19,7 @@ interface UploadItem {
   status: 'pending' | 'processing' | 'completed' | 'error';
   preview?: string;
   error?: string;
+  receiptUrl?: string;
 }
 
 export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUploadProps) {
@@ -74,28 +75,34 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
       );
 
       try {
-        const result = await processReceiptFile(
-          item.file,
-          user.id,
-          () => {}, // Empty update function since we're handling state here
-          () => {} // Empty loading function
-        );
+        console.log(`Processing receipt: ${item.file.name}`);
+        
+        // Upload the file to Supabase storage
+        const receiptUrl = await uploadToSupabase(item.file, user.id);
 
-        if (result) {
+        if (receiptUrl) {
+          console.log(`Successfully uploaded: ${item.file.name} -> ${receiptUrl}`);
+          
           setUploadItems(prev => 
-            prev.map(i => i.id === item.id ? { ...i, status: 'completed' } : i)
+            prev.map(i => i.id === item.id ? { 
+              ...i, 
+              status: 'completed',
+              receiptUrl 
+            } : i)
           );
           completedCount++;
         } else {
-          throw new Error('Failed to process receipt');
+          throw new Error('Failed to upload to storage');
         }
       } catch (error) {
-        console.error('Error processing receipt:', error);
+        console.error(`Error processing receipt ${item.file.name}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
         setUploadItems(prev => 
           prev.map(i => i.id === item.id ? { 
             ...i, 
             status: 'error', 
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: errorMessage
           } : i)
         );
         errorCount++;
@@ -108,12 +115,19 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
     setIsProcessing(false);
     
     if (completedCount > 0) {
-      toast.success(`Successfully processed ${completedCount} receipt${completedCount > 1 ? 's' : ''}`);
+      toast.success(`Successfully uploaded ${completedCount} receipt${completedCount > 1 ? 's' : ''}`);
+      
+      // Dispatch event to refresh expenses
+      const event = new CustomEvent('expenses-updated', { 
+        detail: { timestamp: Date.now() }
+      });
+      window.dispatchEvent(event);
+      
       onUploadComplete();
     }
     
     if (errorCount > 0) {
-      toast.error(`Failed to process ${errorCount} receipt${errorCount > 1 ? 's' : ''}`);
+      toast.error(`Failed to upload ${errorCount} receipt${errorCount > 1 ? 's' : ''}`);
     }
   };
 
@@ -239,10 +253,10 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  Uploading...
                 </>
               ) : (
-                'Process All Receipts'
+                'Upload All Receipts'
               )}
             </Button>
             <Button 
