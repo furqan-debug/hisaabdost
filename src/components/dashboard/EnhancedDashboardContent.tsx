@@ -180,7 +180,7 @@ export function EnhancedDashboardContent({
         </motion.div>
 
         {viewMode === 'grid' ? (
-          // Grid Layout
+          // Grid Layout - 2x2 widget grid
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <motion.div variants={itemVariants}>
               <QuickActionsWidget {...quickActions} />
@@ -208,16 +208,8 @@ export function EnhancedDashboardContent({
             </motion.div>
           </div>
         ) : (
-          // List Layout
+          // List Layout - Single column with priority order
           <div className="space-y-5">
-            <motion.div variants={itemVariants}>
-              <QuickActionsWidget {...quickActions} />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <FinnyCard />
-            </motion.div>
-
             <motion.div variants={itemVariants}>
               <AddExpenseButton 
                 isNewUser={isNewUser}
@@ -244,6 +236,14 @@ export function EnhancedDashboardContent({
                 expenses={allExpenses}
                 isLoading={isExpensesLoading}
               />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <QuickActionsWidget {...quickActions} />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <FinnyCard />
             </motion.div>
           </div>
         )}
