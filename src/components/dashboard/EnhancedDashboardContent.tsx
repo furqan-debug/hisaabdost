@@ -206,15 +206,6 @@ export function EnhancedDashboardContent({
                 setShowAddExpense={setShowAddExpense}
               />
             </motion.div>
-
-            <motion.div variants={itemVariants} className="lg:col-span-2">
-              <ExpenseAnalyticsCard 
-                expenses={expenses}
-                isLoading={isExpensesLoading}
-                chartType={chartType}
-                setChartType={setChartType}
-              />
-            </motion.div>
           </div>
         ) : (
           // List Layout
@@ -252,15 +243,6 @@ export function EnhancedDashboardContent({
               <SpendingTrendsWidget 
                 expenses={allExpenses}
                 isLoading={isExpensesLoading}
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <ExpenseAnalyticsCard 
-                expenses={expenses}
-                isLoading={isExpensesLoading}
-                chartType={chartType}
-                setChartType={setChartType}
               />
             </motion.div>
           </div>
