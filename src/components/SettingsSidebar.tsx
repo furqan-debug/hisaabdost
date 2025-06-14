@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { useSignOut } from '@/hooks/auth/useSignOut';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/utils/currencyUtils';
 import { toast } from '@/components/ui/use-toast';
+import { useIncomeDate } from '@/hooks/useIncomeDate'; // <-- FIXED: use import, not require
 
 interface SettingsSidebarProps {
   isOpen: boolean;
@@ -23,7 +25,7 @@ const SettingsSidebar = ({
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
   const { currencyCode, setCurrencyCode, version } = useCurrency();
-  const { incomeDate, setIncomeDate, isLoading: isLoadingIncomeDate, isUpdating: isUpdatingIncomeDate } = require('@/hooks/useIncomeDate').useIncomeDate();
+  const { incomeDate, setIncomeDate, isLoading: isLoadingIncomeDate, isUpdating: isUpdatingIncomeDate } = useIncomeDate(); // <-- FIXED
   const { preferences, updatePreferences, isUpdating } = useCarryoverPreferences();
   const { user } = useAuth();
   const { signOut } = useSignOut();
