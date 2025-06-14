@@ -13,10 +13,12 @@ import { startOfMonth } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { useEffect } from "react";
+
 interface CategoryBudgetsProps {
   budgets: Budget[];
   onEditBudget: (budget: Budget) => void;
 }
+
 export function CategoryBudgets({
   budgets,
   onEditBudget
