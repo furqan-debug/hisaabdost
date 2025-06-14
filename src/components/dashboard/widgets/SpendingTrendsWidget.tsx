@@ -1,22 +1,57 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
+import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 interface SpendingTrendsWidgetProps {
-  data: Array<{
-    date: string;
+  expenses: Array<{
+    id: string;
     amount: number;
-    month: string;
+    date: string;
+    category: string;
+    description: string;
   }>;
   isLoading?: boolean;
 }
 
-export function SpendingTrendsWidget({ data, isLoading }: SpendingTrendsWidgetProps) {
+export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidgetProps) {
   const { currencyCode } = useCurrency();
+
+  // Process real expense data for the last 6 months
+  const trendsData = useMemo(() => {
+    if (!expenses || expenses.length === 0) return [];
+
+    const now = new Date();
+    const monthsData = [];
+
+    // Generate data for the last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = subMonths(now, i);
+      const monthStart = startOfMonth(monthDate);
+      const monthEnd = endOfMonth(monthDate);
+      
+      // Filter expenses for this month
+      const monthExpenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= monthStart && expenseDate <= monthEnd;
+      });
+
+      // Calculate total amount for this month
+      const totalAmount = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+      monthsData.push({
+        date: format(monthDate, 'yyyy-MM-dd'),
+        month: format(monthDate, 'MMM'),
+        amount: totalAmount
+      });
+    }
+
+    return monthsData;
+  }, [expenses]);
 
   if (isLoading) {
     return (
@@ -34,10 +69,10 @@ export function SpendingTrendsWidget({ data, isLoading }: SpendingTrendsWidgetPr
   }
 
   const getTrend = () => {
-    if (data.length < 2) return { direction: 'neutral', percentage: 0 };
+    if (trendsData.length < 2) return { direction: 'neutral', percentage: 0 };
     
-    const current = data[data.length - 1]?.amount || 0;
-    const previous = data[data.length - 2]?.amount || 0;
+    const current = trendsData[trendsData.length - 1]?.amount || 0;
+    const previous = trendsData[trendsData.length - 2]?.amount || 0;
     
     if (previous === 0) return { direction: 'neutral', percentage: 0 };
     
@@ -94,10 +129,10 @@ export function SpendingTrendsWidget({ data, isLoading }: SpendingTrendsWidgetPr
         </div>
       </CardHeader>
       <CardContent>
-        {data.length > 0 ? (
+        {trendsData.length > 0 ? (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
+              <LineChart data={trendsData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis 
                   dataKey="month" 

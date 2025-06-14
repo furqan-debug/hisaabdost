@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -59,18 +60,6 @@ export function EnhancedDashboardContent({
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const navigate = useNavigate();
-
-  // Generate mock spending trends data
-  const generateTrendsData = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    return months.map((month, index) => ({
-      date: `2024-${String(index + 1).padStart(2, '0')}-01`,
-      month,
-      amount: Math.random() * 2000 + 500 // Random spending between 500-2500
-    }));
-  };
-
-  const trendsData = generateTrendsData();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -202,7 +191,7 @@ export function EnhancedDashboardContent({
 
             <motion.div variants={itemVariants}>
               <SpendingTrendsWidget 
-                data={trendsData}
+                expenses={expenses}
                 isLoading={isExpensesLoading}
               />
             </motion.div>
@@ -260,7 +249,7 @@ export function EnhancedDashboardContent({
 
             <motion.div variants={itemVariants}>
               <SpendingTrendsWidget 
-                data={trendsData}
+                expenses={expenses}
                 isLoading={isExpensesLoading}
               />
             </motion.div>
