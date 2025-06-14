@@ -23,6 +23,7 @@ const SettingsSidebar = ({
 }: SettingsSidebarProps) => {
   const { theme, setTheme } = useTheme();
   const { currencyCode, setCurrencyCode, version } = useCurrency();
+  const { incomeDate, setIncomeDate, isLoading: isLoadingIncomeDate, isUpdating: isUpdatingIncomeDate } = require('@/hooks/useIncomeDate').useIncomeDate();
   const { preferences, updatePreferences, isUpdating } = useCarryoverPreferences();
   const { user } = useAuth();
   const { signOut } = useSignOut();
@@ -68,6 +69,11 @@ const SettingsSidebar = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleIncomeDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = Number(e.target.value);
+    if (value >= 1 && value <= 31) setIncomeDate(value);
   };
 
   console.log('Current currency code in settings:', currencyCode, 'version:', version);
@@ -126,6 +132,37 @@ const SettingsSidebar = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Income Settings */}
+          <div className="p-6 border-b">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
+                <span className="font-bold text-yellow-600 dark:text-yellow-400">₹</span>
+              </div>
+              <h2 className="font-medium">Income Settings</h2>
+            </div>
+            <div className="ml-11 space-y-2">
+              <label htmlFor="income-date-select" className="text-sm font-medium">
+                Your income day
+              </label>
+              <select
+                id="income-date-select"
+                className="mt-1 block w-full rounded border px-3 py-1.5 bg-background border-input focus:outline-none focus:ring ring-primary/30 transition-all"
+                value={incomeDate}
+                onChange={handleIncomeDateChange}
+                disabled={isLoadingIncomeDate || isUpdatingIncomeDate}
+              >
+                {Array.from({ length: 31 }).map((_, idx) => (
+                  <option key={idx + 1} value={idx + 1}>
+                    {idx + 1}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Set the date you typically receive your main income. This will adjust monthly tracking and reports to match your personal income cycle.
+              </p>
             </div>
           </div>
 

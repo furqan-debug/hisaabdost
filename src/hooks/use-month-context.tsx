@@ -1,6 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { startOfMonth, format } from 'date-fns';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 interface MonthData {
   monthlyIncome: number;
@@ -24,6 +26,7 @@ interface MonthContextType {
   updateMonthData: (monthKey: string, data: Partial<MonthData>) => void;
   getCurrentMonthData: () => MonthData;
   isLoading: boolean;
+  incomeDate: number; // Added incomeDate
 }
 
 const DEFAULT_MONTH_DATA: MonthData = {
@@ -44,7 +47,30 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   const [selectedMonth, setSelectedMonth] = useState(startOfMonth(new Date()));
   const [monthsData, setMonthsData] = useState<Record<string, MonthData>>({});
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [incomeDate, setIncomeDate] = React.useState<number>(1);
+
+  const { user } = useAuth();
+
+  // Fetch income date from profile
+  useQuery({
+    queryKey: ["profile-income-date", user?.id],
+    queryFn: async () => {
+      if (!user) return 1;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("income_date")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.income_date ?? 1;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    onSuccess: (fetchedIncomeDate) => {
+      setIncomeDate(fetchedIncomeDate);
+    }
+  });
+
   // Update debounce ref
   const updateDebounceRef = useRef<Record<string, number>>({});
 
@@ -147,7 +173,8 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
       monthsData, 
       updateMonthData, 
       getCurrentMonthData,
-      isLoading
+      isLoading,
+      incomeDate // Now included in context for use elsewhere if needed
     }}>
       {children}
     </MonthContext.Provider>

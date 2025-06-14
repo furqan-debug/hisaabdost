@@ -288,6 +288,7 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          income_date: number
           last_login_at: string | null
           monthly_income: number | null
           notification_time: string | null
@@ -304,6 +305,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id: string
+          income_date?: number
           last_login_at?: string | null
           monthly_income?: number | null
           notification_time?: string | null
@@ -320,6 +322,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          income_date?: number
           last_login_at?: string | null
           monthly_income?: number | null
           notification_time?: string | null
