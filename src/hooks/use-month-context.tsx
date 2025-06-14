@@ -52,7 +52,7 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   // Fetch income date from profile
-  useQuery({
+  const { data: incomeDateData } = useQuery({
     queryKey: ["profile-income-date", user?.id],
     queryFn: async () => {
       if (!user) return 1;
@@ -66,10 +66,14 @@ export function MonthProvider({ children }: { children: React.ReactNode }) {
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
-    onSuccess: (fetchedIncomeDate) => {
-      setIncomeDate(fetchedIncomeDate);
-    }
   });
+
+  // Set incomeDate state when query data changes
+  useEffect(() => {
+    if (incomeDateData !== undefined) {
+      setIncomeDate(incomeDateData);
+    }
+  }, [incomeDateData]);
 
   // Update debounce ref
   const updateDebounceRef = useRef<Record<string, number>>({});
