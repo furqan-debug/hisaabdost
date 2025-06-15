@@ -55,13 +55,13 @@ export async function scanReceipt({
     console.log('FormData prepared, calling edge function...');
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
-    // Use Supabase client to call the edge function with proper authentication
+    // Use the anon key directly for the edge function call
     console.log('Invoking scan-receipt edge function...');
     
     const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${supabase.supabaseKey}`,
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrbGZvbGZpdmpvbnpwcHJ5dGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzMjM0NjQsImV4cCI6MjA1NTg5OTQ2NH0.oipdwmQ4lRIyeYX00Irz4q0ZEDlKc9wuQhSPbHRzOKE`,
         'X-Processing-Level': 'high',
       },
       body: formData
