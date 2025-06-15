@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { X, Trash2, Settings, Minimize2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { X, Trash2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -18,29 +17,19 @@ const ChatHeader = React.memo(({
 }: ChatHeaderProps) => {
   return (
     <motion.div 
-      className="finny-chat-header flex items-center justify-between px-4 py-4"
+      className="bg-gray-900 border-b border-gray-700 flex items-center justify-between px-4 py-4"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center space-x-3">
-        <div className="relative">
-          <div className="finny-avatar">
-            <span>F</span>
-          </div>
-          <div className="status-indicator"></div>
-        </div>
-        
         <div>
           <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-base text-white">Finny</h3>
-            <Badge className="finny-chat-badge text-xs">
-              AI Assistant
-            </Badge>
+            <h3 className="font-semibold text-lg text-white">Finny AI Assistant</h3>
           </div>
-          <p className="text-xs text-gray-300 flex items-center gap-1">
+          <p className="text-sm text-gray-300 flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Online • Ready to help
+            Online • Ready to help with your finances
           </p>
         </div>
       </div>
@@ -51,7 +40,7 @@ const ChatHeader = React.memo(({
             variant="ghost"
             size="icon"
             onClick={onMinimize}
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+            className="h-8 w-8 text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl transition-all duration-200"
             title="Minimize chat"
           >
             <Minimize2 size={16} />
@@ -63,7 +52,7 @@ const ChatHeader = React.memo(({
             variant="ghost"
             size="icon"
             onClick={onReset}
-            className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
+            className="h-8 w-8 text-gray-300 hover:text-red-400 hover:bg-red-900/20 rounded-xl transition-all duration-200"
             title="Reset conversation"
           >
             <Trash2 size={16} />
@@ -74,7 +63,7 @@ const ChatHeader = React.memo(({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+          className="h-8 w-8 text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl transition-all duration-200"
           title="Close chat"
         >
           <X size={16} />

@@ -54,8 +54,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="finny-chat-input keyboard-avoid">
-      <form onSubmit={onSubmit} className="finny-chat-input-container">
+    <div className="bg-gray-900 border-t border-gray-700 px-4 py-4">
+      <form onSubmit={onSubmit} className="flex gap-3 items-center max-w-3xl mx-auto">
         <div className="relative flex-1">
           <input 
             type="text" 
@@ -65,8 +65,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             disabled={isDisabled} 
-            className={`w-full transition-all duration-300 ${
-              isFocused ? 'shadow-lg transform scale-[1.02]' : ''
+            className={`w-full text-sm bg-gray-800 text-white border border-gray-600 
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300
+              py-3 px-4 rounded-2xl placeholder:text-gray-400 ${
+              isFocused ? 'shadow-lg' : ''
             }`}
             placeholder={getPlaceholderText()}
           />
@@ -75,9 +77,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
           {isLoading && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <div className="flex gap-1">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           )}
@@ -90,7 +92,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-xl text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
+            className="h-10 w-10 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
             disabled={isDisabled}
             title="Attach file (coming soon)"
           >
@@ -102,7 +104,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-xl text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200"
+            className="h-10 w-10 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
             disabled={isDisabled}
             title="Voice input (coming soon)"
           >
@@ -114,7 +116,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="submit" 
             size="icon" 
             disabled={isDisabled || !value.trim()} 
-            className="finny-send-button"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Send message"
           >
             <SendHorizontal size={18} />

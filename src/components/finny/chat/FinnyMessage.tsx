@@ -2,7 +2,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useCurrency } from '@/hooks/use-currency';
-import MessageAvatar from './components/MessageAvatar';
 import MessageBadges from './components/MessageBadges';
 import MessageTimestamp from './components/MessageTimestamp';
 import ActionIndicator from './components/ActionIndicator';
@@ -43,7 +42,7 @@ const FinnyMessage = React.memo(({
 
   return (
     <motion.div
-      className={`group flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      className={`group flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
@@ -53,15 +52,13 @@ const FinnyMessage = React.memo(({
         delay: isUser ? 0 : 0.1
       }}
     >
-      <MessageAvatar isUser={isUser} timestamp={timestamp} />
-      
       <div className={`
-        max-w-[80%] rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm
+        max-w-[85%] rounded-2xl px-4 py-3 shadow-lg
         ${isUser 
-          ? 'finny-message-user bg-gradient-to-br from-green-500 to-green-600 text-white' 
+          ? 'bg-blue-600 text-white' 
           : isEmpathetic 
-            ? 'finny-message-bot bg-gradient-to-br from-purple-600/90 to-purple-700/90 text-white border border-purple-500/30' 
-            : 'finny-message-bot bg-gradient-to-br from-[#2D3748]/90 to-[#4A5568]/90 text-white border border-gray-600/30'
+            ? 'bg-gray-800 text-gray-100 border border-gray-600' 
+            : 'bg-gray-800 text-gray-100 border border-gray-600'
         }
       `}>
         <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
