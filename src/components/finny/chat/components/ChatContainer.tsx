@@ -1,19 +1,24 @@
+import React, { useRef, useEffect } from 'react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ChatInput } from './ChatInput';
+import { TypingIndicator } from './TypingIndicator';
+import { QuickReplies } from './QuickReplies';
+import { Message } from '../types';
+import { formatDistanceToNow } from 'date-fns';
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useIsMobile } from '@/hooks/use-mobile';
-import ChatHeader from '../ChatHeader';
-import ChatInput from '../ChatInput';
-import { MessagesArea } from './MessagesArea';
-import { usePullToClose } from '../hooks/usePullToClose';
-import { Message, QuickReply } from '../types';
+import { QuickActionsPanel } from '../../components/QuickActionsPanel';
+import { ProactiveInsights } from '../../components/ProactiveInsights';
+import { QuickAction } from '../../constants/quickActions';
 
 interface ChatContainerProps {
   isOpen: boolean;
   onClose: () => void;
   user: any;
-  oldestMessageTime?: Date;
+  oldestMessageTime: Date | null;
   isConnectingToData: boolean;
   filteredMessages: Message[];
   isTyping: boolean;
@@ -21,8 +26,8 @@ interface ChatContainerProps {
   quickReplies: QuickReply[];
   messagesEndRef: React.RefObject<HTMLDivElement>;
   newMessage: string;
-  setNewMessage: (value: string) => void;
-  handleSendMessage: (e: React.FormEvent) => void;
+  setNewMessage: (message: string) => void;
+  handleSendMessage: (e: React.FormEvent | null, customMessage?: string) => void;
   handleQuickReply: (reply: QuickReply) => void;
   resetChat: () => void;
   isAuthPromptOnly: boolean;
@@ -47,115 +52,128 @@ export const ChatContainer = ({
   isAuthPromptOnly
 }: ChatContainerProps) => {
   const isMobile = useIsMobile();
-  const headerRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [isAtTop, setIsAtTop] = useState(true);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const chatHeaderRef = useRef<HTMLDivElement>(null);
+  const [chatHeight, setChatHeight] = React.useState<number>(600);
 
-  // Monitor scroll position to determine if user is at the top
-  useEffect(() => {
-    const scrollArea = scrollAreaRef.current;
-    if (!scrollArea) return;
+  React.useEffect(() => {
+    if (!isMobile) {
+      const calculateChatHeight = () => {
+        const headerHeight = chatHeaderRef.current?.offsetHeight || 60;
+        const windowHeight = window.innerHeight;
+        const maxHeight = windowHeight * 0.8;
+        const calculatedHeight = Math.min(maxHeight, 600);
+        setChatHeight(calculatedHeight - headerHeight);
+      };
 
-    const handleScroll = () => {
-      const scrollTop = scrollArea.scrollTop;
-      setIsAtTop(scrollTop <= 10);
-    };
+      calculateChatHeight();
+      window.addEventListener('resize', calculateChatHeight);
 
-    scrollArea.addEventListener('scroll', handleScroll);
-    return () => scrollArea.removeEventListener('scroll', handleScroll);
-  }, []);
+      return () => {
+        window.removeEventListener('resize', calculateChatHeight);
+      };
+    }
+  }, [isMobile]);
 
-  // Use the pull-to-close hook
-  usePullToClose({ isOpen, isAtTop, headerRef, onClose });
-
-  const handleMinimize = () => {
-    setIsMinimized(!isMinimized);
+  const handleQuickAction = (action: QuickAction) => {
+    handleSendMessage(null, action.action);
   };
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div 
-          className={`fixed z-50 ${
-            isMobile 
-              ? 'inset-0 m-0 flex flex-col' 
-              : isMinimized
-                ? 'bottom-4 right-4 w-80 h-16'
-                : 'bottom-4 right-4 md:bottom-6 md:right-6 w-[95vw] max-w-[420px] h-[85vh] max-h-[700px]'
-          }`}
-          initial={{
-            opacity: 0,
-            y: isMobile ? 100 : 50,
-            scale: 0.9
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            scale: 1
-          }}
-          exit={{
-            opacity: 0,
-            y: isMobile ? 100 : 50,
-            scale: 0.9
-          }}
-          transition={{
-            type: 'spring',
-            damping: 30,
-            stiffness: 300
-          }}
-        >
-          <Card className="finny-chat-card flex flex-col h-full overflow-hidden">
-            <div className="flex flex-col h-full keyboard-aware">
-              <div className="flex-none" ref={headerRef}>
-                <ChatHeader 
-                  onClose={onClose} 
-                  onReset={resetChat} 
-                  onMinimize={!isMobile ? handleMinimize : undefined}
-                />
-              </div>
-              
-              <AnimatePresence>
-                {!isMinimized && (
-                  <motion.div
-                    className="flex flex-col flex-1 overflow-hidden min-h-0"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <MessagesArea
-                      user={user}
-                      oldestMessageTime={oldestMessageTime}
-                      isConnectingToData={isConnectingToData}
-                      filteredMessages={filteredMessages}
-                      isTyping={isTyping}
-                      isLoading={isLoading}
-                      quickReplies={quickReplies}
-                      messagesEndRef={messagesEndRef}
-                      scrollAreaRef={scrollAreaRef}
-                      isAuthPromptOnly={isAuthPromptOnly}
-                      handleQuickReply={handleQuickReply}
-                    />
+  const handleInsightAction = (action: string) => {
+    handleSendMessage(null, action);
+  };
 
-                    <div className="flex-none">
-                      <ChatInput 
-                        value={newMessage} 
-                        onChange={e => setNewMessage(e.target.value)} 
-                        onSubmit={handleSendMessage}
-                        disabled={isAuthPromptOnly && !user}
-                        isLoading={isLoading} 
-                        isAuthenticated={!!user} 
-                        isConnecting={isConnectingToData} 
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+  if (!isOpen) return null;
+
+  return (
+    <div className={`
+      fixed inset-0 z-50 
+      ${isMobile ? 'bg-slate-900 finny-chat-mobile-fix' : 'pointer-events-none'}
+    `}>
+      <Card className={`
+        finny-chat-card
+        ${isMobile 
+          ? 'h-full w-full rounded-none border-0' 
+          : 'fixed bottom-4 right-4 w-96 h-[600px] max-h-[80vh]'
+        }
+        ${isMobile ? '' : 'pointer-events-auto'}
+        overflow-hidden flex flex-col
+      `}>
+        {/* Header */}
+        <div className="finny-chat-header p-4 border-b border-slate-700/30 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src="/finny-avatar.png" alt="Finny AI Avatar" />
+                <AvatarFallback>FA</AvatarFallback>
+              </Avatar>
+              <div className="space-y-0.5">
+                <h3 className="font-medium text-sm">Finny AI</h3>
+                <p className="text-xs text-muted-foreground">
+                  Online
+                </p>
+              </div>
             </div>
-          </Card>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            <Button variant="ghost" size="sm" className="hover:bg-slate-700/20 rounded-full" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        </div>
+
+        {/* Enhanced Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {user && !isAuthPromptOnly && (
+            <div className="flex-shrink-0 p-3 border-b border-slate-700/30 space-y-3">
+              <ProactiveInsights onInsightAction={handleInsightAction} />
+              <QuickActionsPanel onActionSelect={handleQuickAction} isLoading={isLoading} />
+            </div>
+          )}
+
+          {/* Messages Area */}
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full finny-messages-container">
+              {isConnectingToData && (
+                <div className="flex items-center justify-center h-full">
+                  Connecting to your data...
+                </div>
+              )}
+              
+              {filteredMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`finny-message ${message.isUser ? 'finny-message-user text-right' : 'finny-message-bot text-left'} mb-3 last:mb-0`}
+                >
+                  <div className="flex flex-col">
+                    <div className={`finny-message-content max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-2 ${message.isUser ? 'bg-blue-600 text-white ml-auto' : 'bg-slate-800 text-slate-200 mr-auto'}`}>
+                      {message.content}
+                    </div>
+                    <span className="text-[0.65rem] text-slate-400 mt-1 ml-auto mr-0">
+                      {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="finny-message finny-message-bot text-left mb-3">
+                  <TypingIndicator />
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </ScrollArea>
+          </div>
+
+          {/* Input Area */}
+          <div className="finny-chat-input keyboard-avoid flex-shrink-0">
+            <ChatInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              isMobile={isMobile}
+            />
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };

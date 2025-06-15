@@ -21,6 +21,7 @@ import {
 import { formatCurrency } from '@/utils/formatters';
 import { useFinny } from '../context/FinnyContext';
 import { CurrencyCode } from '@/utils/currencyUtils';
+import { EnhancedExtractor } from '../utils/enhancedExpenseExtractor';
 
 export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: CurrencyCode) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
@@ -115,6 +116,45 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
 
     console.log("Sending message to Finny:", messageText);
 
+    // Enhanced auto-extraction with improved patterns
+    const expenseData = EnhancedExtractor.extractExpense(messageText);
+    const budgetData = EnhancedExtractor.extractBudget(messageText);
+    const goalData = EnhancedExtractor.extractGoal(messageText);
+
+    let autoProcessed = false;
+    let autoMessage = '';
+
+    // Try to auto-process expense with higher confidence threshold
+    if (expenseData && expenseData.confidence > 0.7) {
+      try {
+        console.log("Auto-processing expense:", expenseData);
+        
+        // Process the expense immediately
+        const response = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: expenseData.amount,
+            category: expenseData.category,
+            description: expenseData.description,
+            date: expenseData.date || new Date().toISOString().split('T')[0]
+          })
+        });
+
+        if (response.ok) {
+          autoProcessed = true;
+          autoMessage = `✅ Expense added: ${formatCurrency(expenseData.amount, currencyCode)} for ${expenseData.description} in ${expenseData.category}`;
+          
+          // Trigger refresh events
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('expense-added'));
+          }, 300);
+        }
+      } catch (error) {
+        console.error("Auto-expense processing failed:", error);
+      }
+    }
+
     const userMessage = {
       id: Date.now().toString(),
       content: messageText,
@@ -130,6 +170,24 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     setIsTyping(true);
 
     try {
+      // If we auto-processed something, provide immediate feedback
+      if (autoProcessed) {
+        setIsTyping(false);
+        const autoResponseMessage = {
+          id: (Date.now() + 1).toString(),
+          content: autoMessage + "\n\nIs there anything else I can help you with? 😊",
+          isUser: false,
+          timestamp: new Date(),
+          hasAction: true,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        };
+
+        setMessages(prev => [...prev, autoResponseMessage]);
+        saveMessage(autoResponseMessage);
+        setIsLoading(false);
+        return;
+      }
+
       const recentMessages = [...messages.slice(-5), userMessage];
 
       const categoryMatch = messageText.match(PATTERNS.CATEGORY);
