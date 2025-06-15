@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { SendHorizontal, Mic, Paperclip } from 'lucide-react';
+import { SendHorizontal, Sparkles } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCurrency } from '@/hooks/use-currency';
 import { getCurrencyByCode } from '@/utils/currencyUtils';
@@ -21,7 +22,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onChange,
   onSubmit,
   disabled,
-  placeholder = 'Message Finny...',
+  placeholder = 'Ask Finny anything about your finances...',
   isLoading,
   isAuthenticated,
   isConnecting
@@ -53,8 +54,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border-t border-gray-100 px-4 py-3">
-      <form onSubmit={onSubmit} className="flex gap-2 items-center max-w-3xl mx-auto">
+    <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-t border-gray-200/50 px-6 py-4 backdrop-blur-sm">
+      <form onSubmit={onSubmit} className="flex gap-3 items-center max-w-4xl mx-auto">
         <div className="relative flex-1">
           <input 
             type="text" 
@@ -64,38 +65,44 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             disabled={isDisabled} 
-            className={`w-full text-sm bg-gray-100 text-gray-900 border border-transparent 
-              focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300
-              py-3 px-4 rounded-xl placeholder:text-gray-500 ${
-              isFocused ? 'shadow-md bg-white' : ''
-            }`}
+            className={`w-full text-sm bg-white text-gray-900 border-2 border-gray-200
+              focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300
+              py-4 px-6 rounded-2xl placeholder:text-gray-500 font-medium shadow-sm
+              ${isFocused ? 'shadow-lg bg-white border-blue-500' : 'hover:border-gray-300'}
+              ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
             placeholder={getPlaceholderText()}
           />
           
+          {/* Sparkle decoration when focused */}
+          {isFocused && !isDisabled && (
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+              <Sparkles size={16} className="text-blue-500 animate-pulse" />
+            </div>
+          )}
+          
           {/* Loading indicator */}
           {isLoading && (
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+            <div className="absolute right-6 top-1/2 transform -translate-y-1/2">
               <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse"></div>
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center">
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={isDisabled || !value.trim()} 
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-11 w-11 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:bg-blue-500/50 disabled:cursor-not-allowed"
-            title="Send message"
-          >
-            <SendHorizontal size={18} />
-          </Button>
-        </div>
+        {/* Send button */}
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={isDisabled || !value.trim()} 
+          className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-2xl h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ring-2 ring-blue-500/20"
+          title="Send message"
+        >
+          <SendHorizontal size={20} />
+        </Button>
       </form>
     </div>
   );
