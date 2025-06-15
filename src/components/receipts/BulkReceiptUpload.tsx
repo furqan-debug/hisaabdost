@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, FileImage, Loader2 } from 'lucide-react';
+import { Upload, X, FileImage, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { uploadToSupabase } from '@/utils/receipt/uploadService';
 import { useAuth } from '@/lib/auth';
@@ -16,10 +16,11 @@ interface BulkReceiptUploadProps {
 interface UploadItem {
   file: File;
   id: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
+  status: 'pending' | 'uploading' | 'completed' | 'error';
   preview?: string;
   error?: string;
   receiptUrl?: string;
+  progress?: number;
 }
 
 export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUploadProps) {
@@ -31,11 +32,28 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    const newItems: UploadItem[] = files.map(file => ({
+    // Validate file types
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file`);
+        return false;
+      }
+      
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10MB)`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    const newItems: UploadItem[] = validFiles.map(file => ({
       file,
       id: `${file.name}-${Date.now()}-${Math.random()}`,
       status: 'pending',
-      preview: URL.createObjectURL(file)
+      preview: URL.createObjectURL(file),
+      progress: 0
     }));
 
     setUploadItems(prev => [...prev, ...newItems]);
@@ -66,16 +84,35 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
     let completedCount = 0;
     let errorCount = 0;
 
-    // Process receipts sequentially to avoid overwhelming the system
-    for (const item of uploadItems) {
-      if (item.status === 'completed') continue;
+    // Process receipts with better progress tracking
+    for (let i = 0; i < uploadItems.length; i++) {
+      const item = uploadItems[i];
+      
+      if (item.status === 'completed') {
+        completedCount++;
+        continue;
+      }
 
+      // Update status to uploading
       setUploadItems(prev => 
-        prev.map(i => i.id === item.id ? { ...i, status: 'processing' } : i)
+        prev.map(uploadItem => 
+          uploadItem.id === item.id 
+            ? { ...uploadItem, status: 'uploading', progress: 10 } 
+            : uploadItem
+        )
       );
 
       try {
-        console.log(`Processing receipt: ${item.file.name}`);
+        console.log(`Processing receipt ${i + 1}/${uploadItems.length}: ${item.file.name}`);
+        
+        // Update progress
+        setUploadItems(prev => 
+          prev.map(uploadItem => 
+            uploadItem.id === item.id 
+              ? { ...uploadItem, progress: 50 } 
+              : uploadItem
+          )
+        );
         
         // Upload the file to Supabase storage
         const receiptUrl = await uploadToSupabase(item.file, user.id);
@@ -84,11 +121,16 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
           console.log(`Successfully uploaded: ${item.file.name} -> ${receiptUrl}`);
           
           setUploadItems(prev => 
-            prev.map(i => i.id === item.id ? { 
-              ...i, 
-              status: 'completed',
-              receiptUrl 
-            } : i)
+            prev.map(uploadItem => 
+              uploadItem.id === item.id 
+                ? { 
+                    ...uploadItem, 
+                    status: 'completed',
+                    receiptUrl,
+                    progress: 100 
+                  } 
+                : uploadItem
+            )
           );
           completedCount++;
         } else {
@@ -96,20 +138,27 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
         }
       } catch (error) {
         console.error(`Error processing receipt ${item.file.name}:`, error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage = error instanceof Error ? error.message : 'Upload failed';
         
         setUploadItems(prev => 
-          prev.map(i => i.id === item.id ? { 
-            ...i, 
-            status: 'error', 
-            error: errorMessage
-          } : i)
+          prev.map(uploadItem => 
+            uploadItem.id === item.id 
+              ? { 
+                  ...uploadItem, 
+                  status: 'error', 
+                  error: errorMessage,
+                  progress: 0
+                } 
+              : uploadItem
+          )
         );
         errorCount++;
       }
 
       // Small delay between uploads to prevent rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (i < uploadItems.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     setIsProcessing(false);
@@ -132,30 +181,45 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
   };
 
   const getProgress = () => {
-    const total = uploadItems.length;
-    const completed = uploadItems.filter(item => 
-      item.status === 'completed' || item.status === 'error'
-    ).length;
-    return total > 0 ? (completed / total) * 100 : 0;
+    if (uploadItems.length === 0) return 0;
+    
+    const totalProgress = uploadItems.reduce((sum, item) => {
+      switch (item.status) {
+        case 'completed': return sum + 100;
+        case 'uploading': return sum + (item.progress || 0);
+        case 'error': return sum + 0;
+        default: return sum + 0;
+      }
+    }, 0);
+    
+    return totalProgress / uploadItems.length;
   };
 
   const getStatusColor = (status: UploadItem['status']) => {
     switch (status) {
       case 'completed': return 'text-green-600';
       case 'error': return 'text-red-600';
-      case 'processing': return 'text-blue-600';
+      case 'uploading': return 'text-blue-600';
       default: return 'text-muted-foreground';
     }
   };
 
-  const getStatusIcon = (status: UploadItem['status']) => {
-    switch (status) {
-      case 'processing': return <Loader2 className="h-4 w-4 animate-spin" />;
-      case 'completed': return <div className="h-2 w-2 bg-green-500 rounded-full" />;
-      case 'error': return <div className="h-2 w-2 bg-red-500 rounded-full" />;
-      default: return <div className="h-2 w-2 bg-gray-300 rounded-full" />;
+  const getStatusIcon = (item: UploadItem) => {
+    switch (item.status) {
+      case 'uploading': 
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-600" />;
+      case 'completed': 
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'error': 
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      default: 
+        return <div className="h-2 w-2 bg-gray-300 rounded-full" />;
     }
   };
+
+  const hasErrors = uploadItems.some(item => item.status === 'error');
+  const hasCompleted = uploadItems.some(item => item.status === 'completed');
+  const allCompleted = uploadItems.length > 0 && uploadItems.every(item => item.status === 'completed');
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -171,7 +235,7 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm font-medium mb-2">Drop receipt images here or click to browse</p>
           <p className="text-xs text-muted-foreground mb-4">
-            Supports multiple images: JPG, PNG, HEIC
+            Supports multiple images: JPG, PNG, HEIC (Max 10MB each)
           </p>
           <input
             ref={fileInputRef}
@@ -194,7 +258,7 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
         {uploadItems.length > 0 && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Progress</span>
+              <span>Overall Progress</span>
               <span>{Math.round(getProgress())}%</span>
             </div>
             <Progress value={getProgress()} className="h-2" />
@@ -222,9 +286,17 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
                   {item.error && (
                     <p className="text-xs text-red-600">{item.error}</p>
                   )}
+                  {item.status === 'uploading' && item.progress !== undefined && (
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                      <div 
+                        className="bg-blue-600 h-1 rounded-full transition-all duration-300" 
+                        style={{ width: `${item.progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className={`flex items-center gap-2 ${getStatusColor(item.status)}`}>
-                  {getStatusIcon(item.status)}
+                  {getStatusIcon(item)}
                   <span className="text-xs capitalize">{item.status}</span>
                 </div>
                 {!isProcessing && item.status === 'pending' && (
@@ -247,7 +319,7 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
           <div className="flex gap-2 pt-4">
             <Button 
               onClick={processAllReceipts}
-              disabled={isProcessing || uploadItems.every(item => item.status === 'completed')}
+              disabled={isProcessing || allCompleted}
               className="flex-1"
             >
               {isProcessing ? (
@@ -255,6 +327,8 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Uploading...
                 </>
+              ) : allCompleted ? (
+                'All Uploaded'
               ) : (
                 'Upload All Receipts'
               )}
@@ -271,6 +345,22 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
             >
               Clear All
             </Button>
+          </div>
+        )}
+
+        {/* Status Summary */}
+        {(hasCompleted || hasErrors) && (
+          <div className="text-xs text-muted-foreground">
+            {hasCompleted && (
+              <p className="text-green-600">
+                ✓ {uploadItems.filter(item => item.status === 'completed').length} uploaded successfully
+              </p>
+            )}
+            {hasErrors && (
+              <p className="text-red-600">
+                ✗ {uploadItems.filter(item => item.status === 'error').length} failed to upload
+              </p>
+            )}
           </div>
         )}
       </CardContent>

@@ -70,7 +70,7 @@ async function performUpload(
   // Create a unique file name
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 10);
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
   const fileName = `${timestamp}-${randomString}.${fileExt}`;
   
   // Create storage path
@@ -78,22 +78,57 @@ async function performUpload(
   const bucketName = 'receipts';
   
   try {
-    // Ensure bucket exists
-    await ensureBucketExists(bucketName);
+    // First ensure bucket exists
+    const bucketExists = await ensureBucketExists(bucketName);
+    if (!bucketExists) {
+      console.error('Failed to create or access bucket');
+      toast.error('Storage not available');
+      return null;
+    }
     
     console.log(`Uploading to bucket: ${bucketName}, path: ${storagePath}`);
     
-    // Upload file
+    // Upload file with better error handling
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(storagePath, file, {
         cacheControl: '3600',
-        upsert: true
+        upsert: false // Don't overwrite existing files
       });
       
     if (error) {
       console.error('Supabase upload error:', error);
-      toast.error(`Upload failed: ${error.message}`);
+      
+      // Handle specific error cases
+      if (error.message.includes('Bucket not found')) {
+        toast.error('Storage bucket not available. Please contact support.');
+      } else if (error.message.includes('The resource already exists')) {
+        // Try with a different filename
+        const newFileName = `${timestamp}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const newStoragePath = userId ? `users/${userId}/${newFileName}` : `public/${newFileName}`;
+        
+        const { data: retryData, error: retryError } = await supabase.storage
+          .from(bucketName)
+          .upload(newStoragePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (retryError) {
+          toast.error(`Upload failed: ${retryError.message}`);
+          return null;
+        }
+        
+        // Get the public URL for the retry upload
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(newStoragePath);
+          
+        console.log(`Retry upload successful! Public URL: ${publicUrl}`);
+        return publicUrl;
+      } else {
+        toast.error(`Upload failed: ${error.message}`);
+      }
       return null;
     }
     
@@ -112,31 +147,43 @@ async function performUpload(
 }
 
 /**
- * Ensure bucket exists
+ * Ensure bucket exists and create if necessary
  */
-async function ensureBucketExists(bucketName: string): Promise<void> {
+async function ensureBucketExists(bucketName: string): Promise<boolean> {
   try {
-    // Check if bucket exists by trying to list files
-    const { error: listError } = await supabase.storage
+    // First check if bucket exists by trying to list files
+    const { data, error: listError } = await supabase.storage
       .from(bucketName)
       .list('', { limit: 1 });
     
     if (!listError) {
-      return; // Bucket exists
+      console.log(`Bucket ${bucketName} exists and is accessible`);
+      return true; // Bucket exists and is accessible
     }
     
-    console.log(`Creating bucket: ${bucketName}`);
+    console.log(`Bucket ${bucketName} may not exist, attempting to create...`);
     
     // Try to create the bucket
-    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+    const { data: bucketData, error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true,
-      fileSizeLimit: 10485760 // 10MB
+      fileSizeLimit: 10485760, // 10MB
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/heic', 'image/heif', 'image/webp']
     });
     
-    if (createError && !createError.message.includes('already exists')) {
-      console.warn(`Couldn't create bucket: ${createError.message}`);
+    if (createError) {
+      if (createError.message.includes('already exists')) {
+        console.log(`Bucket ${bucketName} already exists`);
+        return true;
+      } else {
+        console.error(`Failed to create bucket: ${createError.message}`);
+        return false;
+      }
     }
+    
+    console.log(`Successfully created bucket: ${bucketName}`);
+    return true;
   } catch (error) {
     console.error(`Error with bucket ${bucketName}:`, error);
+    return false;
   }
 }
