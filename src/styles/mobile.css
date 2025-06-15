@@ -15,7 +15,6 @@ Most styles are now organized into component-specific files:
   body, html {
     overflow-x: hidden;
     width: 100%;
-    position: relative;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: none;
   }
