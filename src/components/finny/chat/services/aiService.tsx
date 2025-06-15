@@ -17,6 +17,15 @@ export async function processMessageWithAI(
     throw new Error("You must be logged in to use Finny");
   }
 
+  console.log("Processing message with AI:", {
+    messageToSend,
+    userId,
+    analysisType,
+    specificCategory,
+    currencyCode,
+    messageLength: messageToSend.length
+  });
+
   // Get enhanced user profile data for personalization
   try {
     const { data: userProfile } = await supabase
@@ -25,39 +34,56 @@ export async function processMessageWithAI(
       .eq('id', userId)
       .single();
 
-    console.log("Processing message with AI:", {
-      messageToSend,
-      userId,
+    console.log("User profile retrieved for AI processing:", {
       userProfileFound: !!userProfile,
-      analysisType,
-      specificCategory,
-      currencyCode,
       profileCurrency: userProfile?.preferred_currency
     });
     
     // Always use the passed currencyCode, but if not provided, fall back to profile preferred_currency
     const effectiveCurrencyCode = currencyCode || userProfile?.preferred_currency || 'USD';
       
+    const requestBody = {
+      message: messageToSend,
+      userId,
+      chatHistory: recentMessages,
+      analysisType,
+      specificCategory,
+      currencyCode: effectiveCurrencyCode,
+      userName: userProfile?.full_name,
+      userAge: userProfile?.age,
+      userGender: userProfile?.gender,
+    };
+
+    console.log("Calling Finny edge function with:", {
+      ...requestBody,
+      chatHistory: `${recentMessages.length} messages`
+    });
+
     const { data, error } = await supabase.functions.invoke('finny-chat', {
-      body: {
-        message: messageToSend,
-        userId,
-        chatHistory: recentMessages,
-        analysisType,
-        specificCategory,
-        currencyCode: effectiveCurrencyCode,
-        userName: userProfile?.full_name,
-        userAge: userProfile?.age,
-        userGender: userProfile?.gender,
-      },
+      body: requestBody,
     });
 
     if (error) {
-      console.error('Error calling Finny:', error);
-      throw new Error(`Failed to get response: ${error.message}`);
+      console.error('Error calling Finny edge function:', error);
+      throw new Error(`Failed to get response from Finny: ${error.message}`);
+    }
+
+    if (!data) {
+      console.error('No data received from Finny edge function');
+      throw new Error('No response received from Finny service');
+    }
+
+    if (!data.response) {
+      console.error('Invalid response structure from Finny:', data);
+      throw new Error('Invalid response format from Finny service');
     }
     
-    console.log('Finny response received with currency:', effectiveCurrencyCode);
+    console.log('Finny response received successfully:', {
+      hasResponse: !!data.response,
+      hasAction: !!data.action,
+      responseLength: data.response?.length || 0,
+      currency: effectiveCurrencyCode
+    });
     
     // Check if the response indicates an expense was added
     if (data.action && data.action.type === 'add_expense') {
@@ -158,6 +184,16 @@ export async function processMessageWithAI(
     return data;
   } catch (error) {
     console.error('Error processing AI message:', error);
+    
+    // Provide more specific error messages
+    if (error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to Finny service');
+    } else if (error.message.includes('timeout')) {
+      throw new Error('Request timeout: Finny is taking too long to respond');
+    } else if (error.message.includes('Failed to get response')) {
+      throw new Error('Service error: Finny service is temporarily unavailable');
+    }
+    
     throw error;
   }
 }

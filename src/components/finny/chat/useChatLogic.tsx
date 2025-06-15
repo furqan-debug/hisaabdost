@@ -113,6 +113,8 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
       return;
     }
 
+    console.log("Sending message to Finny:", messageText);
+
     const userMessage = {
       id: Date.now().toString(),
       content: messageText,
@@ -164,15 +166,23 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
         specificCategory = deleteGoalMatch[1].trim();
       }
 
-      console.log(`Using currency ${currencyCode} for Finny chat`);
+      console.log(`Processing message with currency ${currencyCode} for Finny chat`);
+      
       const data = await processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode);
+      
+      console.log("Received response from Finny:", data);
       
       setIsTyping(false);
 
-      const hasAction = data.response.includes('✅') || data.rawResponse.includes('[ACTION:');
+      // Check if we have a valid response
+      if (!data || !data.response) {
+        throw new Error("Invalid response from Finny service");
+      }
+
+      const hasAction = data.response.includes('✅') || (data.rawResponse && data.rawResponse.includes('[ACTION:'));
       
-      const newMessage = {
-        id: Date.now().toString(),
+      const finnyResponseMessage = {
+        id: (Date.now() + 1).toString(),
         content: data.response,
         isUser: false,
         timestamp: new Date(),
@@ -180,27 +190,42 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
 
-      setMessages(prev => [...prev, newMessage]);
-      saveMessage(newMessage);
+      setMessages(prev => [...prev, finnyResponseMessage]);
+      saveMessage(finnyResponseMessage);
 
-      const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
-      setQuickReplies(updatedReplies);
+      // Update quick replies based on the response
+      try {
+        const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
+        setQuickReplies(updatedReplies);
+      } catch (replyError) {
+        console.error("Error updating quick replies:", replyError);
+        // Continue without updating quick replies
+      }
 
     } catch (error) {
-      console.error('Error in chat:', error);
-      toast.error(`Sorry, I couldn't process that request: ${error.message}`);
+      console.error('Error in Finny chat:', error);
+      
+      let errorMessage = "Sorry, I'm having trouble processing your request right now.";
+      
+      if (error.message.includes("Failed to get response")) {
+        errorMessage = "I'm having connectivity issues. Please try again in a moment.";
+      } else if (error.message.includes("Invalid response")) {
+        errorMessage = "I received an unexpected response. Please try rephrasing your message.";
+      }
+      
+      toast.error(errorMessage);
       
       setIsTyping(false);
-      const errorMessage = {
-        id: Date.now().toString(),
-        content: "Sorry, I'm having trouble processing your request. Please try again later.",
+      const errorResponseMessage = {
+        id: (Date.now() + 1).toString(),
+        content: `❌ ${errorMessage} Please try again later.`,
         isUser: false,
         timestamp: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       };
       
-      setMessages(prev => [...prev, errorMessage]);
-      saveMessage(errorMessage);
+      setMessages(prev => [...prev, errorResponseMessage]);
+      saveMessage(errorResponseMessage);
     } finally {
       setIsLoading(false);
     }
@@ -213,6 +238,7 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
       }
       return;
     }
+    console.log("Quick reply selected:", reply.action);
     handleSendMessage(null, reply.action);
   };
 
