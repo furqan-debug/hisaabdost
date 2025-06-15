@@ -12,6 +12,7 @@ import { startOfMonth } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { useEffect } from "react";
+import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -23,7 +24,7 @@ interface CategoryBudgetCardProps {
   onEditBudget: (budget: Budget) => void;
   onDeleteBudget: (budgetId: string, category: string) => void;
   spentAmount: number;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 }
 
 const CategoryBudgetCard = ({ budget, onEditBudget, onDeleteBudget, spentAmount, currencyCode }: CategoryBudgetCardProps) => {
