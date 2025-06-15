@@ -54,6 +54,7 @@ export const ChatContainer = ({
 }: ChatContainerProps) => {
   const isMobile = useIsMobile();
   const chatHeaderRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [chatHeight, setChatHeight] = React.useState<number>(600);
 
   React.useEffect(() => {
@@ -75,9 +76,16 @@ export const ChatContainer = ({
     }
   }, [isMobile]);
 
+  // Auto-scroll to bottom when new messages arrive
+  React.useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [filteredMessages, isTyping]);
+
   const handleQuickAction = (action: QuickAction) => {
     // For manual expense entry, we should trigger the expense form instead of sending a message
-    if (action.type === 'expense' && action.id === 'manual-entry') {
+    if (action.type === 'manual' && action.id === 'manual-entry') {
       // Trigger the expense form to open
       const event = new CustomEvent('open-expense-form', {
         detail: { mode: 'manual' }
@@ -116,7 +124,7 @@ export const ChatContainer = ({
         overflow-hidden flex flex-col
       `}>
         {/* Header */}
-        <div className="finny-chat-header p-4 border-b border-slate-700/30 flex-shrink-0">
+        <div ref={chatHeaderRef} className="finny-chat-header p-4 border-b border-slate-700/30 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
@@ -137,7 +145,7 @@ export const ChatContainer = ({
         </div>
 
         {/* Enhanced Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           {user && !isAuthPromptOnly && (
             <div className="flex-shrink-0 p-3 border-b border-slate-700/30 space-y-3">
               <ProactiveInsights onInsightAction={handleInsightAction} />
@@ -145,42 +153,64 @@ export const ChatContainer = ({
             </div>
           )}
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full finny-messages-container">
-              {isConnectingToData && (
-                <div className="flex items-center justify-center h-full">
-                  Connecting to your data...
-                </div>
-              )}
-              
-              {filteredMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`finny-message ${message.isUser ? 'finny-message-user text-right' : 'finny-message-bot text-left'} mb-3 last:mb-0`}
-                >
-                  <div className="flex flex-col">
-                    <div className={`finny-message-content max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-2 ${message.isUser ? 'bg-blue-600 text-white ml-auto' : 'bg-slate-800 text-slate-200 mr-auto'}`}>
-                      {message.content}
+          {/* Messages Area with proper scrolling */}
+          <div className="flex-1 min-h-0">
+            <ScrollArea 
+              className="h-full touch-scroll-container"
+              ref={scrollAreaRef}
+            >
+              <div className="finny-messages-container p-4">
+                {isConnectingToData && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-white mb-1">Connecting to Finny</div>
+                      <div className="text-xs text-gray-400">Analyzing your financial data...</div>
                     </div>
-                    <span className="text-[0.65rem] text-slate-400 mt-1 ml-auto mr-0">
-                      {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-                    </span>
                   </div>
-                </div>
-              ))}
+                )}
+                
+                {filteredMessages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`finny-message ${message.isUser ? 'finny-message-user text-right' : 'finny-message-bot text-left'} mb-4`}
+                  >
+                    <div className="flex flex-col">
+                      <div className={`finny-message-content max-w-[80%] rounded-2xl px-4 py-3 ${
+                        message.isUser 
+                          ? 'bg-blue-600 text-white ml-auto' 
+                          : 'bg-slate-800 text-slate-200 mr-auto'
+                      }`}>
+                        {message.content}
+                      </div>
+                      <span className="text-[0.65rem] text-slate-400 mt-1 px-2">
+                        {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
 
-              {isTyping && (
-                <div className="finny-message finny-message-bot text-left mb-3">
-                  <TypingIndicator />
-                </div>
-              )}
-              <div ref={messagesEndRef} />
+                {isTyping && (
+                  <div className="finny-message finny-message-bot text-left mb-4">
+                    <TypingIndicator />
+                  </div>
+                )}
+
+                {!isLoading && !isTyping && filteredMessages.length > 0 && !filteredMessages[filteredMessages.length - 1].isUser && (
+                  <QuickReplies 
+                    replies={quickReplies} 
+                    onSelect={handleQuickReply} 
+                    isLoading={isLoading} 
+                    isAuthenticated={!!user} 
+                  />
+                )}
+
+                <div ref={messagesEndRef} className="h-1" />
+              </div>
             </ScrollArea>
           </div>
 
           {/* Input Area */}
-          <div className="finny-chat-input keyboard-avoid flex-shrink-0">
+          <div className="finny-chat-input keyboard-avoid flex-shrink-0 p-4 border-t border-slate-700/30">
             <ChatInput
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
