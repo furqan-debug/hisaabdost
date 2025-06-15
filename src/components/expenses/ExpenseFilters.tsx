@@ -74,8 +74,8 @@ export function ExpenseFilters({
       
       {/* Month filter message */}
       {!useCustomDateRange && (
-        <Alert variant="default" className="bg-muted/40 border-border/40 py-2">
-          <AlertDescription className="flex items-center text-xs text-muted-foreground">
+        <Alert variant="default" className="bg-primary/10 border-primary/20 border py-2">
+          <AlertDescription className="flex items-center text-xs text-primary/80">
             Showing expenses for {format(selectedMonth, 'MMMM yyyy')}. Use a custom range to override.
           </AlertDescription>
         </Alert>
