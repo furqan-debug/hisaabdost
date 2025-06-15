@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ActionIndicatorProps {
   hasAction?: boolean;
@@ -9,27 +9,40 @@ interface ActionIndicatorProps {
   isError: boolean;
 }
 
-const ActionIndicator = ({ hasAction, isSuccess, isError }: ActionIndicatorProps) => {
-  if (!hasAction) return null;
-  
+const ActionIndicator = React.memo(({ hasAction, isSuccess, isError }: ActionIndicatorProps) => {
+  if (!hasAction && !isSuccess && !isError) return null;
+
   return (
-    <div className="flex gap-1.5 items-center mt-1">
-      <Badge variant="outline" className={`
-        text-[10px] py-0 px-1.5 
-        ${isSuccess 
-          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300' 
-          : isError 
-            ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
-            : 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'}
-      `}>
-        <span className="flex items-center gap-1">
-          {isSuccess && <Check size={10} />}
-          {isError && <AlertCircle size={10} />}
-          {isSuccess ? 'Action completed' : isError ? 'Action failed' : 'Action'}
-        </span>
-      </Badge>
-    </div>
+    <motion.div 
+      className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-600/30"
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      transition={{ duration: 0.3 }}
+    >
+      {isSuccess && (
+        <div className="flex items-center gap-1 text-green-400">
+          <CheckCircle size={14} />
+          <span className="text-xs">Action completed</span>
+        </div>
+      )}
+      
+      {isError && (
+        <div className="flex items-center gap-1 text-red-400">
+          <XCircle size={14} />
+          <span className="text-xs">Action failed</span>
+        </div>
+      )}
+      
+      {hasAction && !isSuccess && !isError && (
+        <div className="flex items-center gap-1 text-blue-400">
+          <Zap size={14} />
+          <span className="text-xs">Processing action...</span>
+        </div>
+      )}
+    </motion.div>
   );
-};
+});
+
+ActionIndicator.displayName = 'ActionIndicator';
 
 export default ActionIndicator;

@@ -4,26 +4,28 @@ import { motion } from 'framer-motion';
 
 const TypingIndicator = () => {
   return (
-    <div className="flex gap-3 items-start px-4 py-2">
-      <div className="w-8 h-8 rounded-full bg-[#9b87f5] flex items-center justify-center">
-        <span className="text-xs font-semibold text-white">F</span>
+    <motion.div 
+      className="flex gap-3 items-start px-4 py-2"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="finny-avatar">
+        <span>F</span>
       </div>
-      <div className="bg-[#1A1F2C] rounded-2xl px-4 py-3 max-w-[85%]">
-        <div className="flex items-center gap-3">
-          <motion.div
-            className="h-0.5 w-5 bg-white/50 rounded-full"
-            animate={{
-              width: [5, 20, 5],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
+      
+      <div className="typing-indicator">
+        <div className="flex items-center gap-1">
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+        </div>
+        <div className="text-xs text-gray-400 mt-1">
+          Finny is typing...
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

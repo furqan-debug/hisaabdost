@@ -12,7 +12,7 @@ interface FinnyMessageProps {
   isUser: boolean;
   timestamp: Date;
   hasAction?: boolean;
-  visualData?: any; // Keeping this prop to avoid breaking existing code, but we won't use it
+  visualData?: any;
 }
 
 const FinnyMessage = React.memo(({ 
@@ -25,13 +25,7 @@ const FinnyMessage = React.memo(({
   
   // Remove any action markers from the message content for display
   const formattedContent = useMemo(() => {
-    // Replace any USD currency symbols with the proper currency symbol based on selected currency
     let processedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
-    
-    // Check for success/error indicators
-    const isSuccess = processedContent.includes('✅');
-    const isError = processedContent.includes('❌');
-
     return processedContent;
   }, [content, currencyCode]);
   
@@ -49,28 +43,28 @@ const FinnyMessage = React.memo(({
 
   return (
     <motion.div
-      className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
+      className={`group flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
         type: "spring", 
-        stiffness: 260, 
-        damping: 20,
+        stiffness: 300, 
+        damping: 25,
         delay: isUser ? 0 : 0.1
       }}
     >
       <MessageAvatar isUser={isUser} timestamp={timestamp} />
       
       <div className={`
-        max-w-[85%] rounded-lg px-3.5 py-2.5 shadow-sm
+        max-w-[80%] rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm
         ${isUser 
-          ? 'bg-green-500 text-white' 
+          ? 'finny-message-user bg-gradient-to-br from-green-500 to-green-600 text-white' 
           : isEmpathetic 
-            ? 'bg-[#3e3559] text-white' // More empathetic tone for supportive messages
-            : 'bg-[#352F44] text-white'
+            ? 'finny-message-bot bg-gradient-to-br from-purple-600/90 to-purple-700/90 text-white border border-purple-500/30' 
+            : 'finny-message-bot bg-gradient-to-br from-[#2D3748]/90 to-[#4A5568]/90 text-white border border-gray-600/30'
         }
       `}>
-        <div className="text-sm whitespace-pre-wrap break-words">
+        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
           {formattedContent}
         </div>
 
@@ -81,7 +75,7 @@ const FinnyMessage = React.memo(({
           isError={isError} 
         />
         
-        <div className="flex justify-between items-center mt-1">
+        <div className="flex justify-between items-end mt-2">
           <MessageBadges 
             content={formattedContent}
             isUser={isUser}

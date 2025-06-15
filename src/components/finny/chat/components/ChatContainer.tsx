@@ -50,6 +50,7 @@ export const ChatContainer = ({
   const headerRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   // Monitor scroll position to determine if user is at the top
   useEffect(() => {
@@ -58,7 +59,7 @@ export const ChatContainer = ({
 
     const handleScroll = () => {
       const scrollTop = scrollArea.scrollTop;
-      setIsAtTop(scrollTop <= 10); // Consider "at top" if within 10px of top
+      setIsAtTop(scrollTop <= 10);
     };
 
     scrollArea.addEventListener('scroll', handleScroll);
@@ -68,19 +69,25 @@ export const ChatContainer = ({
   // Use the pull-to-close hook
   usePullToClose({ isOpen, isAtTop, headerRef, onClose });
 
+  const handleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className={`fixed z-40 ${
+          className={`fixed z-50 ${
             isMobile 
               ? 'inset-0 m-0 flex flex-col' 
-              : 'bottom-20 right-4 md:bottom-24 md:right-8 w-[90vw] sm:w-[400px]'
+              : isMinimized
+                ? 'bottom-4 right-4 w-80 h-16'
+                : 'bottom-4 right-4 md:bottom-6 md:right-6 w-[90vw] sm:w-[420px] h-[600px] md:h-[700px]'
           }`}
           initial={{
             opacity: 0,
-            y: 20,
-            scale: 0.95
+            y: isMobile ? 100 : 50,
+            scale: 0.9
           }}
           animate={{
             opacity: 1,
@@ -89,46 +96,62 @@ export const ChatContainer = ({
           }}
           exit={{
             opacity: 0,
-            y: 20,
-            scale: 0.95
+            y: isMobile ? 100 : 50,
+            scale: 0.9
           }}
           transition={{
             type: 'spring',
-            damping: 25,
+            damping: 30,
             stiffness: 300
           }}
         >
-          <Card className="finny-chat-card flex flex-col h-full">
+          <Card className="finny-chat-card flex flex-col h-full overflow-hidden">
             <div className="flex flex-col h-full keyboard-aware">
               <div className="flex-none" ref={headerRef}>
-                <ChatHeader onClose={onClose} onReset={resetChat} />
-              </div>
-              
-              <MessagesArea
-                user={user}
-                oldestMessageTime={oldestMessageTime}
-                isConnectingToData={isConnectingToData}
-                filteredMessages={filteredMessages}
-                isTyping={isTyping}
-                isLoading={isLoading}
-                quickReplies={quickReplies}
-                messagesEndRef={messagesEndRef}
-                scrollAreaRef={scrollAreaRef}
-                isAuthPromptOnly={isAuthPromptOnly}
-                handleQuickReply={handleQuickReply}
-              />
-
-              <div className="flex-none">
-                <ChatInput 
-                  value={newMessage} 
-                  onChange={e => setNewMessage(e.target.value)} 
-                  onSubmit={handleSendMessage}
-                  disabled={isAuthPromptOnly && !user}
-                  isLoading={isLoading} 
-                  isAuthenticated={!!user} 
-                  isConnecting={isConnectingToData} 
+                <ChatHeader 
+                  onClose={onClose} 
+                  onReset={resetChat} 
+                  onMinimize={!isMobile ? handleMinimize : undefined}
                 />
               </div>
+              
+              <AnimatePresence>
+                {!isMinimized && (
+                  <motion.div
+                    className="flex flex-col flex-1 overflow-hidden"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MessagesArea
+                      user={user}
+                      oldestMessageTime={oldestMessageTime}
+                      isConnectingToData={isConnectingToData}
+                      filteredMessages={filteredMessages}
+                      isTyping={isTyping}
+                      isLoading={isLoading}
+                      quickReplies={quickReplies}
+                      messagesEndRef={messagesEndRef}
+                      scrollAreaRef={scrollAreaRef}
+                      isAuthPromptOnly={isAuthPromptOnly}
+                      handleQuickReply={handleQuickReply}
+                    />
+
+                    <div className="flex-none">
+                      <ChatInput 
+                        value={newMessage} 
+                        onChange={e => setNewMessage(e.target.value)} 
+                        onSubmit={handleSendMessage}
+                        disabled={isAuthPromptOnly && !user}
+                        isLoading={isLoading} 
+                        isAuthenticated={!!user} 
+                        isConnecting={isConnectingToData} 
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </Card>
         </motion.div>
