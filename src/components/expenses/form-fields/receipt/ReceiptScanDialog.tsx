@@ -32,8 +32,8 @@ export function ReceiptScanDialog({
   setOpen,
   onCleanup,
   onCapture,
-  autoSave = true, // Default to true for automatic saving
-  autoProcess = true, // Default to true for automatic processing
+  autoSave = true,
+  autoProcess = true,
   onSuccess
 }: ReceiptScanDialogProps) {
   const [autoProcessStarted, setAutoProcessStarted] = useState(false);
@@ -43,7 +43,7 @@ export function ReceiptScanDialog({
   useEffect(() => {
     if (file) {
       fingerprintRef.current = `${file.name}-${file.size}-${file.lastModified}`;
-      console.log(`Fingerprint created: ${fingerprintRef.current}`);
+      console.log(`Receipt Dialog: Fingerprint created: ${fingerprintRef.current}`);
     }
   }, [file]);
 
@@ -65,7 +65,7 @@ export function ReceiptScanDialog({
     autoSave,
     setOpen,
     onSuccess,
-    processAllItems: true // Always process all items from the receipt
+    processAllItems: true
   });
 
   const retryHandler = useReceiptRetry({
@@ -93,14 +93,15 @@ export function ReceiptScanDialog({
       !autoProcessStarted &&
       !retryHandler.isProcessingInProgress()
     ) {
-      console.log(`Auto-processing triggered for: ${fingerprintRef.current}`);
+      console.log(`Receipt Dialog: Auto-processing triggered for: ${fingerprintRef.current}`);
+      console.log(`Receipt Dialog: File details - Name: ${file.name}, Size: ${file.size}, Type: ${file.type}`);
       setAutoProcessStarted(true);
 
       // Start processing immediately when dialog opens
       const timer = setTimeout(() => {
-        console.log("Starting automatic receipt scan...");
-        handleScanReceipt(); // Trigger the scan directly
-      }, 500);
+        console.log("Receipt Dialog: Starting automatic receipt scan...");
+        handleScanReceipt();
+      }, 1000); // Increased delay to ensure everything is ready
 
       return () => clearTimeout(timer);
     }
@@ -111,12 +112,14 @@ export function ReceiptScanDialog({
     isAutoProcessing,
     autoProcess,
     autoProcessStarted,
-    handleScanReceipt
+    handleScanReceipt,
+    retryHandler
   ]);
 
   // Reset scan state when dialog closes
   useEffect(() => {
     if (!open) {
+      console.log("Receipt Dialog: Dialog closed, resetting state");
       setAutoProcessStarted(false);
       retryHandler.setAttemptCount(0);
       retryHandler.setProcessing(false);
@@ -126,6 +129,8 @@ export function ReceiptScanDialog({
   // Close dialog after processing completes
   useEffect(() => {
     if (processingComplete && open && !isScanning && !isAutoProcessing) {
+      console.log("Receipt Dialog: Processing complete, closing dialog");
+      
       // Trigger the success callback if provided
       if (onSuccess) {
         onSuccess();
@@ -134,7 +139,7 @@ export function ReceiptScanDialog({
       // Close the dialog with a slight delay
       const timer = setTimeout(() => {
         setOpen(false);
-      }, 1500);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [processingComplete, open, isScanning, isAutoProcessing, setOpen, onSuccess]);

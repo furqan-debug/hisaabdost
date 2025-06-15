@@ -21,12 +21,12 @@ export async function scanReceipt({
   onError
 }: ScanOptions): Promise<ScanResult> {
   if (!file) {
-    console.error('No file provided to scanReceipt');
+    console.error('ReceiptScanner: No file provided to scanReceipt');
     if (onError) onError('No file provided');
     return { success: false, error: 'No file provided' };
   }
 
-  console.log(`Starting receipt scan for file: ${file.name} (${file.size} bytes, type: ${file.type})`);
+  console.log(`ReceiptScanner: Starting receipt scan for file: ${file.name} (${file.size} bytes, type: ${file.type})`);
 
   try {
     if (onProgress) onProgress(10, "Preparing receipt image...");
@@ -34,7 +34,7 @@ export async function scanReceipt({
     // Validate file type
     if (!file.type.startsWith('image/')) {
       const errorMsg = `Invalid file type: ${file.type}. Please upload an image.`;
-      console.error(errorMsg);
+      console.error('ReceiptScanner:', errorMsg);
       if (onError) onError(errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -42,19 +42,20 @@ export async function scanReceipt({
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       const errorMsg = `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`;
-      console.error(errorMsg);
+      console.error('ReceiptScanner:', errorMsg);
       if (onError) onError(errorMsg);
       return { success: false, error: errorMsg };
     }
 
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
-    // Use Supabase functions.invoke method instead of direct fetch
-    console.log('Invoking scan-receipt edge function via Supabase...');
-    
     // Convert file to base64 for edge function
+    console.log('ReceiptScanner: Converting file to base64...');
     const fileBuffer = await file.arrayBuffer();
     const base64File = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+    
+    console.log('ReceiptScanner: Invoking scan-receipt edge function...');
+    if (onProgress) onProgress(40, "Processing with AI...");
     
     const { data, error } = await supabase.functions.invoke('scan-receipt', {
       body: {
@@ -66,13 +67,18 @@ export async function scanReceipt({
       }
     });
 
-    console.log('Edge function response received:', { data, error });
+    console.log('ReceiptScanner: Edge function response received:', { 
+      hasData: !!data, 
+      hasError: !!error,
+      data: data ? JSON.stringify(data, null, 2) : null,
+      error: error ? JSON.stringify(error, null, 2) : null
+    });
 
     // Update progress based on response status
     if (onProgress) onProgress(60, "Processing receipt text...");
 
     if (error) {
-      console.error("Scan API error:", error);
+      console.error("ReceiptScanner: Scan API error:", error);
       const errorMsg = `Server error: ${error.message || 'Unknown error'}`;
       if (onError) onError(errorMsg);
       return { 
@@ -84,7 +90,7 @@ export async function scanReceipt({
 
     if (!data) {
       const errorMsg = "No data returned from scan function";
-      console.error(errorMsg);
+      console.error('ReceiptScanner:', errorMsg);
       if (onError) onError(errorMsg);
       return { 
         success: false, 
@@ -94,7 +100,7 @@ export async function scanReceipt({
     }
 
     if (data.isTimeout) {
-      console.log("Scan timed out on server");
+      console.log("ReceiptScanner: Scan timed out on server");
       if (onTimeout) onTimeout();
       return { 
         success: false, 
@@ -105,7 +111,7 @@ export async function scanReceipt({
     }
 
     if (data.error) {
-      console.error("Server returned error:", data.error);
+      console.error("ReceiptScanner: Server returned error:", data.error);
       if (onError) onError(data.error);
       return { 
         success: false, 
@@ -118,7 +124,7 @@ export async function scanReceipt({
 
     // Check if we have valid scan results
     if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-      console.warn("No items found in scan results, creating fallback expense");
+      console.warn("ReceiptScanner: No items found in scan results, creating fallback expense");
       
       // Create a fallback expense entry
       const fallbackItem = {
@@ -128,6 +134,8 @@ export async function scanReceipt({
         category: "Other",
         paymentMethod: "Card"
       };
+
+      console.log("ReceiptScanner: Created fallback item:", fallbackItem);
 
       return { 
         success: true,
@@ -139,7 +147,7 @@ export async function scanReceipt({
       };
     }
 
-    console.log(`Scan successful! Found ${data.items.length} items`);
+    console.log(`ReceiptScanner: Scan successful! Found ${data.items.length} items:`, data.items);
     if (onProgress) onProgress(100, "Receipt processed!");
 
     // Return success with the extracted data
@@ -152,7 +160,7 @@ export async function scanReceipt({
       receiptUrl
     };
   } catch (networkError) {
-    console.error("Network error during scan:", networkError);
+    console.error("ReceiptScanner: Network error during scan:", networkError);
     const errorMsg = `Network error: ${networkError.message}`;
     if (onError) onError(errorMsg);
     return { 

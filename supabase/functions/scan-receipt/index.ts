@@ -18,49 +18,89 @@ function createTimeout(timeoutMs = 28000) {
   });
 }
 
-// Simple OCR mock function - replace with actual OCR service
+// Enhanced OCR mock function with more realistic data
 async function runOCR(file: File): Promise<any> {
-  console.log(`Running OCR on file: ${file.name}`);
+  console.log(`Edge Function: Running OCR on file: ${file.name}`);
   
   // Simulate processing time
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Mock response with sample data
-  return {
-    success: true,
-    date: new Date().toISOString().split('T')[0],
-    merchant: "Sample Store",
-    total: "25.99",
-    items: [
-      {
-        description: "Coffee",
-        amount: "4.99",
-        category: "Food",
-        paymentMethod: "Card"
-      },
-      {
-        description: "Sandwich",
-        amount: "8.50",
-        category: "Food", 
-        paymentMethod: "Card"
-      },
-      {
-        description: "Tax",
-        amount: "1.25",
-        category: "Other",
-        paymentMethod: "Card"
-      }
-    ]
-  };
+  // Mock response with more realistic receipt data
+  const sampleReceipts = [
+    {
+      success: true,
+      date: new Date().toISOString().split('T')[0],
+      merchant: "Grocery Store",
+      total: "45.67",
+      items: [
+        {
+          description: "Milk",
+          amount: "4.99",
+          category: "Food",
+          paymentMethod: "Card"
+        },
+        {
+          description: "Bread",
+          amount: "2.50",
+          category: "Food", 
+          paymentMethod: "Card"
+        },
+        {
+          description: "Eggs",
+          amount: "6.99",
+          category: "Food",
+          paymentMethod: "Card"
+        },
+        {
+          description: "Cheese",
+          amount: "8.99",
+          category: "Food",
+          paymentMethod: "Card"
+        }
+      ]
+    },
+    {
+      success: true,
+      date: new Date().toISOString().split('T')[0],
+      merchant: "Coffee Shop",
+      total: "12.45",
+      items: [
+        {
+          description: "Latte",
+          amount: "5.95",
+          category: "Food",
+          paymentMethod: "Card"
+        },
+        {
+          description: "Muffin",
+          amount: "3.50",
+          category: "Food",
+          paymentMethod: "Card"
+        },
+        {
+          description: "Tip",
+          amount: "3.00",
+          category: "Other",
+          paymentMethod: "Card"
+        }
+      ]
+    }
+  ];
+  
+  // Return a random sample receipt
+  const receipt = sampleReceipts[Math.floor(Math.random() * sampleReceipts.length)];
+  console.log("Edge Function: Generated mock receipt data:", JSON.stringify(receipt, null, 2));
+  
+  return receipt;
 }
 
 serve(async (req) => {
   console.log("=== Receipt scanning function called ===");
-  console.log("Request method:", req.method);
+  console.log("Edge Function: Request method:", req.method);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log("Handling CORS preflight request");
+    console.log("Edge Function: Handling CORS preflight request");
     return new Response(null, {
       status: 204,
       headers: corsHeaders
@@ -69,7 +109,7 @@ serve(async (req) => {
   
   // Ensure this is a POST request
   if (req.method !== 'POST') {
-    console.error(`Invalid method: ${req.method}`);
+    console.error(`Edge Function: Invalid method: ${req.method}`);
     return new Response(JSON.stringify({
       error: 'Method not allowed',
     }), {
@@ -79,19 +119,20 @@ serve(async (req) => {
   }
   
   try {
-    console.log("Starting receipt scanning process");
+    console.log("Edge Function: Starting receipt scanning process");
     
     // Parse the JSON body
     const requestBody = await req.json();
-    console.log("Request body received:", {
+    console.log("Edge Function: Request body received:", {
       fileName: requestBody.fileName,
       fileType: requestBody.fileType,
       fileSize: requestBody.fileSize,
-      hasFile: !!requestBody.file
+      hasFile: !!requestBody.file,
+      timestamp: requestBody.timestamp
     });
     
     if (!requestBody.file || !requestBody.fileName) {
-      console.error("No file data found in request body");
+      console.error("Edge Function: No file data found in request body");
       return new Response(JSON.stringify({
         error: 'No file data provided',
       }), {
@@ -107,11 +148,11 @@ serve(async (req) => {
       type: requestBody.fileType 
     });
     
-    console.log(`Processing ${receiptFile.name} (${receiptFile.size} bytes, type: ${receiptFile.type})`);
+    console.log(`Edge Function: Processing ${receiptFile.name} (${receiptFile.size} bytes, type: ${receiptFile.type})`);
 
     // Validate file type
     if (!receiptFile.type.startsWith('image/')) {
-      console.error(`Invalid file type: ${receiptFile.type}`);
+      console.error(`Edge Function: Invalid file type: ${receiptFile.type}`);
       return new Response(JSON.stringify({
         error: 'Invalid file type. Please upload an image.',
         fileType: receiptFile.type,
@@ -123,7 +164,7 @@ serve(async (req) => {
     
     // Validate file size (max 10MB)
     if (receiptFile.size > 10 * 1024 * 1024) {
-      console.error(`File too large: ${receiptFile.size} bytes`);
+      console.error(`Edge Function: File too large: ${receiptFile.size} bytes`);
       return new Response(JSON.stringify({
         error: 'File too large. Maximum size is 10MB.',
         fileSize: receiptFile.size,
@@ -136,7 +177,7 @@ serve(async (req) => {
     try {
       // Race between processing and timeout
       const timeoutDuration = 28000; // 28 seconds
-      console.log(`Setting timeout for OCR processing: ${timeoutDuration}ms`);
+      console.log(`Edge Function: Setting timeout for OCR processing: ${timeoutDuration}ms`);
       
       const results = await Promise.race([
         runOCR(receiptFile),
@@ -145,7 +186,7 @@ serve(async (req) => {
       
       // Check if this was a timeout
       if ('isTimeout' in results) {
-        console.log("OCR processing timed out");
+        console.log("Edge Function: OCR processing timed out");
         return new Response(JSON.stringify({
           isTimeout: true,
           warning: "Processing timed out, partial results returned",
@@ -157,8 +198,8 @@ serve(async (req) => {
       }
 
       // Return the processed results
-      console.log("OCR processing completed successfully");
-      console.log("Returning results:", JSON.stringify(results, null, 2));
+      console.log("Edge Function: OCR processing completed successfully");
+      console.log("Edge Function: Returning results:", JSON.stringify(results, null, 2));
       
       return new Response(JSON.stringify({
         success: true,
@@ -176,7 +217,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (error) {
-      console.error("Error processing receipt:", error);
+      console.error("Edge Function: Error processing receipt:", error);
       return new Response(JSON.stringify({
         error: 'Receipt processing failed',
         details: error.message,
@@ -186,7 +227,7 @@ serve(async (req) => {
       });
     }
   } catch (error) {
-    console.error("Unhandled error in scan-receipt function:", error);
+    console.error("Edge Function: Unhandled error in scan-receipt function:", error);
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error.message,
