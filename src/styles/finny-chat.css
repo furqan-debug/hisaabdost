@@ -1,8 +1,6 @@
-
-/* Finny Chat Styles - Mobile-First Premium Design */
+/* Finny Chat Styles - Dark Theme Redesign */
 .finny-chat-card {
-  @apply bg-white/95 backdrop-blur-2xl border border-gray-200/60 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8);
+  @apply bg-slate-900/95 backdrop-blur-2xl border border-slate-700/30 rounded-none sm:rounded-3xl shadow-2xl shadow-black/40 overflow-hidden text-white;
 }
 
 /* Mobile-first responsive design */
@@ -16,10 +14,10 @@
   @apply bg-transparent;
 }
 
-/* Message containers with enhanced spacing */
+/* Messages container with dark background */
 .finny-messages-container {
-  @apply p-3 sm:p-6 space-y-4 sm:space-y-6 pb-6 sm:pb-8;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+  @apply p-3 sm:p-4;
+  background-color: #0f172a; /* equivalent to slate-900 */
   min-height: 100%;
 }
 
@@ -34,7 +32,7 @@
   animation: slideInLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Enhanced input area */
+/* Enhanced input area - now part of ChatInput.tsx */
 .finny-chat-input {
   @apply bg-transparent;
 }
@@ -43,22 +41,23 @@
   @apply flex gap-2 sm:gap-4 items-center max-w-4xl mx-auto relative;
 }
 
+/* Input styles moved to ChatInput.tsx for dark theme */
 .finny-chat-input input {
-  @apply text-xs sm:text-sm bg-white text-gray-900 border-2 border-gray-200
-    focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300
-    py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl placeholder:text-gray-500 font-medium shadow-sm;
+  @apply text-sm bg-slate-800 text-slate-100 border-2 border-slate-700
+    focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300
+    py-2.5 sm:py-3 px-4 sm:px-5 rounded-full placeholder:text-slate-400 font-medium shadow-sm;
 }
 
 .finny-chat-input input:focus {
-  @apply shadow-lg bg-white border-blue-500;
+  @apply shadow-lg border-blue-500;
 }
 
-/* Premium send button */
+/* Send button styles moved to ChatInput.tsx */
 .finny-send-button {
   @apply bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
-    text-white rounded-xl sm:rounded-2xl h-10 w-10 sm:h-12 sm:w-12 shadow-lg hover:shadow-xl
+    text-white rounded-full h-10 w-10 sm:h-11 sm:w-11 shadow-lg hover:shadow-xl
     transition-all duration-300 transform hover:scale-105 active:scale-95 
-    disabled:opacity-50 disabled:cursor-not-allowed ring-2 ring-blue-500/20;
+    disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Keyboard handling styles */
@@ -68,47 +67,39 @@
 
 .keyboard-avoid {
   @apply sticky bottom-0 w-full z-50;
-  background: linear-gradient(180deg, transparent 0%, #ffffff 20%);
+  background: linear-gradient(180deg, transparent 0%, #0f172a 20%);
 }
 
-/* Enhanced Quick Reply Buttons */
+/* Quick Reply buttons updated for dark theme */
 .quick-reply-button {
-  @apply flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-3 px-2.5 sm:px-5 rounded-xl sm:rounded-2xl transition-all duration-300
-    bg-white/80 backdrop-blur-sm hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 
-    text-gray-700 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed 
-    border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md 
-    transform hover:scale-105 active:scale-95 font-medium min-h-[32px] sm:min-h-[36px];
+  @apply flex items-center gap-1.5 text-xs sm:text-sm py-1.5 px-3 rounded-full transition-all duration-300
+    bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700 
+    text-slate-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed 
+    border border-slate-700 hover:border-slate-600 shadow-sm hover:shadow-md 
+    transform hover:scale-105 active:scale-95 font-medium min-h-[32px];
 }
 
 /* Premium status indicator */
 .status-indicator {
-  @apply absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white/80 shadow-sm;
+  @apply absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-slate-900 shadow-sm;
   background: linear-gradient(45deg, #10B981, #059669);
   animation: pulse 2s infinite;
 }
 
 /* Enhanced typing indicator */
 .typing-indicator {
-  @apply flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-br from-gray-50 to-white 
-    rounded-2xl sm:rounded-3xl border border-gray-200 shadow-lg backdrop-blur-sm;
+  @apply flex items-center gap-3 px-4 py-3 bg-white 
+    rounded-2xl sm:rounded-3xl shadow-lg;
 }
 
 .typing-dot {
-  @apply w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full;
+  @apply w-2 h-2 rounded-full bg-slate-400;
   animation: typingDot 1.4s infinite ease-in-out;
 }
 
-.typing-dot:nth-child(1) { 
-  background: linear-gradient(45deg, #3B82F6, #8B5CF6);
-  animation-delay: -0.32s; 
-}
-.typing-dot:nth-child(2) { 
-  background: linear-gradient(45deg, #8B5CF6, #EC4899);
-  animation-delay: -0.16s; 
-}
-.typing-dot:nth-child(3) { 
-  background: linear-gradient(45deg, #EC4899, #3B82F6);
-}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { /* no delay */ }
 
 /* Enhanced scrollbar */
 .scrollbar-hide {

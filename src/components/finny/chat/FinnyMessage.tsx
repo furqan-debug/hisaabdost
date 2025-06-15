@@ -23,17 +23,14 @@ const FinnyMessage = React.memo(({
 }: FinnyMessageProps) => {
   const { currencyCode } = useCurrency();
   
-  // Remove any action markers from the message content for display
   const formattedContent = useMemo(() => {
     let processedContent = content.replace(/\[ACTION:(.*?)\]/g, '');
     return processedContent;
   }, [content, currencyCode]);
   
-  // Check for success/error indicators
   const isSuccess = formattedContent.includes('✅');
   const isError = formattedContent.includes('❌');
 
-  // Detect emotional tone in message to apply appropriate styling
   const isEmpathetic = 
     !isUser &&
     (formattedContent.toLowerCase().includes("i understand") ||
@@ -43,7 +40,7 @@ const FinnyMessage = React.memo(({
 
   return (
     <motion.div
-      className={`group flex items-start gap-2 sm:gap-4 ${isUser ? 'justify-end' : 'justify-start'} mb-4 sm:mb-6 px-2 sm:px-0`}
+      className={`group flex items-start gap-2 sm:gap-3 ${isUser ? 'justify-end' : 'justify-start'} mb-4 sm:mb-6 px-2 sm:px-0`}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
@@ -53,7 +50,6 @@ const FinnyMessage = React.memo(({
         delay: isUser ? 0 : 0.1
       }}
     >
-      {/* Avatar for bot messages (left side) */}
       {!isUser && (
         <div className="flex-shrink-0">
           <MessageAvatar isUser={isUser} timestamp={timestamp} />
@@ -61,31 +57,25 @@ const FinnyMessage = React.memo(({
       )}
 
       <div className={`
-        max-w-[85%] sm:max-w-[80%] rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-3 sm:py-4 shadow-lg relative backdrop-blur-sm
+        max-w-[85%] sm:max-w-[80%] rounded-2xl sm:rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 shadow-lg relative
         ${isUser 
-          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25' 
-          : isEmpathetic 
-            ? 'bg-gradient-to-br from-purple-50 to-pink-50 text-gray-800 border border-purple-100 shadow-purple-100/50' 
-            : 'bg-white text-gray-800 border border-gray-100 shadow-gray-200/50'
+          ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-blue-900/30' 
+          : 'bg-white text-slate-800 shadow-black/20'
         }
         hover:shadow-xl transition-all duration-300
       `}>
-        {/* Message bubble tail */}
         <div className={`
-          absolute top-3 sm:top-4 w-2 h-2 sm:w-3 sm:h-3 rotate-45
+          absolute top-3 w-2.5 h-2.5 rotate-45
           ${isUser 
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 -right-1 sm:-right-1.5' 
-            : isEmpathetic
-              ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-l border-t border-purple-100 -left-1 sm:-left-1.5'
-              : 'bg-white border-l border-t border-gray-100 -left-1 sm:-left-1.5'
+            ? 'bg-blue-700 -right-1' 
+            : 'bg-white -left-1'
           }
         `} />
 
-        <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-medium">
+        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
           {formattedContent}
         </div>
 
-        {/* Action result indicators */}
         <ActionIndicator 
           hasAction={hasAction} 
           isSuccess={isSuccess} 
@@ -105,7 +95,6 @@ const FinnyMessage = React.memo(({
         </div>
       </div>
 
-      {/* Avatar for user messages (right side) */}
       {isUser && (
         <div className="flex-shrink-0">
           <MessageAvatar isUser={isUser} timestamp={timestamp} />
