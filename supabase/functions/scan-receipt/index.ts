@@ -7,7 +7,7 @@ console.log("=== scan-receipt function loaded ===");
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-Processing-Level',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
@@ -48,10 +48,6 @@ serve(async (req) => {
   try {
     console.log("Starting receipt scanning process");
     
-    // Check content type
-    const contentType = req.headers.get('content-type') || '';
-    console.log("Content-Type:", contentType);
-    
     // OpenAI API key from environment
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -65,143 +61,104 @@ serve(async (req) => {
     }
     console.log("OpenAI API key found");
     
-    // Processing level from header
-    const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
-    const enhancedProcessing = processingLevel === 'high';
-    console.log("Processing level:", processingLevel, "Enhanced:", enhancedProcessing);
+    // Parse the JSON body
+    const requestBody = await req.json();
+    console.log("Request body received:", {
+      fileName: requestBody.fileName,
+      fileType: requestBody.fileType,
+      fileSize: requestBody.fileSize,
+      hasFile: !!requestBody.file
+    });
     
-    let receiptImage: File | null = null;
+    if (!requestBody.file || !requestBody.fileName) {
+      console.error("No file data found in request body");
+      return new Response(JSON.stringify({
+        error: 'No file data provided',
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
-    // Check if this is multipart/form-data
-    if (contentType.includes('multipart/form-data')) {
-      console.log("Handling multipart form data");
+    // Convert base64 back to File
+    const base64Data = requestBody.file;
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    const receiptFile = new File([binaryData], requestBody.fileName, { 
+      type: requestBody.fileType 
+    });
+    
+    console.log(`Processing ${receiptFile.name} (${receiptFile.size} bytes, type: ${receiptFile.type})`);
+
+    // Validate file type
+    if (!receiptFile.type.startsWith('image/')) {
+      console.error(`Invalid file type: ${receiptFile.type}`);
+      return new Response(JSON.stringify({
+        error: 'Invalid file type. Please upload an image.',
+        fileType: receiptFile.type,
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Validate file size (max 10MB)
+    if (receiptFile.size > 10 * 1024 * 1024) {
+      console.error(`File too large: ${receiptFile.size} bytes`);
+      return new Response(JSON.stringify({
+        error: 'File too large. Maximum size is 10MB.',
+        fileSize: receiptFile.size,
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    try {
+      // Race between processing and timeout
+      const timeoutDuration = 28000; // 28 seconds
+      console.log(`Setting timeout for OCR processing: ${timeoutDuration}ms`);
       
-      try {
-        // Parse the form data
-        const formData = await req.formData();
-        const formDataKeys = [...formData.keys()];
-        console.log("Form data keys:", formDataKeys);
-        
-        // Try all common field names for the receipt file
-        const fieldNamesToCheck = ['file', 'receipt', 'image', 'receiptImage'];
-        
-        for (const fieldName of fieldNamesToCheck) {
-          const file = formData.get(fieldName) as File;
-          if (file && file instanceof File && file.size > 0) {
-            receiptImage = file;
-            console.log(`Found receipt image in field '${fieldName}': ${file.name} (${file.size} bytes, type: ${file.type})`);
-            break;
-          }
-        }
-        
-        if (!receiptImage) {
-          console.error("No receipt image found in form data");
-          console.error("Available form fields:", formDataKeys);
-          
-          return new Response(JSON.stringify({
-            error: 'No receipt image provided',
-            formDataKeys: formDataKeys,
-            fieldNamesChecked: fieldNamesToCheck,
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        // Validate file type
-        if (!receiptImage.type.startsWith('image/')) {
-          console.error(`Invalid file type: ${receiptImage.type}`);
-          return new Response(JSON.stringify({
-            error: 'Invalid file type. Please upload an image.',
-            fileType: receiptImage.type,
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        // Validate file size (max 10MB)
-        if (receiptImage.size > 10 * 1024 * 1024) {
-          console.error(`File too large: ${receiptImage.size} bytes`);
-          return new Response(JSON.stringify({
-            error: 'File too large. Maximum size is 10MB.',
-            fileSize: receiptImage.size,
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        console.log(`Processing ${receiptImage.name} (${receiptImage.size} bytes, type: ${receiptImage.type})`);
-
-        try {
-          // Race between processing and timeout
-          const timeoutDuration = 28000; // 28 seconds
-          console.log(`Setting timeout for OCR processing: ${timeoutDuration}ms`);
-          
-          const results = await Promise.race([
-            runOCR(receiptImage, openaiApiKey),
-            createTimeout(timeoutDuration)
-          ]);
-          
-          // Check if this was a timeout
-          if ('isTimeout' in results) {
-            console.log("OCR processing timed out");
-            return new Response(JSON.stringify({
-              isTimeout: true,
-              warning: "Processing timed out, partial results returned",
-              date: new Date().toISOString().split('T')[0]
-            }), {
-              status: 200, // Return 200 with timeout indication rather than error
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-
-          // Return the processed results
-          console.log("OCR processing completed successfully");
-          console.log("Returning results:", JSON.stringify(results, null, 2));
-          
-          return new Response(JSON.stringify({
-            ...results,
-            success: true,
-            receiptDetails: {
-              filename: receiptImage.name,
-              size: receiptImage.size,
-              type: receiptImage.type
-            }
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        } catch (error) {
-          console.error("Error processing receipt:", error);
-          return new Response(JSON.stringify({
-            error: 'Receipt processing failed',
-            details: error.message,
-          }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-      } catch (formDataError) {
-        console.error("Error parsing form data:", formDataError);
+      const results = await Promise.race([
+        runOCR(receiptFile, openaiApiKey),
+        createTimeout(timeoutDuration)
+      ]);
+      
+      // Check if this was a timeout
+      if ('isTimeout' in results) {
+        console.log("OCR processing timed out");
         return new Response(JSON.stringify({
-          error: 'Failed to parse form data',
-          details: formDataError.message,
-          contentType: contentType,
+          isTimeout: true,
+          warning: "Processing timed out, partial results returned",
+          date: new Date().toISOString().split('T')[0]
         }), {
-          status: 400,
+          status: 200, // Return 200 with timeout indication rather than error
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-    } else {
-      console.error("Unsupported content type:", contentType);
+
+      // Return the processed results
+      console.log("OCR processing completed successfully");
+      console.log("Returning results:", JSON.stringify(results, null, 2));
+      
       return new Response(JSON.stringify({
-        error: 'Unsupported content type',
-        expected: 'multipart/form-data',
-        received: contentType,
+        ...results,
+        success: true,
+        receiptDetails: {
+          filename: receiptFile.name,
+          size: receiptFile.size,
+          type: receiptFile.type
+        }
       }), {
-        status: 400,
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      console.error("Error processing receipt:", error);
+      return new Response(JSON.stringify({
+        error: 'Receipt processing failed',
+        details: error.message,
+      }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -211,7 +168,7 @@ serve(async (req) => {
       error: 'Internal server error',
       details: error.message,
     }), {
-      status: 500,
+    status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

@@ -47,35 +47,33 @@ export async function scanReceipt({
       return { success: false, error: errorMsg };
     }
 
-    // Create a form data object to send to the edge function
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('timestamp', Date.now().toString());
-    
-    console.log('FormData prepared, calling edge function...');
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
-    // Use the anon key directly for the edge function call
-    console.log('Invoking scan-receipt edge function...');
+    // Use Supabase functions.invoke method instead of direct fetch
+    console.log('Invoking scan-receipt edge function via Supabase...');
     
-    const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrbGZvbGZpdmpvbnpwcHJ5dGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzMjM0NjQsImV4cCI6MjA1NTg5OTQ2NH0.oipdwmQ4lRIyeYX00Irz4q0ZEDlKc9wuQhSPbHRzOKE`,
-        'X-Processing-Level': 'high',
-      },
-      body: formData
+    // Convert file to base64 for edge function
+    const fileBuffer = await file.arrayBuffer();
+    const base64File = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+    
+    const { data, error } = await supabase.functions.invoke('scan-receipt', {
+      body: {
+        file: base64File,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        timestamp: Date.now()
+      }
     });
 
-    console.log('Edge function response received:', response.status, response.statusText);
+    console.log('Edge function response received:', { data, error });
 
     // Update progress based on response status
     if (onProgress) onProgress(60, "Processing receipt text...");
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Scan API error:", response.status, errorText);
-      const errorMsg = `Server error: ${response.status} ${response.statusText}`;
+    if (error) {
+      console.error("Scan API error:", error);
+      const errorMsg = `Server error: ${error.message || 'Unknown error'}`;
       if (onError) onError(errorMsg);
       return { 
         success: false, 
@@ -84,89 +82,75 @@ export async function scanReceipt({
       };
     }
 
-    try {
-      const data = await response.json();
-      console.log("Receipt scan API response data:", data);
+    if (!data) {
+      const errorMsg = "No data returned from scan function";
+      console.error(errorMsg);
+      if (onError) onError(errorMsg);
+      return { 
+        success: false, 
+        error: errorMsg,
+        receiptUrl
+      };
+    }
 
-      if (!data) {
-        const errorMsg = "No data returned from scan function";
-        console.error(errorMsg);
-        if (onError) onError(errorMsg);
-        return { 
-          success: false, 
-          error: errorMsg,
-          receiptUrl
-        };
-      }
+    if (data.isTimeout) {
+      console.log("Scan timed out on server");
+      if (onTimeout) onTimeout();
+      return { 
+        success: false, 
+        isTimeout: true,
+        warning: data.warning || "Processing timed out",
+        receiptUrl
+      };
+    }
 
-      if (data.isTimeout) {
-        console.log("Scan timed out on server");
-        if (onTimeout) onTimeout();
-        return { 
-          success: false, 
-          isTimeout: true,
-          warning: data.warning || "Processing timed out",
-          receiptUrl
-        };
-      }
+    if (data.error) {
+      console.error("Server returned error:", data.error);
+      if (onError) onError(data.error);
+      return { 
+        success: false, 
+        error: data.error,
+        receiptUrl
+      };
+    }
 
-      if (data.error) {
-        console.error("Server returned error:", data.error);
-        if (onError) onError(data.error);
-        return { 
-          success: false, 
-          error: data.error,
-          receiptUrl
-        };
-      }
+    if (onProgress) onProgress(80, "Extracting expense information...");
 
-      if (onProgress) onProgress(80, "Extracting expense information...");
+    // Check if we have valid scan results
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      console.warn("No items found in scan results, creating fallback expense");
+      
+      // Create a fallback expense entry
+      const fallbackItem = {
+        description: data.merchant || "Store Purchase",
+        amount: data.total || "0.00",
+        date: data.date || new Date().toISOString().split('T')[0],
+        category: "Other",
+        paymentMethod: "Card"
+      };
 
-      // Check if we have valid scan results
-      if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-        console.warn("No items found in scan results, creating fallback expense");
-        
-        // Create a fallback expense entry
-        const fallbackItem = {
-          description: data.merchant || "Store Purchase",
-          amount: data.total || "0.00",
-          date: data.date || new Date().toISOString().split('T')[0],
-          category: "Other",
-          paymentMethod: "Card"
-        };
-
-        return { 
-          success: true,
-          date: data.date,
-          merchant: data.merchant || "Store",
-          items: [fallbackItem],
-          total: data.total,
-          receiptUrl
-        };
-      }
-
-      console.log(`Scan successful! Found ${data.items.length} items`);
-      if (onProgress) onProgress(100, "Receipt processed!");
-
-      // Return success with the extracted data
       return { 
         success: true,
         date: data.date,
         merchant: data.merchant || "Store",
-        items: data.items || [],
+        items: [fallbackItem],
         total: data.total,
         receiptUrl
       };
-    } catch (parseError) {
-      console.error("Failed to parse scan response:", parseError);
-      const errorMsg = "Failed to parse server response";
-      if (onError) onError(errorMsg);
-      return { 
-        success: false, 
-        error: errorMsg,
-        receiptUrl
-      };
     }
+
+    console.log(`Scan successful! Found ${data.items.length} items`);
+    if (onProgress) onProgress(100, "Receipt processed!");
+
+    // Return success with the extracted data
+    return { 
+      success: true,
+      date: data.date,
+      merchant: data.merchant || "Store",
+      items: data.items || [],
+      total: data.total,
+      receiptUrl
+    };
   } catch (networkError) {
     console.error("Network error during scan:", networkError);
     const errorMsg = `Network error: ${networkError.message}`;
