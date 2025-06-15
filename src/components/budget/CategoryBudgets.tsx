@@ -1,4 +1,3 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
@@ -18,6 +17,70 @@ interface CategoryBudgetsProps {
   budgets: Budget[];
   onEditBudget: (budget: Budget) => void;
 }
+
+interface CategoryBudgetCardProps {
+  budget: Budget;
+  onEditBudget: (budget: Budget) => void;
+  onDeleteBudget: (budgetId: string, category: string) => void;
+  spentAmount: number;
+  currencyCode: string;
+}
+
+const CategoryBudgetCard = ({ budget, onEditBudget, onDeleteBudget, spentAmount, currencyCode }: CategoryBudgetCardProps) => {
+  const remainingAmount = Number(budget.amount) - spentAmount;
+  const progress = Number(budget.amount) > 0 ? Math.min((spentAmount / Number(budget.amount)) * 100, 100) : 0;
+  const isOverBudget = spentAmount > Number(budget.amount);
+
+  return (
+    <Card className={`budget-glass-card w-full overflow-hidden transition-all duration-300 hover:shadow-lg ${isOverBudget ? 'border-l-4 border-l-destructive' : 'border-l-4 border-l-transparent'}`}>
+      <CardContent className="p-4 space-y-4">
+        <div className="flex justify-between items-start">
+          <div className="flex-1 min-w-0 space-y-1">
+            <h3 className="font-semibold text-base truncate">{budget.category}</h3>
+            <p className="text-xs text-muted-foreground capitalize bg-muted/50 px-2 py-0.5 rounded-full inline-block">{budget.period}</p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 flex-shrink-0 text-muted-foreground">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEditBudget(budget)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDeleteBudget(budget.id, budget.category)} className="text-destructive focus:text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        
+        <div className="space-y-2">
+          <Progress value={progress} className="h-2" indicatorClassName={isOverBudget ? 'bg-destructive' : 'bg-primary'} />
+          <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <span className={`font-medium ${isOverBudget ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(spentAmount, currencyCode)}</span>
+            <span>{formatCurrency(Number(budget.amount), currencyCode)}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Remaining</p>
+                <p className={`font-medium truncate ${remainingAmount < 0 ? 'text-destructive' : ''}`}>{formatCurrency(remainingAmount, currencyCode)}</p>
+            </div>
+            <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Usage</p>
+                <p className="font-medium">{progress.toFixed(0)}%</p>
+            </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export function CategoryBudgets({
   budgets,
@@ -120,142 +183,42 @@ export function CategoryBudgets({
   };
   const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference");
   if (filteredBudgets.length === 0) {
-    return <div className="w-full max-w-full overflow-hidden">
-        <Card className="w-full">
+    return (
+        <Card className="budget-glass-card">
           <CardHeader>
             <CardTitle>Budget Categories</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-              <p className="text-muted-foreground mb-2">No budget categories found</p>
-              <p className="text-sm text-muted-foreground">Add your first budget to start tracking your spending by category</p>
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <p className="text-muted-foreground mb-2">No budget categories found.</p>
+              <p className="text-sm text-muted-foreground">Add your first budget to start tracking.</p>
             </div>
           </CardContent>
         </Card>
-      </div>;
+    );
   }
-  return <div className="w-full max-w-full overflow-hidden">
-      <Card className="w-full mx-0 px-[3px]">
+  return (
+      <Card className="budget-glass-card">
         <CardHeader className="pb-4">
           <CardTitle>Budget Categories</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 sm:px-6 px-0">
-          <div className="w-full space-y-4">
-            {isMobile ? <div className="w-full space-y-3 overflow-hidden">
-                {filteredBudgets.map(budget => {
+        <CardContent className="pt-0 px-2 sm:px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredBudgets.map(budget => {
               const spentAmount = getSpentAmount(budget.category);
-              const remainingAmount = Number(budget.amount) - spentAmount;
-              const progress = Number(budget.amount) > 0 ? Math.min(spentAmount / Number(budget.amount) * 100, 100) : 0;
-              const isOverBudget = spentAmount > Number(budget.amount);
-              return <Card key={budget.id} className={`w-full bg-card/50 border-border/50 overflow-hidden ${isOverBudget ? 'border-l-4 border-l-red-500' : ''}`}>
-                      <CardContent className="p-4 space-y-3 w-full">
-                        <div className="flex justify-between items-start w-full">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">{budget.category}</h3>
-                            <p className="text-xs text-muted-foreground capitalize">{budget.period}</p>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0 flex-shrink-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => onEditBudget(budget)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteBudget(budget.id, budget.category)} className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 w-full">
-                          <div className="bg-background/50 p-2 rounded-md min-w-0">
-                            <p className="text-muted-foreground text-xs">Budgeted</p>
-                            <p className="font-medium text-xs truncate">{formatCurrency(Number(budget.amount), currencyCode)}</p>
-                          </div>
-                          <div className="bg-background/50 p-2 rounded-md min-w-0">
-                            <p className="text-muted-foreground text-xs">Spent</p>
-                            <p className={`font-medium text-xs truncate ${isOverBudget ? 'text-red-500' : ''}`}>{formatCurrency(spentAmount, currencyCode)}</p>
-                          </div>
-                          <div className="bg-background/50 p-2 rounded-md min-w-0">
-                            <p className="text-muted-foreground text-xs">Remaining</p>
-                            <p className={`font-medium text-xs truncate ${remainingAmount < 0 ? 'text-red-500' : ''}`}>{formatCurrency(remainingAmount, currencyCode)}</p>
-                          </div>
-                          <div className="bg-background/50 p-2 rounded-md min-w-0">
-                            <p className="text-muted-foreground text-xs">Progress</p>
-                            <p className="font-medium text-xs">{progress.toFixed(0)}%</p>
-                          </div>
-                        </div>
-                        
-                        <div className="w-full">
-                          <Progress value={progress} className={`w-full h-2 ${isOverBudget ? 'bg-red-200' : ''}`} indicatorClassName={isOverBudget ? 'bg-red-500' : undefined} />
-                        </div>
-                      </CardContent>
-                    </Card>;
+              return (
+                <CategoryBudgetCard 
+                  key={budget.id}
+                  budget={budget}
+                  onEditBudget={onEditBudget}
+                  onDeleteBudget={handleDeleteBudget}
+                  spentAmount={spentAmount}
+                  currencyCode={currencyCode}
+                />
+              );
             })}
-              </div> : <div className="w-full overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Period</TableHead>
-                      <TableHead>Budgeted</TableHead>
-                      <TableHead>Spent</TableHead>
-                      <TableHead>Remaining</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredBudgets.map(budget => {
-                  const spentAmount = getSpentAmount(budget.category);
-                  const remainingAmount = Number(budget.amount) - spentAmount;
-                  const progress = Number(budget.amount) > 0 ? Math.min(spentAmount / Number(budget.amount) * 100, 100) : 0;
-                  const isOverBudget = spentAmount > Number(budget.amount);
-                  return <TableRow key={budget.id} className={isOverBudget ? 'bg-red-50/10' : undefined}>
-                          <TableCell>{budget.category}</TableCell>
-                          <TableCell className="capitalize">{budget.period}</TableCell>
-                          <TableCell>{formatCurrency(Number(budget.amount), currencyCode)}</TableCell>
-                          <TableCell className={isOverBudget ? 'text-red-500 font-medium' : undefined}>
-                            {formatCurrency(spentAmount, currencyCode)}
-                          </TableCell>
-                          <TableCell className={remainingAmount < 0 ? 'text-red-500 font-medium' : undefined}>
-                            {formatCurrency(remainingAmount, currencyCode)}
-                          </TableCell>
-                          <TableCell className="w-[200px]">
-                            <Progress value={progress} className={isOverBudget ? 'bg-red-200' : undefined} indicatorClassName={isOverBudget ? 'bg-red-500' : undefined} />
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onEditBudget(budget)}>
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDeleteBudget(budget.id, budget.category)} className="text-red-600">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>;
-                })}
-                  </TableBody>
-                </Table>
-              </div>}
           </div>
         </CardContent>
       </Card>
-    </div>;
+  );
 }

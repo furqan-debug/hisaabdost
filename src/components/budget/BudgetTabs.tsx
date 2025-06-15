@@ -7,7 +7,6 @@ import { BudgetComparison } from "@/components/budget/BudgetComparison";
 import { Budget } from "@/pages/Budget";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { LayoutDashboard, Layers, Receipt, BarChart2 } from "lucide-react";
 
 interface BudgetTabsProps {
@@ -23,7 +22,6 @@ export const BudgetTabs = ({
   activeTab,
   onTabChange
 }: BudgetTabsProps) => {
-  const isMobile = useIsMobile();
   const [stableActiveTab, setStableActiveTab] = useState(activeTab);
 
   useEffect(() => {
@@ -63,13 +61,10 @@ export const BudgetTabs = ({
       transition={{ duration: 0.3 }}
     >
       <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full">
-        <div className="w-full mb-8">
+        <div className="w-full mb-8 overflow-x-auto no-scrollbar">
           <TabsList className={`
-            w-full h-auto p-2 bg-muted/30 rounded-xl
-            ${isMobile 
-              ? 'grid grid-cols-2 gap-2' 
-              : 'inline-flex gap-1 justify-center'
-            }
+            w-full md:w-auto h-auto p-1.5 bg-muted/50 rounded-xl
+            inline-flex gap-1 justify-start md:justify-center
           `}>
             {tabs.map((tab, index) => (
               <motion.div
@@ -77,22 +72,19 @@ export const BudgetTabs = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className={isMobile ? "w-full" : ""}
+                className="flex-shrink-0"
               >
                 <TabsTrigger 
                   value={tab.id} 
                   className={`
-                    relative inline-flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200
+                    relative inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200
                     data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm
-                    hover:bg-background/50 hover:text-foreground
-                    ${isMobile 
-                      ? 'w-full justify-center min-h-[60px] flex-col gap-1' 
-                      : 'whitespace-nowrap min-w-[120px] justify-center'
-                    }
+                    hover:bg-muted/80 hover:text-foreground
+                    whitespace-nowrap
                   `}
                 >
-                  <tab.icon className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} flex-shrink-0`} />
-                  <span className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="font-medium text-sm">
                     {tab.label}
                   </span>
                 </TabsTrigger>

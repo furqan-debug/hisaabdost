@@ -27,14 +27,14 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
 
   if (filteredBudgets.length === 0) {
     return (
-      <Card className="bg-card/95 backdrop-blur-sm border-border/40">
+      <Card className="budget-glass-card">
         <CardHeader>
           <CardTitle>Budget Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center h-full py-8 px-4 text-center space-y-3">
-            <p className="text-muted-foreground">No budget categories found</p>
-            <p className="text-sm text-muted-foreground">Add your first budget to see an overview here</p>
+          <div className="flex flex-col items-center justify-center h-full py-16 px-4 text-center space-y-3">
+            <p className="text-muted-foreground">No budget data available.</p>
+            <p className="text-sm text-muted-foreground">Add a budget to see your spending breakdown.</p>
           </div>
         </CardContent>
       </Card>
@@ -42,7 +42,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   }
 
   return (
-    <Card className="bg-card/95 backdrop-blur-sm border-border/40">
+    <Card className="budget-glass-card">
       <CardHeader>
         <CardTitle>Budget Overview</CardTitle>
       </CardHeader>
@@ -53,8 +53,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="rounded-xl bg-background/50 p-6">
-            <div className="w-full h-[300px] relative">
+          <div className="rounded-xl p-4 sm:p-6">
+            <div className="w-full h-[250px] sm:h-[300px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie 
@@ -62,17 +62,18 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                     cx="50%" 
                     cy="50%" 
                     innerRadius={isMobile ? 60 : 80}
-                    outerRadius={isMobile ? 85 : 110}
+                    outerRadius={isMobile ? 80 : 110}
                     paddingAngle={3}
                     dataKey="value"
-                    cornerRadius={6}
+                    cornerRadius={8}
                     strokeWidth={2}
-                    stroke="white"
+                    stroke="hsl(var(--card))"
                   >
                     {data.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`}
                         fill={CATEGORY_COLORS[entry.name]} 
+                        className="focus:outline-none"
                       />
                     ))}
                   </Pie>
@@ -84,10 +85,10 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                         <motion.div 
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-lg border bg-card/95 backdrop-blur-sm p-3 shadow-sm"
+                          className="rounded-lg border bg-popover/80 backdrop-blur-sm p-3 shadow-lg"
                         >
                           <p className="text-sm font-medium">{data.name}</p>
-                          <p className="text-sm">{formatCurrency(data.value, currencyCode)}</p>
+                          <p className="text-sm text-popover-foreground">{formatCurrency(data.value, currencyCode)}</p>
                           <p className="text-xs text-muted-foreground">{data.percentage}% of total</p>
                         </motion.div>
                       );
@@ -97,8 +98,8 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
               </ResponsiveContainer>
               
               {/* Center total display */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-10">
-                <p className="text-2xl font-semibold">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-0 pointer-events-none">
+                <p className="text-2xl font-bold">
                   {formatCurrency(totalBudget, currencyCode)}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -107,17 +108,17 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-6">
               {data.map((entry, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-card/50"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-background/50 hover:bg-muted/50 transition-colors"
                 >
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-3 h-3 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
                   />
                   <div className="min-w-0 flex-1">

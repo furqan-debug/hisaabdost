@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -67,10 +66,10 @@ const Budget = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-4 space-y-6">
-        <div className="h-32 bg-muted/20 rounded-lg animate-pulse" />
+        <div className="h-24 bg-muted/20 rounded-lg animate-pulse" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-muted/20 rounded-lg animate-pulse" />
+            <div key={i} className="h-24 bg-muted/20 rounded-xl animate-pulse" />
           ))}
         </div>
         <div className="h-96 bg-muted/20 rounded-lg animate-pulse" />
@@ -79,33 +78,27 @@ const Budget = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-hidden">
-      <div className="container mx-auto max-w-7xl px-4 py-6 space-y-6 w-full max-w-full overflow-hidden">
-        <div className="w-full max-w-full overflow-hidden">
-          <BudgetHeader 
-            onAddBudget={handleAddBudget}
-            onExport={exportBudgetData} 
-          />
-        </div>
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8">
+        <BudgetHeader 
+          onAddBudget={handleAddBudget}
+          onExport={exportBudgetData} 
+        />
         
-        <div className="w-full max-w-full overflow-hidden">
-          <BudgetSummaryCards 
-            totalBudget={totalBudget}
-            remainingBalance={remainingBalance}
-            usagePercentage={usagePercentage}
-            monthlyIncome={monthlyIncome}
-            isLoading={isLoading}
-          />
-        </div>
+        <BudgetSummaryCards 
+          totalBudget={totalBudget}
+          remainingBalance={remainingBalance}
+          usagePercentage={usagePercentage}
+          monthlyIncome={monthlyIncome}
+          isLoading={isLoading}
+        />
         
-        <div className="w-full max-w-full overflow-hidden">
-          <BudgetTabs 
-            budgets={budgets || []}
-            onEditBudget={handleEditBudget}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
+        <BudgetTabs 
+          budgets={budgets || []}
+          onEditBudget={handleEditBudget}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         <BudgetForm
           open={showBudgetForm}

@@ -50,7 +50,7 @@
   
   /* Fixed budget content height to avoid jumpy layout */
   .budget-chart-container {
-    height: 300px;
+    height: 250px;
     width: 100%;
     max-width: 100%;
     overflow-x: hidden !important;
@@ -68,11 +68,6 @@
     @apply h-2;
   }
   
-  /* Budget tab mobile cards for better UX */
-  .budget-stat-card {
-    @apply p-3 rounded-xl flex items-center justify-between bg-background/50 border border-border/30;
-  }
-  
   /* Mobile budget form improvements */
   .budget-form-container {
     @apply space-y-4 mt-3;
@@ -84,11 +79,6 @@
     max-width: 100%;
     overflow-x: hidden !important;
     width: 100%;
-  }
-  
-  /* Category budget cards for better display */
-  .category-budget-card {
-    @apply p-3 rounded-xl bg-card/70 border border-border/30 mb-3;
   }
   
   /* Budget info row layout */
@@ -208,16 +198,11 @@
 
 /* Additional styles for card and glassmorphism effects */
 .budget-glass-card {
-  @apply bg-background/80 backdrop-blur-sm border-border/30 shadow-sm;
-  transition: all 0.2s ease-in-out;
+  @apply rounded-xl bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-border/20 shadow-sm transition-all duration-300;
 }
 
 .budget-glass-card:hover {
-  @apply shadow-md bg-background/90;
-}
-
-.budget-stat-card {
-  @apply rounded-xl p-4 bg-background/80 backdrop-blur-sm;
+  @apply shadow-md bg-card/70 dark:bg-card/50 border-border/30;
 }
 
 .budget-progress {
