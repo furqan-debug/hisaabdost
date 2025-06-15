@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,16 +31,16 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    // Validate file types
+    // Validate file types and sizes
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} is not a valid image file`);
         return false;
       }
       
-      // Check file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (max 10MB)`);
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`);
         return false;
       }
       
@@ -235,7 +234,7 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm font-medium mb-2">Drop receipt images here or click to browse</p>
           <p className="text-xs text-muted-foreground mb-4">
-            Supports multiple images: JPG, PNG, HEIC (Max 10MB each)
+            Supports multiple images: JPG, PNG, HEIC (Max 5MB each)
           </p>
           <input
             ref={fileInputRef}

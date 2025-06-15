@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
@@ -10,6 +9,56 @@ const uploadCache = new Map<string, Promise<string | null>>();
  */
 export function generateFileFingerprint(file: File): string {
   return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+/**
+ * Compress image file to reduce size
+ */
+async function compressImage(file: File, maxSizeKB: number = 2048): Promise<File> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions to keep aspect ratio
+      let { width, height } = img;
+      const maxDimension = 1920; // Max width or height
+      
+      if (width > height && width > maxDimension) {
+        height = (height * maxDimension) / width;
+        width = maxDimension;
+      } else if (height > maxDimension) {
+        width = (width * maxDimension) / height;
+        height = maxDimension;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        },
+        'image/jpeg',
+        0.8 // 80% quality
+      );
+    };
+    
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /**
@@ -28,6 +77,13 @@ export async function uploadToSupabase(
     // Only allow images
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
+      return null;
+    }
+    
+    // Check file size before processing (5MB limit before compression)
+    const maxSizeBeforeCompression = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSizeBeforeCompression) {
+      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`);
       return null;
     }
     
@@ -67,17 +123,33 @@ async function performUpload(
 ): Promise<string | null> {
   console.log(`Uploading to Supabase: ${file.name} (${fileFingerprint})`);
   
-  // Create a unique file name
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(2, 10);
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const fileName = `${timestamp}-${randomString}.${fileExt}`;
-  
-  // Create storage path
-  const storagePath = userId ? `users/${userId}/${fileName}` : `public/${fileName}`;
-  const bucketName = 'receipts';
-  
   try {
+    // Compress the image if it's larger than 2MB
+    let fileToUpload = file;
+    const maxSizeKB = 2048; // 2MB
+    if (file.size > maxSizeKB * 1024) {
+      console.log(`Compressing file from ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+      toast.info('Compressing large image...');
+      fileToUpload = await compressImage(file, maxSizeKB);
+      console.log(`Compressed to ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB`);
+    }
+    
+    // Final size check after compression
+    if (fileToUpload.size > 5 * 1024 * 1024) { // 5MB hard limit
+      toast.error('File is still too large after compression. Please use a smaller image.');
+      return null;
+    }
+    
+    // Create a unique file name
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 10);
+    const fileExt = 'jpg'; // Always use jpg after compression
+    const fileName = `${timestamp}-${randomString}.${fileExt}`;
+    
+    // Create storage path
+    const storagePath = userId ? `users/${userId}/${fileName}` : `public/${fileName}`;
+    const bucketName = 'receipts';
+    
     // First ensure bucket exists
     const bucketExists = await ensureBucketExists(bucketName);
     if (!bucketExists) {
@@ -91,7 +163,7 @@ async function performUpload(
     // Upload file with better error handling
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(storagePath, file, {
+      .upload(storagePath, fileToUpload, {
         cacheControl: '3600',
         upsert: false // Don't overwrite existing files
       });
@@ -109,7 +181,7 @@ async function performUpload(
         
         const { data: retryData, error: retryError } = await supabase.storage
           .from(bucketName)
-          .upload(newStoragePath, file, {
+          .upload(newStoragePath, fileToUpload, {
             cacheControl: '3600',
             upsert: false
           });
@@ -126,6 +198,8 @@ async function performUpload(
           
         console.log(`Retry upload successful! Public URL: ${publicUrl}`);
         return publicUrl;
+      } else if (error.message.includes('Payload too large')) {
+        toast.error('Image is too large. Please use a smaller image (under 2MB).');
       } else {
         toast.error(`Upload failed: ${error.message}`);
       }
@@ -166,7 +240,7 @@ async function ensureBucketExists(bucketName: string): Promise<boolean> {
     // Try to create the bucket
     const { data: bucketData, error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true,
-      fileSizeLimit: 10485760, // 10MB
+      fileSizeLimit: 5242880, // 5MB limit
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/heic', 'image/heif', 'image/webp']
     });
     
