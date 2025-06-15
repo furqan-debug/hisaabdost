@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { BotMessageSquare } from 'lucide-react';
+import { Twitch } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
 
@@ -16,19 +16,8 @@ const FinnyButton = ({
   isOpen
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
-  const [hasAnimated, setHasAnimated] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const { user } = useAuth();
-
-  // Animation will run only on the initial render
-  useEffect(() => {
-    // Set after component mounts to indicate animation has played
-    const timer = setTimeout(() => {
-      setHasAnimated(true);
-    }, 1500); // Slightly longer than the animation duration to ensure it completes
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
@@ -42,21 +31,18 @@ const FinnyButton = ({
       }} 
       animate={{
         scale: 1,
-        opacity: 1,
-        y: hasAnimated ? 0 : [0, -15, 0] // Gentle bounce only on initial render
+        opacity: 1
       }} 
       transition={{
         type: 'spring',
         stiffness: 260,
         damping: 20,
-        y: {
-          duration: 1,
-          ease: "easeInOut",
-          times: [0, 0.5, 1]
-        }
       }} 
       whileTap={{
         scale: 0.9
+      }}
+      whileHover={{
+        scale: 1.1
       }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
@@ -65,46 +51,46 @@ const FinnyButton = ({
         onClick={onClick} 
         aria-label="Open Finny Chat" 
         className={`
-          w-14 h-14 rounded-full shadow-lg 
+          relative w-16 h-16 rounded-full shadow-lg shadow-primary/40
           bg-gradient-to-br from-primary to-purple-500 hover:from-primary/90 hover:to-purple-400
           border-2 border-white/20 backdrop-blur-sm
-          ${!hasAnimated ? 'animate-pulse' : ''}
+          flex items-center justify-center
         `}
       >
+        {/* Animated pulse ring effect */}
         <motion.div 
-          animate={!hasAnimated ? {
-            scale: [1, 1.2, 1]
-          } : isHovering ? {
-            rotate: [0, -10, 10, -5, 0],
-            transition: { duration: 0.7, ease: "easeInOut" }
-          } : undefined} 
-          transition={!hasAnimated ? {
-            duration: 1.5,
-            ease: "easeInOut",
-            times: [0, 0.5, 1],
-            repeat: 0
-          } : undefined}
-          className="relative"
+            className="absolute inset-0 rounded-full bg-primary"
+            animate={{ 
+              scale: [1, 1.4, 1],
+              opacity: [0.5, 0, 0.5]
+            }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              repeatType: "loop",
+              ease: "easeInOut"
+            }}
+        />
+        
+        <motion.div
+          animate={{
+            scale: isHovering ? 1.1 : [1, 1.05, 1],
+            rotate: isHovering ? [0, -10, 10, -5, 0] : 0,
+          }}
+          transition={{
+            scale: {
+              duration: 1.5,
+              repeat: Infinity,
+              repeatType: "mirror",
+              ease: "easeInOut"
+            },
+            rotate: { 
+              duration: 0.7, 
+              ease: "easeInOut"
+            }
+          }}
         >
-          {/* Main icon */}
-          <BotMessageSquare className="w-6 h-6 text-white" />
-          
-          {/* Animated pulse ring effect */}
-          {!hasAnimated && (
-            <motion.div 
-              className="absolute inset-0 rounded-full"
-              initial={{ scale: 1, opacity: 0.7 }}
-              animate={{ 
-                scale: [1, 1.4, 1],
-                opacity: [0.7, 0, 0.7]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: "loop"
-              }}
-            />
-          )}
+          <Twitch className="w-8 h-8 text-white" />
         </motion.div>
       </Button>
     </motion.div>
