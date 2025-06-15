@@ -69,7 +69,7 @@
 }
 
 .keyboard-avoid {
-  @apply sticky bottom-0 w-full z-100;
+  @apply sticky bottom-0 w-full z-50;
   background: linear-gradient(180deg, transparent 0%, #1A1F2C 20%);
 }
 
