@@ -58,7 +58,6 @@ export default defineConfig(({ mode }) => ({
 
   plugins: [
     react(),
-    // Remove splitVendorChunk as it conflicts with manualChunks
     mode === "development" && componentTagger(),
   ].filter(Boolean),
 
@@ -73,4 +72,7 @@ export default defineConfig(({ mode }) => ({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', '@tanstack/react-query'],
     exclude: ['@capacitor/core']
   },
+
+  // Ensure service worker is copied to dist
+  publicDir: 'public',
 }));
