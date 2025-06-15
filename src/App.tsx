@@ -8,7 +8,6 @@ import { ThemeProvider } from "next-themes";
 import { FinnyProvider } from "@/components/finny";
 import { MonthProvider } from "@/hooks/use-month-context";
 import { CurrencyProvider } from "@/hooks/use-currency";
-import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import Dashboard from "@/pages/Dashboard";
 import Expenses from "@/pages/Expenses";
 import Analytics from "@/pages/Analytics";
@@ -20,7 +19,6 @@ import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
-import { useEffect } from "react";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -28,29 +26,11 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5,
       retry: 1,
-      // Enable offline support
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
     },
   },
 });
 
 function App() {
-  // Register service worker
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
-      });
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -61,7 +41,6 @@ function App() {
                 <MonthProvider>
                   <FinnyProvider>
                     <div className="App">
-                      <OfflineIndicator />
                       <Routes>
                         <Route path="/" element={<Navigate to="/auth" replace />} />
                         <Route path="/auth" element={<Auth />} />
