@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,22 @@ export const ChatContainer = ({
   }, [isMobile]);
 
   const handleQuickAction = (action: QuickAction) => {
+    // For manual expense entry, we should trigger the expense form instead of sending a message
+    if (action.type === 'expense' && action.id === 'manual-entry') {
+      // Trigger the expense form to open
+      const event = new CustomEvent('open-expense-form', {
+        detail: { mode: 'manual' }
+      });
+      window.dispatchEvent(event);
+      
+      // Close the chat if on mobile
+      if (isMobile) {
+        onClose();
+      }
+      return;
+    }
+    
+    // For other actions, send the message as before
     handleSendMessage(null, action.action);
   };
 

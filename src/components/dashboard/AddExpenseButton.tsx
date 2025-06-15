@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,21 @@ export const AddExpenseButton = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
+
+  // Listen for expense form events from Finny chat
+  useEffect(() => {
+    const handleOpenExpenseForm = (event: CustomEvent) => {
+      const { mode } = event.detail;
+      setCaptureMode(mode || 'manual');
+      setShowAddExpense(true);
+    };
+
+    window.addEventListener('open-expense-form', handleOpenExpenseForm as EventListener);
+
+    return () => {
+      window.removeEventListener('open-expense-form', handleOpenExpenseForm as EventListener);
+    };
+  }, [setShowAddExpense]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -8,10 +8,17 @@ export interface QuickAction {
   action: string;
   category?: string;
   amount?: number;
-  type: 'expense' | 'budget' | 'goal' | 'query';
+  type: 'expense' | 'budget' | 'goal' | 'query' | 'manual';
 }
 
 export const QUICK_EXPENSE_ACTIONS: QuickAction[] = [
+  {
+    id: 'manual-entry',
+    label: 'Manual Entry',
+    icon: Plus,
+    action: 'Open manual expense form',
+    type: 'manual'
+  },
   {
     id: 'coffee',
     label: 'Coffee $5',
