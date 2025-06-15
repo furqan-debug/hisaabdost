@@ -54,6 +54,7 @@ export function useScanReceipt({
   }, []);
   
   const startScan = useCallback(() => {
+    console.log("Starting receipt scan...");
     setIsScanning(true);
     setIsAutoProcessing(true);
     setScanProgress(0);
@@ -63,6 +64,7 @@ export function useScanReceipt({
   }, []);
   
   const timeoutScan = useCallback(() => {
+    console.log("Receipt scan timed out");
     setScanTimedOut(true);
     setIsScanning(false);
     setIsAutoProcessing(false);
@@ -70,6 +72,7 @@ export function useScanReceipt({
   }, []);
   
   const errorScan = useCallback((message: string) => {
+    console.log("Receipt scan error:", message);
     setScanError(message);
     setIsScanning(false);
     setIsAutoProcessing(false);
@@ -77,6 +80,7 @@ export function useScanReceipt({
   }, []);
   
   const endScan = useCallback(() => {
+    console.log("Receipt scan completed");
     setIsScanning(false);
     setIsAutoProcessing(false);
   }, []);
@@ -96,6 +100,7 @@ export function useScanReceipt({
     const receiptUrl = file ? URL.createObjectURL(file) : undefined;
     
     try {
+      console.log("Calling scanReceipt service...");
       const scanResults = await scanReceipt({
         file,
         receiptUrl,
@@ -104,64 +109,38 @@ export function useScanReceipt({
         onError: errorScan
       });
       
+      console.log("Scan results received:", scanResults);
+      
       if (scanResults?.success && scanResults.items && scanResults.items.length > 0) {
-        updateProgress(90, "Extracting expense information...");
+        updateProgress(90, "Processing scan results...");
         
-        const mainItem = selectMainItem(scanResults.items);
-        const currentDate = new Date().toISOString().split('T')[0];
-        
-        // Always prioritize the current date if no date was found
-        let expenseDetails = {
-          description: mainItem.description || scanResults.merchant || "Store Purchase",
-          amount: mainItem.amount || scanResults.total || "0.00",
-          date: mainItem.date || scanResults.date || currentDate,
-          category: mainItem.category || "Other",
-          paymentMethod: mainItem.paymentMethod || "Card",
-        };
-        
-        // Log the date extraction for debugging
-        console.log("Receipt date processing:", {
-          itemDate: mainItem.date,
-          scanResultsDate: scanResults.date,
-          finalDate: expenseDetails.date,
-          usedCurrentDate: !mainItem.date && !scanResults.date
-        });
-        
-        if (autoSave) {
+        if (autoSave && processAllItems) {
           try {
             updateProgress(95, "Saving expenses to database...");
+            console.log("Processing all items for auto-save...");
             
-            if (processAllItems && scanResults.items.length >= 1) {
-              // Process all items from the receipt
-              const success = await processScanResults(
-                scanResults,
-                true,
-                onCapture,
-                setOpen
-              );
-              
-              if (success) {
-                updateProgress(100, "All expenses saved successfully!");
-                setProcessingComplete(true);
-                
-                if (onSuccess) {
-                  onSuccess();
-                }
-                
-                return true;
-              } else {
-                updateProgress(100, "Failed to save all expenses");
-                errorScan("Failed to save expenses to database");
-                return false;
-              }
-            } else {
-              if (onCapture) {
-                onCapture(expenseDetails);
-              }
-              
-              updateProgress(100, "Receipt processed successfully!");
+            // Process all items from the receipt
+            const success = await processScanResults(
+              scanResults,
+              true,
+              onCapture,
+              setOpen
+            );
+            
+            if (success) {
+              updateProgress(100, "All expenses saved successfully!");
               setProcessingComplete(true);
+              console.log("Receipt processing completed successfully");
+              
+              if (onSuccess) {
+                onSuccess();
+              }
+              
               return true;
+            } else {
+              updateProgress(100, "Failed to save all expenses");
+              errorScan("Failed to save expenses to database");
+              return false;
             }
           } catch (error) {
             console.error("Error saving expenses:", error);
@@ -169,8 +148,23 @@ export function useScanReceipt({
             errorScan("Failed to save to database");
             return false;
           }
-        } else if (onCapture) {
-          onCapture(expenseDetails);
+        } else {
+          // Manual mode - just extract main item for form
+          const mainItem = selectMainItem(scanResults.items);
+          const currentDate = new Date().toISOString().split('T')[0];
+          
+          let expenseDetails = {
+            description: mainItem.description || scanResults.merchant || "Store Purchase",
+            amount: mainItem.amount || scanResults.total || "0.00",
+            date: mainItem.date || scanResults.date || currentDate,
+            category: mainItem.category || "Other",
+            paymentMethod: mainItem.paymentMethod || "Card",
+          };
+          
+          if (onCapture) {
+            onCapture(expenseDetails);
+          }
+          
           updateProgress(100, "Receipt processed successfully!");
           setProcessingComplete(true);
           return true;
@@ -210,6 +204,7 @@ export function useScanReceipt({
   ]);
   
   const autoProcessReceipt = useCallback(() => {
+    console.log("Auto-processing receipt...");
     return handleScanReceipt();
   }, [handleScanReceipt]);
   

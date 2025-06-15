@@ -150,17 +150,9 @@ async function performUpload(
     const storagePath = userId ? `users/${userId}/${fileName}` : `public/${fileName}`;
     const bucketName = 'receipts';
     
-    // First ensure bucket exists
-    const bucketExists = await ensureBucketExists(bucketName);
-    if (!bucketExists) {
-      console.error('Failed to create or access bucket');
-      toast.error('Storage not available');
-      return null;
-    }
-    
     console.log(`Uploading to bucket: ${bucketName}, path: ${storagePath}`);
     
-    // Upload file with better error handling
+    // Upload file directly - bucket should exist now
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(storagePath, fileToUpload, {
@@ -172,9 +164,7 @@ async function performUpload(
       console.error('Supabase upload error:', error);
       
       // Handle specific error cases
-      if (error.message.includes('Bucket not found')) {
-        toast.error('Storage bucket not available. Please contact support.');
-      } else if (error.message.includes('The resource already exists')) {
+      if (error.message.includes('The resource already exists')) {
         // Try with a different filename
         const newFileName = `${timestamp}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const newStoragePath = userId ? `users/${userId}/${newFileName}` : `public/${newFileName}`;

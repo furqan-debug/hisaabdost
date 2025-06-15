@@ -95,6 +95,8 @@ export async function processScanResults(
     // Always save all expenses from receipt
     if (formattedItems.length > 0) {
       try {
+        console.log("Inserting expenses into database:", itemsWithUserId);
+        
         // Insert expenses directly into the database
         const { data, error } = await supabase
           .from('expenses')
@@ -121,24 +123,35 @@ export async function processScanResults(
         }
         
         console.log("Successfully saved expenses to database:", formattedItems.length, "items");
-        toast.success(`Successfully saved ${formattedItems.length} expense(s) from receipt`);
         
-        // IMPORTANT: Dispatch multiple events to ensure all components refresh
-        // First, dispatch a receipt-scanned event
+        const itemText = formattedItems.length === 1 ? "expense" : "expenses";
+        toast.success(`Successfully saved ${formattedItems.length} ${itemText} from receipt`);
+        
+        // Dispatch multiple events to ensure all components refresh
+        console.log("Dispatching expense update events...");
+        
+        // Immediate event dispatch
         const receiptEvent = new CustomEvent('receipt-scanned', { 
           detail: { timestamp: Date.now(), count: formattedItems.length }
         });
         window.dispatchEvent(receiptEvent);
-        console.log("Dispatched receipt-scanned event after database insert");
         
-        // Then dispatch an expenses-updated event with a small delay to ensure it's processed separately
+        // Delayed events to ensure proper refresh
         setTimeout(() => {
           const updateEvent = new CustomEvent('expenses-updated', { 
             detail: { timestamp: Date.now(), count: formattedItems.length }
           });
           window.dispatchEvent(updateEvent);
-          console.log("Dispatched expenses-updated event after database insert");
-        }, 100);
+          console.log("Dispatched expenses-updated event");
+        }, 500);
+        
+        setTimeout(() => {
+          const refreshEvent = new CustomEvent('expense-refresh', { 
+            detail: { timestamp: Date.now() }
+          });
+          window.dispatchEvent(refreshEvent);
+          console.log("Dispatched expense-refresh event");
+        }, 1000);
         
         // If onCapture is provided, also update the form with the first item
         if (onCapture && formattedItems.length > 0) {
@@ -147,8 +160,9 @@ export async function processScanResults(
         
         // Close the dialog after a short delay
         if (setOpen) {
-          setTimeout(() => setOpen(false), 1000);
+          setTimeout(() => setOpen(false), 1500);
         }
+        
         return true;
         
       } catch (error) {
