@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { scanReceipt } from '../services/receiptScannerService';
 import { processScanResults } from '../utils/processScanUtils';
 import { toast } from 'sonner';
-import { selectMainItem } from '../utils/itemSelectionUtils';
 
 interface UseScanReceiptProps {
   file: File | null;
@@ -39,7 +38,7 @@ export function useScanReceipt({
   const [processingComplete, setProcessingComplete] = useState(false);
   
   const resetScanState = useCallback(() => {
-    console.log("Resetting scan state");
+    console.log("🔄 useScanReceipt: Resetting all scan state");
     setIsScanning(false);
     setIsAutoProcessing(false);
     setScanProgress(0);
@@ -50,13 +49,13 @@ export function useScanReceipt({
   }, []);
   
   const updateProgress = useCallback((progress: number, message?: string) => {
-    console.log(`Scan progress: ${progress}% - ${message || ''}`);
+    console.log(`📊 Scan progress: ${progress}% - ${message || ''}`);
     setScanProgress(progress);
     if (message) setStatusMessage(message);
   }, []);
   
   const startScan = useCallback(() => {
-    console.log("Starting receipt scan...");
+    console.log("🎬 useScanReceipt: Starting receipt scan...");
     setIsScanning(true);
     setIsAutoProcessing(true);
     setScanProgress(0);
@@ -66,7 +65,7 @@ export function useScanReceipt({
   }, []);
   
   const timeoutScan = useCallback(() => {
-    console.log("Receipt scan timed out");
+    console.log("⏰ useScanReceipt: Receipt scan timed out");
     setScanTimedOut(true);
     setIsScanning(false);
     setIsAutoProcessing(false);
@@ -74,7 +73,7 @@ export function useScanReceipt({
   }, []);
   
   const errorScan = useCallback((message: string) => {
-    console.log("Receipt scan error:", message);
+    console.log(`❌ useScanReceipt: Receipt scan error: ${message}`);
     setScanError(message);
     setIsScanning(false);
     setIsAutoProcessing(false);
@@ -82,31 +81,31 @@ export function useScanReceipt({
   }, []);
   
   const endScan = useCallback(() => {
-    console.log("Receipt scan completed");
+    console.log("🏁 useScanReceipt: Receipt scan completed");
     setIsScanning(false);
     setIsAutoProcessing(false);
   }, []);
   
   const handleScanReceipt = useCallback(async () => {
     if (!file) {
-      console.error("No file provided for scanning");
+      console.error("❌ useScanReceipt: No file provided for scanning");
       toast.error("No receipt file selected");
       return false;
     }
     
     if (isScanning) {
-      console.log("Scan already in progress, skipping");
+      console.log("⚠️ useScanReceipt: Scan already in progress, skipping");
       toast.info("Scan already in progress");
       return false;
     }
     
-    console.log(`Starting receipt scan for: ${file.name} (${file.size} bytes, ${file.type})`);
+    console.log(`🚀 useScanReceipt: Starting receipt scan for: ${file.name} (${file.size} bytes, ${file.type})`);
     startScan();
     
     const receiptUrl = file ? URL.createObjectURL(file) : undefined;
     
     try {
-      console.log("Calling scanReceipt service...");
+      console.log("📞 useScanReceipt: Calling scanReceipt service...");
       const scanResults = await scanReceipt({
         file,
         receiptUrl,
@@ -115,14 +114,13 @@ export function useScanReceipt({
         onError: errorScan
       });
       
-      console.log("Scan results received:", scanResults);
+      console.log("📥 useScanReceipt: Scan results received:", JSON.stringify(scanResults, null, 2));
       
       if (scanResults?.success) {
         updateProgress(90, "Processing scan results...");
         
-        // Process the scan results and save to database
         try {
-          console.log("Processing scan results for database save...");
+          console.log("💾 useScanReceipt: Processing scan results for database save...");
           
           const success = await processScanResults(
             scanResults,
@@ -134,9 +132,10 @@ export function useScanReceipt({
           if (success) {
             updateProgress(100, "Expenses saved successfully!");
             setProcessingComplete(true);
-            console.log("Receipt processing completed successfully");
+            console.log("✅ useScanReceipt: Receipt processing completed successfully");
             
-            // Dispatch events to refresh expense lists
+            // Dispatch multiple events to ensure all components refresh
+            console.log("📡 useScanReceipt: Dispatching refresh events...");
             setTimeout(() => {
               window.dispatchEvent(new CustomEvent('expenses-updated', { 
                 detail: { timestamp: Date.now(), action: 'receipt-scan' }
@@ -144,9 +143,14 @@ export function useScanReceipt({
               window.dispatchEvent(new CustomEvent('receipt-scanned', { 
                 detail: { timestamp: Date.now() }
               }));
-            }, 500);
+              window.dispatchEvent(new CustomEvent('expense-refresh', { 
+                detail: { timestamp: Date.now() }
+              }));
+              console.log("📡 useScanReceipt: All refresh events dispatched");
+            }, 100);
             
             if (onSuccess) {
+              console.log("🎉 useScanReceipt: Calling onSuccess callback");
               onSuccess();
             }
             
@@ -157,7 +161,7 @@ export function useScanReceipt({
             return false;
           }
         } catch (error) {
-          console.error("Error processing scan results:", error);
+          console.error("💥 useScanReceipt: Error processing scan results:", error);
           updateProgress(100, "Error saving to database");
           errorScan("Failed to save to database");
           return false;
@@ -173,7 +177,7 @@ export function useScanReceipt({
         return false;
       }
     } catch (error) {
-      console.error("Error in receipt scanning:", error);
+      console.error("💥 useScanReceipt: Error in receipt scanning:", error);
       errorScan("An unexpected error occurred");
       return false;
     } finally {
@@ -194,7 +198,7 @@ export function useScanReceipt({
   ]);
   
   const autoProcessReceipt = useCallback(() => {
-    console.log("Auto-processing receipt...");
+    console.log("⚡ useScanReceipt: Auto-processing receipt...");
     return handleScanReceipt();
   }, [handleScanReceipt]);
   
