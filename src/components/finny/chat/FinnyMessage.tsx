@@ -5,6 +5,7 @@ import { useCurrency } from '@/hooks/use-currency';
 import MessageBadges from './components/MessageBadges';
 import MessageTimestamp from './components/MessageTimestamp';
 import ActionIndicator from './components/ActionIndicator';
+import MessageAvatar from './components/MessageAvatar';
 
 interface FinnyMessageProps {
   content: string;
@@ -42,7 +43,7 @@ const FinnyMessage = React.memo(({
 
   return (
     <motion.div
-      className={`group flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+      className={`group flex items-end gap-3 ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
@@ -52,13 +53,18 @@ const FinnyMessage = React.memo(({
         delay: isUser ? 0 : 0.1
       }}
     >
+      {/* Avatar for bot messages (left side) */}
+      {!isUser && (
+        <MessageAvatar isUser={isUser} timestamp={timestamp} />
+      )}
+
       <div className={`
-        max-w-[85%] rounded-2xl px-4 py-3 shadow-lg
+        max-w-[75%] rounded-2xl px-4 py-3 shadow-lg relative
         ${isUser 
           ? 'bg-blue-600 text-white' 
           : isEmpathetic 
-            ? 'bg-gray-800 text-gray-100 border border-gray-600' 
-            : 'bg-gray-800 text-gray-100 border border-gray-600'
+            ? 'bg-white text-gray-800 border border-gray-200' 
+            : 'bg-white text-gray-800 border border-gray-200'
         }
       `}>
         <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -84,6 +90,11 @@ const FinnyMessage = React.memo(({
           <MessageTimestamp timestamp={timestamp} />
         </div>
       </div>
+
+      {/* Avatar for user messages (right side) */}
+      {isUser && (
+        <MessageAvatar isUser={isUser} timestamp={timestamp} />
+      )}
     </motion.div>
   );
 });

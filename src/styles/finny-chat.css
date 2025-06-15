@@ -1,20 +1,20 @@
 
-/* Finny Chat Styles - Clean Design Without Avatars */
+/* Finny Chat Styles - Clean Design With Modern Avatars */
 .finny-chat-card {
-  @apply bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden;
+  @apply bg-gray-50 border border-gray-200 rounded-2xl shadow-2xl overflow-hidden;
 }
 
 .finny-chat-header {
-  @apply bg-gray-900 border-b border-gray-700;
+  @apply bg-white border-b border-gray-200;
 }
 
 /* Message containers */
 .finny-messages-container {
   @apply p-4 space-y-4 pb-6;
-  background: linear-gradient(180deg, rgb(17, 24, 39) 0%, rgb(31, 41, 55) 100%);
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
 }
 
-/* Enhanced message bubbles without avatars */
+/* Enhanced message bubbles with avatars */
 .finny-message-user {
   @apply transition-all duration-300 transform hover:scale-[1.02] shadow-lg;
   animation: slideInRight 0.3s ease-out;
@@ -27,7 +27,7 @@
 
 /* Enhanced input area */
 .finny-chat-input {
-  @apply border-t border-gray-700 bg-gray-900 px-4 py-4 relative z-50;
+  @apply border-t border-gray-200 bg-white px-4 py-4 relative z-50;
 }
 
 .finny-chat-input-container {
@@ -35,13 +35,13 @@
 }
 
 .finny-chat-input input {
-  @apply text-sm bg-gray-800 text-white border border-gray-600 
+  @apply text-sm bg-gray-50 text-gray-900 border border-gray-300 
     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300
-    py-3 px-4 rounded-2xl placeholder:text-gray-400;
+    py-3 px-4 rounded-2xl placeholder:text-gray-500;
 }
 
 .finny-chat-input input:focus {
-  @apply shadow-lg;
+  @apply shadow-lg bg-white;
 }
 
 /* Send button enhancement */
@@ -57,14 +57,14 @@
 
 .keyboard-avoid {
   @apply sticky bottom-0 w-full z-50;
-  background: linear-gradient(180deg, transparent 0%, rgb(17, 24, 39) 20%);
+  background: linear-gradient(180deg, transparent 0%, #ffffff 20%);
 }
 
 /* Enhanced Quick Reply Buttons */
 .quick-reply-button {
   @apply flex items-center gap-2 text-sm py-2.5 px-4 rounded-2xl transition-all duration-300
-    bg-gray-800 hover:bg-gray-700 text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed 
-    border border-gray-600 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95;
+    bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed 
+    border border-gray-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95;
 }
 
 /* Status indicator */
@@ -76,7 +76,7 @@
 
 /* Typing indicator enhancement */
 .typing-indicator {
-  @apply flex items-center gap-1 px-3 py-2 bg-gray-800 rounded-2xl border border-gray-600 shadow-lg;
+  @apply flex items-center gap-1 px-3 py-2 bg-white rounded-2xl border border-gray-200 shadow-lg;
 }
 
 .typing-dot {
@@ -104,18 +104,18 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(55, 65, 81, 0.1);
+    background: rgba(243, 244, 246, 0.3);
     border-radius: 3px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(107, 114, 128, 0.3);
+    background: rgba(156, 163, 175, 0.5);
     border-radius: 3px;
     transition: background 0.2s;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(107, 114, 128, 0.5);
+    background: rgba(156, 163, 175, 0.7);
   }
 }
 
@@ -162,22 +162,22 @@
   }
 }
 
-/* Message badges with better contrast */
+/* Message badges with better contrast for light theme */
 .message-badge {
   @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-    bg-blue-900/50 text-blue-200 border border-blue-700;
+    bg-blue-100 text-blue-800 border border-blue-200;
 }
 
 .success-badge {
-  @apply bg-green-900/50 text-green-200 border-green-700;
+  @apply bg-green-100 text-green-800 border-green-200;
 }
 
 .error-badge {
-  @apply bg-red-900/50 text-red-200 border-red-700;
+  @apply bg-red-100 text-red-800 border-red-200;
 }
 
 .empathy-badge {
-  @apply bg-purple-900/50 text-purple-200 border-purple-700;
+  @apply bg-purple-100 text-purple-800 border-purple-200;
 }
 
 /* Mobile optimizations */
@@ -203,23 +203,21 @@
   }
 }
 
-/* Dark mode specific enhancements */
-@media (prefers-color-scheme: dark) {
-  .finny-chat-card {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-  }
+/* Light mode specific enhancements */
+.finny-chat-card {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 }
 
 /* Focus states for accessibility */
 .finny-chat-input input:focus-visible,
 .quick-reply-button:focus-visible,
 .finny-send-button:focus-visible {
-  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900;
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white;
 }
 
 /* Loading states */
 .loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
