@@ -39,6 +39,7 @@ export function useScanReceipt({
   const [processingComplete, setProcessingComplete] = useState(false);
   
   const resetScanState = useCallback(() => {
+    console.log("Resetting scan state");
     setIsScanning(false);
     setIsAutoProcessing(false);
     setScanProgress(0);
@@ -49,6 +50,7 @@ export function useScanReceipt({
   }, []);
   
   const updateProgress = useCallback((progress: number, message?: string) => {
+    console.log(`Scan progress: ${progress}% - ${message || ''}`);
     setScanProgress(progress);
     if (message) setStatusMessage(message);
   }, []);
@@ -87,16 +89,20 @@ export function useScanReceipt({
   
   const handleScanReceipt = useCallback(async () => {
     if (!file) {
+      console.error("No file provided for scanning");
       toast.error("No receipt file selected");
       return false;
     }
     
     if (isScanning) {
+      console.log("Scan already in progress, skipping");
       toast.info("Scan already in progress");
       return false;
     }
     
+    console.log(`Starting receipt scan for: ${file.name} (${file.size} bytes, ${file.type})`);
     startScan();
+    
     const receiptUrl = file ? URL.createObjectURL(file) : undefined;
     
     try {

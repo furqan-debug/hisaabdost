@@ -21,131 +21,161 @@ export async function scanReceipt({
   onError
 }: ScanOptions): Promise<ScanResult> {
   if (!file) {
+    console.error('No file provided to scanReceipt');
     if (onError) onError('No file provided');
     return { success: false, error: 'No file provided' };
   }
 
+  console.log(`Starting receipt scan for file: ${file.name} (${file.size} bytes, type: ${file.type})`);
+
   try {
     if (onProgress) onProgress(10, "Preparing receipt image...");
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      const errorMsg = `Invalid file type: ${file.type}. Please upload an image.`;
+      console.error(errorMsg);
+      if (onError) onError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      const errorMsg = `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`;
+      console.error(errorMsg);
+      if (onError) onError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
 
     // Create a form data object to send to the edge function
     const formData = new FormData();
     formData.append('file', file);
     formData.append('timestamp', Date.now().toString());
     formData.append('retry', '0');
-    formData.append('enhanced', 'true'); // Request enhanced processing
+    formData.append('enhanced', 'true');
 
+    console.log('FormData prepared, calling edge function...');
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
     // Start a timer for the scan
     const scanStartTime = Date.now();
     const timeoutDuration = 25000; // 25 seconds timeout
-    const timeoutPromise = new Promise<ScanResult>((resolve) => {
-      setTimeout(() => {
-        if (Date.now() - scanStartTime >= timeoutDuration) {
-          if (onTimeout) onTimeout();
-          resolve({ success: false, isTimeout: true });
-        }
-      }, timeoutDuration);
-    });
-
+    
     // Use Supabase client to call the edge function with proper authentication
-    const fetchPromise = supabase.functions.invoke('scan-receipt', {
+    console.log('Invoking scan-receipt edge function...');
+    const response = await supabase.functions.invoke('scan-receipt', {
       body: formData,
       headers: {
         'X-Processing-Level': 'high',
       }
-    }).then(async (response) => {
-      // Update progress based on response status
-      if (onProgress) onProgress(60, "Processing receipt text...");
+    });
 
-      if (response.error) {
-        console.error("Scan API error:", response.error);
-        if (onError) onError(`Server error: ${response.error.message}`);
+    console.log('Edge function response received:', response);
+
+    // Update progress based on response status
+    if (onProgress) onProgress(60, "Processing receipt text...");
+
+    if (response.error) {
+      console.error("Scan API error:", response.error);
+      const errorMsg = `Server error: ${response.error.message}`;
+      if (onError) onError(errorMsg);
+      return { 
+        success: false, 
+        error: errorMsg,
+        receiptUrl
+      };
+    }
+
+    try {
+      const data = response.data;
+      console.log("Receipt scan API response data:", data);
+
+      if (!data) {
+        const errorMsg = "No data returned from scan function";
+        console.error(errorMsg);
+        if (onError) onError(errorMsg);
         return { 
           success: false, 
-          error: `Server error: ${response.error.message}`,
+          error: errorMsg,
           receiptUrl
         };
       }
 
-      try {
-        const data = response.data;
-        console.log("Receipt scan API response:", data);
+      if (data.isTimeout) {
+        console.log("Scan timed out on server");
+        if (onTimeout) onTimeout();
+        return { 
+          success: false, 
+          isTimeout: true,
+          warning: data.warning || "Processing timed out",
+          receiptUrl
+        };
+      }
 
-        if (data.isTimeout) {
-          if (onTimeout) onTimeout();
-          return { 
-            success: false, 
-            isTimeout: true,
-            warning: data.warning || "Processing timed out",
-            receiptUrl
-          };
-        }
+      if (data.error) {
+        console.error("Server returned error:", data.error);
+        if (onError) onError(data.error);
+        return { 
+          success: false, 
+          error: data.error,
+          receiptUrl
+        };
+      }
 
-        if (data.error) {
-          if (onError) onError(data.error);
-          return { 
-            success: false, 
-            error: data.error,
-            receiptUrl
-          };
-        }
+      if (onProgress) onProgress(80, "Extracting expense information...");
 
-        if (onProgress) onProgress(80, "Extracting expense information...");
+      // Check if we have valid scan results
+      if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+        console.warn("No items found in scan results, creating fallback expense");
+        
+        // Create a fallback expense entry
+        const fallbackItem = {
+          description: data.merchant || "Store Purchase",
+          amount: data.total || "0.00",
+          date: data.date || new Date().toISOString().split('T')[0],
+          category: "Other",
+          paymentMethod: "Card"
+        };
 
-        // Return success with the extracted data
         return { 
           success: true,
           date: data.date,
           merchant: data.merchant || "Store",
-          items: data.items || [],
+          items: [fallbackItem],
           total: data.total,
           receiptUrl
         };
-      } catch (error) {
-        console.error("Failed to parse scan response:", error);
-        if (onError) onError("Failed to parse server response");
-        return { 
-          success: false, 
-          error: "Failed to parse server response",
-          receiptUrl
-        };
       }
-    }).catch(error => {
-      console.error("Network error during scan:", error);
-      if (onError) onError("Network error");
+
+      console.log(`Scan successful! Found ${data.items.length} items`);
+      if (onProgress) onProgress(100, "Receipt processed!");
+
+      // Return success with the extracted data
       return { 
-        success: false, 
-        error: "Network error",
+        success: true,
+        date: data.date,
+        merchant: data.merchant || "Store",
+        items: data.items || [],
+        total: data.total,
         receiptUrl
       };
-    });
-
-    // Race between the fetch and the timeout
-    const result = await Promise.race([fetchPromise, timeoutPromise]);
-
-    // Use type guard to safely check for isTimeout property
-    if (result && typeof result === 'object' && 'isTimeout' in result && result.isTimeout === true) {
-      console.log("Scan timed out");
-      if (onTimeout) onTimeout();
-    } else if (!result.success) {
-      console.log("Scan failed:", result.error);
-    } else {
-      console.log("Scan completed successfully");
-      if (onProgress) onProgress(100, "Receipt processed!");
+    } catch (parseError) {
+      console.error("Failed to parse scan response:", parseError);
+      const errorMsg = "Failed to parse server response";
+      if (onError) onError(errorMsg);
+      return { 
+        success: false, 
+        error: errorMsg,
+        receiptUrl
+      };
     }
-
-    return {
-      ...result,
-      receiptUrl // Ensure the receipt URL is preserved in the result
-    };
-  } catch (error) {
-    console.error("Error in scanReceipt:", error);
-    if (onError) onError("Unexpected error");
+  } catch (networkError) {
+    console.error("Network error during scan:", networkError);
+    const errorMsg = `Network error: ${networkError.message}`;
+    if (onError) onError(errorMsg);
     return { 
       success: false, 
-      error: "Unexpected error", 
+      error: errorMsg,
       receiptUrl
     };
   }

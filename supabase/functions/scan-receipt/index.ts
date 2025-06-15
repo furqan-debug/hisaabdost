@@ -18,7 +18,10 @@ function createTimeout(timeoutMs = 28000) {
 }
 
 serve(async (req) => {
-  console.log("Receipt scanning function called");
+  console.log("=== Receipt scanning function called ===");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,14 +46,14 @@ serve(async (req) => {
   try {
     console.log("Starting receipt scanning process");
     
-    // Check content type - ensure we don't do strict matching that would break boundary detection
+    // Check content type
     const contentType = req.headers.get('content-type') || '';
     console.log("Content-Type:", contentType);
     
     // OpenAI API key from environment
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
-      console.error("OpenAI API key not found");
+      console.error("OpenAI API key not found in environment");
       return new Response(JSON.stringify({
         error: 'OpenAI API key not configured',
       }), {
@@ -58,26 +61,27 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    console.log("OpenAI API key found");
     
-    // Processing level from header (standard or enhanced)
+    // Processing level from header
     const processingLevel = req.headers.get('X-Processing-Level') || 'standard';
     const enhancedProcessing = processingLevel === 'high';
+    console.log("Processing level:", processingLevel, "Enhanced:", enhancedProcessing);
     
     let receiptImage: File | null = null;
-    let formDataFields: string[] = [];
     
-    // Check if this is multipart/form-data (just check the start, not the boundary part)
+    // Check if this is multipart/form-data
     if (contentType.includes('multipart/form-data')) {
       console.log("Handling multipart form data");
       
       try {
         // Parse the form data
         const formData = await req.formData();
-        formDataFields = [...formData.keys()];
-        console.log("Form data keys:", formDataFields);
+        const formDataKeys = [...formData.keys()];
+        console.log("Form data keys:", formDataKeys);
         
         // Try all common field names for the receipt file
-        const fieldNamesToCheck = ['receipt', 'image', 'file', 'receiptImage'];
+        const fieldNamesToCheck = ['file', 'receipt', 'image', 'receiptImage'];
         
         for (const fieldName of fieldNamesToCheck) {
           const file = formData.get(fieldName) as File;
@@ -85,28 +89,16 @@ serve(async (req) => {
             receiptImage = file;
             console.log(`Found receipt image in field '${fieldName}': ${file.name} (${file.size} bytes, type: ${file.type})`);
             break;
-          } else if (formData.has(fieldName)) {
-            console.log(`Field '${fieldName}' exists but is not a valid file or is empty`);
           }
         }
         
         if (!receiptImage) {
           console.error("No receipt image found in form data");
-          
-          // Create a more detailed error response with debug info
-          const formDataEntries = Object.fromEntries(
-            [...formData.entries()].map(([key, value]) => {
-              if (value instanceof File) {
-                return [key, `File: ${value.name} (${value.size} bytes, ${value.type})`];
-              }
-              return [key, typeof value === 'string' ? value.substring(0, 100) : 'Non-string value'];
-            })
-          );
+          console.error("Available form fields:", formDataKeys);
           
           return new Response(JSON.stringify({
             error: 'No receipt image provided',
-            formDataKeys: formDataFields,
-            formDataEntries,
+            formDataKeys: formDataKeys,
             fieldNamesChecked: fieldNamesToCheck,
           }), {
             status: 400,
@@ -163,9 +155,10 @@ serve(async (req) => {
             });
           }
 
-          // Return the processed results without attempting database operations
-          // This avoids RLS issues as client will handle the database operations
+          // Return the processed results
           console.log("OCR processing completed successfully");
+          console.log("Returning results:", JSON.stringify(results, null, 2));
+          
           return new Response(JSON.stringify({
             ...results,
             success: true,
@@ -211,7 +204,7 @@ serve(async (req) => {
       });
     }
   } catch (error) {
-    console.error("Unhandled error:", error);
+    console.error("Unhandled error in scan-receipt function:", error);
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error.message,
