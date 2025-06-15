@@ -14,15 +14,18 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { OfflineStatus } from "@/components/ui/offline-indicator";
 import { useAuth } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavbarProps {
-  onToggleSidebar: () => void;
-  onSettingsOpen: () => void;
+  onSettingsOpen?: () => void;
 }
 
-export function Navbar({ onToggleSidebar, onSettingsOpen }: NavbarProps) {
+export function Navbar({ onSettingsOpen }: NavbarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toggleSidebar } = useSidebar();
+  const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
     try {
@@ -41,9 +44,11 @@ export function Navbar({ onToggleSidebar, onSettingsOpen }: NavbarProps) {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
       <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
-            <Menu className="h-4 w-4" />
-          </Button>
+          {!isMobile && (
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
           <span className="font-bold text-lg">Hisaab Dost</span>
         </div>
 
@@ -62,7 +67,7 @@ export function Navbar({ onToggleSidebar, onSettingsOpen }: NavbarProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuItem onClick={() => onSettingsOpen()}>
+              <DropdownMenuItem onClick={() => onSettingsOpen?.()}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>

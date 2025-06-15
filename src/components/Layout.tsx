@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Navbar } from './Navbar';
 import { BottomNavigation } from './BottomNavigation';
-import { LayoutWrapper } from './layout/LayoutWrapper';
-import { LayoutContainer } from './layout/LayoutContainer';
+import Sidebar from './Sidebar';
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -35,19 +35,18 @@ const Layout = () => {
   }
 
   return (
-    <LayoutWrapper>
-      <Navbar 
-        onToggleSidebar={() => {}} 
-        onSettingsOpen={() => {}} 
-      />
-      <LayoutContainer 
-        isMobile={isMobile} 
-        pageTransition={pageTransition}
-      >
-        <Outlet />
-      </LayoutContainer>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        {!isMobile && <Sidebar />}
+        <SidebarInset className="flex-1">
+          <Navbar />
+          <main className={`flex-1 transition-all duration-300 ${pageTransition ? 'opacity-50' : 'opacity-100'}`}>
+            <Outlet />
+          </main>
+        </SidebarInset>
+      </div>
       {isMobile && <BottomNavigation />}
-    </LayoutWrapper>
+    </SidebarProvider>
   );
 };
 
