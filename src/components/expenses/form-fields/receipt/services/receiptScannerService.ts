@@ -51,33 +51,31 @@ export async function scanReceipt({
     const formData = new FormData();
     formData.append('file', file);
     formData.append('timestamp', Date.now().toString());
-    formData.append('retry', '0');
-    formData.append('enhanced', 'true');
-
+    
     console.log('FormData prepared, calling edge function...');
     if (onProgress) onProgress(20, "Analyzing receipt...");
 
-    // Start a timer for the scan
-    const scanStartTime = Date.now();
-    const timeoutDuration = 25000; // 25 seconds timeout
-    
     // Use Supabase client to call the edge function with proper authentication
     console.log('Invoking scan-receipt edge function...');
-    const response = await supabase.functions.invoke('scan-receipt', {
-      body: formData,
+    
+    const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/scan-receipt', {
+      method: 'POST',
       headers: {
+        'Authorization': `Bearer ${supabase.supabaseKey}`,
         'X-Processing-Level': 'high',
-      }
+      },
+      body: formData
     });
 
-    console.log('Edge function response received:', response);
+    console.log('Edge function response received:', response.status, response.statusText);
 
     // Update progress based on response status
     if (onProgress) onProgress(60, "Processing receipt text...");
 
-    if (response.error) {
-      console.error("Scan API error:", response.error);
-      const errorMsg = `Server error: ${response.error.message}`;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Scan API error:", response.status, errorText);
+      const errorMsg = `Server error: ${response.status} ${response.statusText}`;
       if (onError) onError(errorMsg);
       return { 
         success: false, 
@@ -87,7 +85,7 @@ export async function scanReceipt({
     }
 
     try {
-      const data = response.data;
+      const data = await response.json();
       console.log("Receipt scan API response data:", data);
 
       if (!data) {

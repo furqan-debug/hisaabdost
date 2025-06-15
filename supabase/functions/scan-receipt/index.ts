@@ -2,6 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { runOCR } from "./services/ocrService.ts";
 
+console.log("=== scan-receipt function loaded ===");
+
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
