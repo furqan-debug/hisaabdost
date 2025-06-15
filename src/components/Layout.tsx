@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
-import Navbar from './Navbar';
+import { Navbar } from './Navbar';
 import { BottomNavigation } from './BottomNavigation';
 import { LayoutWrapper } from './layout/LayoutWrapper';
 import { LayoutContainer } from './layout/LayoutContainer';
@@ -36,7 +36,10 @@ const Layout = () => {
 
   return (
     <LayoutWrapper>
-      <Navbar />
+      <Navbar 
+        onToggleSidebar={() => {}} 
+        onSettingsOpen={() => {}} 
+      />
       <LayoutContainer 
         isMobile={isMobile} 
         pageTransition={pageTransition}

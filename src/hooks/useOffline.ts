@@ -41,12 +41,16 @@ export function useOffline(): OfflineHookReturn {
     
     setPendingSync(true);
     try {
-      // Trigger background sync if service worker supports it
+      // Check if service worker and background sync are supported
       if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
         const registration = await navigator.serviceWorker.ready;
-        await registration.sync.register('expense-sync');
-        await registration.sync.register('budget-sync');
-        console.log('Background sync registered');
+        // Use type assertion since TypeScript doesn't recognize sync by default
+        const syncManager = (registration as any).sync;
+        if (syncManager) {
+          await syncManager.register('expense-sync');
+          await syncManager.register('budget-sync');
+          console.log('Background sync registered');
+        }
       }
       
       // Dispatch custom events for components to handle sync
