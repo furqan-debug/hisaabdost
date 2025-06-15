@@ -8,6 +8,7 @@ import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { EnhancedQuickActionsWidget } from "./widgets/EnhancedQuickActionsWidget";
+import { QuickActionsWidget } from "./widgets/QuickActionsWidget";
 import { SpendingTrendsWidget } from "./widgets/SpendingTrendsWidget";
 import { BulkReceiptUpload } from "@/components/receipts/BulkReceiptUpload";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
