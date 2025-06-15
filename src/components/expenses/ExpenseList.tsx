@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface ExpenseListProps {
   filteredExpenses: Expense[];
@@ -52,7 +53,7 @@ interface MobileExpenseRowProps {
   onToggle: () => void;
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 }
 
 const MobileExpenseRow = ({ expense, selected, onToggle, onEdit, onDelete, currencyCode }: MobileExpenseRowProps) => {
