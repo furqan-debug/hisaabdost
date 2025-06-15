@@ -1,5 +1,6 @@
+
 import React from "react";
-import { Bell, LogOut, Settings, User } from "lucide-react";
+import { Bell, LogOut, Settings, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,7 +42,7 @@ export function Navbar({ onToggleSidebar, onSettingsOpen }: NavbarProps) {
       <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
-            {/* <Menu className="h-4 w-4" /> */}
+            <Menu className="h-4 w-4" />
           </Button>
           <span className="font-bold text-lg">Hisaab Dost</span>
         </div>
