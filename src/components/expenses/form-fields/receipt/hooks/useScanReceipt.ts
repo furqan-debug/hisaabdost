@@ -117,63 +117,50 @@ export function useScanReceipt({
       
       console.log("Scan results received:", scanResults);
       
-      if (scanResults?.success && scanResults.items && scanResults.items.length > 0) {
+      if (scanResults?.success) {
         updateProgress(90, "Processing scan results...");
         
-        if (autoSave && processAllItems) {
-          try {
-            updateProgress(95, "Saving expenses to database...");
-            console.log("Processing all items for auto-save...");
+        // Process the scan results and save to database
+        try {
+          console.log("Processing scan results for database save...");
+          
+          const success = await processScanResults(
+            scanResults,
+            autoSave,
+            onCapture,
+            setOpen
+          );
+          
+          if (success) {
+            updateProgress(100, "Expenses saved successfully!");
+            setProcessingComplete(true);
+            console.log("Receipt processing completed successfully");
             
-            // Process all items from the receipt
-            const success = await processScanResults(
-              scanResults,
-              true,
-              onCapture,
-              setOpen
-            );
+            // Dispatch events to refresh expense lists
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('expenses-updated', { 
+                detail: { timestamp: Date.now(), action: 'receipt-scan' }
+              }));
+              window.dispatchEvent(new CustomEvent('receipt-scanned', { 
+                detail: { timestamp: Date.now() }
+              }));
+            }, 500);
             
-            if (success) {
-              updateProgress(100, "All expenses saved successfully!");
-              setProcessingComplete(true);
-              console.log("Receipt processing completed successfully");
-              
-              if (onSuccess) {
-                onSuccess();
-              }
-              
-              return true;
-            } else {
-              updateProgress(100, "Failed to save all expenses");
-              errorScan("Failed to save expenses to database");
-              return false;
+            if (onSuccess) {
+              onSuccess();
             }
-          } catch (error) {
-            console.error("Error saving expenses:", error);
-            updateProgress(100, "Error saving to database");
-            errorScan("Failed to save to database");
+            
+            return true;
+          } else {
+            updateProgress(100, "Failed to save expenses");
+            errorScan("Failed to save expenses to database");
             return false;
           }
-        } else {
-          // Manual mode - just extract main item for form
-          const mainItem = selectMainItem(scanResults.items);
-          const currentDate = new Date().toISOString().split('T')[0];
-          
-          let expenseDetails = {
-            description: mainItem.description || scanResults.merchant || "Store Purchase",
-            amount: mainItem.amount || scanResults.total || "0.00",
-            date: mainItem.date || scanResults.date || currentDate,
-            category: mainItem.category || "Other",
-            paymentMethod: mainItem.paymentMethod || "Card",
-          };
-          
-          if (onCapture) {
-            onCapture(expenseDetails);
-          }
-          
-          updateProgress(100, "Receipt processed successfully!");
-          setProcessingComplete(true);
-          return true;
+        } catch (error) {
+          console.error("Error processing scan results:", error);
+          updateProgress(100, "Error saving to database");
+          errorScan("Failed to save to database");
+          return false;
         }
       } else if (scanResults?.isTimeout) {
         timeoutScan();
@@ -192,8 +179,6 @@ export function useScanReceipt({
     } finally {
       endScan();
     }
-    
-    return false;
   }, [
     file,
     isScanning,
@@ -205,7 +190,6 @@ export function useScanReceipt({
     onCapture,
     onSuccess,
     endScan,
-    processAllItems,
     setOpen
   ]);
   

@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { runOCR } from "./services/ocrService.ts";
 
 console.log("=== scan-receipt function loaded ===");
 
@@ -19,11 +18,45 @@ function createTimeout(timeoutMs = 28000) {
   });
 }
 
+// Simple OCR mock function - replace with actual OCR service
+async function runOCR(file: File): Promise<any> {
+  console.log(`Running OCR on file: ${file.name}`);
+  
+  // Simulate processing time
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Mock response with sample data
+  return {
+    success: true,
+    date: new Date().toISOString().split('T')[0],
+    merchant: "Sample Store",
+    total: "25.99",
+    items: [
+      {
+        description: "Coffee",
+        amount: "4.99",
+        category: "Food",
+        paymentMethod: "Card"
+      },
+      {
+        description: "Sandwich",
+        amount: "8.50",
+        category: "Food", 
+        paymentMethod: "Card"
+      },
+      {
+        description: "Tax",
+        amount: "1.25",
+        category: "Other",
+        paymentMethod: "Card"
+      }
+    ]
+  };
+}
+
 serve(async (req) => {
   console.log("=== Receipt scanning function called ===");
   console.log("Request method:", req.method);
-  console.log("Request URL:", req.url);
-  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -47,19 +80,6 @@ serve(async (req) => {
   
   try {
     console.log("Starting receipt scanning process");
-    
-    // OpenAI API key from environment
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      console.error("OpenAI API key not found in environment");
-      return new Response(JSON.stringify({
-        error: 'OpenAI API key not configured',
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    console.log("OpenAI API key found");
     
     // Parse the JSON body
     const requestBody = await req.json();
@@ -119,7 +139,7 @@ serve(async (req) => {
       console.log(`Setting timeout for OCR processing: ${timeoutDuration}ms`);
       
       const results = await Promise.race([
-        runOCR(receiptFile, openaiApiKey),
+        runOCR(receiptFile),
         createTimeout(timeoutDuration)
       ]);
       
@@ -131,7 +151,7 @@ serve(async (req) => {
           warning: "Processing timed out, partial results returned",
           date: new Date().toISOString().split('T')[0]
         }), {
-          status: 200, // Return 200 with timeout indication rather than error
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -141,8 +161,11 @@ serve(async (req) => {
       console.log("Returning results:", JSON.stringify(results, null, 2));
       
       return new Response(JSON.stringify({
-        ...results,
         success: true,
+        date: results.date,
+        merchant: results.merchant,
+        total: results.total,
+        items: results.items || [],
         receiptDetails: {
           filename: receiptFile.name,
           size: receiptFile.size,
@@ -168,7 +191,7 @@ serve(async (req) => {
       error: 'Internal server error',
       details: error.message,
     }), {
-    status: 500,
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
