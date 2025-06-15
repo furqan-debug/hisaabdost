@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChatInput } from './ChatInput';
-import { TypingIndicator } from './TypingIndicator';
-import { QuickReplies } from './QuickReplies';
-import { Message } from '../types';
+import ChatInput from '../ChatInput';
+import TypingIndicator from '../TypingIndicator';
+import QuickReplies from '../QuickReplies';
+import { Message, QuickReply } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 
 import { QuickActionsPanel } from '../../components/QuickActionsPanel';
@@ -165,11 +165,11 @@ export const ChatContainer = ({
           {/* Input Area */}
           <div className="finny-chat-input keyboard-avoid flex-shrink-0">
             <ChatInput
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              handleSendMessage={handleSendMessage}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onSubmit={handleSendMessage}
               isLoading={isLoading}
-              isMobile={isMobile}
+              isAuthenticated={!!user}
             />
           </div>
         </div>
