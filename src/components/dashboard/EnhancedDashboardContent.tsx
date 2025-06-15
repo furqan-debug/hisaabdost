@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -6,7 +7,7 @@ import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
-import { QuickActionsWidget } from "./widgets/QuickActionsWidget";
+import { EnhancedQuickActionsWidget } from "./widgets/EnhancedQuickActionsWidget";
 import { SpendingTrendsWidget } from "./widgets/SpendingTrendsWidget";
 import { BulkReceiptUpload } from "@/components/receipts/BulkReceiptUpload";
 import { Dialog, DialogContent } from "@/components/ui/dialog";

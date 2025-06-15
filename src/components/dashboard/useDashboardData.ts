@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -182,12 +181,14 @@ export function useDashboardData() {
   const walletBalance = monthlyIncome + totalAdditions - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
-  // Setup notification triggers
+  // Setup notification triggers with enhanced alerts
   useNotificationTriggers({
     budgets: [], // Will be populated when budget data is available
     monthlyExpenses,
     monthlyIncome,
     walletBalance,
+    expenses, // Add expenses for more detailed notifications
+    previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
   // Update month data when income or expenses change
