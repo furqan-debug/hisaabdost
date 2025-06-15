@@ -14,7 +14,7 @@ export function useExpenseRefresh() {
   const triggerRefresh = useCallback(() => {
     // Throttle refreshes to prevent multiple rapid refreshes
     const now = Date.now();
-    if (now - lastRefreshTime > 500) { // Only refresh if more than 500ms has passed
+    if (now - lastRefreshTime > 300) { // Reduced throttle time for more responsive updates
       console.log("Manually triggering refresh");
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(now);
@@ -34,6 +34,10 @@ export function useExpenseRefresh() {
       window.clearTimeout(refreshTimerRef.current);
     }
     
+    // For receipt-related events, trigger immediate refresh
+    const isReceiptEvent = eventName === 'receipt-scanned' || detail.action === 'receipt-scan';
+    const timeout = isReceiptEvent ? 100 : 200; // Faster refresh for receipt events
+    
     // Set a short timeout to batch potential multiple events
     refreshTimerRef.current = window.setTimeout(() => {
       console.log(`Refreshing expense list from ${eventName} event`);
@@ -41,17 +45,15 @@ export function useExpenseRefresh() {
       setLastRefreshTime(Date.now());
       refreshTimerRef.current = null;
       
-      // Show toast for certain events
-      if (eventName === 'receipt-scanned') {
-        toast.success("Receipt processed, expenses added successfully!");
-      } else if (eventName === 'expense-added') {
+      // Show toast for certain events (but not for receipt events as they have their own toast)
+      if (eventName === 'expense-added' && !isReceiptEvent) {
         toast.success("Expense added successfully!");
       } else if (eventName === 'expense-edited') {
         toast.success("Expense updated successfully!");
       } else if (eventName === 'expense-deleted') {
         toast.success("Expense deleted successfully!");
       }
-    }, 300);
+    }, timeout);
   }, []);
   
   useEffect(() => {

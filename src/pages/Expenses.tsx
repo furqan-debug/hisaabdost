@@ -42,7 +42,7 @@ const Expenses = () => {
         return [];
       }
       
-      console.log("Fetched expenses:", data);
+      console.log("Fetched expenses:", data?.length || 0, "items");
       
       return data.map(exp => ({
         id: exp.id,
@@ -57,10 +57,9 @@ const Expenses = () => {
       }));
     },
     enabled: !!user,
-    refetchInterval: 5000, // Poll every 5 seconds
+    staleTime: 1000, // Consider data stale after 1 second
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 0, // Always consider data stale to ensure fresh data
   });
 
   const {
@@ -89,11 +88,12 @@ const Expenses = () => {
   };
 
   const handleExpenseAdded = () => {
+    console.log("Expense added, triggering refresh");
     refetch();
+    triggerRefresh();
     // Add a second refetch with delay to catch any pending database operations
     setTimeout(() => {
       refetch();
-      triggerRefresh();
     }, 1000);
   };
 
@@ -129,37 +129,37 @@ const Expenses = () => {
     }
   };
 
-  // Listen for receipt scanning and expense update events
+  // Listen for receipt scanning and expense update events with enhanced logging
   useEffect(() => {
     const handleReceiptScan = (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log("Receipt scan detected, refreshing expenses list", customEvent.detail);
+      console.log("Receipt scan detected in Expenses page, refreshing list", customEvent.detail);
       refetch();
+      triggerRefresh();
+      // Additional delayed refresh for receipt scans
       setTimeout(() => {
+        console.log("Delayed refresh after receipt scan");
         refetch();
-        triggerRefresh();
-      }, 1000);
+      }, 1500);
     };
     
     const handleExpensesUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log("Expenses updated event detected, refreshing list", customEvent.detail);
+      console.log("Expenses updated event detected in Expenses page", customEvent.detail);
       refetch();
-      setTimeout(() => {
-        refetch();
-        triggerRefresh();
-      }, 1000);
+      triggerRefresh();
     };
     
+    console.log("Setting up event listeners in Expenses page");
     window.addEventListener('receipt-scanned', handleReceiptScan);
     window.addEventListener('expenses-updated', handleExpensesUpdated);
-    
-    // Initial fetch
-    refetch();
+    window.addEventListener('expense-added', handleExpensesUpdated);
     
     return () => {
+      console.log("Cleaning up event listeners in Expenses page");
       window.removeEventListener('receipt-scanned', handleReceiptScan);
       window.removeEventListener('expenses-updated', handleExpensesUpdated);
+      window.removeEventListener('expense-added', handleExpensesUpdated);
     };
   }, [refetch, triggerRefresh]);
 

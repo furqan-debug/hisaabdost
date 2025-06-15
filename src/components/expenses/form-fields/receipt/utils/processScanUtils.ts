@@ -61,7 +61,7 @@ export async function processScanResults(
   // Format all items for saving, ensuring all required fields are present
   const formattedItems = scanResult.items.map((item: any) => ({
     description: item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
-    amount: item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00",
+    amount: parseFloat(item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00"),
     date: formatDate(item.date || validatedReceiptDate),
     category: item.category || "Food", // Default to Food if no category
     paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
@@ -80,98 +80,139 @@ export async function processScanResults(
       
       // If onCapture is provided, still update the form with the first item
       if (onCapture && formattedItems.length > 0) {
-        onCapture(formattedItems[0]);
+        const firstItem = formattedItems[0];
+        onCapture({
+          description: firstItem.description,
+          amount: firstItem.amount.toString(),
+          date: firstItem.date,
+          category: firstItem.category,
+          paymentMethod: firstItem.paymentMethod
+        });
       }
       
       return false;
     }
     
-    // Add user_id to each item
-    const itemsWithUserId = formattedItems.map(item => ({
-      ...item,
-      user_id: user.id
-    }));
-    
-    // Always save all expenses from receipt
+    // Insert expenses directly into the database
     if (formattedItems.length > 0) {
       try {
-        console.log("Inserting expenses into database:", itemsWithUserId);
+        console.log("Inserting expenses into database for user:", user.id);
         
-        // Insert expenses directly into the database
+        // Prepare expense data for database insertion
+        const expenseData = formattedItems.map(item => ({
+          user_id: user.id,
+          description: item.description,
+          amount: item.amount,
+          date: item.date,
+          category: item.category,
+          payment: item.paymentMethod,
+          receipt_url: item.receiptUrl,
+          is_recurring: false,
+          notes: scanResult.merchant ? `From receipt: ${scanResult.merchant}` : null
+        }));
+        
+        console.log("Expense data to insert:", expenseData);
+        
+        // Insert expenses into the database
         const { data, error } = await supabase
           .from('expenses')
-          .insert(itemsWithUserId.map(item => ({
-            user_id: item.user_id,
-            description: item.description,
-            amount: parseFloat(item.amount),
-            date: item.date,
-            category: item.category || 'Food',
-            receipt_url: item.receiptUrl,
-            payment: item.paymentMethod,
-            is_recurring: false
-          })));
+          .insert(expenseData)
+          .select('id, description, amount');
         
         if (error) {
-          console.error("Error saving expenses:", error);
-          toast.error("Failed to save expenses from receipt");
+          console.error("Database error saving expenses:", error);
+          toast.error(`Failed to save expenses: ${error.message}`);
           
           // Even if saving to database failed, still update the form if onCapture is provided
           if (onCapture && formattedItems.length > 0) {
-            onCapture(formattedItems[0]);
+            const firstItem = formattedItems[0];
+            onCapture({
+              description: firstItem.description,
+              amount: firstItem.amount.toString(),
+              date: firstItem.date,
+              category: firstItem.category,
+              paymentMethod: firstItem.paymentMethod
+            });
           }
           return false;
         }
         
-        console.log("Successfully saved expenses to database:", formattedItems.length, "items");
+        console.log("Successfully saved expenses to database:", data);
         
         const itemText = formattedItems.length === 1 ? "expense" : "expenses";
-        toast.success(`Successfully saved ${formattedItems.length} ${itemText} from receipt`);
+        toast.success(`Successfully saved ${formattedItems.length} ${itemText} from receipt!`);
         
-        // Dispatch multiple events to ensure all components refresh
+        // Dispatch events to refresh expense lists
         console.log("Dispatching expense update events...");
         
-        // Immediate event dispatch
-        const receiptEvent = new CustomEvent('receipt-scanned', { 
-          detail: { timestamp: Date.now(), count: formattedItems.length }
-        });
-        window.dispatchEvent(receiptEvent);
+        // Immediate refresh event
+        window.dispatchEvent(new CustomEvent('expenses-updated', { 
+          detail: { 
+            timestamp: Date.now(), 
+            count: formattedItems.length,
+            action: 'receipt-scan'
+          }
+        }));
         
-        // Delayed events to ensure proper refresh
-        setTimeout(() => {
-          const updateEvent = new CustomEvent('expenses-updated', { 
-            detail: { timestamp: Date.now(), count: formattedItems.length }
-          });
-          window.dispatchEvent(updateEvent);
-          console.log("Dispatched expenses-updated event");
-        }, 500);
+        // Additional events for different components
+        window.dispatchEvent(new CustomEvent('receipt-scanned', { 
+          detail: { 
+            timestamp: Date.now(), 
+            count: formattedItems.length 
+          }
+        }));
         
+        window.dispatchEvent(new CustomEvent('expense-added', { 
+          detail: { 
+            timestamp: Date.now(), 
+            count: formattedItems.length 
+          }
+        }));
+        
+        // Delayed refresh to ensure all components catch the update
         setTimeout(() => {
-          const refreshEvent = new CustomEvent('expense-refresh', { 
+          window.dispatchEvent(new CustomEvent('expense-refresh', { 
             detail: { timestamp: Date.now() }
-          });
-          window.dispatchEvent(refreshEvent);
-          console.log("Dispatched expense-refresh event");
-        }, 1000);
+          }));
+          console.log("Dispatched delayed refresh event");
+        }, 500);
         
         // If onCapture is provided, also update the form with the first item
         if (onCapture && formattedItems.length > 0) {
-          onCapture(formattedItems[0]);
+          const firstItem = formattedItems[0];
+          onCapture({
+            description: firstItem.description,
+            amount: firstItem.amount.toString(),
+            date: firstItem.date,
+            category: firstItem.category,
+            paymentMethod: firstItem.paymentMethod
+          });
         }
         
         // Close the dialog after a short delay
         if (setOpen) {
-          setTimeout(() => setOpen(false), 1500);
+          setTimeout(() => {
+            console.log("Closing scan dialog");
+            setOpen(false);
+          }, 2000);
         }
         
         return true;
         
       } catch (error) {
         console.error("Error saving expense from scan:", error);
-        toast.error("Error processing receipt");
+        toast.error("Error processing receipt - please try again");
         
         // Even if an error occurred, still update the form if onCapture is provided
         if (onCapture && formattedItems.length > 0) {
-          onCapture(formattedItems[0]);
+          const firstItem = formattedItems[0];
+          onCapture({
+            description: firstItem.description,
+            amount: firstItem.amount.toString(),
+            date: firstItem.date,
+            category: firstItem.category,
+            paymentMethod: firstItem.paymentMethod
+          });
         }
         return false;
       }
@@ -181,7 +222,7 @@ export async function processScanResults(
     }
   } catch (error) {
     console.error("Error getting current user:", error);
-    toast.error("Authentication error");
+    toast.error("Authentication error - please log in again");
     return false;
   }
 }
