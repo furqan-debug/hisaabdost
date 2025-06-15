@@ -61,10 +61,10 @@ export const BudgetTabs = ({
       transition={{ duration: 0.3 }}
     >
       <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full">
-        <div className="w-full mb-8 overflow-x-auto no-scrollbar">
+        <div className="w-full mb-8">
           <TabsList className={`
             w-full md:w-auto h-auto p-1.5 bg-muted/50 rounded-xl
-            inline-flex gap-1 justify-start md:justify-center
+            flex flex-wrap gap-1 justify-start md:justify-center
           `}>
             {tabs.map((tab, index) => (
               <motion.div
