@@ -217,7 +217,7 @@
   }
   
   .finny-messages-container {
-    @apply px-3 pb-safe;
+    @apply px-3 pb-4;
   }
   
   .finny-chat-input {
