@@ -82,7 +82,7 @@ export const ChatContainer = ({
               ? 'inset-0 m-0 flex flex-col' 
               : isMinimized
                 ? 'bottom-4 right-4 w-80 h-16'
-                : 'bottom-4 right-4 md:bottom-6 md:right-6 w-[90vw] sm:w-[420px] h-[600px] md:h-[700px]'
+                : 'bottom-4 right-4 md:bottom-6 md:right-6 w-[95vw] max-w-[420px] h-[85vh] max-h-[700px]'
           }`}
           initial={{
             opacity: 0,
@@ -118,7 +118,7 @@ export const ChatContainer = ({
               <AnimatePresence>
                 {!isMinimized && (
                   <motion.div
-                    className="flex flex-col flex-1 overflow-hidden"
+                    className="flex flex-col flex-1 overflow-hidden min-h-0"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

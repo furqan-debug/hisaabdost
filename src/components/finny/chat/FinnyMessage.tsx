@@ -43,7 +43,7 @@ const FinnyMessage = React.memo(({
 
   return (
     <motion.div
-      className={`group flex items-start gap-4 ${isUser ? 'justify-end' : 'justify-start'} mb-6`}
+      className={`group flex items-start gap-2 sm:gap-4 ${isUser ? 'justify-end' : 'justify-start'} mb-4 sm:mb-6 px-2 sm:px-0`}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
@@ -55,11 +55,13 @@ const FinnyMessage = React.memo(({
     >
       {/* Avatar for bot messages (left side) */}
       {!isUser && (
-        <MessageAvatar isUser={isUser} timestamp={timestamp} />
+        <div className="flex-shrink-0">
+          <MessageAvatar isUser={isUser} timestamp={timestamp} />
+        </div>
       )}
 
       <div className={`
-        max-w-[80%] rounded-3xl px-5 py-4 shadow-lg relative backdrop-blur-sm
+        max-w-[85%] sm:max-w-[80%] rounded-2xl sm:rounded-3xl px-3 sm:px-5 py-3 sm:py-4 shadow-lg relative backdrop-blur-sm
         ${isUser 
           ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25' 
           : isEmpathetic 
@@ -70,16 +72,16 @@ const FinnyMessage = React.memo(({
       `}>
         {/* Message bubble tail */}
         <div className={`
-          absolute top-4 w-3 h-3 rotate-45
+          absolute top-3 sm:top-4 w-2 h-2 sm:w-3 sm:h-3 rotate-45
           ${isUser 
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 -right-1.5' 
+            ? 'bg-gradient-to-br from-blue-500 to-blue-600 -right-1 sm:-right-1.5' 
             : isEmpathetic
-              ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-l border-t border-purple-100 -left-1.5'
-              : 'bg-white border-l border-t border-gray-100 -left-1.5'
+              ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-l border-t border-purple-100 -left-1 sm:-left-1.5'
+              : 'bg-white border-l border-t border-gray-100 -left-1 sm:-left-1.5'
           }
         `} />
 
-        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words font-medium">
+        <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-medium">
           {formattedContent}
         </div>
 
@@ -90,7 +92,7 @@ const FinnyMessage = React.memo(({
           isError={isError} 
         />
         
-        <div className="flex justify-between items-end mt-3 pt-2">
+        <div className="flex justify-between items-end mt-2 sm:mt-3 pt-1 sm:pt-2 gap-2">
           <MessageBadges 
             content={formattedContent}
             isUser={isUser}
@@ -105,7 +107,9 @@ const FinnyMessage = React.memo(({
 
       {/* Avatar for user messages (right side) */}
       {isUser && (
-        <MessageAvatar isUser={isUser} timestamp={timestamp} />
+        <div className="flex-shrink-0">
+          <MessageAvatar isUser={isUser} timestamp={timestamp} />
+        </div>
       )}
     </motion.div>
   );

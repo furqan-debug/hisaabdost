@@ -1,8 +1,15 @@
 
-/* Finny Chat Styles - Modern Premium Design */
+/* Finny Chat Styles - Mobile-First Premium Design */
 .finny-chat-card {
-  @apply bg-white/95 backdrop-blur-2xl border border-gray-200/60 rounded-3xl shadow-2xl overflow-hidden;
+  @apply bg-white/95 backdrop-blur-2xl border border-gray-200/60 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* Mobile-first responsive design */
+@media (min-width: 640px) {
+  .finny-chat-card {
+    @apply rounded-3xl;
+  }
 }
 
 .finny-chat-header {
@@ -11,7 +18,7 @@
 
 /* Message containers with enhanced spacing */
 .finny-messages-container {
-  @apply p-6 space-y-6 pb-8;
+  @apply p-3 sm:p-6 space-y-4 sm:space-y-6 pb-6 sm:pb-8;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
   min-height: 100%;
 }
@@ -33,13 +40,13 @@
 }
 
 .finny-chat-input-container {
-  @apply flex gap-4 items-center max-w-4xl mx-auto relative;
+  @apply flex gap-2 sm:gap-4 items-center max-w-4xl mx-auto relative;
 }
 
 .finny-chat-input input {
-  @apply text-sm bg-white text-gray-900 border-2 border-gray-200
+  @apply text-xs sm:text-sm bg-white text-gray-900 border-2 border-gray-200
     focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300
-    py-4 px-6 rounded-2xl placeholder:text-gray-500 font-medium shadow-sm;
+    py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl placeholder:text-gray-500 font-medium shadow-sm;
 }
 
 .finny-chat-input input:focus {
@@ -49,7 +56,7 @@
 /* Premium send button */
 .finny-send-button {
   @apply bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
-    text-white rounded-2xl h-12 w-12 shadow-lg hover:shadow-xl
+    text-white rounded-xl sm:rounded-2xl h-10 w-10 sm:h-12 sm:w-12 shadow-lg hover:shadow-xl
     transition-all duration-300 transform hover:scale-105 active:scale-95 
     disabled:opacity-50 disabled:cursor-not-allowed ring-2 ring-blue-500/20;
 }
@@ -66,28 +73,28 @@
 
 /* Enhanced Quick Reply Buttons */
 .quick-reply-button {
-  @apply flex items-center gap-2 text-sm py-3 px-5 rounded-2xl transition-all duration-300
+  @apply flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm py-1.5 sm:py-3 px-2.5 sm:px-5 rounded-xl sm:rounded-2xl transition-all duration-300
     bg-white/80 backdrop-blur-sm hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 
     text-gray-700 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed 
     border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md 
-    transform hover:scale-105 active:scale-95 font-medium;
+    transform hover:scale-105 active:scale-95 font-medium min-h-[32px] sm:min-h-[36px];
 }
 
 /* Premium status indicator */
 .status-indicator {
-  @apply absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white/80 shadow-sm;
+  @apply absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white/80 shadow-sm;
   background: linear-gradient(45deg, #10B981, #059669);
   animation: pulse 2s infinite;
 }
 
 /* Enhanced typing indicator */
 .typing-indicator {
-  @apply flex items-center gap-3 px-6 py-4 bg-gradient-to-br from-gray-50 to-white 
-    rounded-3xl border border-gray-200 shadow-lg backdrop-blur-sm;
+  @apply flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-br from-gray-50 to-white 
+    rounded-2xl sm:rounded-3xl border border-gray-200 shadow-lg backdrop-blur-sm;
 }
 
 .typing-dot {
-  @apply w-2.5 h-2.5 rounded-full;
+  @apply w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full;
   animation: typingDot 1.4s infinite ease-in-out;
 }
 
@@ -182,7 +189,7 @@
 
 /* Enhanced message badges */
 .message-badge {
-  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+  @apply inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold
     bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 
     border border-blue-200 shadow-sm;
 }
@@ -210,15 +217,22 @@
   }
   
   .finny-messages-container {
-    @apply px-4 pb-4;
+    @apply px-3 pb-4;
   }
   
   .finny-chat-input {
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   
   .quick-reply-button {
-    @apply text-xs py-2.5 px-4;
+    @apply text-xs py-2 px-3 min-h-[32px];
+  }
+  
+  /* Fix text cutoff on mobile */
+  .finny-message-content {
+    @apply text-xs leading-relaxed;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -264,4 +278,55 @@
 
 .float-animation {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Safe area support for modern mobile devices */
+.safe-area-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Prevent content overflow on small screens */
+.mobile-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Touch-friendly scrolling */
+.touch-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.touch-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Improved mobile chat layout */
+@media (max-width: 640px) {
+  .finny-chat-mobile-fix {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .finny-messages-mobile {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .finny-input-mobile {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    background: white;
+  }
 }
