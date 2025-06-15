@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,6 +10,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import SettingsSidebar from "./SettingsSidebar";
+
 const Navbar = () => {
   const {
     user,
@@ -37,12 +39,12 @@ const Navbar = () => {
     if (!user?.email) return 'U';
     return user.email.charAt(0).toUpperCase();
   };
-  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 transition-all duration-300 safe-area-top">
+  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background transition-all duration-300 safe-area-top">
       <div className="flex h-14 items-center justify-between max-w-[480px] px-4 mx-auto">
         {/* Left: Menu Button */}
         <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="rounded-full hover:bg-muted transition-all duration-300">
+            <Button variant="ghost" size="icon-sm" className="hover:bg-muted transition-all duration-300">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
@@ -53,11 +55,9 @@ const Navbar = () => {
         </Sheet>
         
         {/* Center: Logo and Title */}
-        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200 px-px">
-          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded bg-white shadow-sm" style={{
-          filter: "drop-shadow(0 1px 3px rgba(128,102,255,0.12))"
-        }} />
-          <h2 className="font-semibold text-lg bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
+        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200">
+          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded-lg bg-white" />
+          <h2 className="font-semibold text-lg text-primary">
             Hisaab Dost
           </h2>
         </div>
@@ -70,8 +70,8 @@ const Navbar = () => {
           {/* User Avatar Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="rounded-full h-8 w-8 p-0">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon-sm" className="rounded-full h-9 w-9 p-0">
+                <Avatar className="h-9 w-9">
                   <AvatarImage src="" alt={user?.email || "User"} />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
                     {getUserInitials()}
