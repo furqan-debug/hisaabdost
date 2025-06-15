@@ -1,11 +1,11 @@
 
 /* Finny Chat Styles - Clean Design With Modern Avatars */
 .finny-chat-card {
-  @apply bg-gray-50 border border-gray-200 rounded-2xl shadow-2xl overflow-hidden;
+  @apply bg-gray-50/80 backdrop-blur-xl border border-gray-200/80 rounded-2xl shadow-2xl overflow-hidden;
 }
 
 .finny-chat-header {
-  @apply bg-white border-b border-gray-200;
+  @apply bg-transparent; /* Let component handle it */
 }
 
 /* Message containers */
@@ -16,18 +16,18 @@
 
 /* Enhanced message bubbles with avatars */
 .finny-message-user {
-  @apply transition-all duration-300 transform hover:scale-[1.02] shadow-lg;
+  @apply transition-all duration-300 transform hover:scale-[1.01] shadow-md;
   animation: slideInRight 0.3s ease-out;
 }
 
 .finny-message-bot {
-  @apply transition-all duration-300 transform hover:scale-[1.02] shadow-lg;
+  @apply transition-all duration-300 transform hover:scale-[1.01] shadow-md;
   animation: slideInLeft 0.3s ease-out;
 }
 
 /* Enhanced input area */
 .finny-chat-input {
-  @apply border-t border-gray-200 bg-white px-4 py-4 relative z-50;
+  @apply bg-transparent; /* Let component handle it */
 }
 
 .finny-chat-input-container {
@@ -37,7 +37,7 @@
 .finny-chat-input input {
   @apply text-sm bg-gray-50 text-gray-900 border border-gray-300 
     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300
-    py-3 px-4 rounded-2xl placeholder:text-gray-500;
+    py-3 px-4 rounded-xl placeholder:text-gray-500;
 }
 
 .finny-chat-input input:focus {
@@ -46,8 +46,8 @@
 
 /* Send button enhancement */
 .finny-send-button {
-  @apply bg-blue-600 hover:bg-blue-700 text-white rounded-2xl h-12 w-12 shadow-lg hover:shadow-xl 
-    transition-all duration-300 transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-11 w-11 shadow-md hover:shadow-lg
+    transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Keyboard handling styles */

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useCurrency } from '@/hooks/use-currency';
@@ -59,9 +58,9 @@ const FinnyMessage = React.memo(({
       )}
 
       <div className={`
-        max-w-[75%] rounded-2xl px-4 py-3 shadow-lg relative
+        max-w-[75%] rounded-2xl px-4 py-3 shadow-md relative
         ${isUser 
-          ? 'bg-blue-600 text-white' 
+          ? 'bg-blue-500 text-white' 
           : isEmpathetic 
             ? 'bg-white text-gray-800 border border-gray-200' 
             : 'bg-white text-gray-800 border border-gray-200'
@@ -87,7 +86,7 @@ const FinnyMessage = React.memo(({
             isError={isError}
             hasAction={hasAction}
           />
-          <MessageTimestamp timestamp={timestamp} />
+          <MessageTimestamp timestamp={timestamp} isUser={isUser} />
         </div>
       </div>
 

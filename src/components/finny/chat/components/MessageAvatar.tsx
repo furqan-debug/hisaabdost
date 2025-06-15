@@ -16,6 +16,7 @@ const MessageAvatar = React.memo(({ isUser, timestamp }: MessageAvatarProps) => 
       className="flex-shrink-0"
       initial={{ scale: 0, rotate: -180 }}
       animate={{ scale: 1, rotate: 0 }}
+      whileHover={{ scale: 1.1, rotate: 5 }}
       transition={{ 
         type: 'spring', 
         stiffness: 500, 
@@ -25,13 +26,13 @@ const MessageAvatar = React.memo(({ isUser, timestamp }: MessageAvatarProps) => 
     >
       {isUser ? (
         <div className="relative">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md border-2 border-white">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-md ring-2 ring-white">
             <User size={14} className="text-white" />
           </div>
         </div>
       ) : (
         <div className="relative">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center shadow-md border-2 border-white">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-300 to-green-400 flex items-center justify-center shadow-md ring-2 ring-white">
             <Bot size={14} className="text-white" />
           </div>
           {isRecent && (
