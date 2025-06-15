@@ -96,9 +96,11 @@ export function ReceiptScanDialog({
       console.log(`Auto-processing triggered for: ${fingerprintRef.current}`);
       setAutoProcessStarted(true);
 
+      // Start processing immediately when dialog opens
       const timer = setTimeout(() => {
-        retryHandler.startProcessing();
-      }, 300); // Slightly more delay for smoother UI mount
+        console.log("Starting automatic receipt scan...");
+        handleScanReceipt(); // Trigger the scan directly
+      }, 500);
 
       return () => clearTimeout(timer);
     }
@@ -109,7 +111,7 @@ export function ReceiptScanDialog({
     isAutoProcessing,
     autoProcess,
     autoProcessStarted,
-    retryHandler
+    handleScanReceipt
   ]);
 
   // Reset scan state when dialog closes

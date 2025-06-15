@@ -94,16 +94,15 @@ export function ReceiptField({
     // Flag that we've started processing to prevent reopening
     setProcessingStarted(true);
     
-    // Store the file for scanning but don't create blob URLs
+    // Store the file for scanning
     setReceiptFile(file);
-    
-    // Only open scan dialog for auto-processing
-    if (autoProcess) {
-      setScanDialogOpen(true);
-    }
     
     // Call the original onFileChange to handle storage
     onFileChange(e);
+    
+    // Always open scan dialog for processing - this is the key fix!
+    console.log("Opening scan dialog for automatic processing...");
+    setScanDialogOpen(true);
     
     // Reset the file input so the same file can be selected again later
     if (e.target) {
@@ -129,6 +128,18 @@ export function ReceiptField({
     
     setReceiptFile(null);
     setProcessingStarted(false); // Allow new uploads after cleanup
+  };
+  
+  // Handle successful scan completion
+  const handleScanSuccess = () => {
+    console.log("Receipt scan completed successfully, triggering refresh");
+    // Dispatch events to refresh expense lists
+    window.dispatchEvent(new CustomEvent('expenses-updated', { 
+      detail: { timestamp: Date.now(), action: 'receipt-scan' }
+    }));
+    window.dispatchEvent(new CustomEvent('receipt-scanned', { 
+      detail: { timestamp: Date.now() }
+    }));
   };
   
   // Clean up resources when component unmounts
@@ -178,8 +189,8 @@ export function ReceiptField({
         />
       </div>
       
-      {/* Scan Dialog - only shown when scanDialogOpen is true and autoProcess is enabled */}
-      {receiptFile && autoProcess && (
+      {/* Scan Dialog - always shown when a file is selected for auto-processing */}
+      {receiptFile && (
         <ReceiptScanDialog
           file={receiptFile}
           previewUrl={null}
@@ -188,7 +199,8 @@ export function ReceiptField({
           onCleanup={handleCleanup}
           onCapture={onCapture}
           autoSave={true}
-          autoProcess={true}
+          autoProcess={autoProcess}
+          onSuccess={handleScanSuccess}
         />
       )}
     </div>
