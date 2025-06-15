@@ -11,7 +11,7 @@ const MessageTimestamp = React.memo(({ timestamp, isUser }: MessageTimestampProp
   const timeAgo = formatDistanceToNow(timestamp, { addSuffix: true });
   
   return (
-    <div className={`text-xs ${isUser ? 'text-blue-200' : 'text-gray-400'} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
+    <div className={`text-xs ${isUser ? 'text-blue-200' : 'text-slate-400'} opacity-70 group-hover:opacity-100 transition-opacity duration-200`}>
       {timeAgo}
     </div>
   );

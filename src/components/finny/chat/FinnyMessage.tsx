@@ -82,7 +82,7 @@ const FinnyMessage = React.memo(({
           isError={isError} 
         />
         
-        <div className="flex justify-between items-end mt-2 sm:mt-3 pt-1 sm:pt-2 gap-2">
+        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-2 sm:mt-3 pt-1 sm:pt-2">
           <MessageBadges 
             content={formattedContent}
             isUser={isUser}

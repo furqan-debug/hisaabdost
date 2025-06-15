@@ -21,7 +21,7 @@ const MessageBadges = React.memo(({
   if (isUser) return null;
 
   return (
-    <div className="flex gap-1 mt-1">
+    <>
       {hasAction && (
         <span className="message-badge">
           Action
@@ -29,19 +29,19 @@ const MessageBadges = React.memo(({
       )}
       
       {isSuccess && (
-        <span className="success-badge">
+        <span className="message-badge success-badge">
           Success
         </span>
       )}
       
       {isError && (
-        <span className="error-badge">
+        <span className="message-badge error-badge">
           Error
         </span>
       )}
       
       {isEmpathetic && (
-        <span className="empathy-badge">
+        <span className="message-badge empathy-badge">
           Support
         </span>
       )}
@@ -63,7 +63,7 @@ const MessageBadges = React.memo(({
           Goal
         </span>
       )}
-    </div>
+    </>
   );
 });
 
