@@ -1,4 +1,3 @@
-
 // Import Supabase client type
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
@@ -65,45 +64,63 @@ export async function processAction(
     throw new Error("Invalid action format");
   }
 
-  console.log("Processing action:", action);
+  console.log("Processing action:", JSON.stringify(action, null, 2));
 
   try {
     switch (action.type) {
       case "add_expense": {
+        // Validate required fields
+        if (!action.amount || !action.category) {
+          throw new Error("Amount and category are required for adding expense");
+        }
+
         // Validate and ensure correct date format
         const validatedDate = validateAndFormatDate(action.date);
         
-        // Always log the final date being used
-        console.log(`Adding expense with date: ${validatedDate} (Original input: ${action.date})`);
+        // Ensure amount is a valid number
+        const amount = parseFloat(action.amount);
+        if (isNaN(amount) || amount <= 0) {
+          throw new Error("Invalid amount provided");
+        }
+        
+        // Always log the expense data being inserted
+        const expenseData = {
+          user_id: userId,
+          amount: amount,
+          category: action.category,
+          description: action.description || action.category,
+          date: validatedDate,
+          payment: action.paymentMethod || "Cash",
+          notes: action.notes || null,
+          is_recurring: action.isRecurring || false,
+        };
+
+        console.log(`Inserting expense with data:`, JSON.stringify(expenseData, null, 2));
         
         // Insert the expense
         const { data, error } = await supabase
           .from("expenses")
-          .insert({
-            user_id: userId,
-            amount: action.amount,
-            category: action.category,
-            description: action.description || "",
-            date: validatedDate,
-            payment: action.paymentMethod || "Card",
-            notes: action.notes || null,
-            is_recurring: action.isRecurring || false,
-          })
+          .insert(expenseData)
           .select();
 
         if (error) {
           console.error("Error inserting expense:", error);
-          throw error;
+          throw new Error(`Failed to save expense: ${error.message}`);
         }
 
-        console.log("Expense added successfully:", data);
+        if (!data || data.length === 0) {
+          console.error("No data returned after expense insertion");
+          throw new Error("Expense was not saved properly");
+        }
+
+        console.log("Expense added successfully:", JSON.stringify(data[0], null, 2));
 
         // Format response based on action details
         const formattedDate = validatedDate === getTodaysDate() 
           ? "today" 
           : `on ${validatedDate}`;
           
-        return `I've added the ${action.category} expense of ${action.amount} for ${action.description || "your purchase"} ${formattedDate}.`;
+        return `I've successfully added the ${action.category} expense of Rs ${amount} for ${action.description || action.category} ${formattedDate}. The expense has been saved to your records.`;
       }
 
       case "update_expense": {

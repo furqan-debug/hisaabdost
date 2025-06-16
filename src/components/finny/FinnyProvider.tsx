@@ -1,4 +1,3 @@
-
 import React, { ReactNode, lazy, Suspense } from 'react';
 import FinnyButton from './FinnyButton';
 import { toast } from 'sonner';
@@ -72,6 +71,36 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     message += date ? ` on ${date}` : ` on ${today}`;
     
     triggerChat(message);
+
+    // Listen for successful expense addition and trigger refresh
+    const handleExpenseAdded = () => {
+      console.log("Expense added via Finny, triggering refresh events");
+      
+      // Trigger multiple refresh events to ensure UI updates
+      setTimeout(() => {
+        const events = ['expenses-updated', 'expense-added', 'expense-refresh'];
+        events.forEach(eventName => {
+          const event = new CustomEvent(eventName, { 
+            detail: { 
+              timestamp: Date.now(),
+              source: 'finny-chat',
+              action: 'add_expense'
+            }
+          });
+          window.dispatchEvent(event);
+        });
+      }, 1000); // Wait 1 second for backend processing
+    };
+
+    // Set up one-time listener for this expense addition
+    const cleanup = () => {
+      window.removeEventListener('finny-expense-added', handleExpenseAdded);
+    };
+
+    window.addEventListener('finny-expense-added', handleExpenseAdded, { once: true });
+    
+    // Cleanup after 30 seconds to prevent memory leaks
+    setTimeout(cleanup, 30000);
   };
   
   const setBudget = (amount: number, category: string, period: string = "monthly") => {
