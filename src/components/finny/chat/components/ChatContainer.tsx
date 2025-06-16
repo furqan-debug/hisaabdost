@@ -11,10 +11,6 @@ import QuickReplies from '../QuickReplies';
 import { Message, QuickReply } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 
-import { QuickActionsPanel } from '../../components/QuickActionsPanel';
-import { ProactiveInsights } from '../../components/ProactiveInsights';
-import { QuickAction } from '../../constants/quickActions';
-
 interface ChatContainerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -83,30 +79,6 @@ export const ChatContainer = ({
     }
   }, [filteredMessages, isTyping]);
 
-  const handleQuickAction = (action: QuickAction) => {
-    // For manual expense entry, we should trigger the expense form instead of sending a message
-    if (action.type === 'manual' && action.id === 'manual-entry') {
-      // Trigger the expense form to open
-      const event = new CustomEvent('open-expense-form', {
-        detail: { mode: 'manual' }
-      });
-      window.dispatchEvent(event);
-      
-      // Close the chat if on mobile
-      if (isMobile) {
-        onClose();
-      }
-      return;
-    }
-    
-    // For other actions, send the message as before
-    handleSendMessage(null, action.action);
-  };
-
-  const handleInsightAction = (action: string) => {
-    handleSendMessage(null, action);
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -144,81 +116,71 @@ export const ChatContainer = ({
           </div>
         </div>
 
-        {/* Enhanced Content Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {user && !isAuthPromptOnly && (
-            <div className="flex-shrink-0 p-3 border-b border-slate-700/30 space-y-3">
-              <ProactiveInsights onInsightAction={handleInsightAction} />
-              <QuickActionsPanel onActionSelect={handleQuickAction} isLoading={isLoading} />
+        {/* Messages Area with proper scrolling */}
+        <div className="flex-1 min-h-0">
+          <ScrollArea 
+            className="h-full touch-scroll-container"
+            ref={scrollAreaRef}
+          >
+            <div className="finny-messages-container p-4">
+              {isConnectingToData && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-white mb-1">Connecting to Finny</div>
+                    <div className="text-xs text-gray-400">Analyzing your financial data...</div>
+                  </div>
+                </div>
+              )}
+              
+              {filteredMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`finny-message ${message.isUser ? 'finny-message-user text-right' : 'finny-message-bot text-left'} mb-4`}
+                >
+                  <div className="flex flex-col">
+                    <div className={`finny-message-content max-w-[80%] rounded-2xl px-4 py-3 ${
+                      message.isUser 
+                        ? 'bg-blue-600 text-white ml-auto' 
+                        : 'bg-slate-800 text-slate-200 mr-auto'
+                    }`}>
+                      {message.content}
+                    </div>
+                    <span className="text-[0.65rem] text-slate-400 mt-1 px-2">
+                      {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="finny-message finny-message-bot text-left mb-4">
+                  <TypingIndicator />
+                </div>
+              )}
+
+              {!isLoading && !isTyping && filteredMessages.length > 0 && !filteredMessages[filteredMessages.length - 1].isUser && (
+                <QuickReplies 
+                  replies={quickReplies} 
+                  onSelect={handleQuickReply} 
+                  isLoading={isLoading} 
+                  isAuthenticated={!!user} 
+                />
+              )}
+
+              <div ref={messagesEndRef} className="h-1" />
             </div>
-          )}
+          </ScrollArea>
+        </div>
 
-          {/* Messages Area with proper scrolling */}
-          <div className="flex-1 min-h-0">
-            <ScrollArea 
-              className="h-full touch-scroll-container"
-              ref={scrollAreaRef}
-            >
-              <div className="finny-messages-container p-4">
-                {isConnectingToData && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <div className="text-sm font-medium text-white mb-1">Connecting to Finny</div>
-                      <div className="text-xs text-gray-400">Analyzing your financial data...</div>
-                    </div>
-                  </div>
-                )}
-                
-                {filteredMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`finny-message ${message.isUser ? 'finny-message-user text-right' : 'finny-message-bot text-left'} mb-4`}
-                  >
-                    <div className="flex flex-col">
-                      <div className={`finny-message-content max-w-[80%] rounded-2xl px-4 py-3 ${
-                        message.isUser 
-                          ? 'bg-blue-600 text-white ml-auto' 
-                          : 'bg-slate-800 text-slate-200 mr-auto'
-                      }`}>
-                        {message.content}
-                      </div>
-                      <span className="text-[0.65rem] text-slate-400 mt-1 px-2">
-                        {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {isTyping && (
-                  <div className="finny-message finny-message-bot text-left mb-4">
-                    <TypingIndicator />
-                  </div>
-                )}
-
-                {!isLoading && !isTyping && filteredMessages.length > 0 && !filteredMessages[filteredMessages.length - 1].isUser && (
-                  <QuickReplies 
-                    replies={quickReplies} 
-                    onSelect={handleQuickReply} 
-                    isLoading={isLoading} 
-                    isAuthenticated={!!user} 
-                  />
-                )}
-
-                <div ref={messagesEndRef} className="h-1" />
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Input Area */}
-          <div className="finny-chat-input keyboard-avoid flex-shrink-0 p-4 border-t border-slate-700/30">
-            <ChatInput
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onSubmit={handleSendMessage}
-              isLoading={isLoading}
-              isAuthenticated={!!user}
-            />
-          </div>
+        {/* Input Area */}
+        <div className="finny-chat-input keyboard-avoid flex-shrink-0 p-4 border-t border-slate-700/30">
+          <ChatInput
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onSubmit={handleSendMessage}
+            isLoading={isLoading}
+            isAuthenticated={!!user}
+          />
         </div>
       </Card>
     </div>
