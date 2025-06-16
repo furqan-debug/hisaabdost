@@ -52,6 +52,7 @@ export const ChatContainer = ({
   const chatHeaderRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [chatHeight, setChatHeight] = React.useState<number>(600);
+  const [keyboardHeight, setKeyboardHeight] = React.useState<number>(0);
 
   React.useEffect(() => {
     if (!isMobile) {
@@ -72,6 +73,40 @@ export const ChatContainer = ({
     }
   }, [isMobile]);
 
+  // Handle keyboard visibility on mobile
+  React.useEffect(() => {
+    if (!isMobile) return;
+
+    const handleResize = () => {
+      const visualViewport = window.visualViewport;
+      if (visualViewport) {
+        const keyboardHeightCalc = window.innerHeight - visualViewport.height;
+        setKeyboardHeight(Math.max(0, keyboardHeightCalc));
+      }
+    };
+
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        const keyboardHeightCalc = window.innerHeight - window.visualViewport.height;
+        setKeyboardHeight(Math.max(0, keyboardHeightCalc));
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    } else {
+      window.addEventListener('resize', handleResize);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      } else {
+        window.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [isMobile]);
+
   // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {
     if (messagesEndRef.current) {
@@ -86,15 +121,21 @@ export const ChatContainer = ({
       fixed inset-0 z-50 
       ${isMobile ? 'bg-slate-900 finny-chat-mobile-fix' : 'pointer-events-none'}
     `}>
-      <Card className={`
-        finny-chat-card
-        ${isMobile 
-          ? 'h-full w-full rounded-none border-0' 
-          : 'fixed bottom-4 right-4 w-96 h-[600px] max-h-[80vh]'
-        }
-        ${isMobile ? '' : 'pointer-events-auto'}
-        overflow-hidden flex flex-col
-      `}>
+      <Card 
+        className={`
+          finny-chat-card
+          ${isMobile 
+            ? 'h-full w-full rounded-none border-0' 
+            : 'fixed bottom-4 right-4 w-96 h-[600px] max-h-[80vh]'
+          }
+          ${isMobile ? '' : 'pointer-events-auto'}
+          overflow-hidden flex flex-col
+        `}
+        style={isMobile ? {
+          height: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px)` : '100vh',
+          transition: 'height 0.2s ease-in-out'
+        } : {}}
+      >
         {/* Header */}
         <div ref={chatHeaderRef} className="finny-chat-header p-4 border-b border-slate-700/30 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -172,8 +213,8 @@ export const ChatContainer = ({
           </ScrollArea>
         </div>
 
-        {/* Input Area */}
-        <div className="finny-chat-input keyboard-avoid flex-shrink-0 p-4 border-t border-slate-700/30">
+        {/* Input Area - Fixed at bottom */}
+        <div className="finny-chat-input keyboard-avoid flex-shrink-0">
           <ChatInput
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}

@@ -28,6 +28,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isConnecting
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const currencySymbol = getCurrencyByCode(currencyCode).symbol;
@@ -41,8 +42,40 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [isMobile]);
 
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
+  // Handle mobile keyboard focus
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleFocus = () => {
+      setIsFocused(true);
+      
+      // Scroll the input into view on mobile
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end',
+            inline: 'nearest'
+          });
+        }
+      }, 300); // Wait for keyboard animation
+    };
+
+    const handleBlur = () => {
+      setIsFocused(false);
+    };
+
+    const input = inputRef.current;
+    if (input) {
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('blur', handleBlur);
+      
+      return () => {
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('blur', handleBlur);
+      };
+    }
+  }, [isMobile]);
 
   const getPlaceholderText = () => {
     if (isConnecting) return 'Connecting to Finny...';
@@ -52,7 +85,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="bg-slate-900/70 backdrop-blur-lg border-t border-slate-700/50 px-3 sm:px-4 py-2.5 sm:py-3 safe-area-bottom">
+    <div 
+      ref={containerRef}
+      className={`
+        bg-slate-900/95 backdrop-blur-lg border-t border-slate-700/50 
+        px-3 sm:px-4 py-2.5 sm:py-3 
+        ${isMobile ? 'safe-area-bottom' : ''}
+        ${isMobile && isFocused ? 'keyboard-focused' : ''}
+      `}
+    >
       <form onSubmit={onSubmit} className="flex gap-2 sm:gap-3 items-center max-w-4xl mx-auto">
         <div className="relative flex-1 min-w-0">
           <input 
@@ -60,8 +101,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
             ref={inputRef} 
             value={value} 
             onChange={onChange} 
-            onFocus={handleFocus}
-            onBlur={handleBlur}
             disabled={isDisabled} 
             className={`w-full text-sm bg-slate-800 text-slate-100 border-2 border-slate-700
               focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300
