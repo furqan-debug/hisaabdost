@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bot, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageAvatarProps {
   isUser: boolean;
@@ -21,15 +21,29 @@ const MessageAvatar = React.memo(({ isUser }: MessageAvatarProps) => {
         delay: 0.1
       }}
     >
-      {isUser ? (
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg ring-1 ring-white/10">
-          <User size={16} className="sm:w-5 sm:h-5 text-white" />
-        </div>
-      ) : (
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-700 flex items-center justify-center shadow-lg ring-1 ring-white/10">
-          <Bot size={16} className="sm:w-5 sm:h-5 text-white" />
-        </div>
-      )}
+      <Avatar className="w-8 h-8 sm:w-9 sm:h-9">
+        {isUser ? (
+          <>
+            <AvatarImage 
+              src="https://images.unsplash.com/photo-1501286353178-1ec881214838?w=100&h=100&fit=crop&crop=face" 
+              alt="User Avatar" 
+            />
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+              🐵
+            </AvatarFallback>
+          </>
+        ) : (
+          <>
+            <AvatarImage 
+              src="https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=100&h=100&fit=crop&crop=face" 
+              alt="Finny AI Avatar" 
+            />
+            <AvatarFallback className="bg-slate-700 text-white">
+              🐱
+            </AvatarFallback>
+          </>
+        )}
+      </Avatar>
     </motion.div>
   );
 });

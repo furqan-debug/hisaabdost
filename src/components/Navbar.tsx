@@ -72,9 +72,12 @@ const Navbar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" className="rounded-full h-9 w-9 p-0">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="" alt={user?.email || "User"} />
+                  <AvatarImage 
+                    src="https://images.unsplash.com/photo-1501286353178-1ec881214838?w=100&h=100&fit=crop&crop=face" 
+                    alt={user?.email || "User"} 
+                  />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
-                    {getUserInitials()}
+                    🐵
                   </AvatarFallback>
                 </Avatar>
                 <span className="sr-only">User menu</span>

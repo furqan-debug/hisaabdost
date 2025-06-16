@@ -100,8 +100,8 @@ export const ChatContainer = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src="/finny-avatar.png" alt="Finny AI Avatar" />
-                <AvatarFallback>FA</AvatarFallback>
+                <AvatarImage src="https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=100&h=100&fit=crop&crop=face" alt="Finny AI Avatar" />
+                <AvatarFallback>🐱</AvatarFallback>
               </Avatar>
               <div className="space-y-0.5">
                 <h3 className="font-medium text-sm">Finny AI</h3>
