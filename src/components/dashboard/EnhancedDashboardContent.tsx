@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
@@ -140,8 +139,10 @@ export const EnhancedDashboardContent = ({
           {/* Recent Expenses */}
           <RecentExpensesCard 
             expenses={expenses}
+            isNewUser={isNewUser}
             isLoading={isExpensesLoading}
-            onEdit={setExpenseToEdit}
+            setExpenseToEdit={setExpenseToEdit}
+            setShowAddExpense={setShowAddExpense}
           />
           
           {/* Expense Analytics */}
