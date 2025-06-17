@@ -1,16 +1,18 @@
+
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { EnhancedQuickActionsWidget } from "@/components/dashboard/widgets/EnhancedQuickActionsWidget";
-import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useFinny } from "@/components/finny/context/FinnyContext";
+import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
+import { useExpenseFile } from "@/hooks/use-expense-file";
+import { useState } from "react";
 
 interface EnhancedDashboardContentProps {
   isNewUser: boolean;
@@ -56,35 +58,55 @@ export const EnhancedDashboardContent = ({
   walletBalance
 }: EnhancedDashboardContentProps) => {
   const isMobile = useIsMobile();
-  const { triggerChat } = useFinny();
+  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
+
+  // Use the expense file hook to handle file operations
+  const {
+    selectedFile,
+    setSelectedFile,
+    fileInputRef,
+    cameraInputRef,
+    handleFileChange,
+    triggerFileUpload,
+    triggerCameraCapture
+  } = useExpenseFile();
 
   const handleAddExpense = () => {
     console.log('Dashboard: handleAddExpense called');
+    setCaptureMode('manual');
     setShowAddExpense(true);
   };
 
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
-    // Trigger file upload by dispatching event
-    const event = new CustomEvent('open-expense-form', {
-      detail: { mode: 'upload' }
-    });
-    window.dispatchEvent(event);
+    setCaptureMode('upload');
+    triggerFileUpload();
   };
 
   const handleTakePhoto = () => {
     console.log('Dashboard: handleTakePhoto called');
-    // Trigger camera capture by dispatching event
-    const event = new CustomEvent('open-expense-form', {
-      detail: { mode: 'camera' }
-    });
-    window.dispatchEvent(event);
+    setCaptureMode('camera');
+    triggerCameraCapture();
   };
 
   const handleAddBudget = () => {
-    console.log('Dashboard: handleAddBudget called');
-    // Use Finny to help with budget creation
-    triggerChat('Help me create a new budget');
+    console.log('Dashboard: handleAddBudget called - navigating to budget page');
+    window.location.href = '/app/budget';
+  };
+
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = handleFileChange(e);
+    if (file) {
+      setSelectedFile(file);
+      setShowAddExpense(true);
+    }
+  };
+
+  const handleSheetClose = () => {
+    setShowAddExpense(false);
+    setSelectedFile(null);
+    setCaptureMode('manual');
+    setExpenseToEdit(undefined);
   };
 
   return (
@@ -116,26 +138,6 @@ export const EnhancedDashboardContent = ({
           isMobile ? "col-span-1" : "col-span-2"
         )}>
           
-          {/* Quick Actions Widget for New Users */}
-          {isNewUser && (
-            <QuickActionsWidget
-              onAddExpense={handleAddExpense}
-              onUploadReceipt={handleUploadReceipt}
-              onTakePhoto={handleTakePhoto}
-              onAddBudget={handleAddBudget}
-            />
-          )}
-
-          {/* Add Expense Button */}
-          <AddExpenseButton
-            isNewUser={isNewUser}
-            expenseToEdit={expenseToEdit}
-            showAddExpense={showAddExpense}
-            setExpenseToEdit={setExpenseToEdit}
-            setShowAddExpense={setShowAddExpense}
-            onAddExpense={handleExpenseRefresh}
-          />
-
           {/* Recent Expenses */}
           <RecentExpensesCard 
             expenses={expenses}
@@ -156,7 +158,7 @@ export const EnhancedDashboardContent = ({
 
         {/* Right Column - Secondary Content */}
         <div className="space-y-6">
-          {/* Enhanced Quick Actions Widget for All Users */}
+          {/* Enhanced Quick Actions Widget - Now the primary way to add expenses */}
           <EnhancedQuickActionsWidget
             onAddExpense={handleAddExpense}
             onUploadReceipt={handleUploadReceipt}
@@ -171,6 +173,32 @@ export const EnhancedDashboardContent = ({
           <SpendingTrendsWidget expenses={allExpenses} />
         </div>
       </div>
+
+      {/* Hidden file inputs for receipt processing */}
+      <ReceiptFileInput 
+        onChange={handleFileSelection} 
+        inputRef={fileInputRef} 
+        id="dashboard-receipt-upload" 
+        useCamera={false} 
+      />
+      
+      <ReceiptFileInput 
+        onChange={handleFileSelection} 
+        inputRef={cameraInputRef} 
+        id="dashboard-camera-capture" 
+        useCamera={true} 
+      />
+
+      {/* Expense Sheet - triggered from Quick Actions */}
+      <AddExpenseSheet 
+        onAddExpense={handleExpenseRefresh} 
+        expenseToEdit={expenseToEdit} 
+        onClose={handleSheetClose} 
+        open={showAddExpense || expenseToEdit !== undefined} 
+        onOpenChange={setShowAddExpense} 
+        initialCaptureMode={captureMode} 
+        initialFile={selectedFile}
+      />
     </div>
   );
 };

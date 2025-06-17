@@ -30,15 +30,21 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Add Expense',
       icon: Plus,
-      onClick: onAddExpense,
+      onClick: () => {
+        console.log('Quick Actions: Add Expense clicked');
+        onAddExpense();
+      },
       color: 'bg-blue-500 hover:bg-blue-600',
-      description: 'Quick manual entry',
+      description: 'Manual entry',
       urgent: false
     },
     {
       title: 'Upload Receipt',
       icon: Upload,
-      onClick: onUploadReceipt,
+      onClick: () => {
+        console.log('Quick Actions: Upload Receipt clicked');
+        onUploadReceipt();
+      },
       color: 'bg-green-500 hover:bg-green-600',
       description: 'Scan from gallery',
       urgent: false
@@ -46,7 +52,10 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Take Photo',
       icon: Camera,
-      onClick: onTakePhoto,
+      onClick: () => {
+        console.log('Quick Actions: Take Photo clicked');
+        onTakePhoto();
+      },
       color: 'bg-purple-500 hover:bg-purple-600',
       description: 'Camera capture',
       urgent: false
@@ -54,7 +63,10 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Add Budget',
       icon: PlusCircle,
-      onClick: onAddBudget,
+      onClick: () => {
+        console.log('Quick Actions: Add Budget clicked');
+        onAddBudget();
+      },
       color: hasCritical ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600',
       description: 'Set new budget',
       urgent: hasCritical
@@ -65,7 +77,10 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Set Goals',
       icon: Target,
-      onClick: () => window.location.href = '/app/goals',
+      onClick: () => {
+        console.log('Quick Actions: Set Goals clicked');
+        window.location.href = '/app/goals';
+      },
       color: 'bg-indigo-500 hover:bg-indigo-600',
       description: 'Financial goals',
       urgent: false
@@ -73,7 +88,10 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'View Analytics',
       icon: TrendingUp,
-      onClick: () => window.location.href = '/app/analytics',
+      onClick: () => {
+        console.log('Quick Actions: View Analytics clicked');
+        window.location.href = '/app/analytics';
+      },
       color: 'bg-cyan-500 hover:bg-cyan-600',
       description: 'Spending insights',
       urgent: false
@@ -81,7 +99,10 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Export Data',
       icon: FileText,
-      onClick: () => window.location.href = '/app/expenses',
+      onClick: () => {
+        console.log('Quick Actions: Export Data clicked');
+        window.location.href = '/app/expenses';
+      },
       color: 'bg-amber-500 hover:bg-amber-600',
       description: 'Export reports',
       urgent: false
@@ -90,8 +111,9 @@ export function EnhancedQuickActionsWidget({
       title: 'Calculator',
       icon: Calculator,
       onClick: () => {
-        // Open a simple calculator modal or redirect
-        alert('Calculator feature coming soon!');
+        console.log('Quick Actions: Calculator clicked');
+        // Open calculator in new tab/window
+        window.open('https://www.google.com/search?q=calculator', '_blank');
       },
       color: 'bg-rose-500 hover:bg-rose-600',
       description: 'Quick math',
