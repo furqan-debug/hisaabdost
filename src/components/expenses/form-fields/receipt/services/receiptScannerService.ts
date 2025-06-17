@@ -145,25 +145,25 @@ export async function scanReceipt({
 
     if (onProgress) onProgress(80, "Extracting and validating expense information...");
 
-    // Validate and clean the items from the scan result
+    // Process the successful response
     let validatedItems: any[] = [];
     
     if (data.items && Array.isArray(data.items) && data.items.length > 0) {
       validatedItems = data.items
-        .filter(item => validateReceiptItem(item))
+        .filter(item => item && item.description && item.amount)
         .map(item => ({
-          description: cleanItemDescription(item.description || item.name || 'Receipt Item'),
-          amount: validateAndCleanAmount(item.amount),
+          description: item.description || 'Receipt Item',
+          amount: item.amount || '0.00',
           date: data.date || new Date().toISOString().split('T')[0],
-          category: item.category || "Food",
-          paymentMethod: item.paymentMethod || "Card"
+          category: item.category || "Other",
+          paymentMethod: item.payment || "Card"
         }))
-        .filter(item => item.amount > 0); // Only keep items with valid amounts
+        .filter(item => parseFloat(item.amount) > 0);
       
       console.log(`✅ ReceiptScanner: Validated ${validatedItems.length} items out of ${data.items.length} original items`);
     }
 
-    // If no valid items found, don't create fallback - this ensures accuracy
+    // If no valid items found, return error
     if (validatedItems.length === 0) {
       console.warn(`⚠️ ReceiptScanner: No valid items could be extracted from receipt`);
       const errorMsg = "Could not extract any valid expense items from the receipt. Please try again or enter manually.";
