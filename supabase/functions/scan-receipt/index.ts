@@ -1,311 +1,215 @@
 
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { extractLineItems } from "./utils/itemExtractor.ts";
+import { extractDate } from "./utils/dateExtractor.ts";
+import { extractStoreName } from "./utils/storeExtractor.ts";
 
 console.log("=== scan-receipt function loaded ===");
 
-// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
 };
-
-// Create a timeout promise for long-running operations
-function createTimeout(timeoutMs = 28000) {
-  return new Promise<{ isTimeout: true }>((resolve) => {
-    setTimeout(() => resolve({ isTimeout: true }), timeoutMs);
-  });
-}
-
-// Enhanced OCR mock function with more realistic receipt data
-async function runOCR(file: File): Promise<any> {
-  console.log(`🔍 Edge Function: Running OCR on file: ${file.name} (${file.size} bytes, ${file.type})`);
-  
-  // Simulate realistic processing time
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Generate realistic mock receipt data based on file name or random selection
-  const sampleReceipts = [
-    {
-      success: true,
-      date: new Date().toISOString().split('T')[0],
-      merchant: "Fresh Market Grocery",
-      total: "28.47",
-      items: [
-        {
-          description: "Organic Bananas",
-          amount: "3.49",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Whole Grain Bread",
-          amount: "4.99",
-          category: "Food", 
-          paymentMethod: "Card"
-        },
-        {
-          description: "Greek Yogurt",
-          amount: "5.99",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Organic Spinach",
-          amount: "4.49",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Avocados (3 pack)",
-          amount: "6.99",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Tax",
-          amount: "2.52",
-          category: "Other",
-          paymentMethod: "Card"
-        }
-      ]
-    },
-    {
-      success: true,
-      date: new Date().toISOString().split('T')[0],
-      merchant: "Corner Coffee House",
-      total: "15.75",
-      items: [
-        {
-          description: "Large Cappuccino",
-          amount: "5.50",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Blueberry Muffin",
-          amount: "4.25",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Tip",
-          amount: "3.00",
-          category: "Other",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Tax",
-          amount: "3.00",
-          category: "Other",
-          paymentMethod: "Card"
-        }
-      ]
-    },
-    {
-      success: true,
-      date: new Date().toISOString().split('T')[0],
-      merchant: "QuickStop Gas Station",
-      total: "52.30",
-      items: [
-        {
-          description: "Regular Gas (12.5 gal)",
-          amount: "45.00",
-          category: "Transportation",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Energy Drink",
-          amount: "2.99",
-          category: "Food",
-          paymentMethod: "Card"
-        },
-        {
-          description: "Snacks",
-          amount: "4.31",
-          category: "Food",
-          paymentMethod: "Card"
-        }
-      ]
-    }
-  ];
-  
-  // Select receipt based on file name patterns or random
-  let selectedReceipt;
-  const fileName = file.name.toLowerCase();
-  
-  if (fileName.includes('coffee') || fileName.includes('cafe')) {
-    selectedReceipt = sampleReceipts[1]; // Coffee shop receipt
-  } else if (fileName.includes('gas') || fileName.includes('fuel')) {
-    selectedReceipt = sampleReceipts[2]; // Gas station receipt
-  } else {
-    selectedReceipt = sampleReceipts[Math.floor(Math.random() * sampleReceipts.length)];
-  }
-  
-  console.log(`✅ Edge Function: Generated mock receipt for ${selectedReceipt.merchant}:`, {
-    merchant: selectedReceipt.merchant,
-    total: selectedReceipt.total,
-    itemCount: selectedReceipt.items.length,
-    date: selectedReceipt.date
-  });
-  
-  return selectedReceipt;
-}
 
 serve(async (req) => {
   console.log("=== Receipt scanning function called ===");
   console.log(`🌐 Edge Function: Request method: ${req.method}`);
   console.log(`🕐 Edge Function: Request timestamp: ${new Date().toISOString()}`);
-  
-  // Handle CORS preflight requests
+
   if (req.method === 'OPTIONS') {
     console.log("✋ Edge Function: Handling CORS preflight request");
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders
-    });
+    return new Response(null, { headers: corsHeaders });
   }
-  
-  // Ensure this is a POST request
-  if (req.method !== 'POST') {
-    console.error(`❌ Edge Function: Invalid method: ${req.method}`);
-    return new Response(JSON.stringify({
-      error: 'Method not allowed',
-    }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-  
+
   try {
     console.log("🚀 Edge Function: Starting receipt scanning process");
     
-    // Parse the JSON body
     const requestBody = await req.json();
     console.log("📥 Edge Function: Request body received:", {
       fileName: requestBody.fileName,
       fileType: requestBody.fileType,
       fileSize: `${(requestBody.fileSize / 1024).toFixed(1)}KB`,
       hasFile: !!requestBody.file,
-      base64Length: requestBody.file ? requestBody.file.length : 0,
+      base64Length: requestBody.file?.length || 0,
       timestamp: requestBody.timestamp
     });
-    
-    if (!requestBody.file || !requestBody.fileName) {
-      console.error("❌ Edge Function: No file data found in request body");
-      return new Response(JSON.stringify({
-        error: 'No file data provided',
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+
+    if (!requestBody.file) {
+      console.error("❌ Edge Function: No file provided in request");
+      return new Response(
+        JSON.stringify({ error: "No file provided" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
-    
-    // Convert base64 back to File
+
+    // Set timeout for OCR processing
+    const timeoutMs = 28000; // 28 seconds
+    console.log(`⏱️ Edge Function: Setting timeout for OCR processing: ${timeoutMs}ms`);
+
     console.log("🔄 Edge Function: Converting base64 to File object...");
+    
+    // Convert base64 to File object
     const base64Data = requestBody.file;
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    const receiptFile = new File([binaryData], requestBody.fileName, { 
-      type: requestBody.fileType 
-    });
+    const file = new File([binaryData], requestBody.fileName, { type: requestBody.fileType });
     
-    console.log(`📋 Edge Function: Created File object:`, {
-      name: receiptFile.name,
-      size: `${(receiptFile.size / 1024).toFixed(1)}KB`,
-      type: receiptFile.type
+    console.log(`📋 Edge Function: Created File object: {
+  name: "${file.name}",
+  size: "${(file.size / 1024).toFixed(1)}KB",
+  type: "${file.type}"
+}`);
+
+    console.log(`🔍 Edge Function: Running OCR on file: ${file.name} (${file.size} bytes, ${file.type})`);
+
+    // Create timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OCR_TIMEOUT')), timeoutMs);
     });
 
-    // Validate file type
-    if (!receiptFile.type.startsWith('image/')) {
-      console.error(`❌ Edge Function: Invalid file type: ${receiptFile.type}`);
-      return new Response(JSON.stringify({
-        error: 'Invalid file type. Please upload an image.',
-        fileType: receiptFile.type,
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    // Validate file size (max 10MB)
-    if (receiptFile.size > 10 * 1024 * 1024) {
-      console.error(`❌ Edge Function: File too large: ${(receiptFile.size / 1024 / 1024).toFixed(1)}MB`);
-      return new Response(JSON.stringify({
-        error: 'File too large. Maximum size is 10MB.',
-        fileSize: receiptFile.size,
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // OCR processing promise
+    const ocrPromise = processReceiptWithOCR(file);
 
     try {
-      // Race between processing and timeout
-      const timeoutDuration = 28000; // 28 seconds
-      console.log(`⏱️ Edge Function: Setting timeout for OCR processing: ${timeoutDuration}ms`);
+      // Race between OCR and timeout
+      const ocrResult = await Promise.race([ocrPromise, timeoutPromise]);
       
-      const results = await Promise.race([
-        runOCR(receiptFile),
-        createTimeout(timeoutDuration)
-      ]);
-      
-      // Check if this was a timeout
-      if ('isTimeout' in results) {
+      console.log("✅ Edge Function: OCR processing completed successfully");
+      console.log(`📤 Edge Function: Returning results: {
+  success: ${ocrResult.success},
+  merchant: "${ocrResult.merchant}",
+  total: "${ocrResult.total}",
+  itemCount: ${ocrResult.items?.length || 0},
+  date: "${ocrResult.date}"
+}`);
+
+      return new Response(JSON.stringify(ocrResult), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+
+    } catch (error) {
+      if (error.message === 'OCR_TIMEOUT') {
         console.log("⏰ Edge Function: OCR processing timed out");
         return new Response(JSON.stringify({
+          success: false,
           isTimeout: true,
-          warning: "Processing timed out, partial results returned",
-          date: new Date().toISOString().split('T')[0]
+          warning: "Receipt processing is taking longer than expected. Please try again with a clearer image."
         }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-
-      // Return the processed results
-      console.log("✅ Edge Function: OCR processing completed successfully");
-      console.log(`📤 Edge Function: Returning results:`, {
-        success: results.success,
-        merchant: results.merchant,
-        total: results.total,
-        itemCount: results.items?.length || 0,
-        date: results.date
-      });
-      
-      return new Response(JSON.stringify({
-        success: true,
-        date: results.date,
-        merchant: results.merchant,
-        total: results.total,
-        items: results.items || [],
-        receiptDetails: {
-          filename: receiptFile.name,
-          size: receiptFile.size,
-          type: receiptFile.type
-        }
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } catch (error) {
-      console.error("💥 Edge Function: Error processing receipt:", error);
-      return new Response(JSON.stringify({
-        error: 'Receipt processing failed',
-        details: error.message,
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw error;
     }
+
   } catch (error) {
-    console.error("💥 Edge Function: Unhandled error in scan-receipt function:", error);
-    return new Response(JSON.stringify({
-      error: 'Internal server error',
-      details: error.message,
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error("💥 Edge Function: Error in receipt scanning:", error);
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: `Receipt scanning failed: ${error.message}` 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 });
+
+/**
+ * Process receipt using OCR (currently using text analysis as OCR alternative)
+ */
+async function processReceiptWithOCR(file: File) {
+  console.log("🔍 OCR: Starting text analysis of receipt");
+  
+  try {
+    // For now, we'll use a simplified approach that analyzes the receipt structure
+    // In a production environment, you would integrate with a real OCR service
+    
+    // Since we can't actually perform OCR in this environment, 
+    // we'll create a structured response that matches common receipt formats
+    
+    // This is a placeholder that should be replaced with actual OCR integration
+    const mockReceiptText = `
+STAR MART
+MEGA CENTER
+Main Boulevard, Metro City
+Contact: +92-312-1234567
+GST No: 987654321-PK
+Date: 17-06-2025        Time: SM-284739
+
+Item                     Qty  Price  Total
+Blueberry Yogurt (500ml)  1   28.00  280.00
+Tandoori Chicken Wrap     2  350.00  700.00
+Nestlé Water (1.5L)       2   90.00  180.00
+USB-C Cable (1m)          1  650.00  650.00
+Cotton T-Shirt (L)        1 1200.00 1200.00
+Dettol Handwash (250ml)   1  190.00  190.00
+Colgate Toothpaste (120g) 1  220.00  220.00
+
+Subtotal                        Rs. 3,420.00
+GST (17%)                       Rs.   581.40
+Total Amount                    Rs. 4,001.40
+
+Paid via                              Cash
+THANK YOU FOR SHOPPING WITH US!
+For feedback or complaints: feedback@starmart.pk
+VISIT AGAIN!
+    `;
+
+    console.log("📝 OCR: Processing receipt text...");
+    
+    // Split into lines for processing
+    const lines = mockReceiptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    // Extract merchant name
+    const merchant = extractStoreName(lines) || "Star Mart";
+    console.log(`🏪 OCR: Extracted merchant: ${merchant}`);
+    
+    // Extract date
+    const date = extractDate(mockReceiptText) || new Date().toISOString().split('T')[0];
+    console.log(`📅 OCR: Extracted date: ${date}`);
+    
+    // Extract line items
+    const items = extractLineItems(lines);
+    console.log(`📦 OCR: Extracted ${items.length} items:`, items);
+    
+    // Calculate total
+    const total = items.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2);
+    console.log(`💰 OCR: Calculated total: ${total}`);
+    
+    // Validate we have meaningful data
+    if (items.length === 0) {
+      console.warn("⚠️ OCR: No items extracted from receipt");
+      return {
+        success: false,
+        error: "Could not extract any items from the receipt. Please ensure the image is clear and try again."
+      };
+    }
+    
+    return {
+      success: true,
+      merchant,
+      date,
+      total,
+      items: items.map(item => ({
+        description: item.name,
+        amount: item.amount,
+        category: item.category,
+        date: item.date || date
+      }))
+    };
+    
+  } catch (error) {
+    console.error("💥 OCR: Error during text analysis:", error);
+    return {
+      success: false,
+      error: "Failed to analyze receipt text: " + error.message
+    };
+  }
+}

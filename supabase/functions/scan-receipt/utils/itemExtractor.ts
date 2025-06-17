@@ -12,149 +12,138 @@ export function extractLineItems(lines: string[]): Array<{name: string; amount: 
   // Get receipt date
   const receiptDate = extractDate(lines.join("\n"));
   
-  // Filter out receipt header and footer sections
-  let startLineIndex = findItemsSectionStart(lines);
-  let endLineIndex = findItemsSectionEnd(lines);
+  // Pakistani receipt specific patterns
+  const pakistaniPatterns = [
+    // Standard format: Item Name Qty Price Total
+    /^(.+?)\s+(\d+)\s+(\d+\.\d{2})\s+(\d+\.\d{2})$/,
+    // Format with parentheses: Item Name (size) Qty Price Total  
+    /^(.+?\([^)]+\))\s+(\d+)\s+(\d+\.\d{2})\s+(\d+\.\d{2})$/,
+    // Simple format: Item Name Price
+    /^(.+?)\s+(\d+\.\d{2})$/,
+    // Format with Rs.: Item Name Rs. Amount
+    /^(.+?)\s+Rs\.\s*(\d+\.\d{2})$/,
+    // Quantity format: Item Name x Qty Amount
+    /^(.+?)\s*x\s*(\d+)\s+(\d+\.\d{2})$/
+  ];
   
-  console.log(`Processing item section from line ${startLineIndex} to ${endLineIndex}`);
+  // Look for item section markers
+  let itemSectionStart = -1;
+  let itemSectionEnd = -1;
   
-  // First pass: Extract items based on recognizable patterns
-  for (let i = startLineIndex; i <= endLineIndex; i++) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].toLowerCase();
+    
+    // Find start of items section
+    if (itemSectionStart === -1 && (
+      line.includes('item') || 
+      line.includes('qty') || 
+      line.includes('price') || 
+      line.includes('total')
+    )) {
+      itemSectionStart = i + 1;
+      console.log(`Found item section start at line ${itemSectionStart}: ${lines[i]}`);
+    }
+    
+    // Find end of items section
+    if (itemSectionStart !== -1 && (
+      line.includes('subtotal') || 
+      line.includes('gst') || 
+      line.includes('tax') || 
+      line.includes('total amount') ||
+      line.includes('paid via')
+    )) {
+      itemSectionEnd = i - 1;
+      console.log(`Found item section end at line ${itemSectionEnd}: ${lines[i]}`);
+      break;
+    }
+  }
+  
+  // If we didn't find clear markers, use educated guesses
+  if (itemSectionStart === -1) {
+    itemSectionStart = Math.min(8, Math.floor(lines.length * 0.3));
+  }
+  if (itemSectionEnd === -1) {
+    itemSectionEnd = Math.max(lines.length - 5, Math.ceil(lines.length * 0.7));
+  }
+  
+  console.log(`Processing items from line ${itemSectionStart} to ${itemSectionEnd}`);
+  
+  // Process the item section
+  for (let i = itemSectionStart; i <= itemSectionEnd && i < lines.length; i++) {
     const line = lines[i].trim();
     
-    // Skip very short lines or known non-item text
     if (line.length < 3 || shouldSkipLine(line)) {
       continue;
     }
     
-    // Check if the line likely contains an item
-    if (isLikelyItemLine(line)) {
-      // Try each pattern to extract items
-      let itemFound = false;
-      for (const pattern of itemExtractionPatterns) {
-        const match = line.match(pattern);
-        if (match) {
-          // Handle patterns with quantity indicators
-          if (pattern.toString().includes('[xX]')) {
-            const qty = parseInt(match[1]);
-            const name = cleanItemText(match[2]);
-            const price = parseFloat(match[3]);
-            
-            if (name.length >= 2 && price > 0) {
-              items.push({
-                name: `${name} (${qty}x)`,
-                amount: (price * qty).toFixed(2),
-                category: guessCategoryFromItemName(name),
-                date: receiptDate
-              });
-              itemFound = true;
-            }
-          } else {
-            // Standard item-price patterns
-            const name = cleanItemText(match[1]);
-            const price = match[2];
-            
-            if (name.length >= 2 && parseFloat(price) > 0) {
-              items.push({
-                name: name,
-                amount: price,
-                category: guessCategoryFromItemName(name),
-                date: receiptDate
-              });
-              itemFound = true;
-            }
-          }
-          
-          if (itemFound) break;
-        }
-      }
-      
-      // Second pass for this line: Use more aggressive extraction if no match found
-      if (!itemFound) {
-        // Look for any price pattern in the line
-        const priceMatch = line.match(/\$?\s*(\d+\.\d{2})/);
-        if (priceMatch) {
-          // Extract the price
-          const price = priceMatch[1];
-          // Extract the item name by removing the price part
-          let nameText = line.replace(priceMatch[0], '').trim();
-          nameText = cleanItemText(nameText);
-          
-          // Only add if we have a reasonable name and price
-          if (nameText.length >= 2 && parseFloat(price) > 0) {
-            items.push({
-              name: nameText,
-              amount: price,
-              category: guessCategoryFromItemName(nameText),
-              date: receiptDate
-            });
-          }
-        }
-      }
-    }
-  }
-  
-  console.log(`Found ${items.length} items from pattern matching`);
-  
-  // Third pass: Line by line aggressive extraction for stores with unusual receipt formats
-  if (items.length <= 1) {
-    console.log("Few items found, trying aggressive extraction");
+    console.log(`Processing line ${i}: "${line}"`);
     
-    // Reset to use more of the receipt
-    startLineIndex = Math.max(3, startLineIndex - 3);
-    endLineIndex = Math.min(lines.length - 3, endLineIndex + 3);
+    // Try Pakistani-specific patterns first
+    let itemFound = false;
     
-    for (let i = startLineIndex; i <= endLineIndex; i++) {
-      const line = lines[i].trim();
-      if (line.length < 3) continue;
-      
-      // Look for any number that could be a price
-      const priceMatches = Array.from(line.matchAll(/\$?\s*(\d+\.\d{2})/g));
-      
-      if (priceMatches.length === 1) {
-        // Single price found - likely an item
-        const price = priceMatches[0][1];
-        // Get everything before the price as the name
-        const nameStart = line.indexOf(priceMatches[0][0]);
-        let name = nameStart > 0 ? line.substring(0, nameStart).trim() : line;
+    for (const pattern of pakistaniPatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        let itemName, amount, quantity = 1;
         
-        // Clean and check the name
-        name = cleanItemText(name);
-        if (name.length >= 2 && parseFloat(price) > 0 && !shouldSkipLine(name.toLowerCase())) {
+        if (match.length === 5) {
+          // Format: Item Qty Price Total
+          itemName = cleanItemText(match[1]);
+          quantity = parseInt(match[2]);
+          amount = match[4]; // Use total, not unit price
+        } else if (match.length === 4) {
+          // Format: Item x Qty Amount
+          itemName = cleanItemText(match[1]);
+          quantity = parseInt(match[2]);
+          amount = match[3];
+        } else if (match.length === 3) {
+          // Format: Item Price or Item Rs. Price
+          itemName = cleanItemText(match[1]);
+          amount = match[2];
+        }
+        
+        if (itemName && itemName.length >= 2 && amount && parseFloat(amount) > 0) {
+          // Add quantity indicator if more than 1
+          const finalName = quantity > 1 ? `${itemName} (${quantity}x)` : itemName;
+          
           items.push({
-            name: name,
-            amount: price,
-            category: guessCategoryFromItemName(name),
+            name: finalName,
+            amount: amount,
+            category: guessCategoryFromItemName(itemName),
             date: receiptDate
           });
+          
+          console.log(`✅ Extracted item: ${finalName} - Rs. ${amount}`);
+          itemFound = true;
+          break;
         }
       }
     }
     
-    console.log(`After aggressive extraction, found ${items.length} items`);
-  }
-  
-  // If we didn't find any items with direct matching, create at least one item
-  if (items.length === 0) {
-    console.log("No items found, creating fallback item");
-    
-    // Look for a total amount in the receipt
-    let totalAmount = "0.00";
-    for (const line of lines) {
-      const totalMatch = line.match(/total\s*:?\s*\$?\s*(\d+\.\d{2})/i);
-      if (totalMatch) {
-        totalAmount = totalMatch[1];
-        break;
+    // If no pattern matched, try generic extraction
+    if (!itemFound) {
+      // Look for any line with a price-like number
+      const priceMatch = line.match(/(\d+\.\d{2})/);
+      if (priceMatch) {
+        const price = priceMatch[1];
+        // Get everything before the price as item name
+        const nameEnd = line.indexOf(price);
+        if (nameEnd > 3) {
+          let itemName = line.substring(0, nameEnd).trim();
+          itemName = cleanItemText(itemName);
+          
+          if (itemName.length >= 2 && parseFloat(price) > 0) {
+            items.push({
+              name: itemName,
+              amount: price,
+              category: guessCategoryFromItemName(itemName),
+              date: receiptDate
+            });
+            console.log(`✅ Generic extraction: ${itemName} - Rs. ${price}`);
+          }
+        }
       }
     }
-    
-    // Create a generic "Store Purchase" item
-    items.push({
-      name: "Store Purchase",
-      amount: totalAmount,
-      category: "Shopping",
-      date: receiptDate
-    });
   }
   
   console.log(`Extracted ${items.length} total items from receipt`);

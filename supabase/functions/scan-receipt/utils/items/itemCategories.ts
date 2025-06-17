@@ -1,78 +1,81 @@
 
-// Map common items to expense categories
-const categoryMap: Record<string, string[]> = {
-  "Food": [
-    "grocery", "groceries", "food", "meal", "burger", "pizza", "restaurant", 
-    "cafe", "coffee", "lunch", "dinner", "breakfast", "snack", "drink", 
-    "beverage", "beer", "wine", "liquor", "takeout", "bakery", "meat", 
-    "produce", "fruit", "vegetable", "dairy", "milk", "cheese", "yogurt",
-    "fish", "chips", "sandwich", "salad", "dessert", "cake", "ice cream",
-    "chocolate", "candy", "soda", "juice", "water", "tea"
-  ],
-  "Transportation": [
-    "gas", "fuel", "petrol", "diesel", "car", "auto", "vehicle", "repair", 
-    "maintenance", "oil", "tire", "tyre", "battery", "parking", "toll", 
-    "fare", "ticket", "uber", "lyft", "taxi", "cab", "bus", "train", 
-    "subway", "metro", "transit", "transport", "flight", "airline"
-  ],
-  "Utilities": [
-    "electric", "electricity", "water", "gas", "power", "utility", "sewage", 
-    "garbage", "trash", "waste", "internet", "wifi", "phone", "mobile", 
-    "cell", "cable", "tv", "television", "streaming", "subscription"
-  ],
-  "Rent": [
-    "rent", "mortgage", "house", "apartment", "condo", "housing", "property", 
-    "maintenance", "repair", "improvement", "furniture", "decor", "appliance", 
-    "cleaning", "service", "lawn", "garden", "home", "insurance"
-  ],
-  "Entertainment": [
-    "movie", "theatre", "theater", "concert", "show", "event", "ticket", 
-    "game", "sport", "hobby", "book", "music", "subscription", "streaming", 
-    "netflix", "hulu", "spotify", "disney", "amazon", "apple", "video", "audio"
-  ],
-  "Healthcare": [
-    "doctor", "medical", "medicine", "health", "dental", "vision", "prescription", 
-    "drug", "fitness", "gym", "exercise", "vitamin", "supplement", "therapy", 
-    "hospital", "clinic", "insurance"
-  ],
-  "Shopping": [
-    "clothing", "clothes", "apparel", "fashion", "accessory", "jewelry", 
-    "electronic", "device", "gadget", "technology", "computer", "laptop", 
-    "phone", "retail", "store", "mall", "online", "amazon", "ebay", "etsy", 
-    "walmart", "target", "best buy", "apple", "purchase", "shopping"
-  ],
-  "Other": [
-    "office", "supply", "business", "professional", "service", "consulting", 
-    "software", "subscription", "license", "fee", "dues", "membership",
-    "bill", "payment", "fee", "subscription", "insurance", "tax", "loan", 
-    "credit", "debt", "finance", "interest", "bank", "service",
-    "haircut", "salon", "spa", "beauty", "cosmetic", "makeup", "skincare", 
-    "personal", "care", "hygiene", "toiletry", "laundry", "dry clean", 
-    "service", "education", "course", "class", "tuition", "school", "college"
-  ]
-};
-
-// Guess the most likely category for an item based on its name
+// Enhanced categorization for Pakistani items
 export function guessCategoryFromItemName(itemName: string): string {
-  if (!itemName) return "Other";
+  const name = itemName.toLowerCase();
   
-  const lowerName = itemName.toLowerCase();
-  
-  // Check each category's keywords
-  for (const [category, keywords] of Object.entries(categoryMap)) {
-    for (const keyword of keywords) {
-      if (lowerName.includes(keyword)) {
-        return category;
-      }
-    }
+  // Food & Beverages
+  if (name.includes('yogurt') || name.includes('yoghurt') || 
+      name.includes('milk') || name.includes('cheese') || 
+      name.includes('butter') || name.includes('cream')) {
+    return 'Food';
   }
   
-  // Special case detection for specific patterns
-  if (lowerName.match(/\d+\s*x/)) {
-    // If it has a quantity, it's likely a grocery/food item
-    return "Food";
+  if (name.includes('chicken') || name.includes('beef') || 
+      name.includes('mutton') || name.includes('fish') || 
+      name.includes('meat') || name.includes('wrap') || 
+      name.includes('burger') || name.includes('sandwich')) {
+    return 'Food';
   }
   
-  // Default category if no match found
-  return "Other";
+  if (name.includes('water') || name.includes('juice') || 
+      name.includes('drink') || name.includes('tea') || 
+      name.includes('coffee') || name.includes('cola') || 
+      name.includes('pepsi') || name.includes('sprite')) {
+    return 'Food';
+  }
+  
+  if (name.includes('rice') || name.includes('wheat') || 
+      name.includes('flour') || name.includes('bread') || 
+      name.includes('biscuit') || name.includes('cookie')) {
+    return 'Food';
+  }
+  
+  // Personal Care
+  if (name.includes('toothpaste') || name.includes('brush') || 
+      name.includes('soap') || name.includes('shampoo') || 
+      name.includes('handwash') || name.includes('sanitizer') || 
+      name.includes('lotion') || name.includes('cream') ||
+      name.includes('dettol') || name.includes('colgate')) {
+    return 'Health';
+  }
+  
+  // Clothing
+  if (name.includes('shirt') || name.includes('pant') || 
+      name.includes('trouser') || name.includes('dress') || 
+      name.includes('jacket') || name.includes('coat') ||
+      name.includes('cotton') || name.includes('fabric')) {
+    return 'Shopping';
+  }
+  
+  // Electronics & Accessories
+  if (name.includes('cable') || name.includes('charger') || 
+      name.includes('phone') || name.includes('usb') || 
+      name.includes('adapter') || name.includes('battery') ||
+      name.includes('electronic') || name.includes('wire')) {
+    return 'Shopping';
+  }
+  
+  // Pakistani specific items
+  if (name.includes('tandoori') || name.includes('biryani') || 
+      name.includes('karahi') || name.includes('halal') ||
+      name.includes('desi') || name.includes('masala')) {
+    return 'Food';
+  }
+  
+  // Household items
+  if (name.includes('detergent') || name.includes('cleaner') || 
+      name.includes('tissue') || name.includes('paper') ||
+      name.includes('bag') || name.includes('bottle')) {
+    return 'Shopping';
+  }
+  
+  // Transportation
+  if (name.includes('fuel') || name.includes('petrol') || 
+      name.includes('diesel') || name.includes('gas') ||
+      name.includes('transport') || name.includes('fare')) {
+    return 'Transport';
+  }
+  
+  // Default to Shopping for retail items
+  return 'Shopping';
 }
