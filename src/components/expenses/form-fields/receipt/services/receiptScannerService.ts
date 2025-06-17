@@ -1,6 +1,7 @@
 
 import { ScanResult, processScanResults } from '../utils/processScanUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { validateReceiptItem, cleanItemDescription, validateAndCleanAmount } from '../utils/itemSelectionUtils';
 
 interface ScanOptions {
   file: File | null;
@@ -142,42 +143,48 @@ export async function scanReceipt({
       };
     }
 
-    if (onProgress) onProgress(80, "Extracting expense information...");
+    if (onProgress) onProgress(80, "Extracting and validating expense information...");
 
-    // Ensure we have items (create fallback if needed)
-    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-      console.warn(`⚠️ ReceiptScanner: No items found, creating fallback expense`);
+    // Validate and clean the items from the scan result
+    let validatedItems: any[] = [];
+    
+    if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+      validatedItems = data.items
+        .filter(item => validateReceiptItem(item))
+        .map(item => ({
+          description: cleanItemDescription(item.description || item.name || 'Receipt Item'),
+          amount: validateAndCleanAmount(item.amount),
+          date: data.date || new Date().toISOString().split('T')[0],
+          category: item.category || "Food",
+          paymentMethod: item.paymentMethod || "Card"
+        }))
+        .filter(item => item.amount > 0); // Only keep items with valid amounts
       
-      const fallbackItem = {
-        description: data.merchant || "Store Purchase",
-        amount: data.total || "0.00",
-        date: data.date || new Date().toISOString().split('T')[0],
-        category: "Other",
-        paymentMethod: "Card"
-      };
+      console.log(`✅ ReceiptScanner: Validated ${validatedItems.length} items out of ${data.items.length} original items`);
+    }
 
-      console.log(`🔧 ReceiptScanner: Created fallback item:`, fallbackItem);
-
+    // If no valid items found, don't create fallback - this ensures accuracy
+    if (validatedItems.length === 0) {
+      console.warn(`⚠️ ReceiptScanner: No valid items could be extracted from receipt`);
+      const errorMsg = "Could not extract any valid expense items from the receipt. Please try again or enter manually.";
+      if (onError) onError(errorMsg);
       return { 
-        success: true,
-        date: data.date,
-        merchant: data.merchant || "Store",
-        items: [fallbackItem],
-        total: data.total,
+        success: false,
+        error: errorMsg,
         receiptUrl
       };
     }
 
-    console.log(`✅ ReceiptScanner: Scan successful! Found ${data.items.length} items`);
-    console.log(`📦 ReceiptScanner: Items:`, data.items);
+    console.log(`✅ ReceiptScanner: Scan successful! Found ${validatedItems.length} valid items`);
+    console.log(`📦 ReceiptScanner: Validated items:`, validatedItems);
     
     if (onProgress) onProgress(100, "Receipt processed successfully!");
 
     return { 
       success: true,
-      date: data.date,
+      date: data.date || new Date().toISOString().split('T')[0],
       merchant: data.merchant || "Store",
-      items: data.items || [],
+      items: validatedItems,
       total: data.total,
       receiptUrl
     };

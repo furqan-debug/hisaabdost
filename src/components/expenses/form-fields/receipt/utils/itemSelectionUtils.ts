@@ -1,58 +1,101 @@
 
-// Utility functions for selecting the most relevant items from receipt scan results
+// Helper functions for selecting and validating receipt items
 
-/**
- * Selects the most relevant item from a list of items
- * This is typically the main purchase or the most expensive item
- */
 export function selectMainItem(items: any[]): any {
-  if (!items || items.length === 0) return {};
+  if (!items || items.length === 0) {
+    console.warn("selectMainItem: No items provided");
+    return {};
+  }
   
   // If there's only one item, use it
-  if (items.length === 1) return items[0];
+  if (items.length === 1) {
+    return items[0];
+  }
+  
+  // Filter out invalid items first
+  const validItems = items.filter(item => {
+    const hasDescription = item.description && item.description.toString().trim().length > 0;
+    const hasAmount = item.amount && !isNaN(parseFloat(item.amount.toString().replace(/[$,]/g, '')));
+    const validAmount = parseFloat(item.amount.toString().replace(/[$,]/g, '')) > 0;
+    
+    return hasDescription && hasAmount && validAmount;
+  });
+  
+  if (validItems.length === 0) {
+    console.warn("selectMainItem: No valid items found");
+    return {};
+  }
+  
+  // If only one valid item, return it
+  if (validItems.length === 1) {
+    return validItems[0];
+  }
   
   // Try to find the item with the highest amount (likely the main purchase)
-  return items.reduce((highest, current) => {
-    const highestAmount = parseFloat(highest.amount || '0');
-    const currentAmount = parseFloat(current.amount || '0');
+  return validItems.reduce((highest, current) => {
+    const highestAmount = parseFloat(highest.amount?.toString().replace(/[$,]/g, '') || '0');
+    const currentAmount = parseFloat(current.amount?.toString().replace(/[$,]/g, '') || '0');
     return currentAmount > highestAmount ? current : highest;
-  }, items[0]);
+  }, validItems[0]);
 }
 
-/**
- * Format receipt items for display or storage
- * Converts the items to a standardized format
- */
-export function formatReceiptItems(items: any[], receiptUrl?: string): Array<{
-  description: string;
-  amount: string;
-  category: string;
-  date: string;
-  paymentMethod: string;
-  receiptUrl?: string;
-}> {
-  if (!items || items.length === 0) return [];
+export function validateReceiptItem(item: any): boolean {
+  if (!item) return false;
   
-  return items.map(item => ({
-    description: item.description || item.name || "Store Item",
-    amount: item.amount || "0.00",
-    category: item.category || "Other",
-    date: item.date || new Date().toISOString().split('T')[0],
-    paymentMethod: item.paymentMethod || "Card",
-    receiptUrl: receiptUrl
-  }));
+  const hasDescription = item.description && item.description.toString().trim().length > 0;
+  const rawAmount = item.amount?.toString().replace(/[$,\s]/g, '') || '0';
+  const hasAmount = !isNaN(parseFloat(rawAmount));
+  const validAmount = parseFloat(rawAmount) > 0;
+  
+  return hasDescription && hasAmount && validAmount;
 }
 
-/**
- * Calculate the total amount from all items
- */
-export function calculateTotalAmount(items: any[]): string {
-  if (!items || items.length === 0) return "0.00";
+export function cleanItemDescription(description: string): string {
+  if (!description) return '';
   
-  const total = items.reduce((sum, item) => {
-    const amount = parseFloat(item.amount || '0');
-    return sum + (isNaN(amount) ? 0 : amount);
-  }, 0);
+  // Remove common receipt prefixes and codes
+  let cleaned = description
+    .toString()
+    .trim()
+    .replace(/^item[:.\s-]+/i, '')
+    .replace(/^product[:.\s-]+/i, '')
+    .replace(/^[a-z]{1,3}\d{4,}[:.\s-]*/i, '') // Remove SKU/UPC codes
+    .replace(/\s+/g, ' '); // Normalize whitespace
   
-  return total.toFixed(2);
+  // Truncate very long descriptions
+  if (cleaned.length > 50) {
+    cleaned = cleaned.substring(0, 50).trim() + '...';
+  }
+  
+  // Capitalize first letter
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  
+  return cleaned || 'Receipt Item';
+}
+
+export function validateAndCleanAmount(amount: any): number {
+  if (!amount) return 0;
+  
+  const cleanAmount = amount.toString().replace(/[$,\s]/g, '');
+  const parsedAmount = parseFloat(cleanAmount);
+  
+  // Return 0 for invalid amounts
+  if (isNaN(parsedAmount) || parsedAmount < 0) {
+    return 0;
+  }
+  
+  // Cap extremely large amounts (likely OCR errors)
+  if (parsedAmount > 10000) {
+    console.warn(`Amount ${parsedAmount} seems too large, capping at $10000`);
+    return 10000;
+  }
+  
+  // Set minimum amount
+  if (parsedAmount < 0.01) {
+    return 0.01;
+  }
+  
+  return Math.round(parsedAmount * 100) / 100; // Round to 2 decimal places
 }

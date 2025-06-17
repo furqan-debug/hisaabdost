@@ -32,31 +32,78 @@ export async function processScanResults(
 ): Promise<boolean> {
   console.log("🔄 processScanResults: Starting to process scan result:", JSON.stringify(scanResult, null, 2));
   
-  if (!scanResult || !scanResult.items || scanResult.items.length === 0) {
-    console.log("❌ processScanResults: No items found in scan result");
-    toast.error("No items found in receipt");
+  if (!scanResult || !scanResult.success) {
+    console.log("❌ processScanResults: Scan was not successful");
+    toast.error("Receipt scan was not successful");
     return false;
   }
+
+  if (!scanResult.items || !Array.isArray(scanResult.items) || scanResult.items.length === 0) {
+    console.log("❌ processScanResults: No valid items found in scan result");
+    toast.error("No items could be extracted from the receipt");
+    return false;
+  }
+  
+  // Validate that items have required fields
+  const validItems = scanResult.items.filter(item => {
+    const hasDescription = item.description && item.description.trim().length > 0;
+    const hasAmount = item.amount && !isNaN(parseFloat(item.amount.toString().replace(/[$,]/g, '')));
+    const validAmount = parseFloat(item.amount.toString().replace(/[$,]/g, '')) > 0;
+    
+    console.log(`📦 processScanResults: Item validation:`, {
+      description: item.description,
+      amount: item.amount,
+      hasDescription,
+      hasAmount,
+      validAmount
+    });
+    
+    return hasDescription && hasAmount && validAmount;
+  });
+
+  if (validItems.length === 0) {
+    console.log("❌ processScanResults: No valid items after validation");
+    toast.error("Could not extract valid expense items from the receipt");
+    return false;
+  }
+
+  console.log(`✅ processScanResults: Found ${validItems.length} valid items out of ${scanResult.items.length} total items`);
   
   // Get current date for fallback
   const today = new Date().toISOString().split('T')[0];
   const receiptDate = scanResult.date ? formatDate(scanResult.date) : today;
   console.log(`📅 processScanResults: Using receipt date: ${receiptDate}`);
   
-  // Validate date is reasonable
-  const receiptYear = new Date(receiptDate).getFullYear();
-  const validatedReceiptDate = (receiptYear < 2020 || receiptYear > 2030) ? today : receiptDate;
+  // Validate date is reasonable (within last 2 years and not future)
+  const receiptDateObj = new Date(receiptDate);
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const validatedReceiptDate = (receiptDateObj < twoYearsAgo || receiptDateObj > tomorrow) ? today : receiptDate;
   if (validatedReceiptDate !== receiptDate) {
     console.log(`⚠️ processScanResults: Date ${receiptDate} out of range, using ${validatedReceiptDate}`);
   }
   
-  // Format items for database insertion
-  const formattedItems = scanResult.items.map((item: any, index: number) => {
+  // Format items for database insertion with strict validation
+  const formattedItems = validItems.map((item: any, index: number) => {
+    // Clean and validate amount
+    const cleanAmount = item.amount.toString().replace(/[$,\s]/g, '');
+    const parsedAmount = parseFloat(cleanAmount);
+    
+    // Ensure amount is reasonable (between $0.01 and $10000)
+    const validatedAmount = (parsedAmount < 0.01 || parsedAmount > 10000) ? 0.01 : parsedAmount;
+    
+    // Clean description
+    const cleanDescription = item.description.toString().trim();
+    const validatedDescription = cleanDescription.length > 0 ? cleanDescription : `Item ${index + 1}`;
+    
     const formattedItem = {
-      description: item.description || (scanResult.merchant ? `Purchase from ${scanResult.merchant}` : "Store Purchase"),
-      amount: parseFloat(item.amount?.toString().replace('$', '') || scanResult.total?.toString() || "0.00"),
+      description: validatedDescription,
+      amount: validatedAmount,
       date: formatDate(item.date || validatedReceiptDate),
-      category: item.category || "Food", // Default to Food
+      category: item.category || "Food", // Default to Food for receipt items
       paymentMethod: item.paymentMethod || "Card", // Default assumption for receipts
       receiptUrl: scanResult.receiptUrl || null
     };
@@ -102,7 +149,7 @@ export async function processScanResults(
       payment: item.paymentMethod,
       receipt_url: item.receiptUrl,
       is_recurring: false,
-      notes: scanResult.merchant ? `From receipt: ${scanResult.merchant}` : null
+      notes: scanResult.merchant ? `From receipt: ${scanResult.merchant}` : "Receipt scan"
     }));
     
     console.log(`💾 processScanResults: Inserting ${expenseData.length} expenses into database:`, expenseData);
@@ -135,7 +182,9 @@ export async function processScanResults(
     console.log("✅ processScanResults: Successfully saved expenses to database:", data);
     
     const itemText = formattedItems.length === 1 ? "expense" : "expenses";
-    toast.success(`Successfully saved ${formattedItems.length} ${itemText} from receipt!`);
+    toast.success(`Successfully saved ${formattedItems.length} ${itemText} from receipt!`, {
+      description: `Total amount: $${formattedItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}`
+    });
     
     // Dispatch immediate refresh events
     console.log("📡 processScanResults: Dispatching immediate refresh events...");
