@@ -1,12 +1,14 @@
+
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
 import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
 import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
-import { EnhancedQuickActionsWidget } from "@/components/dashboard/EnhancedQuickActionsWidget";
+import { EnhancedQuickActionsWidget } from "@/components/dashboard/widgets/EnhancedQuickActionsWidget";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
-import { SpendingTrendsWidget } from "@/components/dashboard/SpendingTrendsWidget";
+import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useFinny } from "@/components/finny/context/FinnyContext";
@@ -28,8 +30,8 @@ interface EnhancedDashboardContentProps {
   showAddExpense: boolean;
   setShowAddExpense: (show: boolean) => void;
   handleExpenseRefresh: () => void;
-  chartType: string;
-  setChartType: (type: string) => void;
+  chartType: 'pie' | 'bar' | 'line';
+  setChartType: (type: 'pie' | 'bar' | 'line') => void;
   walletBalance: number;
 }
 
@@ -89,7 +91,7 @@ export const EnhancedDashboardContent = ({
   return (
     <div className="space-y-6 pb-6">
       {/* Header */}
-      <DashboardHeader />
+      <DashboardHeader isNewUser={isNewUser} />
       
       {/* Stats Cards */}
       <StatCards 
@@ -100,6 +102,7 @@ export const EnhancedDashboardContent = ({
         savingsRate={savingsRate}
         formatPercentage={formatPercentage}
         walletBalance={walletBalance}
+        isNewUser={isNewUser}
       />
 
       {/* Main Content Grid */}
@@ -138,7 +141,7 @@ export const EnhancedDashboardContent = ({
           <RecentExpensesCard 
             expenses={expenses}
             isLoading={isExpensesLoading}
-            onExpenseEdit={setExpenseToEdit}
+            onEdit={setExpenseToEdit}
           />
           
           {/* Expense Analytics */}
