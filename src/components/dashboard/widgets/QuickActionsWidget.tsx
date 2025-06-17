@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Camera, PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useFinny } from '@/components/finny/context/FinnyContext';
 
 interface QuickActionsWidgetProps {
   onAddExpense: () => void;
@@ -18,51 +19,119 @@ export function QuickActionsWidget({
   onTakePhoto,
   onAddBudget
 }: QuickActionsWidgetProps) {
+  const { triggerChat } = useFinny();
+
+  const handleAddExpense = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Quick action: Add Expense clicked');
+    
+    // Dispatch custom event that AddExpenseButton listens for
+    const customEvent = new CustomEvent('open-expense-form', {
+      detail: { mode: 'manual' }
+    });
+    window.dispatchEvent(customEvent);
+    
+    // Also call the provided callback as fallback
+    setTimeout(() => {
+      try {
+        onAddExpense();
+      } catch (error) {
+        console.error('Error executing onAddExpense:', error);
+      }
+    }, 100);
+  };
+
+  const handleUploadReceipt = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Quick action: Upload Receipt clicked');
+    
+    // Dispatch custom event for file upload
+    const customEvent = new CustomEvent('open-expense-form', {
+      detail: { mode: 'upload' }
+    });
+    window.dispatchEvent(customEvent);
+    
+    // Also call the provided callback as fallback
+    setTimeout(() => {
+      try {
+        onUploadReceipt();
+      } catch (error) {
+        console.error('Error executing onUploadReceipt:', error);
+      }
+    }, 100);
+  };
+
+  const handleTakePhoto = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Quick action: Take Photo clicked');
+    
+    // Dispatch custom event for camera capture
+    const customEvent = new CustomEvent('open-expense-form', {
+      detail: { mode: 'camera' }
+    });
+    window.dispatchEvent(customEvent);
+    
+    // Also call the provided callback as fallback
+    setTimeout(() => {
+      try {
+        onTakePhoto();
+      } catch (error) {
+        console.error('Error executing onTakePhoto:', error);
+      }
+    }, 100);
+  };
+
+  const handleAddBudget = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Quick action: Add Budget clicked');
+    
+    // Use Finny to set a budget
+    triggerChat('Help me set up a new budget');
+    
+    // Also call the provided callback as fallback
+    setTimeout(() => {
+      try {
+        onAddBudget();
+      } catch (error) {
+        console.error('Error executing onAddBudget:', error);
+      }
+    }, 100);
+  };
+
   const actions = [
     {
       title: 'Add Expense',
       icon: Plus,
-      onClick: onAddExpense,
+      onClick: handleAddExpense,
       color: 'bg-blue-500 hover:bg-blue-600',
       description: 'Quick manual entry'
     },
     {
       title: 'Upload Receipt',
       icon: Upload,
-      onClick: onUploadReceipt,
+      onClick: handleUploadReceipt,
       color: 'bg-green-500 hover:bg-green-600',
       description: 'Scan from gallery'
     },
     {
       title: 'Take Photo',
       icon: Camera,
-      onClick: onTakePhoto,
+      onClick: handleTakePhoto,
       color: 'bg-purple-500 hover:bg-purple-600',
       description: 'Camera capture'
     },
     {
       title: 'Add Budget',
       icon: PlusCircle,
-      onClick: onAddBudget,
+      onClick: handleAddBudget,
       color: 'bg-orange-500 hover:bg-orange-600',
       description: 'Set new budget'
     }
   ];
-
-  const handleActionClick = (action: typeof actions[0], event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log(`Quick action clicked: ${action.title}`);
-    
-    // Add a small delay to ensure the click is registered
-    setTimeout(() => {
-      try {
-        action.onClick();
-      } catch (error) {
-        console.error(`Error executing ${action.title}:`, error);
-      }
-    }, 50);
-  };
 
   return (
     <Card className="cursor-default">
@@ -80,7 +149,7 @@ export function QuickActionsWidget({
             >
               <Button
                 variant="outline"
-                onClick={(e) => handleActionClick(action, e)}
+                onClick={action.onClick}
                 className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95"
                 type="button"
               >
