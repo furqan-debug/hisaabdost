@@ -1,10 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
-import { processAction } from "./services/actionProcessor.ts";
-import { fetchUserFinancialData } from "./services/userDataService.ts";
-import { formatCurrency } from "./utils/formatters.ts";
-import { extractExpenseFromMessage, isExpenseMessage } from "./utils/expenseExtractor.ts";
 
 // Define CORS headers
 const corsHeaders = {
@@ -16,11 +12,6 @@ const corsHeaders = {
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-// Validate required environment variables
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('Missing required environment variables');
-}
 
 // Define expense categories
 const EXPENSE_CATEGORIES = [
@@ -37,14 +28,89 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+// Process actions like adding expenses
+async function processAction(actionData: any, userId: string, supabase: any): Promise<string> {
+  console.log("Processing action:", actionData);
+  
+  try {
+    if (actionData.type === "add_expense") {
+      // Insert expense into database
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert({
+          user_id: userId,
+          description: actionData.description || "Expense",
+          amount: parseFloat(actionData.amount) || 0,
+          date: actionData.date || getTodaysDate(),
+          category: actionData.category || "Other",
+          payment: actionData.paymentMethod || "Card",
+          is_recurring: false,
+          notes: "Added via Finny chat"
+        })
+        .select('id');
+
+      if (error) {
+        console.error("Database error:", error);
+        return `❌ Failed to add expense: ${error.message}`;
+      }
+
+      console.log("Expense added successfully:", data);
+      return `✅ Added expense: ${actionData.description} for $${actionData.amount}`;
+      
+    } else if (actionData.type === "delete_expense") {
+      // Delete expense by ID
+      if (actionData.id) {
+        const { error } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('id', actionData.id)
+          .eq('user_id', userId);
+          
+        if (error) {
+          console.error("Delete error:", error);
+          return `❌ Failed to delete expense: ${error.message}`;
+        }
+        
+        console.log("Expense deleted successfully by ID");
+        return "✅ Expense deleted successfully";
+      } else {
+        // Delete most recent expense
+        const { data: recentExpense, error: fetchError } = await supabase
+          .from('expenses')
+          .select('id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (fetchError || !recentExpense) {
+          return "❌ No recent expense found to delete";
+        }
+        
+        const { error: deleteError } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('id', recentExpense.id)
+          .eq('user_id', userId);
+          
+        if (deleteError) {
+          return `❌ Failed to delete expense: ${deleteError.message}`;
+        }
+        
+        return "✅ Most recent expense deleted successfully";
+      }
+    }
+    
+    return `❌ Unknown action type: ${actionData.type}`;
+  } catch (error) {
+    console.error("Action processing error:", error);
+    return `❌ Error processing action: ${error.message}`;
+  }
+}
+
 // System message for Finny
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, and financial goals through natural conversation.
-
-USER PERSONALIZATION INSTRUCTIONS:
-- Always address the user by their first name
-- Adjust your tone based on their age and gender
-- Be friendly, professional, and encouraging
 
 You can perform these actions:
 1. Add new expenses (with clean, short descriptions)
@@ -75,8 +141,6 @@ serve(async (req) => {
       message, 
       userId, 
       chatHistory = [], 
-      analysisType = 'general',
-      specificCategory = null,
       currencyCode = 'USD'
     } = await req.json();
 
@@ -90,7 +154,7 @@ serve(async (req) => {
 
     console.log("Processing request:", { message, userId, currencyCode });
 
-    // Initialize Supabase client with proper error handling
+    // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('Supabase configuration missing');
     }
@@ -98,77 +162,44 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get user profile
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile } = await supabase
       .from('profiles')
-      .select('full_name, age, gender, preferred_currency')
+      .select('full_name, preferred_currency')
       .eq('id', userId)
       .single();
 
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError);
-    }
-
     const userName = userProfile?.full_name || 'there';
-    const userPreferredCurrency = currencyCode || userProfile?.preferred_currency || 'USD';
 
-    // PRE-PROCESS: Check for automatic expense messages
-    if (isExpenseMessage(message)) {
-      const autoExpenseData = extractExpenseFromMessage(message);
-      if (autoExpenseData && autoExpenseData.confidence > 0.5) {
-        console.log("Auto-extracted expense:", autoExpenseData);
-        
-        const expenseAction = {
-          type: "add_expense",
-          amount: autoExpenseData.amount,
-          category: autoExpenseData.category,
-          description: autoExpenseData.description,
-          date: autoExpenseData.date || getTodaysDate()
-        };
-
-        try {
-          const actionResult = await processAction(expenseAction, userId, supabase);
-          return new Response(JSON.stringify({
-            response: `✅ ${actionResult}`,
-            rawResponse: actionResult,
-            visualData: null,
-            action: expenseAction
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        } catch (error) {
-          console.error("Error processing auto-expense:", error);
-          return new Response(JSON.stringify({
-            response: `❌ Failed to add expense: ${error.message}`,
-            rawResponse: null,
-            visualData: null,
-            action: null
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-      }
-    }
-
-    // Continue with OpenAI processing
+    // Continue with OpenAI processing if we have the API key
     if (!OPENAI_API_KEY) {
-      throw new Error('OpenAI API key not configured');
+      return new Response(JSON.stringify({
+        response: `Hello ${userName}! I'm Finny, your financial assistant. However, I need the OpenAI API key to be configured to help you properly.`,
+        rawResponse: null,
+        visualData: null,
+        action: null
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Fetch user financial data
-    const financialData = await fetchUserFinancialData(userId, supabase, userPreferredCurrency);
-    
+    // Fetch recent expenses for context
+    const { data: recentExpenses } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(5);
+
     // Prepare context for OpenAI
     const contextMessage = `User Profile: ${userName}
-Currency: ${userPreferredCurrency}
-Financial Summary: ${financialData.summary}
-Recent Expenses: ${JSON.stringify(financialData.recentExpenses.slice(0, 5))}
-Budgets: ${JSON.stringify(financialData.budgets)}`;
+Currency: ${currencyCode}
+Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
 
     // Prepare messages for OpenAI
     const openAIMessages = [
       { role: "system", content: FINNY_SYSTEM_MESSAGE },
       { role: "system", content: contextMessage },
-      ...chatHistory.slice(-5).map(msg => ({
+      ...chatHistory.slice(-5).map((msg: any) => ({
         role: msg.isUser ? "user" : "assistant",
         content: msg.content
       })),
