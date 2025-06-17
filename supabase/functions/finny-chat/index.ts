@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { processAction } from "./services/actionProcessor.ts";
@@ -95,13 +96,13 @@ EXPENSE DESCRIPTIONS: Always use clean, short descriptions for expenses:
 
 Format for responses:
 - When you need to perform an action, include a JSON object with the action details in your response
-- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"2025-05-02","description":"Chicken"}]
+- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"2025-06-17","description":"Chicken"}]
 - The actions you can perform are: add_expense, update_expense, delete_expense, set_budget, update_budget, set_goal, update_goal
 
 When the user mentions "today", "now", "current", or doesn't specify a date for expenses:
 - ALWAYS use today's date in the format YYYY-MM-DD.
 - DO NOT use dates from the past like 2022 or 2023 unless the user explicitly requests it.
-- For example: [ACTION:{"type":"add_expense","amount":25,"category":"Food","date":"2025-05-02","description":"Lunch"}]
+- For example: [ACTION:{"type":"add_expense","amount":25,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
 
 For goal setting specifically:
 - When the user is setting a goal, extract the amount and deadline from their message
@@ -202,357 +203,155 @@ serve(async (req) => {
           type: "add_expense",
           amount: autoExpenseData.amount,
           category: autoExpenseData.category,
-          description: autoExpenseData.description, // This will now be clean and short
-          date: getTodaysDate()
+          description: autoExpenseData.description,
+          date: autoExpenseData.date || getTodaysDate()
         };
 
+        console.log("Processing auto-extracted expense action:", expenseAction);
+
         try {
-          // Process the expense immediately
+          // Process the expense action immediately
           const actionResult = await processAction(expenseAction, userId, supabase);
+          console.log("Auto-expense action result:", actionResult);
+          
           hasAutoExpense = true;
-          
-          // Modify the message to inform AI that expense was already added
-          processedMessage = `User message: "${message}"\n\nNOTE: I have automatically detected and added this expense:\n- Amount: ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)}\n- Category: ${autoExpenseData.category}\n- Description: ${autoExpenseData.description}\n- Date: ${getTodaysDate()}\n\nPlease acknowledge this addition with a brief, friendly confirmation using the clean description. Do not ask follow-up questions since the expense was successfully added.`;
-          
-          console.log("Auto-expense processed successfully:", actionResult);
-        } catch (autoExpenseError) {
-          console.error("Failed to auto-process expense:", autoExpenseError);
-          // Continue with normal processing if auto-expense fails
-          hasAutoExpense = false;
+          processedMessage = `✅ ${actionResult}`;
+        } catch (error) {
+          console.error("Error processing auto-expense:", error);
+          processedMessage = `❌ Failed to add expense: ${error.message}`;
         }
       }
     }
-      
-    // Look for goal setting patterns to extract info directly
-    const goalPattern = /(?:set|create)(?: a)? (?:savings |financial )?goal(?: of)? \$?(\d+(?:\.\d+)?)(?: (?:for|to reach|to save))? (?:by|at|on) ([a-zA-Z0-9\s,\/]+)/i;
-    const goalMatch = message.match(goalPattern);
-    
-    if (goalMatch) {
-      console.log("Detected goal setting request with:", {
-        amount: goalMatch[1],
-        deadline: goalMatch[2]
+
+    // If we auto-processed an expense, return the confirmation immediately
+    if (hasAutoExpense) {
+      return new Response(JSON.stringify({
+        response: processedMessage,
+        rawResponse: processedMessage,
+        visualData: null,
+        action: null
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Get user's financial data to provide context
-    let userContext = "";
-    let visualData = null;
-    try {
-      const { data: budgets } = await supabase
-        .from('budgets')
-        .select('monthly_income')
-        .eq('user_id', userId)
-        .limit(1);
-
-      const monthlyIncome = budgets?.[0]?.monthly_income || 0;
-      
-      const userData = await fetchUserFinancialData(supabase, userId, monthlyIncome);
-      
-      // If this is a category-specific request, prepare detailed analysis
-      if (analysisType === 'category' && specificCategory) {
-        // Convert to lowercase for case-insensitive comparison
-        const categoryLower = specificCategory.toLowerCase();
-        
-        // Check if we have data for this category
-        let categoryData = null;
-        let matchedCategory = '';
-        
-        // Find the exact category match (case insensitive)
-        for (const cat of Object.keys(userData.categoryDetails)) {
-          if (cat.toLowerCase() === categoryLower) {
-            categoryData = userData.categoryDetails[cat];
-            matchedCategory = cat;
-            break;
-          }
-        }
-        
-        // If we found data for this category
-        if (categoryData && categoryData.length > 0) {
-          // Calculate total for this category
-          const categoryTotal = userData.categorySpending[matchedCategory];
-          
-          // Prepare visual data for the frontend
-          visualData = {
-            type: "category",
-            category: matchedCategory,
-            total: categoryTotal,
-            transactions: categoryData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-            count: categoryData.length,
-          };
-          
-          // Generate detailed analysis
-          const details = categoryData
-            .slice(0, 5)  // Limit to top 5 transactions for the context
-            .map(item => `- ${item.description || 'Expense'}: ${formatCurrency(item.amount, userPreferredCurrency)} on ${item.date}${item.notes ? ` (${item.notes})` : ''}`)
-            .join('\n');
-          
-          // Add to context
-          userContext += `\n\nDetailed ${matchedCategory} spending breakdown:
-Total spent on ${matchedCategory}: ${formatCurrency(categoryTotal, userPreferredCurrency)}
-Number of ${matchedCategory} transactions: ${categoryData.length}
-Latest transactions:
-${details}
-
-When responding about ${matchedCategory}, include this detailed breakdown and insights about their spending pattern.`;
-        } 
-        else {
-          userContext += `\n\nThe user is asking about ${specificCategory} spending, but there are no recorded expenses in this category. Suggest adding expenses with this category to track spending.`;
-        }
-      }
-      
-      // Format general context for the AI with personalized language based on user profile
-      userContext += `
-Personal Information:
-- Name: ${userName}
-- Age: ${userAge !== null ? userAge : "Not provided"} (${ageCategory})
-- Gender: ${userGender}
-- Preferred Currency: ${userPreferredCurrency}
-
-Monthly Overview:
-- Income: ${formatCurrency(monthlyIncome, userPreferredCurrency)}
-- Total spending this month: ${formatCurrency(userData.monthlyTotal, userPreferredCurrency)}
-- Total spending last month: ${formatCurrency(userData.prevMonthTotal, userPreferredCurrency)}
-${userData.savingsRate !== null ? `- Current savings rate: ${userData.savingsRate.toFixed(1)}%` : ''}
-- Monthly change: ${userData.monthlyTotal > userData.prevMonthTotal ? 'Increased by ' : 'Decreased by '}${formatCurrency(Math.abs(userData.monthlyTotal - userData.prevMonthTotal), userPreferredCurrency)} (${((Math.abs(userData.monthlyTotal - userData.prevMonthTotal) / (userData.prevMonthTotal || 1)) * 100).toFixed(1)}%)
-
-Spending Categories (This Month):
-${Object.entries(userData.categorySpending)
-  .sort((a, b) => b[1] - a[1])
-  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount), userPreferredCurrency)}`)
-  .join('\n')}
-
-Previous Month Categories:
-${Object.entries(userData.prevCategorySpending)
-  .sort((a, b) => b[1] - a[1])
-  .map(([category, amount]) => `  * ${category}: ${formatCurrency(Number(amount), userPreferredCurrency)}`)
-  .join('\n')}
-
-Recent Activity:
-- Latest Expenses: ${userData.recentExpenses ? userData.recentExpenses.slice(0, 5).map(exp => `${exp.category} (${formatCurrency(exp.amount, userPreferredCurrency)})`).join(', ') : "No recent expenses"}
-- Active Budgets: ${userData.budgets ? userData.budgets.map(b => `${b.category} (${formatCurrency(b.amount, userPreferredCurrency)})`).join(', ') : "No budgets set"}
-
-All expense categories used: ${userData.uniqueCategories.join(', ')}
-
-IMPORTANT: Only use these predefined expense categories:
-${EXPENSE_CATEGORIES.join(', ')}
-
-IMPORTANT: When adding an expense:
-- Today's date is ${getTodaysDate()}
-- Always use this current date when the user says 'today' or doesn't specify a date
-- NEVER use past years like 2022 or 2023 for expenses mentioned as current or recent
-- Always format currency amounts using ${userPreferredCurrency} format
-
-When responding to the user named ${userName}:
-1. Use their name (${userName}) occasionally to make interactions personal
-2. Adjust your tone based on their age group (${ageCategory})
-3. Use communication style appropriate for their gender preference (${userGender})
-4. Show all financial data in their preferred currency (${userPreferredCurrency})
-5. Include relevant financial data in your responses
-6. Offer specific suggestions based on their spending patterns
-7. Highlight both positive trends and areas for improvement`;
-
-    } catch (error) {
-      console.error("Error fetching user context:", error);
-      userContext = "Unable to retrieve user's financial context completely.";
+    // Continue with OpenAI processing for non-auto-processed messages
+    if (!OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
     }
 
-    // Look for emotional cues in the message to adjust tone
-    const stressWords = ["urgent", "problem", "worried", "stress", "help", "emergency", "asap", "confused"];
-    const hasStressSignals = stressWords.some(word => message.toLowerCase().includes(word));
+    // Fetch user financial data for context
+    const financialData = await fetchUserFinancialData(userId, supabase, userPreferredCurrency);
     
-    if (hasStressSignals) {
-      userContext += "\n\nNOTE: The user appears to be showing signs of stress or urgency. Respond with extra patience, clarity, and empathy.";
-    }
+    // Create personalized system message
+    const personalizedSystemMessage = FINNY_SYSTEM_MESSAGE.replace(
+      /\${getTodaysDate\(\)}/g, 
+      getTodaysDate()
+    );
 
-    // Analyze message formality to match tone
-    const formalWords = ["kindly", "please", "would you", "could you", "thank you", "appreciate"];
-    const casualWords = ["hey", "hi", "lol", "cool", "awesome", "thanks"];
-    const userFormalityScore = 
-      formalWords.filter(word => message.toLowerCase().includes(word)).length - 
-      casualWords.filter(word => message.toLowerCase().includes(word)).length;
-    
-    if (userFormalityScore > 1) {
-      userContext += "\n\nNOTE: The user is using a more formal communication style. Match with respectful, professional language.";
-    } else if (userFormalityScore < -1) {
-      userContext += "\n\nNOTE: The user is using a casual, relaxed communication style. Match with a friendly, conversational tone.";
-    }
+    // Prepare context for OpenAI
+    const contextMessage = `User Profile: ${userName} (Age: ${userAge}, Gender: ${userGender})
+Currency: ${userPreferredCurrency}
+Financial Summary: ${financialData.summary}
+Recent Expenses: ${JSON.stringify(financialData.recentExpenses.slice(0, 5))}
+Budgets: ${JSON.stringify(financialData.budgets)}`;
 
-    // Format chat history for OpenAI
-    const formattedHistory = chatHistory?.map((msg: any) => ({
-      role: msg.isUser ? 'user' : 'assistant',
-      content: msg.content
-    })) || [];
+    // Prepare messages for OpenAI
+    const openAIMessages = [
+      { role: "system", content: personalizedSystemMessage },
+      { role: "system", content: contextMessage },
+      ...chatHistory.slice(-5).map(msg => ({
+        role: msg.isUser ? "user" : "assistant",
+        content: msg.content
+      })),
+      { role: "user", content: message }
+    ];
+
+    console.log("Sending request to OpenAI with context");
 
     // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: FINNY_SYSTEM_MESSAGE + "\n\n" + (userContext || '') },
-          ...formattedHistory,
-          { role: 'user', content: processedMessage }
-        ],
+        model: "gpt-4",
+        messages: openAIMessages,
+        max_tokens: 1000,
         temperature: 0.7,
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error}`);
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.text();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
 
-    const result = await response.json();
-    const aiResponse = result.choices[0].message.content;
+    const openAIData = await openAIResponse.json();
+    let responseText = openAIData.choices[0]?.message?.content || "I'm sorry, I couldn't process that request.";
 
-    // Process goal setting patterns directly if the normal action fails
-    let actionMatch = aiResponse.match(/\[ACTION:(.*?)\]/);
-    let processedResponse = aiResponse;
-    let action = null;
-    
-    // If we already processed an auto-expense, include it in the response
-    if (hasAutoExpense && autoExpenseData) {
-      action = {
-        type: "add_expense",
-        amount: autoExpenseData.amount,
-        category: autoExpenseData.category,
-        description: autoExpenseData.description, // Clean description
-        date: getTodaysDate()
-      };
+    console.log("OpenAI response:", responseText);
+
+    // Check for actions in the response
+    const actionRegex = /\[ACTION:({[^}]+})\]/g;
+    let actionMatch;
+    let processedActions = [];
+
+    while ((actionMatch = actionRegex.exec(responseText)) !== null) {
+      try {
+        const actionData = JSON.parse(actionMatch[1]);
+        console.log("Processing action from OpenAI response:", actionData);
+        
+        const actionResult = await processAction(actionData, userId, supabase);
+        processedActions.push({ action: actionData, result: actionResult });
+        
+        console.log("Action processed successfully:", actionResult);
+      } catch (error) {
+        console.error("Error processing action:", error);
+        processedActions.push({ 
+          action: actionMatch[1], 
+          result: `❌ Failed to process action: ${error.message}` 
+        });
+      }
+    }
+
+    // Remove action tags from response text and replace with results
+    let finalResponse = responseText;
+    if (processedActions.length > 0) {
+      finalResponse = responseText.replace(actionRegex, '');
       
-      // Add confirmation checkmark with proper currency formatting and clean description
-      if (!processedResponse.includes("✅")) {
-        processedResponse = `✅ Added ${formatCurrency(autoExpenseData.amount, userPreferredCurrency)} ${autoExpenseData.category} expense: ${autoExpenseData.description}\n\n${processedResponse}`;
-      }
-    }
-    // If we have a goal match in the input but no action in the response, try to create a goal action
-    else if (goalMatch && (!actionMatch || !actionMatch[1].includes("set_goal"))) {
-      try {
-        console.log("Creating goal action from pattern match");
-        const goalAction = {
-          type: "set_goal",
-          title: "Savings Goal",
-          targetAmount: parseFloat(goalMatch[1]),
-          deadline: goalMatch[2],
-          category: "Savings"
-        };
-        
-        // Process the goal action directly
-        const actionResult = await processAction(goalAction, userId, supabase);
-        action = goalAction;
-        
-        // Replace or append the confirmation to the response
-        if (aiResponse.includes("goal") || aiResponse.includes("saving")) {
-          processedResponse = processedResponse.replace(
-            /I can help you (set|create) (a|your) (savings|financial) goal/i,
-            `✅ ${actionResult}`
-          );
-        } else {
-          processedResponse = `${processedResponse}\n\n✅ ${actionResult}`;
-        }
-      } catch (actionError) {
-        console.error('Error processing goal action:', actionError);
-        if (processedResponse.includes("goal") || processedResponse.includes("saving")) {
-          processedResponse = processedResponse.replace(
-            /I can help you (set|create) (a|your) (savings|financial) goal/i,
-            `❌ Sorry, I couldn't complete that action. ${actionError.message}`
-          );
-        } else {
-          processedResponse = `${processedResponse}\n\n❌ Sorry, I couldn't complete that action. ${actionError.message}`;
-        }
-      }
-    }
-    // Check if there's an action in the AI response (only if we haven't already processed an auto-expense)
-    else if (!hasAutoExpense && actionMatch && actionMatch[1]) {
-      try {
-        // parse the assistant's action
-        action = JSON.parse(actionMatch[1]);
-        let actionDataModified = false;
-
-        // --- If it's an add_expense action ---
-        if (action.type === 'add_expense') {
-          const todaysDate = getTodaysDate();
-          
-          // Check if the date is missing, invalid, or contains "today" references
-          if (!action.date || 
-              new Date(action.date).getFullYear() !== new Date().getFullYear() ||
-              message.toLowerCase().includes("today") ||
-              message.toLowerCase().includes("now") ||
-              message.toLowerCase().includes("current")) {
-                
-            action.date = todaysDate;
-            actionDataModified = true;
-            console.log(`Date was missing, invalid, or "today" was referenced. Using today's date: ${action.date}`);
-          }
-          
-          // Always double check the date format and validity
-          try {
-            const dateObj = new Date(action.date);
-            if (isNaN(dateObj.getTime())) {
-              console.log(`Invalid date found: ${action.date}, using today's date`);
-              action.date = todaysDate;
-              actionDataModified = true;
-            }
-          } catch (e) {
-            console.log(`Error parsing date: ${action.date}, using today's date`);
-            action.date = todaysDate;
-            actionDataModified = true;
-          }
-        }
-
-        // now send it on to your processor
-        const actionResult = await processAction(action, userId, supabase);
-
-        // replace the marker with the confirmation
-        processedResponse = aiResponse.replace(
-          actionMatch[0],
-          `✅ ${actionResult}`
-        );
-        
-      } catch (actionError) {
-        console.error('Error processing action:', actionError);
-        // Replace the action marker with an error message
-        processedResponse = aiResponse.replace(
-          actionMatch[0], 
-          `❌ Sorry, I couldn't complete that action. ${actionError.message}`
-        );
+      // Add action results to the response
+      const actionResults = processedActions.map(pa => pa.result).join('\n');
+      if (actionResults) {
+        finalResponse = actionResults + (finalResponse.trim() ? '\n\n' + finalResponse.trim() : '');
       }
     }
 
-    // Return the AI response
-    return new Response(
-      JSON.stringify({ 
-        response: processedResponse,
-        rawResponse: aiResponse,
-        visualData: visualData,
-        action: action // Include action data in response
-      }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    console.log("Final response:", finalResponse);
+
+    return new Response(JSON.stringify({
+      response: finalResponse,
+      rawResponse: responseText,
+      visualData: null,
+      action: processedActions.length > 0 ? processedActions[0].action : null
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in Finny chat:', error);
     
-    return new Response(
-      JSON.stringify({ 
-        error: error.message 
-      }),
-      { 
-        status: 400, 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    return new Response(JSON.stringify({
+      response: `❌ Sorry, I encountered an error: ${error.message}. Please try again.`,
+      rawResponse: null,
+      visualData: null,
+      action: null
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
