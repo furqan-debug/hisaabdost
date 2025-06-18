@@ -20,24 +20,26 @@ export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsPr
   const insights = useAnalyticsInsights(expenses);
 
   useEffect(() => {
-    if (insights.length === 0) return;
+    // Only send notifications if user has meaningful data (at least 5 expenses)
+    if (!expenses || expenses.length < 5) return;
+    
+    // Only process significant insights (not tips or basic highlights)
+    const significantInsights = insights.filter(insight => 
+      insight.type === 'alert' || insight.type === 'warning'
+    );
 
-    // Add insights as notifications
-    insights.forEach((insight) => {
-      // Create a unique key for each insight to prevent duplicates
-      const insightKey = `analytics-${insight.type}-${insight.message.slice(0, 50)}`;
+    if (significantInsights.length === 0) return;
+
+    // Limit to maximum 2 insights per session to avoid spam
+    significantInsights.slice(0, 2).forEach((insight) => {
+      const insightKey = `analytics-${insight.type}-${insight.message.slice(0, 30)}`;
       
-      // Check if we can send this type of notification
       if (NotificationService.canSendNotification('category-insight')) {
         const notification = {
           type: insight.type === 'warning' ? 'warning' as const : 
-                insight.type === 'success' ? 'success' as const :
                 insight.type === 'alert' ? 'error' as const : 'info' as const,
-          title: insight.type === 'highlight' ? '📊 Spending Insight' :
-                 insight.type === 'alert' ? '⚠️ Spending Alert' :
-                 insight.type === 'warning' ? '⚠️ Budget Warning' :
-                 insight.type === 'success' ? '✅ Great Progress' :
-                 insight.type === 'tip' ? '💡 Money Tip' : '📋 Financial Update',
+          title: insight.type === 'alert' ? '⚠️ Spending Alert' :
+                 insight.type === 'warning' ? '⚠️ Budget Warning' : '📊 Spending Insight',
           description: insight.message + (insight.recommendation ? ` ${insight.recommendation}` : ''),
         };
 
@@ -45,7 +47,7 @@ export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsPr
         NotificationService.markNotificationSent('category-insight');
       }
     });
-  }, [insights, addNotification]);
+  }, [insights, addNotification, expenses]);
 
   return { insights };
 }

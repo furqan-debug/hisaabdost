@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { Notification } from '@/hooks/useNotifications';
 
@@ -32,8 +31,9 @@ export interface NotificationTrigger {
 }
 
 export class NotificationService {
-  private static readonly NOTIFICATION_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+  private static readonly NOTIFICATION_COOLDOWN = 48 * 60 * 60 * 1000; // 48 hours (increased)
   private static readonly WEEKLY_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static readonly MONTHLY_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 days
   private static lastNotifications: Record<string, number> = {};
 
   static canSendNotification(type: NotificationType, category?: string): boolean {
@@ -44,12 +44,17 @@ export class NotificationService {
     // Different cooldown periods for different notification types
     let cooldownPeriod = this.NOTIFICATION_COOLDOWN;
     
-    if (['weekly-summary', 'monthly-comparison'].includes(type)) {
+    if (['weekly-summary'].includes(type)) {
       cooldownPeriod = this.WEEKLY_COOLDOWN;
     }
     
+    if (['monthly-comparison', 'monthly-reset', 'leftover-added'].includes(type)) {
+      cooldownPeriod = this.MONTHLY_COOLDOWN;
+    }
+    
+    // Special cases that can send immediately
     if (['monthly-reset', 'leftover-added'].includes(type)) {
-      return true; // Allow immediate sending for monthly events
+      return true;
     }
     
     return (now - lastSent) > cooldownPeriod;
@@ -58,6 +63,32 @@ export class NotificationService {
   static markNotificationSent(type: NotificationType, category?: string): void {
     const key = category ? `${type}-${category}` : type;
     this.lastNotifications[key] = Date.now();
+  }
+
+  static shouldTriggerBudgetWarning(spent: number, budget: number): boolean {
+    if (budget <= 0) return false;
+    const percentage = (spent / budget) * 100;
+    return percentage >= 85 && percentage < 100; // Increased threshold
+  }
+
+  static shouldTriggerOverspending(spent: number, budget: number): boolean {
+    if (budget <= 0) return false;
+    return spent > budget * 1.1; // Only trigger for 10% overspending
+  }
+
+  static shouldTriggerBudgetExceeded(spent: number, budget: number): boolean {
+    if (budget <= 0) return false;
+    const percentage = (spent / budget) * 100;
+    return percentage > 110; // Only trigger for significant overspending
+  }
+
+  static shouldTriggerUnusualExpense(todayExpenses: number, dailyAverage: number): boolean {
+    return todayExpenses > dailyAverage * 3 && dailyAverage > 10; // 3x the average and minimum threshold
+  }
+
+  static calculateSavingsRate(income: number, expenses: number): number {
+    if (income <= 0) return 0;
+    return ((income - expenses) / income) * 100;
   }
 
   static createNotification(trigger: NotificationTrigger): Omit<Notification, 'id' | 'timestamp' | 'read'> {
@@ -149,8 +180,8 @@ export class NotificationService {
       case 'progress-update':
         return {
           type: 'success',
-          title: 'Savings Progress',
-          description: `Great progress! You've saved ${trigger.percentage}% towards your goal this month.`,
+          title: 'Great Savings Progress',
+          description: `Excellent! You've saved ${trigger.percentage}% of your income this month.`,
         };
 
       case 'low-balance':
@@ -174,31 +205,5 @@ export class NotificationService {
           description: 'You have a new notification.',
         };
     }
-  }
-
-  static shouldTriggerBudgetWarning(spent: number, budget: number): boolean {
-    if (budget <= 0) return false;
-    const percentage = (spent / budget) * 100;
-    return percentage >= 80 && percentage < 100;
-  }
-
-  static shouldTriggerOverspending(spent: number, budget: number): boolean {
-    if (budget <= 0) return false;
-    return spent > budget;
-  }
-
-  static shouldTriggerBudgetExceeded(spent: number, budget: number): boolean {
-    if (budget <= 0) return false;
-    const percentage = (spent / budget) * 100;
-    return percentage > 100;
-  }
-
-  static shouldTriggerUnusualExpense(todayExpenses: number, dailyAverage: number): boolean {
-    return todayExpenses > dailyAverage * 2 && dailyAverage > 0; // 2x the average
-  }
-
-  static calculateSavingsRate(income: number, expenses: number): number {
-    if (income <= 0) return 0;
-    return ((income - expenses) / income) * 100;
   }
 }
