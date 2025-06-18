@@ -14,12 +14,17 @@ import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 export function useDashboardData() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  const monthContext = useMonthContext();
   const { refreshTrigger } = useExpenseRefresh();
   const { totalAdditions } = useWalletAdditions();
   
   // Initialize month carryover functionality
   useMonthCarryover();
+  
+  // Safely extract values from context with fallbacks
+  const selectedMonth = monthContext?.selectedMonth || new Date();
+  const getCurrentMonthData = monthContext?.getCurrentMonthData;
+  const updateMonthData = monthContext?.updateMonthData;
   
   // Get current month's data from context - ensure it's defined
   const currentMonthKey = selectedMonth ? format(selectedMonth, 'yyyy-MM') : '';
@@ -199,18 +204,27 @@ export function useDashboardData() {
     previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
-  // Update month data when income or expenses change
+  // Update month data when income or expenses change - with proper dependency safety
   useEffect(() => {
     if (updateMonthData && currentMonthKey) {
       updateMonthData(currentMonthKey, {
-        monthlyIncome,
-        monthlyExpenses,
-        totalBalance,
-        walletBalance,
-        savingsRate
+        monthlyIncome: monthlyIncome || 0,
+        monthlyExpenses: monthlyExpenses || 0,
+        totalBalance: totalBalance || 0,
+        walletBalance: walletBalance || 0,
+        savingsRate: savingsRate || 0
       });
     }
-  }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData, totalBalance, walletBalance, savingsRate]);
+  }, [
+    monthlyIncome || 0,
+    monthlyExpenses || 0,
+    totalAdditions || 0,
+    currentMonthKey || '',
+    updateMonthData,
+    totalBalance || 0,
+    walletBalance || 0,
+    savingsRate || 0
+  ]);
 
   // Listen for expense update events and refresh data
   useEffect(() => {
@@ -219,7 +233,7 @@ export function useDashboardData() {
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger, queryClient, selectedMonth]);
+  }, [refreshTrigger || 0, queryClient, selectedMonth]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
