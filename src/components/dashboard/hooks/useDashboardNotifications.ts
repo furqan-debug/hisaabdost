@@ -37,13 +37,16 @@ export function useDashboardNotifications({
     previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
-  // Listen for expense update events and refresh data - only when valid values exist
+  // Listen for expense update events and refresh data
   useEffect(() => {
-    // Add safety checks to ensure all values are defined before proceeding
-    if (refreshTrigger && refreshTrigger > 0 && selectedMonth) {
+    // Ensure we have valid values before proceeding
+    const safeRefreshTrigger = refreshTrigger ?? 0;
+    const safeSelectedMonth = selectedMonth ?? new Date();
+    
+    if (safeRefreshTrigger > 0) {
       console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+      queryClient.invalidateQueries({ queryKey: ['expenses', format(safeSelectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger || 0, queryClient, selectedMonth || new Date()]);
+  }, [refreshTrigger, queryClient, selectedMonth]);
 }
