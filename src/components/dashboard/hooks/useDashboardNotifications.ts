@@ -49,5 +49,5 @@ export function useDashboardNotifications({
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger ?? 0, queryClient, selectedMonth]);
+  }, [refreshTrigger, queryClient, selectedMonth]);
 }
