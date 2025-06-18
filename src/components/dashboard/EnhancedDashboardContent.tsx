@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
@@ -125,44 +124,30 @@ export const EnhancedDashboardContent = ({
         isNewUser={isNewUser}
       />
 
-      {/* Main Content Grid */}
-      <div className={cn(
-        "grid gap-6",
-        isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"
-      )}>
+      {/* Main Content - Single Column Layout */}
+      <div className="space-y-6">
+        {/* 1. Talk to Finny */}
+        <FinnyCard />
         
-        {/* Left Column - Main Content */}
-        <div className={cn(
-          "space-y-6",
-          isMobile ? "col-span-1" : "col-span-2"
-        )}>
-          
-          {/* Recent Expenses */}
-          <RecentExpensesCard 
-            expenses={expenses}
-            isNewUser={isNewUser}
-            isLoading={isExpensesLoading}
-            setExpenseToEdit={setExpenseToEdit}
-            setShowAddExpense={setShowAddExpense}
-          />
-        </div>
-
-        {/* Right Column - Secondary Content */}
-        <div className="space-y-6">
-          {/* Quick Actions Widget - Only Primary Actions */}
-          <QuickActionsWidget
-            onAddExpense={handleAddExpense}
-            onUploadReceipt={handleUploadReceipt}
-            onTakePhoto={handleTakePhoto}
-            onAddBudget={handleAddBudget}
-          />
-          
-          {/* Finny Card */}
-          <FinnyCard />
-          
-          {/* Spending Trends Widget */}
-          <SpendingTrendsWidget expenses={allExpenses} />
-        </div>
+        {/* 2. Quick Actions */}
+        <QuickActionsWidget
+          onAddExpense={handleAddExpense}
+          onUploadReceipt={handleUploadReceipt}
+          onTakePhoto={handleTakePhoto}
+          onAddBudget={handleAddBudget}
+        />
+        
+        {/* 3. Spending Trends */}
+        <SpendingTrendsWidget expenses={allExpenses} />
+        
+        {/* 4. Recent Expenses */}
+        <RecentExpensesCard 
+          expenses={expenses}
+          isNewUser={isNewUser}
+          isLoading={isExpensesLoading}
+          setExpenseToEdit={setExpenseToEdit}
+          setShowAddExpense={setShowAddExpense}
+        />
       </div>
 
       {/* Hidden file inputs for receipt processing */}
