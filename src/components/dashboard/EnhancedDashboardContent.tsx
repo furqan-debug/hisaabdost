@@ -3,8 +3,7 @@ import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
-import { ExpenseAnalyticsCard } from "@/components/dashboard/ExpenseAnalyticsCard";
-import { EnhancedQuickActionsWidget } from "@/components/dashboard/widgets/EnhancedQuickActionsWidget";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -146,20 +145,12 @@ export const EnhancedDashboardContent = ({
             setExpenseToEdit={setExpenseToEdit}
             setShowAddExpense={setShowAddExpense}
           />
-          
-          {/* Expense Analytics */}
-          <ExpenseAnalyticsCard 
-            expenses={allExpenses}
-            isLoading={isExpensesLoading}
-            chartType={chartType}
-            setChartType={setChartType}
-          />
         </div>
 
         {/* Right Column - Secondary Content */}
         <div className="space-y-6">
-          {/* Enhanced Quick Actions Widget - Now the primary way to add expenses */}
-          <EnhancedQuickActionsWidget
+          {/* Quick Actions Widget - Only Primary Actions */}
+          <QuickActionsWidget
             onAddExpense={handleAddExpense}
             onUploadReceipt={handleUploadReceipt}
             onTakePhoto={handleTakePhoto}
