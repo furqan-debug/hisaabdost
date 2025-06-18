@@ -22,7 +22,10 @@ export function useDashboardNotifications({
   selectedMonth
 }: DashboardNotificationsProps) {
   const queryClient = useQueryClient();
-  const { refreshTrigger } = useExpenseRefresh();
+  const expenseRefreshHook = useExpenseRefresh();
+  
+  // Safely extract refreshTrigger with a fallback
+  const refreshTrigger = expenseRefreshHook?.refreshTrigger ?? 0;
   
   // Initialize month carryover functionality
   useMonthCarryover();
@@ -40,14 +43,12 @@ export function useDashboardNotifications({
   // Listen for expense update events and refresh data
   useEffect(() => {
     // Only proceed if we have valid values
-    if (!selectedMonth || !queryClient) return;
+    if (!selectedMonth || !queryClient || typeof refreshTrigger !== 'number') return;
     
-    const safeRefreshTrigger = refreshTrigger ?? 0;
-    
-    if (safeRefreshTrigger > 0) {
+    if (refreshTrigger > 0) {
       console.log("Refresh trigger changed, invalidating expense queries");
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger ?? 0, queryClient, selectedMonth]);
+  }, [refreshTrigger, queryClient, selectedMonth]);
 }
