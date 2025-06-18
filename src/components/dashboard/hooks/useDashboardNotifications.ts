@@ -22,10 +22,10 @@ export function useDashboardNotifications({
   selectedMonth
 }: DashboardNotificationsProps) {
   const queryClient = useQueryClient();
-  const expenseRefreshHook = useExpenseRefresh();
   
-  // Safely extract refreshTrigger with proper fallback and validation
-  const refreshTrigger = expenseRefreshHook?.refreshTrigger ?? 0;
+  // Ensure we get a valid hook result with fallbacks
+  const expenseRefreshResult = useExpenseRefresh();
+  const refreshTrigger = expenseRefreshResult?.refreshTrigger ?? 0;
   
   // Initialize month carryover functionality
   useMonthCarryover();
@@ -36,20 +36,21 @@ export function useDashboardNotifications({
     monthlyExpenses: monthlyExpenses || 0,
     monthlyIncome: monthlyIncome || 0,
     walletBalance: walletBalance || 0,
-    expenses: expenses || [], // Ensure expenses is always an array
+    expenses: Array.isArray(expenses) ? expenses : [], // Ensure expenses is always an array
     previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
   // Listen for expense update events and refresh data
   useEffect(() => {
-    // Only proceed if we have valid values - add more defensive checks
+    // Only proceed if we have valid values
     if (!selectedMonth || !queryClient) return;
     
-    // Ensure refreshTrigger is a valid number before proceeding
+    // Only invalidate queries if refreshTrigger is a positive number
     if (typeof refreshTrigger === 'number' && refreshTrigger > 0) {
       console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+      const monthKey = format(selectedMonth, 'yyyy-MM');
+      queryClient.invalidateQueries({ queryKey: ['expenses', monthKey] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger, queryClient, selectedMonth]); // Keep dependencies but ensure they're always defined
+  }, [refreshTrigger, queryClient, selectedMonth]);
 }

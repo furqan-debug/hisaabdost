@@ -10,7 +10,10 @@ export function useDashboardQueries() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const monthContext = useMonthContext();
-  const { refreshTrigger } = useExpenseRefresh();
+  
+  // Ensure we get a valid refresh trigger
+  const expenseRefreshResult = useExpenseRefresh();
+  const refreshTrigger = expenseRefreshResult?.refreshTrigger ?? 0;
   
   // Safely extract values from context with fallbacks
   const selectedMonth = monthContext?.selectedMonth || new Date();
@@ -159,8 +162,8 @@ export function useDashboardQueries() {
   return {
     incomeData,
     isIncomeLoading,
-    expenses,
-    allExpenses,
+    expenses: Array.isArray(expenses) ? expenses : [],
+    allExpenses: Array.isArray(allExpenses) ? allExpenses : [],
     isExpensesLoading,
     handleExpenseRefresh,
     selectedMonth,
