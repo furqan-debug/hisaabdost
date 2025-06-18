@@ -1,7 +1,6 @@
 
 import { ScanResult, processScanResults } from '../utils/processScanUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { validateReceiptItem, cleanItemDescription, validateAndCleanAmount } from '../utils/itemSelectionUtils';
 
 interface ScanOptions {
   file: File | null;
@@ -64,7 +63,7 @@ export async function scanReceipt({
     const base64File = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
     console.log(`✅ ReceiptScanner: Base64 conversion complete (${base64File.length} chars)`);
     
-    if (onProgress) onProgress(40, "Calling scan-receipt edge function...");
+    if (onProgress) onProgress(40, "Scanning receipt with OCR...");
     
     console.log(`🚀 ReceiptScanner: Invoking scan-receipt edge function...`);
     
@@ -133,34 +132,34 @@ export async function scanReceipt({
       };
     }
 
-    if (data.error) {
+    if (data.error || !data.success) {
       console.error(`❌ ReceiptScanner: Server returned error:`, data.error);
-      if (onError) onError(data.error);
+      if (onError) onError(data.error || "Receipt processing failed");
       return { 
         success: false, 
-        error: data.error,
+        error: data.error || "Receipt processing failed",
         receiptUrl
       };
     }
 
-    if (onProgress) onProgress(80, "Extracting and validating expense information...");
+    if (onProgress) onProgress(80, "Extracting expense information...");
 
-    // Process the successful response
+    // Process the successful response from the new OCR system
     let validatedItems: any[] = [];
     
     if (data.items && Array.isArray(data.items) && data.items.length > 0) {
       validatedItems = data.items
         .filter(item => item && item.description && item.amount)
         .map(item => ({
-          description: item.description || 'Receipt Item',
-          amount: item.amount || '0.00',
-          date: data.date || new Date().toISOString().split('T')[0],
+          description: item.description,
+          amount: item.amount,
+          date: item.date || data.date || new Date().toISOString().split('T')[0],
           category: item.category || "Other",
           paymentMethod: item.payment || "Card"
         }))
         .filter(item => parseFloat(item.amount) > 0);
       
-      console.log(`✅ ReceiptScanner: Validated ${validatedItems.length} items out of ${data.items.length} original items`);
+      console.log(`✅ ReceiptScanner: Validated ${validatedItems.length} items from OCR extraction`);
     }
 
     // If no valid items found, return error
