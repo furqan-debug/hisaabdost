@@ -20,32 +20,45 @@ export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsPr
   const insights = useAnalyticsInsights(expenses);
 
   useEffect(() => {
+    // Skip for new accounts or if no meaningful insights
     if (insights.length === 0) return;
-
-    // Add insights as notifications
-    insights.forEach((insight) => {
-      // Create a unique key for each insight to prevent duplicates
-      const insightKey = `analytics-${insight.type}-${insight.message.slice(0, 50)}`;
+    if (expenses.length <= 5) return;
+    
+    // Limit to just one notification even if there are multiple insights
+    // This prevents notification spam from analytics
+    const mostImportantInsight = insights
+      .sort((a, b) => {
+        // Prioritize alerts, then warnings, then others
+        const priorityA = a.type === 'alert' ? 3 : a.type === 'warning' ? 2 : 1;
+        const priorityB = b.type === 'alert' ? 3 : b.type === 'warning' ? 2 : 1;
+        return priorityB - priorityA;
+      })
+      .slice(0, 1)[0];
       
-      // Check if we can send this type of notification
-      if (NotificationService.canSendNotification('category-insight')) {
-        const notification = {
-          type: insight.type === 'warning' ? 'warning' as const : 
-                insight.type === 'success' ? 'success' as const :
-                insight.type === 'alert' ? 'error' as const : 'info' as const,
-          title: insight.type === 'highlight' ? '📊 Spending Insight' :
-                 insight.type === 'alert' ? '⚠️ Spending Alert' :
-                 insight.type === 'warning' ? '⚠️ Budget Warning' :
-                 insight.type === 'success' ? '✅ Great Progress' :
-                 insight.type === 'tip' ? '💡 Money Tip' : '📋 Financial Update',
-          description: insight.message + (insight.recommendation ? ` ${insight.recommendation}` : ''),
-        };
+    if (mostImportantInsight && NotificationService.canSendNotification('category-insight')) {
+      const notificationType = 
+        mostImportantInsight.type === 'warning' ? 'warning' as const : 
+        mostImportantInsight.type === 'success' ? 'success' as const :
+        mostImportantInsight.type === 'alert' ? 'error' as const : 'info' as const;
+        
+      const notificationTitle = 
+        mostImportantInsight.type === 'highlight' ? '📊 Spending Insight' :
+        mostImportantInsight.type === 'alert' ? '⚠️ Spending Alert' :
+        mostImportantInsight.type === 'warning' ? '⚠️ Budget Warning' :
+        mostImportantInsight.type === 'success' ? '✅ Great Progress' :
+        mostImportantInsight.type === 'tip' ? '💡 Money Tip' : '📋 Financial Update';
+        
+      const notification = {
+        type: notificationType,
+        title: notificationTitle,
+        description: mostImportantInsight.message + (mostImportantInsight.recommendation 
+          ? ` ${mostImportantInsight.recommendation}` : ''),
+      };
 
-        addNotification(notification);
-        NotificationService.markNotificationSent('category-insight');
-      }
-    });
-  }, [insights, addNotification]);
+      addNotification(notification);
+      NotificationService.markNotificationSent('category-insight');
+    }
+  }, [insights, addNotification, expenses.length]);
 
   return { insights };
 }
