@@ -41,14 +41,7 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
       });
 
       // Calculate total amount for this month
-      const totalAmount = monthExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-
-      // For consistency, if there are no expenses at all for the account, 
-      // don't show any phantom data points with amount 0
-      // Only add a month with zero if there are expenses in other months
-      if (expenses.length === 0 && totalAmount === 0) {
-        continue;
-      }
+      const totalAmount = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
       monthsData.push({
         date: format(monthDate, 'yyyy-MM-dd'),
@@ -59,9 +52,6 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
 
     return monthsData;
   }, [expenses]);
-
-  // Check if this is a new account
-  const isNewAccount = expenses.length <= 3;
 
   if (isLoading) {
     return (
@@ -79,10 +69,7 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
   }
 
   const getTrend = () => {
-    // For new accounts with minimal data, don't calculate trends
-    if (isNewAccount || trendsData.length < 2) {
-      return { direction: 'neutral', percentage: 0 };
-    }
+    if (trendsData.length < 2) return { direction: 'neutral', percentage: 0 };
     
     const current = trendsData[trendsData.length - 1]?.amount || 0;
     const previous = trendsData[trendsData.length - 2]?.amount || 0;
@@ -122,11 +109,6 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
   };
 
   const getTrendText = () => {
-    // For new accounts with minimal data, show a neutral message
-    if (isNewAccount || trend.percentage === 0) {
-      return 'Stable spending';
-    }
-
     switch (trend.direction) {
       case 'up':
         return `${trend.percentage.toFixed(1)}% increase`;
@@ -136,9 +118,6 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
         return 'Stable spending';
     }
   };
-
-  // Check if we have real data to display
-  const hasRealData = trendsData.some(data => data.amount > 0);
 
   return (
     <Card>
@@ -150,7 +129,7 @@ export function SpendingTrendsWidget({ expenses, isLoading }: SpendingTrendsWidg
         </div>
       </CardHeader>
       <CardContent>
-        {hasRealData ? (
+        {trendsData.length > 0 ? (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendsData}>

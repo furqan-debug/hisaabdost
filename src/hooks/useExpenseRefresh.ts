@@ -7,8 +7,8 @@ import { toast } from 'sonner';
  * and trigger refreshes in the expense list
  */
 export function useExpenseRefresh() {
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const refreshTimerRef = useRef<number | null>(null);
   
   const triggerRefresh = useCallback(() => {
@@ -91,9 +91,5 @@ export function useExpenseRefresh() {
     };
   }, [handleExpenseUpdateEvent]);
   
-  // Always return an object with defined values
-  return { 
-    refreshTrigger: refreshTrigger || 0, 
-    triggerRefresh 
-  };
+  return { refreshTrigger, triggerRefresh };
 }

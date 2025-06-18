@@ -9,8 +9,7 @@ import { useBudgetCalculations } from "./useBudgetCalculations";
 import { exportBudgetData } from "@/services/budgetExportService";
 
 export function useBudgetData() {
-  const monthContext = useMonthContext();
-  const selectedMonth = monthContext?.selectedMonth || new Date();
+  const { selectedMonth } = useMonthContext();
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   const queryClient = useQueryClient();
@@ -22,10 +21,8 @@ export function useBudgetData() {
   useEffect(() => {
     const handleBudgetUpdate = (e: Event) => {
       console.log("Budget update detected, refreshing data", e);
-      if (queryClient && user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user.id] });
-        setRefreshTrigger(Date.now());
-      }
+      queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user?.id] });
+      setRefreshTrigger(Date.now());
     };
     
     window.addEventListener('budget-updated', handleBudgetUpdate);
@@ -47,12 +44,12 @@ export function useBudgetData() {
 
   // Export function wrapper
   const handleExportBudgetData = () => {
-    exportBudgetData(budgets || [], expenses || [], selectedMonth);
+    exportBudgetData(budgets, expenses, selectedMonth);
   };
 
   // Transform budgets data for notification triggers
-  const budgetNotificationData = Array.isArray(budgets) ? budgets.map(budget => {
-    const categoryExpenses = Array.isArray(expenses) ? expenses.filter(expense => expense.category === budget.category) : [];
+  const budgetNotificationData = budgets?.map(budget => {
+    const categoryExpenses = expenses?.filter(expense => expense.category === budget.category) || [];
     const spent = categoryExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
     
     return {
@@ -60,11 +57,11 @@ export function useBudgetData() {
       budget: Number(budget.amount),
       spent,
     };
-  }) : [];
+  }) || [];
 
   return {
-    budgets: Array.isArray(budgets) ? budgets : [],
-    expenses: Array.isArray(expenses) ? expenses : [],
+    budgets,
+    expenses,
     isLoading,
     exportBudgetData: handleExportBudgetData,
     budgetNotificationData,
