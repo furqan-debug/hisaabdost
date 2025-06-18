@@ -204,7 +204,7 @@ export function useDashboardData() {
     previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
-  // Update month data when income or expenses change - with proper dependency safety
+  // Update month data when income or expenses change - only when updateMonthData is available
   useEffect(() => {
     if (updateMonthData && currentMonthKey) {
       updateMonthData(currentMonthKey, {
@@ -216,24 +216,24 @@ export function useDashboardData() {
       });
     }
   }, [
-    monthlyIncome || 0,
-    monthlyExpenses || 0,
-    totalAdditions || 0,
-    currentMonthKey || '',
     updateMonthData,
-    totalBalance || 0,
-    walletBalance || 0,
-    savingsRate || 0
+    currentMonthKey,
+    monthlyIncome,
+    monthlyExpenses,
+    totalAdditions,
+    totalBalance,
+    walletBalance,
+    savingsRate
   ]);
 
-  // Listen for expense update events and refresh data
+  // Listen for expense update events and refresh data - only when valid values exist
   useEffect(() => {
-    if (refreshTrigger > 0 && selectedMonth) {
+    if (refreshTrigger && refreshTrigger > 0 && selectedMonth) {
       console.log("Refresh trigger changed, invalidating expense queries");
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     }
-  }, [refreshTrigger || 0, queryClient, selectedMonth]);
+  }, [refreshTrigger, queryClient, selectedMonth]);
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
