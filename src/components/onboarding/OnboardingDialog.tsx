@@ -55,12 +55,9 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     if (step === 'currency') {
       try {
         console.log("Final step reached, saving all data to profile");
-        
-        // Update profiles table with all onboarding data
-        const { error: profileError } = await supabase
+        const { error } = await supabase
           .from('profiles')
-          .upsert({
-            id: user?.id,
+          .update({
             full_name: updatedData.fullName,
             age: updatedData.age,
             gender: updatedData.gender,
@@ -68,35 +65,14 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             monthly_income: updatedData.monthlyIncome,
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
-          });
+          })
+          .eq('id', user?.id);
 
-        if (profileError) {
-          console.error("Error saving profile data:", profileError);
-          throw profileError;
+        if (error) {
+          console.error("Error saving profile data:", error);
+          throw error;
         }
-
-        // Also save monthly income to budgets table for dashboard compatibility
-        if (updatedData.monthlyIncome && updatedData.monthlyIncome > 0) {
-          const { error: budgetError } = await supabase
-            .from('budgets')
-            .upsert({
-              user_id: user?.id,
-              monthly_income: updatedData.monthlyIncome,
-              category: 'income',
-              period: 'monthly',
-              amount: 0
-            });
-
-          if (budgetError) {
-            console.warn('Could not update budgets table:', budgetError);
-          } else {
-            console.log('Successfully saved monthly income to budgets table:', updatedData.monthlyIncome);
-          }
-        }
-
         setCurrentStep('complete');
-        
-        toast.success('Welcome! Your profile has been set up successfully.');
       } catch (error) {
         toast.error('Failed to save your preferences');
         console.error('Error saving onboarding data:', error);

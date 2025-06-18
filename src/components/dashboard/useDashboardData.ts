@@ -29,59 +29,55 @@ export function useDashboardData() {
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Fetch monthly income from Supabase - checking both profiles and budgets tables
+  // Fetch monthly income from Supabase - checking both budgets and profiles
   const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
     queryKey: ['monthly_income', user?.id],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
       try {
-        console.log("Fetching monthly income for user:", user.id);
-        
-        // First check profiles table for monthly income (primary source)
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('monthly_income')
-          .eq('id', user.id)
-          .single();
-          
-        if (!profileError && profileData?.monthly_income) {
-          console.log("Found monthly income in profiles table:", profileData.monthly_income);
-          return { monthlyIncome: profileData.monthly_income };
-        }
-        
-        // Fallback: check budgets table for monthly income
+        // First check budgets table for monthly income
         const { data: budgetData, error: budgetError } = await supabase
           .from('budgets')
           .select('monthly_income')
           .eq('user_id', user.id)
           .limit(1);
           
-        if (budgetError) {
-          console.warn("Error fetching from budgets table:", budgetError);
-        }
+        if (budgetError) throw budgetError;
         
         // If we have income data in budgets, use that
         if (budgetData && budgetData.length > 0 && budgetData[0].monthly_income) {
-          console.log("Found monthly income in budgets table:", budgetData[0].monthly_income);
           return { monthlyIncome: budgetData[0].monthly_income };
         }
         
-        console.log("No monthly income found in either table, defaulting to 0");
-        return { monthlyIncome: 0 };
+        // Otherwise, check the profiles table for monthly income
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('monthly_income')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError) {
+          // If there's an error getting the profile, but it's not critical
+          console.warn("Could not fetch profile data:", profileError);
+          return { monthlyIncome: 0 };
+        }
+        
+        // Return income from profile if available
+        return { 
+          monthlyIncome: profileData?.monthly_income || 0 
+        };
       } catch (error) {
         console.error("Error fetching monthly income:", error);
         return { monthlyIncome: 0 };
       }
     },
     enabled: !!user,
-    staleTime: 30000, // Cache for 30 seconds
   });
   
   // Update local income state when data is fetched from Supabase
   useEffect(() => {
     if (incomeData && !isIncomeLoading) {
-      console.log("Updating local income state with:", incomeData.monthlyIncome);
       setMonthlyIncome(incomeData.monthlyIncome);
       
       // Also update the month context
@@ -95,7 +91,6 @@ export function useDashboardData() {
   const handleExpenseRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['monthly_income'] }); // Also refresh income data
   };
   
   // Fetch current month's expenses from Supabase using React Query
