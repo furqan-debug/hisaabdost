@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,11 +21,11 @@ export function useDashboardData() {
   // Initialize month carryover functionality
   useMonthCarryover();
   
-  // Get current month's data from context
-  const currentMonthKey = format(selectedMonth, 'yyyy-MM');
-  const currentMonthData = getCurrentMonthData();
+  // Get current month's data from context - ensure it's defined
+  const currentMonthKey = selectedMonth ? format(selectedMonth, 'yyyy-MM') : '';
+  const currentMonthData = getCurrentMonthData ? getCurrentMonthData() : { monthlyIncome: 0 };
   
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData?.monthlyIncome || 0);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -80,7 +81,7 @@ export function useDashboardData() {
   
   // Update local income state when data is fetched from Supabase
   useEffect(() => {
-    if (incomeData && !isIncomeLoading) {
+    if (incomeData && !isIncomeLoading && updateMonthData && currentMonthKey) {
       console.log("Updating local income state with:", incomeData.monthlyIncome);
       setMonthlyIncome(incomeData.monthlyIncome);
       
@@ -93,18 +94,20 @@ export function useDashboardData() {
   
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+    if (selectedMonth) {
+      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
+    }
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
     queryClient.invalidateQueries({ queryKey: ['monthly_income'] }); // Also refresh income data
   };
   
   // Fetch current month's expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger, user?.id],
+    queryKey: ['expenses', currentMonthKey, refreshTrigger, user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !selectedMonth) return [];
       
-      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
+      console.log("Fetching expenses for month:", currentMonthKey);
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -136,7 +139,7 @@ export function useDashboardData() {
         receiptUrl: exp.receipt_url || undefined,
       }));
     },
-    enabled: !!user,
+    enabled: !!user && !!selectedMonth,
   });
 
   // Fetch ALL expenses for the last 6 months for spending trends
@@ -183,7 +186,7 @@ export function useDashboardData() {
   // Calculate financial metrics for the current month
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
   const totalBalance = monthlyIncome - monthlyExpenses;
-  const walletBalance = monthlyIncome + totalAdditions - monthlyExpenses;
+  const walletBalance = monthlyIncome + (totalAdditions || 0) - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
   // Setup notification triggers with enhanced alerts
@@ -198,18 +201,20 @@ export function useDashboardData() {
 
   // Update month data when income or expenses change
   useEffect(() => {
-    updateMonthData(currentMonthKey, {
-      monthlyIncome,
-      monthlyExpenses,
-      totalBalance,
-      walletBalance,
-      savingsRate
-    });
-  }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData]);
+    if (updateMonthData && currentMonthKey) {
+      updateMonthData(currentMonthKey, {
+        monthlyIncome,
+        monthlyExpenses,
+        totalBalance,
+        walletBalance,
+        savingsRate
+      });
+    }
+  }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData, totalBalance, walletBalance, savingsRate]);
 
   // Listen for expense update events and refresh data
   useEffect(() => {
-    if (refreshTrigger > 0) {
+    if (refreshTrigger > 0 && selectedMonth) {
       console.log("Refresh trigger changed, invalidating expense queries");
       queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
       queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
@@ -237,7 +242,7 @@ export function useDashboardData() {
     monthlyExpenses,
     totalBalance,
     walletBalance,
-    totalAdditions,
+    totalAdditions: totalAdditions || 0,
     savingsRate,
     chartType,
     setChartType,
