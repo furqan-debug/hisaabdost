@@ -30,13 +30,13 @@ export function useDashboardNotifications({
   // Initialize month carryover functionality
   useMonthCarryover();
   
-  // Setup notification triggers with enhanced alerts
+  // Setup notification triggers with enhanced alerts - ensure all values are defined
   useNotificationTriggers({
     budgets: [], // Will be populated when budget data is available
-    monthlyExpenses,
-    monthlyIncome,
-    walletBalance,
-    expenses, // Add expenses for more detailed notifications
+    monthlyExpenses: monthlyExpenses || 0,
+    monthlyIncome: monthlyIncome || 0,
+    walletBalance: walletBalance || 0,
+    expenses: expenses || [], // Ensure expenses is always an array
     previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
   });
 
