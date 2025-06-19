@@ -33,22 +33,41 @@ export function useNotificationTriggers({
   const processedMonth = useRef<string>('');
   const lastBudgetChecks = useRef<Record<string, { spent: number; timestamp: number }>>({});
 
-  // Only trigger notifications if user has meaningful data
-  const hasMinimumData = expenses.length >= 3 || monthlyExpenses > 0;
+  // Much stricter requirements for sending notifications
+  const hasSignificantData = expenses.length >= 10 && monthlyExpenses > 100; // Increased thresholds
+  const hasEstablishedBudgets = budgets.length > 0 && budgets.some(b => b.budget > 0);
+  const hasIncomeData = monthlyIncome > 0;
 
-  // Check budget warnings and overspending - only for users with budgets
+  console.log('Notification triggers check:', {
+    hasSignificantData,
+    hasEstablishedBudgets,
+    hasIncomeData,
+    expenseCount: expenses.length,
+    monthlyExpenses,
+    budgetCount: budgets.length
+  });
+
+  // Check budget warnings and overspending - only for established users with significant data
   useEffect(() => {
     if (!settings.budgetWarnings && !settings.overspendingAlerts) return;
-    if (!hasMinimumData || budgets.length === 0) return;
+    if (!hasSignificantData || !hasEstablishedBudgets) {
+      console.log('Skipping budget notifications - insufficient data');
+      return;
+    }
+    
+    // Only check once per hour to prevent spam
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
     
     budgets.forEach(({ category, budget, spent }) => {
       if (budget <= 0 || spent <= 0) return;
       
       const lastCheck = lastBudgetChecks.current[category];
-      const now = Date.now();
       
-      // Only check if spending has changed significantly
-      if (lastCheck && Math.abs(lastCheck.spent - spent) < (budget * 0.1)) {
+      // Skip if checked recently and spending hasn't changed significantly
+      if (lastCheck && 
+          (now - lastCheck.timestamp) < oneHour && 
+          Math.abs(lastCheck.spent - spent) < (budget * 0.2)) {
         return;
       }
       
@@ -56,8 +75,8 @@ export function useNotificationTriggers({
       
       const percentage = (spent / budget) * 100;
       
-      // Budget exceeded notification (>110% to avoid minor overruns)
-      if (settings.overspendingAlerts && percentage > 110) {
+      // Budget exceeded notification (only for severe overspending)
+      if (settings.overspendingAlerts && percentage > 150) {
         if (NotificationService.canSendNotification('budget-exceeded', category)) {
           const notification = NotificationService.createNotification({
             type: 'budget-exceeded',
@@ -69,8 +88,8 @@ export function useNotificationTriggers({
           NotificationService.markNotificationSent('budget-exceeded', category);
         }
       }
-      // Budget warning notification (85-100%)
-      else if (settings.budgetWarnings && percentage >= 85 && percentage <= 100) {
+      // Budget warning notification (only at 90%+)
+      else if (settings.budgetWarnings && percentage >= 90 && percentage <= 100) {
         if (NotificationService.canSendNotification('budget-warning', category)) {
           const notification = NotificationService.createNotification({
             type: 'budget-warning',
@@ -83,17 +102,20 @@ export function useNotificationTriggers({
         }
       }
     });
-  }, [budgets, addNotification, settings.budgetWarnings, settings.overspendingAlerts, hasMinimumData]);
+  }, [budgets, addNotification, settings.budgetWarnings, settings.overspendingAlerts, hasSignificantData, hasEstablishedBudgets]);
 
-  // Monthly comparison - only if user has substantial historical data
+  // Monthly comparison - only for users with substantial historical data
   useEffect(() => {
-    if (!hasMinimumData) return;
+    if (!hasSignificantData || !hasIncomeData) return;
+    
     if (monthlyExpenses > 0 && previousMonthExpenses > 0) {
       const change = monthlyExpenses - previousMonthExpenses;
       const changePercentage = Math.abs(change / previousMonthExpenses) * 100;
       
-      // Only notify if change is very significant (>25%)
-      if (changePercentage > 25 && NotificationService.canSendNotification('monthly-comparison')) {
+      // Only notify if change is very significant (>40% and substantial amount)
+      if (changePercentage > 40 && Math.abs(change) > 500 && 
+          NotificationService.canSendNotification('monthly-comparison')) {
+        
         const notification = NotificationService.createNotification({
           type: 'monthly-comparison',
           comparisonData: {
@@ -107,16 +129,17 @@ export function useNotificationTriggers({
         NotificationService.markNotificationSent('monthly-comparison');
       }
     }
-  }, [monthlyExpenses, previousMonthExpenses, addNotification, hasMinimumData]);
+  }, [monthlyExpenses, previousMonthExpenses, addNotification, hasSignificantData, hasIncomeData]);
 
-  // Low wallet balance - only for established users
+  // Low wallet balance - only for established users with income
   useEffect(() => {
-    if (!hasMinimumData || monthlyIncome <= 0) return;
+    if (!hasSignificantData || !hasIncomeData) return;
     
-    if (walletBalance < 50 && walletBalance > 0) {
+    if (walletBalance < 100 && walletBalance > 0) {
       const percentage = (walletBalance / monthlyIncome) * 100;
       
-      if (percentage < 5 && NotificationService.canSendNotification('low-balance')) {
+      // Only alert if balance is critically low (less than 2% of income)
+      if (percentage < 2 && NotificationService.canSendNotification('low-balance')) {
         const notification = NotificationService.createNotification({
           type: 'low-balance',
         });
@@ -125,16 +148,16 @@ export function useNotificationTriggers({
         NotificationService.markNotificationSent('low-balance');
       }
     }
-  }, [walletBalance, monthlyIncome, addNotification, hasMinimumData]);
+  }, [walletBalance, monthlyIncome, addNotification, hasSignificantData, hasIncomeData]);
 
-  // Savings progress - only for users with income and expenses
+  // Savings progress - only for exceptional savings rates
   useEffect(() => {
-    if (!hasMinimumData || monthlyIncome <= 0 || monthlyExpenses <= 0) return;
+    if (!hasSignificantData || !hasIncomeData) return;
     
     const savingsRate = NotificationService.calculateSavingsRate(monthlyIncome, monthlyExpenses);
     
-    // Only celebrate significant savings rates (>30%)
-    if (savingsRate >= 30 && NotificationService.canSendNotification('progress-update')) {
+    // Only celebrate exceptional savings rates (>50%)
+    if (savingsRate >= 50 && NotificationService.canSendNotification('progress-update')) {
       const notification = NotificationService.createNotification({
         type: 'progress-update',
         percentage: Math.round(savingsRate),
@@ -143,5 +166,5 @@ export function useNotificationTriggers({
       addNotification(notification);
       NotificationService.markNotificationSent('progress-update');
     }
-  }, [monthlyIncome, monthlyExpenses, addNotification, hasMinimumData]);
+  }, [monthlyIncome, monthlyExpenses, addNotification, hasSignificantData, hasIncomeData]);
 }

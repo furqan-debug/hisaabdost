@@ -20,33 +20,38 @@ export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsPr
   const insights = useAnalyticsInsights(expenses);
 
   useEffect(() => {
-    // Only send notifications if user has meaningful data (at least 5 expenses)
-    if (!expenses || expenses.length < 5) return;
+    // Much stricter requirements - only for very established users
+    if (!expenses || expenses.length < 20) {
+      console.log('Analytics notifications disabled - insufficient data (need 20+ expenses)');
+      return;
+    }
     
-    // Only process significant insights (not tips or basic highlights)
-    const significantInsights = insights.filter(insight => 
-      insight.type === 'alert' || insight.type === 'warning'
+    // Only process critical alerts (not tips or highlights)
+    const criticalInsights = insights.filter(insight => 
+      insight.type === 'alert' && insight.message.includes('unusually large')
     );
 
-    if (significantInsights.length === 0) return;
+    if (criticalInsights.length === 0) {
+      console.log('No critical insights to notify about');
+      return;
+    }
 
-    // Limit to maximum 2 insights per session to avoid spam
-    significantInsights.slice(0, 2).forEach((insight) => {
-      const insightKey = `analytics-${insight.type}-${insight.message.slice(0, 30)}`;
-      
-      if (NotificationService.canSendNotification('category-insight')) {
-        const notification = {
-          type: insight.type === 'warning' ? 'warning' as const : 
-                insight.type === 'alert' ? 'error' as const : 'info' as const,
-          title: insight.type === 'alert' ? '⚠️ Spending Alert' :
-                 insight.type === 'warning' ? '⚠️ Budget Warning' : '📊 Spending Insight',
-          description: insight.message + (insight.recommendation ? ` ${insight.recommendation}` : ''),
-        };
+    // Maximum 1 insight per session to avoid spam
+    const mostCritical = criticalInsights[0];
+    
+    if (NotificationService.canSendNotification('category-insight')) {
+      const notification = {
+        type: 'warning' as const,
+        title: '⚠️ Spending Alert',
+        description: mostCritical.message + (mostCritical.recommendation ? ` ${mostCritical.recommendation}` : ''),
+      };
 
-        addNotification(notification);
-        NotificationService.markNotificationSent('category-insight');
-      }
-    });
+      console.log('Sending critical analytics notification:', notification);
+      addNotification(notification);
+      NotificationService.markNotificationSent('category-insight');
+    } else {
+      console.log('Analytics notification blocked by rate limiting');
+    }
   }, [insights, addNotification, expenses]);
 
   return { insights };

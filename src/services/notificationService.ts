@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import { Notification } from '@/hooks/useNotifications';
 
@@ -31,12 +32,37 @@ export interface NotificationTrigger {
 }
 
 export class NotificationService {
-  private static readonly NOTIFICATION_COOLDOWN = 48 * 60 * 60 * 1000; // 48 hours (increased)
-  private static readonly WEEKLY_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days
+  // Much longer cooldown periods to prevent spam
+  private static readonly NOTIFICATION_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days (was 48 hours)
+  private static readonly WEEKLY_COOLDOWN = 14 * 24 * 60 * 60 * 1000; // 14 days (was 7 days)
   private static readonly MONTHLY_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 days
+  private static readonly DAILY_LIMIT = 2; // Maximum 2 notifications per day
+  private static readonly SESSION_LIMIT = 1; // Maximum 1 notification per session
+  
   private static lastNotifications: Record<string, number> = {};
+  private static dailyCount: Record<string, { date: string; count: number }> = {};
+  private static sessionCount = 0;
 
   static canSendNotification(type: NotificationType, category?: string): boolean {
+    // Check session limit first
+    if (this.sessionCount >= this.SESSION_LIMIT) {
+      console.log('Session notification limit reached');
+      return false;
+    }
+
+    // Check daily limit
+    const today = new Date().toDateString();
+    const dailyKey = `daily-${today}`;
+    
+    if (!this.dailyCount[dailyKey]) {
+      this.dailyCount[dailyKey] = { date: today, count: 0 };
+    }
+    
+    if (this.dailyCount[dailyKey].count >= this.DAILY_LIMIT) {
+      console.log('Daily notification limit reached');
+      return false;
+    }
+
     const key = category ? `${type}-${category}` : type;
     const lastSent = this.lastNotifications[key] || 0;
     const now = Date.now();
@@ -52,38 +78,60 @@ export class NotificationService {
       cooldownPeriod = this.MONTHLY_COOLDOWN;
     }
     
-    // Special cases that can send immediately
-    if (['monthly-reset', 'leftover-added'].includes(type)) {
+    // Only monthly reset can bypass cooldown completely
+    if (type === 'monthly-reset') {
       return true;
     }
     
-    return (now - lastSent) > cooldownPeriod;
+    const canSend = (now - lastSent) > cooldownPeriod;
+    
+    if (!canSend) {
+      console.log(`Notification ${type} blocked by cooldown`);
+    }
+    
+    return canSend;
   }
 
   static markNotificationSent(type: NotificationType, category?: string): void {
     const key = category ? `${type}-${category}` : type;
-    this.lastNotifications[key] = Date.now();
+    const now = Date.now();
+    
+    this.lastNotifications[key] = now;
+    
+    // Update daily count
+    const today = new Date().toDateString();
+    const dailyKey = `daily-${today}`;
+    
+    if (!this.dailyCount[dailyKey]) {
+      this.dailyCount[dailyKey] = { date: today, count: 0 };
+    }
+    
+    this.dailyCount[dailyKey].count++;
+    this.sessionCount++;
+    
+    console.log(`Notification sent: ${type}, Daily: ${this.dailyCount[dailyKey].count}/${this.DAILY_LIMIT}, Session: ${this.sessionCount}/${this.SESSION_LIMIT}`);
   }
 
+  // Much stricter thresholds for notifications
   static shouldTriggerBudgetWarning(spent: number, budget: number): boolean {
-    if (budget <= 0) return false;
+    if (budget <= 0 || spent <= 0) return false;
     const percentage = (spent / budget) * 100;
-    return percentage >= 85 && percentage < 100; // Increased threshold
+    return percentage >= 90; // Only warn at 90% (was 85%)
   }
 
   static shouldTriggerOverspending(spent: number, budget: number): boolean {
     if (budget <= 0) return false;
-    return spent > budget * 1.1; // Only trigger for 10% overspending
+    return spent > budget * 1.25; // Only trigger for 25% overspending (was 10%)
   }
 
   static shouldTriggerBudgetExceeded(spent: number, budget: number): boolean {
     if (budget <= 0) return false;
     const percentage = (spent / budget) * 100;
-    return percentage > 110; // Only trigger for significant overspending
+    return percentage > 150; // Only trigger for major overspending (was 110%)
   }
 
   static shouldTriggerUnusualExpense(todayExpenses: number, dailyAverage: number): boolean {
-    return todayExpenses > dailyAverage * 3 && dailyAverage > 10; // 3x the average and minimum threshold
+    return todayExpenses > dailyAverage * 5 && dailyAverage > 50; // 5x average and higher minimum (was 3x and 10)
   }
 
   static calculateSavingsRate(income: number, expenses: number): number {
@@ -105,7 +153,7 @@ export class NotificationService {
         return {
           type: 'error',
           title: `Overspending Alert: ${trigger.category}`,
-          description: `You're overspending on ${trigger.category} this month. Consider reviewing your expenses.`,
+          description: `You're significantly overspending on ${trigger.category} this month. Consider reviewing your expenses.`,
           category: trigger.category,
         };
 
@@ -134,29 +182,8 @@ export class NotificationService {
       case 'unusual-expense':
         return {
           type: 'warning',
-          title: 'Unusual Daily Expense',
+          title: 'Unusually High Daily Spending',
           description: `Today's spending of ${trigger.amount?.toFixed(2)} is significantly higher than your usual daily average.`,
-        };
-
-      case 'budget-reminder':
-        return {
-          type: 'info',
-          title: 'Set Monthly Budget',
-          description: `Don't forget to set your budget for this month to better track your spending.`,
-        };
-
-      case 'daily-expense-reminder':
-        return {
-          type: 'info',
-          title: 'Daily Expense Reminder',
-          description: `Remember to log your expenses for today to keep your financial tracking accurate.`,
-        };
-
-      case 'weekly-summary':
-        return {
-          type: 'info',
-          title: 'Weekly Spending Summary',
-          description: `You've spent ${trigger.amount?.toFixed(2)} this week. Check your analytics for detailed insights.`,
         };
 
       case 'monthly-comparison':
@@ -168,20 +195,11 @@ export class NotificationService {
             : `Great job! You've saved ${Math.abs(trigger.comparisonData?.change || 0).toFixed(2)} compared to last month.`,
         };
 
-      case 'category-insight':
-        return {
-          type: 'success',
-          title: `${trigger.category} Spending Insight`,
-          description: trigger.comparisonData?.change && trigger.comparisonData.change < 0
-            ? `Your ${trigger.category} expenses dropped by ${Math.abs(trigger.comparisonData.change).toFixed(2)} this month. Well done!`
-            : `Your ${trigger.category} expenses increased by ${trigger.comparisonData?.change?.toFixed(2)} this month.`,
-        };
-
       case 'progress-update':
         return {
           type: 'success',
-          title: 'Great Savings Progress',
-          description: `Excellent! You've saved ${trigger.percentage}% of your income this month.`,
+          title: 'Excellent Savings Progress',
+          description: `Outstanding! You've saved ${trigger.percentage}% of your income this month.`,
         };
 
       case 'low-balance':
@@ -189,13 +207,6 @@ export class NotificationService {
           type: 'warning',
           title: 'Low Wallet Balance',
           description: `Your wallet balance is running low. Consider adding funds or reviewing your spending.`,
-        };
-
-      case 'savings-goal':
-        return {
-          type: 'success',
-          title: 'Savings Milestone',
-          description: `Congratulations! You've reached ${trigger.percentage}% of your savings goal.`,
         };
 
       default:
