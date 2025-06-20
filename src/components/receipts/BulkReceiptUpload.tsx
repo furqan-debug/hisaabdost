@@ -38,9 +38,11 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
         return false;
       }
       
-      // Check file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`);
+      // Check file size (2MB limit)
+      const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSizeBytes) {
+        const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+        toast.error(`${file.name} exceeds 2MB limit (${fileSizeMB}MB). Please choose a smaller image.`);
         return false;
       }
       
@@ -234,7 +236,7 @@ export function BulkReceiptUpload({ onUploadComplete, onClose }: BulkReceiptUplo
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm font-medium mb-2">Drop receipt images here or click to browse</p>
           <p className="text-xs text-muted-foreground mb-4">
-            Supports multiple images: JPG, PNG, HEIC (Max 5MB each)
+            Supports multiple images: JPG, PNG, HEIC (Max 2MB each)
           </p>
           <input
             ref={fileInputRef}

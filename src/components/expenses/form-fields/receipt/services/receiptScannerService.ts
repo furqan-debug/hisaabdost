@@ -47,9 +47,11 @@ export async function scanReceipt({
       return { success: false, error: errorMsg };
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      const errorMsg = `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 10MB.`;
+    // Validate file size (2MB limit)
+    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSizeBytes) {
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+      const errorMsg = `File size exceeds 2MB limit. Your file is ${fileSizeMB}MB. Please choose a smaller image.`;
       console.error(`❌ ReceiptScanner: ${errorMsg}`);
       if (onError) onError(errorMsg);
       return { success: false, error: errorMsg };

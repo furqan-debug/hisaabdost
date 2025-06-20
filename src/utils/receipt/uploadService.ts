@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ export function generateFileFingerprint(file: File): string {
 /**
  * Compress image file to reduce size
  */
-async function compressImage(file: File, maxSizeKB: number = 2048): Promise<File> {
+async function compressImage(file: File, maxSizeKB: number = 1536): Promise<File> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -80,10 +81,11 @@ export async function uploadToSupabase(
       return null;
     }
     
-    // Check file size before processing (5MB limit before compression)
-    const maxSizeBeforeCompression = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSizeBeforeCompression) {
-      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`);
+    // Check file size - 2MB limit
+    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSizeBytes) {
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+      toast.error(`File size exceeds 2MB limit. Your file is ${fileSizeMB}MB. Please choose a smaller image.`);
       return null;
     }
     
@@ -124,9 +126,9 @@ async function performUpload(
   console.log(`Uploading to Supabase: ${file.name} (${fileFingerprint})`);
   
   try {
-    // Compress the image if it's larger than 2MB
+    // Compress the image if it's larger than 1.5MB to ensure it stays under 2MB
     let fileToUpload = file;
-    const maxSizeKB = 2048; // 2MB
+    const maxSizeKB = 1536; // 1.5MB
     if (file.size > maxSizeKB * 1024) {
       console.log(`Compressing file from ${(file.size / 1024 / 1024).toFixed(1)}MB`);
       toast.info('Compressing large image...');
@@ -135,8 +137,9 @@ async function performUpload(
     }
     
     // Final size check after compression
-    if (fileToUpload.size > 5 * 1024 * 1024) { // 5MB hard limit
-      toast.error('File is still too large after compression. Please use a smaller image.');
+    if (fileToUpload.size > 2 * 1024 * 1024) { // 2MB hard limit
+      const fileSizeMB = (fileToUpload.size / 1024 / 1024).toFixed(1);
+      toast.error(`File size exceeds 2MB limit even after compression (${fileSizeMB}MB). Please use a smaller image.`);
       return null;
     }
     
@@ -189,7 +192,7 @@ async function performUpload(
         console.log(`Retry upload successful! Public URL: ${publicUrl}`);
         return publicUrl;
       } else if (error.message.includes('Payload too large')) {
-        toast.error('Image is too large. Please use a smaller image (under 2MB).');
+        toast.error('File size exceeds 2MB limit. Please choose a smaller image.');
       } else {
         toast.error(`Upload failed: ${error.message}`);
       }
