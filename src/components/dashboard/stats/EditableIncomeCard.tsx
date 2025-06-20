@@ -49,7 +49,22 @@ export const EditableIncomeCard = ({
 
     setIsUpdating(true);
     try {
-      // Update in the budgets table first
+      console.log("Updating income to:", newIncome);
+      
+      // Update in the profiles table first (primary source)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          monthly_income: newIncome
+        })
+        .eq('id', user?.id);
+
+      if (profileError) {
+        console.error('Could not update profiles table:', profileError);
+        throw profileError;
+      }
+
+      // Also update in budgets table as fallback
       const { error: budgetError } = await supabase
         .from('budgets')
         .upsert({
@@ -62,18 +77,6 @@ export const EditableIncomeCard = ({
 
       if (budgetError) {
         console.warn('Could not update budgets table:', budgetError);
-      }
-
-      // Also update in profiles table as fallback
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user?.id,
-          monthly_income: newIncome
-        });
-
-      if (profileError) {
-        console.warn('Could not update profiles table:', profileError);
       }
 
       // Log the income activity
