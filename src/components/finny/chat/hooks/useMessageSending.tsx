@@ -14,6 +14,7 @@ export const useMessageSending = (
   messages: Message[],
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void,
   saveMessage: (message: Message) => void,
+  isLoading: boolean,
   setIsLoading: (loading: boolean) => void,
   setIsTyping: (typing: boolean) => void,
   setQuickReplies: (replies: QuickReply[]) => void,

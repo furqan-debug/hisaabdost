@@ -10,13 +10,13 @@ import { Calendar, Plus } from 'lucide-react';
 import { CurrencyCode } from '@/utils/currencyUtils';
 
 export const useChatInitialization = (
-  userCurrencyCode?: CurrencyCode,
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void,
   saveMessage: (message: Message) => void,
   setIsTyping: (isTyping: boolean) => void,
   setQuickReplies: (replies: QuickReply[]) => void,
   hasInitialized: boolean,
-  setHasInitialized: (initialized: boolean) => void
+  setHasInitialized: (initialized: boolean) => void,
+  userCurrencyCode?: CurrencyCode
 ) => {
   const [isConnectingToData, setIsConnectingToData] = useState(false);
   const { user } = useAuth();
@@ -43,18 +43,28 @@ export const useChatInitialization = (
   }, [user, hasInitialized]);
 
   useEffect(() => {
-    if (user && messages.length === 1 && !messages[0].isUser && messages[0].content.includes("log in first")) {
-      setMessages([]);
-      setHasInitialized(false);
-    } else if (!user && messages.length === 0) {
-      const authPromptMessage = {
-        id: '1',
-        content: FINNY_MESSAGES.AUTH_PROMPT,
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      setMessages([authPromptMessage]);
+    if (user) {
+      setMessages(prevMessages => {
+        if (prevMessages.length === 1 && !prevMessages[0].isUser && prevMessages[0].content.includes("log in first")) {
+          setHasInitialized(false);
+          return [];
+        }
+        return prevMessages;
+      });
+    } else {
+      setMessages(prevMessages => {
+        if (prevMessages.length === 0) {
+          const authPromptMessage = {
+            id: '1',
+            content: FINNY_MESSAGES.AUTH_PROMPT,
+            isUser: false,
+            timestamp: new Date(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+          };
+          return [authPromptMessage];
+        }
+        return prevMessages;
+      });
     }
   }, [user]);
 

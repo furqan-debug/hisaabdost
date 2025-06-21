@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { toast } from 'sonner';
 import { QuickReply } from './types';
 import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
 import { useMessageHandling } from './hooks/useMessageHandling';
@@ -34,19 +35,20 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
   } = useMessageHandling(setQuickReplies);
 
   const { isConnectingToData, initializeChat } = useChatInitialization(
-    userCurrencyCode,
     setMessages,
     saveMessage,
     setIsTyping,
     setQuickReplies,
     hasInitialized,
-    setHasInitialized
+    setHasInitialized,
+    userCurrencyCode
   );
 
   const { newMessage, setNewMessage, handleSendMessage } = useMessageSending(
     messages,
     setMessages,
     saveMessage,
+    isLoading,
     setIsLoading,
     setIsTyping,
     setQuickReplies,
