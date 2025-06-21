@@ -1,45 +1,28 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { QuickReply } from './types';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
 import { useMessageHandling } from './hooks/useMessageHandling';
-import { processMessageWithAI } from './services/aiService';
-import { updateQuickRepliesForResponse } from './services/quickReplyService';
-import { PATTERNS } from './utils/messagePatterns';
 import { useCurrency } from '@/hooks/use-currency';
-import { 
-  Calendar, 
-  DollarSign, 
-  Info, 
-  ArrowRight, 
-  PiggyBank,
-  Trash2,
-  Plus
-} from 'lucide-react';
-import { formatCurrency } from '@/utils/formatters';
 import { useFinny } from '../context/FinnyContext';
 import { CurrencyCode } from '@/utils/currencyUtils';
-import { EnhancedExtractor } from '../utils/enhancedExpenseExtractor';
+import { useChatInitialization } from './hooks/useChatInitialization';
+import { useMessageSending } from './hooks/useMessageSending';
 
 export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: CurrencyCode) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isConnectingToData, setIsConnectingToData] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { currencyCode: contextCurrencyCode } = useCurrency();
   const { remainingDailyMessages, isMessageLimitReached } = useFinny();
   
-  // Use the passed currency code if provided, otherwise use the one from context
   const currencyCode = userCurrencyCode || contextCurrencyCode;
 
   const {
     messages,
     setMessages,
-    newMessage,
-    setNewMessage,
     isLoading,
     setIsLoading,
     isTyping,
@@ -50,244 +33,31 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     clearLocalStorage
   } = useMessageHandling(setQuickReplies);
 
+  const { isConnectingToData, initializeChat } = useChatInitialization(
+    userCurrencyCode,
+    setMessages,
+    saveMessage,
+    setIsTyping,
+    setQuickReplies,
+    hasInitialized,
+    setHasInitialized
+  );
+
+  const { newMessage, setNewMessage, handleSendMessage } = useMessageSending(
+    messages,
+    setMessages,
+    saveMessage,
+    setIsLoading,
+    setIsTyping,
+    setQuickReplies,
+    currencyCode
+  );
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
-
-  useEffect(() => {
-    // Only initialize if we haven't already and user is available
-    if (!hasInitialized && user) {
-      initializeChat();
-      setHasInitialized(true);
-    } else if (!user && hasInitialized) {
-      // Reset initialization state when user logs out
-      setHasInitialized(false);
-      
-      // Show welcome message for non-authenticated users
-      const welcomeMessage = {
-        id: '1',
-        content: FINNY_MESSAGES.AUTH_PROMPT,
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, [user, hasInitialized]);
-
-  // Check for user on mount and handle initial message appropriately
-  useEffect(() => {
-    // If user is logged in and we're showing auth prompt, replace with a personalized greeting
-    if (user && messages.length === 1 && !messages[0].isUser && messages[0].content.includes("log in first")) {
-      // Remove the auth prompt and trigger reinitialization
-      setMessages([]); 
-      setHasInitialized(false);
-    }
-    // If no messages and no user, show auth prompt
-    else if (!user && messages.length === 0) {
-      const authPromptMessage = {
-        id: '1',
-        content: FINNY_MESSAGES.AUTH_PROMPT,
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      setMessages([authPromptMessage]);
-    }
-  }, [user]);
-
-  const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
-    if (e) e.preventDefault();
-    
-    let messageText = customMessage || newMessage;
-    if (!messageText.trim() || isLoading) return;
-
-    if (!user) {
-      toast.error("Please log in to chat with Finny");
-      return;
-    }
-
-    if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
-      return;
-    }
-
-    console.log("Sending message to Finny:", messageText);
-
-    // Enhanced auto-extraction with improved patterns
-    const expenseData = EnhancedExtractor.extractExpense(messageText);
-    const budgetData = EnhancedExtractor.extractBudget(messageText);
-    const goalData = EnhancedExtractor.extractGoal(messageText);
-
-    let autoProcessed = false;
-    let autoMessage = '';
-
-    // Try to auto-process expense with higher confidence threshold
-    if (expenseData && expenseData.confidence > 0.7) {
-      try {
-        console.log("Auto-processing expense:", expenseData);
-        
-        // Process the expense immediately
-        const response = await fetch('/api/expenses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: expenseData.amount,
-            category: expenseData.category,
-            description: expenseData.description,
-            date: expenseData.date || new Date().toISOString().split('T')[0]
-          })
-        });
-
-        if (response.ok) {
-          autoProcessed = true;
-          autoMessage = `✅ Expense added: ${formatCurrency(expenseData.amount, currencyCode)} for ${expenseData.description} in ${expenseData.category}`;
-          
-          // Trigger refresh events
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('expense-added'));
-          }, 300);
-        }
-      } catch (error) {
-        console.error("Auto-expense processing failed:", error);
-      }
-    }
-
-    const userMessage = {
-      id: Date.now().toString(),
-      content: messageText,
-      isUser: true,
-      timestamp: new Date(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    saveMessage(userMessage);
-    setNewMessage('');
-    setIsLoading(true);
-    setIsTyping(true);
-
-    try {
-      // If we auto-processed something, provide immediate feedback
-      if (autoProcessed) {
-        setIsTyping(false);
-        const autoResponseMessage = {
-          id: (Date.now() + 1).toString(),
-          content: autoMessage + "\n\nIs there anything else I can help you with? 😊",
-          isUser: false,
-          timestamp: new Date(),
-          hasAction: true,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        };
-
-        setMessages(prev => [...prev, autoResponseMessage]);
-        saveMessage(autoResponseMessage);
-        setIsLoading(false);
-        return;
-      }
-
-      const recentMessages = [...messages.slice(-5), userMessage];
-
-      const categoryMatch = messageText.match(PATTERNS.CATEGORY);
-      const summaryMatch = messageText.match(PATTERNS.SUMMARY);
-      const deleteExpenseMatch = messageText.match(PATTERNS.DELETE_EXPENSE);
-      const deleteBudgetMatch = messageText.match(PATTERNS.DELETE_BUDGET);
-      const deleteGoalMatch = messageText.match(PATTERNS.DELETE_GOAL);
-      const goalMatch = messageText.match(PATTERNS.GOAL);
-
-      let analysisType = "general";
-      let specificCategory = null;
-
-      if (goalMatch) {
-        messageText = `${messageText}\n\nPlease create a goal with the following details: 
-        - amount: ${goalMatch[1]}
-        - deadline: ${goalMatch[2]}
-        - title: "Savings Goal"
-        - category: Savings`;
-      }
-
-      if (categoryMatch) {
-        analysisType = "category";
-        specificCategory = categoryMatch[1];
-      } else if (summaryMatch) {
-        analysisType = "summary";
-      } else if (deleteExpenseMatch) {
-        analysisType = "delete_expense";
-        specificCategory = deleteExpenseMatch[1].trim();
-      } else if (deleteBudgetMatch) {
-        analysisType = "delete_budget";
-        specificCategory = deleteBudgetMatch[1].trim();
-      } else if (deleteGoalMatch) {
-        analysisType = "delete_goal";
-        specificCategory = deleteGoalMatch[1].trim();
-      }
-
-      console.log(`Processing message with currency ${currencyCode} for Finny chat`);
-      
-      const data = await processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode);
-      
-      console.log("Received response from Finny:", data);
-      
-      setIsTyping(false);
-
-      // Check if we have a valid response
-      if (!data || !data.response) {
-        throw new Error("Invalid response from Finny service");
-      }
-
-      const hasAction = data.response.includes('✅') || (data.rawResponse && data.rawResponse.includes('[ACTION:'));
-      
-      const finnyResponseMessage = {
-        id: (Date.now() + 1).toString(),
-        content: data.response,
-        isUser: false,
-        timestamp: new Date(),
-        hasAction: hasAction,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-
-      setMessages(prev => [...prev, finnyResponseMessage]);
-      saveMessage(finnyResponseMessage);
-
-      // Update quick replies based on the response
-      try {
-        const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
-        setQuickReplies(updatedReplies);
-      } catch (replyError) {
-        console.error("Error updating quick replies:", replyError);
-        // Continue without updating quick replies
-      }
-
-    } catch (error) {
-      console.error('Error in Finny chat:', error);
-      
-      let errorMessage = "Sorry, I'm having trouble processing your request right now.";
-      
-      if (error.message.includes("Failed to get response")) {
-        errorMessage = "I'm having connectivity issues. Please try again in a moment.";
-      } else if (error.message.includes("Invalid response")) {
-        errorMessage = "I received an unexpected response. Please try rephrasing your message.";
-      }
-      
-      toast.error(errorMessage);
-      
-      setIsTyping(false);
-      const errorResponseMessage = {
-        id: (Date.now() + 1).toString(),
-        content: `❌ ${errorMessage} Please try again later.`,
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      
-      setMessages(prev => [...prev, errorResponseMessage]);
-      saveMessage(errorResponseMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleQuickReply = (reply: QuickReply) => {
     if (isLoading || !user || isMessageLimitReached) {
@@ -299,164 +69,6 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     console.log("Quick reply selected:", reply.action);
     handleSendMessage(null, reply.action);
   };
-
-  const initializeChat = async () => {
-    if (!user) return; // Exit early if no user
-    
-    setIsConnectingToData(true);
-    
-    try {
-      // First check if we have any existing messages in storage
-      const messageCount = await loadChatHistory();
-      
-      // If we have chat history, don't show welcome message again
-      if (messageCount > 0) {
-        // Filter out any auth prompts in the message history if user is authenticated
-        if (user) {
-          setMessages(prevMessages => 
-            prevMessages.filter(msg => !(msg.content.includes("log in first") && !msg.isUser))
-          );
-        }
-        
-        setIsConnectingToData(false);
-        return;
-      }
-        
-      const now = new Date();
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-      
-      const { data: monthlyExpenses, error: monthlyError } = await supabase
-        .from('expenses')
-        .select('amount, category')
-        .eq('user_id', user.id)
-        .gte('date', firstDayOfMonth)
-        .lte('date', lastDayOfMonth);
-        
-      if (monthlyError) throw monthlyError;
-      
-      const { data: recentExpenses, error: expensesError } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(5);
-        
-      if (expensesError) throw expensesError;
-      
-      const { data: budgets, error: budgetsError } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', user.id);
-        
-      if (budgetsError) throw budgetsError;
-      
-      const totalMonthlySpending = monthlyExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
-      
-      let personalizedGreeting = FINNY_MESSAGES.GREETING;
-      
-      if (monthlyExpenses && monthlyExpenses.length > 0) {
-        const categoryTotals: {[key: string]: number} = {};
-        monthlyExpenses.forEach(exp => {
-          categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + Number(exp.amount);
-        });
-        
-        const topCategory = Object.entries(categoryTotals)
-          .sort((a, b) => b[1] - a[1])[0];
-        
-        const userName = user?.user_metadata?.full_name || '';
-        personalizedGreeting = `Hey ${userName}! 🎉 Finny here to help with your finances.\nLooks like you've spent ${formatCurrency(totalMonthlySpending, currencyCode)} this month. ${topCategory[0]} took ${formatCurrency(topCategory[1], currencyCode)} — shall we explore ways to save? 🧠`;
-        
-        let contextReplies: QuickReply[] = [];
-        
-        contextReplies.push({
-          text: `${topCategory[0]} analysis`,
-          action: `Show my ${topCategory[0].toLowerCase()} spending breakdown`,
-          icon: <Calendar size={14} />
-        });
-        
-        if (budgets && budgets.length > 0) {
-          const budgetByCategory: {[key: string]: number} = {};
-          budgets.forEach(budget => {
-            budgetByCategory[budget.category] = budget.amount;
-          });
-          
-          for (const [category, spent] of Object.entries(categoryTotals)) {
-            if (budgetByCategory[category] && spent > budgetByCategory[category]) {
-              contextReplies.push({
-                text: `${category} budget alert`,
-                action: `How am I doing with my ${category.toLowerCase()} budget?`,
-                icon: <Info size={14} />
-              });
-              break;
-            }
-          }
-        }
-        
-        if (recentExpenses && recentExpenses.length > 0) {
-          const latestExpense = recentExpenses[0];
-          contextReplies.push({
-            text: `Add ${latestExpense.category}`,
-            action: `I want to add a new ${latestExpense.category.toLowerCase()} expense`,
-            icon: <Plus size={14} />
-          });
-        }
-        
-        const majorCategories = ['Transportation', 'Food', 'Housing', 'Entertainment'];
-        for (const category of majorCategories) {
-          if (categoryTotals[category] && !contextReplies.some(reply => reply.text.includes(category))) {
-            contextReplies.push({
-              text: `${category} breakdown`,
-              action: `Show my ${category.toLowerCase()} spending breakdown`,
-              icon: <Calendar size={14} />
-            });
-            break;
-          }
-        }
-        
-        setQuickReplies([
-          ...contextReplies.slice(0, 3),
-          ...DEFAULT_QUICK_REPLIES.slice(0, 1)
-        ]);
-      }
-      
-      setIsTyping(true);
-      setTimeout(() => {
-        const welcomeMessage = {
-          id: '1',
-          content: personalizedGreeting,
-          isUser: false,
-          timestamp: new Date(),
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        };
-        
-        // Only set the message if we don't already have messages (prevent duplicates)
-        setMessages(prevMessages => {
-          if (prevMessages.length === 0) {
-            return [welcomeMessage];
-          }
-          return prevMessages;
-        });
-        
-        saveMessage(welcomeMessage);
-        setIsTyping(false);
-      }, 1500);
-      
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      const errorMessage = {
-        id: '1',
-        content: "I've connected to your account, but I'm having trouble retrieving your latest financial data. How can I help you today?",
-        isUser: false,
-        timestamp: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      };
-      setMessages([errorMessage]);
-      saveMessage(errorMessage);
-    } finally {
-      setIsConnectingToData(false);
-    }
-  };
   
   const resetChat = () => {
     clearLocalStorage();
@@ -464,12 +76,10 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     setHasInitialized(false);
     
     if (user) {
-      // Re-initialize chat if user is signed in
       setTimeout(() => {
         initializeChat();
       }, 500);
     } else {
-      // Show auth prompt for non-authenticated users
       const welcomeMessage = {
         id: '1',
         content: FINNY_MESSAGES.AUTH_PROMPT,
