@@ -170,13 +170,14 @@ serve(async (req) => {
 
     const userName = userProfile?.full_name || 'there';
 
-    // Continue with OpenAI processing if we have the API key
+    // Check if OpenAI API key is available
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({
-        response: `Hello ${userName}! I'm Finny, your financial assistant. However, I need the OpenAI API key to be configured to help you properly.`,
+        response: `Hello ${userName}! I'm Finny, your financial assistant. However, I'm currently unavailable as the OpenAI API key needs to be configured. Please contact support to enable this feature.`,
         rawResponse: null,
         visualData: null,
-        action: null
+        action: null,
+        error: 'OpenAI API key not configured'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -208,7 +209,7 @@ Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
 
     console.log("Sending request to OpenAI");
 
-    // Call OpenAI API
+    // Call OpenAI API with better error handling
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -216,7 +217,7 @@ Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: openAIMessages,
         max_tokens: 1000,
         temperature: 0.7,
@@ -226,7 +227,31 @@ Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
     if (!openAIResponse.ok) {
       const errorData = await openAIResponse.text();
       console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+      
+      // Handle specific error cases
+      if (openAIResponse.status === 429) {
+        return new Response(JSON.stringify({
+          response: `I'm sorry ${userName}, but I'm currently unavailable due to API limits being reached. This usually resolves within a few hours. Please try again later, or you can continue using the app's other features in the meantime.`,
+          rawResponse: null,
+          visualData: null,
+          action: null,
+          error: 'API quota exceeded'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } else if (openAIResponse.status === 401) {
+        return new Response(JSON.stringify({
+          response: `I'm sorry ${userName}, but there's an authentication issue with my AI service. Please contact support to resolve this.`,
+          rawResponse: null,
+          visualData: null,
+          action: null,
+          error: 'API authentication failed'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } else {
+        throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorData}`);
+      }
     }
 
     const openAIData = await openAIResponse.json();
@@ -281,10 +306,11 @@ Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
     console.error('Error in Finny chat:', error);
     
     return new Response(JSON.stringify({
-      response: `❌ Sorry, I encountered an error: ${error.message}. Please try again.`,
+      response: `❌ I'm currently experiencing technical difficulties. Please try again in a few moments, or contact support if the issue persists.`,
       rawResponse: null,
       visualData: null,
-      action: null
+      action: null,
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
