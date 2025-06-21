@@ -37,7 +37,9 @@ const FinnyChat = ({
     handleSendMessage,
     handleQuickReply,
     oldestMessageTime,
-    resetChat
+    resetChat,
+    remainingDailyMessages,
+    isMessageLimitReached
   } = useChatLogic(null, currencyCode);
 
   // Effect to reset chat when it's first opened
