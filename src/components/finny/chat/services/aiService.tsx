@@ -89,88 +89,69 @@ export async function processMessageWithAI(
     if (data.action) {
       console.log('Processing action from Finny:', data.action);
       
-      // Dispatch events based on action type to trigger UI updates
+      // Dispatch immediate events based on action type to trigger UI updates
+      const dispatchEvent = (eventName: string, detail: any) => {
+        const event = new CustomEvent(eventName, { detail });
+        window.dispatchEvent(event);
+        console.log(`Dispatched ${eventName} event:`, detail);
+      };
+
+      // Create a base detail object for all events
+      const baseDetail = {
+        timestamp: Date.now(),
+        source: 'finny-chat',
+        actionData: data.action
+      };
+
       switch (data.action.type) {
         case 'add_expense':
-          console.log('Expense was added, triggering refresh events');
+          console.log('Expense was added, triggering immediate refresh events');
           
-          // Dispatch multiple events with different timings to ensure all components refresh
-          const expenseEvent = new CustomEvent('expense-added', { 
-            detail: { 
-              timestamp: Date.now(),
-              expenseData: data.action
-            }
-          });
-          window.dispatchEvent(expenseEvent);
+          // Dispatch multiple events immediately for expense updates
+          dispatchEvent('expense-added', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
+          dispatchEvent('finny-expense-added', baseDetail);
           
-          // Follow-up event in 300ms
-          setTimeout(() => {
-            const updateEvent = new CustomEvent('expenses-updated', { 
-              detail: { 
-                timestamp: Date.now(),
-                expenseData: data.action
-              }
-            });
-            window.dispatchEvent(updateEvent);
-          }, 300);
-          
-          // Final refresh event in 1000ms
-          setTimeout(() => {
-            const finalEvent = new CustomEvent('expense-refresh', { 
-              detail: { 
-                timestamp: Date.now(),
-                expenseData: data.action
-              }
-            });
-            window.dispatchEvent(finalEvent);
-          }, 1000);
+          // Additional refresh events with slight delays
+          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
+          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 500);
+          break;
+
+        case 'update_expense':
+          console.log('Expense was updated, triggering refresh events');
+          dispatchEvent('expense-edited', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
+          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
+          break;
+
+        case 'delete_expense':
+          console.log('Expense was deleted, triggering refresh events');
+          dispatchEvent('expense-deleted', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
+          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
           break;
 
         case 'set_budget':
         case 'update_budget':
           console.log('Budget was added or updated, triggering refresh events');
           
-          // Dispatch budget update event
-          const budgetEvent = new CustomEvent('budget-updated', { 
-            detail: { 
-              timestamp: Date.now(),
-              budgetData: data.action
-            }
-          });
-          window.dispatchEvent(budgetEvent);
+          dispatchEvent('budget-updated', baseDetail);
+          dispatchEvent('budget-refresh', baseDetail);
           
-          // Invalidate budget queries after a short delay
-          setTimeout(() => {
-            const budgetRefreshEvent = new CustomEvent('budget-refresh', {
-              detail: {
-                timestamp: Date.now()
-              }
-            });
-            window.dispatchEvent(budgetRefreshEvent);
-          }, 500);
+          // Additional refresh with delay
+          setTimeout(() => dispatchEvent('budget-refresh', baseDetail), 200);
           break;
 
         case 'delete_budget':
           console.log('Budget was deleted, triggering refresh events');
           
-          // Dispatch budget delete event
-          const budgetDeleteEvent = new CustomEvent('budget-deleted', { 
-            detail: { 
-              timestamp: Date.now(),
-              category: data.action.category
-            }
+          dispatchEvent('budget-deleted', { 
+            ...baseDetail, 
+            category: data.action.category 
           });
-          window.dispatchEvent(budgetDeleteEvent);
+          dispatchEvent('budget-refresh', baseDetail);
           
-          // Invalidate budget queries after a short delay
-          setTimeout(() => {
-            const budgetRefreshEvent = new CustomEvent('budget-refresh', {
-              detail: {
-                timestamp: Date.now()
-              }
-            });
-            window.dispatchEvent(budgetRefreshEvent);
-          }, 500);
+          setTimeout(() => dispatchEvent('budget-refresh', baseDetail), 200);
           break;
 
         case 'set_goal':
@@ -178,41 +159,29 @@ export async function processMessageWithAI(
         case 'delete_goal':
           console.log('Goal was modified, triggering refresh events');
           
-          // Dispatch goal update event
-          const goalEvent = new CustomEvent('goal-updated', { 
-            detail: { 
-              timestamp: Date.now(),
-              goalData: data.action
-            }
-          });
-          window.dispatchEvent(goalEvent);
+          dispatchEvent('goal-updated', baseDetail);
+          dispatchEvent('goals-refresh', baseDetail);
           break;
 
         case 'add_wallet_funds':
           console.log('Wallet funds were added, triggering refresh events');
           
-          // Dispatch wallet update event
-          const walletEvent = new CustomEvent('wallet-updated', { 
-            detail: { 
-              timestamp: Date.now(),
-              walletData: data.action
-            }
-          });
-          window.dispatchEvent(walletEvent);
+          dispatchEvent('wallet-updated', baseDetail);
+          dispatchEvent('wallet-refresh', baseDetail);
+          
+          // Also trigger expense-related events since wallet affects dashboard
+          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 100);
           break;
 
         case 'set_income':
         case 'update_income':
           console.log('Income was updated, triggering refresh events');
           
-          // Dispatch income update event
-          const incomeEvent = new CustomEvent('income-updated', { 
-            detail: { 
-              timestamp: Date.now(),
-              incomeData: data.action
-            }
-          });
-          window.dispatchEvent(incomeEvent);
+          dispatchEvent('income-updated', baseDetail);
+          dispatchEvent('income-refresh', baseDetail);
+          
+          // Also trigger expense-related events since income affects dashboard calculations
+          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 100);
           break;
 
         default:

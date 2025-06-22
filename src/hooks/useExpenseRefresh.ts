@@ -14,7 +14,7 @@ export function useExpenseRefresh() {
   const triggerRefresh = useCallback(() => {
     // Throttle refreshes to prevent multiple rapid refreshes
     const now = Date.now();
-    if (now - lastRefreshTime > 200) { // Reduced throttle time for more responsive updates
+    if (now - lastRefreshTime > 100) { // Reduced throttle time for more responsive updates
       console.log("Manually triggering refresh");
       setRefreshTrigger(prev => prev + 1);
       setLastRefreshTime(now);
@@ -36,7 +36,7 @@ export function useExpenseRefresh() {
     
     // For Finny-related events, trigger immediate refresh
     const isFinnyEvent = detail.source === 'finny-chat';
-    const timeout = isFinnyEvent ? 50 : 200; // Faster refresh for Finny events
+    const timeout = isFinnyEvent ? 10 : 50; // Very fast refresh for Finny events
     
     // Set a short timeout to batch potential multiple events
     refreshTimerRef.current = window.setTimeout(() => {
@@ -46,14 +46,18 @@ export function useExpenseRefresh() {
       refreshTimerRef.current = null;
       
       // Show toast for Finny events
-      if (isFinnyEvent && eventName === 'expense-added') {
-        toast.success("Expense added via Finny!");
-      } else if (eventName === 'expense-added' && !isFinnyEvent) {
-        toast.success("Expense added successfully!");
-      } else if (eventName === 'expense-edited') {
-        toast.success("Expense updated successfully!");
-      } else if (eventName === 'expense-deleted') {
-        toast.success("Expense deleted successfully!");
+      if (isFinnyEvent) {
+        if (eventName === 'expense-added' || eventName === 'finny-expense-added') {
+          toast.success("Expense added via Finny!");
+        } else if (eventName === 'expense-edited') {
+          toast.success("Expense updated via Finny!");
+        } else if (eventName === 'expense-deleted') {
+          toast.success("Expense deleted via Finny!");
+        } else if (eventName === 'wallet-updated') {
+          toast.success("Wallet updated via Finny!");
+        } else if (eventName === 'income-updated') {
+          toast.success("Income updated via Finny!");
+        }
       }
     }, timeout);
   }, []);
@@ -63,26 +67,31 @@ export function useExpenseRefresh() {
     console.log("Setting up expense refresh event listeners");
     
     // Add event listeners for various expense update events
-    window.addEventListener('expenses-updated', handleExpenseUpdateEvent);
-    window.addEventListener('receipt-scanned', handleExpenseUpdateEvent);
-    window.addEventListener('expense-added', handleExpenseUpdateEvent);
-    window.addEventListener('expense-edited', handleExpenseUpdateEvent);
-    window.addEventListener('expense-deleted', handleExpenseUpdateEvent);
-    window.addEventListener('expense-refresh', handleExpenseUpdateEvent);
-    window.addEventListener('custom-date-change', handleExpenseUpdateEvent);
-    window.addEventListener('finny-expense-added', handleExpenseUpdateEvent);
+    const eventTypes = [
+      'expenses-updated',
+      'receipt-scanned',
+      'expense-added',
+      'expense-edited',
+      'expense-deleted',
+      'expense-refresh',
+      'custom-date-change',
+      'finny-expense-added',
+      'wallet-updated',
+      'wallet-refresh',
+      'income-updated',
+      'income-refresh'
+    ];
+    
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleExpenseUpdateEvent);
+    });
     
     // Cleanup listeners on unmount
     return () => {
       console.log("Removing expense refresh event listeners");
-      window.removeEventListener('expenses-updated', handleExpenseUpdateEvent);
-      window.removeEventListener('receipt-scanned', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-added', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-edited', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-deleted', handleExpenseUpdateEvent);
-      window.removeEventListener('expense-refresh', handleExpenseUpdateEvent);
-      window.removeEventListener('custom-date-change', handleExpenseUpdateEvent);
-      window.removeEventListener('finny-expense-added', handleExpenseUpdateEvent);
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleExpenseUpdateEvent);
+      });
       
       // Clear any pending timeout
       if (refreshTimerRef.current !== null) {

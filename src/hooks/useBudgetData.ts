@@ -21,18 +21,37 @@ export function useBudgetData() {
   useEffect(() => {
     const handleBudgetUpdate = (e: Event) => {
       console.log("Budget update detected, refreshing data", e);
-      queryClient.invalidateQueries({ queryKey: ['budgets', monthKey, user?.id] });
+      
+      // Immediately invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+      
+      // Update refresh trigger
       setRefreshTrigger(Date.now());
+      
+      // Force a refetch after a short delay
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
+      }, 100);
     };
     
-    window.addEventListener('budget-updated', handleBudgetUpdate);
-    window.addEventListener('budget-deleted', handleBudgetUpdate);
-    window.addEventListener('budget-refresh', handleBudgetUpdate);
+    const eventTypes = [
+      'budget-updated', 
+      'budget-deleted', 
+      'budget-refresh',
+      'income-updated',
+      'income-refresh'
+    ];
+    
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleBudgetUpdate);
+    });
     
     return () => {
-      window.removeEventListener('budget-updated', handleBudgetUpdate);
-      window.removeEventListener('budget-deleted', handleBudgetUpdate);
-      window.removeEventListener('budget-refresh', handleBudgetUpdate);
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleBudgetUpdate);
+      });
     };
   }, [queryClient, monthKey, user?.id]);
   
