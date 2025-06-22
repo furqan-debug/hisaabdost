@@ -93,25 +93,74 @@ export async function deleteGoal(
   userId: string,
   supabase: SupabaseClient
 ): Promise<string> {
+  console.log("deleteGoal called with action:", JSON.stringify(action, null, 2));
+  console.log("deleteGoal called with userId:", userId);
+
+  // First, let's get all user's goals to help with deletion
+  const { data: allGoals, error: fetchError } = await supabase
+    .from("goals")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (fetchError) {
+    console.error("Error fetching user goals:", fetchError);
+    throw new Error("Failed to fetch goals for deletion");
+  }
+
+  console.log("User's current goals:", JSON.stringify(allGoals, null, 2));
+
   let query = supabase
     .from("goals")
     .delete()
     .eq("user_id", userId);
     
+  let goalToDelete = null;
+  
   if (action.id) {
+    console.log("Deleting goal by ID:", action.id);
     query = query.eq("id", action.id);
+    goalToDelete = allGoals?.find(g => g.id === action.id);
   } else if (action.title) {
+    console.log("Deleting goal by title:", action.title);
     query = query.ilike("title", `%${action.title}%`);
+    goalToDelete = allGoals?.find(g => g.title.toLowerCase().includes(action.title.toLowerCase()));
   } else {
-    throw new Error("Please provide a goal ID or title to delete.");
+    // If no specific goal is mentioned, try to delete the most recent one
+    if (allGoals && allGoals.length > 0) {
+      const mostRecentGoal = allGoals.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0];
+      console.log("No specific goal mentioned, deleting most recent:", mostRecentGoal.title);
+      query = query.eq("id", mostRecentGoal.id);
+      goalToDelete = mostRecentGoal;
+    } else {
+      throw new Error("No goals found to delete. Please specify a goal title or create a goal first.");
+    }
   }
   
-  const { error } = await query;
+  console.log("Goal to be deleted:", JSON.stringify(goalToDelete, null, 2));
+  
+  const { data: deletedData, error } = await query.select();
+  
   if (error) {
     console.error("Goal deletion error:", error);
-    throw error;
+    throw new Error(`Failed to delete goal: ${error.message}`);
   }
   
-  console.log("Goal deleted successfully");
-  return `I've deleted the goal for you.`;
+  console.log("Deletion result:", JSON.stringify(deletedData, null, 2));
+  
+  if (!deletedData || deletedData.length === 0) {
+    if (action.title) {
+      throw new Error(`No goal found with title containing "${action.title}".`);
+    } else if (action.id) {
+      throw new Error(`No goal found with ID "${action.id}".`);
+    } else {
+      throw new Error("No goals found to delete.");
+    }
+  }
+  
+  const deletedGoal = deletedData[0];
+  console.log("Successfully deleted goal:", deletedGoal.title);
+  
+  return `I've successfully deleted the goal "${deletedGoal.title}".`;
 }

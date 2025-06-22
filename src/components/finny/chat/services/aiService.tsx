@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { updateQuickRepliesForResponse } from './quickReplyService';
@@ -81,6 +82,7 @@ export async function processMessageWithAI(
       hasResponse: !!data.response,
       hasAction: !!data.action,
       responseLength: data.response?.length || 0,
+      actionType: data.action?.type,
       currency: effectiveCurrencyCode
     });
     
@@ -207,17 +209,40 @@ export async function processMessageWithAI(
           break;
 
         case 'delete_goal':
-          console.log('Goal was deleted, triggering MULTIPLE refresh events');
+          console.log('Goal was deleted by Finny, triggering IMMEDIATE and MULTIPLE refresh events');
           
+          // Immediate events
           dispatchEvent('goal-deleted', { 
             ...baseDetail, 
-            title: data.action.title 
+            title: data.action.title,
+            goalId: data.action.id
           });
           dispatchEvent('goals-refresh', baseDetail);
+          dispatchEvent('goal-updated', baseDetail);
           
+          // Secondary immediate events
           setTimeout(() => {
+            console.log('Secondary goal deletion refresh events');
             dispatchEvent('goals-refresh', baseDetail);
-          }, 100);
+            dispatchEvent('goal-updated', baseDetail);
+            dispatchEvent('goal-deleted', { 
+              ...baseDetail, 
+              title: data.action.title,
+              goalId: data.action.id
+            });
+          }, 50);
+          
+          // Third wave of events
+          setTimeout(() => {
+            console.log('Third wave goal deletion refresh events');
+            dispatchEvent('goals-refresh', baseDetail);
+          }, 200);
+          
+          // Final refresh to ensure UI is updated
+          setTimeout(() => {
+            console.log('Final goal deletion refresh event');
+            dispatchEvent('goals-refresh', baseDetail);
+          }, 500);
           break;
 
         case 'add_wallet_funds':
