@@ -9,13 +9,13 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Query budgets
+  // Query budgets with forced refresh
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets', monthKey, user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching budgets for user:", user.id);
+      console.log("Fetching budgets for user:", user.id, "refreshTrigger:", refreshTrigger);
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
@@ -31,15 +31,32 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 1000,
+    staleTime: 0, // Always consider data stale to force refresh
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
   
-  // Query monthly income
+  // Query monthly income with forced refresh
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
     queryKey: ['monthly_income', user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
+      console.log("Fetching income for user:", user.id, "refreshTrigger:", refreshTrigger);
+      
+      // First try to get from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('monthly_income')
+        .eq('id', user.id)
+        .single();
+        
+      if (!profileError && profileData?.monthly_income) {
+        console.log("Income from profiles:", profileData.monthly_income);
+        return { monthlyIncome: profileData.monthly_income };
+      }
+      
+      // Fallback to budgets table
       const { data, error } = await supabase
         .from('budgets')
         .select('monthly_income')
@@ -47,12 +64,17 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
         .limit(1);
         
       if (error) throw error;
-      return { monthlyIncome: data?.[0]?.monthly_income || 0 };
+      const income = data?.[0]?.monthly_income || 0;
+      console.log("Income from budgets fallback:", income);
+      return { monthlyIncome: income };
     },
     enabled: !!user,
+    staleTime: 0, // Always consider data stale to force refresh
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
-  // Query expenses
+  // Query expenses with forced refresh
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', monthKey, user?.id, refreshTrigger],
     queryFn: async () => {
@@ -60,6 +82,8 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
+      
+      console.log("Fetching expenses for user:", user.id, "month:", monthKey, "refreshTrigger:", refreshTrigger);
       
       const { data, error } = await supabase
         .from('expenses')
@@ -73,6 +97,9 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       return data;
     },
     enabled: !!user,
+    staleTime: 0, // Always consider data stale to force refresh
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   return {

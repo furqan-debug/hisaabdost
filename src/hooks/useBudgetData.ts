@@ -14,26 +14,48 @@ export function useBudgetData() {
   const monthKey = format(selectedMonth, 'yyyy-MM');
   const queryClient = useQueryClient();
   
-  // Add refresh trigger state
+  // Add refresh trigger state with current timestamp
   const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
   
   // Listen for budget update events
   useEffect(() => {
     const handleBudgetUpdate = (e: Event) => {
-      console.log("Budget update detected, refreshing data", e);
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail || {};
+      const isFinnyEvent = detail.source === 'finny-chat';
       
-      // Immediately invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+      console.log("Budget update detected, immediate refresh", e, { isFinnyEvent });
       
-      // Update refresh trigger
-      setRefreshTrigger(Date.now());
-      
-      // Force a refetch after a short delay
-      setTimeout(() => {
+      // Immediate invalidation for Finny events
+      if (isFinnyEvent) {
+        console.log("IMMEDIATE budget refresh for Finny event");
+        
+        // Force immediate invalidation
+        queryClient.invalidateQueries({ queryKey: ['budgets'] });
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+        
+        // Update refresh trigger immediately
+        setRefreshTrigger(Date.now());
+        
+        // Force immediate refetch
         queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
-      }, 100);
+        queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user?.id] });
+        queryClient.refetchQueries({ queryKey: ['monthly_income', user?.id] });
+      } else {
+        // Standard refresh for other events
+        queryClient.invalidateQueries({ queryKey: ['budgets'] });
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+        
+        // Update refresh trigger
+        setRefreshTrigger(Date.now());
+        
+        // Delayed refetch
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
+        }, 100);
+      }
     };
     
     const eventTypes = [
@@ -41,7 +63,9 @@ export function useBudgetData() {
       'budget-deleted', 
       'budget-refresh',
       'income-updated',
-      'income-refresh'
+      'income-refresh',
+      'expenses-updated',
+      'expense-refresh'
     ];
     
     eventTypes.forEach(eventType => {

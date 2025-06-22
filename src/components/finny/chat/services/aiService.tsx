@@ -89,7 +89,7 @@ export async function processMessageWithAI(
     if (data.action) {
       console.log('Processing action from Finny:', data.action);
       
-      // Dispatch immediate events based on action type to trigger UI updates
+      // Dispatch MULTIPLE immediate events based on action type to trigger UI updates
       const dispatchEvent = (eventName: string, detail: any) => {
         const event = new CustomEvent(eventName, { detail });
         window.dispatchEvent(event);
@@ -105,53 +105,87 @@ export async function processMessageWithAI(
 
       switch (data.action.type) {
         case 'add_expense':
-          console.log('Expense was added, triggering immediate refresh events');
+          console.log('Expense was added, triggering MULTIPLE immediate refresh events');
           
-          // Dispatch multiple events immediately for expense updates
+          // Dispatch MULTIPLE events immediately for expense updates
           dispatchEvent('expense-added', baseDetail);
           dispatchEvent('expenses-updated', baseDetail);
           dispatchEvent('finny-expense-added', baseDetail);
+          dispatchEvent('expense-refresh', baseDetail);
           
-          // Additional refresh events with slight delays
-          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
-          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 500);
+          // Additional refresh events with different delays to ensure all components update
+          setTimeout(() => {
+            dispatchEvent('expenses-updated', baseDetail);
+            dispatchEvent('expense-refresh', baseDetail);
+          }, 100);
+          
+          setTimeout(() => {
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 500);
+          
+          setTimeout(() => {
+            dispatchEvent('expense-refresh', baseDetail);
+          }, 1000);
           break;
 
         case 'update_expense':
-          console.log('Expense was updated, triggering refresh events');
+          console.log('Expense was updated, triggering MULTIPLE refresh events');
           dispatchEvent('expense-edited', baseDetail);
           dispatchEvent('expenses-updated', baseDetail);
-          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
+          dispatchEvent('expense-refresh', baseDetail);
+          
+          setTimeout(() => {
+            dispatchEvent('expenses-updated', baseDetail);
+            dispatchEvent('expense-refresh', baseDetail);
+          }, 100);
           break;
 
         case 'delete_expense':
-          console.log('Expense was deleted, triggering refresh events');
+          console.log('Expense was deleted, triggering MULTIPLE refresh events');
           dispatchEvent('expense-deleted', baseDetail);
           dispatchEvent('expenses-updated', baseDetail);
-          setTimeout(() => dispatchEvent('expense-refresh', baseDetail), 100);
+          dispatchEvent('expense-refresh', baseDetail);
+          
+          setTimeout(() => {
+            dispatchEvent('expenses-updated', baseDetail);
+            dispatchEvent('expense-refresh', baseDetail);
+          }, 100);
           break;
 
         case 'set_budget':
         case 'update_budget':
-          console.log('Budget was added or updated, triggering refresh events');
+          console.log('Budget was added or updated, triggering MULTIPLE refresh events');
           
           dispatchEvent('budget-updated', baseDetail);
           dispatchEvent('budget-refresh', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
           
-          // Additional refresh with delay
-          setTimeout(() => dispatchEvent('budget-refresh', baseDetail), 200);
+          // Additional refreshes to ensure all dashboard components update
+          setTimeout(() => {
+            dispatchEvent('budget-updated', baseDetail);
+            dispatchEvent('budget-refresh', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 100);
+          
+          setTimeout(() => {
+            dispatchEvent('budget-refresh', baseDetail);
+          }, 500);
           break;
 
         case 'delete_budget':
-          console.log('Budget was deleted, triggering refresh events');
+          console.log('Budget was deleted, triggering MULTIPLE refresh events');
           
           dispatchEvent('budget-deleted', { 
             ...baseDetail, 
             category: data.action.category 
           });
           dispatchEvent('budget-refresh', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
           
-          setTimeout(() => dispatchEvent('budget-refresh', baseDetail), 200);
+          setTimeout(() => {
+            dispatchEvent('budget-refresh', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 100);
           break;
 
         case 'set_goal':
@@ -164,24 +198,46 @@ export async function processMessageWithAI(
           break;
 
         case 'add_wallet_funds':
-          console.log('Wallet funds were added, triggering refresh events');
+          console.log('Wallet funds were added, triggering MULTIPLE refresh events');
           
           dispatchEvent('wallet-updated', baseDetail);
           dispatchEvent('wallet-refresh', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
           
-          // Also trigger expense-related events since wallet affects dashboard
-          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 100);
+          // Multiple wallet refresh events to ensure all wallet components update
+          setTimeout(() => {
+            dispatchEvent('wallet-updated', baseDetail);
+            dispatchEvent('wallet-refresh', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 100);
+          
+          setTimeout(() => {
+            dispatchEvent('wallet-updated', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 500);
           break;
 
         case 'set_income':
         case 'update_income':
-          console.log('Income was updated, triggering refresh events');
+          console.log('Income was updated, triggering MULTIPLE refresh events');
           
           dispatchEvent('income-updated', baseDetail);
           dispatchEvent('income-refresh', baseDetail);
+          dispatchEvent('expenses-updated', baseDetail);
+          dispatchEvent('budget-refresh', baseDetail);
           
-          // Also trigger expense-related events since income affects dashboard calculations
-          setTimeout(() => dispatchEvent('expenses-updated', baseDetail), 100);
+          // Multiple income refresh events to ensure all income-related components update
+          setTimeout(() => {
+            dispatchEvent('income-updated', baseDetail);
+            dispatchEvent('income-refresh', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+            dispatchEvent('budget-refresh', baseDetail);
+          }, 100);
+          
+          setTimeout(() => {
+            dispatchEvent('income-updated', baseDetail);
+            dispatchEvent('expenses-updated', baseDetail);
+          }, 500);
           break;
 
         default:

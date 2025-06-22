@@ -14,15 +14,42 @@ export function useWalletAdditions() {
   // Listen for wallet update events from Finny
   useEffect(() => {
     const handleWalletUpdate = (e: Event) => {
-      console.log("Wallet update detected, refreshing data", e);
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail || {};
+      const isFinnyEvent = detail.source === 'finny-chat';
       
-      // Immediately invalidate and refetch wallet queries
-      queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
+      console.log("Wallet update detected, immediate refresh", e, { isFinnyEvent });
       
-      // Force a refetch after a short delay
-      setTimeout(() => {
+      if (isFinnyEvent) {
+        console.log("IMMEDIATE wallet refresh for Finny event");
+        
+        // Force immediate invalidation and refetch for Finny events
+        queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
+        queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+        
+        // Immediate refetch
         queryClient.refetchQueries({ queryKey: ['wallet_additions'] });
-      }, 100);
+        queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+        queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
+        
+        // Additional refresh after short delay to ensure backend processing is complete
+        setTimeout(() => {
+          console.log("Secondary wallet refresh for Finny event");
+          queryClient.refetchQueries({ queryKey: ['wallet_additions'] });
+          queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+          queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
+        }, 300);
+      } else {
+        // Standard refresh for other events
+        queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
+        queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+        
+        // Force a refetch after a short delay
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ['wallet_additions'] });
+          queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+        }, 100);
+      }
     };
     
     const eventTypes = ['wallet-updated', 'wallet-refresh'];
