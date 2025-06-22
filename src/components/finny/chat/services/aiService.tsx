@@ -85,100 +85,139 @@ export async function processMessageWithAI(
       currency: effectiveCurrencyCode
     });
     
-    // Check if the response indicates an expense was added
-    if (data.action && data.action.type === 'add_expense') {
-      console.log('Expense was added, triggering refresh events');
+    // Handle different types of actions that Finny can perform
+    if (data.action) {
+      console.log('Processing action from Finny:', data.action);
       
-      // Dispatch multiple events with different timings to ensure all components refresh
-      
-      // Immediate event dispatch
-      const event = new CustomEvent('expense-added', { 
-        detail: { 
-          timestamp: Date.now(),
-          expenseData: data.action
-        }
-      });
-      window.dispatchEvent(event);
-      
-      // Follow-up event in 300ms
-      setTimeout(() => {
-        const updateEvent = new CustomEvent('expenses-updated', { 
-          detail: { 
-            timestamp: Date.now(),
-            expenseData: data.action
-          }
-        });
-        window.dispatchEvent(updateEvent);
-      }, 300);
-      
-      // Final refresh event in 1000ms
-      setTimeout(() => {
-        const finalEvent = new CustomEvent('expense-refresh', { 
-          detail: { 
-            timestamp: Date.now(),
-            expenseData: data.action
-          }
-        });
-        window.dispatchEvent(finalEvent);
-      }, 1000);
-    }
-    // Also handle budget and goal changes
-    else if (data.action && 
-      (data.action.type === 'set_budget' || data.action.type === 'update_budget')) {
-      console.log('Budget was added or updated, triggering refresh events');
-      
-      // Dispatch budget update event
-      const budgetEvent = new CustomEvent('budget-updated', { 
-        detail: { 
-          timestamp: Date.now(),
-          budgetData: data.action
-        }
-      });
-      window.dispatchEvent(budgetEvent);
-      
-      // Invalidate budget queries after a short delay
-      setTimeout(() => {
-        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
-          detail: {
-            timestamp: Date.now()
-          }
-        });
-        window.dispatchEvent(budgetRefreshEvent);
-      }, 500);
-    }
-    else if (data.action && data.action.type === 'delete_budget') {
-      console.log('Budget was deleted, triggering refresh events');
-      
-      // Dispatch budget delete event
-      const budgetDeleteEvent = new CustomEvent('budget-deleted', { 
-        detail: { 
-          timestamp: Date.now(),
-          category: data.action.category
-        }
-      });
-      window.dispatchEvent(budgetDeleteEvent);
-      
-      // Invalidate budget queries after a short delay
-      setTimeout(() => {
-        const budgetRefreshEvent = new CustomEvent('budget-refresh', {
-          detail: {
-            timestamp: Date.now()
-          }
-        });
-        window.dispatchEvent(budgetRefreshEvent);
-      }, 500);
-    }
-    else if (data.action && 
-      (data.action.type === 'set_goal' || data.action.type === 'update_goal' || 
-       data.action.type === 'delete_goal')) {
-      // Dispatch goal update event
-      const goalEvent = new CustomEvent('goal-updated', { 
-        detail: { 
-          timestamp: Date.now(),
-          goalData: data.action
-        }
-      });
-      window.dispatchEvent(goalEvent);
+      // Dispatch events based on action type to trigger UI updates
+      switch (data.action.type) {
+        case 'add_expense':
+          console.log('Expense was added, triggering refresh events');
+          
+          // Dispatch multiple events with different timings to ensure all components refresh
+          const expenseEvent = new CustomEvent('expense-added', { 
+            detail: { 
+              timestamp: Date.now(),
+              expenseData: data.action
+            }
+          });
+          window.dispatchEvent(expenseEvent);
+          
+          // Follow-up event in 300ms
+          setTimeout(() => {
+            const updateEvent = new CustomEvent('expenses-updated', { 
+              detail: { 
+                timestamp: Date.now(),
+                expenseData: data.action
+              }
+            });
+            window.dispatchEvent(updateEvent);
+          }, 300);
+          
+          // Final refresh event in 1000ms
+          setTimeout(() => {
+            const finalEvent = new CustomEvent('expense-refresh', { 
+              detail: { 
+                timestamp: Date.now(),
+                expenseData: data.action
+              }
+            });
+            window.dispatchEvent(finalEvent);
+          }, 1000);
+          break;
+
+        case 'set_budget':
+        case 'update_budget':
+          console.log('Budget was added or updated, triggering refresh events');
+          
+          // Dispatch budget update event
+          const budgetEvent = new CustomEvent('budget-updated', { 
+            detail: { 
+              timestamp: Date.now(),
+              budgetData: data.action
+            }
+          });
+          window.dispatchEvent(budgetEvent);
+          
+          // Invalidate budget queries after a short delay
+          setTimeout(() => {
+            const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+              detail: {
+                timestamp: Date.now()
+              }
+            });
+            window.dispatchEvent(budgetRefreshEvent);
+          }, 500);
+          break;
+
+        case 'delete_budget':
+          console.log('Budget was deleted, triggering refresh events');
+          
+          // Dispatch budget delete event
+          const budgetDeleteEvent = new CustomEvent('budget-deleted', { 
+            detail: { 
+              timestamp: Date.now(),
+              category: data.action.category
+            }
+          });
+          window.dispatchEvent(budgetDeleteEvent);
+          
+          // Invalidate budget queries after a short delay
+          setTimeout(() => {
+            const budgetRefreshEvent = new CustomEvent('budget-refresh', {
+              detail: {
+                timestamp: Date.now()
+              }
+            });
+            window.dispatchEvent(budgetRefreshEvent);
+          }, 500);
+          break;
+
+        case 'set_goal':
+        case 'update_goal':
+        case 'delete_goal':
+          console.log('Goal was modified, triggering refresh events');
+          
+          // Dispatch goal update event
+          const goalEvent = new CustomEvent('goal-updated', { 
+            detail: { 
+              timestamp: Date.now(),
+              goalData: data.action
+            }
+          });
+          window.dispatchEvent(goalEvent);
+          break;
+
+        case 'add_wallet_funds':
+          console.log('Wallet funds were added, triggering refresh events');
+          
+          // Dispatch wallet update event
+          const walletEvent = new CustomEvent('wallet-updated', { 
+            detail: { 
+              timestamp: Date.now(),
+              walletData: data.action
+            }
+          });
+          window.dispatchEvent(walletEvent);
+          break;
+
+        case 'set_income':
+        case 'update_income':
+          console.log('Income was updated, triggering refresh events');
+          
+          // Dispatch income update event
+          const incomeEvent = new CustomEvent('income-updated', { 
+            detail: { 
+              timestamp: Date.now(),
+              incomeData: data.action
+            }
+          });
+          window.dispatchEvent(incomeEvent);
+          break;
+
+        default:
+          console.log('Unknown action type:', data.action.type);
+      }
     }
 
     return data;

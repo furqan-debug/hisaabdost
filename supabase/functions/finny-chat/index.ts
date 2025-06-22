@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
+import { processAction } from "./services/actionProcessor.ts";
 
 // Define CORS headers
 const corsHeaders = {
@@ -28,106 +29,33 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Process actions like adding expenses
-async function processAction(actionData: any, userId: string, supabase: any): Promise<string> {
-  console.log("Processing action:", actionData);
-  
-  try {
-    if (actionData.type === "add_expense") {
-      // Insert expense into database
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert({
-          user_id: userId,
-          description: actionData.description || "Expense",
-          amount: parseFloat(actionData.amount) || 0,
-          date: actionData.date || getTodaysDate(),
-          category: actionData.category || "Other",
-          payment: actionData.paymentMethod || "Card",
-          is_recurring: false,
-          notes: "Added via Finny chat"
-        })
-        .select('id');
-
-      if (error) {
-        console.error("Database error:", error);
-        return `❌ Failed to add expense: ${error.message}`;
-      }
-
-      console.log("Expense added successfully:", data);
-      return `✅ Added expense: ${actionData.description} for $${actionData.amount}`;
-      
-    } else if (actionData.type === "delete_expense") {
-      // Delete expense by ID
-      if (actionData.id) {
-        const { error } = await supabase
-          .from('expenses')
-          .delete()
-          .eq('id', actionData.id)
-          .eq('user_id', userId);
-          
-        if (error) {
-          console.error("Delete error:", error);
-          return `❌ Failed to delete expense: ${error.message}`;
-        }
-        
-        console.log("Expense deleted successfully by ID");
-        return "✅ Expense deleted successfully";
-      } else {
-        // Delete most recent expense
-        const { data: recentExpense, error: fetchError } = await supabase
-          .from('expenses')
-          .select('id')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-          
-        if (fetchError || !recentExpense) {
-          return "❌ No recent expense found to delete";
-        }
-        
-        const { error: deleteError } = await supabase
-          .from('expenses')
-          .delete()
-          .eq('id', recentExpense.id)
-          .eq('user_id', userId);
-          
-        if (deleteError) {
-          return `❌ Failed to delete expense: ${deleteError.message}`;
-        }
-        
-        return "✅ Most recent expense deleted successfully";
-      }
-    }
-    
-    return `❌ Unknown action type: ${actionData.type}`;
-  } catch (error) {
-    console.error("Action processing error:", error);
-    return `❌ Error processing action: ${error.message}`;
-  }
-}
-
-// System message for Finny
+// Enhanced system message for Finny with all capabilities
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
-Your role is to help users manage their expenses, budgets, and financial goals through natural conversation.
+Your role is to help users manage their expenses, budgets, goals, income, and wallet funds through natural conversation.
 
 You can perform these actions:
-1. Add new expenses (with clean, short descriptions)
-2. Edit or delete expenses
-3. Set and update budgets
-4. Track and manage goals
-5. Give spending summaries
+1. Add/edit/delete expenses
+2. Set/update/delete budgets for categories
+3. Create/update/delete financial goals
+4. Add funds to wallet
+5. Set/update monthly income
+6. Provide spending summaries and analysis
 
 IMPORTANT: You must ONLY use the following expense categories:
 ${EXPENSE_CATEGORIES.map(cat => `- ${cat}`).join('\n')}
 
-Format for responses:
-- When you need to perform an action, include a JSON object with the action details
-- For example: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
+Action Format Examples:
+- Add expense: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
+- Set budget: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly"}]
+- Create goal: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31","category":"Savings"}]
+- Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly allowance"}]
+- Set income: [ACTION:{"type":"set_income","amount":75000,"period":"monthly"}]
+- Delete budget: [ACTION:{"type":"delete_budget","category":"Food"}]
+- Delete goal: [ACTION:{"type":"delete_goal","title":"Emergency Fund"}]
 
-When the user mentions "today" or doesn't specify a date:
-- ALWAYS use today's date: ${getTodaysDate()}`;
+When the user mentions "today" or doesn't specify a date, always use today's date: ${getTodaysDate()}
+
+Be conversational and helpful. Always confirm what action you're taking.`;
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -183,18 +111,23 @@ serve(async (req) => {
       });
     }
 
-    // Fetch recent expenses for context
-    const { data: recentExpenses } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-      .limit(5);
+    // Fetch user's financial context for better responses
+    const [expensesResult, budgetsResult, goalsResult, walletResult, profileResult] = await Promise.all([
+      supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(5),
+      supabase.from('budgets').select('*').eq('user_id', userId),
+      supabase.from('goals').select('*').eq('user_id', userId),
+      supabase.from('wallet_additions').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(3),
+      supabase.from('profiles').select('monthly_income').eq('id', userId).single()
+    ]);
 
     // Prepare context for OpenAI
     const contextMessage = `User Profile: ${userName}
 Currency: ${currencyCode}
-Recent Expenses: ${JSON.stringify(recentExpenses || [])}`;
+Monthly Income: ${profileResult.data?.monthly_income || 'Not set'}
+Recent Expenses: ${JSON.stringify(expensesResult.data || [])}
+Current Budgets: ${JSON.stringify(budgetsResult.data || [])}
+Financial Goals: ${JSON.stringify(goalsResult.data || [])}
+Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
 
     // Prepare messages for OpenAI
     const openAIMessages = [

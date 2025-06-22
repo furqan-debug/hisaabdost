@@ -6,6 +6,8 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { addExpense, updateExpense, deleteExpense } from "../actions/expenseActions.ts";
 import { setBudget, deleteBudget } from "../actions/budgetActions.ts";
 import { setGoal, updateGoal, deleteGoal } from "../actions/goalActions.ts";
+import { addWalletFunds } from "../actions/walletActions.ts";
+import { setIncome } from "../actions/incomeActions.ts";
 
 // Process user actions
 export async function processAction(
@@ -45,6 +47,13 @@ export async function processAction(
 
       case "delete_goal":
         return await deleteGoal(action, userId, supabase);
+
+      case "add_wallet_funds":
+        return await addWalletFunds(action, userId, supabase);
+
+      case "set_income":
+      case "update_income":
+        return await setIncome(action, userId, supabase);
 
       default:
         throw new Error(`Unsupported action type: ${action.type}`);

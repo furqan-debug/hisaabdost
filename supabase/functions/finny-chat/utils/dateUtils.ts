@@ -1,6 +1,4 @@
 
-// Date utility functions for action processing
-
 // Get today's date in YYYY-MM-DD format
 export function getTodaysDate(): string {
   const today = new Date();
@@ -10,14 +8,14 @@ export function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Validate and format date
-export function validateAndFormatDate(inputDate: string): string {
-  if (!inputDate) return getTodaysDate();
+// Validate and format date strings
+export function validateAndFormatDate(dateStr?: string): string {
+  if (!dateStr) return getTodaysDate();
   
   try {
     // Check if it's already in ISO format YYYY-MM-DD
-    if (inputDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const date = new Date(inputDate);
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const date = new Date(dateStr);
       const year = date.getFullYear();
       
       // If the year is unreasonable (too old or far future), use current date
@@ -26,11 +24,11 @@ export function validateAndFormatDate(inputDate: string): string {
         return getTodaysDate();
       }
       
-      return inputDate;
+      return dateStr;
     }
     
     // Try to parse the date
-    const date = new Date(inputDate);
+    const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
       const year = date.getFullYear();
       
@@ -54,38 +52,37 @@ export function validateAndFormatDate(inputDate: string): string {
   return getTodaysDate();
 }
 
-// Parse goal deadline with natural language support
+// Parse goal deadline from various formats
 export function parseGoalDeadline(deadline: string): string {
-  try {
-    if (deadline.toLowerCase().includes('end of month') || 
-        deadline.toLowerCase().includes('month end')) {
-      const today = new Date();
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      return lastDay.toISOString().split('T')[0];
-    } 
-    else if (deadline.toLowerCase().includes('end of year') || 
-             deadline.toLowerCase().includes('year end')) {
-      const today = new Date();
-      return `${today.getFullYear()}-12-31`;
-    }
-    else if (deadline.toLowerCase().includes('next month')) {
-      const today = new Date();
-      today.setMonth(today.getMonth() + 1);
-      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    }
-    else {
-      // Try to parse as date
-      const date = new Date(deadline);
-      if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0];
-      }
-    }
-  } catch (e) {
-    console.error("Error parsing goal deadline:", e);
+  if (!deadline) {
+    // Set a default deadline of 6 months from now if not provided
+    const sixMonthsLater = new Date();
+    sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
+    return sixMonthsLater.toISOString().split('T')[0];
   }
   
-  // Set a default deadline of 3 months from now if parsing failed
-  const threeMonthsLater = new Date();
-  threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
-  return threeMonthsLater.toISOString().split('T')[0];
+  // Handle relative dates like "in 6 months", "next year", etc.
+  const lowerDeadline = deadline.toLowerCase();
+  const currentDate = new Date();
+  
+  if (lowerDeadline.includes('month')) {
+    const monthsMatch = lowerDeadline.match(/(\d+)\s*months?/);
+    if (monthsMatch) {
+      const months = parseInt(monthsMatch[1]);
+      currentDate.setMonth(currentDate.getMonth() + months);
+      return currentDate.toISOString().split('T')[0];
+    }
+  }
+  
+  if (lowerDeadline.includes('year')) {
+    const yearsMatch = lowerDeadline.match(/(\d+)\s*years?/);
+    if (yearsMatch) {
+      const years = parseInt(yearsMatch[1]);
+      currentDate.setFullYear(currentDate.getFullYear() + years);
+      return currentDate.toISOString().split('T')[0];
+    }
+  }
+  
+  // Try to parse as a regular date
+  return validateAndFormatDate(deadline);
 }
