@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { updateQuickRepliesForResponse } from './quickReplyService';
@@ -190,11 +189,35 @@ export async function processMessageWithAI(
 
         case 'set_goal':
         case 'update_goal':
-        case 'delete_goal':
-          console.log('Goal was modified, triggering refresh events');
+          console.log('Goal was added or updated, triggering MULTIPLE refresh events');
           
           dispatchEvent('goal-updated', baseDetail);
+          dispatchEvent('goal-added', baseDetail);
           dispatchEvent('goals-refresh', baseDetail);
+          
+          // Multiple goal refresh events to ensure all goal components update
+          setTimeout(() => {
+            dispatchEvent('goal-updated', baseDetail);
+            dispatchEvent('goals-refresh', baseDetail);
+          }, 100);
+          
+          setTimeout(() => {
+            dispatchEvent('goal-updated', baseDetail);
+          }, 500);
+          break;
+
+        case 'delete_goal':
+          console.log('Goal was deleted, triggering MULTIPLE refresh events');
+          
+          dispatchEvent('goal-deleted', { 
+            ...baseDetail, 
+            title: data.action.title 
+          });
+          dispatchEvent('goals-refresh', baseDetail);
+          
+          setTimeout(() => {
+            dispatchEvent('goals-refresh', baseDetail);
+          }, 100);
           break;
 
         case 'add_wallet_funds':

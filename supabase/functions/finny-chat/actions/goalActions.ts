@@ -19,12 +19,19 @@ export async function setGoal(
     deadlineDate = threeMonthsLater.toISOString().split('T')[0];
   }
 
-  // Insert the goal
+  // Ensure target_amount is a positive number
+  const targetAmount = Math.abs(Number(action.targetAmount) || 0);
+  
+  if (targetAmount <= 0) {
+    throw new Error("Target amount must be greater than 0");
+  }
+
+  // Insert the goal with proper values
   const { error } = await supabase.from("goals").insert({
     user_id: userId,
     title: action.title || "Savings Goal",
-    target_amount: action.targetAmount,
-    current_amount: 0, // Start with 0
+    target_amount: targetAmount,
+    current_amount: 0, // Always start with 0, must be non-negative
     deadline: deadlineDate,
     category: action.category || "Savings",
   });
@@ -35,7 +42,7 @@ export async function setGoal(
   }
 
   console.log("Goal created successfully");
-  return `I've created your ${action.title || 'savings'} goal of ${action.targetAmount} to reach by ${deadlineDate}.`;
+  return `I've created your ${action.title || 'savings'} goal of ${targetAmount} to reach by ${deadlineDate}.`;
 }
 
 export async function updateGoal(
@@ -47,8 +54,17 @@ export async function updateGoal(
   
   // Only include fields that are provided
   if (action.title) updateData.title = action.title;
-  if (action.targetAmount !== undefined) updateData.target_amount = action.targetAmount;
-  if (action.currentAmount !== undefined) updateData.current_amount = action.currentAmount;
+  if (action.targetAmount !== undefined) {
+    const targetAmount = Math.abs(Number(action.targetAmount) || 0);
+    if (targetAmount > 0) {
+      updateData.target_amount = targetAmount;
+    }
+  }
+  if (action.currentAmount !== undefined) {
+    // Ensure current_amount is non-negative
+    const currentAmount = Math.max(0, Number(action.currentAmount) || 0);
+    updateData.current_amount = currentAmount;
+  }
   if (action.category) updateData.category = action.category;
   
   // Parse deadline if provided

@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trophy, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +12,7 @@ import { format, startOfMonth, endOfMonth, parseISO, isAfter, isSameMonth, isBef
 import { GoalForm } from "@/components/goals/GoalForm";
 import { useCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/utils/formatters";
+
 interface Goal {
   id: string;
   user_id: string;
@@ -22,52 +23,108 @@ interface Goal {
   deadline: string;
   created_at: string;
 }
+
 export default function Goals() {
-  const {
-    user
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const queryClient = useQueryClient();
-  const {
-    currencyCode
-  } = useCurrency();
-  const {
-    data: goals,
-    isLoading
-  } = useQuery({
-    queryKey: ['goals', user?.id],
+  const { currencyCode } = useCurrency();
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
+
+  // Listen for goal update events from Finny
+  useEffect(() => {
+    const handleGoalUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail || {};
+      const isFinnyEvent = detail.source === 'finny-chat';
+      
+      console.log("Goal update detected, immediate refresh", e, { isFinnyEvent });
+      
+      if (isFinnyEvent) {
+        console.log("IMMEDIATE goal refresh for Finny event");
+        
+        // Force immediate invalidation and refetch for Finny events
+        queryClient.invalidateQueries({ queryKey: ['goals'] });
+        queryClient.refetchQueries({ queryKey: ['goals', user?.id] });
+        
+        // Update refresh trigger immediately
+        setRefreshTrigger(Date.now());
+        
+        // Additional refresh after short delay to ensure backend processing is complete
+        setTimeout(() => {
+          console.log("Secondary goal refresh for Finny event");
+          queryClient.refetchQueries({ queryKey: ['goals', user?.id] });
+          setRefreshTrigger(Date.now());
+        }, 300);
+      } else {
+        // Standard refresh for other events
+        queryClient.invalidateQueries({ queryKey: ['goals'] });
+        
+        // Update refresh trigger
+        setRefreshTrigger(Date.now());
+        
+        // Force a refetch after a short delay
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ['goals', user?.id] });
+        }, 100);
+      }
+    };
+    
+    const eventTypes = [
+      'goal-updated',
+      'goal-deleted',
+      'goals-refresh',
+      'goal-added'
+    ];
+    
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleGoalUpdate);
+    });
+    
+    return () => {
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleGoalUpdate);
+      });
+    };
+  }, [queryClient, user?.id]);
+
+  const { data: goals, isLoading } = useQuery({
+    queryKey: ['goals', user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('goals').select('*').eq('user_id', user.id).order('created_at', {
-        ascending: false
-      });
+      
+      console.log("Fetching goals for user:", user.id, "refreshTrigger:", refreshTrigger);
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
       if (error) {
         console.error("Error fetching goals:", error);
         throw error;
       }
+      
+      console.log(`Fetched ${data?.length || 0} goals:`, data);
       return data as Goal[];
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 0, // Always consider data stale to force refresh
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch all expenses for use in savings calculations
-  const {
-    data: expenses
-  } = useQuery({
+  const { data: expenses } = useQuery({
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('expenses').select('*').eq('user_id', user.id);
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id);
       if (error) throw error;
       return data;
     },
@@ -75,16 +132,14 @@ export default function Goals() {
   });
 
   // Fetch budgets to calculate savings (budget amount - expenses)
-  const {
-    data: budgets
-  } = useQuery({
+  const { data: budgets } = useQuery({
     queryKey: ['budgets', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const {
-        data,
-        error
-      } = await supabase.from('budgets').select('*').eq('user_id', user.id);
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', user.id);
       if (error) throw error;
       return data;
     },
@@ -105,10 +160,14 @@ export default function Goals() {
     const currentMonthEnd = endOfMonth(now);
 
     // Get expenses for this category in the current month
-    const currentMonthExpenses = expenses.filter(e => e.category === goal.category && isSameMonth(new Date(e.date), now));
+    const currentMonthExpenses = expenses.filter(e => 
+      e.category === goal.category && isSameMonth(new Date(e.date), now)
+    );
 
     // Calculate total expenses for this category in the current month
-    const totalExpenses = currentMonthExpenses.reduce((sum, exp) => sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0);
+    const totalExpenses = currentMonthExpenses.reduce((sum, exp) => 
+      sum + (typeof exp.amount === 'string' ? parseFloat(exp.amount) : exp.amount), 0
+    );
 
     // Calculate monthly budget
     const monthlyBudget = categoryBudget.amount;
@@ -119,6 +178,7 @@ export default function Goals() {
     // Return savings (which can be negative if overspent)
     return savings;
   };
+
   const calculateProgress = (goal: Goal) => {
     // Get savings for this category
     const savings = calculateCategorySavings(goal);
@@ -131,8 +191,9 @@ export default function Goals() {
     if (target === 0) return 0; // Avoid division by zero
 
     // Cap progress at 100%
-    return Math.min(savings / target * 100, 100);
+    return Math.min((savings / target) * 100, 100);
   };
+
   const generateTip = (goal: Goal) => {
     const savings = calculateCategorySavings(goal);
     const progress = calculateProgress(goal);
@@ -162,22 +223,26 @@ export default function Goals() {
       return "Congratulations! You've reached your savings goal!";
     }
   };
+
   const handleDeleteGoal = async (goalId: string) => {
     if (!window.confirm('Are you sure you want to delete this goal?')) {
       return;
     }
+
     try {
-      const {
-        error
-      } = await supabase.from('goals').delete().eq('id', goalId);
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', goalId);
+
       if (error) throw error;
+
       toast({
         title: "Goal deleted",
         description: "Your goal has been successfully deleted."
       });
-      queryClient.invalidateQueries({
-        queryKey: ["goals"]
-      });
+
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
     } catch (error) {
       toast({
         title: "Error",
@@ -197,61 +262,78 @@ export default function Goals() {
 
       // Update only if savings are different from what's stored
       if (Math.abs(savingsToStore - goal.current_amount) > 0.01) {
-        const {
-          error
-        } = await supabase.from('goals').update({
-          current_amount: savingsToStore
-        }).eq('id', goal.id);
+        const { error } = await supabase
+          .from('goals')
+          .update({ current_amount: savingsToStore })
+          .eq('id', goal.id);
+
         if (error) throw error;
 
         // Quietly refresh data
-        queryClient.invalidateQueries({
-          queryKey: ["goals"]
-        });
+        queryClient.invalidateQueries({ queryKey: ["goals"] });
       }
     } catch (error) {
       console.error("Failed to sync goal progress:", error);
     }
   };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return <>
+
+  return (
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Financial Goals</h1>
             <p className="text-muted-foreground">Track and manage your financial targets</p>
           </div>
-          <Button onClick={() => {
-          setSelectedGoal(null);
-          setShowGoalForm(true);
-        }} className="mx-[7px] ">
+          <Button 
+            onClick={() => {
+              setSelectedGoal(null);
+              setShowGoalForm(true);
+            }} 
+            className="mx-[7px] "
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Goal
           </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {goals?.length === 0 ? <div className="col-span-full text-center py-8">
-              <p className="text-muted-foreground">No goals yet. Click "Add Goal" to create your first financial goal!</p>
-            </div> : goals?.map(goal => {
-          // Sync goal progress with calculated savings
-          syncGoalProgress(goal);
-          const savings = calculateCategorySavings(goal);
-          const progress = calculateProgress(goal);
-          const formattedProgress = Math.round(progress);
-          const tip = generateTip(goal);
-          const isOverspent = savings < 0;
-          const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
-          return <Card key={goal.id} className="relative">
+          {goals?.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-muted-foreground">
+                No goals yet. Click "Add Goal" to create your first financial goal!
+              </p>
+            </div>
+          ) : (
+            goals?.map((goal) => {
+              // Sync goal progress with calculated savings
+              syncGoalProgress(goal);
+
+              const savings = calculateCategorySavings(goal);
+              const progress = calculateProgress(goal);
+              const formattedProgress = Math.round(progress);
+              const tip = generateTip(goal);
+              const isOverspent = savings < 0;
+              const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
+
+              return (
+                <Card key={goal.id} className="relative">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
                         {goal.title}
                       </CardTitle>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteGoal(goal.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteGoal(goal.id)}
+                      >
                         <span className="sr-only">Delete</span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                           <path d="M3 6h18"></path>
@@ -271,37 +353,64 @@ export default function Goals() {
                       <div className="flex justify-between text-sm">
                         <span>Progress ({formattedProgress}%)</span>
                         <span>
-                          {isOverspent ? <span className="text-destructive">-{formatCurrency(Math.abs(savings), currencyCode)}</span> : `${formatCurrency(Math.max(0, savings), currencyCode)} of ${formatCurrency(goal.target_amount, currencyCode)}`}
+                          {isOverspent ? (
+                            <span className="text-destructive">
+                              -{formatCurrency(Math.abs(savings), currencyCode)}
+                            </span>
+                          ) : (
+                            `${formatCurrency(Math.max(0, savings), currencyCode)} of ${formatCurrency(goal.target_amount, currencyCode)}`
+                          )}
                         </span>
                       </div>
                       
-                      {!hasBudget ? <Alert>
+                      {!hasBudget ? (
+                        <Alert>
                           <AlertDescription className="text-amber-500">
                             No budget set for {goal.category}. Set a budget to track progress.
                           </AlertDescription>
-                        </Alert> : <Progress value={progress} indicatorClassName={isOverspent ? "bg-destructive" : progress >= 100 ? "bg-green-500" : progress > 50 ? "bg-primary" : progress > 25 ? "bg-amber-500" : "bg-red-500"} />}
+                        </Alert>
+                      ) : (
+                        <Progress 
+                          value={progress} 
+                          indicatorClassName={
+                            isOverspent ? "bg-destructive" : 
+                            progress >= 100 ? "bg-green-500" : 
+                            progress > 50 ? "bg-primary" : 
+                            progress > 25 ? "bg-amber-500" : "bg-red-500"
+                          } 
+                        />
+                      )}
                       
                       <div className="mt-2 text-xs text-muted-foreground">
                         <p>Based on {goal.category} budget savings this month</p>
                       </div>
                     </div>
 
-                    {isOverspent && <Alert variant="destructive">
+                    {isOverspent && (
+                      <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
                           You've overspent your {goal.category} budget. Progress is on hold until you start saving.
                         </AlertDescription>
-                      </Alert>}
+                      </Alert>
+                    )}
 
                     <Alert>
                       <AlertDescription>{tip}</AlertDescription>
                     </Alert>
                   </CardContent>
-                </Card>;
-        })}
+                </Card>
+              );
+            })
+          )}
         </div>
       </div>
 
-      <GoalForm open={showGoalForm} onOpenChange={setShowGoalForm} goal={selectedGoal} />
-    </>;
+      <GoalForm 
+        open={showGoalForm} 
+        onOpenChange={setShowGoalForm} 
+        goal={selectedGoal} 
+      />
+    </>
+  );
 }
