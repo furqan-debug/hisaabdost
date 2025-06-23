@@ -8,7 +8,6 @@ import { useSignOut } from "@/hooks/auth/useSignOut";
 import { useOnboarding } from "@/hooks/auth/useOnboarding";
 import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
-import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextType = {
   user: User | null;
@@ -24,26 +23,9 @@ type AuthContextType = {
   updatePassword: (email: string, code: string, newPassword: string) => Promise<void>;
 };
 
-// Create the context with a default value that won't be used
-// but satisfies TypeScript requirements
-const initialContextValue: AuthContextType = {
-  user: null,
-  loading: true,
-  signInWithEmail: async () => { throw new Error("AuthContext not initialized"); },
-  signUp: async () => { throw new Error("AuthContext not initialized"); },
-  verifyOtp: async () => { throw new Error("AuthContext not initialized"); },
-  resendOtp: async () => { throw new Error("AuthContext not initialized"); },
-  signOut: async () => { throw new Error("AuthContext not initialized"); },
-  sendPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
-  verifyPasswordResetCode: async () => { throw new Error("AuthContext not initialized"); },
-  verifyPasswordResetToken: async () => { throw new Error("AuthContext not initialized"); },
-  updatePassword: async () => { throw new Error("AuthContext not initialized"); },
-};
-
-const AuthContext = createContext<AuthContextType>(initialContextValue);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Log the component render
   console.log("AuthProvider rendering");
   
   const { user, loading, session } = useAuthSession();
@@ -79,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

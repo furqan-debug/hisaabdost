@@ -9,10 +9,10 @@ export const useVerification = () => {
   const verifyOtp = async (email: string, token: string) => {
     try {
       console.log("Verifying OTP:", email, token);
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
-        type: "email"
+        type: "signup"
       });
       
       if (error) {
@@ -20,8 +20,11 @@ export const useVerification = () => {
         throw error;
       }
       
-      toast.success("Email verified successfully!");
-      navigate("/app/dashboard");
+      if (data.user) {
+        console.log("OTP verification successful");
+        toast.success("Email verified successfully!");
+        navigate("/app/dashboard");
+      }
     } catch (error: any) {
       console.error("OTP verification error:", error);
       toast.error(error.message || "Verification failed");
@@ -31,16 +34,18 @@ export const useVerification = () => {
 
   const resendOtp = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
+      console.log("Resending OTP to:", email);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
         options: {
-          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/auth`,
         }
       });
       
       if (error) {
-        if (error.status === 429) {
-          toast.warning("Too many requests. Please wait a minute before trying again.");
+        if (error.message.includes('rate limit')) {
+          toast.warning("Please wait a moment before requesting another code.");
         } else {
           throw error;
         }
@@ -48,7 +53,8 @@ export const useVerification = () => {
         toast.success("New verification code sent! Please check your email.");
       }
     } catch (error: any) {
-      toast.error(error.message || "Error sending verification code");
+      console.error("Resend OTP error:", error);
+      toast.error(error.message || "Failed to resend verification code");
       throw error;
     }
   };

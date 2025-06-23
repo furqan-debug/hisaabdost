@@ -8,18 +8,37 @@ export const useSignIn = () => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting sign in for:", email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
       
-      toast.success("Successfully signed in!");
-      navigate("/app/dashboard");
+      if (data.user) {
+        console.log("Sign in successful for user:", data.user.id);
+        toast.success("Successfully signed in!");
+        navigate("/app/dashboard");
+      }
     } catch (error: any) {
       console.error("Sign in error:", error);
-      toast.error(error.message || "Error signing in");
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Error signing in";
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password";
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = "Please verify your email address first";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
       throw error;
     }
   };

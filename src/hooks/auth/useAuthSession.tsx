@@ -37,79 +37,77 @@ export const useAuthSession = () => {
 
   useEffect(() => {
     console.log("Setting up auth session listener");
-    let subscription: { unsubscribe: () => void } | null = null;
+    let mounted = true;
     
-    // Check for session immediately using cache-first approach
-    const initAuth = async () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        // First set up auth state listener
-        const { data } = await supabase.auth.onAuthStateChange(async (event, currentSession) => {
-          console.log("Auth state change:", event);
-          const currentUser = currentSession?.user ?? null;
-          
-          setUser(currentUser);
-          setSession(currentSession);
-          setCachedUser(currentUser);
-
-          if (currentUser) {
-            try {
-              // Perform user profile updates in the background instead of blocking
-              setTimeout(async () => {
-                try {
-                  // Update last login timestamp and sync user metadata with profiles
-                  const { data: profileData, error: profileCheckError } = await supabase
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', currentUser.id)
-                    .single();
-                    
-                  if (!profileCheckError) {
-                    // Profile exists, update it
-                    await supabase
-                      .from('profiles')
-                      .update({ 
-                        last_login_at: new Date().toISOString(),
-                        // Update profile full_name with user_metadata if available and profile name is empty
-                        ...(currentUser.user_metadata?.full_name && !profileData.full_name ? 
-                          { full_name: currentUser.user_metadata.full_name } : {})
-                      })
-                      .eq('id', currentUser.id);
-                  }
-                } catch (err) {
-                  console.error("Background profile update failed:", err);
-                }
-              }, 2000); // Delay by 2 seconds to prioritize UI loading
-            } catch (error) {
-              console.error("Error in background tasks:", error);
-            }
-          }
-        });
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        subscription = data.subscription;
-
-        // Now check for existing session
-        const { data: sessionData } = await supabase.auth.getSession();
-        setSession(sessionData.session);
+        if (error) {
+          console.error("Error getting initial session:", error);
+        }
         
-        const currentUser = sessionData.session?.user ?? null;
-        setUser(currentUser);
-        setCachedUser(currentUser);
-        
-        // Only mark loading as complete after session check
-        setLoading(false);
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setCachedUser(session?.user ?? null);
+          setLoading(false);
+        }
       } catch (error) {
-        console.error("Auth initialization error:", error);
-        setLoading(false);
+        console.error("Error in getInitialSession:", error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
-    
-    initAuth();
-    
-    // Return cleanup function to unsubscribe
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log("Auth state change:", event, currentSession?.user?.id);
+        
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setCachedUser(currentSession?.user ?? null);
+          
+          // Update user profile in background if user exists
+          if (currentSession?.user) {
+            setTimeout(async () => {
+              try {
+                const { data: profileData, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', currentSession.user.id)
+                  .single();
+                  
+                if (!profileError) {
+                  // Update last login
+                  await supabase
+                    .from('profiles')
+                    .update({ 
+                      last_login_at: new Date().toISOString(),
+                      ...(currentSession.user.user_metadata?.full_name && !profileData.full_name ? 
+                        { full_name: currentSession.user.user_metadata.full_name } : {})
+                    })
+                    .eq('id', currentSession.user.id);
+                }
+              } catch (err) {
+                console.error("Background profile update failed:", err);
+              }
+            }, 1000);
+          }
+        }
       }
+    );
+
+    // Get initial session
+    getInitialSession();
+    
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 

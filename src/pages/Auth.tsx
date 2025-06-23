@@ -12,28 +12,7 @@ import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 const Auth = () => {
-  // Safe access to auth context with fallback mechanism
-  let user = null;
-  let verifyOtp = async (email: string, token: string) => {
-    console.error("Auth context not available");
-  };
-  let resendOtp = async (email: string) => {
-    console.error("Auth context not available");
-  };
-  let sendPasswordResetCode = async (email: string) => {
-    console.error("Auth context not available");
-  };
-  
-  try {
-    const auth = useAuth();
-    user = auth.user;
-    verifyOtp = auth.verifyOtp;
-    resendOtp = auth.resendOtp;
-    sendPasswordResetCode = auth.sendPasswordResetCode;
-  } catch (error) {
-    console.error("Error accessing auth context:", error);
-  }
-
+  const { user, verifyOtp, resendOtp, sendPasswordResetCode } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
