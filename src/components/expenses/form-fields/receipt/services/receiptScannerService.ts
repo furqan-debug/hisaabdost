@@ -93,6 +93,21 @@ export async function scanReceipt({
     console.log(`🚀 ReceiptScanner: Calling scan-receipt edge function...`);
     const startTime = Date.now();
     
+    // Prepare the request body
+    const requestBody = {
+      file: base64File,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    };
+
+    console.log(`📤 ReceiptScanner: Request body prepared:`, {
+      fileName: requestBody.fileName,
+      fileType: requestBody.fileType,
+      fileSize: requestBody.fileSize,
+      base64Length: requestBody.file.length
+    });
+
     // Call the edge function with proper error handling and timeout
     const timeoutController = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -101,17 +116,30 @@ export async function scanReceipt({
     
     let response;
     try {
-      response = await supabase.functions.invoke('scan-receipt', {
-        body: {
-          file: base64File,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size
-        },
+      // Use fetch directly to ensure proper body transmission
+      const supabaseUrl = 'https://bklfolfivjonzpprytkz.supabase.co';
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrbGZvbGZpdmpvbnpwcHJ5dGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzMjM0NjQsImV4cCI6MjA1NTg5OTQ2NH0.oipdwmQ4lRIyeYX00Irz4q0ZEDlKc9wuQhSPbHRzOKE';
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      const fetchResponse = await fetch(`${supabaseUrl}/functions/v1/scan-receipt`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken || supabaseAnonKey}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify(requestBody),
+        signal: timeoutController.signal
       });
+
+      if (!fetchResponse.ok) {
+        throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+      }
+
+      const responseData = await fetchResponse.json();
+      response = { data: responseData, error: null };
     } catch (invokeError) {
       clearTimeout(timeoutId);
       console.error('❌ ReceiptScanner: Edge function invoke error:', invokeError);
