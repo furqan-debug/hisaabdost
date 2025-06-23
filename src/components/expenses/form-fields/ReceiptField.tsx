@@ -7,6 +7,7 @@ import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
+import { toast } from "sonner";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -56,14 +57,12 @@ export function ReceiptField({
   }, [setFileInputRef, setCameraInputRef]);
 
   const handleUpload = () => {
-    // Only open file dialog if we're not already processing a receipt
     if (!processingStarted && fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
   
   const handleCameraCapture = () => {
-    // Only open camera if we're not already processing a receipt
     if (!processingStarted && cameraInputRef.current) {
       cameraInputRef.current.click();
     }
@@ -77,13 +76,27 @@ export function ReceiptField({
       return;
     }
     
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (2MB limit)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error('Image file too large. Please select a file smaller than 2MB.');
+      return;
+    }
+    
     // Generate fingerprint for the file
     const fingerprint = generateFileFingerprint(file);
-    console.log(`File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint})`);
+    console.log(`📁 File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint})`);
     
     // Check if this file is already being processed in any component
     if (processingCache.has(fingerprint)) {
-      console.log(`File is already being processed: ${fingerprint}`);
+      console.log(`⚠️ File is already being processed: ${fingerprint}`);
+      toast.info('This receipt is already being processed');
       return;
     }
     
@@ -100,8 +113,8 @@ export function ReceiptField({
     // Call the original onFileChange to handle storage
     onFileChange(e);
     
-    // Always open scan dialog for processing - this is the key fix!
-    console.log("Opening scan dialog for automatic processing...");
+    // Open scan dialog for processing
+    console.log("🔍 Opening scan dialog for automatic processing...");
     setScanDialogOpen(true);
     
     // Reset the file input so the same file can be selected again later
@@ -113,13 +126,14 @@ export function ReceiptField({
   // Handle retrying the scan with the existing file
   const handleRetryScan = () => {
     if (receiptFile) {
+      console.log("🔄 Retrying scan with existing file");
       setScanDialogOpen(true);
     }
   };
   
   // Clean up resources when dialog is closed
   const handleCleanup = () => {
-    console.log("Cleaning up resources for file:", currentFileFingerprint.current);
+    console.log("🧹 Cleaning up resources for file:", currentFileFingerprint.current);
     // Remove from processing cache
     if (currentFileFingerprint.current) {
       processingCache.delete(currentFileFingerprint.current);
@@ -132,14 +146,23 @@ export function ReceiptField({
   
   // Handle successful scan completion
   const handleScanSuccess = () => {
-    console.log("Receipt scan completed successfully, triggering refresh");
+    console.log("✅ Receipt scan completed successfully, triggering refresh");
+    
+    // Show success message
+    toast.success('Receipt processed successfully!');
+    
     // Dispatch events to refresh expense lists
-    window.dispatchEvent(new CustomEvent('expenses-updated', { 
-      detail: { timestamp: Date.now(), action: 'receipt-scan' }
-    }));
-    window.dispatchEvent(new CustomEvent('receipt-scanned', { 
-      detail: { timestamp: Date.now() }
-    }));
+    const eventDetail = { 
+      timestamp: Date.now(), 
+      action: 'receipt-scan',
+      source: 'receipt-field' 
+    };
+    
+    window.dispatchEvent(new CustomEvent('expenses-updated', { detail: eventDetail }));
+    window.dispatchEvent(new CustomEvent('receipt-scanned', { detail: eventDetail }));
+    window.dispatchEvent(new CustomEvent('expense-refresh', { detail: eventDetail }));
+    
+    console.log("📡 Refresh events dispatched from ReceiptField");
   };
   
   // Clean up resources when component unmounts
@@ -189,7 +212,7 @@ export function ReceiptField({
         />
       </div>
       
-      {/* Scan Dialog - always shown when a file is selected for auto-processing */}
+      {/* Scan Dialog - shown when a file is selected for auto-processing */}
       {receiptFile && (
         <ReceiptScanDialog
           file={receiptFile}
