@@ -18,19 +18,57 @@ serve(async (req) => {
   }
 
   console.log("=== Receipt scanning function called ===");
+  console.log("Request method:", req.method);
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
   try {
-    const { file, fileName, fileType, fileSize } = await req.json();
+    // Validate request method
+    if (req.method !== 'POST') {
+      throw new Error('Only POST method is allowed');
+    }
+
+    // Validate content type
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error("Invalid content type:", contentType);
+      throw new Error('Content-Type must be application/json');
+    }
+
+    // Get request body text first to check if it's empty
+    const bodyText = await req.text();
+    console.log("Request body length:", bodyText.length);
+    
+    if (!bodyText || bodyText.trim().length === 0) {
+      console.error("Empty request body received");
+      throw new Error('Request body is empty. Please provide file data.');
+    }
+
+    // Parse JSON safely
+    let requestData;
+    try {
+      requestData = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Body content (first 200 chars):", bodyText.substring(0, 200));
+      throw new Error('Invalid JSON in request body: ' + parseError.message);
+    }
+
+    const { file, fileName, fileType, fileSize } = requestData;
 
     console.log(`📥 Request received:`, {
       fileName: fileName || 'unknown',
       fileSize: fileSize ? `${(fileSize / 1024).toFixed(1)}KB` : 'unknown',
       hasFile: !!file,
-      fileType: fileType || 'unknown'
+      fileType: fileType || 'unknown',
+      fileLength: file ? file.length : 0
     });
 
     if (!file) {
-      throw new Error('No file provided');
+      throw new Error('No file provided in request');
+    }
+
+    if (typeof file !== 'string') {
+      throw new Error('File must be provided as base64 string');
     }
 
     // Validate file size (20MB limit for processing)
