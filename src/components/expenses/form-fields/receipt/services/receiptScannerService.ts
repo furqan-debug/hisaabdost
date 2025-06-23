@@ -47,22 +47,45 @@ export async function scanReceipt({
       return { success: false, error: errorMsg };
     }
 
-    // Validate file size (2MB limit)
-    const maxSizeBytes = 2 * 1024 * 1024; // 2MB
+    // Validate file size (5MB limit)
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSizeBytes) {
       const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
-      const errorMsg = `File size exceeds 2MB limit. Your file is ${fileSizeMB}MB. Please choose a smaller image.`;
+      const errorMsg = `File size exceeds 5MB limit. Your file is ${fileSizeMB}MB. Please choose a smaller image.`;
       console.error(`❌ ReceiptScanner: ${errorMsg}`);
       if (onError) onError(errorMsg);
       return { success: false, error: errorMsg };
     }
 
-    if (onProgress) onProgress(20, "Converting image to base64...");
+    if (onProgress) onProgress(20, "Converting image...");
 
-    // Convert file to base64 for edge function
+    // Convert file to base64 using a more memory-efficient approach
     console.log(`🔄 ReceiptScanner: Converting ${file.name} to base64...`);
-    const fileBuffer = await file.arrayBuffer();
-    const base64File = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+    
+    let base64File: string;
+    try {
+      // Use FileReader for better memory handling with large files
+      base64File = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            // Remove the data URL prefix (e.g., "data:image/png;base64,")
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          } else {
+            reject(new Error('Failed to read file as base64'));
+          }
+        };
+        reader.onerror = () => reject(new Error('FileReader error'));
+        reader.readAsDataURL(file);
+      });
+    } catch (conversionError) {
+      console.error('❌ ReceiptScanner: Base64 conversion error:', conversionError);
+      const errorMsg = 'Failed to process image. Please try a smaller image or different format.';
+      if (onError) onError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    
     console.log(`✅ ReceiptScanner: Base64 conversion complete (${base64File.length} chars)`);
     
     if (onProgress) onProgress(40, "Scanning receipt with OCR...");
@@ -70,18 +93,45 @@ export async function scanReceipt({
     console.log(`🚀 ReceiptScanner: Calling scan-receipt edge function...`);
     const startTime = Date.now();
     
-    // Call the edge function with proper error handling
-    const { data, error } = await supabase.functions.invoke('scan-receipt', {
-      body: {
-        file: base64File,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size
+    // Call the edge function with proper error handling and timeout
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      timeoutController.abort();
+    }, 60000); // 60 second timeout
+    
+    let response;
+    try {
+      response = await supabase.functions.invoke('scan-receipt', {
+        body: {
+          file: base64File,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size
+        },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (invokeError) {
+      clearTimeout(timeoutId);
+      console.error('❌ ReceiptScanner: Edge function invoke error:', invokeError);
+      
+      if (invokeError.name === 'AbortError') {
+        console.log('⏰ ReceiptScanner: Request timed out');
+        if (onTimeout) onTimeout();
+        return { success: false, error: 'Processing timed out. Please try again.', isTimeout: true };
       }
-    });
-
+      
+      const errorMsg = `Failed to process receipt: ${invokeError.message || 'Network error'}`;
+      if (onError) onError(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    
+    clearTimeout(timeoutId);
     const duration = Date.now() - startTime;
     console.log(`⏱️ ReceiptScanner: Edge function completed in ${duration}ms`);
+
+    const { data, error } = response;
 
     if (error) {
       console.error('❌ ReceiptScanner: Edge function error:', error);
@@ -108,7 +158,7 @@ export async function scanReceipt({
 
     if (onProgress) onProgress(80, "Processing scan results...");
 
-    // Validate that we have actual receipt data, not fallback data
+    // Validate that we have actual receipt data
     if (!data.success) {
       console.error('❌ ReceiptScanner: Scan was not successful:', data.error);
       const errorMsg = data.error || 'Receipt scanning failed';
@@ -116,11 +166,11 @@ export async function scanReceipt({
       return { success: false, error: errorMsg };
     }
 
-    // Check if this is fallback/mock data
-    if (data.warning && data.warning.includes('limited accuracy')) {
-      console.warn('⚠️ ReceiptScanner: Received fallback data due to OCR limitations');
-      // Still process it, but warn the user
-      if (onProgress) onProgress(85, "Using fallback processing due to OCR limitations...");
+    // Check for timeout in response
+    if (data.isTimeout) {
+      console.log('⏰ ReceiptScanner: Processing timed out on server');
+      if (onTimeout) onTimeout();
+      return { success: false, error: 'Processing timed out', isTimeout: true };
     }
 
     // Ensure we have items

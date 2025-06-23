@@ -11,36 +11,40 @@ const corsHeaders = {
 // Get environment variables
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-// Helper function to resize image if too large
-async function resizeImageIfNeeded(base64File: string): Promise<string> {
-  try {
-    // Convert base64 to bytes to check size
-    const sizeInBytes = (base64File.length * 3) / 4;
-    const maxSizeBytes = 20 * 1024 * 1024; // 20MB limit for OpenAI
-    
-    console.log(`Image size: ${(sizeInBytes / 1024 / 1024).toFixed(2)}MB`);
-    
-    if (sizeInBytes <= maxSizeBytes) {
-      return base64File;
-    }
-    
-    console.log("Image too large, needs resizing");
-    // For now, we'll truncate if too large - in production you'd want proper image resizing
-    const maxBase64Length = Math.floor(maxSizeBytes * 4 / 3);
-    return base64File.substring(0, maxBase64Length);
-  } catch (error) {
-    console.error("Error checking image size:", error);
-    return base64File;
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-}
 
-// Process receipt with OpenAI (when available)
-async function processReceiptWithOpenAI(base64File: string, fileName: string, apiKey: string): Promise<any> {
-  console.log("🤖 Using OpenAI Vision API for OCR processing");
-  
+  console.log("=== Receipt scanning function called ===");
+
   try {
-    // Resize image if needed to prevent payload issues
-    const processedImage = await resizeImageIfNeeded(base64File);
+    const { file, fileName, fileType, fileSize } = await req.json();
+
+    console.log(`📥 Request received:`, {
+      fileName: fileName || 'unknown',
+      fileSize: fileSize ? `${(fileSize / 1024).toFixed(1)}KB` : 'unknown',
+      hasFile: !!file,
+      fileType: fileType || 'unknown'
+    });
+
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
+    // Validate file size (20MB limit for processing)
+    if (fileSize && fileSize > 20 * 1024 * 1024) {
+      throw new Error('File too large. Please use an image smaller than 20MB.');
+    }
+
+    // Check if OpenAI API key is available
+    if (!OPENAI_API_KEY) {
+      console.error("❌ OpenAI API key not configured");
+      throw new Error('Receipt processing service is not configured. Please contact support.');
+    }
+
+    console.log("🤖 Using OpenAI Vision API for OCR processing");
     
     const prompt = `Analyze this receipt image and extract the following information in JSON format:
     {
@@ -74,7 +78,7 @@ async function processReceiptWithOpenAI(base64File: string, fileName: string, ap
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -87,8 +91,8 @@ async function processReceiptWithOpenAI(base64File: string, fileName: string, ap
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${processedImage}`,
-                  detail: 'low' // Use low detail to reduce processing complexity
+                  url: `data:${fileType || 'image/jpeg'};base64,${file}`,
+                  detail: 'low'
                 }
               }
             ]
@@ -158,77 +162,14 @@ async function processReceiptWithOpenAI(base64File: string, fileName: string, ap
       parsedData.items = validItems;
       
       console.log(`✅ OpenAI processing successful: ${validItems.length} valid items found`);
-      return parsedData;
+      return new Response(JSON.stringify(parsedData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     } catch (parseError) {
       console.error("❌ Error parsing OpenAI response:", parseError);
       console.error("Raw response:", content);
       throw new Error('Failed to parse OCR results');
     }
-  } catch (error) {
-    console.error("❌ Error in OpenAI processing:", error);
-    throw error;
-  }
-}
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  console.log("=== Receipt scanning function called ===");
-
-  try {
-    const { file, fileName, fileType, fileSize } = await req.json();
-
-    console.log(`📥 Request received:`, {
-      fileName: fileName || 'unknown',
-      fileSize: fileSize ? `${(fileSize / 1024).toFixed(1)}KB` : 'unknown',
-      hasFile: !!file,
-      fileType: fileType || 'unknown'
-    });
-
-    if (!file) {
-      throw new Error('No file provided');
-    }
-
-    // Validate file size (limit to 5MB to prevent memory issues)
-    if (fileSize && fileSize > 5 * 1024 * 1024) {
-      throw new Error('File too large. Please use an image smaller than 5MB.');
-    }
-
-    console.log("🔍 Processing receipt with OCR...");
-
-    let result;
-    
-    // Check if OpenAI API key is available
-    if (!OPENAI_API_KEY) {
-      console.error("❌ OpenAI API key not configured");
-      throw new Error('Receipt processing service is not configured. Please contact support.');
-    }
-
-    try {
-      // Try OpenAI processing with improved error handling
-      result = await processReceiptWithOpenAI(file, fileName || 'receipt', OPENAI_API_KEY);
-      
-      // Ensure we have a valid result
-      if (!result || !result.success || !result.items || result.items.length === 0) {
-        throw new Error('No valid items could be extracted from the receipt');
-      }
-      
-    } catch (error) {
-      console.error("❌ OpenAI OCR failed:", error);
-      
-      // Return the actual error instead of falling back to mock data
-      throw new Error(`Receipt processing failed: ${error.message}`);
-    }
-
-    console.log("✅ Processing completed successfully");
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
     console.error('💥 Error in scan-receipt function:', error);
     
