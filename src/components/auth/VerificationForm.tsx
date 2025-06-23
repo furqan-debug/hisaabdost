@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { RefreshCw, CheckCircle, XCircle, Clock } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 type VerificationFormProps = {
@@ -68,7 +67,7 @@ export const VerificationForm = ({
         });
       }, 1000);
     } catch (error) {
-      // Error is handled in the hook
+      // Error is handled elsewhere
     } finally {
       setResendLoading(false);
     }
@@ -80,22 +79,6 @@ export const VerificationForm = ({
         <Label htmlFor="otp" className="text-center block">
           Enter the 6-digit verification code sent to {email}
         </Label>
-
-        {/* Rate limiting info */}
-        <motion.div
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex p-3 mt-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700 items-start gap-3"
-        >
-          <Clock className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="font-medium">Email delivery may be delayed</p>
-            <p className="text-blue-600 mt-1">
-              Due to rate limiting, your verification code might take a few moments to arrive. 
-              Please check your email (including spam folder) before requesting a new code.
-            </p>
-          </div>
-        </motion.div>
 
         <div className="flex justify-center pt-2">
           <InputOTP

@@ -17,7 +17,6 @@ export const useSignUp = () => {
       
       if (signUpError) throw signUpError;
       
-      // Account created successfully, now try to send verification code
       try {
         const { error: otpError } = await supabase.auth.signInWithOtp({
           email,
@@ -27,46 +26,30 @@ export const useSignUp = () => {
         });
         
         if (otpError) {
-          // Handle rate limiting gracefully
+          // If this is a rate limit error, we still want to proceed to verification
+          // because the account was created successfully
           if (otpError.status === 429) {
-            toast.success("Account created successfully!", {
-              description: "Verification code will be sent shortly. Please check your email in a few moments."
-            });
+            toast.warning("Verification code may be delayed due to rate limiting. Please wait a moment before requesting a new code.");
             return { email };
           }
-          
-          // For other OTP errors, still proceed since account was created
-          console.warn("OTP sending failed:", otpError);
-          toast.success("Account created successfully!", {
-            description: "Please check your email for the verification code."
-          });
-          return { email };
+          throw otpError;
         }
         
-        toast.success("Account created! Please check your email for the verification code.");
+        toast.success("Verification code sent! Please check your email.");
         return { email };
-        
       } catch (otpError: any) {
-        // If OTP sending fails but account was created, still proceed
-        console.warn("OTP error:", otpError);
-        toast.success("Account created successfully!", {
-          description: "Please check your email for the verification code."
-        });
-        return { email };
+        // If OTP sending fails but account was created, still redirect to verification
+        if (otpError.status === 429) {
+          toast.warning("Verification code may be delayed due to rate limiting. Please wait a moment before requesting a new code.");
+          return { email };
+        }
+        console.error("OTP error:", otpError);
+        toast.error(otpError.message || "Error sending verification code");
+        throw otpError;
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      
-      // Handle specific signup errors
-      if (error.message?.includes("User already registered")) {
-        toast.error("An account with this email already exists. Please try signing in instead.");
-      } else if (error.message?.includes("Password should be at least")) {
-        toast.error("Password must be at least 6 characters long.");
-      } else if (error.message?.includes("Invalid email")) {
-        toast.error("Please enter a valid email address.");
-      } else {
-        toast.error(error.message || "Error creating account. Please try again.");
-      }
+      toast.error(error.message || "Error signing up");
       throw error;
     }
   };

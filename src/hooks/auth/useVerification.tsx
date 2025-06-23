@@ -24,15 +24,7 @@ export const useVerification = () => {
       navigate("/app/dashboard");
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      
-      // Handle specific verification errors
-      if (error.message?.includes("Token has expired")) {
-        toast.error("Verification code has expired. Please request a new one.");
-      } else if (error.message?.includes("Invalid token")) {
-        toast.error("Invalid verification code. Please check and try again.");
-      } else {
-        toast.error(error.message || "Verification failed. Please try again.");
-      }
+      toast.error(error.message || "Verification failed");
       throw error;
     }
   };
@@ -48,9 +40,7 @@ export const useVerification = () => {
       
       if (error) {
         if (error.status === 429) {
-          toast.warning("Please wait a moment before requesting another verification code.", {
-            description: "Rate limiting is in place to prevent spam."
-          });
+          toast.warning("Too many requests. Please wait a minute before trying again.");
         } else {
           throw error;
         }
@@ -58,13 +48,7 @@ export const useVerification = () => {
         toast.success("New verification code sent! Please check your email.");
       }
     } catch (error: any) {
-      console.error("Resend OTP error:", error);
-      
-      if (error.status === 429) {
-        toast.warning("Please wait a moment before requesting another verification code.");
-      } else {
-        toast.error(error.message || "Error sending verification code. Please try again.");
-      }
+      toast.error(error.message || "Error sending verification code");
       throw error;
     }
   };
