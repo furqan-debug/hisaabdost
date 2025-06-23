@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -15,7 +16,7 @@ export interface ScanResult {
   total?: string;
   error?: string;
   warning?: string;
-  isTimeout?: boolean; // Add the missing property
+  isTimeout?: boolean;
 }
 
 /**
@@ -46,12 +47,25 @@ export async function processScanResults(
 
     console.log(`👤 ProcessScanResults: Processing for user ${user.id}`);
 
-    // Prepare expenses for database insertion
+    // Prepare expenses for database insertion with better error handling
     const expensesToInsert = scanResults.items.map(item => {
+      // Validate amount
+      let amount = 0;
+      try {
+        amount = parseFloat(item.amount);
+        if (isNaN(amount) || amount <= 0) {
+          console.warn(`Invalid amount for item: ${item.description}, setting to 0`);
+          amount = 0;
+        }
+      } catch (error) {
+        console.warn(`Error parsing amount for item: ${item.description}`, error);
+        amount = 0;
+      }
+
       const expense = {
         user_id: user.id,
-        amount: parseFloat(item.amount),
-        description: item.description.trim(),
+        amount: amount,
+        description: item.description.trim() || 'Store Purchase',
         date: item.date || scanResults.date || new Date().toISOString().split('T')[0],
         category: item.category || 'Other',
         payment: item.paymentMethod || 'Card',
@@ -68,7 +82,13 @@ export async function processScanResults(
       });
 
       return expense;
-    });
+    }).filter(expense => expense.amount > 0); // Only include expenses with valid amounts
+
+    if (expensesToInsert.length === 0) {
+      console.error('❌ ProcessScanResults: No valid expenses to insert');
+      toast.error('No valid expenses could be created from the receipt');
+      return false;
+    }
 
     console.log(`💰 ProcessScanResults: Inserting ${expensesToInsert.length} expenses...`);
 
