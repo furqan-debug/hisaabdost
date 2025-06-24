@@ -24,7 +24,7 @@ const FinnyButton = ({
   
   return (
     <motion.div 
-      className={`fixed z-40 ${isMobile ? 'right-4 bottom-20' : 'right-4 bottom-8'}`} 
+      className={`fixed z-40 ${isMobile ? 'right-2 bottom-16' : 'right-2 bottom-4'}`} 
       initial={{
         scale: 0,
         opacity: 0,
@@ -50,10 +50,15 @@ const FinnyButton = ({
       }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
+      style={{
+        // Add padding to prevent clipping of glow effects
+        padding: '16px',
+        margin: '-16px'
+      }}
     >
       {/* Outer glow effect */}
       <motion.div
-        className="absolute inset-0 rounded-full"
+        className="absolute inset-4 rounded-full pointer-events-none"
         animate={{
           boxShadow: isHovering 
             ? '0 0 30px rgba(147, 51, 234, 0.4), 0 0 60px rgba(147, 51, 234, 0.2)' 
@@ -80,7 +85,7 @@ const FinnyButton = ({
       >
         {/* Animated pulse rings */}
         <motion.div 
-          className="absolute inset-0 rounded-full bg-purple-400"
+          className="absolute inset-0 rounded-full bg-purple-400 pointer-events-none"
           animate={{ 
             scale: [1, 1.6, 1],
             opacity: [0.6, 0, 0.6]
@@ -94,7 +99,7 @@ const FinnyButton = ({
         />
         
         <motion.div 
-          className="absolute inset-0 rounded-full bg-indigo-400"
+          className="absolute inset-0 rounded-full bg-indigo-400 pointer-events-none"
           animate={{ 
             scale: [1, 1.4, 1],
             opacity: [0.4, 0, 0.4]
