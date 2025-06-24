@@ -1,5 +1,6 @@
 
 import { formatCurrency } from "@/utils/formatters";
+import { CurrencyCode } from "@/utils/currencyUtils";
 import { startOfMonth, endOfMonth, isSameMonth } from "date-fns";
 
 interface Goal {
@@ -73,12 +74,12 @@ export function useGoalCalculations(expenses: any[], budgets: any[], currencyCod
 
     // If savings are negative (overspent)
     if (savings < 0) {
-      return `You've overspent your ${goal.category} budget by ${formatCurrency(Math.abs(savings), currencyCode)}. Try to reduce spending to get back on track.`;
+      return `You've overspent your ${goal.category} budget by ${formatCurrency(Math.abs(savings), currencyCode as CurrencyCode)}. Try to reduce spending to get back on track.`;
     }
 
     // Progress tips based on percentage
     if (progress < 25) {
-      return `Focus on reducing your ${goal.category} spending to increase your savings. Try to save at least ${formatCurrency(goal.target_amount * 0.25, currencyCode)} this month.`;
+      return `Focus on reducing your ${goal.category} spending to increase your savings. Try to save at least ${formatCurrency(goal.target_amount * 0.25, currencyCode as CurrencyCode)} this month.`;
     } else if (progress < 50) {
       return "You're making progress! Keep reducing expenses to reach your goal faster.";
     } else if (progress < 75) {

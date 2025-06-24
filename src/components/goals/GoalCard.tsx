@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Trophy, Target, TrendingUp, Calendar, DollarSign, AlertTriangle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { formatCurrency } from "@/utils/formatters";
+import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface Goal {
   id: string;
@@ -97,7 +98,7 @@ export function GoalCard({
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <DollarSign className="h-3 w-3" />
-                <span>{formatCurrency(goal.target_amount, currencyCode)}</span>
+                <span>{formatCurrency(goal.target_amount, currencyCode as CurrencyCode)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
@@ -131,12 +132,12 @@ export function GoalCard({
                 {isOverspent ? (
                   <span className="text-destructive flex items-center gap-1">
                     <TrendingUp className="h-4 w-4 rotate-180" />
-                    -{formatCurrency(Math.abs(savings), currencyCode)}
+                    -{formatCurrency(Math.abs(savings), currencyCode as CurrencyCode)}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
                     <TrendingUp className="h-4 w-4 text-green-600" />
-                    {formatCurrency(Math.max(0, savings), currencyCode)}
+                    {formatCurrency(Math.max(0, savings), currencyCode as CurrencyCode)}
                   </span>
                 )}
               </p>
