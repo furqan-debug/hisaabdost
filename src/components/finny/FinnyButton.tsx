@@ -24,7 +24,7 @@ const FinnyButton = ({
   
   return (
     <motion.div 
-      className={`fixed z-40 ${isMobile ? 'right-2 bottom-16' : 'right-2 bottom-4'}`} 
+      className={`fixed z-40 ${isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4'}`} 
       initial={{
         scale: 0,
         opacity: 0,
