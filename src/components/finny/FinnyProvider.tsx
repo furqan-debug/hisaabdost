@@ -1,8 +1,9 @@
+
 import React, { ReactNode, lazy, Suspense } from 'react';
 import FinnyButton from './FinnyButton';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/formatters';
-import { FinnyContext } from './context/FinnyContext';
+import { FinnyContext, MAX_DAILY_MESSAGES } from './context/FinnyContext';
 import { useFinnyChat } from './hooks/useFinnyChat';
 import { useMessageLimit } from './hooks/useMessageLimit';
 import { validateCategory } from './utils/categoryUtils';
@@ -32,25 +33,31 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     incrementMessageCount
   } = useMessageLimit(user);
   
-  const triggerChat = (message: string) => {
+  const triggerChat = async (message: string) => {
     if (!user) {
       toast.error("Please log in to use Finny");
       return;
     }
     
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
+      return;
+    }
+    
+    // Try to increment the message count first
+    const canSend = await incrementMessageCount();
+    if (!canSend) {
+      toast.error("Unable to send message. Please try again.");
       return;
     }
     
     setQueuedMessage(message);
     setIsOpen(true);
-    incrementMessageCount();
   };
   
-  const addExpense = (amount: number, category: string, description?: string, date?: string) => {
+  const addExpense = async (amount: number, category: string, description?: string, date?: string) => {
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
       return;
     }
     
@@ -70,7 +77,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     message += date ? ` on ${date}` : ` on ${today}`;
     
-    triggerChat(message);
+    await triggerChat(message);
 
     // Listen for successful expense addition and trigger refresh
     const handleExpenseAdded = () => {
@@ -103,9 +110,9 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTimeout(cleanup, 30000);
   };
   
-  const setBudget = (amount: number, category: string, period: string = "monthly") => {
+  const setBudget = async (amount: number, category: string, period: string = "monthly") => {
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
       return;
     }
     
@@ -118,13 +125,13 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       message += ` (originally requested as "${category}")`;
     }
     
-    triggerChat(message);
+    await triggerChat(message);
   };
   
   // Add explicit method to delete budgets
-  const deleteBudget = (category: string) => {
+  const deleteBudget = async (category: string) => {
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
       return;
     }
     
@@ -135,7 +142,7 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       message += ` (originally requested as "${category}")`;
     }
     
-    triggerChat(message);
+    await triggerChat(message);
     
     // Trigger budget update event
     setTimeout(() => {
@@ -150,13 +157,13 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, 300);
   };
   
-  const askFinny = (question: string) => {
+  const askFinny = async (question: string) => {
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
       return;
     }
     
-    triggerChat(question);
+    await triggerChat(question);
   };
 
   return (

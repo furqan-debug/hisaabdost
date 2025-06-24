@@ -22,7 +22,7 @@ export const useMessageSending = (
 ) => {
   const [newMessage, setNewMessage] = useState('');
   const { user } = useAuth();
-  const { isMessageLimitReached } = useFinny();
+  const { isMessageLimitReached, remainingDailyMessages } = useFinny();
   const { processAutoExpense } = useAutoExpenseProcessing(currencyCode);
 
   const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
@@ -41,7 +41,13 @@ export const useMessageSending = (
       return;
     }
 
+    if (remainingDailyMessages <= 0) {
+      toast.error(`You have reached your daily limit of 10 messages. Please try again tomorrow.`);
+      return;
+    }
+
     console.log("Sending message to Finny:", messageText);
+    console.log(`Messages remaining today: ${remainingDailyMessages}`);
 
     // Try auto-processing first
     const autoResult = await processAutoExpense(messageText);

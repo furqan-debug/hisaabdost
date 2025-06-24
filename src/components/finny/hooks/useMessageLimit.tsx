@@ -19,16 +19,17 @@ export function useMessageLimit(user: User | null) {
       }
 
       try {
-        // Get today's date range
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        // Get today's date range in user's timezone
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-        // Count messages from today
-        const { data, error } = await supabase
+        // Count USER messages only from today (not including AI responses)
+        const { count, error } = await supabase
           .from('chat_messages')
-          .select('*', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
+          .eq('is_user', true) // Only count user messages, not AI responses
           .gte('created_at', startOfDay.toISOString())
           .lt('created_at', endOfDay.toISOString());
 
@@ -37,8 +38,10 @@ export function useMessageLimit(user: User | null) {
           return;
         }
 
-        const messageCount = data?.length || 0;
+        const messageCount = count || 0;
         const remaining = Math.max(0, MAX_DAILY_MESSAGES - messageCount);
+        
+        console.log(`Daily message limit check: ${messageCount}/${MAX_DAILY_MESSAGES} messages used today`);
         
         setRemainingDailyMessages(remaining);
         setIsMessageLimitReached(remaining === 0);
@@ -50,13 +53,46 @@ export function useMessageLimit(user: User | null) {
     fetchMessageCount();
   }, [user]);
 
-  // Function to increment the message count
-  const incrementMessageCount = () => {
+  // Function to decrement remaining messages and save to database
+  const incrementMessageCount = async () => {
+    if (!user || isMessageLimitReached) {
+      return false; // Don't allow if no user or limit reached
+    }
+
+    // Optimistically update the UI
     setRemainingDailyMessages(prev => {
       const newCount = Math.max(0, prev - 1);
       setIsMessageLimitReached(newCount === 0);
       return newCount;
     });
+
+    try {
+      // Save the user message to database to track the count
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: user.id,
+          content: 'Message count tracking',
+          is_user: true,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        });
+
+      if (error) {
+        console.error('Error saving message count:', error);
+        // Revert the optimistic update on error
+        setRemainingDailyMessages(prev => Math.min(MAX_DAILY_MESSAGES, prev + 1));
+        setIsMessageLimitReached(false);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error incrementing message count:', error);
+      // Revert the optimistic update on error
+      setRemainingDailyMessages(prev => Math.min(MAX_DAILY_MESSAGES, prev + 1));
+      setIsMessageLimitReached(false);
+      return false;
+    }
   };
 
   return {
