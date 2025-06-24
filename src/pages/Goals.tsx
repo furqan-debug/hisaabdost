@@ -513,11 +513,10 @@ export default function Goals() {
                     </CardContent>
                   </Card>
                 );
-              })
-            )}
-          </div>
-        )}
-      </div>
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <GoalForm 
