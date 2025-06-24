@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trophy, AlertTriangle } from "lucide-react";
+import { Plus, Trophy, AlertTriangle, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -278,132 +278,246 @@ export default function Goals() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Financial Goals</h1>
-            <p className="text-muted-foreground">Track and manage your financial targets</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto p-4 md:p-6 space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Target className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Financial Goals
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Set ambitious targets, track your progress, and achieve your financial dreams
+            </p>
+            <Button 
+              onClick={() => {
+                setSelectedGoal(null);
+                setShowGoalForm(true);
+              }} 
+              size="lg"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Create New Goal
+            </Button>
           </div>
-          <Button 
-            onClick={() => {
-              setSelectedGoal(null);
-              setShowGoalForm(true);
-            }} 
-            className="mx-[7px] "
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Goal
-          </Button>
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Goals Grid */}
           {goals?.length === 0 ? (
-            <div className="col-span-full text-center py-8">
-              <p className="text-muted-foreground">
-                No goals yet. Click "Add Goal" to create your first financial goal!
-              </p>
+            <div className="text-center py-16">
+              <div className="max-w-md mx-auto space-y-6">
+                <div className="w-32 h-32 mx-auto bg-muted/30 rounded-full flex items-center justify-center">
+                  <Target className="h-16 w-16 text-muted-foreground/50" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-semibold text-muted-foreground">No Goals Yet</h3>
+                  <p className="text-muted-foreground">
+                    Start your journey by creating your first financial goal. Every big achievement begins with a clear target!
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => {
+                    setSelectedGoal(null);
+                    setShowGoalForm(true);
+                  }}
+                  variant="outline"
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Get Started
+                </Button>
+              </div>
             </div>
           ) : (
-            goals?.map((goal) => {
-              // Sync goal progress with calculated savings
-              syncGoalProgress(goal);
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {goals?.map((goal) => {
+                // Sync goal progress with calculated savings
+                syncGoalProgress(goal);
 
-              const savings = calculateCategorySavings(goal);
-              const progress = calculateProgress(goal);
-              const formattedProgress = Math.round(progress);
-              const tip = generateTip(goal);
-              const isOverspent = savings < 0;
-              const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
+                const savings = calculateCategorySavings(goal);
+                const progress = calculateProgress(goal);
+                const formattedProgress = Math.round(progress);
+                const tip = generateTip(goal);
+                const isOverspent = savings < 0;
+                const hasBudget = budgets?.some(b => b.category === goal.category && b.amount > 0) ?? false;
 
-              return (
-                <Card key={goal.id} className="relative">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Trophy className={progress >= 100 ? "text-yellow-500" : "text-muted-foreground"} />
-                        {goal.title}
-                      </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteGoal(goal.id)}
-                      >
-                        <span className="sr-only">Delete</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                      </Button>
-                    </div>
-                    <CardDescription>
-                      Target: {formatCurrency(goal.target_amount, currencyCode)}
-                      <br />
-                      Deadline: {format(parseISO(goal.deadline), 'MMM dd, yyyy')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress ({formattedProgress}%)</span>
-                        <span>
-                          {isOverspent ? (
-                            <span className="text-destructive">
-                              -{formatCurrency(Math.abs(savings), currencyCode)}
-                            </span>
-                          ) : (
-                            `${formatCurrency(Math.max(0, savings), currencyCode)} of ${formatCurrency(goal.target_amount, currencyCode)}`
-                          )}
-                        </span>
+                return (
+                  <Card key={goal.id} className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+                    {/* Progress Ring Background */}
+                    <div className="absolute top-4 right-4 w-16 h-16">
+                      <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          className="text-muted/20"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          strokeDasharray={`${(progress / 100) * 176} 176`}
+                          className={
+                            isOverspent ? "text-destructive" : 
+                            progress >= 100 ? "text-green-500" : 
+                            progress > 50 ? "text-primary" : 
+                            progress > 25 ? "text-amber-500" : "text-red-500"
+                          }
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold">{formattedProgress}%</span>
                       </div>
-                      
-                      {!hasBudget ? (
-                        <Alert>
-                          <AlertDescription className="text-amber-500">
-                            No budget set for {goal.category}. Set a budget to track progress.
+                    </div>
+
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between pr-20">
+                        <div className="space-y-2">
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <div className={`p-2 rounded-lg ${
+                              progress >= 100 ? "bg-green-100 text-green-600" : 
+                              progress > 50 ? "bg-primary/10 text-primary" : 
+                              "bg-muted text-muted-foreground"
+                            }`}>
+                              {progress >= 100 ? (
+                                <Trophy className="h-4 w-4" />
+                              ) : (
+                                <Target className="h-4 w-4" />
+                              )}
+                            </div>
+                            <span className="font-semibold">{goal.title}</span>
+                          </CardTitle>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              <span>{formatCurrency(goal.target_amount, currencyCode)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{format(parseISO(goal.deadline), 'MMM dd')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteGoal(goal.id)}
+                        >
+                          <span className="sr-only">Delete</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </Button>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* Progress Section */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Current Progress</p>
+                            <p className="text-lg font-semibold">
+                              {isOverspent ? (
+                                <span className="text-destructive flex items-center gap-1">
+                                  <TrendingUp className="h-4 w-4 rotate-180" />
+                                  -{formatCurrency(Math.abs(savings), currencyCode)}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <TrendingUp className="h-4 w-4 text-green-600" />
+                                  {formatCurrency(Math.max(0, savings), currencyCode)}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Category</p>
+                            <p className="text-sm font-medium">{goal.category}</p>
+                          </div>
+                        </div>
+                        
+                        {!hasBudget ? (
+                          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+                            <AlertTriangle className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-amber-700 dark:text-amber-400">
+                              Set a budget for {goal.category} to track progress automatically
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <>
+                            <Progress 
+                              value={progress} 
+                              className="h-2"
+                              indicatorClassName={
+                                isOverspent ? "bg-destructive" : 
+                                progress >= 100 ? "bg-green-500" : 
+                                progress > 50 ? "bg-primary" : 
+                                progress > 25 ? "bg-amber-500" : "bg-red-500"
+                              } 
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Based on {goal.category} budget savings this month
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Status Alerts */}
+                      {isOverspent && (
+                        <Alert variant="destructive" className="border-destructive/20">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="text-sm">
+                            Budget exceeded. Reduce {goal.category} spending to resume progress.
                           </AlertDescription>
                         </Alert>
-                      ) : (
-                        <Progress 
-                          value={progress} 
-                          indicatorClassName={
-                            isOverspent ? "bg-destructive" : 
-                            progress >= 100 ? "bg-green-500" : 
-                            progress > 50 ? "bg-primary" : 
-                            progress > 25 ? "bg-amber-500" : "bg-red-500"
-                          } 
-                        />
                       )}
-                      
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        <p>Based on {goal.category} budget savings this month</p>
+
+                      {progress >= 100 && (
+                        <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
+                          <Trophy className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-green-700 dark:text-green-400 text-sm">
+                            🎉 Congratulations! Goal achieved!
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Tip Section */}
+                      <div className="p-3 rounded-lg bg-muted/50 border border-muted/30">
+                        <p className="text-xs text-muted-foreground font-medium mb-1">💡 Smart Tip</p>
+                        <p className="text-sm">{tip}</p>
                       </div>
-                    </div>
-
-                    {isOverspent && (
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          You've overspent your {goal.category} budget. Progress is on hold until you start saving.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Alert>
-                      <AlertDescription>{tip}</AlertDescription>
-                    </Alert>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
       </div>
 
       <GoalForm 
