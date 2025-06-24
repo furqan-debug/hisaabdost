@@ -24,6 +24,11 @@ export function ThemeSettings() {
     
     mediaQuery.addEventListener('change', handleChange);
     
+    // Ensure purple theme is always applied
+    document.documentElement.classList.remove("pink");
+    document.documentElement.classList.add("purple");
+    localStorage.setItem("color-theme", "purple");
+    
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
@@ -62,6 +67,11 @@ export function ThemeSettings() {
           <Settings className="mr-2 h-4 w-4" />
           System ({systemTheme})
         </Button>
+      </div>
+      <div className="mt-4 p-3 bg-muted/50 rounded-md">
+        <p className="text-xs text-muted-foreground">
+          Purple color theme is active for all users
+        </p>
       </div>
     </div>
   );

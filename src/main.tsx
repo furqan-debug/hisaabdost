@@ -15,19 +15,14 @@ const preloadResources = () => {
     }
   };
   
-  // Initialize color theme from localStorage before rendering
+  // Initialize purple theme as default for all users
   const initColorTheme = () => {
-    const savedColorTheme = localStorage.getItem("color-theme");
-    
     // Remove any existing theme classes
     document.documentElement.classList.remove("pink", "purple");
     
-    // Apply saved theme if it exists, otherwise use default (which is green)
-    if (savedColorTheme === "pink") {
-      document.documentElement.classList.add("pink");
-    } else if (savedColorTheme === "purple") {
-      document.documentElement.classList.add("purple");
-    }
+    // Always apply purple theme
+    document.documentElement.classList.add("purple");
+    localStorage.setItem("color-theme", "purple");
   };
   
   // Execute preload operations
