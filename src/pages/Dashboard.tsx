@@ -36,20 +36,25 @@ const Dashboard = () => {
     setMonthlyIncome
   } = useDashboardData();
 
-  // Setup notification triggers for dashboard
+  // Only setup notifications when we have complete data and user is not new
+  const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && expenses.length > 0;
+
+  // Setup notification triggers for dashboard - only for established users
   useNotificationTriggers({
-    monthlyExpenses,
-    monthlyIncome,
-    walletBalance,
-    expenses,
+    monthlyExpenses: shouldSetupNotifications ? monthlyExpenses : 0,
+    monthlyIncome: shouldSetupNotifications ? monthlyIncome : 0,
+    walletBalance: shouldSetupNotifications ? walletBalance : 0,
+    expenses: shouldSetupNotifications ? expenses : [],
     previousMonthExpenses: 0, // Would need to fetch from previous month
   });
 
   // Setup month carryover logic
   useMonthCarryover();
 
-  // Setup analytics notifications - this will send insights as notifications
-  useAnalyticsNotifications({ expenses });
+  // Setup analytics notifications - only for established users with sufficient data
+  useAnalyticsNotifications({ 
+    expenses: shouldSetupNotifications && expenses.length >= 20 ? expenses : [] 
+  });
 
   // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {

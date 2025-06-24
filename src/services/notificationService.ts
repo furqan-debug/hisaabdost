@@ -32,19 +32,35 @@ export interface NotificationTrigger {
 }
 
 export class NotificationService {
-  // Much longer cooldown periods to prevent spam
-  private static readonly NOTIFICATION_COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days (was 48 hours)
-  private static readonly WEEKLY_COOLDOWN = 14 * 24 * 60 * 60 * 1000; // 14 days (was 7 days)
-  private static readonly MONTHLY_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 days
-  private static readonly DAILY_LIMIT = 2; // Maximum 2 notifications per day
-  private static readonly SESSION_LIMIT = 1; // Maximum 1 notification per session
+  // Much more aggressive cooldown periods
+  private static readonly NOTIFICATION_COOLDOWN = 14 * 24 * 60 * 60 * 1000; // 14 days
+  private static readonly WEEKLY_COOLDOWN = 21 * 24 * 60 * 60 * 1000; // 21 days
+  private static readonly MONTHLY_COOLDOWN = 60 * 24 * 60 * 60 * 1000; // 60 days
+  private static readonly DAILY_LIMIT = 1; // Maximum 1 notification per day
+  private static readonly SESSION_LIMIT = 3; // Maximum 3 notifications per session
+  private static readonly GLOBAL_SESSION_LIMIT = 1; // Maximum 1 notification per page load
   
   private static lastNotifications: Record<string, number> = {};
   private static dailyCount: Record<string, { date: string; count: number }> = {};
   private static sessionCount = 0;
+  private static globalSessionCount = 0;
+  private static sessionStartTime = Date.now();
 
   static canSendNotification(type: NotificationType, category?: string): boolean {
-    // Check session limit first
+    // Reset session count if it's been more than 30 minutes since session start
+    if (Date.now() - this.sessionStartTime > 30 * 60 * 1000) {
+      this.sessionCount = 0;
+      this.globalSessionCount = 0;
+      this.sessionStartTime = Date.now();
+    }
+
+    // Check global session limit first (most restrictive)
+    if (this.globalSessionCount >= this.GLOBAL_SESSION_LIMIT) {
+      console.log('Global session notification limit reached');
+      return false;
+    }
+
+    // Check session limit
     if (this.sessionCount >= this.SESSION_LIMIT) {
       console.log('Session notification limit reached');
       return false;
@@ -80,7 +96,7 @@ export class NotificationService {
     
     // Only monthly reset can bypass cooldown completely
     if (type === 'monthly-reset') {
-      return true;
+      return this.globalSessionCount < this.GLOBAL_SESSION_LIMIT;
     }
     
     const canSend = (now - lastSent) > cooldownPeriod;
@@ -108,30 +124,31 @@ export class NotificationService {
     
     this.dailyCount[dailyKey].count++;
     this.sessionCount++;
+    this.globalSessionCount++;
     
-    console.log(`Notification sent: ${type}, Daily: ${this.dailyCount[dailyKey].count}/${this.DAILY_LIMIT}, Session: ${this.sessionCount}/${this.SESSION_LIMIT}`);
+    console.log(`Notification sent: ${type}, Daily: ${this.dailyCount[dailyKey].count}/${this.DAILY_LIMIT}, Session: ${this.sessionCount}/${this.SESSION_LIMIT}, Global: ${this.globalSessionCount}/${this.GLOBAL_SESSION_LIMIT}`);
   }
 
   // Much stricter thresholds for notifications
   static shouldTriggerBudgetWarning(spent: number, budget: number): boolean {
     if (budget <= 0 || spent <= 0) return false;
     const percentage = (spent / budget) * 100;
-    return percentage >= 90; // Only warn at 90% (was 85%)
+    return percentage >= 95; // Only warn at 95% (was 90%)
   }
 
   static shouldTriggerOverspending(spent: number, budget: number): boolean {
     if (budget <= 0) return false;
-    return spent > budget * 1.25; // Only trigger for 25% overspending (was 10%)
+    return spent > budget * 2; // Only trigger for 100% overspending (was 25%)
   }
 
   static shouldTriggerBudgetExceeded(spent: number, budget: number): boolean {
     if (budget <= 0) return false;
     const percentage = (spent / budget) * 100;
-    return percentage > 150; // Only trigger for major overspending (was 110%)
+    return percentage > 200; // Only trigger for major overspending (was 150%)
   }
 
   static shouldTriggerUnusualExpense(todayExpenses: number, dailyAverage: number): boolean {
-    return todayExpenses > dailyAverage * 5 && dailyAverage > 50; // 5x average and higher minimum (was 3x and 10)
+    return todayExpenses > dailyAverage * 10 && dailyAverage > 100; // 10x average and higher minimum
   }
 
   static calculateSavingsRate(income: number, expenses: number): number {
@@ -144,24 +161,24 @@ export class NotificationService {
       case 'budget-warning':
         return {
           type: 'warning',
-          title: `Budget Alert: ${trigger.category}`,
-          description: `You've reached ${trigger.percentage}% of your ${trigger.category} budget for this month.`,
+          title: `Critical Budget Alert: ${trigger.category}`,
+          description: `You've reached ${trigger.percentage}% of your ${trigger.category} budget. Consider reducing spending.`,
           category: trigger.category,
         };
 
       case 'overspending':
         return {
           type: 'error',
-          title: `Overspending Alert: ${trigger.category}`,
-          description: `You're significantly overspending on ${trigger.category} this month. Consider reviewing your expenses.`,
+          title: `Severe Overspending: ${trigger.category}`,
+          description: `You're significantly overspending on ${trigger.category}. Immediate attention required.`,
           category: trigger.category,
         };
 
       case 'budget-exceeded':
         return {
           type: 'error',
-          title: `Budget Exceeded: ${trigger.category}`,
-          description: `You've exceeded your ${trigger.category} budget by ${trigger.percentage?.toFixed(1)}%.`,
+          title: `Budget Severely Exceeded: ${trigger.category}`,
+          description: `You've exceeded your ${trigger.category} budget by ${trigger.percentage?.toFixed(1)}%. Take immediate action.`,
           category: trigger.category,
         };
 
@@ -169,44 +186,44 @@ export class NotificationService {
         return {
           type: 'info',
           title: 'New Month Started',
-          description: `Welcome to ${trigger.monthName}! Your expenses and budget tracking have been reset for the new month.`,
+          description: `Welcome to ${trigger.monthName}! Your monthly tracking has been reset.`,
         };
 
       case 'leftover-added':
         return {
           type: 'success',
-          title: 'Leftover Budget Added',
-          description: `${trigger.amount?.toFixed(2)} from last month's unused budget has been added to your wallet automatically.`,
+          title: 'Budget Surplus Added',
+          description: `${trigger.amount?.toFixed(2)} from unused budget has been added to your wallet.`,
         };
 
       case 'unusual-expense':
         return {
           type: 'warning',
-          title: 'Unusually High Daily Spending',
-          description: `Today's spending of ${trigger.amount?.toFixed(2)} is significantly higher than your usual daily average.`,
+          title: 'Extremely High Daily Spending',
+          description: `Today's spending of ${trigger.amount?.toFixed(2)} is dramatically higher than normal.`,
         };
 
       case 'monthly-comparison':
         return {
           type: 'info',
-          title: 'Monthly Spending Update',
+          title: 'Significant Monthly Change',
           description: trigger.comparisonData?.change && trigger.comparisonData.change > 0 
-            ? `You've spent ${Math.abs(trigger.comparisonData.change).toFixed(2)} more than last month.`
-            : `Great job! You've saved ${Math.abs(trigger.comparisonData?.change || 0).toFixed(2)} compared to last month.`,
+            ? `Major increase: You've spent ${Math.abs(trigger.comparisonData.change).toFixed(2)} more than last month.`
+            : `Excellent! You've saved ${Math.abs(trigger.comparisonData?.change || 0).toFixed(2)} compared to last month.`,
         };
 
       case 'progress-update':
         return {
           type: 'success',
-          title: 'Excellent Savings Progress',
-          description: `Outstanding! You've saved ${trigger.percentage}% of your income this month.`,
+          title: 'Outstanding Savings Achievement',
+          description: `Exceptional performance! You've saved ${trigger.percentage}% of your income this month.`,
         };
 
       case 'low-balance':
         return {
           type: 'warning',
-          title: 'Low Wallet Balance',
-          description: `Your wallet balance is running low. Consider adding funds or reviewing your spending.`,
+          title: 'Critical Wallet Balance',
+          description: `Your wallet balance is critically low. Immediate attention needed.`,
         };
 
       default:
@@ -216,5 +233,14 @@ export class NotificationService {
           description: 'You have a new notification.',
         };
     }
+  }
+
+  // Reset daily counts for testing (can be removed in production)
+  static resetDailyCounts(): void {
+    this.dailyCount = {};
+    this.sessionCount = 0;
+    this.globalSessionCount = 0;
+    this.sessionStartTime = Date.now();
+    console.log('Notification counts reset');
   }
 }
