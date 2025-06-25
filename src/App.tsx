@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import "./App.css";
 import { useOfflineData } from "@/hooks/useOfflineData";
 import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
@@ -34,8 +36,8 @@ const queryClient = new QueryClient({
 function App() {
   const { isInitialized } = useOfflineData();
   
-  if (isAuthLoading || !isInitialized) {
-    return <LoadingScreen />;
+  if (!isInitialized) {
+    return <LoadingScreen message="Initializing offline support..." />;
   }
 
   return (

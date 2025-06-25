@@ -1,4 +1,3 @@
-
 import Dexie, { Table } from 'dexie';
 
 // Define the offline data schemas
@@ -163,13 +162,15 @@ export class OfflineStorageService {
 
   async readAll<T>(table: string, userId?: string): Promise<T[]> {
     try {
-      let query = (offlineDB as any)[table].orderBy('created_at');
+      let collection = (offlineDB as any)[table];
       
       if (userId) {
-        query = query.filter((record: any) => record.user_id === userId);
+        collection = collection.where('user_id').equals(userId);
+      } else {
+        collection = collection.toCollection();
       }
       
-      return await query.reverse().toArray();
+      return await collection.reverse().toArray();
     } catch (error) {
       console.error(`Failed to read records from ${table}:`, error);
       return [];
@@ -241,10 +242,7 @@ export class OfflineStorageService {
     try {
       return await offlineDB.sync_queue
         .where('status')
-        .equals('pending')
-        .or('status')
-        .equals('failed')
-        .orderBy('timestamp')
+        .anyOf(['pending', 'failed'])
         .toArray();
     } catch (error) {
       console.error('Failed to get pending sync operations:', error);
