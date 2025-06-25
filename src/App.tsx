@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,8 @@ import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
 import "./App.css";
+import { useOfflineData } from "@/hooks/useOfflineData";
+import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,12 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const { isInitialized } = useOfflineData();
+  
+  if (isAuthLoading || !isInitialized) {
+    return <LoadingScreen />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
