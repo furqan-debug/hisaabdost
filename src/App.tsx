@@ -31,7 +31,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5,
       retry: 1,
-      refetchOnWindowFocus: false, // Reduce unnecessary refetches
+      refetchOnWindowFocus: false,
       refetchOnMount: false,
     },
     mutations: {
@@ -46,10 +46,10 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <TooltipProvider delayDuration={300}>
           <BrowserRouter>
-            <FinnyProvider>
-              <AuthProvider>
-                <CurrencyProvider>
-                  <MonthProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <MonthProvider>
+                  <FinnyProvider>
                     <OfflineProvider>
                       <div className="App">
                         <Routes>
@@ -73,10 +73,10 @@ function App() {
                         <Toaster position="top-right" />
                       </div>
                     </OfflineProvider>
-                  </MonthProvider>
-                </CurrencyProvider>
-              </AuthProvider>
-            </FinnyProvider>
+                  </FinnyProvider>
+                </MonthProvider>
+              </CurrencyProvider>
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
