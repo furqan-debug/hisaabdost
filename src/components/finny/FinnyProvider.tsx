@@ -79,35 +79,40 @@ export const FinnyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     await triggerChat(message);
 
-    // Listen for successful expense addition and trigger refresh
-    const handleExpenseAdded = () => {
-      console.log("Expense added via Finny, triggering refresh events");
+    // Trigger immediate refresh events when expense is added through Finny
+    const triggerRefreshEvents = () => {
+      console.log("Triggering immediate refresh events for Finny expense addition");
       
-      // Trigger multiple refresh events to ensure UI updates
-      setTimeout(() => {
-        const events = ['expenses-updated', 'expense-added', 'expense-refresh'];
-        events.forEach(eventName => {
-          const event = new CustomEvent(eventName, { 
-            detail: { 
-              timestamp: Date.now(),
-              source: 'finny-chat',
-              action: 'add_expense'
-            }
-          });
-          window.dispatchEvent(event);
+      const events = [
+        'expense-added',
+        'expenses-updated', 
+        'expense-refresh',
+        'finny-expense-added'
+      ];
+      
+      events.forEach(eventName => {
+        const event = new CustomEvent(eventName, { 
+          detail: { 
+            timestamp: Date.now(),
+            source: 'finny-chat',
+            action: 'add_expense',
+            amount,
+            category: validCategory,
+            description,
+            date: date || today
+          }
         });
-      }, 1000); // Wait 1 second for backend processing
+        window.dispatchEvent(event);
+        console.log(`Dispatched ${eventName} event`);
+      });
     };
 
-    // Set up one-time listener for this expense addition
-    const cleanup = () => {
-      window.removeEventListener('finny-expense-added', handleExpenseAdded);
-    };
-
-    window.addEventListener('finny-expense-added', handleExpenseAdded, { once: true });
+    // Trigger events immediately
+    triggerRefreshEvents();
     
-    // Cleanup after 30 seconds to prevent memory leaks
-    setTimeout(cleanup, 30000);
+    // Also trigger after a delay to catch any async operations
+    setTimeout(triggerRefreshEvents, 1000);
+    setTimeout(triggerRefreshEvents, 2000);
   };
   
   const setBudget = async (amount: number, category: string, period: string = "monthly") => {

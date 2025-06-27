@@ -148,6 +148,41 @@ export const useMessageSending = (
       setMessages(prev => [...prev, finnyResponseMessage]);
       saveMessage(finnyResponseMessage);
 
+      // Trigger refresh events if the response indicates an action was taken
+      if (hasAction) {
+        console.log("Finny response indicates action taken, triggering refresh events");
+        
+        const triggerRefreshEvents = () => {
+          const events = [
+            'expense-added',
+            'expenses-updated', 
+            'expense-refresh',
+            'finny-expense-added',
+            'wallet-updated',
+            'income-updated',
+            'budget-updated'
+          ];
+          
+          events.forEach(eventName => {
+            const event = new CustomEvent(eventName, { 
+              detail: { 
+                timestamp: Date.now(),
+                source: 'finny-chat',
+                action: 'finny_response',
+                responseContent: data.response
+              }
+            });
+            window.dispatchEvent(event);
+            console.log(`Dispatched ${eventName} event from Finny response`);
+          });
+        };
+
+        // Trigger immediately and with delays
+        triggerRefreshEvents();
+        setTimeout(triggerRefreshEvents, 500);
+        setTimeout(triggerRefreshEvents, 1500);
+      }
+
       try {
         const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
         setQuickReplies(updatedReplies);

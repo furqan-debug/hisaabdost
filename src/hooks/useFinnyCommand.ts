@@ -137,45 +137,38 @@ export function useFinnyCommand() {
     
     addExpense(amount, validCategory, description, expenseDate);
     
-    // Immediately trigger multiple refresh events to ensure the expense list updates
-    const event = new CustomEvent('expense-added', {
-      detail: {
-        timestamp: Date.now(),
-        amount, 
-        category: validCategory,
-        description, 
-        date: expenseDate
-      }
-    });
-    window.dispatchEvent(event);
-    
-    // Wait a bit and trigger another event
-    setTimeout(() => {
-      const updateEvent = new CustomEvent('expenses-updated', { 
-        detail: { 
-          timestamp: Date.now(),
-          amount, 
-          category: validCategory,
-          description, 
-          date: expenseDate
-        }
+    // Immediately trigger comprehensive refresh events
+    const triggerRefreshEvents = () => {
+      console.log("Triggering comprehensive refresh events for recordExpense");
+      
+      const events = [
+        'expense-added',
+        'expenses-updated',
+        'expense-refresh',
+        'finny-expense-added'
+      ];
+      
+      events.forEach(eventName => {
+        const event = new CustomEvent(eventName, {
+          detail: {
+            timestamp: Date.now(),
+            amount, 
+            category: validCategory,
+            description, 
+            date: expenseDate,
+            source: 'finny-command'
+          }
+        });
+        window.dispatchEvent(event);
+        console.log(`Dispatched ${eventName} from recordExpense`);
       });
-      window.dispatchEvent(updateEvent);
-    }, 300);
-    
-    // Final refresh event
-    setTimeout(() => {
-      const finalEvent = new CustomEvent('expense-refresh', { 
-        detail: { 
-          timestamp: Date.now(),
-          amount, 
-          category: validCategory,
-          description, 
-          date: expenseDate
-        }
-      });
-      window.dispatchEvent(finalEvent);
-    }, 1000);
+    };
+
+    // Trigger events immediately and with multiple delays
+    triggerRefreshEvents();
+    setTimeout(triggerRefreshEvents, 300);
+    setTimeout(triggerRefreshEvents, 1000);
+    setTimeout(triggerRefreshEvents, 2000);
   };
   
   /**
