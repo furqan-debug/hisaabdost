@@ -17,6 +17,7 @@ import Budget from "@/pages/Budget";
 import Goals from "@/pages/Goals";
 import History from "@/pages/History";
 import ManageFunds from "@/pages/ManageFunds";
+import TestNotifications from "@/pages/TestNotifications";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
@@ -63,6 +64,7 @@ function App() {
                             <Route path="goals" element={<Goals />} />
                             <Route path="history" element={<History />} />
                             <Route path="manage-funds" element={<ManageFunds />} />
+                            <Route path="test-notifications" element={<TestNotifications />} />
                             <Route index element={<Navigate to="dashboard" replace />} />
                           </Route>
                           <Route path="*" element={<NotFound />} />

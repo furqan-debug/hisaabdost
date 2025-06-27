@@ -1,106 +1,113 @@
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Bell, ChevronDown, User, Settings, LogOut, TestTube } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, Menu, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useMonthContext } from "@/hooks/use-month-context";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
-import SettingsSidebar from "./SettingsSidebar";
+import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./notifications/NotificationBell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-const Navbar = () => {
-  const {
-    user,
-    signOut
-  } = useAuth();
-  const isMobile = useIsMobile();
-  const {
-    selectedMonth,
-    setSelectedMonth
-  } = useMonthContext();
-  const [scrolled, setScrolled] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  const handleLogoClick = () => {
-    window.location.href = '/app/dashboard';
+export default function Navbar() {
+  const { user, signOut } = useAuth();
+  const location = useLocation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsDropdownOpen(false);
   };
 
-  // Get user initials for avatar fallback
-  const getUserInitials = () => {
-    if (!user?.email) return 'U';
-    return user.email.charAt(0).toUpperCase();
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
-  return <nav className="sticky top-0 z-10 border-b border-border/40 bg-background transition-all duration-300 safe-area-top">
-      <div className="flex h-14 items-center justify-between max-w-[480px] px-4 mx-auto">
-        {/* Left: Menu Button */}
-        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="hover:bg-muted transition-all duration-300">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] sm:w-[350px] p-0 overflow-hidden">
-            <SettingsSidebar isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
-          </SheetContent>
-        </Sheet>
-        
-        {/* Center: Logo and Title */}
-        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-200">
-          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-8 w-8 mr-2 rounded-lg bg-white" />
-          <h2 className="font-semibold text-lg text-primary">
-            Hisaab Dost
-          </h2>
+
+  const isTestPage = location.pathname === '/app/test-notifications';
+
+  return (
+    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <div className="flex h-14 items-center px-4">
+        <div className="mr-4 hidden md:flex">
+          <Link to="/app/dashboard" className="mr-6 flex items-center space-x-2">
+            <span className="hidden font-bold sm:inline-block">HisaabDost</span>
+          </Link>
         </div>
         
-        {/* Right: Notification and User Avatar */}
-        <div className="flex items-center gap-2">
-          {/* Notification Bell */}
-          <NotificationBell />
-
-          {/* User Avatar Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="rounded-full h-9 w-9 p-0">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage 
-                    src="https://images.unsplash.com/photo-1501286353178-1ec881214838?w=100&h=100&fit=crop&crop=face" 
-                    alt={user?.email || "User"} 
-                  />
-                  <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
-                    🐵
-                  </AvatarFallback>
-                </Avatar>
-                <span className="sr-only">User menu</span>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Mobile logo */}
+            <Link to="/app/dashboard" className="flex items-center space-x-2 md:hidden">
+              <span className="font-bold">HisaabDost</span>
+            </Link>
+          </div>
+          
+          <nav className="flex items-center space-x-2">
+            {/* Test Notifications Link */}
+            {!isTestPage && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/app/test-notifications" className="flex items-center gap-2">
+                  <TestTube className="h-4 w-4" />
+                  <span className="hidden sm:inline">Test Notifications</span>
+                </Link>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 animate-scale-in">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.email}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email?.split('@')[0]}
-                  </p>
+            )}
+            
+            <NotificationBell />
+            <ThemeToggle />
+            
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {getInitials(user?.user_metadata?.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    {user?.user_metadata?.full_name && (
+                      <p className="font-medium">{user.user_metadata.full_name}</p>
+                    )}
+                    {user?.email && (
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/app/test-notifications" className="flex items-center">
+                    <TestTube className="mr-2 h-4 w-4" />
+                    <span>Test Notifications</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
         </div>
       </div>
-    </nav>;
-};
-export default Navbar;
+    </nav>
+  );
+}
