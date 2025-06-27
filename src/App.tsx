@@ -47,8 +47,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <FinnyProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <FinnyProvider>
             <MonthProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -68,8 +68,8 @@ function App() {
               </Routes>
               <Toaster />
             </MonthProvider>
-          </AuthProvider>
-        </FinnyProvider>
+          </FinnyProvider>
+        </AuthProvider>
       </Router>
     </QueryClientProvider>
   );
