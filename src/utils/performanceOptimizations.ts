@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Performance optimization utilities
 
 // Debounce function for search and filter operations

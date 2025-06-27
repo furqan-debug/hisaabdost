@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useScanReceipt } from "./hooks/useScanReceipt";
 import { useEffect, useRef, useState } from "react";
@@ -6,6 +5,7 @@ import { useReceiptRetry } from "./hooks/useReceiptRetry";
 import { useDialogCleanup } from "./hooks/useDialogCleanup";
 import { ScanDialogContent } from "./components/ScanDialogContent";
 import { ScanProgressBar } from "./components/ScanProgressBar";
+import { useProgressAnimation } from "./hooks/useProgressAnimation";
 
 interface ReceiptScanDialogProps {
   file: File | null;
@@ -72,6 +72,12 @@ export function ReceiptScanDialog({
     setOpen,
     onSuccess,
     processAllItems: true
+  });
+
+  // Use the progress animation hook for smooth progress display
+  const displayedProgress = useProgressAnimation({
+    isScanning: isScanning || isAutoProcessing,
+    backendProgress: scanProgress
   });
 
   const retryHandler = useReceiptRetry({
@@ -207,6 +213,7 @@ export function ReceiptScanDialog({
           <ScanProgressBar 
             isScanning={isScanning || isAutoProcessing} 
             processingComplete={processingComplete}
+            progress={displayedProgress}
           />
         </ScanDialogContent>
       </DialogContent>

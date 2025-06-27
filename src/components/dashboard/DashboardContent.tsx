@@ -16,7 +16,7 @@ interface DashboardContentProps {
   monthlyIncome: number;
   setMonthlyIncome: (income: number) => void;
   savingsRate: number;
-  formatPercentage: (value: string) => string;
+  formatPercentage: (value: number) => string;
   expenses: any[];
   isExpensesLoading: boolean;
   expenseToEdit: any;
