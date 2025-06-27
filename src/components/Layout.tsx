@@ -1,8 +1,8 @@
 
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
+import Sidebar from "./Sidebar";
 import { BottomNavigation } from "./BottomNavigation";
-import { Navbar } from "./Navbar";
+import Navbar from "./Navbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LayoutContainer } from "./layout/LayoutContainer";
 import { LayoutWrapper } from "./layout/LayoutWrapper";
@@ -15,9 +15,9 @@ export default function Layout() {
   const isMobileApp = Capacitor.isNativePlatform();
 
   return (
-    <LayoutContainer>
+    <LayoutContainer isMobile={isMobile} pageTransition={false}>
       {!isMobile && <Sidebar />}
-      <LayoutWrapper isMobile={isMobile}>
+      <LayoutWrapper>
         <Navbar />
         <main className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto">
