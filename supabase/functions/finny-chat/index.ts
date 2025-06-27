@@ -29,9 +29,17 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Enhanced system message for Finny with all capabilities
+// Enhanced system message for Finny with conversational tone
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, goals, income, and wallet funds through natural conversation.
+
+COMMUNICATION STYLE:
+- Write in a conversational, friendly tone like you're talking to a friend
+- Use natural sentence flow without bullet points or asterisks
+- Keep responses concise but warm and helpful
+- Use emojis sparingly and only when they add genuine value
+- Avoid robotic formatting like "Here's what I did:" or "Summary:"
+- Instead of listing actions, weave them naturally into your response
 
 You can perform these actions:
 1. Add/edit/delete expenses
@@ -55,7 +63,18 @@ Action Format Examples:
 
 When the user mentions "today" or doesn't specify a date, always use today's date: ${getTodaysDate()}
 
-Be conversational and helpful. Always confirm what action you're taking.`;
+RESPONSE EXAMPLES:
+Good: "I've added your lunch expense of $15 to your Food category. That brings your food spending this month to $240 so far."
+Bad: "* Added expense: $15 for lunch
+* Category: Food  
+* Date: Today
+Summary: Expense successfully recorded."
+
+Good: "Perfect! I've set up a $300 monthly budget for your Food category. This should help you keep track of your dining expenses."
+Bad: "* Budget created
+* Category: Food
+* Amount: $300/month
+* Status: Active"`;
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -101,7 +120,7 @@ serve(async (req) => {
     // Check if OpenAI API key is available
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({
-        response: `Hello ${userName}! I'm Finny, your financial assistant. However, I'm currently unavailable as the OpenAI API key needs to be configured. Please contact support to enable this feature.`,
+        response: `Hey ${userName}! I'm Finny, your financial assistant. I'm currently offline as my AI service needs to be set up. Please reach out to support to get me running for you.`,
         rawResponse: null,
         visualData: null,
         action: null,
@@ -164,7 +183,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
       // Handle specific error cases
       if (openAIResponse.status === 429) {
         return new Response(JSON.stringify({
-          response: `I'm sorry ${userName}, but I'm currently unavailable due to API limits being reached. This usually resolves within a few hours. Please try again later, or you can continue using the app's other features in the meantime.`,
+          response: `Hey ${userName}, I'm swamped right now due to high demand. This usually clears up in a few hours. Feel free to keep using the app's other features while you wait!`,
           rawResponse: null,
           visualData: null,
           action: null,
@@ -174,7 +193,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
         });
       } else if (openAIResponse.status === 401) {
         return new Response(JSON.stringify({
-          response: `I'm sorry ${userName}, but there's an authentication issue with my AI service. Please contact support to resolve this.`,
+          response: `Sorry ${userName}, there's a technical issue with my connection. Please contact support so they can get me back up and running.`,
           rawResponse: null,
           visualData: null,
           action: null,
@@ -188,7 +207,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
     }
 
     const openAIData = await openAIResponse.json();
-    let responseText = openAIData.choices[0]?.message?.content || "I'm sorry, I couldn't process that request.";
+    let responseText = openAIData.choices[0]?.message?.content || "Sorry, I couldn't process that request right now.";
 
     console.log("OpenAI response:", responseText);
 
@@ -210,7 +229,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
         console.error("Error processing action:", error);
         processedActions.push({ 
           action: actionMatch[1], 
-          result: `❌ Failed to process action: ${error.message}` 
+          result: `Something went wrong while processing that action: ${error.message}` 
         });
       }
     }
@@ -239,7 +258,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
     console.error('Error in Finny chat:', error);
     
     return new Response(JSON.stringify({
-      response: `❌ I'm currently experiencing technical difficulties. Please try again in a few moments, or contact support if the issue persists.`,
+      response: `I'm having some technical difficulties right now. Please try again in a moment, or reach out to support if this keeps happening.`,
       rawResponse: null,
       visualData: null,
       action: null,
