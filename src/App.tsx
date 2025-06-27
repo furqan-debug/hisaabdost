@@ -19,10 +19,7 @@ import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
-import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import "./App.css";
-import { useOfflineData } from "@/hooks/useOfflineData";
-import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,12 +31,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isInitialized } = useOfflineData();
-  
-  if (!isInitialized) {
-    return <LoadingScreen message="Initializing offline support..." />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
