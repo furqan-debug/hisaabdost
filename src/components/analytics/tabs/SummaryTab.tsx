@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 import { groupSimilarExpenses, getTopSpenders, analyzeSpendingPatterns } from "@/utils/expenseGrouping";
 import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency } from "@/utils/formatters";
 import { TrendingUp, TrendingDown, DollarSign, Package, Users, Target } from "lucide-react";
 
 interface SummaryTabProps {
@@ -12,7 +13,9 @@ interface SummaryTabProps {
 }
 
 export function SummaryTab({ expenses }: SummaryTabProps) {
-  const { formatAmount } = useCurrency();
+  const { currencyCode } = useCurrency();
+  
+  const formatAmount = (amount: number) => formatCurrency(amount, currencyCode);
   
   const groupingResult = groupSimilarExpenses(expenses);
   const topSpenders = getTopSpenders(expenses, 5);
