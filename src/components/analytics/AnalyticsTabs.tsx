@@ -29,28 +29,28 @@ export function AnalyticsTabs({
     <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md overflow-hidden rounded-xl">
       <CardContent className="p-0">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b-0 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm p-2 h-auto flex-wrap gap-1 md:flex-nowrap">
+          <TabsList className="w-full rounded-none border-b-0 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm p-2 h-auto">
             <TabsTrigger 
               value="summary" 
-              className="flex-1 min-w-0 rounded-lg border-0 px-3 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20 whitespace-nowrap"
+              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
             >
               Smart Summary
             </TabsTrigger>
             <TabsTrigger 
               value="overview" 
-              className="flex-1 min-w-0 rounded-lg border-0 px-3 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20 whitespace-nowrap"
+              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="trends" 
-              className="flex-1 min-w-0 rounded-lg border-0 px-3 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20 whitespace-nowrap"
+              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
             >
               Trends
             </TabsTrigger>
             <TabsTrigger 
               value="comparison" 
-              className="flex-1 min-w-0 rounded-lg border-0 px-3 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20 whitespace-nowrap"
+              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
             >
               Compare
             </TabsTrigger>
