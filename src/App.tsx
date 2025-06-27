@@ -46,10 +46,10 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <TooltipProvider delayDuration={300}>
           <BrowserRouter>
-            <AuthProvider>
-              <CurrencyProvider>
-                <MonthProvider>
-                  <FinnyProvider>
+            <FinnyProvider>
+              <AuthProvider>
+                <CurrencyProvider>
+                  <MonthProvider>
                     <OfflineProvider>
                       <div className="App">
                         <Routes>
@@ -73,10 +73,10 @@ function App() {
                         <Toaster position="top-right" />
                       </div>
                     </OfflineProvider>
-                  </FinnyProvider>
-                </MonthProvider>
-              </CurrencyProvider>
-            </AuthProvider>
+                  </MonthProvider>
+                </CurrencyProvider>
+              </AuthProvider>
+            </FinnyProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
