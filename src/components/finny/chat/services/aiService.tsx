@@ -72,12 +72,14 @@ export async function processMessageWithAI(
       setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000)
     );
 
-    const { data, error } = await Promise.race([
+    const response = await Promise.race([
       supabase.functions.invoke('finny-chat', {
         body: requestBody,
       }),
       timeoutPromise
-    ]);
+    ]) as { data: any; error: any };
+
+    const { data, error } = response;
 
     if (error) {
       console.error('Error calling Finny edge function:', error);

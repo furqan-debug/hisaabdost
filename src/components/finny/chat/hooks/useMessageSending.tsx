@@ -9,6 +9,7 @@ import { Message, QuickReply } from '../types';
 import { PATTERNS } from '../utils/messagePatterns';
 import { CurrencyCode } from '@/utils/currencyUtils';
 import { useAutoExpenseProcessing } from './useAutoExpenseProcessing';
+import { MAX_DAILY_MESSAGES } from '../../context/FinnyContext';
 
 export const useMessageSending = (
   messages: Message[],
