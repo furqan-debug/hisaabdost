@@ -1,18 +1,18 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExpensesPieChart } from "./ExpensesPieChart";
-import { ExpensesBarChart } from "./ExpensesBarChart";
-import { ExpensesLineChart } from "./ExpensesLineChart";
-import { ExpensesComparison } from "./ExpensesComparison";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
 import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { TrendsTab } from "./tabs/TrendsTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
+import { SummaryTab } from "./tabs/SummaryTab";
+
 interface AnalyticsTabsProps {
   filteredExpenses: any[];
 }
+
 export function AnalyticsTabs({
   filteredExpenses
 }: AnalyticsTabsProps) {
@@ -24,10 +24,15 @@ export function AnalyticsTabs({
   }, {} as Record<string, {
     color: string;
   }>);
-  return <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md overflow-hidden rounded-xl">
+
+  return (
+    <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md overflow-hidden rounded-xl">
       <CardContent className="p-0">
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="summary" className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b-0 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm p-0 my-[4px] h-12 mx-[-5px] px-0">
+            <TabsTrigger value="summary" className="rounded-lg border-0 mx-1 px-6 py-2.5 font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20">
+              Smart Summary
+            </TabsTrigger>
             <TabsTrigger value="overview" className="rounded-lg border-0 mx-1 px-6 py-2.5 font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20">
               Overview
             </TabsTrigger>
@@ -40,6 +45,20 @@ export function AnalyticsTabs({
           </TabsList>
 
           <div className="mt-6 space-y-6 px-4 md:px-6 pb-6 py-0 my-[38px]">
+            <TabsContent value="summary" className="mt-0 focus:outline-none focus:ring-0">
+              <motion.div initial={{
+              opacity: 0,
+              y: 10
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.3
+            }}>
+                <SummaryTab expenses={filteredExpenses} />
+              </motion.div>
+            </TabsContent>
+
             <TabsContent value="overview" className="mt-0 focus:outline-none focus:ring-0">
               <motion.div initial={{
               opacity: 0,
@@ -84,5 +103,6 @@ export function AnalyticsTabs({
           </div>
         </Tabs>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
