@@ -8,12 +8,19 @@ export function usePushNotifications() {
 
   useEffect(() => {
     if (user) {
-      PushNotificationService.initialize();
+      // Initialize push notifications when user is available
+      PushNotificationService.initialize().catch(error => {
+        console.log('Push notification initialization failed:', error);
+      });
     }
   }, [user]);
 
   const sendNotification = async (title: string, body: string, data?: Record<string, any>) => {
-    await PushNotificationService.sendNotification({ title, body, data });
+    try {
+      await PushNotificationService.sendNotification({ title, body, data });
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
   };
 
   return { sendNotification };

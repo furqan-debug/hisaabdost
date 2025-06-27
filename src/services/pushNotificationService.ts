@@ -13,6 +13,7 @@ export class PushNotificationService {
   private static isInitialized = false;
 
   static async initialize() {
+    // Only initialize on native platforms and if not already initialized
     if (!Capacitor.isNativePlatform() || this.isInitialized) {
       console.log('Push notifications not available on web platform or already initialized');
       return;
@@ -29,7 +30,7 @@ export class PushNotificationService {
         // On success, we should be able to receive notifications
         PushNotifications.addListener('registration', (token) => {
           console.log('Push registration success, token: ' + token.value);
-          this.saveDeviceToken(token.value);
+          this.saveDeviceToken(token.value).catch(console.error);
         });
 
         // Some issue with our setup and push will not work
@@ -53,13 +54,17 @@ export class PushNotificationService {
       }
     } catch (error) {
       console.error('Error initializing push notifications:', error);
+      // Don't throw the error - let the app continue without push notifications
     }
   }
 
   private static async saveDeviceToken(token: string) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found, skipping device token save');
+        return;
+      }
 
       const { error } = await supabase
         .from('user_device_tokens')
@@ -83,7 +88,10 @@ export class PushNotificationService {
   static async sendNotification(payload: PushNotificationPayload) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found, cannot send notification');
+        return;
+      }
 
       // Call edge function to send push notification
       const { error } = await supabase.functions.invoke('send-push-notification', {

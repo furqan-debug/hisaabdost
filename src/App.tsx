@@ -18,11 +18,19 @@ import ManageFunds from './pages/ManageFunds';
 import NotFound from './pages/NotFound';
 
 function App() {
-  // Initialize push notifications
+  // Initialize push notifications with error handling
   useEffect(() => {
-    import('./services/pushNotificationService').then(({ PushNotificationService }) => {
-      PushNotificationService.initialize();
-    });
+    const initializePushNotifications = async () => {
+      try {
+        const { PushNotificationService } = await import('./services/pushNotificationService');
+        await PushNotificationService.initialize();
+      } catch (error) {
+        console.log('Push notifications not available:', error);
+        // Continue app initialization even if push notifications fail
+      }
+    };
+
+    initializePushNotifications();
   }, []);
 
   return (
