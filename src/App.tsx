@@ -1,84 +1,104 @@
+import React, { useEffect } from 'react';
+import {
+  IonApp,
+  IonRouterOutlet,
+  setupIonicReact
+} from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
+import { Route, Redirect } from 'react-router-dom';
 
-import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/lib/auth";
-import { ThemeProvider } from "next-themes";
-import { FinnyProvider } from "@/components/finny";
-import { MonthProvider } from "@/hooks/use-month-context";
-import { CurrencyProvider } from "@/hooks/use-currency";
-import { OfflineProvider } from "@/components/offline/OfflineProvider";
-import { OfflineStatusIndicator } from "@/components/offline/OfflineStatusIndicator";
-import Dashboard from "@/pages/Dashboard";
-import Expenses from "@/pages/Expenses";
-import Analytics from "@/pages/Analytics";
-import Budget from "@/pages/Budget";
-import Goals from "@/pages/Goals";
-import History from "@/pages/History";
-import ManageFunds from "@/pages/ManageFunds";
-import Auth from "@/pages/Auth";
-import ResetPassword from "@/pages/ResetPassword";
-import NotFound from "@/pages/NotFound";
-import Layout from "@/components/Layout";
-import "./App.css";
-import "./styles/optimized-animations.css";
+/* Core CSS required for Ionic components to work properly */
+import '@ionic/react/css/core.css';
 
-// Optimized QueryClient configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-      refetchOnWindowFocus: false, // Reduce unnecessary refetches
-      refetchOnMount: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+/* Basic CSS for apps built with Ionic */
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
+
+/* Optional CSS utils that can be commented out */
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/display.css';
+
+/* Theme variables */
+import './theme/variables.css';
+import { useAuth } from './lib/auth';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import Loading from './pages/Loading';
+import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
+import { Toaster } from './components/ui/sonner';
+import { useOnboarding } from './hooks/useOnboarding';
+import { FinnyProvider } from './components/finny/FinnyProvider';
+import { MonthProvider } from './hooks/use-month-context';
+import { CurrencyProvider } from './components/currency/CurrencyProvider';
+
+setupIonicReact();
 
 function App() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { isOnboarded } = useOnboarding();
+
+  // Show loading screen while checking authentication status
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  // Initialize push notifications
+  useEffect(() => {
+    import('./services/pushNotificationService').then(({ PushNotificationService }) => {
+      PushNotificationService.initialize();
+    });
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <TooltipProvider delayDuration={300}>
-          <BrowserRouter>
-            <AuthProvider>
-              <CurrencyProvider>
-                <MonthProvider>
-                  <FinnyProvider>
-                    <OfflineProvider>
-                      <div className="App">
-                        <Routes>
-                          <Route path="/" element={<Navigate to="/auth" replace />} />
-                          <Route path="/auth" element={<Auth />} />
-                          <Route path="/auth/reset-password" element={<ResetPassword />} />
-                          <Route path="/app" element={<Layout />}>
-                            <Route path="dashboard" element={<Dashboard />} />
-                            <Route path="expenses" element={<Expenses />} />
-                            <Route path="analytics" element={<Analytics />} />
-                            <Route path="budget" element={<Budget />} />
-                            <Route path="goals" element={<Goals />} />
-                            <Route path="history" element={<History />} />
-                            <Route path="manage-funds" element={<ManageFunds />} />
-                            <Route index element={<Navigate to="dashboard" replace />} />
-                          </Route>
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                        <OfflineStatusIndicator />
-                        <Toaster position="top-right" />
-                      </div>
-                    </OfflineProvider>
-                  </FinnyProvider>
-                </MonthProvider>
-              </CurrencyProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <IonApp>
+      <CurrencyProvider>
+        <MonthProvider>
+          <FinnyProvider>
+            <IonReactRouter>
+              <IonRouterOutlet>
+                <Route exact path="/">
+                  {isAuthenticated ? (
+                    isOnboarded ? (
+                      <Dashboard />
+                    ) : (
+                      <Onboarding />
+                    )
+                  ) : (
+                    <Redirect to="/login" />
+                  )}
+                </Route>
+                <Route path="/login">
+                  {isAuthenticated ? <Redirect to="/" /> : <Login />}
+                </Route>
+                <Route path="/register">
+                  {isAuthenticated ? <Redirect to="/" /> : <Register />}
+                </Route>
+                <Route path="/forgot-password">
+                  {isAuthenticated ? <Redirect to="/" /> : <ForgotPassword />}
+                </Route>
+                <Route path="/onboarding">
+                  {isAuthenticated ? (isOnboarded ? <Redirect to="/" /> : <Onboarding />) : <Redirect to="/login" />}
+                </Route>
+                <Route path="/dashboard">
+                  {isAuthenticated ? (isOnboarded ? <Dashboard /> : <Redirect to="/onboarding" />) : <Redirect to="/login" />}
+                </Route>
+                <Route>
+                  <Redirect to="/" />
+                </Route>
+              </IonRouterOutlet>
+            </IonReactRouter>
+            <Toaster />
+          </FinnyProvider>
+        </MonthProvider>
+      </CurrencyProvider>
+    </IonApp>
   );
 }
 
