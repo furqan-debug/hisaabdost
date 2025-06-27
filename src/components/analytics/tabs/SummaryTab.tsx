@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -7,6 +6,8 @@ import { groupSimilarExpenses, getTopSpenders, analyzeSpendingPatterns } from "@
 import { useCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/utils/formatters";
 import { TrendingUp, TrendingDown, DollarSign, Package, Users, Target } from "lucide-react";
+import { WastageAlerts } from "../WastageAlerts";
+import { SmartInsights } from "../SmartInsights";
 
 interface SummaryTabProps {
   expenses: any[];
@@ -66,6 +67,12 @@ export function SummaryTab({ expenses }: SummaryTabProps) {
         </Card>
       </div>
 
+      {/* Wastage Alerts Section */}
+      <WastageAlerts expenses={expenses} />
+
+      {/* Smart Savings Insights */}
+      <SmartInsights expenses={expenses} totalSpending={totalSpending} />
+
       {/* Smart Expense Groups */}
       <Card>
         <CardHeader>
@@ -115,6 +122,16 @@ export function SummaryTab({ expenses }: SummaryTabProps) {
                   <p className="text-sm bg-muted/50 rounded p-2">
                     "{group.topExpense.description}" on {group.topExpense.date}
                   </p>
+                  
+                  {/* Smart Insight for this group */}
+                  {group.expenses.length > 4 && (
+                    <div className="bg-blue-50/50 border border-blue-200 rounded p-2">
+                      <p className="text-xs text-blue-700">
+                        💡 <strong>Smart Insight:</strong> You spend {formatAmount(group.totalAmount * 12)} yearly on {group.groupName.toLowerCase()}. 
+                        {group.totalAmount > 2000 ? ' Consider if all of these are necessary.' : ' This seems well-controlled.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
                 <details className="text-sm">
@@ -236,6 +253,15 @@ export function SummaryTab({ expenses }: SummaryTabProps) {
                       {((pattern.totalAmount / totalSpending) * 100).toFixed(1)}%
                     </span>
                   </div>
+                  
+                  {/* Pattern-specific insights */}
+                  {pattern.totalAmount * 12 > 5000 && (
+                    <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                      <p className="text-xs text-amber-800">
+                        💰 This costs you {formatAmount(pattern.totalAmount * 12)} per year
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
