@@ -250,36 +250,6 @@ export type Database = {
           },
         ]
       }
-      notification_logs: {
-        Row: {
-          body: string
-          data: Json | null
-          id: string
-          results: Json | null
-          sent_at: string
-          title: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          data?: Json | null
-          id?: string
-          results?: Json | null
-          sent_at?: string
-          title: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          data?: Json | null
-          id?: string
-          results?: Json | null
-          sent_at?: string
-          title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       password_reset_codes: {
         Row: {
           code: string | null
@@ -361,33 +331,6 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
-        }
-        Relationships: []
-      }
-      push_tokens: {
-        Row: {
-          created_at: string
-          id: string
-          platform: string
-          token: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          platform: string
-          token: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          platform?: string
-          token?: string
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
