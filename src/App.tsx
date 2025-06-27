@@ -34,10 +34,10 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <MonthProvider>
-        <FinnyProvider>
-          <Router>
+    <Router>
+      <AuthProvider>
+        <MonthProvider>
+          <FinnyProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -54,11 +54,11 @@ function App() {
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </Router>
-          <Toaster />
-        </FinnyProvider>
-      </MonthProvider>
-    </AuthProvider>
+            <Toaster />
+          </FinnyProvider>
+        </MonthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
