@@ -4,9 +4,10 @@ import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { EnhancedDashboardContent } from "@/components/dashboard/EnhancedDashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { useMobileNotificationTriggers } from "@/hooks/useMobileNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
+import { useMobilePushNotifications } from "@/hooks/useMobilePushNotifications";
 
 /**
  * Dashboard page component that displays financial overview
@@ -36,11 +37,14 @@ const Dashboard = () => {
     setMonthlyIncome
   } = useDashboardData();
 
+  // Initialize mobile push notifications
+  useMobilePushNotifications();
+
   // Only setup notifications when we have complete data and user is not new
   const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && expenses.length > 0;
 
-  // Setup notification triggers for dashboard - only for established users
-  useNotificationTriggers({
+  // Setup mobile notification triggers for dashboard - only for established users
+  useMobileNotificationTriggers({
     monthlyExpenses: shouldSetupNotifications ? monthlyExpenses : 0,
     monthlyIncome: shouldSetupNotifications ? monthlyIncome : 0,
     walletBalance: shouldSetupNotifications ? walletBalance : 0,
