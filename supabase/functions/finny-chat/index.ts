@@ -29,7 +29,7 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Enhanced system message for Finny with conversational tone
+// Enhanced system message for Finny
 const FINNY_SYSTEM_MESSAGE = `You are Finny, a smart and friendly financial assistant for the Expensify AI app.
 Your role is to help users manage their expenses, budgets, goals, income, and wallet funds through natural conversation.
 
@@ -74,7 +74,12 @@ Good: "Perfect! I've set up a $300 monthly budget for your Food category. This s
 Bad: "* Budget created
 * Category: Food
 * Amount: $300/month
-* Status: Active"`;
+* Status: Active"
+
+ERROR HANDLING:
+- If you encounter any errors, explain them clearly and suggest solutions
+- Always be helpful and provide alternatives when something doesn't work
+- If an action fails, explain what went wrong and how to fix it`;
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -84,36 +89,89 @@ serve(async (req) => {
   }
 
   try {
+    // Validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('Invalid JSON in request body:', error);
+      return new Response(JSON.stringify({
+        response: "I received an invalid request. Please try again.",
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'Invalid request format'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const { 
       message, 
       userId, 
       chatHistory = [], 
       currencyCode = 'USD'
-    } = await req.json();
+    } = requestBody;
 
-    if (!message) {
-      throw new Error('Message is required');
+    // Validate required fields
+    if (!message || typeof message !== 'string') {
+      return new Response(JSON.stringify({
+        response: "Please provide a valid message.",
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'Message is required'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    if (!userId) {
-      throw new Error('User ID is required');
+    if (!userId || typeof userId !== 'string') {
+      return new Response(JSON.stringify({
+        response: "Authentication required. Please log in to use Finny.",
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'User ID is required'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    console.log("Processing request:", { message, userId, currencyCode });
+    console.log("Processing request:", { message: message.substring(0, 100) + '...', userId, currencyCode });
 
     // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Supabase configuration missing');
+      console.error('Supabase configuration missing');
+      return new Response(JSON.stringify({
+        response: "I'm having configuration issues right now. Please contact support to get me running properly.",
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'Supabase configuration missing'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user profile
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('full_name, preferred_currency')
-      .eq('id', userId)
-      .single();
+    // Get user profile with error handling
+    let userProfile = null;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, preferred_currency')
+        .eq('id', userId)
+        .single();
+      userProfile = data;
+    } catch (profileError) {
+      console.warn('Could not fetch user profile:', profileError);
+    }
 
     const userName = userProfile?.full_name || 'there';
 
@@ -130,8 +188,8 @@ serve(async (req) => {
       });
     }
 
-    // Fetch user's financial context for better responses
-    const [expensesResult, budgetsResult, goalsResult, walletResult, profileResult] = await Promise.all([
+    // Fetch user's financial context with error handling
+    const [expensesResult, budgetsResult, goalsResult, walletResult, profileResult] = await Promise.allSettled([
       supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(5),
       supabase.from('budgets').select('*').eq('user_id', userId),
       supabase.from('goals').select('*').eq('user_id', userId),
@@ -139,14 +197,21 @@ serve(async (req) => {
       supabase.from('profiles').select('monthly_income').eq('id', userId).single()
     ]);
 
+    // Extract data safely
+    const expenses = expensesResult.status === 'fulfilled' ? expensesResult.value.data || [] : [];
+    const budgets = budgetsResult.status === 'fulfilled' ? budgetsResult.value.data || [] : [];
+    const goals = goalsResult.status === 'fulfilled' ? goalsResult.value.data || [] : [];
+    const walletAdditions = walletResult.status === 'fulfilled' ? walletResult.value.data || [] : [];
+    const monthlyIncome = profileResult.status === 'fulfilled' ? profileResult.value.data?.monthly_income || 'Not set' : 'Not set';
+
     // Prepare context for OpenAI
     const contextMessage = `User Profile: ${userName}
 Currency: ${currencyCode}
-Monthly Income: ${profileResult.data?.monthly_income || 'Not set'}
-Recent Expenses: ${JSON.stringify(expensesResult.data || [])}
-Current Budgets: ${JSON.stringify(budgetsResult.data || [])}
-Financial Goals: ${JSON.stringify(goalsResult.data || [])}
-Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
+Monthly Income: ${monthlyIncome}
+Recent Expenses: ${JSON.stringify(expenses)}
+Current Budgets: ${JSON.stringify(budgets)}
+Financial Goals: ${JSON.stringify(goals)}
+Recent Wallet Additions: ${JSON.stringify(walletAdditions)}`;
 
     // Prepare messages for OpenAI
     const openAIMessages = [
@@ -161,24 +226,39 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
 
     console.log("Sending request to OpenAI");
 
-    // Call OpenAI API with better error handling
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: openAIMessages,
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
-    });
+    // Call OpenAI API with enhanced error handling
+    let openAIResponse;
+    try {
+      openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: openAIMessages,
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+    } catch (fetchError) {
+      console.error("Network error calling OpenAI:", fetchError);
+      return new Response(JSON.stringify({
+        response: `Sorry ${userName}, I'm having network connectivity issues right now. Please check your internet connection and try again in a moment.`,
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'Network error'
+      }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.text();
-      console.error("OpenAI API error:", errorData);
+      const errorText = await openAIResponse.text();
+      console.error("OpenAI API error:", openAIResponse.status, errorText);
       
       // Handle specific error cases
       if (openAIResponse.status === 429) {
@@ -193,7 +273,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
         });
       } else if (openAIResponse.status === 401) {
         return new Response(JSON.stringify({
-          response: `Sorry ${userName}, there's a technical issue with my connection. Please contact support so they can get me back up and running.`,
+          response: `Sorry ${userName}, there's a technical issue with my AI connection. Please contact support so they can get me back up and running.`,
           rawResponse: null,
           visualData: null,
           action: null,
@@ -202,16 +282,41 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       } else {
-        throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorData}`);
+        return new Response(JSON.stringify({
+          response: `Sorry ${userName}, I'm experiencing technical difficulties. Please try again in a moment or contact support if this continues.`,
+          rawResponse: null,
+          visualData: null,
+          action: null,
+          error: `OpenAI API error: ${openAIResponse.status}`
+        }), {
+          status: 503,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
     }
 
-    const openAIData = await openAIResponse.json();
-    let responseText = openAIData.choices[0]?.message?.content || "Sorry, I couldn't process that request right now.";
+    let openAIData;
+    try {
+      openAIData = await openAIResponse.json();
+    } catch (parseError) {
+      console.error("Error parsing OpenAI response:", parseError);
+      return new Response(JSON.stringify({
+        response: `Sorry ${userName}, I received a malformed response from my AI service. Please try again.`,
+        rawResponse: null,
+        visualData: null,
+        action: null,
+        error: 'Invalid response format'
+      }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    console.log("OpenAI response:", responseText);
+    let responseText = openAIData.choices?.[0]?.message?.content || "Sorry, I couldn't process that request right now.";
 
-    // Check for actions in the response
+    console.log("OpenAI response:", responseText.substring(0, 200) + '...');
+
+    // Process actions in the response
     const actionRegex = /\[ACTION:({[^}]+})\]/g;
     let actionMatch;
     let processedActions = [];
@@ -243,7 +348,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
       }
     }
 
-    console.log("Final response:", finalResponse);
+    console.log("Final response:", finalResponse.substring(0, 200) + '...');
 
     return new Response(JSON.stringify({
       response: finalResponse,
@@ -255,7 +360,7 @@ Recent Wallet Additions: ${JSON.stringify(walletResult.data || [])}`;
     });
 
   } catch (error) {
-    console.error('Error in Finny chat:', error);
+    console.error('Unexpected error in Finny chat:', error);
     
     return new Response(JSON.stringify({
       response: `I'm having some technical difficulties right now. Please try again in a moment, or reach out to support if this keeps happening.`,

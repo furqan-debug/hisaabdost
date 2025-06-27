@@ -17,6 +17,10 @@ export async function processMessageWithAI(
     throw new Error("You must be logged in to use Finny");
   }
 
+  if (!messageToSend?.trim()) {
+    throw new Error("Message cannot be empty");
+  }
+
   console.log("Processing message with AI:", {
     messageToSend,
     userId,
@@ -28,11 +32,15 @@ export async function processMessageWithAI(
 
   // Get enhanced user profile data for personalization
   try {
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
       .select('full_name, age, gender, preferred_currency')
       .eq('id', userId)
       .single();
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.warn("Could not fetch user profile:", profileError);
+    }
 
     console.log("User profile retrieved for AI processing:", {
       userProfileFound: !!userProfile,
@@ -45,7 +53,7 @@ export async function processMessageWithAI(
     const requestBody = {
       message: messageToSend,
       userId,
-      chatHistory: recentMessages,
+      chatHistory: recentMessages.slice(-10), // Send more context but limit to avoid token limits
       analysisType,
       specificCategory,
       currencyCode: effectiveCurrencyCode,
@@ -56,16 +64,34 @@ export async function processMessageWithAI(
 
     console.log("Calling Finny edge function with:", {
       ...requestBody,
-      chatHistory: `${recentMessages.length} messages`
+      chatHistory: `${requestBody.chatHistory.length} messages`
     });
 
-    const { data, error } = await supabase.functions.invoke('finny-chat', {
-      body: requestBody,
-    });
+    // Call with timeout and retry logic
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000)
+    );
+
+    const { data, error } = await Promise.race([
+      supabase.functions.invoke('finny-chat', {
+        body: requestBody,
+      }),
+      timeoutPromise
+    ]);
 
     if (error) {
       console.error('Error calling Finny edge function:', error);
-      throw new Error(`Failed to get response from Finny: ${error.message}`);
+      
+      // Handle specific error types
+      if (error.message?.includes('timeout')) {
+        throw new Error('Request timeout: Finny is taking too long to respond');
+      } else if (error.message?.includes('network')) {
+        throw new Error('Network error: Unable to connect to Finny service');
+      } else if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
+        throw new Error('Authentication error: Please log in again');
+      } else {
+        throw new Error(`Failed to get response from Finny: ${error.message}`);
+      }
     }
 
     if (!data) {
@@ -86,210 +112,150 @@ export async function processMessageWithAI(
       currency: effectiveCurrencyCode
     });
     
-    // Handle different types of actions that Finny can perform
+    // Enhanced action handling with comprehensive event dispatching
     if (data.action) {
       console.log('Processing action from Finny:', data.action);
       
-      // Dispatch MULTIPLE immediate events based on action type to trigger UI updates
       const dispatchEvent = (eventName: string, detail: any) => {
-        const event = new CustomEvent(eventName, { detail });
-        window.dispatchEvent(event);
-        console.log(`Dispatched ${eventName} event:`, detail);
+        try {
+          const event = new CustomEvent(eventName, { detail });
+          window.dispatchEvent(event);
+          console.log(`Dispatched ${eventName} event:`, detail);
+        } catch (eventError) {
+          console.error(`Error dispatching ${eventName} event:`, eventError);
+        }
       };
 
       // Create a base detail object for all events
       const baseDetail = {
         timestamp: Date.now(),
         source: 'finny-chat',
-        actionData: data.action
+        actionData: data.action,
+        userId,
+        currency: effectiveCurrencyCode
+      };
+
+      const triggerMultipleEvents = (eventNames: string[], additionalDetail = {}) => {
+        const detail = { ...baseDetail, ...additionalDetail };
+        
+        eventNames.forEach(eventName => {
+          dispatchEvent(eventName, detail);
+        });
+        
+        // Additional delayed triggers to ensure all components update
+        setTimeout(() => {
+          eventNames.forEach(eventName => {
+            dispatchEvent(eventName, detail);
+          });
+        }, 100);
+        
+        setTimeout(() => {
+          eventNames.forEach(eventName => {
+            dispatchEvent(eventName, detail);
+          });
+        }, 500);
       };
 
       switch (data.action.type) {
         case 'add_expense':
-          console.log('Expense was added, triggering MULTIPLE immediate refresh events');
-          
-          // Dispatch MULTIPLE events immediately for expense updates
-          dispatchEvent('expense-added', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          dispatchEvent('finny-expense-added', baseDetail);
-          dispatchEvent('expense-refresh', baseDetail);
-          
-          // Additional refresh events with different delays to ensure all components update
-          setTimeout(() => {
-            dispatchEvent('expenses-updated', baseDetail);
-            dispatchEvent('expense-refresh', baseDetail);
-          }, 100);
-          
-          setTimeout(() => {
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 500);
-          
-          setTimeout(() => {
-            dispatchEvent('expense-refresh', baseDetail);
-          }, 1000);
+          console.log('Expense was added, triggering comprehensive refresh events');
+          triggerMultipleEvents([
+            'expense-added',
+            'expenses-updated',
+            'finny-expense-added',
+            'expense-refresh',
+            'dashboard-refresh'
+          ], { expenseData: data.action });
           break;
 
         case 'update_expense':
-          console.log('Expense was updated, triggering MULTIPLE refresh events');
-          dispatchEvent('expense-edited', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          dispatchEvent('expense-refresh', baseDetail);
-          
-          setTimeout(() => {
-            dispatchEvent('expenses-updated', baseDetail);
-            dispatchEvent('expense-refresh', baseDetail);
-          }, 100);
+          console.log('Expense was updated, triggering refresh events');
+          triggerMultipleEvents([
+            'expense-edited',
+            'expenses-updated',
+            'expense-refresh',
+            'dashboard-refresh'
+          ], { expenseData: data.action });
           break;
 
         case 'delete_expense':
-          console.log('Expense was deleted, triggering MULTIPLE refresh events');
-          dispatchEvent('expense-deleted', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          dispatchEvent('expense-refresh', baseDetail);
-          
-          setTimeout(() => {
-            dispatchEvent('expenses-updated', baseDetail);
-            dispatchEvent('expense-refresh', baseDetail);
-          }, 100);
+          console.log('Expense was deleted, triggering refresh events');
+          triggerMultipleEvents([
+            'expense-deleted',
+            'expenses-updated',
+            'expense-refresh',
+            'dashboard-refresh'
+          ], { expenseData: data.action });
           break;
 
         case 'set_budget':
         case 'update_budget':
-          console.log('Budget was added or updated, triggering MULTIPLE refresh events');
-          
-          dispatchEvent('budget-updated', baseDetail);
-          dispatchEvent('budget-refresh', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          
-          // Additional refreshes to ensure all dashboard components update
-          setTimeout(() => {
-            dispatchEvent('budget-updated', baseDetail);
-            dispatchEvent('budget-refresh', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 100);
-          
-          setTimeout(() => {
-            dispatchEvent('budget-refresh', baseDetail);
-          }, 500);
+          console.log('Budget was added or updated, triggering refresh events');
+          triggerMultipleEvents([
+            'budget-updated',
+            'budget-refresh',
+            'expenses-updated',
+            'dashboard-refresh'
+          ], { budgetData: data.action });
           break;
 
         case 'delete_budget':
-          console.log('Budget was deleted, triggering MULTIPLE refresh events');
-          
-          dispatchEvent('budget-deleted', { 
-            ...baseDetail, 
-            category: data.action.category 
-          });
-          dispatchEvent('budget-refresh', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          
-          setTimeout(() => {
-            dispatchEvent('budget-refresh', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 100);
+          console.log('Budget was deleted, triggering refresh events');
+          triggerMultipleEvents([
+            'budget-deleted',
+            'budget-refresh',
+            'expenses-updated',
+            'dashboard-refresh'
+          ], { budgetData: data.action });
           break;
 
         case 'set_goal':
         case 'update_goal':
-          console.log('Goal was added or updated, triggering MULTIPLE refresh events');
-          
-          dispatchEvent('goal-updated', baseDetail);
-          dispatchEvent('goal-added', baseDetail);
-          dispatchEvent('goals-refresh', baseDetail);
-          
-          // Multiple goal refresh events to ensure all goal components update
-          setTimeout(() => {
-            dispatchEvent('goal-updated', baseDetail);
-            dispatchEvent('goals-refresh', baseDetail);
-          }, 100);
-          
-          setTimeout(() => {
-            dispatchEvent('goal-updated', baseDetail);
-          }, 500);
+          console.log('Goal was added or updated, triggering refresh events');
+          triggerMultipleEvents([
+            'goal-updated',
+            'goal-added',
+            'goals-refresh',
+            'dashboard-refresh'
+          ], { goalData: data.action });
           break;
 
         case 'delete_goal':
-          console.log('Goal was deleted by Finny, triggering IMMEDIATE and MULTIPLE refresh events');
-          
-          // Immediate events
-          dispatchEvent('goal-deleted', { 
-            ...baseDetail, 
-            title: data.action.title,
-            goalId: data.action.id
-          });
-          dispatchEvent('goals-refresh', baseDetail);
-          dispatchEvent('goal-updated', baseDetail);
-          
-          // Secondary immediate events
-          setTimeout(() => {
-            console.log('Secondary goal deletion refresh events');
-            dispatchEvent('goals-refresh', baseDetail);
-            dispatchEvent('goal-updated', baseDetail);
-            dispatchEvent('goal-deleted', { 
-              ...baseDetail, 
-              title: data.action.title,
-              goalId: data.action.id
-            });
-          }, 50);
-          
-          // Third wave of events
-          setTimeout(() => {
-            console.log('Third wave goal deletion refresh events');
-            dispatchEvent('goals-refresh', baseDetail);
-          }, 200);
-          
-          // Final refresh to ensure UI is updated
-          setTimeout(() => {
-            console.log('Final goal deletion refresh event');
-            dispatchEvent('goals-refresh', baseDetail);
-          }, 500);
+          console.log('Goal was deleted by Finny, triggering comprehensive refresh events');
+          triggerMultipleEvents([
+            'goal-deleted',
+            'goals-refresh',
+            'goal-updated',
+            'dashboard-refresh'
+          ], { goalData: data.action });
           break;
 
         case 'add_wallet_funds':
-          console.log('Wallet funds were added, triggering MULTIPLE refresh events');
-          
-          dispatchEvent('wallet-updated', baseDetail);
-          dispatchEvent('wallet-refresh', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          
-          // Multiple wallet refresh events to ensure all wallet components update
-          setTimeout(() => {
-            dispatchEvent('wallet-updated', baseDetail);
-            dispatchEvent('wallet-refresh', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 100);
-          
-          setTimeout(() => {
-            dispatchEvent('wallet-updated', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 500);
+          console.log('Wallet funds were added, triggering refresh events');
+          triggerMultipleEvents([
+            'wallet-updated',
+            'wallet-refresh',
+            'expenses-updated',
+            'dashboard-refresh'
+          ], { walletData: data.action });
           break;
 
         case 'set_income':
         case 'update_income':
-          console.log('Income was updated, triggering MULTIPLE refresh events');
-          
-          dispatchEvent('income-updated', baseDetail);
-          dispatchEvent('income-refresh', baseDetail);
-          dispatchEvent('expenses-updated', baseDetail);
-          dispatchEvent('budget-refresh', baseDetail);
-          
-          // Multiple income refresh events to ensure all income-related components update
-          setTimeout(() => {
-            dispatchEvent('income-updated', baseDetail);
-            dispatchEvent('income-refresh', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-            dispatchEvent('budget-refresh', baseDetail);
-          }, 100);
-          
-          setTimeout(() => {
-            dispatchEvent('income-updated', baseDetail);
-            dispatchEvent('expenses-updated', baseDetail);
-          }, 500);
+          console.log('Income was updated, triggering refresh events');
+          triggerMultipleEvents([
+            'income-updated',
+            'income-refresh',
+            'expenses-updated',
+            'budget-refresh',
+            'dashboard-refresh'
+          ], { incomeData: data.action });
           break;
 
         default:
           console.log('Unknown action type:', data.action.type);
+          // Still trigger general refresh for unknown actions
+          triggerMultipleEvents(['dashboard-refresh'], { unknownAction: data.action });
       }
     }
 
@@ -297,15 +263,20 @@ export async function processMessageWithAI(
   } catch (error) {
     console.error('Error processing AI message:', error);
     
-    // Provide more specific error messages
-    if (error.message.includes('fetch')) {
+    // Provide more specific error messages based on error type
+    if (error.message?.includes('fetch')) {
       throw new Error('Network error: Unable to connect to Finny service');
-    } else if (error.message.includes('timeout')) {
+    } else if (error.message?.includes('timeout')) {
       throw new Error('Request timeout: Finny is taking too long to respond');
-    } else if (error.message.includes('Failed to get response')) {
+    } else if (error.message?.includes('Failed to get response')) {
       throw new Error('Service error: Finny service is temporarily unavailable');
+    } else if (error.message?.includes('Authentication')) {
+      throw new Error('Authentication error: Please log in again');
+    } else if (error.message?.includes('Invalid response')) {
+      throw new Error('Service error: Received invalid response from Finny');
     }
     
+    // Re-throw the original error if it's already well-formatted
     throw error;
   }
 }

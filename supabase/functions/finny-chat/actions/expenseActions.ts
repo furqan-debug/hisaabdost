@@ -1,4 +1,3 @@
-
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { validateAndFormatDate, getTodaysDate } from "../utils/dateUtils.ts";
 
@@ -28,7 +27,7 @@ export async function addExpense(
     category: action.category,
     description: action.description || action.category,
     date: validatedDate,
-    payment: action.paymentMethod || "Cash",
+    payment: action.paymentMethod || "Cash", // Use 'payment' not 'payment_method'
     notes: action.notes || null,
     is_recurring: action.isRecurring || false,
   };
@@ -58,7 +57,7 @@ export async function addExpense(
     ? "today" 
     : `on ${validatedDate}`;
     
-  return `I've successfully added the ${action.category} expense of Rs ${amount} for ${action.description || action.category} ${formattedDate}. The expense has been saved to your records.`;
+  return `I've successfully added the ${action.category} expense of ${action.amount} for ${action.description || action.category} ${formattedDate}. The expense has been saved to your records.`;
 }
 
 export async function updateExpense(
@@ -71,6 +70,12 @@ export async function updateExpense(
   // Validate date if present in the update
   if (updateData.date) {
     updateData.date = validateAndFormatDate(updateData.date);
+  }
+  
+  // Fix payment method field name
+  if (updateData.paymentMethod) {
+    updateData.payment = updateData.paymentMethod;
+    delete updateData.paymentMethod;
   }
   
   const { error } = await supabase
@@ -122,6 +127,9 @@ export async function deleteExpense(
       const validDate = validateAndFormatDate(action.date);
       query = query.eq("date", validDate);
     }
+
+    // Add limit to prevent accidental mass deletion
+    query = query.limit(1);
 
     const { error } = await query;
     if (error) {

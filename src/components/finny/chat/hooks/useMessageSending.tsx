@@ -21,37 +21,41 @@ export const useMessageSending = (
   currencyCode: CurrencyCode
 ) => {
   const [newMessage, setNewMessage] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
   const { user } = useAuth();
   const { isMessageLimitReached, remainingDailyMessages } = useFinny();
   const { processAutoExpense } = useAutoExpenseProcessing(currencyCode);
 
-  const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string) => {
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000;
+
+  const handleSendMessage = async (e: React.FormEvent | null, customMessage?: string, isRetry = false) => {
     if (e) e.preventDefault();
     
     let messageText = customMessage || newMessage;
-    if (!messageText.trim() || isLoading) return;
+    if (!messageText?.trim() || isLoading) return;
 
+    // Validate user authentication
     if (!user) {
       toast.error("Please log in to chat with Finny");
       return;
     }
 
+    // Check message limits
     if (isMessageLimitReached) {
-      toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+      toast.error(`Daily message limit reached (${MAX_DAILY_MESSAGES} messages). Please try again tomorrow.`);
       return;
     }
 
     if (remainingDailyMessages <= 0) {
-      toast.error(`You have reached your daily limit of 10 messages. Please try again tomorrow.`);
+      toast.error(`You have reached your daily limit of ${MAX_DAILY_MESSAGES} messages. Please try again tomorrow.`);
       return;
     }
 
     console.log("Sending message to Finny:", messageText);
     console.log(`Messages remaining today: ${remainingDailyMessages}`);
 
-    // Try auto-processing first
-    const autoResult = await processAutoExpense(messageText);
-
+    // Create user message
     const userMessage = {
       id: Date.now().toString(),
       content: messageText,
@@ -60,13 +64,16 @@ export const useMessageSending = (
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    saveMessage(userMessage);
-    setNewMessage('');
-    setIsLoading(true);
-    setIsTyping(true);
-
     try {
+      // Try auto-processing first
+      const autoResult = await processAutoExpense(messageText);
+
+      setMessages(prev => [...prev, userMessage]);
+      saveMessage(userMessage);
+      if (!isRetry) setNewMessage('');
+      setIsLoading(true);
+      setIsTyping(true);
+
       // If we auto-processed something, provide immediate feedback
       if (autoResult.processed) {
         setIsTyping(false);
@@ -82,12 +89,13 @@ export const useMessageSending = (
         setMessages(prev => [...prev, autoResponseMessage]);
         saveMessage(autoResponseMessage);
         setIsLoading(false);
+        setRetryCount(0);
         return;
       }
 
       const recentMessages = [...messages.slice(-5), userMessage];
 
-      // Pattern matching for different types of requests
+      // Enhanced pattern matching
       const categoryMatch = messageText.match(PATTERNS.CATEGORY);
       const summaryMatch = messageText.match(PATTERNS.SUMMARY);
       const deleteExpenseMatch = messageText.match(PATTERNS.DELETE_EXPENSE);
@@ -124,7 +132,13 @@ export const useMessageSending = (
 
       console.log(`Processing message with currency ${currencyCode} for Finny chat`);
       
-      const data = await processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode);
+      // Process with AI with timeout
+      const data = await Promise.race([
+        processMessageWithAI(messageText, user.id, recentMessages, analysisType, specificCategory, currencyCode),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 30000)
+        )
+      ]);
       
       console.log("Received response from Finny:", data);
       
@@ -148,9 +162,9 @@ export const useMessageSending = (
       setMessages(prev => [...prev, finnyResponseMessage]);
       saveMessage(finnyResponseMessage);
 
-      // Trigger refresh events if the response indicates an action was taken
+      // Enhanced refresh event handling
       if (hasAction) {
-        console.log("Finny response indicates action taken, triggering refresh events");
+        console.log("Finny response indicates action taken, triggering comprehensive refresh events");
         
         const triggerRefreshEvents = () => {
           const events = [
@@ -160,7 +174,8 @@ export const useMessageSending = (
             'finny-expense-added',
             'wallet-updated',
             'income-updated',
-            'budget-updated'
+            'budget-updated',
+            'dashboard-refresh'
           ];
           
           events.forEach(eventName => {
@@ -177,12 +192,15 @@ export const useMessageSending = (
           });
         };
 
-        // Trigger immediately and with delays
+        // Multiple refresh triggers with different timings
         triggerRefreshEvents();
+        setTimeout(triggerRefreshEvents, 100);
         setTimeout(triggerRefreshEvents, 500);
+        setTimeout(triggerRefreshEvents, 1000);
         setTimeout(triggerRefreshEvents, 1500);
       }
 
+      // Update quick replies
       try {
         const updatedReplies = updateQuickRepliesForResponse(messageText, data.response, categoryMatch);
         setQuickReplies(updatedReplies);
@@ -190,23 +208,45 @@ export const useMessageSending = (
         console.error("Error updating quick replies:", replyError);
       }
 
+      // Reset retry count on success
+      setRetryCount(0);
+
     } catch (error) {
       console.error('Error in Finny chat:', error);
       
+      setIsTyping(false);
+      
+      // Retry logic
+      if (!isRetry && retryCount < MAX_RETRIES && error.message.includes('timeout')) {
+        console.log(`Retrying message (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        setRetryCount(prev => prev + 1);
+        
+        toast.info(`Request timed out. Retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+        
+        setTimeout(() => {
+          handleSendMessage(null, messageText, true);
+        }, RETRY_DELAY * (retryCount + 1));
+        
+        return;
+      }
+      
       let errorMessage = "Sorry, I'm having trouble processing your request right now.";
       
-      if (error.message.includes("Failed to get response")) {
-        errorMessage = "I'm having connectivity issues. Please try again in a moment.";
+      if (error.message.includes("timeout")) {
+        errorMessage = "The request took too long to process. Please try again with a simpler question.";
+      } else if (error.message.includes("Failed to get response")) {
+        errorMessage = "I'm having connectivity issues. Please check your internet connection and try again.";
       } else if (error.message.includes("Invalid response")) {
         errorMessage = "I received an unexpected response. Please try rephrasing your message.";
+      } else if (error.message.includes("Network error")) {
+        errorMessage = "Network connection failed. Please check your internet and try again.";
       }
       
       toast.error(errorMessage);
       
-      setIsTyping(false);
       const errorResponseMessage = {
         id: (Date.now() + 1).toString(),
-        content: `❌ ${errorMessage} Please try again later.`,
+        content: `❌ ${errorMessage}\n\n${retryCount >= MAX_RETRIES ? 'Maximum retries reached. ' : ''}Please try again later or contact support if the issue persists.`,
         isUser: false,
         timestamp: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -214,6 +254,11 @@ export const useMessageSending = (
       
       setMessages(prev => [...prev, errorResponseMessage]);
       saveMessage(errorResponseMessage);
+      
+      // Reset retry count after max retries
+      if (retryCount >= MAX_RETRIES) {
+        setRetryCount(0);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -222,6 +267,7 @@ export const useMessageSending = (
   return {
     newMessage,
     setNewMessage,
-    handleSendMessage
+    handleSendMessage,
+    retryCount
   };
 };
