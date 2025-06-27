@@ -5,17 +5,39 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { logWalletActivity } from "@/services/activityLogService";
 import { WalletAdditionInput, WalletAddition } from "./types";
+import { offlineStorage } from "@/services/offlineStorageService";
 
 export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Add funds mutation
+  // Add funds mutation with offline support
   const addFundsMutation = useMutation({
     mutationFn: async (addition: WalletAdditionInput) => {
       if (!user) throw new Error('User not authenticated');
       
       console.log('Adding funds:', addition);
+      
+      // If offline, save to pending sync
+      if (!navigator.onLine) {
+        const offlineFund = {
+          id: `temp_${Date.now()}`,
+          user_id: user.id,
+          amount: addition.amount,
+          description: addition.description || 'Added funds',
+          date: addition.date || new Date().toISOString().split('T')[0],
+          fund_type: addition.fund_type || 'manual',
+          carryover_month: addition.carryover_month,
+          created_at: new Date().toISOString(),
+          is_deleted_by_user: false
+        };
+        
+        offlineStorage.addToPendingSync('wallet', offlineFund);
+        window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+        
+        return offlineFund;
+      }
+      
       const { data, error } = await supabase
         .from('wallet_additions')
         .insert({
@@ -31,7 +53,23 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
 
       if (error) {
         console.error('Error adding funds:', error);
-        throw error;
+        // If server error, save offline as fallback
+        const offlineFund = {
+          id: `temp_${Date.now()}`,
+          user_id: user.id,
+          amount: addition.amount,
+          description: addition.description || 'Added funds',
+          date: addition.date || new Date().toISOString().split('T')[0],
+          fund_type: addition.fund_type || 'manual',
+          carryover_month: addition.carryover_month,
+          created_at: new Date().toISOString(),
+          is_deleted_by_user: false
+        };
+        
+        offlineStorage.addToPendingSync('wallet', offlineFund);
+        window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+        
+        return offlineFund;
       }
       
       console.log('Funds added successfully:', data);
@@ -41,22 +79,29 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       // Invalidate all wallet-related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       
-      // Log the wallet activity with fund type
-      try {
-        await logWalletActivity(
-          data.amount, 
-          data.description || 'Added funds to wallet',
-          data.fund_type || 'manual'
-        );
-      } catch (error) {
-        console.error('Failed to log wallet activity:', error);
+      // Log the wallet activity with fund type (only if online)
+      if (navigator.onLine) {
+        try {
+          await logWalletActivity(
+            data.amount, 
+            data.description || 'Added funds to wallet',
+            data.fund_type || 'manual'
+          );
+        } catch (error) {
+          console.error('Failed to log wallet activity:', error);
+        }
       }
       
-      // Only show toast for manual additions to avoid spam
-      if (data.fund_type === 'manual') {
+      // Show appropriate toast message
+      if (navigator.onLine && data.fund_type === 'manual') {
         toast({
           title: "Success",
           description: "Funds added successfully"
+        });
+      } else if (!navigator.onLine) {
+        toast({
+          title: "Saved Offline",
+          description: "Funds will be added when connection is restored"
         });
       }
     },
@@ -70,10 +115,14 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
     }
   });
 
-  // Delete funds mutation (soft delete for carryover funds, hard delete for manual funds)
+  // Delete funds mutation (requires online connection for now)
   const deleteFundsMutation = useMutation({
     mutationFn: async (fundId: string) => {
       if (!user) throw new Error('User not authenticated');
+      
+      if (!navigator.onLine) {
+        throw new Error('Delete operation requires internet connection');
+      }
       
       console.log('Starting delete process for fund ID:', fundId);
       
@@ -144,9 +193,13 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
     },
     onError: (error) => {
       console.error('Delete mutation failed:', error);
+      const message = error.message.includes('internet connection') 
+        ? 'Delete operation requires internet connection'
+        : 'Failed to delete fund entry. Please try again.';
+        
       toast({
         title: "Error",
-        description: "Failed to delete fund entry. Please try again.",
+        description: message,
         variant: "destructive"
       });
     }

@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { ExpenseFormData, UseExpenseFormProps } from "./types";
 import { Expense } from "@/components/expenses/types";
+import { saveExpenseOffline } from "@/services/offlineExpenseService";
 
 interface UseExpenseSubmitProps extends UseExpenseFormProps {
   formData: ExpenseFormData;
@@ -26,84 +27,93 @@ export function useExpenseSubmit({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.amount || !formData.description || !formData.date || !formData.category || !user) return;
+    if (!formData.amount || !formData.description || !formData.date || !formData.category) return;
 
     setIsSubmitting(true);
     try {
-      const expenseData = {
-        user_id: user.id,
-        amount: parseFloat(formData.amount),
-        description: formData.description,
-        date: formData.date,
-        category: formData.category,
-        payment: formData.paymentMethod,
-        notes: formData.notes,
-        is_recurring: formData.isRecurring,
-        receipt_url: formData.receiptUrl
-      };
-
-      let error;
-      let newExpense: Expense | null = null;
-
       if (expenseToEdit) {
-        const { error: updateError } = await supabase
+        // For editing, we still need online connection
+        if (!user) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to edit expenses.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const expenseData = {
+          user_id: user.id,
+          amount: parseFloat(formData.amount),
+          description: formData.description,
+          date: formData.date,
+          category: formData.category,
+          payment: formData.paymentMethod,
+          notes: formData.notes,
+          is_recurring: formData.isRecurring,
+          receipt_url: formData.receiptUrl
+        };
+
+        const { error } = await supabase
           .from('expenses')
           .update(expenseData)
           .eq('id', expenseToEdit.id);
-        error = updateError;
-        
-        if (!error) {
-          newExpense = {
-            ...expenseToEdit,
-            amount: parseFloat(formData.amount),
-            description: formData.description,
-            date: formData.date,
-            category: formData.category,
-            paymentMethod: formData.paymentMethod,
-            notes: formData.notes,
-            isRecurring: formData.isRecurring,
-            receiptUrl: formData.receiptUrl
-          };
+
+        if (error) throw error;
+
+        const updatedExpense: Expense = {
+          ...expenseToEdit,
+          amount: parseFloat(formData.amount),
+          description: formData.description,
+          date: formData.date,
+          category: formData.category,
+          paymentMethod: formData.paymentMethod,
+          notes: formData.notes,
+          isRecurring: formData.isRecurring,
+          receiptUrl: formData.receiptUrl
+        };
+
+        await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+
+        if (onAddExpense) {
+          onAddExpense(updatedExpense);
         }
+
+        toast({
+          title: "Expense Updated",
+          description: "Your expense has been updated successfully.",
+        });
       } else {
-        const { data, error: insertError } = await supabase
-          .from('expenses')
-          .insert([expenseData])
-          .select('id')
-          .single();
-        error = insertError;
+        // For new expenses, use offline-capable service
+        const newExpense: Expense = {
+          id: `temp_${Date.now()}`,
+          amount: parseFloat(formData.amount),
+          description: formData.description,
+          date: formData.date,
+          category: formData.category,
+          paymentMethod: formData.paymentMethod,
+          notes: formData.notes || "",
+          isRecurring: formData.isRecurring,
+          receiptUrl: formData.receiptUrl || ""
+        };
+
+        const success = await saveExpenseOffline(newExpense);
         
-        if (!error && data) {
-          newExpense = {
-            id: data.id,
-            amount: parseFloat(formData.amount),
-            description: formData.description,
-            date: formData.date,
-            category: formData.category,
-            paymentMethod: formData.paymentMethod,
-            notes: formData.notes || "",
-            isRecurring: formData.isRecurring,
-            receiptUrl: formData.receiptUrl || ""
-          };
+        if (success) {
+          // Invalidate queries to refresh data
+          await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+          await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+
+          if (onAddExpense) {
+            onAddExpense(newExpense);
+          }
+
+          // Don't show additional toast here as saveExpenseOffline already shows one
+        } else {
+          throw new Error('Failed to save expense');
         }
       }
-
-      if (error) throw error;
-
-      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
-      // Notify parent about new/updated expense if callback is provided
-      if (onAddExpense && newExpense) {
-        onAddExpense(newExpense);
-      }
-
-      toast({
-        title: expenseToEdit ? "Expense Updated" : "Expense Added",
-        description: expenseToEdit 
-          ? "Your expense has been updated successfully."
-          : "Your expense has been added successfully.",
-      });
 
       resetForm();
       onClose?.();
