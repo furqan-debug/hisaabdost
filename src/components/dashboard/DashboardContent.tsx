@@ -16,7 +16,7 @@ interface DashboardContentProps {
   monthlyIncome: number;
   setMonthlyIncome: (income: number) => void;
   savingsRate: number;
-  formatPercentage: (value: number) => string;
+  formatPercentage: (value: string) => string;
   expenses: any[];
   isExpensesLoading: boolean;
   expenseToEdit: any;
@@ -49,28 +49,27 @@ export function DashboardContent({
   setChartType,
   walletBalance
 }: DashboardContentProps) {
+  // Simplified animations for better performance
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { staggerChildren: 0.05 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 10 },
     show: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.2 }
     }
   };
 
   return (
     <motion.div 
-      className="space-y-5 py-2 touch-scroll-container no-scrollbar"
+      className="space-y-5 py-2"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -93,7 +92,6 @@ export function DashboardContent({
         />
       </motion.div>
 
-      {/* Swapped order: First FinnyCard (Talk to Finny) then AddExpenseButton */}
       <motion.div variants={itemVariants}>
         <FinnyCard />
       </motion.div>

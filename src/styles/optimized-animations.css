@@ -1,0 +1,73 @@
+
+/* Optimized animations with better performance */
+
+/* Use transform and opacity for GPU acceleration */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.2s ease-out forwards;
+  will-change: transform;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+  will-change: transform;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(4px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Optimized hover effects */
+.hover-scale {
+  transition: transform 0.15s ease;
+  will-change: transform;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Disable animations on mobile for better performance */
+@media (max-width: 640px) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none !important;
+  }
+  
+  .hover-scale:hover {
+    transform: none;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

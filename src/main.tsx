@@ -4,30 +4,14 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Preload critical resources
+// Optimized preload operations
 const preloadResources = () => {
-  // Preload auth state before rendering
-  const preloadAuth = () => {
-    try {
-      return JSON.parse(localStorage.getItem('hisaabdost_user_cache') || 'null');
-    } catch (e) {
-      return null;
-    }
-  };
-  
-  // Initialize purple theme as default for all users
-  const initColorTheme = () => {
-    // Remove any existing theme classes
-    document.documentElement.classList.remove("pink", "purple");
-    
-    // Always apply purple theme
+  // Initialize theme without DOM manipulation during render
+  const savedTheme = localStorage.getItem("color-theme");
+  if (!savedTheme) {
     document.documentElement.classList.add("purple");
     localStorage.setItem("color-theme", "purple");
-  };
-  
-  // Execute preload operations
-  initColorTheme();
-  preloadAuth();
+  }
 };
 
 // Run initialization
@@ -38,15 +22,9 @@ const rootElement = document.getElementById("root");
 
 if (rootElement) {
   const root = createRoot(rootElement);
-  root.render(
-    import.meta.env.DEV ? (
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    ) : (
-      <App />
-    )
-  );
+  
+  // Remove React.StrictMode in development for better performance during development
+  root.render(<App />);
 } else {
   console.error('Root element not found');
 }

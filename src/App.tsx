@@ -22,11 +22,18 @@ import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
 import "./App.css";
+import "./styles/optimized-animations.css";
 
+// Optimized QueryClient configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      retry: 1,
+      refetchOnWindowFocus: false, // Reduce unnecessary refetches
+      refetchOnMount: false,
+    },
+    mutations: {
       retry: 1,
     },
   },
@@ -35,8 +42,8 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <TooltipProvider delayDuration={300}>
           <BrowserRouter>
             <AuthProvider>
               <CurrencyProvider>
@@ -61,7 +68,7 @@ function App() {
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                         <OfflineStatusIndicator />
-                        <Toaster />
+                        <Toaster position="top-right" />
                       </div>
                     </OfflineProvider>
                   </FinnyProvider>
