@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
@@ -89,14 +88,22 @@ serve(async (req) => {
 
     console.log('Processing push notification request:', { userId, sendToAll, title });
 
+    // Enhanced debug logging for environment variables
+    console.log('🔍 Environment variable check:');
+    console.log('SUPABASE_URL exists:', !!Deno.env.get('SUPABASE_URL'));
+    console.log('SUPABASE_SERVICE_ROLE_KEY exists:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+    console.log('FIREBASE_SERVICE_ACCOUNT exists:', !!Deno.env.get('FIREBASE_SERVICE_ACCOUNT'));
+    
     // Check if Firebase service account is available
     const firebaseServiceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
     if (!firebaseServiceAccount) {
       console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable is not set');
+      console.log('Available environment variables:', Object.keys(Deno.env.toObject()));
       return new Response(
         JSON.stringify({ 
           error: 'Firebase Service Account not configured',
-          message: 'Please set the FIREBASE_SERVICE_ACCOUNT environment variable in your Supabase project settings'
+          message: 'Please set the FIREBASE_SERVICE_ACCOUNT environment variable in your Supabase project settings',
+          availableEnvVars: Object.keys(Deno.env.toObject()).filter(key => !key.includes('PASS') && !key.includes('KEY')).slice(0, 10)
         }),
         { 
           status: 500, 
@@ -105,9 +112,13 @@ serve(async (req) => {
       );
     }
 
+    console.log('✅ FIREBASE_SERVICE_ACCOUNT found, length:', firebaseServiceAccount.length);
+
     let serviceAccount;
     try {
       serviceAccount = JSON.parse(firebaseServiceAccount);
+      console.log('✅ Service account JSON parsed successfully');
+      console.log('Service account fields:', Object.keys(serviceAccount));
     } catch (error) {
       console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', error);
       return new Response(
@@ -137,6 +148,8 @@ serve(async (req) => {
         }
       );
     }
+
+    console.log('📋 Using Firebase project:', projectId);
 
     let tokens;
     let tokensError;
