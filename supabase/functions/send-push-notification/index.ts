@@ -17,6 +17,62 @@ interface PushNotificationRequest {
 
 const BATCH_SIZE = 50; // Process tokens in batches to avoid overwhelming the system
 
+// Function to generate JWT for FCM v1 API
+async function generateAccessToken(serviceAccount: any): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const jwt = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600, // 1 hour
+    iat: now,
+  };
+
+  // Create JWT header and payload
+  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify(jwt));
+  
+  // Import private key
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    new TextEncoder().encode(serviceAccount.private_key.replace(/\\n/g, '\n')),
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256',
+    },
+    false,
+    ['sign']
+  );
+
+  // Sign the JWT
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    new TextEncoder().encode(`${header}.${payload}`)
+  );
+
+  const signedJWT = `${header}.${payload}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
+
+  // Exchange JWT for access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: signedJWT,
+    }),
+  });
+
+  const tokenData = await tokenResponse.json();
+  if (!tokenResponse.ok) {
+    throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`);
+  }
+
+  return tokenData.access_token;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -33,14 +89,47 @@ serve(async (req) => {
 
     console.log('Processing push notification request:', { userId, sendToAll, title });
 
-    // Check if Firebase Server Key is available
-    const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
-    if (!firebaseServerKey) {
-      console.error('❌ FIREBASE_SERVER_KEY environment variable is not set');
+    // Check if Firebase service account is available
+    const firebaseServiceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+    if (!firebaseServiceAccount) {
+      console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable is not set');
       return new Response(
         JSON.stringify({ 
-          error: 'Firebase Server Key not configured',
-          message: 'Please set the FIREBASE_SERVER_KEY environment variable in your Supabase project settings'
+          error: 'Firebase Service Account not configured',
+          message: 'Please set the FIREBASE_SERVICE_ACCOUNT environment variable in your Supabase project settings'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    let serviceAccount;
+    try {
+      serviceAccount = JSON.parse(firebaseServiceAccount);
+    } catch (error) {
+      console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid Firebase Service Account JSON',
+          message: 'Please check the FIREBASE_SERVICE_ACCOUNT format in your Supabase project settings'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Extract project ID from service account
+    const projectId = serviceAccount.project_id;
+    if (!projectId) {
+      console.error('❌ No project_id found in service account');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing project_id in service account',
+          message: 'Please ensure your service account JSON contains the project_id field'
         }),
         { 
           status: 500, 
@@ -92,6 +181,25 @@ serve(async (req) => {
 
     console.log(`Found ${tokens.length} device tokens to process`);
 
+    // Generate access token for FCM v1 API
+    let accessToken;
+    try {
+      accessToken = await generateAccessToken(serviceAccount);
+      console.log('✅ Successfully generated FCM access token');
+    } catch (error) {
+      console.error('❌ Failed to generate FCM access token:', error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to generate FCM access token',
+          message: error.message
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const results = [];
     let processedCount = 0;
     const errors = [];
@@ -105,24 +213,26 @@ serve(async (req) => {
       const batchPromises = batch.map(async (token) => {
         try {
           if (token.platform === 'android') {
-            // Send FCM notification for Android
-            console.log(`Sending FCM notification to user ${token.user_id}`);
+            // Send FCM v1 notification for Android
+            console.log(`Sending FCM v1 notification to user ${token.user_id}`);
             
             const fcmPayload = {
-              to: token.device_token,
-              notification: {
-                title,
-                body,
-              },
-              data: data || {},
+              message: {
+                token: token.device_token,
+                notification: {
+                  title,
+                  body,
+                },
+                data: data || {},
+              }
             };
 
-            console.log('FCM Payload:', JSON.stringify(fcmPayload, null, 2));
+            console.log('FCM v1 Payload:', JSON.stringify(fcmPayload, null, 2));
 
-            const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
+            const fcmResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
               method: 'POST',
               headers: {
-                'Authorization': `key=${firebaseServerKey}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify(fcmPayload),
@@ -157,9 +267,9 @@ serve(async (req) => {
             };
 
             if (fcmResponse.ok && !fcmResult.error) {
-              console.log(`✅ FCM notification sent successfully to user ${token.user_id}`);
+              console.log(`✅ FCM v1 notification sent successfully to user ${token.user_id}`);
             } else {
-              console.error(`❌ FCM notification failed for user ${token.user_id}:`, fcmResult);
+              console.error(`❌ FCM v1 notification failed for user ${token.user_id}:`, fcmResult);
               errors.push({ 
                 user_id: token.user_id, 
                 error: fcmResult.error || fcmResult,
@@ -218,10 +328,10 @@ serve(async (req) => {
       }
     }
 
-    // Log the notification to database (fix the UUID issue)
+    // Log the notification to database
     try {
       const logData = {
-        user_id: sendToAll || !userId ? null : userId, // Use null instead of 'broadcast' string
+        user_id: sendToAll || !userId ? null : userId,
         title,
         body,
         data,
@@ -229,7 +339,7 @@ serve(async (req) => {
           total_tokens: tokens.length,
           successful: results.filter(r => r.success).length,
           failed: results.filter(r => !r.success).length,
-          errors: errors.length > 0 ? errors.slice(0, 10) : undefined, // Log first 10 errors
+          errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
         },
       };
 
@@ -264,7 +374,7 @@ serve(async (req) => {
         errors: errors.length,
         batch_size: BATCH_SIZE,
         results: results.slice(0, 5), // Return first 5 results as sample
-        firebase_key_configured: !!firebaseServerKey
+        fcm_v1_api_used: true
       }),
       { 
         status: 200, 
