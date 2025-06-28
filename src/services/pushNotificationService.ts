@@ -9,6 +9,10 @@ export interface PushNotificationPayload {
   data?: Record<string, any>;
 }
 
+export interface BroadcastNotificationPayload extends PushNotificationPayload {
+  sendToAll: boolean;
+}
+
 export class PushNotificationService {
   private static isInitialized = false;
 
@@ -106,6 +110,39 @@ export class PushNotificationService {
       }
     } catch (error) {
       console.error('Error in sendNotification:', error);
+    }
+  }
+
+  static async sendBroadcastNotification(payload: BroadcastNotificationPayload) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user found, cannot send broadcast notification');
+        return;
+      }
+
+      console.log('Sending broadcast notification to all users');
+
+      // Call edge function to send push notification to all users
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          sendToAll: true,
+          title: payload.title,
+          body: payload.body,
+          data: payload.data
+        }
+      });
+
+      if (error) {
+        console.error('Error sending broadcast notification:', error);
+        throw error;
+      }
+
+      console.log('Broadcast notification sent successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in sendBroadcastNotification:', error);
+      throw error;
     }
   }
 }

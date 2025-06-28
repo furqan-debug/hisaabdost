@@ -20,8 +20,27 @@ export function usePushNotifications() {
       await PushNotificationService.sendNotification({ title, body, data });
     } catch (error) {
       console.error('Failed to send notification:', error);
+      throw error;
     }
   };
 
-  return { sendNotification };
+  const sendBroadcastNotification = async (title: string, body: string, data?: Record<string, any>) => {
+    try {
+      const result = await PushNotificationService.sendBroadcastNotification({ 
+        title, 
+        body, 
+        data,
+        sendToAll: true 
+      });
+      return result;
+    } catch (error) {
+      console.error('Failed to send broadcast notification:', error);
+      throw error;
+    }
+  };
+
+  return { 
+    sendNotification, 
+    sendBroadcastNotification 
+  };
 }
