@@ -33,6 +33,22 @@ serve(async (req) => {
 
     console.log('Processing push notification request:', { userId, sendToAll, title });
 
+    // Check if Firebase Server Key is available
+    const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
+    if (!firebaseServerKey) {
+      console.error('❌ FIREBASE_SERVER_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Firebase Server Key not configured',
+          message: 'Please set the FIREBASE_SERVER_KEY environment variable in your Supabase project settings'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     let tokens;
     let tokensError;
 
@@ -77,7 +93,6 @@ serve(async (req) => {
     console.log(`Found ${tokens.length} device tokens to process`);
 
     const results = [];
-    const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
     let processedCount = 0;
     const errors = [];
 
@@ -89,40 +104,67 @@ serve(async (req) => {
       // Process each token in the current batch
       const batchPromises = batch.map(async (token) => {
         try {
-          if (token.platform === 'android' && firebaseServerKey) {
+          if (token.platform === 'android') {
             // Send FCM notification for Android
+            console.log(`Sending FCM notification to user ${token.user_id}`);
+            
+            const fcmPayload = {
+              to: token.device_token,
+              notification: {
+                title,
+                body,
+              },
+              data: data || {},
+            };
+
+            console.log('FCM Payload:', JSON.stringify(fcmPayload, null, 2));
+
             const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
               method: 'POST',
               headers: {
                 'Authorization': `key=${firebaseServerKey}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                to: token.device_token,
-                notification: {
-                  title,
-                  body,
-                },
-                data: data || {},
-              }),
+              body: JSON.stringify(fcmPayload),
             });
 
-            const fcmResult = await fcmResponse.json();
+            console.log('FCM Response status:', fcmResponse.status);
+            console.log('FCM Response headers:', Object.fromEntries(fcmResponse.headers.entries()));
+
+            const responseText = await fcmResponse.text();
+            console.log('FCM Response text:', responseText.substring(0, 500));
+
+            let fcmResult;
+            try {
+              fcmResult = JSON.parse(responseText);
+            } catch (parseError) {
+              console.error('❌ Failed to parse FCM response as JSON:', parseError);
+              fcmResult = { 
+                error: 'Invalid JSON response from FCM', 
+                rawResponse: responseText.substring(0, 200),
+                status: fcmResponse.status 
+              };
+            }
+
             processedCount++;
 
             const result = {
               token: token.device_token,
               platform: token.platform,
               user_id: token.user_id,
-              success: fcmResponse.ok,
+              success: fcmResponse.ok && !fcmResult.error,
               result: fcmResult,
             };
 
-            if (fcmResponse.ok) {
+            if (fcmResponse.ok && !fcmResult.error) {
               console.log(`✅ FCM notification sent successfully to user ${token.user_id}`);
             } else {
               console.error(`❌ FCM notification failed for user ${token.user_id}:`, fcmResult);
-              errors.push({ user_id: token.user_id, error: fcmResult });
+              errors.push({ 
+                user_id: token.user_id, 
+                error: fcmResult.error || fcmResult,
+                status: fcmResponse.status 
+              });
             }
 
             return result;
@@ -137,13 +179,13 @@ serve(async (req) => {
               error: 'iOS not configured',
             };
           } else {
-            console.log(`⚠️ Unsupported platform or missing server key for user ${token.user_id}`);
+            console.log(`⚠️ Unsupported platform for user ${token.user_id}: ${token.platform}`);
             return {
               token: token.device_token,
               platform: token.platform,
               user_id: token.user_id,
               success: false,
-              error: 'Unsupported platform or missing server key',
+              error: 'Unsupported platform',
             };
           }
         } catch (error) {
@@ -176,10 +218,10 @@ serve(async (req) => {
       }
     }
 
-    // Log the notification to database
+    // Log the notification to database (fix the UUID issue)
     try {
       const logData = {
-        user_id: userId || 'broadcast', // Use 'broadcast' for system-wide notifications
+        user_id: sendToAll || !userId ? null : userId, // Use null instead of 'broadcast' string
         title,
         body,
         data,
@@ -221,7 +263,8 @@ serve(async (req) => {
         total: tokens.length,
         errors: errors.length,
         batch_size: BATCH_SIZE,
-        results: results.slice(0, 5) // Return first 5 results as sample
+        results: results.slice(0, 5), // Return first 5 results as sample
+        firebase_key_configured: !!firebaseServerKey
       }),
       { 
         status: 200, 
