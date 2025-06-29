@@ -258,7 +258,7 @@ export type Database = {
           results: Json | null
           sent_at: string
           title: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           body: string
@@ -267,7 +267,7 @@ export type Database = {
           results?: Json | null
           sent_at?: string
           title: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           body?: string
@@ -276,7 +276,7 @@ export type Database = {
           results?: Json | null
           sent_at?: string
           title?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -496,7 +496,9 @@ export type Database = {
         Row: {
           created_at: string | null
           device_token: string
+          failed_attempts: number | null
           id: string
+          last_failure_at: string | null
           platform: string
           updated_at: string | null
           user_id: string
@@ -504,7 +506,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           device_token: string
+          failed_attempts?: number | null
           id?: string
+          last_failure_at?: string | null
           platform: string
           updated_at?: string | null
           user_id: string
@@ -512,7 +516,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           device_token?: string
+          failed_attempts?: number | null
           id?: string
+          last_failure_at?: string | null
           platform?: string
           updated_at?: string | null
           user_id?: string

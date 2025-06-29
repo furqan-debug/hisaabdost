@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
@@ -97,6 +96,40 @@ async function generateAccessToken(serviceAccount: any): Promise<string> {
   return tokenData.access_token;
 }
 
+// Function to clean up invalid tokens
+async function cleanupInvalidToken(supabase: any, deviceToken: string, userId: string, errorCode: string) {
+  console.log(`🧹 Cleaning up invalid token for user ${userId}: ${errorCode}`);
+  
+  if (errorCode === 'UNREGISTERED') {
+    // Remove the invalid token completely
+    const { error } = await supabase
+      .from('user_device_tokens')
+      .delete()
+      .eq('device_token', deviceToken)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error removing invalid token:', error);
+    } else {
+      console.log('✅ Successfully removed invalid token');
+    }
+  } else {
+    // For other errors, just increment failure count
+    const { error } = await supabase
+      .from('user_device_tokens')
+      .update({
+        failed_attempts: supabase.raw('failed_attempts + 1'),
+        last_failure_at: new Date().toISOString()
+      })
+      .eq('device_token', deviceToken)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error updating token failure count:', error);
+    }
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -180,11 +213,12 @@ serve(async (req) => {
     let tokensError;
 
     if (sendToAll || !userId) {
-      // Fetch all device tokens from all users
+      // Fetch all device tokens from all users, excluding those with too many failures
       console.log('Fetching all device tokens for broadcast notification');
       const result = await supabase
         .from('user_device_tokens')
-        .select('device_token, platform, user_id');
+        .select('device_token, platform, user_id')
+        .lt('failed_attempts', 5); // Exclude tokens with 5+ failures
       tokens = result.data;
       tokensError = result.error;
     } else {
@@ -193,7 +227,8 @@ serve(async (req) => {
       const result = await supabase
         .from('user_device_tokens')
         .select('device_token, platform, user_id')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .lt('failed_attempts', 5); // Exclude tokens with 5+ failures
       tokens = result.data;
       tokensError = result.error;
     }
@@ -205,8 +240,8 @@ serve(async (req) => {
 
     if (!tokens || tokens.length === 0) {
       const message = sendToAll || !userId 
-        ? 'No device tokens found in the system' 
-        : `No device tokens found for user: ${userId}`;
+        ? 'No valid device tokens found in the system' 
+        : `No valid device tokens found for user: ${userId}`;
       console.log(message);
       return new Response(
         JSON.stringify({ message, sent: 0 }),
@@ -241,6 +276,7 @@ serve(async (req) => {
     const results = [];
     let processedCount = 0;
     const errors = [];
+    const tokensToCleanup = [];
 
     // Process tokens in batches for better performance
     for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
@@ -308,6 +344,19 @@ serve(async (req) => {
               console.log(`✅ FCM v1 notification sent successfully to user ${token.user_id}`);
             } else {
               console.error(`❌ FCM v1 notification failed for user ${token.user_id}:`, fcmResult);
+              
+              // Check if this is an invalid token that should be cleaned up
+              if (fcmResult.error && fcmResult.error.details) {
+                const errorCode = fcmResult.error.details[0]?.errorCode;
+                if (errorCode === 'UNREGISTERED' || errorCode === 'INVALID_ARGUMENT') {
+                  tokensToCleanup.push({
+                    deviceToken: token.device_token,
+                    userId: token.user_id,
+                    errorCode: errorCode
+                  });
+                }
+              }
+              
               errors.push({ 
                 user_id: token.user_id, 
                 error: fcmResult.error || fcmResult,
@@ -366,18 +415,31 @@ serve(async (req) => {
       }
     }
 
-    // Log the notification to database
+    // Clean up invalid tokens in the background
+    if (tokensToCleanup.length > 0) {
+      console.log(`🧹 Cleaning up ${tokensToCleanup.length} invalid tokens`);
+      Promise.all(
+        tokensToCleanup.map(({ deviceToken, userId, errorCode }) => 
+          cleanupInvalidToken(supabase, deviceToken, userId, errorCode)
+        )
+      ).catch(error => {
+        console.error('Error during token cleanup:', error);
+      });
+    }
+
+    // Log the notification to database with proper error handling
     try {
       const logData = {
-        user_id: sendToAll || !userId ? null : userId,
-        title,
-        body,
+        user_id: sendToAll || !userId ? null : userId, // Now nullable
+        title: title || 'Notification', // Provide default if null
+        body: body || 'Message', // Provide default if null
         data,
         results: {
           total_tokens: tokens.length,
           successful: results.filter(r => r.success).length,
           failed: results.filter(r => !r.success).length,
           errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
+          cleaned_tokens: tokensToCleanup.length,
         },
       };
 
@@ -387,6 +449,8 @@ serve(async (req) => {
 
       if (logError) {
         console.error('Error logging notification:', logError);
+      } else {
+        console.log('✅ Successfully logged notification');
       }
     } catch (logError) {
       console.error('Failed to log notification:', logError);
@@ -396,6 +460,7 @@ serve(async (req) => {
     const failureCount = results.filter(r => !r.success).length;
     
     console.log(`📊 Notification summary: ${successCount} successful, ${failureCount} failed out of ${tokens.length} total`);
+    console.log(`🧹 Cleaned up ${tokensToCleanup.length} invalid tokens`);
 
     if (errors.length > 0) {
       console.error(`⚠️ ${errors.length} errors occurred during processing`);
@@ -410,6 +475,7 @@ serve(async (req) => {
         failed: failureCount,
         total: tokens.length,
         errors: errors.length,
+        cleaned_tokens: tokensToCleanup.length,
         batch_size: BATCH_SIZE,
         results: results.slice(0, 5), // Return first 5 results as sample
         fcm_v1_api_used: true
