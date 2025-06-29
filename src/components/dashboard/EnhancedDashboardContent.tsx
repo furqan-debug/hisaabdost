@@ -11,6 +11,7 @@ import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 import { useState } from "react";
+import { SmartNotificationTest } from "@/components/dashboard/SmartNotificationTest";
 
 interface EnhancedDashboardContentProps {
   isNewUser: boolean;
@@ -137,10 +138,13 @@ export const EnhancedDashboardContent = ({
           onAddBudget={handleAddBudget}
         />
         
-        {/* 3. Spending Trends */}
+        {/* 3. Smart Notifications Test (Development) */}
+        <SmartNotificationTest />
+        
+        {/* 4. Spending Trends */}
         <SpendingTrendsWidget expenses={allExpenses} />
         
-        {/* 4. Recent Expenses */}
+        {/* 5. Recent Expenses */}
         <RecentExpensesCard 
           expenses={expenses}
           isNewUser={isNewUser}
