@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1';
 
@@ -31,10 +32,34 @@ async function generateAccessToken(serviceAccount: any): Promise<string> {
   const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const payload = btoa(JSON.stringify(jwt));
   
+  // Clean and format the private key properly
+  const privateKeyPem = serviceAccount.private_key
+    .replace(/\\n/g, '\n')
+    .trim();
+  
+  console.log('Private key starts with:', privateKeyPem.substring(0, 50));
+  console.log('Private key ends with:', privateKeyPem.substring(privateKeyPem.length - 50));
+
+  // Convert PEM to ArrayBuffer for crypto.subtle
+  const pemHeader = '-----BEGIN PRIVATE KEY-----';
+  const pemFooter = '-----END PRIVATE KEY-----';
+  
+  if (!privateKeyPem.includes(pemHeader) || !privateKeyPem.includes(pemFooter)) {
+    throw new Error('Invalid private key format. Expected PEM format with proper headers.');
+  }
+
+  const pemContents = privateKeyPem
+    .replace(pemHeader, '')
+    .replace(pemFooter, '')
+    .replace(/\s/g, '');
+
+  // Decode base64 to get the raw key data
+  const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  
   // Import private key
   const privateKey = await crypto.subtle.importKey(
     'pkcs8',
-    new TextEncoder().encode(serviceAccount.private_key.replace(/\\n/g, '\n')),
+    binaryDer,
     {
       name: 'RSASSA-PKCS1-v1_5',
       hash: 'SHA-256',
