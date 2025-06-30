@@ -54,9 +54,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    if (!deepseekApiKey) {
-      throw new Error('DEEPSEEK_API_KEY not configured');
+    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openrouterApiKey) {
+      throw new Error('OPENROUTER_API_KEY not configured');
     }
 
     console.log('🔍 Starting smart notification analysis...');
@@ -82,7 +82,7 @@ serve(async (req) => {
         continue;
       }
 
-      const userNotifications = await analyzeUserForNotifications(supabase, user, deepseekApiKey);
+      const userNotifications = await analyzeUserForNotifications(supabase, user, openrouterApiKey);
       
       if (userNotifications.length > 0) {
         // Sort by priority and take the highest priority notification
@@ -157,7 +157,7 @@ serve(async (req) => {
 async function analyzeUserForNotifications(
   supabase: any, 
   user: UserData, 
-  deepseekApiKey: string
+  openrouterApiKey: string
 ): Promise<SmartNotification[]> {
   const notifications: SmartNotification[] = [];
   
@@ -192,7 +192,7 @@ async function analyzeUserForNotifications(
         
         if (percentage >= 50 && percentage < 100) {
           const budgetNotification = await generateBudgetAlert(
-            user, budget, spent, percentage, expenses || [], deepseekApiKey
+            user, budget, spent, percentage, expenses || [], openrouterApiKey
           );
           if (budgetNotification) {
             notifications.push(budgetNotification);
@@ -203,7 +203,7 @@ async function analyzeUserForNotifications(
 
     // Check for wastage alerts
     const wastageNotification = await checkWastagePattern(
-      user, expenses || [], deepseekApiKey
+      user, expenses || [], openrouterApiKey
     );
     if (wastageNotification) {
       notifications.push(wastageNotification);
@@ -215,7 +215,7 @@ async function analyzeUserForNotifications(
       const hoursSinceLogin = (Date.now() - lastLogin.getTime()) / (1000 * 60 * 60);
       
       if (hoursSinceLogin >= 48) {
-        const inactivityNotification = await generateInactivityAlert(user, deepseekApiKey);
+        const inactivityNotification = await generateInactivityAlert(user, openrouterApiKey);
         if (inactivityNotification) {
           notifications.push(inactivityNotification);
         }
@@ -235,7 +235,7 @@ async function generateBudgetAlert(
   spent: number,
   percentage: number,
   expenses: ExpenseData[],
-  deepseekApiKey: string
+  openrouterApiKey: string
 ): Promise<SmartNotification | null> {
   try {
     const categoryExpenses = expenses.filter(e => e.category === budget.category);
@@ -262,7 +262,7 @@ async function generateBudgetAlert(
     
     Return only JSON: {"title": "...", "body": "..."}`;
 
-    const response = await callDeepSeekAPI(prompt, deepseekApiKey);
+    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
     
     return {
       ...response,
@@ -278,7 +278,7 @@ async function generateBudgetAlert(
 async function checkWastagePattern(
   user: UserData,
   expenses: ExpenseData[],
-  deepseekApiKey: string
+  openrouterApiKey: string
 ): Promise<SmartNotification | null> {
   try {
     // Look for potential wasteful spending patterns
@@ -311,7 +311,7 @@ async function checkWastagePattern(
     
     Return only JSON: {"title": "...", "body": "..."}`;
 
-    const response = await callDeepSeekAPI(prompt, deepseekApiKey);
+    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
     
     return {
       ...response,
@@ -326,7 +326,7 @@ async function checkWastagePattern(
 
 async function generateInactivityAlert(
   user: UserData,
-  deepseekApiKey: string
+  openrouterApiKey: string
 ): Promise<SmartNotification | null> {
   try {
     const language = getLanguageFromCurrency(user.preferred_currency);
@@ -343,7 +343,7 @@ async function generateInactivityAlert(
     
     Return only JSON: {"title": "...", "body": "..."}`;
 
-    const response = await callDeepSeekAPI(prompt, deepseekApiKey);
+    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
     
     return {
       ...response,
@@ -356,15 +356,17 @@ async function generateInactivityAlert(
   }
 }
 
-async function callDeepSeekAPI(prompt: string, apiKey: string): Promise<{title: string, body: string}> {
-  const response = await fetch('https://api.deepseek.com/chat/completions', {
+async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<{title: string, body: string}> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://your-app-url.com',
+      'X-Title': 'Smart Expense Notifications'
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: 'deepseek/deepseek-v2-chat',
       messages: [
         {
           role: 'system',
@@ -381,7 +383,7 @@ async function callDeepSeekAPI(prompt: string, apiKey: string): Promise<{title: 
   });
 
   if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
@@ -390,7 +392,7 @@ async function callDeepSeekAPI(prompt: string, apiKey: string): Promise<{title: 
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse DeepSeek response:', content);
+    console.error('Failed to parse OpenRouter response:', content);
     // Fallback response
     return {
       title: 'Spending Alert',
