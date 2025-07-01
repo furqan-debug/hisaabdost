@@ -54,6 +54,14 @@ export const NotificationAnalytics = () => {
     }
   };
 
+  // Helper function to safely render financial context values
+  const renderContextValue = (value: unknown): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'string') return value;
+    return String(value);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -167,9 +175,9 @@ export const NotificationAnalytics = () => {
                 {item.financial_context && (
                   <div className="text-xs text-muted-foreground">
                     <strong>Context:</strong> 
-                    {item.financial_context.totalSpent && ` Spent: ${item.financial_context.totalSpent}`}
-                    {item.financial_context.budgetUtilization && ` | Budget: ${item.financial_context.budgetUtilization.toFixed(1)}%`}
-                    {item.financial_context.spendingTrend && ` | Trend: ${item.financial_context.spendingTrend > 0 ? '+' : ''}${item.financial_context.spendingTrend.toFixed(1)}%`}
+                    {item.financial_context.totalSpent && ` Spent: ${renderContextValue(item.financial_context.totalSpent)}`}
+                    {item.financial_context.budgetUtilization && ` | Budget: ${renderContextValue(item.financial_context.budgetUtilization)}%`}
+                    {item.financial_context.spendingTrend && ` | Trend: ${Number(renderContextValue(item.financial_context.spendingTrend)) > 0 ? '+' : ''}${renderContextValue(item.financial_context.spendingTrend)}%`}
                   </div>
                 )}
               </motion.div>
