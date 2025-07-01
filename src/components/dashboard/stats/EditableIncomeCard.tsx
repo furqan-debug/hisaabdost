@@ -6,11 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { PercentageChange } from "./PercentageChange";
 import { logIncomeActivity } from "@/services/activityLogService";
+import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
+import { useMonthContext } from "@/hooks/use-month-context";
 
 interface EditableIncomeCardProps {
   monthlyIncome: number;
@@ -35,6 +36,7 @@ export const EditableIncomeCard = ({
   const [inputValue, setInputValue] = useState(monthlyIncome.toString());
   const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
+  const { selectedMonth } = useMonthContext();
 
   const handleSave = async () => {
     const newIncome = parseFloat(inputValue);
@@ -49,34 +51,17 @@ export const EditableIncomeCard = ({
 
     setIsUpdating(true);
     try {
-      console.log("Updating income to:", newIncome);
+      console.log("Updating income to:", newIncome, "for month:", selectedMonth);
       
-      // Update in the profiles table first (primary source)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          monthly_income: newIncome
-        })
-        .eq('id', user?.id);
-
-      if (profileError) {
-        console.error('Could not update profiles table:', profileError);
-        throw profileError;
+      if (!user) {
+        throw new Error("User not authenticated");
       }
 
-      // Also update in budgets table as fallback
-      const { error: budgetError } = await supabase
-        .from('budgets')
-        .upsert({
-          user_id: user?.id,
-          monthly_income: newIncome,
-          category: 'income',
-          period: 'monthly',
-          amount: 0
-        });
-
-      if (budgetError) {
-        console.warn('Could not update budgets table:', budgetError);
+      // Use the new MonthlyIncomeService
+      const success = await MonthlyIncomeService.setMonthlyIncome(user.id, selectedMonth, newIncome);
+      
+      if (!success) {
+        throw new Error("Failed to update monthly income");
       }
 
       // Log the income activity

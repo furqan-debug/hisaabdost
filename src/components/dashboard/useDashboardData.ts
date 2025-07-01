@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,7 @@ import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
 export function useDashboardData() {
   const { user } = useAuth();
@@ -29,59 +31,20 @@ export function useDashboardData() {
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
   const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Fetch monthly income - check profiles table first, then budgets table
+  // Fetch monthly income using the new service
   const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id],
+    queryKey: ['monthly_income', user?.id, currentMonthKey],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
-      try {
-        console.log("Fetching monthly income for user:", user.id);
-        
-        // First check the profiles table for monthly income (from onboarding)
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('monthly_income')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileError) {
-          console.warn("Could not fetch profile data:", profileError);
-        }
-        
-        // If we have income data in profiles, use that
-        if (profileData && profileData.monthly_income) {
-          console.log("Found income in profiles table:", profileData.monthly_income);
-          return { monthlyIncome: profileData.monthly_income };
-        }
-        
-        // Otherwise, check budgets table for monthly income
-        const { data: budgetData, error: budgetError } = await supabase
-          .from('budgets')
-          .select('monthly_income')
-          .eq('user_id', user.id)
-          .limit(1);
-          
-        if (budgetError) {
-          console.warn("Could not fetch budget data:", budgetError);
-        }
-        
-        if (budgetData && budgetData.length > 0 && budgetData[0].monthly_income) {
-          console.log("Found income in budgets table:", budgetData[0].monthly_income);
-          return { monthlyIncome: budgetData[0].monthly_income };
-        }
-        
-        console.log("No income found in either table, returning 0");
-        return { monthlyIncome: 0 };
-      } catch (error) {
-        console.error("Error fetching monthly income:", error);
-        return { monthlyIncome: 0 };
-      }
+      console.log("Fetching monthly income for:", user.id, currentMonthKey);
+      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
+      return { monthlyIncome: income };
     },
     enabled: !!user,
   });
   
-  // Update local income state when data is fetched from Supabase
+  // Update local income state when data is fetched
   useEffect(() => {
     if (incomeData && !isIncomeLoading) {
       console.log("Updating monthly income state:", incomeData.monthlyIncome);
@@ -99,6 +62,17 @@ export function useDashboardData() {
     queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
   };
+  
+  // Listen for income update events from Finny
+  useEffect(() => {
+    const handleIncomeUpdate = () => {
+      console.log("Income update event received, refreshing data");
+      queryClient.invalidateQueries({ queryKey: ['monthly_income', user?.id, currentMonthKey] });
+    };
+
+    window.addEventListener('income-updated', handleIncomeUpdate);
+    return () => window.removeEventListener('income-updated', handleIncomeUpdate);
+  }, [queryClient, user?.id, currentMonthKey]);
   
   // Fetch current month's expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
@@ -249,6 +223,13 @@ export function useDashboardData() {
     setShowAddExpense,
     handleExpenseRefresh,
     formatPercentage,
-    setMonthlyIncome
+    setMonthlyIncome: async (newIncome: number) => {
+      if (user) {
+        const success = await MonthlyIncomeService.setMonthlyIncome(user.id, selectedMonth, newIncome);
+        if (success) {
+          setMonthlyIncome(newIncome);
+        }
+      }
+    }
   };
 }

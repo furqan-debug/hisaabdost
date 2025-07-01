@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Budget } from "@/pages/Budget";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/lib/auth";
+import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
 export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
   const { user } = useAuth();
@@ -36,36 +37,17 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     refetchOnWindowFocus: true,
   });
   
-  // Query monthly income with forced refresh
+  // Query monthly income using the new service
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id, refreshTrigger],
+    queryKey: ['monthly_income', user?.id, monthKey, refreshTrigger],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
-      console.log("Fetching income for user:", user.id, "refreshTrigger:", refreshTrigger);
+      console.log("Fetching income for user:", user.id, "month:", monthKey, "refreshTrigger:", refreshTrigger);
       
-      // First try to get from profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('monthly_income')
-        .eq('id', user.id)
-        .single();
-        
-      if (!profileError && profileData?.monthly_income) {
-        console.log("Income from profiles:", profileData.monthly_income);
-        return { monthlyIncome: profileData.monthly_income };
-      }
+      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
+      console.log("Income from service:", income);
       
-      // Fallback to budgets table
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('monthly_income')
-        .eq('user_id', user.id)
-        .limit(1);
-        
-      if (error) throw error;
-      const income = data?.[0]?.monthly_income || 0;
-      console.log("Income from budgets fallback:", income);
       return { monthlyIncome: income };
     },
     enabled: !!user,

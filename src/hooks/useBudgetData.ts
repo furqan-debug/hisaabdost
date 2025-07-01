@@ -7,12 +7,16 @@ import { useAuth } from "@/lib/auth";
 import { useBudgetQueries } from "./useBudgetQueries";
 import { useBudgetCalculations } from "./useBudgetCalculations";
 import { exportBudgetData } from "@/services/budgetExportService";
+import { useFinnyDataSync } from "./useFinnyDataSync";
 
 export function useBudgetData() {
   const { selectedMonth } = useMonthContext();
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   const queryClient = useQueryClient();
+  
+  // Initialize Finny data sync
+  useFinnyDataSync();
   
   // Add refresh trigger state with current timestamp
   const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
@@ -39,9 +43,11 @@ export function useBudgetData() {
         setRefreshTrigger(Date.now());
         
         // Force immediate refetch
-        queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
-        queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user?.id] });
-        queryClient.refetchQueries({ queryKey: ['monthly_income', user?.id] });
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
+          queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user?.id] });
+          queryClient.refetchQueries({ queryKey: ['monthly_income', user?.id] });
+        }, 50);
       } else {
         // Standard refresh for other events
         queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -62,10 +68,12 @@ export function useBudgetData() {
       'budget-updated', 
       'budget-deleted', 
       'budget-refresh',
+      'budget-added',
       'income-updated',
       'income-refresh',
       'expenses-updated',
-      'expense-refresh'
+      'expense-refresh',
+      'expense-added'
     ];
     
     eventTypes.forEach(eventType => {

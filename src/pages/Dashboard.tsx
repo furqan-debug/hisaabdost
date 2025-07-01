@@ -7,6 +7,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
+import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 
 /**
  * Dashboard page component that displays financial overview
@@ -14,6 +15,10 @@ import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
  */
 const Dashboard = () => {
   const { isLoading: isMonthDataLoading } = useMonthContext();
+  
+  // Initialize Finny data synchronization
+  useFinnyDataSync();
+  
   const {
     expenses,
     allExpenses,

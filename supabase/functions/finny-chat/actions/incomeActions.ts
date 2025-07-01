@@ -8,34 +8,39 @@ export async function setIncome(
 ): Promise<string> {
   console.log(`Setting monthly income to: ${action.amount}`);
   
-  // Update in the profiles table
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({
-      monthly_income: action.amount
-    })
-    .eq('id', userId);
+  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+  
+  try {
+    // Update in the new monthly_incomes table
+    const { error: monthlyIncomeError } = await supabase
+      .from('monthly_incomes')
+      .upsert({
+        user_id: userId,
+        month_year: currentMonth,
+        income_amount: parseFloat(action.amount)
+      });
 
-  if (profileError) {
-    console.error("Profile income update error:", profileError);
-    throw profileError;
+    if (monthlyIncomeError) {
+      console.error("Monthly income update error:", monthlyIncomeError);
+      throw monthlyIncomeError;
+    }
+
+    // Also update in the profiles table for backward compatibility
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        monthly_income: parseFloat(action.amount)
+      })
+      .eq('id', userId);
+
+    if (profileError) {
+      console.warn("Profile income update warning:", profileError);
+    }
+
+    console.log("Income updated successfully for month:", currentMonth);
+    return `I've set your monthly income to ${action.amount} for ${currentMonth}.`;
+  } catch (error) {
+    console.error("Error setting income:", error);
+    return `I couldn't set your income: ${error.message}`;
   }
-
-  // Also update in budgets table as fallback
-  const { error: budgetError } = await supabase
-    .from('budgets')
-    .upsert({
-      user_id: userId,
-      monthly_income: action.amount,
-      category: 'income',
-      period: 'monthly',
-      amount: 0
-    });
-
-  if (budgetError) {
-    console.warn('Could not update budgets table:', budgetError);
-  }
-
-  console.log("Income updated successfully");
-  return `I've set your monthly income to ${action.amount}.`;
 }
