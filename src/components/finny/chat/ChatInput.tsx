@@ -1,144 +1,101 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { SendHorizontal, Sparkles } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useCurrency } from '@/hooks/use-currency';
-import { getCurrencyByCode } from '@/utils/currencyUtils';
+import { Input } from '@/components/ui/input';
+import { Send, Loader2, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   disabled?: boolean;
-  placeholder?: string;
   isLoading?: boolean;
   isAuthenticated?: boolean;
   isConnecting?: boolean;
+  placeholder?: string;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   value,
   onChange,
   onSubmit,
-  disabled,
-  placeholder = 'Ask Finny anything...',
-  isLoading,
-  isAuthenticated,
-  isConnecting
+  disabled = false,
+  isLoading = false,
+  isAuthenticated = false,
+  isConnecting = false,
+  placeholder = "Type your message...",
 }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const { currencyCode } = useCurrency();
-  const currencySymbol = getCurrencyByCode(currencyCode).symbol;
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const isDisabled = disabled || isLoading || isConnecting || !isAuthenticated;
-
-  useEffect(() => {
-    if (inputRef.current && !isMobile) {
-      inputRef.current.focus();
-    }
-  }, [isMobile]);
-
-  // Handle mobile keyboard focus
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const handleFocus = () => {
-      setIsFocused(true);
-      
-      // Scroll the input into view on mobile
-      setTimeout(() => {
-        if (containerRef.current) {
-          containerRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'end',
-            inline: 'nearest'
-          });
-        }
-      }, 300); // Wait for keyboard animation
-    };
-
-    const handleBlur = () => {
-      setIsFocused(false);
-    };
-
-    const input = inputRef.current;
-    if (input) {
-      input.addEventListener('focus', handleFocus);
-      input.addEventListener('blur', handleBlur);
-      
-      return () => {
-        input.removeEventListener('focus', handleFocus);
-        input.removeEventListener('blur', handleBlur);
-      };
-    }
-  }, [isMobile]);
-
-  const getPlaceholderText = () => {
-    if (isConnecting) return 'Connecting to Finny...';
-    if (!isAuthenticated) return 'Please log in to chat with Finny';
-    if (isLoading) return 'Finny is thinking...';
-    return placeholder;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!value.trim() || disabled || isLoading || !isAuthenticated) return;
+    onSubmit(e);
   };
 
-  return (
-    <div 
-      ref={containerRef}
-      className={`
-        bg-slate-900/95 backdrop-blur-lg border-t border-slate-700/50 
-        px-3 sm:px-4 py-2.5 sm:py-3 
-        ${isMobile ? 'safe-area-bottom' : ''}
-        ${isMobile && isFocused ? 'keyboard-focused' : ''}
-      `}
-    >
-      <form onSubmit={onSubmit} className="flex gap-2 sm:gap-3 items-center max-w-4xl mx-auto">
-        <div className="relative flex-1 min-w-0">
-          <input 
-            type="text" 
-            ref={inputRef} 
-            value={value} 
-            onChange={onChange} 
-            disabled={isDisabled} 
-            className={`w-full text-sm bg-slate-800 text-slate-100 border-2 border-slate-700
-              focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300
-              py-2.5 sm:py-3 px-4 sm:px-5 rounded-full placeholder:text-slate-400 font-medium
-              ${isFocused ? 'shadow-lg border-blue-500' : 'hover:border-slate-600'}
-              ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            placeholder={getPlaceholderText()}
-          />
-          
-          {isFocused && !isDisabled && (
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <Sparkles size={16} className="text-blue-400 animate-pulse" />
-            </div>
-          )}
-          
-          {isLoading && (
-            <div className="absolute right-5 top-1/2 transform -translate-y-1/2">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            </div>
-          )}
-        </div>
+  const canSend = value.trim() && !disabled && !isLoading && isAuthenticated;
 
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={isDisabled || !value.trim()} 
-          className="bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full h-10 w-10 sm:h-11 sm:w-11 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex-shrink-0"
-          title="Send message"
+  return (
+    <form onSubmit={handleSubmit} className="relative">
+      <div className={`
+        relative flex items-center gap-2 p-2 rounded-2xl border-2 transition-all duration-200
+        ${isFocused 
+          ? 'border-violet-400 bg-white dark:bg-gray-800 shadow-lg shadow-violet-100 dark:shadow-violet-900/20' 
+          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'
+        }
+      `}>
+        {/* Input field */}
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          disabled={disabled || !isAuthenticated}
+          placeholder={placeholder}
+          className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400"
+        />
+        
+        {/* Send button */}
+        <motion.div
+          whileHover={{ scale: canSend ? 1.05 : 1 }}
+          whileTap={{ scale: canSend ? 0.95 : 1 }}
         >
-          <SendHorizontal size={20} className="sm:w-5 sm:h-5" />
-        </Button>
-      </form>
-    </div>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!canSend}
+            className={`
+              w-8 h-8 p-0 rounded-xl transition-all duration-200
+              ${canSend 
+                ? 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 shadow-lg' 
+                : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+              }
+            `}
+          >
+            {isLoading || isConnecting ? (
+              <Loader2 className="w-4 h-4 text-white animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 text-white" />
+            )}
+          </Button>
+        </motion.div>
+      </div>
+      
+      {/* Status indicator */}
+      {isConnecting && (
+        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex gap-1">
+            <div className="w-1 h-1 bg-violet-400 rounded-full animate-pulse"></div>
+            <div className="w-1 h-1 bg-violet-400 rounded-full animate-pulse delay-100"></div>
+            <div className="w-1 h-1 bg-violet-400 rounded-full animate-pulse delay-200"></div>
+          </div>
+          <span>Connecting to advanced AI...</span>
+        </div>
+      )}
+    </form>
   );
 };
 
