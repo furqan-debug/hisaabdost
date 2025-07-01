@@ -18,31 +18,6 @@ export function ThemeToggle() {
   const { setTheme, theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [systemTheme, setSystemTheme] = useState<"dark" | "light">("light");
-
-  // Listen for system theme changes
-  useEffect(() => {
-    // Check the initial system preference
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setSystemTheme(mediaQuery.matches ? "dark" : "light");
-    
-    // Add listener for theme changes
-    const handleChange = (e: MediaQueryListEvent) => {
-      setSystemTheme(e.matches ? "dark" : "light");
-      
-      // If user has selected system theme, update the theme immediately
-      if (theme === 'system') {
-        // This will trigger a re-render with the new system theme
-        setTheme('system');
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [theme, setTheme]);
 
   useEffect(() => {
     setMounted(true);
@@ -52,10 +27,33 @@ export function ThemeToggle() {
     localStorage.setItem("color-theme", "purple");
   }, []);
 
+  // Force theme application when theme changes
+  useEffect(() => {
+    if (mounted && theme) {
+      // Force immediate theme application
+      setTimeout(() => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else if (theme === 'system') {
+          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+      }, 0);
+    }
+  }, [theme, mounted]);
+
   if (!mounted) return null;
 
-  // Determine the actual theme to display (for UI indication)
-  const displayTheme = theme === 'system' ? systemTheme : resolvedTheme;
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    setIsOpen(false);
+  };
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -68,7 +66,7 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="w-56 animate-in fade-in-0 zoom-in-95 touch-scroll-container"
+        className="w-56 animate-in fade-in-0 zoom-in-95"
       >
         <DropdownMenuLabel>Appearance</DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -78,21 +76,21 @@ export function ThemeToggle() {
             Mode
           </DropdownMenuLabel>
           <DropdownMenuItem 
-            onClick={() => setTheme("light")}
-            className={cn(displayTheme === "light" && theme === "light" ? "bg-accent" : "")}
+            onClick={() => handleThemeChange("light")}
+            className={cn(theme === "light" ? "bg-accent" : "")}
           >
             <Sun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => setTheme("dark")}
-            className={cn(displayTheme === "dark" && theme === "dark" ? "bg-accent" : "")}
+            onClick={() => handleThemeChange("dark")}
+            className={cn(theme === "dark" ? "bg-accent" : "")}
           >
             <Moon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => setTheme("system")}
+            onClick={() => handleThemeChange("system")}
             className={cn(theme === "system" ? "bg-accent" : "")}
           >
             <span className="mr-2 flex h-4 w-4 items-center justify-center">

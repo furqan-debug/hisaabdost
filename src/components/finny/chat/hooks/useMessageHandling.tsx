@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Message } from '../types';
 import { processMessageWithAI } from '../services/aiService';
@@ -86,43 +85,39 @@ export function useMessageHandling() {
         hasAction: !!response.action,
       });
 
-      // If an action was performed, trigger appropriate refresh events
+      // If an action was performed, trigger comprehensive refresh events
       if (response.action) {
         console.log('Action performed:', response.action.type);
         
-        // Trigger specific refresh events based on action type
-        switch (response.action.type) {
-          case 'add_expense':
-            window.dispatchEvent(new CustomEvent('expense-added', { 
-              detail: { source: 'finny-chat', userId: user.id } 
+        // Trigger multiple refresh events with different timings
+        const triggerRefreshEvents = () => {
+          const events = [
+            'expense-added',
+            'finny-expense-added',
+            'expenses-updated',
+            'expense-refresh',
+            'dashboard-refresh'
+          ];
+          
+          events.forEach(eventName => {
+            window.dispatchEvent(new CustomEvent(eventName, { 
+              detail: { 
+                source: 'finny-chat', 
+                userId: user.id,
+                action: response.action.type,
+                timestamp: Date.now()
+              } 
             }));
-            break;
-          case 'set_budget':
-            window.dispatchEvent(new CustomEvent('budget-added', { 
-              detail: { source: 'finny-chat', userId: user.id } 
-            }));
-            break;
-          case 'set_income':
-            window.dispatchEvent(new CustomEvent('income-updated', { 
-              detail: { source: 'finny-chat', userId: user.id } 
-            }));
-            break;
-          case 'set_goal':
-            window.dispatchEvent(new CustomEvent('goal-added', { 
-              detail: { source: 'finny-chat', userId: user.id } 
-            }));
-            break;
-          case 'add_wallet_funds':
-            window.dispatchEvent(new CustomEvent('wallet-updated', { 
-              detail: { source: 'finny-chat', userId: user.id } 
-            }));
-            break;
-          default:
-            // Generic refresh for other actions
-            window.dispatchEvent(new CustomEvent('data-updated', { 
-              detail: { source: 'finny-chat', actionType: response.action.type } 
-            }));
-        }
+            console.log(`Dispatched ${eventName} event from Finny`);
+          });
+        };
+
+        // Trigger events immediately and with delays
+        triggerRefreshEvents();
+        setTimeout(triggerRefreshEvents, 100);
+        setTimeout(triggerRefreshEvents, 500);
+        setTimeout(triggerRefreshEvents, 1000);
+        setTimeout(triggerRefreshEvents, 2000);
 
         // Show success toast
         toast.success('Action completed successfully! Data has been updated.');

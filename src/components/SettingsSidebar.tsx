@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -59,10 +57,15 @@ const SettingsSidebar = ({
       // Update the context
       setCurrencyCode(newCurrency);
       
+      // Force immediate UI update
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
       console.log('Currency change completed');
       toast({
         title: "Currency Updated",
-        description: `Currency changed to ${value}`,
+        description: `Currency changed to ${value}. Page will refresh to apply changes.`,
       });
     } catch (error) {
       console.error('Error changing currency:', error);
@@ -248,7 +251,7 @@ const SettingsSidebar = ({
             </div>
           </div>
 
-          {/* Theme */}
+          {/* Theme - Fixed to properly handle theme changes */}
           <div className="p-6 border-b">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
@@ -260,7 +263,13 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'light' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => setTheme('light')}
+                onClick={() => {
+                  setTheme('light');
+                  // Force immediate application
+                  setTimeout(() => {
+                    document.documentElement.classList.remove('dark');
+                  }, 0);
+                }}
               >
                 <Sun className="w-4 h-4 mr-3" />
                 Light
@@ -268,7 +277,13 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'dark' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => setTheme('dark')}
+                onClick={() => {
+                  setTheme('dark');
+                  // Force immediate application
+                  setTimeout(() => {
+                    document.documentElement.classList.add('dark');
+                  }, 0);
+                }}
               >
                 <Moon className="w-4 h-4 mr-3" />
                 Dark
@@ -276,7 +291,18 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'system' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => setTheme('system')}
+                onClick={() => {
+                  setTheme('system');
+                  // Force immediate application based on system preference
+                  setTimeout(() => {
+                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (isDark) {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
+                  }, 0);
+                }}
               >
                 <Monitor className="w-4 h-4 mr-3" />
                 System
@@ -353,4 +379,3 @@ const SettingsSidebar = ({
 };
 
 export default SettingsSidebar;
-

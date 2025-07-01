@@ -17,60 +17,75 @@ export function useFinnyDataSync() {
       const { detail } = event;
       console.log('Finny data refresh event:', event.type, detail);
 
-      // Invalidate relevant queries based on event type
-      switch (event.type) {
-        case 'expense-added':
-        case 'expense-updated':
-        case 'expense-deleted':
-          queryClient.invalidateQueries({ queryKey: ['expenses'] });
-          queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-          break;
+      // Invalidate and refetch relevant queries immediately
+      const invalidateAndRefetch = async () => {
+        switch (event.type) {
+          case 'expense-added':
+          case 'expense-updated':
+          case 'expense-deleted':
+          case 'finny-expense-added':
+            await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+            await queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
+            // Force immediate refetch
+            await queryClient.refetchQueries({ 
+              queryKey: ['expenses', monthKey, user?.id] 
+            });
+            await queryClient.refetchQueries({ 
+              queryKey: ['all_expenses', user?.id] 
+            });
+            break;
 
-        case 'budget-added':
-        case 'budget-updated':
-        case 'budget-deleted':
-          queryClient.invalidateQueries({ queryKey: ['budgets'] });
-          break;
+          case 'budget-added':
+          case 'budget-updated':
+          case 'budget-deleted':
+            await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+            await queryClient.refetchQueries({ 
+              queryKey: ['budgets', monthKey, user?.id] 
+            });
+            break;
 
-        case 'income-updated':
-          queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
-          break;
+          case 'income-updated':
+            await queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+            await queryClient.refetchQueries({ 
+              queryKey: ['monthly_income', user?.id, monthKey] 
+            });
+            break;
 
-        case 'goal-added':
-        case 'goal-updated':
-        case 'goal-deleted':
-          queryClient.invalidateQueries({ queryKey: ['goals'] });
-          break;
+          case 'goal-added':
+          case 'goal-updated':
+          case 'goal-deleted':
+            await queryClient.invalidateQueries({ queryKey: ['goals'] });
+            await queryClient.refetchQueries({ 
+              queryKey: ['goals', user?.id] 
+            });
+            break;
 
-        case 'wallet-updated':
-          queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
-          break;
+          case 'wallet-updated':
+            await queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
+            await queryClient.refetchQueries({ 
+              queryKey: ['wallet_additions', user?.id] 
+            });
+            break;
 
-        default:
-          // General refresh for unknown events
-          queryClient.invalidateQueries();
-          break;
-      }
+          default:
+            // General refresh for unknown events
+            await queryClient.invalidateQueries();
+            break;
+        }
+      };
 
-      // Force a small delay to ensure data is committed
-      setTimeout(() => {
-        queryClient.refetchQueries({ 
-          queryKey: ['expenses', monthKey, user?.id] 
-        });
-        queryClient.refetchQueries({ 
-          queryKey: ['budgets', monthKey, user?.id] 
-        });
-        queryClient.refetchQueries({ 
-          queryKey: ['monthly_income', user?.id, monthKey] 
-        });
-      }, 100);
+      // Execute immediately and with retries
+      invalidateAndRefetch();
+      setTimeout(invalidateAndRefetch, 500);
+      setTimeout(invalidateAndRefetch, 1500);
     };
 
-    // Register event listeners
+    // Register event listeners for all relevant events
     const eventTypes = [
       'expense-added',
       'expense-updated', 
       'expense-deleted',
+      'finny-expense-added',
       'budget-added',
       'budget-updated',
       'budget-deleted',
@@ -78,7 +93,8 @@ export function useFinnyDataSync() {
       'goal-added',
       'goal-updated',
       'goal-deleted',
-      'wallet-updated'
+      'wallet-updated',
+      'dashboard-refresh'
     ];
 
     eventTypes.forEach(eventType => {
