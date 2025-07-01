@@ -51,7 +51,11 @@ export const FinnyMessage: React.FC<FinnyMessageProps> = ({ message, isLatest = 
             
             {message.hasAction && (
               <div className="mt-2">
-                <ActionIndicator />
+                <ActionIndicator 
+                  hasAction={message.hasAction}
+                  isSuccess={false}
+                  isError={false}
+                />
               </div>
             )}
           </div>
