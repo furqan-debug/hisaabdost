@@ -84,7 +84,7 @@ export const NotificationAnalytics = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{stats.totalSent}</div>
+            <div className="text-2xl font-bold">{stats.totalSent || 0}</div>
             <p className="text-sm text-muted-foreground">Total Sent</p>
           </CardContent>
         </Card>
@@ -130,7 +130,7 @@ export const NotificationAnalytics = () => {
                 className="flex items-center gap-1"
               >
                 {getTypeIcon(type)}
-                {type}: {count}
+                {type}: {String(count)}
               </Badge>
             ))}
           </div>
