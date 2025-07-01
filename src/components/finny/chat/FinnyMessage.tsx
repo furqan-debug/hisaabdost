@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Message } from './types';
-import { MessageTimestamp } from './components/MessageTimestamp';
-import { ActionIndicator } from './components/ActionIndicator';
+import MessageTimestamp from './components/MessageTimestamp';
+import ActionIndicator from './components/ActionIndicator';
 
 interface FinnyMessageProps {
   message: Message;
@@ -74,3 +74,5 @@ export const FinnyMessage: React.FC<FinnyMessageProps> = ({ message, isLatest = 
     </motion.div>
   );
 };
+
+export default FinnyMessage;

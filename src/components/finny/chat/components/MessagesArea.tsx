@@ -4,7 +4,7 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatHistoryBanner } from '../ChatHistoryBanner';
-import FinnyMessage from '../FinnyMessage';
+import { FinnyMessage } from '../FinnyMessage';
 import TypingIndicator from '../TypingIndicator';
 import QuickReplies from '../QuickReplies';
 import { AuthAlert } from './AuthAlert';
@@ -78,11 +78,7 @@ export const MessagesArea = ({
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
                 <FinnyMessage 
-                  content={message.content} 
-                  isUser={message.isUser} 
-                  timestamp={message.timestamp} 
-                  hasAction={message.hasAction} 
-                  visualData={message.visualData} 
+                  message={message}
                 />
               </motion.div>
             ))}
