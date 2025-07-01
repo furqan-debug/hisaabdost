@@ -4,9 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, RotateCcw, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageList } from './MessageList';
-import { ChatInput } from './ChatInput';
-import { QuickRepliesGrid } from './QuickRepliesGrid';
+import { MessagesArea } from './MessagesArea';
+import ChatInput from '../ChatInput';
+import QuickReplies from '../QuickReplies';
 import { AdvancedInsightsPanel } from './AdvancedInsightsPanel';
 import { Message, QuickReply } from '../types';
 
@@ -55,6 +55,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   insights
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && chatRef.current) {
@@ -124,37 +125,31 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               />
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-hidden">
-              <MessageList
-                messages={filteredMessages}
-                isTyping={isTyping}
-                isLoading={isLoading}
-                messagesEndRef={messagesEndRef}
-                oldestMessageTime={oldestMessageTime}
-                isConnectingToData={isConnectingToData}
-              />
-            </div>
-
-            {/* Quick Replies */}
-            {user && !isAuthPromptOnly && quickReplies.length > 0 && (
-              <div className="px-4 py-2 border-t border-border/50">
-                <QuickRepliesGrid
-                  quickReplies={quickReplies}
-                  onQuickReply={handleQuickReply}
-                  isLoading={isLoading}
-                />
-              </div>
-            )}
+            {/* Messages Area */}
+            <MessagesArea
+              user={user}
+              oldestMessageTime={oldestMessageTime}
+              isConnectingToData={isConnectingToData}
+              filteredMessages={filteredMessages}
+              isTyping={isTyping}
+              isLoading={isLoading}
+              quickReplies={quickReplies}
+              messagesEndRef={messagesEndRef}
+              scrollAreaRef={scrollAreaRef}
+              isAuthPromptOnly={isAuthPromptOnly}
+              handleQuickReply={handleQuickReply}
+            />
 
             {/* Input */}
             <div className="p-4 border-t border-border/50 bg-background/50">
               <ChatInput
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                handleSendMessage={handleSendMessage}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onSubmit={handleSendMessage}
+                disabled={isLoading}
                 isLoading={isLoading}
-                user={user}
+                isAuthenticated={!!user}
+                isConnecting={isConnectingToData}
                 placeholder={user ? "Ask me anything about your finances... 💰" : "Please log in to chat with Finny"}
               />
             </div>
