@@ -1,7 +1,5 @@
+
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
@@ -12,55 +10,15 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
+import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 
 const Expenses = () => {
-  const { user } = useAuth();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { refreshTrigger, triggerRefresh } = useExpenseRefresh();
+  const { expenses, isLoading: isExpensesLoading, refetch } = useExpenseQueries();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
-
-  const { data: allExpenses = [], isLoading: isExpensesLoading, refetch } = useQuery({
-    queryKey: ['all-expenses', refreshTrigger],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      console.log("Fetching all expenses for user:", user.id);
-      
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching expenses:', error);
-        toast.error("Failed to load expenses. Please try again.");
-        return [];
-      }
-      
-      console.log("Fetched expenses:", data?.length || 0, "items");
-      
-      return data.map(exp => ({
-        id: exp.id,
-        amount: Number(exp.amount),
-        description: exp.description,
-        date: exp.date,
-        category: exp.category,
-        paymentMethod: exp.payment || undefined,
-        notes: exp.notes || undefined,
-        isRecurring: exp.is_recurring || false,
-        receiptUrl: exp.receipt_url || undefined,
-      }));
-    },
-    enabled: !!user,
-    staleTime: 1000, // Consider data stale after 1 second
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-  });
 
   const {
     searchTerm,
@@ -74,7 +32,7 @@ const Expenses = () => {
     filteredExpenses,
     totalFilteredAmount,
     useCustomDateRange
-  } = useExpenseFilter(allExpenses);
+  } = useExpenseFilter(expenses || []);
 
   const {
     selectedExpenses,
@@ -90,11 +48,13 @@ const Expenses = () => {
   const handleExpenseAdded = () => {
     console.log("Expense added, triggering refresh");
     refetch();
-    triggerRefresh();
-    // Add a second refetch with delay to catch any pending database operations
-    setTimeout(() => {
-      refetch();
-    }, 1000);
+    // Trigger a dashboard refresh event
+    window.dispatchEvent(new CustomEvent('dashboard-refresh', { 
+      detail: { 
+        source: 'expense-page',
+        timestamp: Date.now()
+      }
+    }));
   };
 
   const handleDeleteSelected = async () => {
@@ -128,40 +88,6 @@ const Expenses = () => {
       console.error('Export PDF failed:', error);
     }
   };
-
-  // Listen for receipt scanning and expense update events with enhanced logging
-  useEffect(() => {
-    const handleReceiptScan = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log("Receipt scan detected in Expenses page, refreshing list", customEvent.detail);
-      refetch();
-      triggerRefresh();
-      // Additional delayed refresh for receipt scans
-      setTimeout(() => {
-        console.log("Delayed refresh after receipt scan");
-        refetch();
-      }, 1500);
-    };
-    
-    const handleExpensesUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log("Expenses updated event detected in Expenses page", customEvent.detail);
-      refetch();
-      triggerRefresh();
-    };
-    
-    console.log("Setting up event listeners in Expenses page");
-    window.addEventListener('receipt-scanned', handleReceiptScan);
-    window.addEventListener('expenses-updated', handleExpensesUpdated);
-    window.addEventListener('expense-added', handleExpensesUpdated);
-    
-    return () => {
-      console.log("Cleaning up event listeners in Expenses page");
-      window.removeEventListener('receipt-scanned', handleReceiptScan);
-      window.removeEventListener('expenses-updated', handleExpensesUpdated);
-      window.removeEventListener('expense-added', handleExpensesUpdated);
-    };
-  }, [refetch, triggerRefresh]);
 
   const isLoading = isMonthDataLoading || isExpensesLoading;
 

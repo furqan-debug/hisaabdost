@@ -1,39 +1,19 @@
 
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ExpenseCard } from "@/components/expenses/ExpenseCard";
-import { useState } from "react";
-import { ExpenseSkeleton } from "@/components/expenses/ExpenseSkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/use-currency";
+import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 
 export default function ExpenseList() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const navigate = useNavigate();
   const { currencyCode } = useCurrency();
-
-  // Define the fetch function for expenses
-  const fetchExpenses = async () => {
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
-    return data || [];
-  };
-
-  // Use Tanstack Query to fetch expenses
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['expenses', refreshTrigger],
-    queryFn: fetchExpenses
-  });
+  const { expenses, isLoading, error } = useExpenseQueries();
 
   const handleAddExpense = () => {
     navigate('/expenses/new');
@@ -44,7 +24,7 @@ export default function ExpenseList() {
   };
 
   // Calculate total amount
-  const totalAmount = data?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+  const totalAmount = expenses?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
 
   if (isLoading) {
     return (
@@ -57,9 +37,9 @@ export default function ExpenseList() {
           </Button>
         </div>
         <div className="space-y-3">
-          <ExpenseSkeleton />
-          <ExpenseSkeleton />
-          <ExpenseSkeleton />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
         </div>
       </div>
     );
@@ -77,7 +57,7 @@ export default function ExpenseList() {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!expenses || expenses.length === 0) {
     return (
       <EmptyState
         title="No expenses found"
@@ -102,7 +82,7 @@ export default function ExpenseList() {
         </Button>
       </div>
       <div className="space-y-3">
-        {data.map((expense) => (
+        {expenses.slice(0, 10).map((expense) => (
           <ExpenseCard
             key={expense.id}
             description={expense.description}
