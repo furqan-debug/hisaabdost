@@ -39,13 +39,14 @@ const FinnyChat = ({
     oldestMessageTime,
     resetChat,
     remainingDailyMessages,
-    isMessageLimitReached
+    isMessageLimitReached,
+    insights
   } = useChatLogic(null, currencyCode);
 
   // Effect to reset chat when it's first opened
   useEffect(() => {
     if (isOpen) {
-      console.log("Finny chat opened, user status:", user ? "logged in" : "not logged in", "currency:", currencyCode);
+      console.log("Advanced Finny chat opened, user status:", user ? "logged in" : "not logged in", "currency:", currencyCode);
     }
   }, [isOpen, user, currencyCode]);
   
@@ -82,6 +83,7 @@ const FinnyChat = ({
       handleQuickReply={handleQuickReply}
       resetChat={resetChat}
       isAuthPromptOnly={isAuthPromptOnly}
+      insights={insights}
     />
   );
 };

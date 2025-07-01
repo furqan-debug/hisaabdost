@@ -13,6 +13,7 @@ import { useMessageSending } from './hooks/useMessageSending';
 
 export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: CurrencyCode) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
+  const [insights, setInsights] = useState<any>(null);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -44,7 +45,133 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     userCurrencyCode
   );
 
-  const { newMessage, setNewMessage, handleSendMessage } = useMessageSending(
+  // Enhanced message sending with insights handling
+  const enhancedHandleSendMessage = async (e?: React.FormEvent, quickAction?: string) => {
+    if (e) e.preventDefault();
+    
+    const messageToSend = quickAction || newMessage.trim();
+    if (!messageToSend || isLoading || !user || isMessageLimitReached) {
+      if (isMessageLimitReached) {
+        toast.error(`Daily message limit reached (10 messages). Your advanced AI assistant will be available again tomorrow! 🌟`);
+      }
+      return;
+    }
+
+    const userMessage = {
+      id: Date.now().toString(),
+      content: messageToSend,
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    saveMessage(userMessage);
+    setNewMessage('');
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      console.log('Sending advanced message to AI service:', messageToSend);
+      
+      // Enhanced API call with user context
+      const response = await fetch('/api/finny-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageToSend,
+          userId: user.id,
+          chatHistory: messages.slice(-8),
+          currencyCode,
+          userName: user.user_metadata?.full_name,
+          userAge: user.user_metadata?.age,
+          userGender: user.user_metadata?.gender
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Advanced AI service response:', data);
+
+      // Extract insights from response
+      if (data.insights) {
+        setInsights(data.insights);
+      }
+
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        content: data.response || 'I received your message but couldn\'t process it with my full advanced capabilities right now.',
+        isUser: false,
+        timestamp: new Date(),
+        hasAction: !!data.action,
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      saveMessage(aiMessage);
+
+      // Enhanced action handling for advanced features
+      if (data.action) {
+        console.log('Advanced action performed:', data.action.type);
+        
+        // Trigger comprehensive refresh events
+        const triggerAdvancedRefreshEvents = () => {
+          const events = [
+            'expense-added',
+            'finny-expense-added',
+            'expenses-updated',
+            'expense-refresh',
+            'dashboard-refresh',
+            'finny-advanced-action'
+          ];
+          
+          events.forEach(eventName => {
+            window.dispatchEvent(new CustomEvent(eventName, { 
+              detail: { 
+                source: 'finny-advanced-chat', 
+                userId: user.id,
+                action: data.action.type,
+                timestamp: Date.now(),
+                insights: data.insights
+              } 
+            }));
+            console.log(`Dispatched ${eventName} event from Advanced Finny`);
+          });
+        };
+
+        // Multiple refresh triggers for maximum reliability
+        triggerAdvancedRefreshEvents();
+        setTimeout(triggerAdvancedRefreshEvents, 200);
+        setTimeout(triggerAdvancedRefreshEvents, 800);
+        setTimeout(triggerAdvancedRefreshEvents, 2000);
+
+        // Enhanced success notification
+        toast.success('✨ Advanced action completed! Your financial data has been updated with intelligent insights.');
+      }
+
+    } catch (error) {
+      console.error('Error in advanced message handling:', error);
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        content: 'I encountered an issue with my advanced AI systems. Please try again - I\'m working on getting back to full intelligence! 🧠⚡',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      saveMessage(errorMessage);
+      
+      toast.error('Advanced AI temporarily unavailable. Please try again!');
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  };
+
+  const { newMessage, setNewMessage } = useMessageSending(
     messages,
     setMessages,
     saveMessage,
@@ -64,17 +191,18 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
   const handleQuickReply = (reply: QuickReply) => {
     if (isLoading || !user || isMessageLimitReached) {
       if (isMessageLimitReached) {
-        toast.error(`Daily message limit reached (10 messages). Please try again tomorrow.`);
+        toast.error(`Daily message limit reached (10 messages). Your advanced assistant will return tomorrow! 🌟`);
       }
       return;
     }
-    console.log("Quick reply selected:", reply.action);
-    handleSendMessage(null, reply.action);
+    console.log("Advanced quick reply selected:", reply.action);
+    enhancedHandleSendMessage(undefined, reply.action);
   };
   
   const resetChat = () => {
     clearLocalStorage();
     setMessages([]);
+    setInsights(null);
     setHasInitialized(false);
     
     if (user) {
@@ -102,11 +230,12 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     isTyping,
     quickReplies,
     messagesEndRef,
-    handleSendMessage,
+    handleSendMessage: enhancedHandleSendMessage,
     handleQuickReply,
     oldestMessageTime,
     resetChat,
     remainingDailyMessages,
-    isMessageLimitReached
+    isMessageLimitReached,
+    insights
   };
 };
