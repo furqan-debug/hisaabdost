@@ -61,6 +61,23 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   }, [isOpen]);
 
+  // Handle Android status bar and keyboard issues
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('finny-chat-open');
+      // Prevent body scroll when chat is open on mobile
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('finny-chat-open');
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.classList.remove('finny-chat-open');
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -69,7 +86,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end justify-center p-4 md:items-center"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end justify-center p-0 md:p-4 md:items-center"
         onClick={onClose}
       >
         <motion.div
@@ -78,12 +95,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: "100%", opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="w-full max-w-md max-h-[85vh] md:max-h-[80vh] flex flex-col"
+          className="w-full max-w-md h-full md:h-auto md:max-h-[80vh] flex flex-col finny-chat-mobile-fix"
           onClick={(e) => e.stopPropagation()}
         >
-          <Card className="flex flex-col h-full border shadow-2xl bg-white dark:bg-gray-900 overflow-hidden">
-            {/* Simple Header */}
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+          <Card className="flex flex-col h-full border shadow-2xl bg-white dark:bg-gray-900 overflow-hidden rounded-none md:rounded-lg">
+            {/* Header with Android status bar padding */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800 safe-area-top">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -117,8 +134,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               </div>
             </div>
 
-            {/* Messages Area */}
-            <div className="flex-1 relative">
+            {/* Messages Area - flexible height */}
+            <div className="flex-1 relative finny-messages-mobile">
               <MessagesArea
                 user={user}
                 oldestMessageTime={oldestMessageTime}
@@ -134,8 +151,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               />
             </div>
 
-            {/* Simple Input Area */}
-            <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+            {/* Input Area - sticky at bottom with safe area */}
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800 finny-input-mobile safe-area-bottom">
               <ChatInput
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}

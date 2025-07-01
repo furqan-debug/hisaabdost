@@ -9,7 +9,7 @@ interface SettingsHeaderProps {
 
 export function SettingsHeader({ onClose }: SettingsHeaderProps) {
   return (
-    <div className="flex items-center gap-2 px-4 py-4 border-b">
+    <div className="flex items-center gap-2 px-4 py-4 border-b safe-area-top bg-background">
       <Button 
         variant="ghost" 
         size="icon" 

@@ -1,13 +1,13 @@
 
-/* Finny Chat Styles - Dark Theme Redesign */
+/* Finny Chat Styles - Clean & Minimalist Design */
 .finny-chat-card {
-  @apply bg-slate-900/95 backdrop-blur-2xl border border-slate-700/30 rounded-none sm:rounded-3xl shadow-2xl shadow-black/40 overflow-hidden text-white;
+  @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none sm:rounded-lg shadow-lg overflow-hidden;
 }
 
 /* Mobile-first responsive design */
 @media (min-width: 640px) {
   .finny-chat-card {
-    @apply rounded-3xl;
+    @apply rounded-lg;
   }
 }
 
@@ -15,93 +15,85 @@
   @apply bg-transparent;
 }
 
-/* Messages container with dark background */
+/* Messages container with clean background */
 .finny-messages-container {
   @apply p-3 sm:p-4;
-  background-color: #0f172a; /* equivalent to slate-900 */
+  background-color: var(--background);
   min-height: 100%;
 }
 
 /* Enhanced message bubbles */
 .finny-message-user {
-  @apply transition-all duration-300 transform hover:scale-[1.01];
-  animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  @apply transition-all duration-200;
+  animation: slideInRight 0.3s ease-out;
 }
 
 .finny-message-bot {
-  @apply transition-all duration-300 transform hover:scale-[1.01];
-  animation: slideInLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  @apply transition-all duration-200;
+  animation: slideInLeft 0.3s ease-out;
 }
 
-/* Enhanced input area - now part of ChatInput.tsx */
+/* Input area improvements */
 .finny-chat-input {
   @apply bg-transparent;
 }
 
 .finny-chat-input-container {
-  @apply flex gap-2 sm:gap-4 items-center max-w-4xl mx-auto relative;
+  @apply flex gap-2 items-center max-w-4xl mx-auto relative;
 }
 
-/* Input styles moved to ChatInput.tsx for dark theme */
+/* Clean input styles */
 .finny-chat-input input {
-  @apply text-sm bg-slate-800 text-slate-100 border-2 border-slate-700
-    focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300
-    py-2.5 sm:py-3 px-4 sm:px-5 rounded-full placeholder:text-slate-400 font-medium shadow-sm;
+  @apply text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700
+    focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200
+    py-2.5 px-4 rounded-lg placeholder:text-gray-500 dark:placeholder:text-gray-400;
 }
 
 .finny-chat-input input:focus {
-  @apply shadow-lg border-blue-500;
+  @apply shadow-sm border-blue-500;
 }
 
-/* Send button styles moved to ChatInput.tsx */
+/* Clean send button */
 .finny-send-button {
-  @apply bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
-    text-white rounded-full h-10 w-10 sm:h-11 sm:w-11 shadow-lg hover:shadow-xl
-    transition-all duration-300 transform hover:scale-105 active:scale-95 
+  @apply bg-blue-500 hover:bg-blue-600 text-white rounded-lg h-10 w-10 
+    shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 
     disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-/* Keyboard handling styles */
+/* Keyboard handling improvements for Android */
 .keyboard-aware {
   @apply relative flex flex-col h-full;
 }
 
 .keyboard-avoid {
-  @apply sticky bottom-0 w-full z-50;
-  background: linear-gradient(180deg, transparent 0%, #0f172a 20%);
+  @apply sticky bottom-0 w-full z-50 bg-background;
 }
 
-/* Mobile keyboard focus state */
+/* Android keyboard focus state */
 .keyboard-focused {
-  @apply relative z-[60];
+  @apply relative z-[60] bg-background;
   position: sticky !important;
   bottom: 0 !important;
 }
 
-/* Quick Reply buttons updated for dark theme */
+/* Clean quick reply buttons */
 .quick-reply-button {
-  @apply flex items-center gap-1.5 text-xs sm:text-sm py-1.5 px-3 rounded-full transition-all duration-300
-    bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700 
-    text-slate-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed 
-    border border-slate-700 hover:border-slate-600 shadow-sm hover:shadow-md 
-    transform hover:scale-105 active:scale-95 font-medium min-h-[32px];
+  @apply flex items-center gap-1.5 text-sm py-2 px-3 rounded-lg transition-all duration-200
+    bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 
+    text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 
+    disabled:opacity-50 disabled:cursor-not-allowed 
+    border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 
+    shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95 font-medium;
 }
 
-/* Premium status indicator */
-.status-indicator {
-  @apply absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-slate-900 shadow-sm;
-  background: linear-gradient(45deg, #10B981, #059669);
-  animation: pulse 2s infinite;
-}
-
-/* Enhanced typing indicator */
+/* Clean typing indicator */
 .typing-indicator {
-  @apply flex items-center gap-3 px-4 py-3 bg-white 
-    rounded-2xl sm:rounded-3xl shadow-lg;
+  @apply flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 
+    rounded-lg shadow-sm;
 }
 
 .typing-dot {
-  @apply w-2 h-2 rounded-full bg-slate-400;
+  @apply w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500;
   animation: typingDot 1.4s infinite ease-in-out;
 }
 
@@ -109,58 +101,48 @@
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 .typing-dot:nth-child(3) { /* no delay */ }
 
-/* Enhanced scrollbar */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom premium scrollbar for desktop */
+/* Enhanced scrollbar for desktop */
 @media (min-width: 768px) {
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(248, 250, 252, 0.5);
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
-    border-radius: 6px;
-    transition: background 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5));
+    background: rgba(0, 0, 0, 0.3);
   }
 }
 
-/* Enhanced animation keyframes */
+/* Clean animation keyframes */
 @keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateX(30px) scale(0.95);
+    transform: translateX(20px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0);
   }
 }
 
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-30px) scale(0.95);
+    transform: translateX(-20px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0);
   }
 }
 
@@ -175,37 +157,7 @@
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-}
-
-/* Enhanced message badges */
-.message-badge {
-  @apply inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold
-    bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 
-    border border-blue-200 shadow-sm;
-}
-
-.success-badge {
-  @apply bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200;
-}
-
-.error-badge {
-  @apply bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border-red-200;
-}
-
-.empathy-badge {
-  @apply bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-purple-200;
-}
-
-/* Mobile optimizations */
+/* Mobile optimizations with Android fixes */
 @media (max-width: 640px) {
   .finny-chat-card {
     @apply h-[100dvh] rounded-none border-0 shadow-none;
@@ -220,86 +172,48 @@
   }
   
   .finny-chat-input {
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   
   .quick-reply-button {
-    @apply text-xs py-2 px-3 min-h-[32px];
+    @apply text-sm py-2 px-3;
   }
   
-  /* Fix text cutoff on mobile */
+  /* Fix text display on mobile */
   .finny-message-content {
-    @apply text-xs leading-relaxed;
+    @apply text-sm leading-relaxed;
     word-break: break-word;
     overflow-wrap: break-word;
   }
   
-  /* Ensure input stays visible when keyboard is open */
+  /* Android keyboard handling */
   .keyboard-focused {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 9999 !important;
-    background: rgba(15, 23, 42, 0.98) !important;
-    backdrop-filter: blur(16px) !important;
+    background: var(--background) !important;
+    padding: 16px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  
+  /* Android status bar fix */
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
   }
 }
 
-/* Premium focus states for accessibility */
+/* Focus states for accessibility */
 .finny-chat-input input:focus-visible,
 .quick-reply-button:focus-visible,
 .finny-send-button:focus-visible {
-  @apply outline-none ring-4 ring-blue-500/30 ring-offset-2 ring-offset-white;
-}
-
-/* Premium loading states */
-.loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Glassmorphism effects */
-.glass-effect {
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Floating animation for decorative elements */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.float-animation {
-  animation: float 3s ease-in-out infinite;
+  @apply outline-none ring-2 ring-blue-500/50 ring-offset-2 ring-offset-background;
 }
 
 /* Safe area support for modern mobile devices */
 .safe-area-bottom {
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-}
-
-/* Prevent content overflow on small screens */
-.mobile-container {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 /* Touch-friendly scrolling */
@@ -316,7 +230,7 @@
   display: none;
 }
 
-/* Improved mobile chat layout */
+/* Android-specific mobile chat layout */
 @media (max-width: 640px) {
   .finny-chat-mobile-fix {
     height: 100vh;
@@ -337,15 +251,51 @@
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
-    background: white;
+    background: var(--background);
+    z-index: 10;
+  }
+  
+  /* Android keyboard open state */
+  .android-keyboard-open .finny-input-mobile {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--border) !important;
   }
 }
 
-/* Visual Viewport API support for better keyboard handling */
+/* Visual Viewport API support for better Android keyboard handling */
 @supports (height: 100dvh) {
   @media (max-width: 640px) {
     .finny-chat-mobile-fix {
       height: 100dvh;
     }
   }
+}
+
+/* Prevent content overflow on Android */
+.mobile-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Body classes for chat state management */
+.finny-chat-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+.finny-input-focused .finny-input-mobile {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: var(--background) !important;
+  border-top: 1px solid var(--border) !important;
 }
