@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
@@ -10,6 +9,7 @@ import { useFinny } from '../context/FinnyContext';
 import { CurrencyCode } from '@/utils/currencyUtils';
 import { useChatInitialization } from './hooks/useChatInitialization';
 import { useMessageSending } from './hooks/useMessageSending';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: CurrencyCode) => {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(DEFAULT_QUICK_REPLIES);
@@ -73,13 +73,9 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     try {
       console.log('Sending advanced message to AI service:', messageToSend);
       
-      // Enhanced API call with user context
-      const response = await fetch('/api/finny-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Use Supabase edge function instead of /api/ endpoint
+      const { data, error } = await supabase.functions.invoke('finny-chat', {
+        body: {
           message: messageToSend,
           userId: user.id,
           chatHistory: messages.slice(-8),
@@ -87,14 +83,14 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
           userName: user.user_metadata?.full_name,
           userAge: user.user_metadata?.age,
           userGender: user.user_metadata?.gender
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        console.error('Error calling Finny edge function:', error);
+        throw new Error(`Failed to get response from Finny: ${error.message}`);
       }
 
-      const data = await response.json();
       console.log('Advanced AI service response:', data);
 
       // Extract insights from response
