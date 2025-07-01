@@ -212,6 +212,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_analytics: {
+        Row: {
+          ai_reasoning: string | null
+          financial_context: Json | null
+          id: string
+          notification_type: string
+          priority_score: number
+          sent_at: string | null
+          user_id: string | null
+          user_timezone: string | null
+        }
+        Insert: {
+          ai_reasoning?: string | null
+          financial_context?: Json | null
+          id?: string
+          notification_type: string
+          priority_score: number
+          sent_at?: string | null
+          user_id?: string | null
+          user_timezone?: string | null
+        }
+        Update: {
+          ai_reasoning?: string | null
+          financial_context?: Json | null
+          id?: string
+          notification_type?: string
+          priority_score?: number
+          sent_at?: string | null
+          user_id?: string | null
+          user_timezone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_history: {
         Row: {
           email_sent: boolean | null
@@ -320,6 +361,7 @@ export type Database = {
           id: string
           income_date: number
           last_login_at: string | null
+          last_notification_date: string | null
           monthly_income: number | null
           notification_time: string | null
           notification_timezone: string | null
@@ -337,6 +379,7 @@ export type Database = {
           id: string
           income_date?: number
           last_login_at?: string | null
+          last_notification_date?: string | null
           monthly_income?: number | null
           notification_time?: string | null
           notification_timezone?: string | null
@@ -354,6 +397,7 @@ export type Database = {
           id?: string
           income_date?: number
           last_login_at?: string | null
+          last_notification_date?: string | null
           monthly_income?: number | null
           notification_time?: string | null
           notification_timezone?: string | null

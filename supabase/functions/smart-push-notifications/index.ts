@@ -15,6 +15,7 @@ interface UserData {
   monthly_income: number;
   last_login_at: string;
   last_notification_date?: string;
+  timezone?: string;
 }
 
 interface ExpenseData {
@@ -22,25 +23,51 @@ interface ExpenseData {
   category: string;
   date: string;
   description: string;
+  payment_method: string;
 }
 
 interface BudgetData {
   category: string;
   amount: number;
   spent: number;
+  period: string;
+}
+
+interface GoalData {
+  id: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  target_date: string;
+  category: string;
+  status: string;
+}
+
+interface WalletData {
+  balance: number;
+  recent_transactions: Array<{
+    amount: number;
+    type: string;
+    date: string;
+  }>;
 }
 
 interface SmartNotification {
   title: string;
   body: string;
   priority: number;
-  type: 'budget' | 'wastage' | 'inactivity';
+  type: 'budget' | 'goal' | 'wastage' | 'inactivity' | 'savings' | 'achievement';
+  reasoning: string;
+  financial_context: Record<string, any>;
 }
 
 const NOTIFICATION_PRIORITIES = {
-  budget: 1,
-  wastage: 2,
-  inactivity: 3
+  budget: 1,      // Critical - budget alerts
+  goal: 2,        // Important - goal updates
+  wastage: 3,     // Moderate - wasteful spending
+  savings: 4,     // Good - savings opportunities
+  achievement: 5, // Positive - achievements
+  inactivity: 6   // Low - inactivity reminders
 };
 
 serve(async (req) => {
@@ -59,12 +86,15 @@ serve(async (req) => {
       throw new Error('OPENROUTER_API_KEY not configured');
     }
 
-    console.log('🔍 Starting smart notification analysis...');
+    const requestBody = await req.json().catch(() => ({}));
+    const isAutomated = requestBody.automated === true;
 
-    // Get all users for analysis
+    console.log(`🚀 ${isAutomated ? 'Automated' : 'Manual'} smart notification analysis started...`);
+
+    // Get all users eligible for notifications
     const { data: users, error: usersError } = await supabase
       .from('profiles')
-      .select('id, preferred_currency, age, full_name, monthly_income, last_login_at, last_notification_date');
+      .select('id, preferred_currency, age, full_name, monthly_income, last_login_at, last_notification_date, timezone');
 
     if (usersError) {
       throw usersError;
@@ -72,31 +102,48 @@ serve(async (req) => {
 
     console.log(`📊 Analyzing ${users?.length || 0} users for smart notifications`);
 
-    const notifications: Array<{userId: string, notification: SmartNotification}> = [];
+    const notifications: Array<{
+      userId: string;
+      notification: SmartNotification;
+    }> = [];
 
     for (const user of users || []) {
-      // Check daily limit - skip if already sent today
-      const today = new Date().toISOString().split('T')[0];
-      if (user.last_notification_date === today) {
-        console.log(`⏭️ Skipping user ${user.id} - already notified today`);
-        continue;
-      }
+      try {
+        // Enforce daily limit - skip if already sent today
+        const today = new Date().toISOString().split('T')[0];
+        if (user.last_notification_date === today) {
+          console.log(`⏭️ Skipping user ${user.id} - already notified today`);
+          continue;
+        }
 
-      const userNotifications = await analyzeUserForNotifications(supabase, user, openrouterApiKey);
-      
-      if (userNotifications.length > 0) {
-        // Sort by priority and take the highest priority notification
-        const topNotification = userNotifications.sort((a, b) => a.priority - b.priority)[0];
-        notifications.push({ userId: user.id, notification: topNotification });
+        // Get comprehensive financial data
+        const financialData = await getComprehensiveFinancialData(supabase, user);
+        
+        // Use DeepSeek AI to analyze and generate the best notification
+        const smartNotification = await generateIntelligentNotification(
+          user, 
+          financialData, 
+          openrouterApiKey
+        );
+
+        if (smartNotification) {
+          notifications.push({
+            userId: user.id,
+            notification: smartNotification
+          });
+        }
+      } catch (error) {
+        console.error(`❌ Error analyzing user ${user.id}:`, error);
       }
     }
 
-    console.log(`🎯 Generated ${notifications.length} smart notifications`);
+    console.log(`🎯 Generated ${notifications.length} intelligent notifications`);
 
-    // Send notifications
+    // Send notifications and track analytics
     let sentCount = 0;
     for (const { userId, notification } of notifications) {
       try {
+        // Send push notification
         const { error: sendError } = await supabase.functions.invoke('send-push-notification', {
           body: {
             userId,
@@ -104,20 +151,34 @@ serve(async (req) => {
             body: notification.body,
             data: {
               type: notification.type,
-              priority: notification.priority
+              priority: notification.priority,
+              automated: isAutomated
             }
           }
         });
 
         if (!sendError) {
+          const today = new Date().toISOString().split('T')[0];
+          
           // Update last notification date
           await supabase
             .from('profiles')
             .update({ last_notification_date: today })
             .eq('id', userId);
-          
+
+          // Track analytics
+          await supabase
+            .from('notification_analytics')
+            .insert({
+              user_id: userId,
+              notification_type: notification.type,
+              priority_score: notification.priority,
+              financial_context: notification.financial_context,
+              ai_reasoning: notification.reasoning
+            });
+
           sentCount++;
-          console.log(`✅ Sent ${notification.type} notification to user ${userId}`);
+          console.log(`✅ Sent ${notification.type} notification to user ${userId}: ${notification.title}`);
         } else {
           console.error(`❌ Failed to send notification to user ${userId}:`, sendError);
         }
@@ -131,7 +192,8 @@ serve(async (req) => {
         success: true,
         analyzed_users: users?.length || 0,
         notifications_generated: notifications.length,
-        notifications_sent: sentCount
+        notifications_sent: sentCount,
+        automated: isAutomated
       }),
       { 
         status: 200, 
@@ -154,231 +216,275 @@ serve(async (req) => {
   }
 });
 
-async function analyzeUserForNotifications(
-  supabase: any, 
-  user: UserData, 
+async function getComprehensiveFinancialData(supabase: any, user: UserData) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+  // Get expenses (last 60 days for trend analysis)
+  const { data: expenses } = await supabase
+    .from('expenses')
+    .select('amount, category, date, description, payment_method')
+    .eq('user_id', user.id)
+    .gte('date', sixtyDaysAgo.toISOString().split('T')[0])
+    .order('date', { ascending: false });
+
+  // Get budgets
+  const { data: budgets } = await supabase
+    .from('budgets')
+    .select('category, amount, period')
+    .eq('user_id', user.id);
+
+  // Get goals
+  const { data: goals } = await supabase
+    .from('goals')
+    .select('id, name, target_amount, current_amount, target_date, category, status')
+    .eq('user_id', user.id);
+
+  // Get wallet data
+  const { data: walletTransactions } = await supabase
+    .from('wallet_transactions')
+    .select('amount, type, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  // Calculate spending by category for last 30 days
+  const recentExpenses = expenses?.filter(e => 
+    new Date(e.date) >= thirtyDaysAgo
+  ) || [];
+
+  const categorySpending = recentExpenses.reduce((acc, expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Calculate spending trends (last 30 vs previous 30 days)
+  const previousMonthExpenses = expenses?.filter(e => {
+    const expenseDate = new Date(e.date);
+    return expenseDate >= sixtyDaysAgo && expenseDate < thirtyDaysAgo;
+  }) || [];
+
+  const currentMonthTotal = recentExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const previousMonthTotal = previousMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  return {
+    expenses: recentExpenses,
+    previousMonthExpenses,
+    budgets: budgets || [],
+    goals: goals || [],
+    walletTransactions: walletTransactions || [],
+    categorySpending,
+    currentMonthTotal,
+    previousMonthTotal,
+    spendingTrend: previousMonthTotal > 0 ? 
+      ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100 : 0
+  };
+}
+
+async function generateIntelligentNotification(
+  user: UserData,
+  financialData: any,
   openrouterApiKey: string
-): Promise<SmartNotification[]> {
-  const notifications: SmartNotification[] = [];
-  
+): Promise<SmartNotification | null> {
   try {
-    // Get user's recent expenses (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Analyze financial situation comprehensively
+    const insights = analyzeFinancialSituation(user, financialData);
     
-    const { data: expenses } = await supabase
-      .from('expenses')
-      .select('amount, category, date, description')
-      .eq('user_id', user.id)
-      .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
+    if (!insights.shouldNotify) {
+      console.log(`💡 No notification needed for user ${user.id} - ${insights.reason}`);
+      return null;
+    }
 
-    // Get user's budgets
-    const { data: budgets } = await supabase
-      .from('budgets')
-      .select('category, amount')
-      .eq('user_id', user.id);
+    const language = getLanguageFromCurrency(user.preferred_currency);
+    const ageGroup = getAgeGroup(user.age);
 
-    // Calculate spending by category
-    const categorySpending = (expenses || []).reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    // Create comprehensive prompt for DeepSeek
+    const prompt = createIntelligentPrompt(user, financialData, insights, language, ageGroup);
 
-    // Check for budget alerts (50% threshold)
-    if (budgets && budgets.length > 0) {
-      for (const budget of budgets) {
-        const spent = categorySpending[budget.category] || 0;
-        const percentage = (spent / budget.amount) * 100;
-        
-        if (percentage >= 50 && percentage < 100) {
-          const budgetNotification = await generateBudgetAlert(
-            user, budget, spent, percentage, expenses || [], openrouterApiKey
-          );
-          if (budgetNotification) {
-            notifications.push(budgetNotification);
-          }
-        }
+    const response = await callDeepSeekAPI(prompt, openrouterApiKey);
+    
+    return {
+      ...response,
+      priority: NOTIFICATION_PRIORITIES[insights.primaryType] || 6,
+      type: insights.primaryType,
+      reasoning: insights.reasoning,
+      financial_context: {
+        totalSpent: financialData.currentMonthTotal,
+        budgetUtilization: insights.budgetUtilization,
+        goalProgress: insights.goalProgress,
+        spendingTrend: financialData.spendingTrend,
+        topCategories: insights.topSpendingCategories
       }
-    }
-
-    // Check for wastage alerts
-    const wastageNotification = await checkWastagePattern(
-      user, expenses || [], openrouterApiKey
-    );
-    if (wastageNotification) {
-      notifications.push(wastageNotification);
-    }
-
-    // Check for inactivity alerts (48+ hours)
-    if (user.last_login_at) {
-      const lastLogin = new Date(user.last_login_at);
-      const hoursSinceLogin = (Date.now() - lastLogin.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursSinceLogin >= 48) {
-        const inactivityNotification = await generateInactivityAlert(user, openrouterApiKey);
-        if (inactivityNotification) {
-          notifications.push(inactivityNotification);
-        }
-      }
-    }
-
-  } catch (error) {
-    console.error(`Error analyzing user ${user.id}:`, error);
-  }
-
-  return notifications;
-}
-
-async function generateBudgetAlert(
-  user: UserData,
-  budget: any,
-  spent: number,
-  percentage: number,
-  expenses: ExpenseData[],
-  openrouterApiKey: string
-): Promise<SmartNotification | null> {
-  try {
-    const categoryExpenses = expenses.filter(e => e.category === budget.category);
-    const breakdown = categoryExpenses.reduce((acc, expense) => {
-      acc[expense.description] = (acc[expense.description] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const language = getLanguageFromCurrency(user.preferred_currency);
-    const ageGroup = getAgeGroup(user.age);
-
-    const prompt = `Create a budget alert notification for a ${ageGroup} user in ${language}. 
-    User: ${user.full_name || 'User'}
-    Currency: ${user.preferred_currency}
-    Category: ${budget.category}
-    Budget: ${budget.amount}
-    Spent: ${spent} (${percentage.toFixed(1)}%)
-    Top expenses: ${Object.entries(breakdown).slice(0, 3).map(([desc, amt]) => `${desc}: ${amt}`).join(', ')}
-    
-    Generate a friendly, age-appropriate notification with title and body. Be concise and helpful.
-    ${language === 'Roman Urdu' ? 'Use Roman Urdu (English alphabet with Urdu words).' : ''}
-    ${language === 'Hindi' ? 'Use Hindi script.' : ''}
-    ${language === 'Bengali' ? 'Use Bengali script.' : ''}
-    
-    Return only JSON: {"title": "...", "body": "..."}`;
-
-    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
-    
-    return {
-      ...response,
-      priority: NOTIFICATION_PRIORITIES.budget,
-      type: 'budget' as const
     };
   } catch (error) {
-    console.error('Error generating budget alert:', error);
+    console.error('Error generating intelligent notification:', error);
     return null;
   }
 }
 
-async function checkWastagePattern(
-  user: UserData,
-  expenses: ExpenseData[],
-  openrouterApiKey: string
-): Promise<SmartNotification | null> {
-  try {
-    // Look for potential wasteful spending patterns
-    const wastefulCategories = ['Entertainment', 'Food', 'Shopping'];
-    const suspiciousKeywords = ['cigarette', 'smoke', 'cola', 'soda', 'candy', 'chips', 'junk'];
-    
-    const potentialWaste = expenses.filter(expense => 
-      wastefulCategories.includes(expense.category) ||
-      suspiciousKeywords.some(keyword => 
-        expense.description.toLowerCase().includes(keyword)
-      )
-    );
+function analyzeFinancialSituation(user: UserData, data: any) {
+  const insights = {
+    shouldNotify: false,
+    primaryType: 'inactivity' as const,
+    reasoning: '',
+    budgetUtilization: 0,
+    goalProgress: 0,
+    topSpendingCategories: [],
+    urgentBudgets: [],
+    delayedGoals: [],
+    wastefulPatterns: []
+  };
 
-    if (potentialWaste.length < 3) return null; // Need at least 3 instances
+  // 1. BUDGET ANALYSIS (Highest Priority)
+  if (data.budgets.length > 0) {
+    const budgetAnalysis = data.budgets.map((budget: any) => {
+      const spent = data.categorySpending[budget.category] || 0;
+      const utilization = (spent / budget.amount) * 100;
+      return { ...budget, spent, utilization };
+    });
 
-    const wasteAmount = potentialWaste.reduce((sum, expense) => sum + expense.amount, 0);
-    const language = getLanguageFromCurrency(user.preferred_currency);
-    const ageGroup = getAgeGroup(user.age);
-
-    const prompt = `Analyze wasteful spending for a ${ageGroup} user in ${language}.
-    User: ${user.full_name || 'User'}
-    Currency: ${user.preferred_currency}
-    Wasteful expenses: ${potentialWaste.map(e => `${e.description}: ${e.amount}`).slice(0, 5).join(', ')}
-    Total waste: ${wasteAmount}
-    
-    Generate a helpful notification suggesting alternatives and potential savings. Be encouraging, not judgmental.
-    ${language === 'Roman Urdu' ? 'Use Roman Urdu (English alphabet with Urdu words).' : ''}
-    ${language === 'Hindi' ? 'Use Hindi script.' : ''}
-    ${language === 'Bengali' ? 'Use Bengali script.' : ''}
-    
-    Return only JSON: {"title": "...", "body": "..."}`;
-
-    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
-    
-    return {
-      ...response,
-      priority: NOTIFICATION_PRIORITIES.wastage,
-      type: 'wastage' as const
-    };
-  } catch (error) {
-    console.error('Error checking wastage pattern:', error);
-    return null;
+    const urgentBudgets = budgetAnalysis.filter((b: any) => b.utilization >= 70);
+    if (urgentBudgets.length > 0) {
+      insights.shouldNotify = true;
+      insights.primaryType = 'budget';
+      insights.reasoning = `Budget alert: ${urgentBudgets.length} categories over 70% utilization`;
+      insights.urgentBudgets = urgentBudgets;
+      insights.budgetUtilization = Math.max(...urgentBudgets.map((b: any) => b.utilization));
+      return insights;
+    }
   }
+
+  // 2. GOAL ANALYSIS (Second Priority)
+  if (data.goals.length > 0) {
+    const goalAnalysis = data.goals.map((goal: any) => {
+      const progress = (goal.current_amount / goal.target_amount) * 100;
+      const daysToTarget = Math.ceil((new Date(goal.target_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const isDelayed = daysToTarget < 30 && progress < 80;
+      return { ...goal, progress, daysToTarget, isDelayed };
+    });
+
+    const delayedGoals = goalAnalysis.filter((g: any) => g.isDelayed);
+    const nearCompletion = goalAnalysis.filter((g: any) => g.progress >= 90);
+
+    if (delayedGoals.length > 0) {
+      insights.shouldNotify = true;
+      insights.primaryType = 'goal';
+      insights.reasoning = `Goal alert: ${delayedGoals.length} goals at risk of missing deadline`;
+      insights.delayedGoals = delayedGoals;
+      return insights;
+    }
+
+    if (nearCompletion.length > 0) {
+      insights.shouldNotify = true;
+      insights.primaryType = 'achievement';
+      insights.reasoning = `Achievement: ${nearCompletion.length} goals near completion`;
+      insights.goalProgress = Math.max(...nearCompletion.map((g: any) => g.progress));
+      return insights;
+    }
+  }
+
+  // 3. WASTAGE ANALYSIS (Third Priority)
+  const wastefulCategories = ['Entertainment', 'Food', 'Shopping', 'Miscellaneous'];
+  const potentialWaste = data.expenses.filter((expense: any) => 
+    wastefulCategories.includes(expense.category) && expense.amount > (user.monthly_income * 0.02)
+  );
+
+  if (potentialWaste.length >= 3) {
+    const wasteAmount = potentialWaste.reduce((sum: number, e: any) => sum + e.amount, 0);
+    if (wasteAmount > user.monthly_income * 0.1) {
+      insights.shouldNotify = true;
+      insights.primaryType = 'wastage';
+      insights.reasoning = `Wastage detected: ${wasteAmount.toFixed(2)} in potentially unnecessary expenses`;
+      insights.wastefulPatterns = potentialWaste;
+      return insights;
+    }
+  }
+
+  // 4. SAVINGS OPPORTUNITY (Fourth Priority)
+  if (data.spendingTrend < -10) {
+    insights.shouldNotify = true;
+    insights.primaryType = 'savings';
+    insights.reasoning = `Savings opportunity: Spending decreased by ${Math.abs(data.spendingTrend).toFixed(1)}%`;
+    return insights;
+  }
+
+  // 5. INACTIVITY (Lowest Priority)
+  if (user.last_login_at) {
+    const daysSinceLogin = (Date.now() - new Date(user.last_login_at).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceLogin >= 3) {
+      insights.shouldNotify = true;
+      insights.primaryType = 'inactivity';
+      insights.reasoning = `Inactivity: ${Math.floor(daysSinceLogin)} days since last login`;
+      return insights;
+    }
+  }
+
+  insights.reasoning = 'No significant financial events requiring notification';
+  return insights;
 }
 
-async function generateInactivityAlert(
-  user: UserData,
-  openrouterApiKey: string
-): Promise<SmartNotification | null> {
-  try {
-    const language = getLanguageFromCurrency(user.preferred_currency);
-    const ageGroup = getAgeGroup(user.age);
+function createIntelligentPrompt(user: UserData, data: any, insights: any, language: string, ageGroup: string) {
+  const context = `
+Financial Profile:
+- User: ${user.full_name || 'User'} (${ageGroup}, ${language})
+- Currency: ${user.preferred_currency}
+- Monthly Income: ${user.monthly_income}
+- Current Month Spending: ${data.currentMonthTotal}
+- Spending Trend: ${data.spendingTrend > 0 ? '+' : ''}${data.spendingTrend.toFixed(1)}%
 
-    const prompt = `Create an inactivity reminder for a ${ageGroup} user in ${language}.
-    User: ${user.full_name || 'User'}
-    Currency: ${user.preferred_currency}
-    
-    Generate a friendly reminder to check their expenses. Be encouraging and helpful.
-    ${language === 'Roman Urdu' ? 'Use Roman Urdu (English alphabet with Urdu words).' : ''}
-    ${language === 'Hindi' ? 'Use Hindi script.' : ''}
-    ${language === 'Bengali' ? 'Use Bengali script.' : ''}
-    
-    Return only JSON: {"title": "...", "body": "..."}`;
+Analysis: ${insights.reasoning}
+Priority: ${insights.primaryType.toUpperCase()}
 
-    const response = await callOpenRouterAPI(prompt, openrouterApiKey);
-    
-    return {
-      ...response,
-      priority: NOTIFICATION_PRIORITIES.inactivity,
-      type: 'inactivity' as const
-    };
-  } catch (error) {
-    console.error('Error generating inactivity alert:', error);
-    return null;
-  }
+Context Details:
+${insights.urgentBudgets.length > 0 ? `Urgent Budgets: ${insights.urgentBudgets.map((b: any) => `${b.category}: ${b.utilization.toFixed(1)}% used`).join(', ')}` : ''}
+${insights.delayedGoals.length > 0 ? `Delayed Goals: ${insights.delayedGoals.map((g: any) => `${g.name}: ${g.progress.toFixed(1)}% complete, ${g.daysToTarget} days left`).join(', ')}` : ''}
+${insights.goalProgress > 0 ? `Achievement Progress: ${insights.goalProgress.toFixed(1)}% complete` : ''}
+${insights.wastefulPatterns.length > 0 ? `Top Wasteful Expenses: ${insights.wastefulPatterns.slice(0, 3).map((e: any) => `${e.description}: ${e.amount}`).join(', ')}` : ''}
+`;
+
+  return `You are DeepSeek, an advanced AI financial advisor. Create ONE perfect notification for this user.
+
+${context}
+
+Requirements:
+- Be personal, insightful, and actionable
+- Use ${language} language appropriately
+- Match the ${ageGroup} demographic
+- Focus on the most important insight only
+- Make it feel like you truly understand their financial situation
+- Be encouraging but honest about their situation
+
+${language === 'Roman Urdu' ? 'Use Roman Urdu (English alphabet with Urdu words).' : ''}
+${language === 'Hindi' ? 'Use Hindi script.' : ''}
+${language === 'Bengali' ? 'Use Bengali script.' : ''}
+
+Return ONLY JSON: {"title": "...", "body": "..."}`;
 }
 
-async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<{title: string, body: string}> {
+async function callDeepSeekAPI(prompt: string, apiKey: string): Promise<{title: string, body: string}> {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://your-app-url.com',
-      'X-Title': 'Smart Expense Notifications'
+      'X-Title': 'Intelligent Financial Notifications'
     },
     body: JSON.stringify({
       model: 'deepseek/deepseek-v2-chat',
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful financial assistant that creates personalized notifications. Always respond with valid JSON format containing title and body fields.'
+          content: 'You are DeepSeek, an advanced AI financial advisor that creates highly personalized, insightful notifications. You have deep understanding of personal finance and human psychology. Always respond with valid JSON format containing title and body fields.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.7,
-      max_tokens: 200
+      temperature: 0.8,
+      max_tokens: 300
     }),
   });
 
@@ -392,11 +498,10 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<{title
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse OpenRouter response:', content);
-    // Fallback response
+    console.error('Failed to parse DeepSeek response:', content);
     return {
-      title: 'Spending Alert',
-      body: 'Check your recent expenses and budget status.'
+      title: 'Financial Update',
+      body: 'Check your spending and budget status for important insights.'
     };
   }
 }
@@ -411,8 +516,8 @@ function getLanguageFromCurrency(currency: string): string {
 }
 
 function getAgeGroup(age: number): string {
-  if (age < 25) return 'young';
+  if (age < 25) return 'young professional';
   if (age < 35) return 'adult';
-  if (age < 50) return 'middle-aged';
-  return 'mature';
+  if (age < 50) return 'middle-aged professional';
+  return 'mature adult';
 }
