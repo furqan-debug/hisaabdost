@@ -32,7 +32,7 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     saveMessage,
     loadChatHistory,
     clearLocalStorage
-  } = useMessageHandling(setQuickReplies);
+  } = useMessageHandling();
 
   const { isConnectingToData, initializeChat } = useChatInitialization(
     setMessages,

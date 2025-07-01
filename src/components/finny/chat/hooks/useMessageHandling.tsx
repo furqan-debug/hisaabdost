@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { Message } from '../types';
-import { aiService } from '../services/aiService';
+import { processMessageWithAI } from '../services/aiService';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 
@@ -9,12 +9,14 @@ export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m Finny, your personal finance assistant. I can help you track expenses, set budgets, and manage your financial goals. What would you like to do today?',
+      content: 'Hello! I\'m Finny, your personal finance assistant. I can help you track expenses, set budgets, and manage your financial goals. What would you like to do today?',
       isUser: false,
       timestamp: new Date(),
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [oldestMessageTime, setOldestMessageTime] = useState<Date | null>(null);
   const { user } = useAuth();
 
   const addMessage = useCallback((message: Omit<Message, 'id'>) => {
@@ -26,6 +28,37 @@ export function useMessageHandling() {
     return newMessage;
   }, []);
 
+  const saveMessage = useCallback((message: Message) => {
+    // Save to localStorage or other persistence layer
+    try {
+      const existingMessages = JSON.parse(localStorage.getItem('finny-messages') || '[]');
+      const updatedMessages = [...existingMessages, message];
+      localStorage.setItem('finny-messages', JSON.stringify(updatedMessages));
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  }, []);
+
+  const loadChatHistory = useCallback(() => {
+    try {
+      const savedMessages = JSON.parse(localStorage.getItem('finny-messages') || '[]');
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
+        setOldestMessageTime(new Date(savedMessages[0].timestamp));
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  }, []);
+
+  const clearLocalStorage = useCallback(() => {
+    try {
+      localStorage.removeItem('finny-messages');
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+    }
+  }, []);
+
   const sendMessage = useCallback(async (text: string) => {
     if (!user) {
       toast.error('Please sign in to use Finny');
@@ -33,7 +66,7 @@ export function useMessageHandling() {
     }
 
     const userMessage = addMessage({
-      text,
+      content: text,
       isUser: true,
       timestamp: new Date(),
     });
@@ -42,24 +75,23 @@ export function useMessageHandling() {
 
     try {
       console.log('Sending message to AI service:', text);
-      const response = await aiService.sendMessage(text, user.id);
+      const response = await processMessageWithAI(text, user.id, messages.slice(-5));
       
       console.log('AI service response:', response);
       
       const aiMessage = addMessage({
-        text: response.message || 'I received your message but couldn\'t process it properly.',
+        content: response.response || 'I received your message but couldn\'t process it properly.',
         isUser: false,
         timestamp: new Date(),
-        actionPerformed: response.actionPerformed,
-        confidence: response.confidence,
+        hasAction: !!response.action,
       });
 
       // If an action was performed, trigger appropriate refresh events
-      if (response.actionPerformed && response.actionType) {
-        console.log('Action performed:', response.actionType);
+      if (response.action) {
+        console.log('Action performed:', response.action.type);
         
         // Trigger specific refresh events based on action type
-        switch (response.actionType) {
+        switch (response.action.type) {
           case 'add_expense':
             window.dispatchEvent(new CustomEvent('expense-added', { 
               detail: { source: 'finny-chat', userId: user.id } 
@@ -88,7 +120,7 @@ export function useMessageHandling() {
           default:
             // Generic refresh for other actions
             window.dispatchEvent(new CustomEvent('data-updated', { 
-              detail: { source: 'finny-chat', actionType: response.actionType } 
+              detail: { source: 'finny-chat', actionType: response.action.type } 
             }));
         }
 
@@ -99,23 +131,22 @@ export function useMessageHandling() {
     } catch (error) {
       console.error('Error sending message:', error);
       addMessage({
-        text: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: 'Sorry, I encountered an error processing your request. Please try again.',
         isUser: false,
         timestamp: new Date(),
-        isError: true,
       });
       
       toast.error('Failed to process your request. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [user, addMessage]);
+  }, [user, addMessage, messages]);
 
   const clearMessages = useCallback(() => {
     setMessages([
       {
         id: '1',
-        text: 'Hello! I\'m Finny, your personal finance assistant. How can I help you today?',
+        content: 'Hello! I\'m Finny, your personal finance assistant. How can I help you today?',
         isUser: false,
         timestamp: new Date(),
       }
@@ -124,7 +155,15 @@ export function useMessageHandling() {
 
   return {
     messages,
+    setMessages,
     isLoading,
+    setIsLoading,
+    isTyping,
+    setIsTyping,
+    oldestMessageTime,
+    saveMessage,
+    loadChatHistory,
+    clearLocalStorage,
     sendMessage,
     clearMessages,
   };
