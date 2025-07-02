@@ -46,15 +46,9 @@ const Expenses = () => {
   };
 
   const handleExpenseAdded = () => {
-    console.log("Expense added, triggering refresh");
+    console.log("Expense added, triggering simple refresh");
+    // Just refetch without dispatching events to prevent loops
     refetch();
-    // Trigger a dashboard refresh event
-    window.dispatchEvent(new CustomEvent('dashboard-refresh', { 
-      detail: { 
-        source: 'expense-page',
-        timestamp: Date.now()
-      }
-    }));
   };
 
   const handleDeleteSelected = async () => {

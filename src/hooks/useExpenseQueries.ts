@@ -10,7 +10,7 @@ export function useExpenseQueries() {
   const queryClient = useQueryClient();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Listen for expense update events with debouncing to prevent infinite loops
+  // Listen for expense update events with proper debouncing
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout | null = null;
     
@@ -28,25 +28,23 @@ export function useExpenseQueries() {
       // Debounce the refresh to prevent infinite loops
       debounceTimer = setTimeout(() => {
         console.log(`Processing debounced refresh for ${event.type}`);
-        setRefreshTrigger(Date.now());
+        setRefreshTrigger(prev => prev + 1);
         
-        // Only invalidate queries, don't force refetch
+        // Only invalidate queries, don't force refetch to prevent loops
         queryClient.invalidateQueries({ queryKey: ['expenses'] });
         queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
         queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
         
         debounceTimer = null;
-      }, 300); // 300ms debounce
+      }, 500); // Increased debounce time to 500ms
     };
 
+    // Only listen to the most essential events
     const eventTypes = [
-      'expense-added',
       'expense-updated',
+      'expense-added', 
       'expense-deleted',
-      'expenses-updated',
-      'expense-refresh',
-      'finny-expense-added',
-      'dashboard-refresh'
+      'finny-expense-added'
     ];
 
     eventTypes.forEach(eventType => {
@@ -97,9 +95,9 @@ export function useExpenseQueries() {
       })) as Expense[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale
+    staleTime: 1000 * 60, // Consider data fresh for 1 minute
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Prevent excessive refetching
   });
 
   return {
