@@ -100,7 +100,7 @@
   [data-radix-popper-content-wrapper] {
     max-height: 50vh !important;
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important; overscroll-behavior-y: contain !important;
   }
   
   /* Enhanced dropdown touch scrolling */
