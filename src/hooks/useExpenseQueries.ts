@@ -8,7 +8,7 @@ export function useExpenseQueries() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Main expenses query - simplified without events
+  // Main expenses query
   const { data: expenses = [], isLoading, error, refetch } = useQuery({
     queryKey: ['all_expenses', user?.id],
     queryFn: async () => {
@@ -46,12 +46,11 @@ export function useExpenseQueries() {
     refetchOnWindowFocus: false,
   });
 
-  // Simple manual refresh function
+  // Single coordinated refresh function
   const refreshExpenses = () => {
-    console.log("Manual expense refresh triggered");
+    console.log("Refreshing expenses data");
+    // Only invalidate the main expenses query
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['budgets'] });
   };
 
   return {

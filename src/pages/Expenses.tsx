@@ -45,8 +45,8 @@ const Expenses = () => {
   };
 
   const handleExpenseAdded = () => {
-    console.log("Expense added, triggering refresh");
-    // Direct refresh without events
+    console.log("Expense added, triggering single refresh");
+    // Only call refreshExpenses once
     refreshExpenses();
   };
 

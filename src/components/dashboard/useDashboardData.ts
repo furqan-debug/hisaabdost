@@ -55,10 +55,9 @@ export function useDashboardData() {
     }
   }, [incomeData, isIncomeLoading, updateMonthData, currentMonthKey]);
   
-  // Handle manual expense refreshing
+  // Handle manual expense refreshing - SIMPLIFIED
   const handleExpenseRefresh = () => {
     console.log("Dashboard triggering expense refresh");
-    queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
   };
   
