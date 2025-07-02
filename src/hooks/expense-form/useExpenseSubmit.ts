@@ -73,18 +73,11 @@ export function useExpenseSubmit({
           receiptUrl: formData.receiptUrl
         };
 
-        // Simple query invalidation without additional events
+        // Simple query invalidation - NO EVENTS
+        console.log("Invalidating queries after expense update");
         await queryClient.invalidateQueries({ queryKey: ['expenses'] });
         await queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
         await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
-        // Dispatch single, simple event
-        window.dispatchEvent(new CustomEvent('expense-updated', {
-          detail: { 
-            expense: updatedExpense,
-            source: 'expense-form'
-          }
-        }));
 
         if (onAddExpense) {
           onAddExpense(updatedExpense);
@@ -111,7 +104,8 @@ export function useExpenseSubmit({
         const success = await saveExpenseOffline(newExpense);
         
         if (success) {
-          // Simple invalidation
+          // Simple invalidation for new expenses too
+          console.log("Invalidating queries after new expense");
           await queryClient.invalidateQueries({ queryKey: ['expenses'] });
           await queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
           await queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -119,8 +113,6 @@ export function useExpenseSubmit({
           if (onAddExpense) {
             onAddExpense(newExpense);
           }
-
-          // Don't dispatch additional events for new expenses to prevent loops
         } else {
           throw new Error('Failed to save expense');
         }

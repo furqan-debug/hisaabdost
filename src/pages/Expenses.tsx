@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
@@ -9,13 +9,12 @@ import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { expenses, isLoading: isExpensesLoading, refetch } = useExpenseQueries();
+  const { expenses, isLoading: isExpensesLoading, refreshExpenses } = useExpenseQueries();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -46,9 +45,9 @@ const Expenses = () => {
   };
 
   const handleExpenseAdded = () => {
-    console.log("Expense added, triggering simple refresh");
-    // Just refetch without dispatching events to prevent loops
-    refetch();
+    console.log("Expense added, triggering refresh");
+    // Direct refresh without events
+    refreshExpenses();
   };
 
   const handleDeleteSelected = async () => {
@@ -57,6 +56,7 @@ const Expenses = () => {
     const success = await deleteMultipleExpenses(Array.from(selectedExpenses));
     if (success) {
       clearSelection();
+      refreshExpenses();
     }
   };
 
@@ -65,6 +65,7 @@ const Expenses = () => {
     if (selectedExpenses.has(id)) {
       toggleExpenseSelection(id);
     }
+    refreshExpenses();
   };
 
   const exportToCSV = async () => {

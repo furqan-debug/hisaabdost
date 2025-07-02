@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/components/expenses/types";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { useExpenseRefresh } from "@/hooks/useExpenseRefresh";
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
@@ -16,7 +15,6 @@ export function useDashboardData() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
-  const { refreshTrigger } = useExpenseRefresh();
   const { totalAdditions } = useWalletAdditions();
   
   // Initialize month carryover functionality
@@ -59,11 +57,12 @@ export function useDashboardData() {
   
   // Handle manual expense refreshing
   const handleExpenseRefresh = () => {
+    console.log("Dashboard triggering expense refresh");
     queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
     queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
   };
   
-  // Listen for income update events from Finny
+  // Listen for income update events from Finny - ONLY for income, not expenses
   useEffect(() => {
     const handleIncomeUpdate = () => {
       console.log("Income update event received, refreshing data");
@@ -76,7 +75,7 @@ export function useDashboardData() {
   
   // Fetch current month's expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), refreshTrigger, user?.id],
+    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), user?.id],
     queryFn: async () => {
       if (!user) return [];
       
@@ -113,11 +112,12 @@ export function useDashboardData() {
       }));
     },
     enabled: !!user,
+    staleTime: 1000 * 30, // 30 seconds
   });
 
   // Fetch ALL expenses for the last 6 months for spending trends
   const { data: allExpenses = [] } = useQuery({
-    queryKey: ['all_expenses', refreshTrigger, user?.id],
+    queryKey: ['all_expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
@@ -154,6 +154,7 @@ export function useDashboardData() {
       }));
     },
     enabled: !!user,
+    staleTime: 1000 * 30, // 30 seconds
   });
 
   // Calculate financial metrics for the current month
@@ -182,9 +183,6 @@ export function useDashboardData() {
       savingsRate
     });
   }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData]);
-
-  // Remove this effect that was causing infinite loops
-  // Query invalidation is now handled by useExpenseQueries hook
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {
