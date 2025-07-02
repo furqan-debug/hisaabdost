@@ -183,14 +183,8 @@ export function useDashboardData() {
     });
   }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData]);
 
-  // Listen for expense update events and refresh data
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      console.log("Refresh trigger changed, invalidating expense queries");
-      queryClient.invalidateQueries({ queryKey: ['expenses', format(selectedMonth, 'yyyy-MM')] });
-      queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-    }
-  }, [refreshTrigger, queryClient, selectedMonth]);
+  // Remove this effect that was causing infinite loops
+  // Query invalidation is now handled by useExpenseQueries hook
 
   const formatPercentage = (value: number) => {
     return new Intl.NumberFormat('en-US', {

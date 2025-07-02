@@ -76,6 +76,14 @@ export function useExpenseSubmit({
         await queryClient.invalidateQueries({ queryKey: ['expenses'] });
         await queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
+        // Dispatch single event for expense update
+        window.dispatchEvent(new CustomEvent('expense-updated', {
+          detail: { 
+            expense: updatedExpense,
+            source: 'expense-form'
+          }
+        }));
+
         if (onAddExpense) {
           onAddExpense(updatedExpense);
         }

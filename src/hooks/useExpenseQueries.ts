@@ -10,37 +10,33 @@ export function useExpenseQueries() {
   const queryClient = useQueryClient();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Listen for expense update events
+  // Listen for expense update events with debouncing to prevent infinite loops
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null;
+    
     const handleExpenseUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       const detail = customEvent.detail || {};
       
       console.log(`Expense update event: ${event.type}`, detail);
       
-      // Force immediate refresh
-      setRefreshTrigger(Date.now());
-      
-      // Invalidate all expense-related queries
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
-      
-      // Force immediate refetch with delay to ensure database write is complete
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['expenses'] });
-        queryClient.refetchQueries({ queryKey: ['all_expenses'] });
-        queryClient.refetchQueries({ queryKey: ['all-expenses'] });
-      }, 100);
-      
-      // Additional delayed refetch for Finny actions
-      if (detail.source === 'finny-chat') {
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ['expenses'] });
-          queryClient.refetchQueries({ queryKey: ['all_expenses'] });
-          queryClient.refetchQueries({ queryKey: ['all-expenses'] });
-        }, 1000);
+      // Clear any existing debounce timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+      
+      // Debounce the refresh to prevent infinite loops
+      debounceTimer = setTimeout(() => {
+        console.log(`Processing debounced refresh for ${event.type}`);
+        setRefreshTrigger(Date.now());
+        
+        // Only invalidate queries, don't force refetch
+        queryClient.invalidateQueries({ queryKey: ['expenses'] });
+        queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
+        queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
+        
+        debounceTimer = null;
+      }, 300); // 300ms debounce
     };
 
     const eventTypes = [
@@ -58,6 +54,9 @@ export function useExpenseQueries() {
     });
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleExpenseUpdate);
       });
