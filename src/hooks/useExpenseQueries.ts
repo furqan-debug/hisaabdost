@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -9,26 +8,31 @@ export function useExpenseQueries() {
   const queryClient = useQueryClient();
 
   // Main expenses query
-  const { data: expenses = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: expenses = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['all_expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
+
       console.log("Fetching all expenses for user:", user.id);
-      
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: false });
-      
+
       if (error) {
         console.error('Error fetching expenses:', error);
         throw error;
       }
-      
+
       console.log(`Fetched ${data?.length || 0} expenses`);
-      
+
       return data.map(exp => ({
         id: exp.id,
         amount: Number(exp.amount),
@@ -42,15 +46,18 @@ export function useExpenseQueries() {
       })) as Expense[];
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60,       // 1 minute
+    cacheTime: 1000 * 300,      // 5 minutes
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   // Single coordinated refresh function
-  const refreshExpenses = () => {
-    console.log("Refreshing expenses data");
-    // Only invalidate the main expenses query
-    queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
+  const refreshExpenses = async () => {
+    if (!user) return;
+    console.log("Refreshing expenses data for user:", user.id);
+    await queryClient.invalidateQueries({ queryKey: ['all_expenses', user.id] });
   };
 
   return {
@@ -58,6 +65,6 @@ export function useExpenseQueries() {
     isLoading,
     error,
     refetch,
-    refreshExpenses
+    refreshExpenses,
   };
 }
