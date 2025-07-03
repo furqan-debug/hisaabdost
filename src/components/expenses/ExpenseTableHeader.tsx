@@ -42,9 +42,7 @@ export function ExpenseTableHeader({
         <TableHead className="w-[30px]">
           <Checkbox 
             checked={allSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = someSelected;
-            }}
+            indeterminate={someSelected}
             onCheckedChange={toggleSelectAll}
             aria-label="Select all expenses"
           />

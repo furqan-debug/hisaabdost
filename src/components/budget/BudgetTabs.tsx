@@ -114,7 +114,7 @@ export const BudgetTabs = ({
               transition={{ duration: 0.4, ease: "easeOut" }}
               key="categories"
             >
-              <CategoryBudgets budgets={budgets} onEditBudget={onEditBudget} />
+              <CategoryBudgets budgets={budgets} />
             </motion.div>
           </TabsContent>
 

@@ -112,7 +112,6 @@ export function DashboardContent({
           expenses={expenses}
           isNewUser={isNewUser}
           isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
           setShowAddExpense={setShowAddExpense}
         />
       </motion.div>

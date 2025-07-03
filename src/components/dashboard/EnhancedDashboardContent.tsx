@@ -149,7 +149,6 @@ export const EnhancedDashboardContent = ({
           expenses={expenses}
           isNewUser={isNewUser}
           isLoading={isExpensesLoading}
-          setExpenseToEdit={setExpenseToEdit}
           setShowAddExpense={setShowAddExpense}
         />
       </div>
