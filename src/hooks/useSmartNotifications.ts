@@ -1,28 +1,39 @@
 
 import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 import { EnhancedSmartNotificationService } from '@/services/enhancedSmartNotificationService';
-import { toast } from 'sonner';
 
 export function useSmartNotifications() {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const triggerSmartNotifications = async () => {
     setIsLoading(true);
     try {
+      console.log('🎯 Triggering smart notifications manually...');
+      
       const result = await EnhancedSmartNotificationService.triggerSmartNotifications();
       
+      console.log('Smart notifications result:', result);
+      
       if (result.success) {
-        toast.success(
-          `🧠 Smart notifications sent! Analyzed ${result.analyzed_users} users, sent ${result.notifications_sent} intelligent notifications.`
-        );
+        toast({
+          title: "Smart Notifications Triggered! 🧠",
+          description: `Analyzed ${result.analyzed_users || 0} users and sent ${result.notifications_sent || 0} notifications`,
+        });
       } else {
-        toast.error(`Failed to send notifications: ${result.error}`);
+        throw new Error(result.error || 'Unknown error');
       }
       
       return result;
     } catch (error) {
-      toast.error('Failed to trigger smart notifications');
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      console.error('Failed to trigger smart notifications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to trigger smart notifications. Check console for details.",
+        variant: "destructive",
+      });
+      throw error;
     } finally {
       setIsLoading(false);
     }

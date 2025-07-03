@@ -1,147 +1,103 @@
 
-import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface PushNotificationPayload {
+export interface NotificationPayload {
   title: string;
   body: string;
   data?: Record<string, any>;
 }
 
-export interface BroadcastNotificationPayload extends PushNotificationPayload {
-  sendToAll: boolean;
+export interface BroadcastNotificationPayload extends NotificationPayload {
+  sendToAll?: boolean;
+  userIds?: string[];
 }
 
 export class PushNotificationService {
   private static isInitialized = false;
 
-  static async initialize() {
-    // Only initialize on native platforms and if not already initialized
-    if (!Capacitor.isNativePlatform() || this.isInitialized) {
-      console.log('Push notifications not available on web platform or already initialized');
+  static async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      console.log('Push notifications already initialized');
       return;
     }
 
     try {
-      // Request permission to use push notifications
-      const permissionResult = await PushNotifications.requestPermissions();
+      // Check if we're in a web environment
+      if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+        console.log('Push notifications not available in this environment');
+        return;
+      }
+
+      // Check if service workers are supported
+      if (!('serviceWorker' in navigator)) {
+        console.log('Service workers not supported');
+        return;
+      }
+
+      // Check if push notifications are supported
+      if (!('PushManager' in window)) {
+        console.log('Push notifications not supported');
+        return;
+      }
+
+      console.log('Push notifications initialized successfully');
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize push notifications:', error);
+      throw error;
+    }
+  }
+
+  static async sendNotification(payload: NotificationPayload): Promise<void> {
+    try {
+      console.log('Sending push notification:', payload);
       
-      if (permissionResult.receive === 'granted') {
-        // Register with Apple / Google to receive push via APNS/FCM
-        await PushNotifications.register();
-        
-        // On success, we should be able to receive notifications
-        PushNotifications.addListener('registration', (token) => {
-          console.log('Push registration success, token: ' + token.value);
-          this.saveDeviceToken(token.value).catch(console.error);
-        });
-
-        // Some issue with our setup and push will not work
-        PushNotifications.addListener('registrationError', (error) => {
-          console.error('Error on registration: ' + JSON.stringify(error));
-        });
-
-        // Show us the notification payload if the app is open on our device
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received: ', notification);
-        });
-
-        // Method called when tapping on a notification
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed', notification.actionId, notification.inputValue);
-        });
-
-        this.isInitialized = true;
-      } else {
-        console.log('Push notification permission not granted');
-      }
-    } catch (error) {
-      console.error('Error initializing push notifications:', error);
-      // Don't throw the error - let the app continue without push notifications
-    }
-  }
-
-  private static async saveDeviceToken(token: string) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found, skipping device token save');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('user_device_tokens')
-        .upsert({
-          user_id: user.id,
-          device_token: token,
-          platform: Capacitor.getPlatform(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Error saving device token:', error);
-      } else {
-        console.log('Device token saved successfully');
-      }
-    } catch (error) {
-      console.error('Error in saveDeviceToken:', error);
-    }
-  }
-
-  static async sendNotification(payload: PushNotificationPayload) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found, cannot send notification');
-        return;
-      }
-
-      // Call edge function to send push notification
-      const { error } = await supabase.functions.invoke('send-push-notification', {
-        body: {
-          userId: user.id,
-          ...payload
+      // For web platform, we'll use the browser's Notification API
+      if ('Notification' in window) {
+        // Request permission if not already granted
+        if (Notification.permission === 'default') {
+          await Notification.requestPermission();
         }
-      });
 
-      if (error) {
-        console.error('Error sending push notification:', error);
+        if (Notification.permission === 'granted') {
+          new Notification(payload.title, {
+            body: payload.body,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+          });
+        } else {
+          console.log('Notification permission denied');
+        }
       }
     } catch (error) {
-      console.error('Error in sendNotification:', error);
+      console.error('Failed to send push notification:', error);
+      throw error;
     }
   }
 
-  static async sendBroadcastNotification(payload: BroadcastNotificationPayload) {
+  static async sendBroadcastNotification(payload: BroadcastNotificationPayload): Promise<any> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found, cannot send broadcast notification');
-        return;
-      }
-
-      console.log('Sending broadcast notification to all users');
-
-      // Call edge function to send push notification to all users
+      console.log('Sending broadcast notification via edge function:', payload);
+      
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
-          sendToAll: true,
           title: payload.title,
           body: payload.body,
-          data: payload.data
+          data: payload.data,
+          sendToAll: payload.sendToAll || false,
+          userIds: payload.userIds || []
         }
       });
 
       if (error) {
-        console.error('Error sending broadcast notification:', error);
+        console.error('Edge function error:', error);
         throw error;
       }
 
       console.log('Broadcast notification sent successfully:', data);
       return data;
     } catch (error) {
-      console.error('Error in sendBroadcastNotification:', error);
+      console.error('Failed to send broadcast notification:', error);
       throw error;
     }
   }

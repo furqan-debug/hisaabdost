@@ -3,13 +3,34 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSmartNotifications } from '@/hooks/useSmartNotifications';
-import { Brain, Bell, BarChart3 } from 'lucide-react';
+import { Brain, Bell, BarChart3, TestTube } from 'lucide-react';
 import { NotificationAnalytics } from './NotificationAnalytics';
 import { useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 export const SmartNotificationTest = () => {
   const { triggerSmartNotifications, isLoading } = useSmartNotifications();
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const { toast } = useToast();
+
+  const handleTestNotification = async () => {
+    try {
+      const result = await triggerSmartNotifications();
+      console.log('Test notification result:', result);
+      
+      toast({
+        title: "Test Completed! 🧠",
+        description: `Smart notifications triggered successfully. Check the analytics below for details.`,
+      });
+    } catch (error) {
+      console.error('Test failed:', error);
+      toast({
+        title: "Test Failed",
+        description: "Smart notification test failed. Check console for details.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -25,12 +46,12 @@ export const SmartNotificationTest = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button 
-            onClick={triggerSmartNotifications}
+            onClick={handleTestNotification}
             disabled={isLoading}
             className="w-full"
           >
-            <Bell className="h-4 w-4 mr-2" />
-            {isLoading ? 'Analyzing...' : 'Trigger Manual Test'}
+            <TestTube className="h-4 w-4 mr-2" />
+            {isLoading ? 'Testing...' : 'Run Test Now'}
           </Button>
           
           <Button 
@@ -47,6 +68,7 @@ export const SmartNotificationTest = () => {
             <p>🧠 AI analyzes budgets, goals, spending</p>
             <p>🌍 Multi-language support</p>
             <p>📊 One notification per user per day</p>
+            <p>🔧 Test function for manual triggers</p>
           </div>
         </CardContent>
       </Card>
