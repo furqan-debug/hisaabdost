@@ -29,26 +29,31 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Initialize push notifications with error handling
+  // Initialize push notifications with better error handling
   useEffect(() => {
     const initializePushNotifications = async () => {
       try {
-        const { PushNotificationService } = await import('./services/pushNotificationService');
-        await PushNotificationService.initialize();
+        // Only initialize if we're in a proper browser environment
+        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+          const { PushNotificationService } = await import('./services/pushNotificationService');
+          await PushNotificationService.initialize();
+          console.log('Push notifications initialized successfully');
+        }
       } catch (error) {
-        console.log('Push notifications not available:', error);
-        // Continue app initialization even if push notifications fail
+        console.log('Push notifications not available or failed to initialize:', error);
+        // Don't throw - continue with app initialization
       }
     };
 
-    initializePushNotifications();
+    // Don't block app startup - run in background
+    setTimeout(initializePushNotifications, 1000);
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <FinnyProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <FinnyProvider>
             <MonthProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -68,8 +73,8 @@ function App() {
               </Routes>
               <Toaster />
             </MonthProvider>
-          </AuthProvider>
-        </FinnyProvider>
+          </FinnyProvider>
+        </AuthProvider>
       </Router>
     </QueryClientProvider>
   );

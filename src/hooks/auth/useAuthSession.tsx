@@ -14,6 +14,7 @@ const getCachedUser = (): User | null => {
     
     return JSON.parse(cached);
   } catch (e) {
+    console.error('Error reading cached user:', e);
     return null;
   }
 };
@@ -26,7 +27,7 @@ const setCachedUser = (user: User | null) => {
       localStorage.removeItem(USER_CACHE_KEY);
     }
   } catch (e) {
-    // Ignore storage errors
+    console.error('Error caching user:', e);
   }
 };
 
@@ -36,16 +37,30 @@ export const useAuthSession = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Setting up auth session listener");
+    console.log("🔐 Setting up auth session listener");
     let mounted = true;
     
-    // Get initial session
+    // Get initial session with timeout
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("🔐 Getting initial session...");
+        
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+        );
+        
+        const sessionPromise = supabase.auth.getSession();
+        
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
         
         if (error) {
-          console.error("Error getting initial session:", error);
+          console.error("❌ Error getting initial session:", error);
+        } else {
+          console.log("✅ Initial session retrieved:", !!session?.user);
         }
         
         if (mounted) {
@@ -55,8 +70,9 @@ export const useAuthSession = () => {
           setLoading(false);
         }
       } catch (error) {
-        console.error("Error in getInitialSession:", error);
+        console.error("❌ Error in getInitialSession:", error);
         if (mounted) {
+          // Don't block the app - set loading to false even on error
           setLoading(false);
         }
       }
@@ -65,7 +81,7 @@ export const useAuthSession = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state change:", event, currentSession?.user?.id);
+        console.log("🔐 Auth state change:", event, !!currentSession?.user);
         
         if (mounted) {
           setSession(currentSession);
@@ -96,7 +112,7 @@ export const useAuthSession = () => {
               } catch (err) {
                 console.error("Background profile update failed:", err);
               }
-            }, 1000);
+            }, 2000);
           }
         }
       }
@@ -110,6 +126,8 @@ export const useAuthSession = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  console.log("🔐 Auth state:", { loading, hasUser: !!user, hasSession: !!session });
 
   return {
     user,
