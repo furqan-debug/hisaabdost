@@ -36,7 +36,6 @@ const Dashboard = () => {
     setExpenseToEdit,
     showAddExpense,
     setShowAddExpense,
-    handleExpenseRefresh,
     formatPercentage,
     setMonthlyIncome
   } = useDashboardData();
@@ -84,7 +83,6 @@ const Dashboard = () => {
       setExpenseToEdit={setExpenseToEdit}
       showAddExpense={showAddExpense}
       setShowAddExpense={setShowAddExpense}
-      handleExpenseRefresh={handleExpenseRefresh}
       chartType={chartType}
       setChartType={setChartType}
       walletBalance={walletBalance}

@@ -29,7 +29,6 @@ interface EnhancedDashboardContentProps {
   setExpenseToEdit: (expense?: any) => void;
   showAddExpense: boolean;
   setShowAddExpense: (show: boolean) => void;
-  handleExpenseRefresh: () => void;
   chartType: 'pie' | 'bar' | 'line';
   setChartType: (type: 'pie' | 'bar' | 'line') => void;
   walletBalance: number;
@@ -51,7 +50,6 @@ export const EnhancedDashboardContent = ({
   setExpenseToEdit,
   showAddExpense,
   setShowAddExpense,
-  handleExpenseRefresh,
   chartType,
   setChartType,
   walletBalance
@@ -106,6 +104,11 @@ export const EnhancedDashboardContent = ({
     setSelectedFile(null);
     setCaptureMode('manual');
     setExpenseToEdit(undefined);
+  };
+
+  // Simple expense added handler - no manual refresh needed as React Query handles it automatically
+  const handleExpenseAdded = () => {
+    console.log('Dashboard: Expense added - React Query will handle refresh automatically');
   };
 
   return (
@@ -168,7 +171,7 @@ export const EnhancedDashboardContent = ({
 
       {/* Expense Sheet - triggered from Quick Actions */}
       <AddExpenseSheet 
-        onAddExpense={handleExpenseRefresh} 
+        onAddExpense={handleExpenseAdded} 
         expenseToEdit={expenseToEdit} 
         onClose={handleSheetClose} 
         open={showAddExpense || expenseToEdit !== undefined} 
