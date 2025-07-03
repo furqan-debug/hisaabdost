@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -103,8 +104,8 @@ const SettingsSidebar = ({
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="px-6 py-6 border-b">
+      {/* Header with proper safe area handling */}
+      <div className="px-6 py-6 border-b safe-area-top">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Settings className="w-4 h-4 text-primary" />
@@ -339,7 +340,7 @@ const SettingsSidebar = ({
           </div>
 
           {/* Account */}
-          <div className="p-6">
+          <div className="p-6 safe-area-bottom">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900/20 flex items-center justify-center">
                 <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
