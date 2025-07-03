@@ -1,9 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Budget } from "@/pages/Budget";
 import { formatCurrency } from "@/utils/formatters";
 import { Progress } from "@/components/ui/progress";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,18 +17,16 @@ import { CurrencyCode } from "@/utils/currencyUtils";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
-  onEditBudget: (budget: Budget) => void;
 }
 
 interface CategoryBudgetCardProps {
   budget: Budget;
-  onEditBudget: (budget: Budget) => void;
   onDeleteBudget: (budgetId: string, category: string) => void;
   spentAmount: number;
   currencyCode: CurrencyCode;
 }
 
-const CategoryBudgetCard = ({ budget, onEditBudget, onDeleteBudget, spentAmount, currencyCode }: CategoryBudgetCardProps) => {
+const CategoryBudgetCard = ({ budget, onDeleteBudget, spentAmount, currencyCode }: CategoryBudgetCardProps) => {
   const remainingAmount = Number(budget.amount) - spentAmount;
   const progress = Number(budget.amount) > 0 ? Math.min((spentAmount / Number(budget.amount)) * 100, 100) : 0;
   const isOverBudget = spentAmount > Number(budget.amount);
@@ -47,10 +46,6 @@ const CategoryBudgetCard = ({ budget, onEditBudget, onDeleteBudget, spentAmount,
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEditBudget(budget)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDeleteBudget(budget.id, budget.category)} className="text-destructive focus:text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 <span>Delete</span>
@@ -82,19 +77,13 @@ const CategoryBudgetCard = ({ budget, onEditBudget, onDeleteBudget, spentAmount,
   );
 }
 
-
 export function CategoryBudgets({
-  budgets,
-  onEditBudget
+  budgets
 }: CategoryBudgetsProps) {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const {
-    currencyCode
-  } = useCurrency();
+  const { currencyCode } = useCurrency();
 
   // Listen for budget update events
   useEffect(() => {
@@ -113,14 +102,13 @@ export function CategoryBudgets({
       window.removeEventListener('budget-refresh', handleBudgetUpdate);
     };
   }, [queryClient]);
+
   const handleDeleteBudget = async (budgetId: string, category: string) => {
     try {
       console.log(`Deleting budget for category: ${category}`);
 
       // Delete directly from the database
-      const {
-        error
-      } = await supabase.from("budgets").delete().eq("id", budgetId);
+      const { error } = await supabase.from("budgets").delete().eq("id", budgetId);
       if (error) {
         console.error("Error deleting budget:", error);
         toast({
@@ -154,17 +142,12 @@ export function CategoryBudgets({
       });
     }
   };
-  const {
-    data: expenses = [],
-    error: expensesError
-  } = useQuery({
+
+  const { data: expenses = [], error: expensesError } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
       const startDate = startOfMonth(new Date());
-      const {
-        data,
-        error
-      } = await supabase.from('expenses').select('*').gte('date', startDate.toISOString().split('T')[0]);
+      const { data, error } = await supabase.from('expenses').select('*').gte('date', startDate.toISOString().split('T')[0]);
       if (error) {
         console.error('Supabase error:', error);
         throw error;
@@ -172,9 +155,11 @@ export function CategoryBudgets({
       return data || [];
     }
   });
+
   if (expensesError) {
     console.error('Error fetching expenses:', expensesError);
   }
+
   const getSpentAmount = (category: string) => {
     if (!expenses) return 0;
     const categoryExpenses = expenses.filter(expense => expense.category.toLowerCase() === category.toLowerCase());
@@ -182,44 +167,46 @@ export function CategoryBudgets({
       return total + Number(expense.amount);
     }, 0);
   };
+
   const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference");
+
   if (filteredBudgets.length === 0) {
     return (
-        <Card className="budget-glass-card">
-          <CardHeader>
-            <CardTitle>Budget Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <p className="text-muted-foreground mb-2">No budget categories found.</p>
-              <p className="text-sm text-muted-foreground">Add your first budget to start tracking.</p>
-            </div>
-          </CardContent>
-        </Card>
-    );
-  }
-  return (
       <Card className="budget-glass-card">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <CardTitle>Budget Categories</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 px-2 sm:px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBudgets.map(budget => {
-              const spentAmount = getSpentAmount(budget.category);
-              return (
-                <CategoryBudgetCard 
-                  key={budget.id}
-                  budget={budget}
-                  onEditBudget={onEditBudget}
-                  onDeleteBudget={handleDeleteBudget}
-                  spentAmount={spentAmount}
-                  currencyCode={currencyCode}
-                />
-              );
-            })}
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <p className="text-muted-foreground mb-2">No budget categories found.</p>
+            <p className="text-sm text-muted-foreground">Add your first budget to start tracking.</p>
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  return (
+    <Card className="budget-glass-card">
+      <CardHeader className="pb-4">
+        <CardTitle>Budget Categories</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0 px-2 sm:px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredBudgets.map(budget => {
+            const spentAmount = getSpentAmount(budget.category);
+            return (
+              <CategoryBudgetCard 
+                key={budget.id}
+                budget={budget}
+                onDeleteBudget={handleDeleteBudget}
+                spentAmount={spentAmount}
+                currencyCode={currencyCode}
+              />
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

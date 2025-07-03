@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
-import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
@@ -15,8 +14,6 @@ interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
   onDeleteSelected: () => void;
   onAddExpense: () => void;
-  expenseToEdit?: Expense;
-  onExpenseEditClose: () => void;
   showAddExpense: boolean;
   setShowAddExpense: (show: boolean) => void;
   exportToCSV: () => void;
@@ -27,8 +24,6 @@ export function ExpenseHeader({
   selectedExpenses,
   onDeleteSelected,
   onAddExpense,
-  expenseToEdit,
-  onExpenseEditClose,
   showAddExpense,
   setShowAddExpense,
   exportToCSV,
@@ -93,7 +88,6 @@ export function ExpenseHeader({
     setShowAddExpense(false);
     setSelectedFile(null);
     setCaptureMode('manual');
-    onExpenseEditClose();
   };
 
   const buttonVariants = {
@@ -227,9 +221,8 @@ export function ExpenseHeader({
         
         <AddExpenseSheet 
           onAddExpense={onAddExpense}
-          expenseToEdit={expenseToEdit}
           onClose={handleSheetClose}
-          open={showAddExpense || expenseToEdit !== undefined}
+          open={showAddExpense}
           onOpenChange={setShowAddExpense}
           initialCaptureMode={captureMode}
           initialFile={selectedFile}

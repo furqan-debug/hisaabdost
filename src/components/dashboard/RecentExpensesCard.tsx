@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import { Expense } from "@/components/AddExpenseSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { SampleDataButton } from "@/components/SampleDataButton";
@@ -27,7 +27,6 @@ interface RecentExpensesCardProps {
   expenses: Expense[];
   isNewUser: boolean;
   isLoading: boolean;
-  setExpenseToEdit: (expense: Expense) => void;
   setShowAddExpense: (show: boolean) => void;
 }
 
@@ -35,7 +34,6 @@ export const RecentExpensesCard = ({
   expenses,
   isNewUser,
   isLoading,
-  setExpenseToEdit,
   setShowAddExpense,
 }: RecentExpensesCardProps) => {
   const { user } = useAuth();
@@ -137,15 +135,6 @@ export const RecentExpensesCard = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setExpenseToEdit(expense);
-                              setShowAddExpense(true);
-                            }}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleDeleteExpense(expense.id)}
                             className="text-destructive"

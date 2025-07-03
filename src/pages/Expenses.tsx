@@ -16,7 +16,6 @@ const Expenses = () => {
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
   
-  const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
 
   const {
@@ -99,8 +98,6 @@ const Expenses = () => {
         selectedExpenses={selectedExpenses}
         onDeleteSelected={handleDeleteSelected}
         onAddExpense={handleExpenseAdded}
-        expenseToEdit={expenseToEdit}
-        onExpenseEditClose={() => setExpenseToEdit(undefined)}
         showAddExpense={showAddExpense}
         setShowAddExpense={setShowAddExpense}
         exportToCSV={exportToCSV}
@@ -122,10 +119,6 @@ const Expenses = () => {
         toggleSelectAll={() => toggleSelectAll(filteredExpenses.map(exp => exp.id))}
         toggleExpenseSelection={toggleExpenseSelection}
         onAddExpense={handleAddExpense}
-        onEdit={(expense) => {
-          setExpenseToEdit(expense);
-          setShowAddExpense(true);
-        }}
         onDelete={handleSingleDelete}
         totalFilteredAmount={totalFilteredAmount}
         selectedMonth={selectedMonth}

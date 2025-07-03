@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { MoreVertical, Plus, Trash2 } from "lucide-react";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { ExpenseTableHeader } from "@/components/expenses/ExpenseTableHeader";
 import { ExpenseRow } from "@/components/expenses/ExpenseRow";
@@ -40,7 +40,6 @@ interface ExpenseListProps {
   toggleSelectAll: () => void;
   toggleExpenseSelection: (id: string) => void;
   onAddExpense: () => void;
-  onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
   totalFilteredAmount: number;
   selectedMonth: Date;
@@ -51,12 +50,11 @@ interface MobileExpenseRowProps {
   expense: Expense;
   selected: boolean;
   onToggle: () => void;
-  onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
   currencyCode: CurrencyCode;
 }
 
-const MobileExpenseRow = ({ expense, selected, onToggle, onEdit, onDelete, currencyCode }: MobileExpenseRowProps) => {
+const MobileExpenseRow = ({ expense, selected, onToggle, onDelete, currencyCode }: MobileExpenseRowProps) => {
   return (
     <div className="bg-card p-3 rounded-lg border border-border/40 mb-3 shadow-sm flex items-center gap-3 transition-colors hover:bg-muted/50">
       <Checkbox
@@ -82,10 +80,6 @@ const MobileExpenseRow = ({ expense, selected, onToggle, onEdit, onDelete, curre
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(expense)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(expense.id)} className="text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -97,7 +91,6 @@ const MobileExpenseRow = ({ expense, selected, onToggle, onEdit, onDelete, curre
     </div>
   );
 };
-
 
 export function ExpenseList({
   filteredExpenses,
@@ -114,7 +107,6 @@ export function ExpenseList({
   toggleSelectAll,
   toggleExpenseSelection,
   onAddExpense,
-  onEdit,
   onDelete,
   totalFilteredAmount,
   selectedMonth,
@@ -133,6 +125,20 @@ export function ExpenseList({
               Total: {formatCurrency(totalFilteredAmount, currencyCode)}
             </p>
           </div>
+          {selectedExpenses.size > 0 && (
+            <div className="flex items-center gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectAll}
+              >
+                {selectedExpenses.size === filteredExpenses.length ? 'Deselect All' : 'Select All'}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {selectedExpenses.size} selected
+              </span>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="px-2">
           <div className="space-y-4">
@@ -169,7 +175,6 @@ export function ExpenseList({
                       expense={expense}
                       selected={selectedExpenses.has(expense.id)}
                       onToggle={() => toggleExpenseSelection(expense.id)}
-                      onEdit={onEdit}
                       onDelete={onDelete}
                       currencyCode={currencyCode}
                     />
@@ -183,7 +188,8 @@ export function ExpenseList({
     );
   }
 
-  return <Card>
+  return (
+    <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Expense List</CardTitle>
@@ -191,22 +197,54 @@ export function ExpenseList({
             Total: {formatCurrency(totalFilteredAmount, currencyCode)}
           </p>
         </div>
+        {selectedExpenses.size > 0 && (
+          <div className="flex items-center gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSelectAll}
+            >
+              {selectedExpenses.size === filteredExpenses.length ? 'Deselect All' : 'Select All'}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {selectedExpenses.size} selected
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="px-[4px]">
         <div className="space-y-4">
-          <ExpenseFilters searchTerm={searchTerm} setSearchTerm={setSearchTerm} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} dateRange={dateRange} setDateRange={setDateRange} selectedMonth={selectedMonth} useCustomDateRange={useCustomDateRange} />
+          <ExpenseFilters 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            categoryFilter={categoryFilter} 
+            setCategoryFilter={setCategoryFilter} 
+            dateRange={dateRange} 
+            setDateRange={setDateRange} 
+            selectedMonth={selectedMonth} 
+            useCustomDateRange={useCustomDateRange} 
+          />
 
           <div className="rounded-lg border border-border/40 overflow-hidden no-scrollbar touch-scroll-container">
             <Table>
-              <ExpenseTableHeader sortConfig={sortConfig} handleSort={handleSort} selectedExpenses={selectedExpenses} filteredExpenses={filteredExpenses} toggleSelectAll={toggleSelectAll} />
+              <ExpenseTableHeader 
+                sortConfig={sortConfig} 
+                handleSort={handleSort} 
+                selectedExpenses={selectedExpenses} 
+                filteredExpenses={filteredExpenses} 
+                toggleSelectAll={toggleSelectAll} 
+              />
               <TableBody className="no-scrollbar">
-                {isLoading ? <tr>
+                {isLoading ? (
+                  <tr>
                     <td colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <p className="text-muted-foreground">Loading expenses...</p>
                       </div>
                     </td>
-                  </tr> : filteredExpenses.length === 0 ? <tr>
+                  </tr>
+                ) : filteredExpenses.length === 0 ? (
+                  <tr>
                     <td colSpan={7} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <p className="text-muted-foreground">No expenses found</p>
@@ -216,11 +254,23 @@ export function ExpenseList({
                         </Button>
                       </div>
                     </td>
-                  </tr> : filteredExpenses.map(expense => <ExpenseRow key={expense.id} expense={expense} selectedExpenses={selectedExpenses} toggleExpenseSelection={toggleExpenseSelection} onEdit={onEdit} onDelete={onDelete} />)}
+                  </tr>
+                ) : (
+                  filteredExpenses.map(expense => (
+                    <ExpenseRow 
+                      key={expense.id} 
+                      expense={expense} 
+                      selectedExpenses={selectedExpenses} 
+                      toggleExpenseSelection={toggleExpenseSelection} 
+                      onDelete={onDelete} 
+                    />
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }

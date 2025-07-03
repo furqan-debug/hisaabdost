@@ -1,12 +1,15 @@
 
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 
 interface ExpenseTableHeaderProps {
-  sortConfig: { field: 'date' | 'amount' | 'category' | 'description'; order: 'asc' | 'desc' };
+  sortConfig: {
+    field: 'date' | 'amount' | 'category' | 'description';
+    order: 'asc' | 'desc';
+  };
   handleSort: (field: 'date' | 'amount' | 'category' | 'description') => void;
   selectedExpenses: Set<string>;
   filteredExpenses: Expense[];
@@ -20,66 +23,70 @@ export function ExpenseTableHeader({
   filteredExpenses,
   toggleSelectAll
 }: ExpenseTableHeaderProps) {
-  const sortIndicator = (field: 'date' | 'amount' | 'category' | 'description') => {
-    if (sortConfig.field === field) {
-      return sortConfig.order === 'asc' ? (
-        <ArrowUp className="ml-1 h-3 w-3" />
-      ) : (
-        <ArrowDown className="ml-1 h-3 w-3" />
-      );
+  const getSortIcon = (field: string) => {
+    if (sortConfig.field !== field) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
     }
-    return null;
+    return sortConfig.order === 'asc' ? 
+      <ChevronUp className="ml-2 h-4 w-4" /> : 
+      <ChevronDown className="ml-2 h-4 w-4" />;
   };
 
-  const allSelected = filteredExpenses.length > 0 && 
-    filteredExpenses.every(expense => selectedExpenses.has(expense.id));
-  
-  const someSelected = selectedExpenses.size > 0 && !allSelected;
+  // Determine if all expenses are selected
+  const allSelected = filteredExpenses.length > 0 && selectedExpenses.size === filteredExpenses.length;
+  const someSelected = selectedExpenses.size > 0 && selectedExpenses.size < filteredExpenses.length;
 
   return (
     <TableHeader>
       <TableRow>
         <TableHead className="w-[30px]">
-          <Checkbox
+          <Checkbox 
             checked={allSelected}
-            indeterminate={someSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = someSelected;
+            }}
             onCheckedChange={toggleSelectAll}
+            aria-label="Select all expenses"
           />
         </TableHead>
         <TableHead>
           <Button
             variant="ghost"
-            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('date')}
+            className="h-auto p-0 font-medium"
           >
-            Date {sortIndicator('date')}
+            Date
+            {getSortIcon('date')}
           </Button>
         </TableHead>
         <TableHead>
           <Button
             variant="ghost"
-            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('description')}
+            className="h-auto p-0 font-medium"
           >
-            Name {sortIndicator('description')}
+            Description
+            {getSortIcon('description')}
           </Button>
         </TableHead>
         <TableHead>
           <Button
             variant="ghost"
-            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('amount')}
+            className="h-auto p-0 font-medium"
           >
-            Amount {sortIndicator('amount')}
+            Amount
+            {getSortIcon('amount')}
           </Button>
         </TableHead>
         <TableHead className="hidden md:table-cell">
           <Button
             variant="ghost"
-            className="p-0 font-medium flex items-center"
             onClick={() => handleSort('category')}
+            className="h-auto p-0 font-medium"
           >
-            Category {sortIndicator('category')}
+            Category
+            {getSortIcon('category')}
           </Button>
         </TableHead>
         <TableHead className="hidden lg:table-cell">Payment</TableHead>

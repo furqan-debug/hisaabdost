@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Edit, Trash2, FileImage, MoreHorizontal } from "lucide-react";
+import { Trash2, FileImage, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,7 +20,6 @@ interface ExpenseRowProps {
   expense: Expense;
   selectedExpenses: Set<string>;
   toggleExpenseSelection: (id: string) => void;
-  onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
 }
 
@@ -29,7 +28,6 @@ export const ExpenseRow = memo(function ExpenseRow({
   expense,
   selectedExpenses,
   toggleExpenseSelection,
-  onEdit,
   onDelete
 }: ExpenseRowProps) {
   const isSelected = selectedExpenses.has(expense.id);
@@ -45,10 +43,6 @@ export const ExpenseRow = memo(function ExpenseRow({
   const handleReceiptDialogChange = useCallback((open: boolean) => {
     setReceiptDialogOpen(open);
   }, []);
-  
-  const handleEdit = useCallback(() => {
-    onEdit(expense);
-  }, [expense, onEdit]);
   
   const handleDelete = useCallback(() => {
     onDelete(expense.id);
@@ -105,10 +99,6 @@ export const ExpenseRow = memo(function ExpenseRow({
                   View Receipt
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-red-600"
