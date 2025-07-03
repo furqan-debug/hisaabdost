@@ -44,9 +44,9 @@ const Expenses = () => {
     setShowAddExpense(true);
   };
 
+  // Simplified expense added handler - no cascading refreshes
   const handleExpenseAdded = () => {
-    console.log("Expense added, triggering single refresh");
-    // Only call refreshExpenses once
+    console.log("Expense added - single refresh trigger");
     refreshExpenses();
   };
 

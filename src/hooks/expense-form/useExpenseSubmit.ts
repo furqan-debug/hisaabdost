@@ -73,9 +73,12 @@ export function useExpenseSubmit({
           receiptUrl: formData.receiptUrl
         };
 
-        // Single query invalidation - NO multiple calls
-        console.log("Invalidating queries after expense update");
-        queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
+        // ONLY invalidate the specific expense queries - no cascading invalidations
+        console.log("Invalidating expense queries after update");
+        await queryClient.invalidateQueries({ 
+          queryKey: ['all_expenses', user.id],
+          exact: true
+        });
 
         if (onAddExpense) {
           onAddExpense(updatedExpense);
@@ -102,9 +105,12 @@ export function useExpenseSubmit({
         const success = await saveExpenseOffline(newExpense);
         
         if (success) {
-          // Single invalidation for new expenses too
-          console.log("Invalidating queries after new expense");
-          queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
+          // Single invalidation for new expenses
+          console.log("Invalidating expense queries after new expense");
+          await queryClient.invalidateQueries({ 
+            queryKey: ['all_expenses', user?.id],
+            exact: true
+          });
 
           if (onAddExpense) {
             onAddExpense(newExpense);

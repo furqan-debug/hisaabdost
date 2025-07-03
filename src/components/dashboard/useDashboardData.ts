@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Expense } from "@/components/expenses/types";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
@@ -13,7 +13,6 @@ import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
 export function useDashboardData() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   const { totalAdditions } = useWalletAdditions();
   
@@ -54,23 +53,6 @@ export function useDashboardData() {
       });
     }
   }, [incomeData, isIncomeLoading, updateMonthData, currentMonthKey]);
-  
-  // Handle manual expense refreshing - SIMPLIFIED
-  const handleExpenseRefresh = () => {
-    console.log("Dashboard triggering expense refresh");
-    queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-  };
-  
-  // Listen for income update events from Finny - ONLY for income, not expenses
-  useEffect(() => {
-    const handleIncomeUpdate = () => {
-      console.log("Income update event received, refreshing data");
-      queryClient.invalidateQueries({ queryKey: ['monthly_income', user?.id, currentMonthKey] });
-    };
-
-    window.addEventListener('income-updated', handleIncomeUpdate);
-    return () => window.removeEventListener('income-updated', handleIncomeUpdate);
-  }, [queryClient, user?.id, currentMonthKey]);
   
   // Fetch current month's expenses from Supabase using React Query
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
@@ -194,6 +176,8 @@ export function useDashboardData() {
   const isNewUser = expenses.length === 0;
   const isLoading = isExpensesLoading || isIncomeLoading;
 
+  // NO expense refresh function - removed to prevent cascading invalidations
+  
   return {
     expenses,
     allExpenses, // Add all expenses for spending trends
@@ -212,7 +196,6 @@ export function useDashboardData() {
     setExpenseToEdit,
     showAddExpense,
     setShowAddExpense,
-    handleExpenseRefresh,
     formatPercentage,
     setMonthlyIncome: async (newIncome: number) => {
       if (user) {
