@@ -14,7 +14,7 @@ import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { expenses, isLoading: isExpensesLoading, refreshExpenses } = useExpenseQueries();
+  const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
   
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -44,10 +44,9 @@ const Expenses = () => {
     setShowAddExpense(true);
   };
 
-  // Simplified expense added handler - no cascading refreshes
+  // Simple expense added handler - cache updates handled automatically
   const handleExpenseAdded = () => {
-    console.log("Expense added - single refresh trigger");
-    refreshExpenses();
+    console.log("Expense added - cache updated automatically");
   };
 
   const handleDeleteSelected = async () => {
@@ -56,7 +55,6 @@ const Expenses = () => {
     const success = await deleteMultipleExpenses(Array.from(selectedExpenses));
     if (success) {
       clearSelection();
-      refreshExpenses();
     }
   };
 
@@ -65,7 +63,6 @@ const Expenses = () => {
     if (selectedExpenses.has(id)) {
       toggleExpenseSelection(id);
     }
-    refreshExpenses();
   };
 
   const exportToCSV = async () => {

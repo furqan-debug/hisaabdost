@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
+import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,32 +43,10 @@ export const RecentExpensesCard = ({
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { deleteExpense } = useExpenseDelete();
 
   const handleDeleteExpense = async (expenseId: string) => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', expenseId);
-      
-      if (error) throw error;
-      
-      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      
-      toast({
-        title: "Expense Deleted",
-        description: "Expense has been deleted successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the expense. Please try again.",
-        variant: "destructive",
-      });
-    }
+    await deleteExpense(expenseId);
   };
 
   return (

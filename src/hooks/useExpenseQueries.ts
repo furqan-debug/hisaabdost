@@ -1,12 +1,11 @@
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Expense } from "@/components/expenses/types";
 
 export function useExpenseQueries() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   // Main expenses query - simplified with no overlapping invalidations
   const {
@@ -54,21 +53,10 @@ export function useExpenseQueries() {
     refetchOnMount: false,
   });
 
-  // Simple refresh function that only invalidates once
-  const refreshExpenses = async () => {
-    if (!user) return;
-    console.log("Refreshing expenses data - single invalidation");
-    await queryClient.invalidateQueries({ 
-      queryKey: ['all_expenses', user.id],
-      exact: true // Only invalidate this exact query
-    });
-  };
-
   return {
     expenses,
     isLoading,
     error,
     refetch,
-    refreshExpenses,
   };
 }
