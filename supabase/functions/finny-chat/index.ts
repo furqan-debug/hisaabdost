@@ -29,103 +29,35 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Advanced system message for Finny - Most intelligent financial assistant
-const FINNY_SYSTEM_MESSAGE = `You are Finny, the world's most advanced AI financial assistant for the Expensify AI app.
-You are incredibly intelligent, proactive, and have deep financial expertise. You don't just execute commands - you provide strategic insights, detect patterns, and offer sophisticated financial advice.
-
-CORE CAPABILITIES & INTELLIGENCE:
-🧠 ADVANCED FINANCIAL ANALYSIS:
-- Analyze spending patterns and detect anomalies
-- Provide personalized budget recommendations based on income and lifestyle
-- Identify potential savings opportunities and financial inefficiencies
-- Predict future spending trends based on historical data
-- Offer investment advice and wealth-building strategies
-- Calculate complex financial metrics (debt-to-income ratios, savings rates, etc.)
-
-💡 PROACTIVE INSIGHTS:
-- Alert users to unusual spending patterns
-- Suggest budget adjustments based on seasonal trends
-- Recommend expense categorization improvements
-- Identify recurring subscriptions that might be forgotten
-- Highlight potential areas for cost optimization
-
-📊 SOPHISTICATED CONTEXT AWARENESS:
-- Remember user preferences and financial goals across conversations
-- Understand the relationship between different financial decisions
-- Provide context-aware advice based on user's complete financial picture
-- Adapt communication style based on user's financial literacy level
-
-🎯 STRATEGIC PLANNING:
-- Help create comprehensive financial plans
-- Assist with goal setting and milestone tracking
-- Provide actionable steps for achieving financial objectives
-- Offer scenario planning for major financial decisions
+// Simple and direct system message for Finny
+const FINNY_SYSTEM_MESSAGE = `You are Finny, a helpful AI financial assistant for the Expensify AI app.
+Keep all responses simple, direct, and to the point. For actions like adding expenses or updating budgets, just confirm the action without extra details.
 
 COMMUNICATION STYLE:
-- Be conversational and engaging, like talking to a knowledgeable friend
-- Use emojis strategically to enhance communication
-- Provide detailed explanations when asked, but keep regular responses concise
-- Ask clarifying questions to better understand user needs
-- Offer multiple solutions when appropriate
-- Be encouraging and positive about financial progress
+- Be concise and direct
+- Use simple language
+- Confirm actions briefly
+- Avoid lengthy explanations unless asked
+- No excessive emojis or enthusiasm
+- Get straight to the point
 
 EXPENSE CATEGORIES (ONLY use these):
 ${EXPENSE_CATEGORIES.map(cat => `- ${cat}`).join('\n')}
 
-ADVANCED ACTION CAPABILITIES:
-1. 💰 EXPENSE MANAGEMENT:
-   - Add/edit/delete expenses with smart categorization
-   - Analyze expense patterns and provide insights
-   - Set up expense tracking automations
+ACTION CAPABILITIES:
+1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
+2. Set budgets: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly"}]
+3. Set goals: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31"}]
+4. Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly budget"}]
+5. Set income: [ACTION:{"type":"set_income","amount":75000,"period":"monthly"}]
 
-2. 📊 BUDGET INTELLIGENCE:
-   - Create smart budgets based on income and spending history
-   - Adjust budgets dynamically based on life changes
-   - Provide budget performance analysis and optimization tips
+RESPONSE EXAMPLES:
+- "Added $15 lunch expense to Food category."
+- "Set Food budget to $300/month."
+- "Emergency fund goal created for $500."
+- "Added $100 to wallet."
 
-3. 🎯 GOAL ACHIEVEMENT:
-   - Set SMART financial goals with realistic timelines
-   - Track progress and adjust strategies as needed
-   - Celebrate milestones and provide motivation
-
-4. 💳 CASH FLOW OPTIMIZATION:
-   - Manage wallet funds and cash flow
-   - Optimize payment timing and methods
-   - Provide liquidity management advice
-
-5. 📈 INCOME OPTIMIZATION:
-   - Track multiple income sources
-   - Analyze income trends and growth opportunities
-   - Provide career and side-hustle financial advice
-
-ACTION FORMAT EXAMPLES:
-- Add expense: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch at downtown restaurant"}]
-- Smart budget: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly","strategy":"aggressive_savings"}]
-- Strategic goal: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31","category":"Savings","strategy":"automated_monthly"}]
-- Wallet optimization: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly discretionary spending allocation","purpose":"budget_allocation"}]
-- Income tracking: [ACTION:{"type":"set_income","amount":75000,"period":"monthly","source":"primary_job","growth_projection":5}]
-
-ADVANCED RESPONSE EXAMPLES:
-Standard: "I've added your lunch expense of $15 to your Food category."
-Advanced: "I've logged your $15 lunch expense! 🍽️ This brings your food spending to $240 this month (80% of your $300 budget). You're on track, but I notice you've been eating out more frequently this week. Consider meal prepping this weekend to stay within budget and save an extra $50-75 monthly! 💡"
-
-Standard: "Budget set for Food category."
-Advanced: "Perfect choice! 🎯 I've set your Food budget to $300/month based on your income and spending patterns. This represents 15% of your monthly income, which is ideal for food expenses. Pro tip: Try the 50/30/20 rule - cook at home for 70% of meals and enjoy dining out for the rest. This could save you $600 annually! 📊"
-
-FINANCIAL WISDOM & INSIGHTS:
-- Always contextualize actions within broader financial health
-- Provide actionable next steps and optimization tips
-- Reference financial best practices and rules of thumb
-- Help users understand the long-term impact of their decisions
-- Celebrate progress and provide motivation for continued improvement
-
-ERROR HANDLING & SUPPORT:
-- If something goes wrong, explain clearly and provide alternative solutions
-- Offer multiple approaches to achieve financial goals
-- Provide educational content when users need to learn concepts
-- Be patient and supportive, especially with financial stress or confusion
-
-Remember: You're not just a tool - you're a trusted financial advisor and coach who genuinely cares about users' financial success and well-being. Always aim to educate, inspire, and empower users to make better financial decisions.`;
+Keep responses under 2 sentences when possible.`;
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -142,7 +74,7 @@ serve(async (req) => {
     } catch (error) {
       console.error('Invalid JSON in request body:', error);
       return new Response(JSON.stringify({
-        response: "I received an invalid request. Please try again with a clear question about your finances! 💡",
+        response: "Invalid request. Please try again.",
         rawResponse: null,
         visualData: null,
         action: null,
@@ -166,7 +98,7 @@ serve(async (req) => {
     // Validate required fields
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({
-        response: "I'd love to help with your finances! Please share what's on your mind - whether it's tracking expenses, setting budgets, or planning for the future. 💰✨",
+        response: "Please share what you need help with regarding your finances.",
         rawResponse: null,
         visualData: null,
         action: null,
@@ -179,7 +111,7 @@ serve(async (req) => {
 
     if (!userId || typeof userId !== 'string') {
       return new Response(JSON.stringify({
-        response: "To give you personalized financial advice, I need you to be logged in. This helps me understand your unique financial situation and provide tailored recommendations! 🔐",
+        response: "Please log in to use Finny.",
         rawResponse: null,
         visualData: null,
         action: null,
@@ -190,13 +122,13 @@ serve(async (req) => {
       });
     }
 
-    console.log("Processing advanced financial request:", { message: message.substring(0, 100) + '...', userId, currencyCode });
+    console.log("Processing request:", { message: message.substring(0, 100) + '...', userId, currencyCode });
 
     // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Supabase configuration missing');
       return new Response(JSON.stringify({
-        response: "I'm experiencing some technical difficulties connecting to your financial data. Please contact support to get me back up and running at full capacity! 🔧💪",
+        response: "Service temporarily unavailable. Please contact support.",
         rawResponse: null,
         visualData: null,
         action: null,
@@ -209,12 +141,12 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get comprehensive user profile
+    // Get user profile
     let userProfile = null;
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, preferred_currency, monthly_income, age, gender')
+        .select('full_name, preferred_currency, monthly_income')
         .eq('id', userId)
         .single();
       userProfile = data;
@@ -227,7 +159,7 @@ serve(async (req) => {
     // Check if OpenAI API key is available
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({
-        response: `Hey ${displayName}! 👋 I'm Finny, your advanced AI financial assistant. I'm currently offline as my AI brain needs to be configured. Please reach out to support to get me running at full intelligence for you! 🧠✨`,
+        response: `Hi ${displayName}! I'm currently offline. Please contact support to get me running.`,
         rawResponse: null,
         visualData: null,
         action: null,
@@ -237,74 +169,39 @@ serve(async (req) => {
       });
     }
 
-    // Fetch comprehensive financial context with advanced analytics
-    const [expensesResult, budgetsResult, goalsResult, walletResult, profileResult, recentExpensesResult] = await Promise.allSettled([
-      supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(10),
+    // Fetch basic financial context
+    const [expensesResult, budgetsResult, profileResult] = await Promise.allSettled([
+      supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(5),
       supabase.from('budgets').select('*').eq('user_id', userId),
-      supabase.from('goals').select('*').eq('user_id', userId),
-      supabase.from('wallet_additions').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(5),
-      supabase.from('profiles').select('monthly_income').eq('id', userId).single(),
-      supabase.from('expenses').select('amount, category, date').eq('user_id', userId).gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false })
+      supabase.from('profiles').select('monthly_income').eq('id', userId).single()
     ]);
 
     // Extract data safely
     const expenses = expensesResult.status === 'fulfilled' ? expensesResult.value.data || [] : [];
     const budgets = budgetsResult.status === 'fulfilled' ? budgetsResult.value.data || [] : [];
-    const goals = goalsResult.status === 'fulfilled' ? goalsResult.value.data || [] : [];
-    const walletAdditions = walletResult.status === 'fulfilled' ? walletResult.value.data || [] : [];
     const monthlyIncome = profileResult.status === 'fulfilled' ? profileResult.value.data?.monthly_income || 'Not set' : 'Not set';
-    const recentExpenses = recentExpensesResult.status === 'fulfilled' ? recentExpensesResult.value.data || [] : [];
 
-    // Calculate advanced financial metrics
-    const monthlySpending = recentExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-    const savingsRate = monthlyIncome !== 'Not set' ? ((monthlyIncome - monthlySpending) / monthlyIncome * 100).toFixed(1) : 'Unknown';
-    const topSpendingCategory = recentExpenses.reduce((acc, exp) => {
-      acc[exp.category] = (acc[exp.category] || 0) + parseFloat(exp.amount);
-      return acc;
-    }, {});
-    const topCategory = Object.keys(topSpendingCategory).reduce((a, b) => topSpendingCategory[a] > topSpendingCategory[b] ? a : b, '');
+    // Prepare simple context for OpenAI
+    const contextMessage = `USER: ${displayName}
+Currency: ${currencyCode}
+Monthly Income: ${monthlyIncome}
+Recent Expenses: ${JSON.stringify(expenses.slice(0, 3))}
+Current Budgets: ${JSON.stringify(budgets)}`;
 
-    // Prepare advanced context for OpenAI
-    const advancedContextMessage = `COMPREHENSIVE USER FINANCIAL PROFILE:
-👤 User: ${displayName} ${userAge ? `(Age: ${userAge})` : ''} ${userGender ? `(${userGender})` : ''}
-💰 Currency: ${currencyCode}
-📊 Monthly Income: ${monthlyIncome}
-💸 Monthly Spending: ${monthlySpending} ${currencyCode}
-📈 Savings Rate: ${savingsRate}%
-🥇 Top Spending Category: ${topCategory} (${topSpendingCategory[topCategory]} ${currencyCode})
-
-RECENT FINANCIAL ACTIVITY:
-📋 Recent Expenses (Last 10): ${JSON.stringify(expenses.slice(0, 5))}
-💳 Current Budgets: ${JSON.stringify(budgets)}
-🎯 Financial Goals: ${JSON.stringify(goals)}
-💰 Recent Wallet Activity: ${JSON.stringify(walletAdditions)}
-
-SPENDING ANALYSIS:
-📊 Category Breakdown: ${JSON.stringify(topSpendingCategory)}
-📅 30-Day Expense Trend: ${recentExpenses.length} transactions
-🔍 Financial Health Score: ${savingsRate !== 'Unknown' && parseFloat(savingsRate) > 20 ? 'Excellent' : savingsRate !== 'Unknown' && parseFloat(savingsRate) > 10 ? 'Good' : 'Needs Improvement'}
-
-CONTEXT FOR INTELLIGENT RESPONSES:
-- Provide insights based on spending patterns
-- Suggest optimizations based on financial health
-- Reference user's goals and progress
-- Offer personalized advice based on age, income, and spending habits
-- Be proactive about financial planning opportunities`;
-
-    // Prepare messages for OpenAI with advanced context
+    // Prepare messages for OpenAI
     const openAIMessages = [
       { role: "system", content: FINNY_SYSTEM_MESSAGE },
-      { role: "system", content: advancedContextMessage },
-      ...chatHistory.slice(-8).map((msg: any) => ({
+      { role: "system", content: contextMessage },
+      ...chatHistory.slice(-6).map((msg: any) => ({
         role: msg.isUser ? "user" : "assistant",
         content: msg.content
       })),
       { role: "user", content: message }
     ];
 
-    console.log("Sending advanced request to OpenAI");
+    console.log("Sending request to OpenAI");
 
-    // Call OpenAI API with enhanced error handling
+    // Call OpenAI API
     let openAIResponse;
     try {
       openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -316,16 +213,14 @@ CONTEXT FOR INTELLIGENT RESPONSES:
         body: JSON.stringify({
           model: "gpt-4o",
           messages: openAIMessages,
-          max_tokens: 1500,
-          temperature: 0.7,
-          presence_penalty: 0.1,
-          frequency_penalty: 0.1,
+          max_tokens: 800,
+          temperature: 0.3,
         }),
       });
     } catch (fetchError) {
       console.error("Network error calling OpenAI:", fetchError);
       return new Response(JSON.stringify({
-        response: `Sorry ${displayName}, I'm having connectivity issues right now. My advanced AI systems are temporarily offline. Please check your connection and try again! 🔄💫`,
+        response: `Sorry ${displayName}, I'm having connectivity issues. Please try again.`,
         rawResponse: null,
         visualData: null,
         action: null,
@@ -340,10 +235,9 @@ CONTEXT FOR INTELLIGENT RESPONSES:
       const errorText = await openAIResponse.text();
       console.error("OpenAI API error:", openAIResponse.status, errorText);
       
-      // Handle specific error cases
       if (openAIResponse.status === 429) {
         return new Response(JSON.stringify({
-          response: `Hey ${displayName}! 🚀 I'm incredibly popular right now and experiencing high demand. My advanced AI brain is working overtime! This usually clears up quickly. Feel free to explore other features while you wait - I'll be back at full intelligence soon! 💪✨`,
+          response: `I'm experiencing high demand right now. Please try again in a moment.`,
           rawResponse: null,
           visualData: null,
           action: null,
@@ -351,19 +245,9 @@ CONTEXT FOR INTELLIGENT RESPONSES:
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
-      } else if (openAIResponse.status === 401) {
-        return new Response(JSON.stringify({
-          response: `Sorry ${displayName}! 🔐 There's a technical issue with my AI connection. Please contact support so they can restore my full advanced capabilities! I'm eager to help with your financial success! 🎯💰`,
-          rawResponse: null,
-          visualData: null,
-          action: null,
-          error: 'API authentication failed'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
       } else {
         return new Response(JSON.stringify({
-          response: `Sorry ${displayName}! 🔧 I'm experiencing some technical difficulties with my advanced systems. Please try again in a moment - I'm working on getting back to full intelligence! 🧠⚡`,
+          response: `Technical issue. Please try again.`,
           rawResponse: null,
           visualData: null,
           action: null,
@@ -381,7 +265,7 @@ CONTEXT FOR INTELLIGENT RESPONSES:
     } catch (parseError) {
       console.error("Error parsing OpenAI response:", parseError);
       return new Response(JSON.stringify({
-        response: `Sorry ${displayName}! 🤖 I received a garbled response from my AI brain. Please try rephrasing your question - I'm here to provide advanced financial guidance! 💡💰`,
+        response: `Received invalid response. Please try again.`,
         rawResponse: null,
         visualData: null,
         action: null,
@@ -392,11 +276,11 @@ CONTEXT FOR INTELLIGENT RESPONSES:
       });
     }
 
-    let responseText = openAIData.choices?.[0]?.message?.content || `Sorry ${displayName}, I couldn't process that request with my full intelligence right now. Please try again! 🔄✨`;
+    let responseText = openAIData.choices?.[0]?.message?.content || `Sorry, I couldn't process that request. Please try again.`;
 
-    console.log("Advanced OpenAI response:", responseText.substring(0, 200) + '...');
+    console.log("OpenAI response:", responseText.substring(0, 200) + '...');
 
-    // Process actions in the response with enhanced handling
+    // Process actions in the response
     const actionRegex = /\[ACTION:({[^}]+})\]/g;
     let actionMatch;
     let processedActions = [];
@@ -404,22 +288,22 @@ CONTEXT FOR INTELLIGENT RESPONSES:
     while ((actionMatch = actionRegex.exec(responseText)) !== null) {
       try {
         const actionData = JSON.parse(actionMatch[1]);
-        console.log("Processing advanced action:", actionData);
+        console.log("Processing action:", actionData);
         
         const actionResult = await processAction(actionData, userId, supabase);
         processedActions.push({ action: actionData, result: actionResult });
         
-        console.log("Advanced action processed successfully:", actionResult);
+        console.log("Action processed successfully:", actionResult);
       } catch (error) {
-        console.error("Error processing advanced action:", error);
+        console.error("Error processing action:", error);
         processedActions.push({ 
           action: actionMatch[1], 
-          result: `I encountered an issue while processing that financial action: ${error.message}. Let me try a different approach! 🔄` 
+          result: `Action failed: ${error.message}` 
         });
       }
     }
 
-    // Remove action tags from response and enhance with results
+    // Remove action tags from response
     let finalResponse = responseText.replace(actionRegex, '');
     if (processedActions.length > 0) {
       const actionResults = processedActions.map(pa => pa.result).join('\n');
@@ -428,28 +312,22 @@ CONTEXT FOR INTELLIGENT RESPONSES:
       }
     }
 
-    console.log("Final advanced response:", finalResponse.substring(0, 200) + '...');
+    console.log("Final response:", finalResponse.substring(0, 200) + '...');
 
     return new Response(JSON.stringify({
       response: finalResponse,
       rawResponse: responseText,
       visualData: null,
-      action: processedActions.length > 0 ? processedActions[0].action : null,
-      insights: {
-        savingsRate: savingsRate,
-        topSpendingCategory: topCategory,
-        monthlySpending: monthlySpending,
-        financialHealthScore: savingsRate !== 'Unknown' && parseFloat(savingsRate) > 20 ? 'Excellent' : savingsRate !== 'Unknown' && parseFloat(savingsRate) > 10 ? 'Good' : 'Needs Improvement'
-      }
+      action: processedActions.length > 0 ? processedActions[0].action : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Unexpected error in advanced Finny chat:', error);
+    console.error('Unexpected error:', error);
     
     return new Response(JSON.stringify({
-      response: `I'm experiencing some technical difficulties with my advanced AI systems right now. 🔧 Please try again in a moment, or reach out to support if this continues. I'm eager to help optimize your financial success! 💪✨`,
+      response: `Technical error occurred. Please try again.`,
       rawResponse: null,
       visualData: null,
       action: null,
