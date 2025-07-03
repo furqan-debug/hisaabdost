@@ -61,19 +61,31 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   }, [isOpen]);
 
-  // Handle Android status bar and keyboard issues
+  // Enhanced mobile keyboard and layout handling
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('finny-chat-open');
       // Prevent body scroll when chat is open on mobile
       document.body.style.overflow = 'hidden';
+      
+      // Add viewport meta tag handling for mobile
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+      }
     } else {
-      document.body.classList.remove('finny-chat-open');
+      document.body.classList.remove('finny-chat-open', 'keyboard-open');
       document.body.style.overflow = '';
+      
+      // Reset viewport
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      }
     }
 
     return () => {
-      document.body.classList.remove('finny-chat-open');
+      document.body.classList.remove('finny-chat-open', 'keyboard-open');
       document.body.style.overflow = '';
     };
   }, [isOpen]);
@@ -95,12 +107,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: "100%", opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="w-full max-w-md h-full md:h-auto md:max-h-[80vh] flex flex-col finny-chat-mobile-fix"
+          className="w-full max-w-md h-full md:h-auto md:max-h-[85vh] flex flex-col finny-chat-mobile-fix"
           onClick={(e) => e.stopPropagation()}
         >
           <Card className="flex flex-col h-full border shadow-2xl bg-white dark:bg-gray-900 overflow-hidden rounded-none md:rounded-lg">
-            {/* Header with Android status bar padding */}
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800 safe-area-top">
+            {/* Header with enhanced mobile support */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800 safe-area-top flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -134,8 +146,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               </div>
             </div>
 
-            {/* Messages Area - flexible height */}
-            <div className="flex-1 relative finny-messages-mobile">
+            {/* Messages Area - enhanced for keyboard handling */}
+            <div className="flex-1 relative finny-messages-mobile overflow-hidden">
               <MessagesArea
                 user={user}
                 oldestMessageTime={oldestMessageTime}
@@ -151,8 +163,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               />
             </div>
 
-            {/* Input Area - sticky at bottom with safe area */}
-            <div className="p-4 border-t border-gray-100 dark:border-gray-800 finny-input-mobile safe-area-bottom">
+            {/* Input Area - enhanced keyboard support */}
+            <div className="finny-input-mobile flex-shrink-0">
               <ChatInput
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}

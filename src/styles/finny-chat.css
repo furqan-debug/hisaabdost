@@ -1,5 +1,5 @@
 
-/* Finny Chat Styles - Clean & Minimalist Design */
+/* Finny Chat Styles - Clean & Minimalist Design with Enhanced Keyboard Support */
 .finny-chat-card {
   @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none sm:rounded-lg shadow-lg overflow-hidden;
 }
@@ -33,24 +33,38 @@
   animation: slideInLeft 0.3s ease-out;
 }
 
-/* Input area improvements */
-.finny-chat-input {
-  @apply bg-transparent;
+/* Enhanced input area with keyboard support */
+.finny-chat-input-container {
+  @apply w-full p-4 bg-background border-t border-gray-100 dark:border-gray-800;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  transition: all 0.3s ease;
 }
 
-.finny-chat-input-container {
-  @apply flex gap-2 items-center max-w-4xl mx-auto relative;
+/* Keyboard active state */
+.finny-chat-input-container.keyboard-active {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: var(--background) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Input focused state */
+.finny-chat-input-container.input-focused {
+  background: var(--background) !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Clean input styles */
 .finny-chat-input input {
-  @apply text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700
-    focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-200
-    py-2.5 px-4 rounded-lg placeholder:text-gray-500 dark:placeholder:text-gray-400;
-}
-
-.finny-chat-input input:focus {
-  @apply shadow-sm border-blue-500;
+  @apply text-sm bg-transparent text-gray-900 dark:text-gray-100
+    focus:ring-0 focus:border-0 transition-all duration-200
+    py-2.5 px-0 placeholder:text-gray-500 dark:placeholder:text-gray-400;
 }
 
 /* Clean send button */
@@ -60,20 +74,27 @@
     disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-/* Keyboard handling improvements for Android */
+/* Enhanced keyboard handling improvements */
 .keyboard-aware {
   @apply relative flex flex-col h-full;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.keyboard-avoid {
-  @apply sticky bottom-0 w-full z-50 bg-background;
+/* Global keyboard open state */
+.keyboard-open {
+  overflow: hidden !important;
 }
 
-/* Android keyboard focus state */
-.keyboard-focused {
-  @apply relative z-[60] bg-background;
-  position: sticky !important;
+.keyboard-open .finny-chat-input-container {
+  position: fixed !important;
   bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: var(--background) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Clean quick reply buttons */
@@ -157,7 +178,7 @@
   }
 }
 
-/* Mobile optimizations with Android fixes */
+/* Mobile optimizations with enhanced Android keyboard fixes */
 @media (max-width: 640px) {
   .finny-chat-card {
     @apply h-[100dvh] rounded-none border-0 shadow-none;
@@ -169,10 +190,25 @@
   
   .finny-messages-container {
     @apply px-3 pb-4;
+    padding-bottom: 100px; /* Extra space for input area */
   }
   
-  .finny-chat-input {
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  .finny-chat-input-container {
+    @apply px-4 py-3;
+    min-height: 80px;
+  }
+  
+  /* Enhanced keyboard handling for mobile */
+  .finny-chat-input-container.keyboard-active {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
+    padding: 16px !important;
   }
   
   .quick-reply-button {
@@ -184,18 +220,6 @@
     @apply text-sm leading-relaxed;
     word-break: break-word;
     overflow-wrap: break-word;
-  }
-  
-  /* Android keyboard handling */
-  .keyboard-focused {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 9999 !important;
-    background: var(--background) !important;
-    padding: 16px !important;
-    border-top: 1px solid var(--border) !important;
   }
   
   /* Android status bar fix */
@@ -230,7 +254,7 @@
   display: none;
 }
 
-/* Android-specific mobile chat layout */
+/* Enhanced Android-specific mobile chat layout */
 @media (max-width: 640px) {
   .finny-chat-mobile-fix {
     height: 100vh;
@@ -238,6 +262,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
   }
   
   .finny-messages-mobile {
@@ -245,18 +270,20 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 100px; /* Space for input */
   }
   
   .finny-input-mobile {
-    flex-shrink: 0;
     position: sticky;
     bottom: 0;
     background: var(--background);
-    z-index: 10;
+    z-index: 50;
+    border-top: 1px solid var(--border);
   }
   
-  /* Android keyboard open state */
-  .android-keyboard-open .finny-input-mobile {
+  /* Enhanced keyboard open state for Android */
+  .keyboard-open .finny-input-mobile,
+  .keyboard-open .finny-chat-input-container {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -264,10 +291,11 @@
     z-index: 9999 !important;
     background: var(--background) !important;
     border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
   }
 }
 
-/* Visual Viewport API support for better Android keyboard handling */
+/* Visual Viewport API support for better keyboard handling */
 @supports (height: 100dvh) {
   @media (max-width: 640px) {
     .finny-chat-mobile-fix {
@@ -276,21 +304,22 @@
   }
 }
 
-/* Prevent content overflow on Android */
+/* Prevent content overflow on mobile */
 .mobile-container {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
 }
 
-/* Body classes for chat state management */
+/* Body classes for enhanced chat state management */
 .finny-chat-open {
   overflow: hidden !important;
   position: fixed !important;
   width: 100% !important;
 }
 
-.finny-input-focused .finny-input-mobile {
+.finny-input-focused .finny-input-mobile,
+.finny-input-focused .finny-chat-input-container {
   position: fixed !important;
   bottom: 0 !important;
   left: 0 !important;
@@ -298,4 +327,15 @@
   z-index: 9999 !important;
   background: var(--background) !important;
   border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced viewport handling */
+@media (max-width: 640px) {
+  .keyboard-active {
+    transform: translateY(0) !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    width: 100% !important;
+  }
 }

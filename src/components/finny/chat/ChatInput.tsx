@@ -31,20 +31,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handle Android keyboard visibility
+  // Enhanced keyboard visibility handling
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined') {
+        // Get viewport dimensions
         const viewportHeight = window.visualViewport?.height || window.innerHeight;
         const windowHeight = window.innerHeight;
         const heightDiff = windowHeight - viewportHeight;
         
-        // Detect keyboard open on Android
-        if (heightDiff > 150) {
+        // Detect keyboard open (more sensitive detection)
+        if (heightDiff > 100) {
           setKeyboardHeight(heightDiff);
-          document.body.classList.add('android-keyboard-open');
+          document.body.classList.add('keyboard-open');
           
-          // Scroll input into view on Android
+          // Scroll input into view with proper timing
           setTimeout(() => {
             if (containerRef.current && isFocused) {
               containerRef.current.scrollIntoView({ 
@@ -53,21 +54,33 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 inline: 'nearest'
               });
             }
-          }, 100);
+          }, 150);
         } else {
           setKeyboardHeight(0);
-          document.body.classList.remove('android-keyboard-open');
+          document.body.classList.remove('keyboard-open');
         }
       }
     };
 
-    if (typeof window !== 'undefined' && window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleResize);
-        document.body.classList.remove('android-keyboard-open');
-      };
-    }
+    // Listen to both resize and visualViewport events
+    const setupListeners = () => {
+      if (typeof window !== 'undefined') {
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', handleResize);
+        }
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+          if (window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', handleResize);
+          }
+          window.removeEventListener('resize', handleResize);
+          document.body.classList.remove('keyboard-open');
+        };
+      }
+    };
+
+    return setupListeners();
   }, [isFocused]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -78,8 +91,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-    // Add class to body for Android keyboard handling
     document.body.classList.add('finny-input-focused');
+    
+    // Ensure input is visible after keyboard appears
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
+    }, 300);
   };
 
   const handleBlur = () => {
@@ -93,18 +116,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
     <div 
       ref={containerRef}
       className={`
-        android-input-fix keyboard-avoid
-        ${keyboardHeight > 0 ? 'keyboard-focused' : ''}
+        finny-chat-input-container
+        ${keyboardHeight > 0 ? 'keyboard-active' : ''}
+        ${isFocused ? 'input-focused' : ''}
       `}
       style={{
-        paddingBottom: keyboardHeight > 0 ? `${Math.max(keyboardHeight - 100, 0)}px` : undefined
-      }}
+        '--keyboard-height': `${keyboardHeight}px`
+      } as React.CSSProperties}
     >
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="w-full">
         <div className={`
-          flex items-center gap-2 p-2 rounded-lg border transition-colors
+          flex items-center gap-2 p-3 rounded-xl border transition-all duration-200
           ${isFocused 
-            ? 'border-blue-500 bg-white dark:bg-gray-800' 
+            ? 'border-blue-500 bg-white dark:bg-gray-800 shadow-lg' 
             : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'
           }
         `}>
@@ -117,6 +141,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled={disabled || !isAuthenticated}
             placeholder={placeholder}
             className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
           />
           
           <Button
@@ -124,9 +151,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
             size="sm"
             disabled={!canSend}
             className={`
-              w-8 h-8 p-0 rounded-md
+              w-9 h-9 p-0 rounded-lg flex-shrink-0
               ${canSend 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm' 
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
               }
             `}
