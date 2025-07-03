@@ -91,6 +91,12 @@ export function useExpenseSubmit({
           title: "Expense Updated",
           description: "Your expense has been updated successfully.",
         });
+
+        // Temporary fix: Force page reload after expense update to prevent UI freeze
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+
       } else {
         // For new expenses, use offline-capable service
         const newExpense: Expense = {
