@@ -1,7 +1,7 @@
 
 import { ExpenseFormData } from "@/hooks/useExpenseForm";
 import { CategoryField } from "../form-fields/CategoryField";
-import { PaymentMethodField } from "../form-fields/PaymentMethodField";
+import { DateField } from "../form-fields/DateField";
 
 interface CategorySectionProps {
   formData: ExpenseFormData;
@@ -10,16 +10,16 @@ interface CategorySectionProps {
 
 export function CategorySection({ formData, onFieldChange }: CategorySectionProps) {
   return (
-    <>
+    <div className="grid grid-cols-2 gap-3">
+      <DateField 
+        value={formData.date} 
+        onChange={(value) => onFieldChange('date', value)} 
+      />
+      
       <CategoryField 
         value={formData.category} 
         onChange={(value) => onFieldChange('category', value)} 
       />
-      
-      <PaymentMethodField 
-        value={formData.paymentMethod} 
-        onChange={(value) => onFieldChange('paymentMethod', value)} 
-      />
-    </>
+    </div>
   );
 }

@@ -1,5 +1,4 @@
-
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ExpenseForm } from "./expenses/ExpenseForm";
 import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
@@ -27,7 +26,7 @@ const AddExpenseSheet = ({
   onClose,
   open,
   onOpenChange,
-  initialCaptureMode = 'manual', // Default to manual mode
+  initialCaptureMode = 'manual',
   initialFile = null
 }: AddExpenseSheetProps) => {
   const [showScanDialog, setShowScanDialog] = useState(false);
@@ -131,6 +130,26 @@ const AddExpenseSheet = ({
     };
   }, [filePreviewUrl]);
 
+  // Handle sheet close
+  const handleSheetClose = (open: boolean) => {
+    if (!open) {
+      // Clean up any resources
+      handleScanDialogCleanup();
+      
+      // Call the parent's onOpenChange if provided
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
+      
+      // Call onClose if provided
+      if (onClose) {
+        onClose();
+      }
+    } else if (onOpenChange) {
+      onOpenChange(true);
+    }
+  };
+
   // Handle scan dialog cleanup
   const handleScanDialogCleanup = () => {
     console.log("Cleaning up scan dialog resources");
@@ -154,7 +173,7 @@ const AddExpenseSheet = ({
     // Notify parent about the expense addition
     if (onAddExpense) {
       console.log("Calling onAddExpense callback after successful scan");
-      onAddExpense(); // Call without arguments to trigger a general refresh
+      onAddExpense();
     }
     
     // Close the sheet automatically after a delay
@@ -168,57 +187,37 @@ const AddExpenseSheet = ({
     }, 1500);
   };
 
-  // Handle sheet close
-  const handleSheetClose = (open: boolean) => {
-    if (!open) {
-      // Clean up any resources
-      handleScanDialogCleanup();
-      
-      // Call the parent's onOpenChange if provided
-      if (onOpenChange) {
-        onOpenChange(false);
-      }
-      
-      // Call onClose if provided
-      if (onClose) {
-        onClose();
-      }
-    } else if (onOpenChange) {
-      onOpenChange(true);
-    }
-  };
-
   return (
     <>
-      <Sheet open={open} onOpenChange={handleSheetClose}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</SheetTitle>
-            <SheetDescription>
+      <Drawer open={open} onOpenChange={handleSheetClose}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader className="text-center">
+            <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
+            <DrawerDescription>
               {expenseToEdit 
                 ? "Edit your expense details below." 
-                : isManualEntry
-                  ? "Enter expense details manually."
-                  : "Upload a receipt for automatic processing."
+                : "Enter your expense information"
               }
-            </SheetDescription>
-          </SheetHeader>
+            </DrawerDescription>
+          </DrawerHeader>
           
-          <ExpenseForm
-            formData={formData}
-            isSubmitting={isSubmitting}
-            isEditing={!!expenseToEdit}
-            isUploading={isUploading}
-            onSubmit={handleSubmit}
-            onFieldChange={updateField}
-            onFileChange={handleFileChange}
-            setFileInputRef={setFileInputRef}
-            setCameraInputRef={setCameraInputRef}
-            onScanComplete={handleScanComplete}
-            isManualEntry={isManualEntry}
-          />
-        </SheetContent>
-      </Sheet>
+          <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+            <ExpenseForm
+              formData={formData}
+              isSubmitting={isSubmitting}
+              isEditing={!!expenseToEdit}
+              isUploading={isUploading}
+              onSubmit={handleSubmit}
+              onFieldChange={updateField}
+              onFileChange={handleFileChange}
+              setFileInputRef={setFileInputRef}
+              setCameraInputRef={setCameraInputRef}
+              onScanComplete={handleScanComplete}
+              isManualEntry={isManualEntry}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Receipt scanning dialog - only shown for auto-process modes */}
       {!isManualEntry && initialFile && filePreviewUrl && (

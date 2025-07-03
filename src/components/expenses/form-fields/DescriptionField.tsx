@@ -5,19 +5,19 @@ import { Input } from "@/components/ui/input";
 interface DescriptionFieldProps {
   value: string;
   onChange: (value: string) => void;
+  label?: string;
 }
 
-export function DescriptionField({ value, onChange }: DescriptionFieldProps) {
+export function DescriptionField({ value, onChange, label = "Description" }: DescriptionFieldProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="expense-description">Expense Name</Label>
+      <Label htmlFor="description">{label}</Label>
       <Input
-        id="expense-description"
-        name="description"
+        id="description"
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Enter expense name"
+        placeholder="What did you spend on?"
         required
       />
     </div>

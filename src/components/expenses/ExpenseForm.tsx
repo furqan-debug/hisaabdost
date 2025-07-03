@@ -1,11 +1,14 @@
 
+import { useState } from "react";
 import { FormSection } from "./form-sections/FormSection";
 import { FormActions } from "./form-sections/FormActions";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
 import { CategorySection } from "./form-sections/CategorySection";
-import { DetailsSection } from "./form-sections/DetailsSection";
-import { ReceiptSection } from "./form-sections/ReceiptSection";
+import { AdvancedSection } from "./form-sections/AdvancedSection";
 import { ExpenseFormData } from "@/hooks/useExpenseForm";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ExpenseFormProps {
   formData: ExpenseFormData;
@@ -24,7 +27,6 @@ interface ExpenseFormProps {
     category: string;
     paymentMethod: string;
   }) => void;
-  // Add field to indicate if this is from the manual entry mode
   isManualEntry?: boolean;
 }
 
@@ -39,10 +41,13 @@ export function ExpenseForm({
   setFileInputRef,
   setCameraInputRef,
   onScanComplete,
-  isManualEntry = true // Default to true for backward compatibility
+  isManualEntry = true
 }: ExpenseFormProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4 mt-4">
+    <form onSubmit={onSubmit} className="space-y-4">
+      {/* Basic Fields */}
       <FormSection>
         <BasicInfoSection 
           formData={formData} 
@@ -56,25 +61,41 @@ export function ExpenseForm({
           onFieldChange={onFieldChange} 
         />
       </FormSection>
-      
-      <FormSection>
-        <DetailsSection 
-          formData={formData} 
-          onFieldChange={onFieldChange} 
-        />
-      </FormSection>
-      
-      <FormSection>
-        <ReceiptSection 
-          receiptUrl={formData.receiptUrl} 
-          onFileChange={onFileChange}
-          isUploading={isUploading}
-          setFileInputRef={setFileInputRef}
-          setCameraInputRef={setCameraInputRef}
-          onCapture={onScanComplete}
-          isManualForm={isManualEntry}
-        />
-      </FormSection>
+
+      {/* Advanced Toggle Button */}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="w-full justify-between text-sm text-muted-foreground hover:text-foreground"
+      >
+        Advanced Options
+        {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </Button>
+
+      {/* Advanced Fields */}
+      <AnimatePresence>
+        {showAdvanced && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <AdvancedSection
+              formData={formData}
+              onFieldChange={onFieldChange}
+              onFileChange={onFileChange}
+              isUploading={isUploading}
+              setFileInputRef={setFileInputRef}
+              setCameraInputRef={setCameraInputRef}
+              onScanComplete={onScanComplete}
+              isManualEntry={isManualEntry}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <FormActions 
         isSubmitting={isSubmitting || isUploading} 
