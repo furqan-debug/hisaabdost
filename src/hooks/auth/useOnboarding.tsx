@@ -2,11 +2,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
 
 export const useOnboarding = (user: User | null) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -21,11 +19,6 @@ export const useOnboarding = (user: User | null) => {
           setShowOnboarding(true);
         } else {
           setShowOnboarding(false);
-          // If user completed onboarding but is not on dashboard, redirect
-          if (profile?.onboarding_completed && window.location.pathname !== '/app/dashboard') {
-            console.log("User completed onboarding, redirecting to dashboard");
-            navigate("/app/dashboard", { replace: true });
-          }
         }
       } else {
         setShowOnboarding(false);
@@ -47,12 +40,7 @@ export const useOnboarding = (user: User | null) => {
         },
         (payload) => {
           if (payload.new.onboarding_completed) {
-            console.log("Onboarding completed via real-time update");
             setShowOnboarding(false);
-            // Force navigation when onboarding is completed
-            setTimeout(() => {
-              navigate("/app/dashboard", { replace: true });
-            }, 100);
           }
         }
       )
@@ -61,7 +49,7 @@ export const useOnboarding = (user: User | null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, navigate]);
+  }, [user]);
 
   return { showOnboarding };
 };

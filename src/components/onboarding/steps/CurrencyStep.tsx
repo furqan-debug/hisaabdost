@@ -5,10 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/lib/auth';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -16,71 +13,31 @@ interface CurrencyStepProps {
 }
 
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
-  const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "PKR");
+  const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "USD");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
+    // Prevent multiple submissions
     if (isSubmitting) return;
     
-    console.log("Currency step: Starting completion with currency:", currency);
-    setIsSubmitting(true);
-    
     try {
-      if (!user?.id) {
-        console.error("No user ID available");
-        toast.error("Authentication error. Please try again.");
+      // Ensure we have a valid currency selected
+      if (!currency) {
+        toast.error("Please select a currency before continuing");
         return;
       }
-
-      const updatedData = { ...initialData, preferredCurrency: currency };
       
-      console.log("Updating profile with final data:", {
-        full_name: updatedData.fullName,
-        age: updatedData.age,
-        gender: updatedData.gender,
-        preferred_currency: updatedData.preferredCurrency,
-        monthly_income: updatedData.monthlyIncome,
-        onboarding_completed: true,
-      });
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updatedData.fullName,
-          age: updatedData.age,
-          gender: updatedData.gender,
-          preferred_currency: updatedData.preferredCurrency,
-          monthly_income: updatedData.monthlyIncome,
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error("Database error:", error);
-        throw error;
-      }
-
-      console.log("Profile updated successfully");
-      toast.success("Setup completed! Welcome to your dashboard.");
+      // Set submitting state to show loading indicator
+      setIsSubmitting(true);
       
-      // Navigate immediately without delay
-      console.log("Navigating to dashboard immediately");
-      navigate("/app/dashboard", { replace: true });
+      // Pass the selected currency to the parent component and let it handle the transition
+      onComplete({ preferredCurrency: currency });
       
-      // Force refresh if navigation doesn't work
-      setTimeout(() => {
-        if (window.location.pathname !== '/app/dashboard') {
-          console.log("Forcing navigation with window.location");
-          window.location.href = "/app/dashboard";
-        }
-      }, 1000);
-      
+      // We intentionally don't reset isSubmitting here as the parent component
+      // will handle transitioning to the next step or showing errors
     } catch (error) {
-      console.error('Error completing onboarding:', error);
-      toast.error('Failed to complete setup. Please try again.');
+      console.error("Error in currency step:", error);
+      toast.error("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -119,9 +76,8 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
         <Button 
           onClick={handleComplete}
           disabled={isSubmitting}
-          className="w-full sm:w-auto"
         >
-          {isSubmitting ? "Completing Setup..." : "Complete Setup"}
+          {isSubmitting ? "Saving..." : "Complete Setup"}
         </Button>
       </div>
     </div>

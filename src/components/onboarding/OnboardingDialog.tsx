@@ -5,7 +5,11 @@ import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
+import { CompleteStep } from './steps/CompleteStep';
 import { OnboardingStep, OnboardingFormData } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth';
+import { toast } from 'sonner';
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -20,6 +24,7 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     preferredCurrency: 'PKR',
     monthlyIncome: null
   });
+  const { user } = useAuth();
 
   // Debug logging for component mounts and step changes
   useEffect(() => {
@@ -38,21 +43,43 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     console.log("Updated form data:", updatedData);
 
     // Move to the next step based on the current step
-    const nextSteps: Record<OnboardingStep, OnboardingStep | null> = {
+    const nextSteps: Record<OnboardingStep, OnboardingStep> = {
       welcome: 'personal',
       personal: 'income',
       income: 'currency',
-      currency: null, // Final step - no next step
+      currency: 'complete',
+      complete: 'complete'
     };
     
-    // If it's the final step (currency), the CurrencyStep component handles navigation
-    if (step !== 'currency') {
-      // Move to next step
-      const nextStep = nextSteps[step];
-      if (nextStep) {
-        console.log(`Moving from ${step} to ${nextStep}`);
-        setCurrentStep(nextStep);
+    // If it's the final step, save all data to the profile
+    if (step === 'currency') {
+      try {
+        console.log("Final step reached, saving all data to profile");
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            full_name: updatedData.fullName,
+            age: updatedData.age,
+            gender: updatedData.gender,
+            preferred_currency: updatedData.preferredCurrency,
+            monthly_income: updatedData.monthlyIncome,
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          })
+          .eq('id', user?.id);
+
+        if (error) {
+          console.error("Error saving profile data:", error);
+          throw error;
+        }
+        setCurrentStep('complete');
+      } catch (error) {
+        toast.error('Failed to save your preferences');
+        console.error('Error saving onboarding data:', error);
       }
+    } else {
+      console.log(`Moving from ${step} to ${nextSteps[step]}`);
+      setCurrentStep(nextSteps[step]);
     }
   };
 
@@ -81,6 +108,8 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           onComplete={(data) => handleStepComplete('currency', data)} 
           initialData={formData} 
         />;
+      case 'complete':
+        return <CompleteStep />;
       default:
         return <WelcomeStep 
           onComplete={(data) => handleStepComplete('welcome', data)} 
