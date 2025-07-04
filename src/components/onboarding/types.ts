@@ -4,7 +4,7 @@ export type OnboardingStep = 'welcome' | 'personal' | 'income' | 'currency' | 'c
 export interface OnboardingFormData {
   fullName: string;
   age: number | null;
-  gender: string;
+  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   preferredCurrency: string;
   monthlyIncome: number | null;
 }
