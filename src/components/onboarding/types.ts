@@ -1,5 +1,5 @@
 
-export type OnboardingStep = 'welcome' | 'personal' | 'income' | 'currency' | 'complete';
+export type OnboardingStep = 'welcome' | 'personal' | 'income' | 'currency';
 
 export interface OnboardingFormData {
   fullName: string;

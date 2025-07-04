@@ -13,9 +13,9 @@ export const useSignOut = () => {
       // Clear Finny chat context safely
       try {
         const { useFinny } = await import("@/components/finny/context/FinnyContext");
-        const { clearChatHistory } = useFinny();
-        clearChatHistory();
-        console.log("Finny chat history cleared");
+        const { resetChat } = useFinny();
+        resetChat();
+        console.log("Finny chat reset completed");
       } catch (finnyError) {
         console.log("Finny context not available during sign out, skipping cleanup");
       }

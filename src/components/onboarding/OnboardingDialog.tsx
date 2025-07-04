@@ -39,19 +39,15 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     setFormData(updatedData);
     console.log("Updated form data:", updatedData);
 
-    // Move to the next step based on the current step (except for currency which handles its own navigation)
-    const nextSteps: Record<OnboardingStep, OnboardingStep> = {
-      welcome: 'personal',
-      personal: 'income',
-      income: 'currency',
-      currency: 'currency' // Currency step handles its own completion
-    };
-    
-    // Only advance steps for non-final steps
-    if (step !== 'currency') {
-      console.log(`Moving from ${step} to ${nextSteps[step]}`);
-      setCurrentStep(nextSteps[step]);
+    // Move to the next step based on the current step
+    if (step === 'welcome') {
+      setCurrentStep('personal');
+    } else if (step === 'personal') {
+      setCurrentStep('income');
+    } else if (step === 'income') {
+      setCurrentStep('currency');
     }
+    // Currency step handles its own completion and navigation
   };
 
   // Create the component for the current step with proper props and handlers
