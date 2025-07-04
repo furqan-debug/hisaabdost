@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
-import { toast } from "sonner";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -13,31 +12,19 @@ interface CurrencyStepProps {
 }
 
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
-  const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "USD");
+  const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "PKR");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleComplete = () => {
-    // Prevent multiple submissions
+  const handleComplete = async () => {
     if (isSubmitting) return;
     
+    console.log("Currency step: Starting completion with currency:", currency);
+    setIsSubmitting(true);
+    
     try {
-      // Ensure we have a valid currency selected
-      if (!currency) {
-        toast.error("Please select a currency before continuing");
-        return;
-      }
-      
-      // Set submitting state to show loading indicator
-      setIsSubmitting(true);
-      
-      // Pass the selected currency to the parent component and let it handle the transition
-      onComplete({ preferredCurrency: currency });
-      
-      // We intentionally don't reset isSubmitting here as the parent component
-      // will handle transitioning to the next step or showing errors
+      await onComplete({ preferredCurrency: currency });
     } catch (error) {
-      console.error("Error in currency step:", error);
-      toast.error("Something went wrong. Please try again.");
+      console.error("Error in currency step completion:", error);
       setIsSubmitting(false);
     }
   };
@@ -76,8 +63,9 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
         <Button 
           onClick={handleComplete}
           disabled={isSubmitting}
+          className="w-full sm:w-auto"
         >
-          {isSubmitting ? "Saving..." : "Complete Setup"}
+          {isSubmitting ? "Completing Setup..." : "Complete Setup"}
         </Button>
       </div>
     </div>

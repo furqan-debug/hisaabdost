@@ -48,14 +48,29 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
       welcome: 'personal',
       personal: 'income',
       income: 'currency',
-      currency: null, // No next step after currency
-      complete: null
+      currency: null, // Final step
     };
     
     // If it's the final step (currency), save all data and redirect to dashboard
     if (step === 'currency') {
+      console.log("Final step reached, saving data and navigating");
+      
       try {
-        console.log("Final step reached, saving all data to profile and redirecting to dashboard");
+        if (!user?.id) {
+          console.error("No user ID available");
+          toast.error("Authentication error. Please try again.");
+          return;
+        }
+
+        console.log("Updating profile with data:", {
+          full_name: updatedData.fullName,
+          age: updatedData.age,
+          gender: updatedData.gender,
+          preferred_currency: updatedData.preferredCurrency,
+          monthly_income: updatedData.monthlyIncome,
+          onboarding_completed: true,
+        });
+
         const { error } = await supabase
           .from('profiles')
           .update({
@@ -67,25 +82,28 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
             onboarding_completed: true,
             onboarding_completed_at: new Date().toISOString()
           })
-          .eq('id', user?.id);
+          .eq('id', user.id);
 
         if (error) {
-          console.error("Error saving profile data:", error);
+          console.error("Database error:", error);
           throw error;
         }
 
-        // Show success message
+        console.log("Profile updated successfully, showing success message");
         toast.success("Setup completed! Welcome to your dashboard.");
         
-        // Navigate directly to dashboard
-        console.log("Navigating to dashboard");
-        navigate("/app/dashboard", { replace: true });
+        // Small delay to ensure toast shows, then navigate
+        setTimeout(() => {
+          console.log("Navigating to dashboard now");
+          navigate("/app/dashboard", { replace: true });
+        }, 500);
         
       } catch (error) {
-        toast.error('Failed to save your preferences');
-        console.error('Error saving onboarding data:', error);
+        console.error('Error completing onboarding:', error);
+        toast.error('Failed to complete setup. Please try again.');
       }
     } else {
+      // Move to next step
       const nextStep = nextSteps[step];
       if (nextStep) {
         console.log(`Moving from ${step} to ${nextStep}`);
