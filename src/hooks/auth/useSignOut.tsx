@@ -1,53 +1,42 @@
 
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useFinny } from "@/components/finny";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useSignOut = () => {
   const navigate = useNavigate();
-  let resetChat = () => {}; // Default empty function
-  
-  // Safely try to get resetChat function
-  try {
-    const finny = useFinny();
-    if (finny && typeof finny.resetChat === 'function') {
-      resetChat = finny.resetChat;
-    }
-  } catch (error) {
-    console.error("Error accessing Finny context:", error);
-    // Continue with empty resetChat function
-  }
 
   const signOut = async () => {
     try {
-      // Show loading toast
-      const toastId = toast.loading("Signing out...");
+      console.log("🔓 Starting sign out process");
       
-      // Try to clear Finny chat before signing out
+      // Clear Finny chat context safely
       try {
-        if (typeof resetChat === 'function') {
-          resetChat();
-        }
-        localStorage.removeItem('finny_chat_messages');
-      } catch (error) {
-        console.error("Error resetting chat:", error);
+        const { useFinny } = await import("@/components/finny/context/FinnyContext");
+        const { clearChatHistory } = useFinny();
+        clearChatHistory();
+        console.log("Finny chat history cleared");
+      } catch (finnyError) {
+        console.log("Finny context not available during sign out, skipping cleanup");
       }
       
-      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
       
-      // Dismiss loading toast and show success
-      toast.dismiss(toastId);
-      toast.success("Successfully signed out");
-      navigate("/auth");
-    } catch (error: any) {
-      toast.error(error.message || "Error signing out");
+      if (error) {
+        console.error("Sign out error:", error);
+        toast.error("Error signing out");
+        throw error;
+      }
+
+      console.log("🔓 Sign out successful");
+      toast.success("Signed out successfully");
+      navigate("/auth", { replace: true });
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      // Navigate anyway to prevent being stuck
+      navigate("/auth", { replace: true });
     }
   };
 
-  return {
-    signOut,
-  };
+  return { signOut };
 };

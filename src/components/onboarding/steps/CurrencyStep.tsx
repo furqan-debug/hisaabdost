@@ -6,6 +6,9 @@ import { OnboardingFormData } from "../types";
 import { useState } from "react";
 import { CURRENCY_OPTIONS, CurrencyOption, CurrencyCode } from "@/utils/currencyUtils";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -15,29 +18,67 @@ interface CurrencyStepProps {
 export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
   const [currency, setCurrency] = useState<CurrencyCode>(initialData.preferredCurrency as CurrencyCode || "USD");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const handleComplete = () => {
-    // Prevent multiple submissions
+  const handleComplete = async () => {
     if (isSubmitting) return;
     
     try {
-      // Ensure we have a valid currency selected
       if (!currency) {
         toast.error("Please select a currency before continuing");
         return;
       }
       
-      // Set submitting state to show loading indicator
-      setIsSubmitting(true);
+      if (!user) {
+        toast.error("User not authenticated");
+        return;
+      }
       
-      // Pass the selected currency to the parent component and let it handle the transition
+      setIsSubmitting(true);
+      console.log("Starting final onboarding step with currency:", currency);
+      
+      // Complete the onboarding data first
+      const finalFormData = { ...initialData, preferredCurrency: currency };
+      console.log("Final form data:", finalFormData);
+      
+      // Save all data to the profile and mark onboarding as complete
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: finalFormData.fullName,
+          age: finalFormData.age,
+          gender: finalFormData.gender,
+          preferred_currency: finalFormData.preferredCurrency,
+          monthly_income: finalFormData.monthlyIncome,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error("Error saving final onboarding data:", error);
+        throw error;
+      }
+
+      console.log("Onboarding data saved successfully");
+      toast.success("Setup completed! Welcome to your dashboard.");
+      
+      // Force navigation immediately after successful save
+      console.log("Navigating to dashboard");
+      navigate("/app/dashboard", { replace: true });
+      
+      // Also call the parent completion handler for cleanup
       onComplete({ preferredCurrency: currency });
       
-      // We intentionally don't reset isSubmitting here as the parent component
-      // will handle transitioning to the next step or showing errors
     } catch (error) {
-      console.error("Error in currency step:", error);
-      toast.error("Something went wrong. Please try again.");
+      console.error("Error completing onboarding:", error);
+      toast.error("Something went wrong, but we'll take you to the dashboard anyway.");
+      
+      // Navigate even on error to prevent getting stuck
+      navigate("/app/dashboard", { replace: true });
+      onComplete({ preferredCurrency: currency });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -76,8 +117,9 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
         <Button 
           onClick={handleComplete}
           disabled={isSubmitting}
+          className="w-full sm:w-auto"
         >
-          {isSubmitting ? "Saving..." : "Complete Setup"}
+          {isSubmitting ? "Setting up..." : "Get Started"}
         </Button>
       </div>
     </div>

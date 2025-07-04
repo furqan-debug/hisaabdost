@@ -5,11 +5,8 @@ import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
-import { CompleteStep } from './steps/CompleteStep';
 import { OnboardingStep, OnboardingFormData } from './types';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
-import { toast } from 'sonner';
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -35,49 +32,23 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     console.log("Step changed to:", currentStep);
   }, [currentStep]);
 
-  const handleStepComplete = async (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
+  const handleStepComplete = (step: OnboardingStep, data: Partial<OnboardingFormData>) => {
     console.log(`Step ${step} completed with data:`, data);
     
     const updatedData = { ...formData, ...data };
     setFormData(updatedData);
     console.log("Updated form data:", updatedData);
 
-    // Move to the next step based on the current step
+    // Move to the next step based on the current step (except for currency which handles its own navigation)
     const nextSteps: Record<OnboardingStep, OnboardingStep> = {
       welcome: 'personal',
       personal: 'income',
       income: 'currency',
-      currency: 'complete',
-      complete: 'complete'
+      currency: 'currency' // Currency step handles its own completion
     };
     
-    // If it's the final step, save all data to the profile
-    if (step === 'currency') {
-      try {
-        console.log("Final step reached, saving all data to profile");
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            full_name: updatedData.fullName,
-            age: updatedData.age,
-            gender: updatedData.gender,
-            preferred_currency: updatedData.preferredCurrency,
-            monthly_income: updatedData.monthlyIncome,
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user?.id);
-
-        if (error) {
-          console.error("Error saving profile data:", error);
-          throw error;
-        }
-        setCurrentStep('complete');
-      } catch (error) {
-        toast.error('Failed to save your preferences');
-        console.error('Error saving onboarding data:', error);
-      }
-    } else {
+    // Only advance steps for non-final steps
+    if (step !== 'currency') {
       console.log(`Moving from ${step} to ${nextSteps[step]}`);
       setCurrentStep(nextSteps[step]);
     }
@@ -108,8 +79,6 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
           onComplete={(data) => handleStepComplete('currency', data)} 
           initialData={formData} 
         />;
-      case 'complete':
-        return <CompleteStep />;
       default:
         return <WelcomeStep 
           onComplete={(data) => handleStepComplete('welcome', data)} 

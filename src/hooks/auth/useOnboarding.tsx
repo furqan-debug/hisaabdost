@@ -9,12 +9,22 @@ export const useOnboarding = (user: User | null) => {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (user) {
-        const { data: profile } = await supabase
+        console.log("Checking onboarding status for user:", user.id);
+        
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('onboarding_completed')
           .eq('id', user.id)
           .single();
 
+        if (error) {
+          console.error("Error checking onboarding status:", error);
+          setShowOnboarding(false);
+          return;
+        }
+
+        console.log("Profile onboarding status:", profile?.onboarding_completed);
+        
         if (profile && !profile.onboarding_completed) {
           setShowOnboarding(true);
         } else {
@@ -39,7 +49,9 @@ export const useOnboarding = (user: User | null) => {
           filter: `id=eq.${user?.id}`,
         },
         (payload) => {
+          console.log("Profile update received:", payload);
           if (payload.new.onboarding_completed) {
+            console.log("Onboarding completed, hiding dialog");
             setShowOnboarding(false);
           }
         }
