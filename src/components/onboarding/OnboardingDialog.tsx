@@ -6,10 +6,6 @@ import { WelcomeStep } from './steps/WelcomeStep';
 import { IncomeStep } from './steps/IncomeStep';
 import { CurrencyStep } from './steps/CurrencyStep';
 import { OnboardingStep, OnboardingFormData } from './types';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/lib/auth';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -24,8 +20,6 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     preferredCurrency: 'PKR',
     monthlyIncome: null
   });
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
   // Debug logging for component mounts and step changes
   useEffect(() => {
@@ -48,61 +42,11 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
       welcome: 'personal',
       personal: 'income',
       income: 'currency',
-      currency: null, // Final step
+      currency: null, // Final step - no next step
     };
     
-    // If it's the final step (currency), save all data and redirect to dashboard
-    if (step === 'currency') {
-      console.log("Final step reached, saving data and navigating");
-      
-      try {
-        if (!user?.id) {
-          console.error("No user ID available");
-          toast.error("Authentication error. Please try again.");
-          return;
-        }
-
-        console.log("Updating profile with data:", {
-          full_name: updatedData.fullName,
-          age: updatedData.age,
-          gender: updatedData.gender,
-          preferred_currency: updatedData.preferredCurrency,
-          monthly_income: updatedData.monthlyIncome,
-          onboarding_completed: true,
-        });
-
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            full_name: updatedData.fullName,
-            age: updatedData.age,
-            gender: updatedData.gender,
-            preferred_currency: updatedData.preferredCurrency,
-            monthly_income: updatedData.monthlyIncome,
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (error) {
-          console.error("Database error:", error);
-          throw error;
-        }
-
-        console.log("Profile updated successfully, showing success message");
-        toast.success("Setup completed! Welcome to your dashboard.");
-        
-        // Small delay to ensure toast shows, then navigate
-        setTimeout(() => {
-          console.log("Navigating to dashboard now");
-          navigate("/app/dashboard", { replace: true });
-        }, 500);
-        
-      } catch (error) {
-        console.error('Error completing onboarding:', error);
-        toast.error('Failed to complete setup. Please try again.');
-      }
-    } else {
+    // If it's the final step (currency), the CurrencyStep component handles navigation
+    if (step !== 'currency') {
       // Move to next step
       const nextStep = nextSteps[step];
       if (nextStep) {
