@@ -18,7 +18,6 @@ import History from './pages/History';
 import ManageFunds from './pages/ManageFunds';
 import NotFound from './pages/NotFound';
 
-
 // Create a query client instance
 const queryClient = new QueryClient({
   defaultOptions: {
