@@ -1,31 +1,66 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet } from "lucide-react";
+import { PlusCircle, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/dashboard/stats/StatCard";
+import { AddFundsDialog } from "@/components/dashboard/wallet/AddFundsDialog";
+import { useWalletAdditions, type WalletAdditionInput } from "@/hooks/useWalletAdditions";
 import { formatCurrency } from "@/utils/formatters";
-import { useCurrencyReactive } from "@/hooks/useCurrencyReactive";
+import { useCurrency } from "@/hooks/use-currency";
 
 interface WalletBalanceCardProps {
   walletBalance: number;
 }
 
 export function WalletBalanceCard({ walletBalance }: WalletBalanceCardProps) {
-  const { currencyCode, version } = useCurrencyReactive();
+  const { currencyCode } = useCurrency();
+  const { 
+    totalAdditions, 
+    addFunds, 
+    isAddFundsOpen, 
+    setIsAddFundsOpen, 
+    isAdding 
+  } = useWalletAdditions();
   
+  const handleOpenAddFunds = () => {
+    setIsAddFundsOpen(true);
+  };
+
+  const handleCloseAddFunds = () => {
+    setIsAddFundsOpen(false);
+  };
+
+  const handleAddFunds = (addition: WalletAdditionInput) => {
+    addFunds(addition);
+  };
+
   return (
-    <Card key={`wallet-balance-${version}`} className="relative overflow-hidden wallet-card">
-      <CardHeader className="p-3 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-            <Wallet className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-          </div>
-          <CardTitle className="text-xs font-medium text-muted-foreground">Wallet Balance</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="p-3 pt-0">
-        <div className="text-lg font-bold text-foreground">
-          {formatCurrency(walletBalance, currencyCode)}
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <StatCard
+        title="Wallet Balance"
+        value={formatCurrency(walletBalance, currencyCode)}
+        subtext={totalAdditions > 0 ? `Includes ${formatCurrency(totalAdditions, currencyCode)} in added funds` : undefined}
+        infoTooltip="Your wallet balance represents the total amount of money you have available to spend. This includes your monthly income plus any additional funds you've manually added (like bonuses, gifts, or transfers from savings). This is your current spending power and helps you track how much money you have left for expenses this month."
+        cardType="wallet"
+        actionElement={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleOpenAddFunds}
+            className="w-full text-primary hover:bg-primary/10 flex items-center justify-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Funds</span>
+          </Button>
+        }
+      />
+      
+      <AddFundsDialog 
+        isOpen={isAddFundsOpen}
+        onClose={handleCloseAddFunds}
+        onAddFunds={handleAddFunds}
+        isAdding={isAdding}
+      />
+    </>
   );
 }
