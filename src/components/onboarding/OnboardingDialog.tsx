@@ -14,6 +14,7 @@ interface OnboardingDialogProps {
 
 export function OnboardingDialog({ open }: OnboardingDialogProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
+  const [dialogOpen, setDialogOpen] = useState(open);
   const [formData, setFormData] = useState<OnboardingFormData>({
     fullName: '',
     age: null,
@@ -22,6 +23,11 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
     monthlyIncome: null
   });
   const { user } = useAuth();
+
+  // Sync dialog state with prop
+  useEffect(() => {
+    setDialogOpen(open);
+  }, [open]);
 
   // Debug logging for component mounts and step changes
   useEffect(() => {
@@ -46,8 +52,11 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
       setCurrentStep('income');
     } else if (step === 'income') {
       setCurrentStep('currency');
+    } else if (step === 'currency') {
+      // Currency step completed - close dialog
+      console.log("Currency step completed, closing onboarding dialog");
+      setDialogOpen(false);
     }
-    // Currency step handles its own completion and navigation
   };
 
   // Create the component for the current step with proper props and handlers
@@ -84,7 +93,12 @@ export function OnboardingDialog({ open }: OnboardingDialogProps) {
   };
 
   return (
-    <Dialog open={open} modal>
+    <Dialog open={dialogOpen} modal onOpenChange={(isOpen) => {
+      if (!isOpen && currentStep !== 'currency') {
+        // Only allow closing if not on currency step or if onboarding is complete
+        setDialogOpen(false);
+      }
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         {renderCurrentStep()}
       </DialogContent>

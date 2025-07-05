@@ -53,6 +53,14 @@ export const useOnboarding = (user: User | null) => {
           if (payload.new.onboarding_completed) {
             console.log("Onboarding completed, hiding dialog");
             setShowOnboarding(false);
+            
+            // Additional navigation fallback for mobile
+            setTimeout(() => {
+              if (window.location.pathname !== "/app/dashboard") {
+                console.log("Fallback navigation to dashboard");
+                window.location.href = "/app/dashboard";
+              }
+            }, 1000);
           }
         }
       )

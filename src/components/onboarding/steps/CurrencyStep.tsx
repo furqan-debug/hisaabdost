@@ -62,22 +62,47 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       }
 
       console.log("Onboarding data saved successfully");
+      
+      // Call the parent completion handler first to close the dialog
+      onComplete({ preferredCurrency: currency });
+      
+      // Show success message
       toast.success("Setup completed! Welcome to your dashboard.");
       
-      // Force navigation immediately after successful save
-      console.log("Navigating to dashboard");
+      // Multiple navigation strategies for mobile compatibility
+      console.log("Attempting navigation to dashboard");
+      
+      // Strategy 1: Immediate navigation
       navigate("/app/dashboard", { replace: true });
       
-      // Also call the parent completion handler for cleanup
-      onComplete({ preferredCurrency: currency });
+      // Strategy 2: Delayed navigation for mobile WebView
+      setTimeout(() => {
+        console.log("Executing delayed navigation");
+        navigate("/app/dashboard", { replace: true });
+      }, 100);
+      
+      // Strategy 3: Force page reload as fallback for mobile
+      setTimeout(() => {
+        console.log("Executing page reload fallback");
+        if (window.location.pathname !== "/app/dashboard") {
+          window.location.href = "/app/dashboard";
+        }
+      }, 500);
       
     } catch (error) {
       console.error("Error completing onboarding:", error);
-      toast.error("Something went wrong, but we'll take you to the dashboard anyway.");
+      
+      // Even on error, complete the onboarding to prevent getting stuck
+      onComplete({ preferredCurrency: currency });
+      toast.success("Setup completed! Welcome to your dashboard.");
       
       // Navigate even on error to prevent getting stuck
       navigate("/app/dashboard", { replace: true });
-      onComplete({ preferredCurrency: currency });
+      setTimeout(() => {
+        if (window.location.pathname !== "/app/dashboard") {
+          window.location.href = "/app/dashboard";
+        }
+      }, 500);
     } finally {
       setIsSubmitting(false);
     }
