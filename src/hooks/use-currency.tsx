@@ -40,57 +40,39 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Custom setter that also saves to localStorage and forces re-renders
   const setCurrencyCode = (code: CurrencyCode) => {
     try {
-      console.log('Currency changing from:', currencyCode, 'to:', code);
-      
       // Update state immediately
       setCurrencyCodeState(code);
       
       // Increment version to force re-renders
-      const newVersion = version + 1;
-      setVersion(newVersion);
+      setVersion(prev => prev + 1);
       
       // Save to localStorage
       localStorage.setItem('preferred-currency', code);
       
-      // Force immediate re-render of all components with multiple strategies
+      // Force immediate re-render of all components
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('currency-updated', { 
-          detail: { code, version: newVersion } 
+          detail: { code, version: version + 1 } 
         }));
       }, 0);
       
-      // Additional force update for stubborn components
-      setTimeout(() => {
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'preferred-currency',
-          newValue: code,
-          oldValue: currencyCode
-        }));
-      }, 50);
-      
-      console.log('Currency change completed, new version:', newVersion);
-      
     } catch (error) {
-      console.error('Error setting currency:', error);
+      console.error('Error saving currency to localStorage:', error);
     }
   };
 
-  // Listen for storage changes from other tabs/windows and custom events
+  // Listen for storage changes from other tabs/windows
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'preferred-currency' && e.newValue && e.newValue !== currencyCode) {
-        console.log('Storage change detected:', e.newValue);
+      if (e.key === 'preferred-currency' && e.newValue) {
         setCurrencyCodeState(e.newValue as CurrencyCode);
         setVersion(prev => prev + 1);
       }
     };
 
     const handleCurrencyChange = (e: CustomEvent) => {
-      console.log('Custom currency change event:', e.detail);
-      if (e.detail.code !== currencyCode) {
-        setCurrencyCodeState(e.detail.code);
-        setVersion(e.detail.version);
-      }
+      setCurrencyCodeState(e.detail.code);
+      setVersion(e.detail.version);
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -100,7 +82,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('currency-updated', handleCurrencyChange as EventListener);
     };
-  }, [currencyCode]);
+  }, []);
 
   return (
     <CurrencyContext.Provider value={{ currencyCode, setCurrencyCode, version }}>

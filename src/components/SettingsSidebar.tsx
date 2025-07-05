@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -57,10 +58,15 @@ const SettingsSidebar = ({
       // Update the context
       setCurrencyCode(newCurrency);
       
+      // Force immediate UI update
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
       console.log('Currency change completed');
       toast({
         title: "Currency Updated",
-        description: `Currency changed to ${value}. All values will update immediately.`,
+        description: `Currency changed to ${value}. Page will refresh to apply changes.`,
       });
     } catch (error) {
       console.error('Error changing currency:', error);
