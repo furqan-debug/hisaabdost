@@ -65,6 +65,14 @@ const config: CapacitorConfig = {
     // App plugin for deep link handling
     App: {
       enabled: true
+    },
+    // AdMob configuration
+    AdMob: {
+      appId: "ca-app-pub-8996865130200922~6761545939",
+      testingDevices: ["YOUR_DEVICE_ID"], // Add your test device ID here
+      tagForChildDirectedTreatment: false,
+      tagForUnderAgeOfConsent: false,
+      maxAdContentRating: "G"
     }
   },
   

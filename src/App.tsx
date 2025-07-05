@@ -29,24 +29,38 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Initialize push notifications with better error handling
+  // Initialize push notifications and AdMob with better error handling
   useEffect(() => {
-    const initializePushNotifications = async () => {
+    const initializeServices = async () => {
       try {
         // Only initialize if we're in a proper browser environment
         if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-          const { PushNotificationService } = await import('./services/pushNotificationService');
-          await PushNotificationService.initialize();
-          console.log('Push notifications initialized successfully');
+          // Initialize push notifications
+          try {
+            const { PushNotificationService } = await import('./services/pushNotificationService');
+            await PushNotificationService.initialize();
+            console.log('Push notifications initialized successfully');
+          } catch (error) {
+            console.log('Push notifications not available or failed to initialize:', error);
+          }
+
+          // Initialize AdMob
+          try {
+            const { AdMobService } = await import('./services/admobService');
+            await AdMobService.initialize();
+            console.log('AdMob initialized successfully');
+          } catch (error) {
+            console.log('AdMob not available or failed to initialize:', error);
+          }
         }
       } catch (error) {
-        console.log('Push notifications not available or failed to initialize:', error);
+        console.log('Services initialization failed:', error);
         // Don't throw - continue with app initialization
       }
     };
 
     // Don't block app startup - run in background
-    setTimeout(initializePushNotifications, 1000);
+    setTimeout(initializeServices, 1000);
   }, []);
 
   return (
