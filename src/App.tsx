@@ -17,11 +17,6 @@ import Goals from './pages/Goals';
 import History from './pages/History';
 import ManageFunds from './pages/ManageFunds';
 import NotFound from './pages/NotFound';
-import { AdMob } from 'capacitor-admob';
-
-useEffect(() => {
-  AdMob.initialize(); // Call only once when app starts
-}, []);
 
 
 // Create a query client instance
