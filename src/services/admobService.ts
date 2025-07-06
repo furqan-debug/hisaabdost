@@ -1,5 +1,5 @@
 
-import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition, AdMobBannerSize } from 'capacitor-admob';
+import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from 'capacitor-admob';
 
 export class AdMobService {
   private static isInitialized = false;
