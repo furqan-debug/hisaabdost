@@ -19,8 +19,24 @@ export function SummaryTab({ expenses }: SummaryTabProps) {
   
   const totalSpending = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
+  if (expenses.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="max-w-md mx-auto">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/30 flex items-center justify-center">
+            <div className="text-4xl">📊</div>
+          </div>
+          <h3 className="text-xl font-semibold mb-3">No Data to Analyze</h3>
+          <p className="text-muted-foreground mb-6">
+            Add some expenses to see intelligent insights about your spending patterns and behaviors.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <OverviewCards 
         groupsCount={groupingResult.groups.length}
         totalGrouped={groupingResult.totalGrouped}
@@ -44,7 +60,9 @@ export function SummaryTab({ expenses }: SummaryTabProps) {
         totalSpending={totalSpending} 
       />
 
-      <UngroupedExpenses ungroupedExpenses={groupingResult.ungrouped} />
+      {groupingResult.ungrouped.length > 0 && (
+        <UngroupedExpenses ungroupedExpenses={groupingResult.ungrouped} />
+      )}
     </div>
   );
 }
