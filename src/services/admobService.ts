@@ -44,8 +44,8 @@ export class AdMobService {
 
       const bannerOptions: AdOptions = {
         adId: options?.adId || 'ca-app-pub-3940256099942544/6300978111', // Test banner ad unit ID
-        adSize: options?.size || 'BANNER',
-        position: options?.position || 'BOTTOM_CENTER',
+        adSize: (options?.size as AdSize) || AdSize.BANNER,
+        position: (options?.position as AdPosition) || AdPosition.BOTTOM_CENTER,
         margin: 0,
         isTesting: true, // Set to false in production
       };
