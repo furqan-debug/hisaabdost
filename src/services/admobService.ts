@@ -1,5 +1,5 @@
 
-import { CapacitorAdMob, AdOptions, AdSize, AdPosition } from 'capacitor-admob';
+import { AdMob, AdOptions, AdSize, AdPosition } from 'capacitor-admob';
 
 export class AdMobService {
   private static isInitialized = false;
@@ -14,7 +14,7 @@ export class AdMobService {
 
       // Check if we're on a native platform
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await CapacitorAdMob.initialize({
+        await AdMob.initialize({
           requestTrackingAuthorization: true,
           testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID
           initializeForTesting: false, // Set to true during development
@@ -46,11 +46,10 @@ export class AdMobService {
         adId: options?.adId || 'ca-app-pub-3940256099942544/6300978111', // Test banner ad unit ID
         adSize: (options?.size as AdSize) || AdSize.BANNER,
         position: (options?.position as AdPosition) || AdPosition.BOTTOM_CENTER,
-        margin: 0,
         isTesting: true, // Set to false in production
       };
 
-      await CapacitorAdMob.showBanner(bannerOptions);
+      await AdMob.showBanner(bannerOptions);
       console.log('Banner ad shown successfully');
     } catch (error) {
       console.error('Failed to show banner ad:', error);
@@ -61,7 +60,7 @@ export class AdMobService {
   // Hide banner ad
   static async hideBannerAd(): Promise<void> {
     try {
-      await CapacitorAdMob.hideBanner();
+      await AdMob.hideBanner();
       console.log('Banner ad hidden successfully');
     } catch (error) {
       console.error('Failed to hide banner ad:', error);
@@ -72,7 +71,7 @@ export class AdMobService {
   // Resume banner ad
   static async resumeBannerAd(): Promise<void> {
     try {
-      await CapacitorAdMob.resumeBanner();
+      await AdMob.resumeBanner();
       console.log('Banner ad resumed successfully');
     } catch (error) {
       console.error('Failed to resume banner ad:', error);
@@ -83,7 +82,7 @@ export class AdMobService {
   // Remove banner ad
   static async removeBannerAd(): Promise<void> {
     try {
-      await CapacitorAdMob.removeBanner();
+      await AdMob.removeBanner();
       console.log('Banner ad removed successfully');
     } catch (error) {
       console.error('Failed to remove banner ad:', error);
