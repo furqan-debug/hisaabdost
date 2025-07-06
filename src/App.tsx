@@ -1,96 +1,133 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './lib/auth';
-import { MonthProvider } from './hooks/use-month-context';
-import { FinnyProvider } from './components/finny/FinnyProvider';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Auth from './pages/Auth';
-import ResetPassword from './pages/ResetPassword';
-import Analytics from './pages/Analytics';
-import Budget from './pages/Budget';
-import Expenses from './pages/Expenses';
-import Goals from './pages/Goals';
-import History from './pages/History';
-import ManageFunds from './pages/ManageFunds';
-import NotFound from './pages/NotFound';
+import { Toaster } from '@/components/ui/toaster';
+import { CurrencyProvider } from '@/hooks/use-currency';
+import { MonthProvider } from '@/hooks/use-month-context';
+import { OfflineProvider } from '@/components/offline/OfflineProvider';
+import { AuthProvider } from '@/lib/auth';
+import { FinnyProvider } from '@/components/finny/FinnyProvider';
+import { ThemeProvider } from 'next-themes';
 
-// Create a query client instance
+// Pages
+import Auth from '@/pages/Auth';
+import Dashboard from '@/pages/Dashboard';
+import Expenses from '@/pages/Expenses';
+import Analytics from '@/pages/Analytics';
+import Budget from '@/pages/Budget';
+import Goals from '@/pages/Goals';  
+import History from '@/pages/History';
+import ManageFunds from '@/pages/ManageFunds';
+import AppGuide from '@/pages/AppGuide';
+import ResetPassword from '@/pages/ResetPassword';
+import NotFound from '@/pages/NotFound';
+
+// Components
+import Layout from '@/components/Layout';
+import LoadingScreen from '@/components/shared/LoadingScreen';
+import { useAuth } from '@/lib/auth';
+
+import './App.css';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       retry: 1,
     },
   },
 });
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (user) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
-  // Initialize push notifications and AdMob with better error handling
-  useEffect(() => {
-    const initializeServices = async () => {
-      try {
-        // Only initialize if we're in a proper browser environment
-        if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-          // Initialize push notifications
-          try {
-            const { PushNotificationService } = await import('./services/pushNotificationService');
-            await PushNotificationService.initialize();
-            console.log('Push notifications initialized successfully');
-          } catch (error) {
-            console.log('Push notifications not available or failed to initialize:', error);
-          }
-
-          // Initialize AdMob
-          try {
-            const { AdMobService } = await import('./services/admobService');
-            await AdMobService.initialize();
-            console.log('AdMob initialized successfully');
-          } catch (error) {
-            console.log('AdMob not available or failed to initialize:', error);
-          }
-        }
-      } catch (error) {
-        console.log('Services initialization failed:', error);
-        // Don't throw - continue with app initialization
-      }
-    };
-
-    // Don't block app startup - run in background
-    setTimeout(initializeServices, 1000);
-  }, []);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <FinnyProvider>
+          <CurrencyProvider>
             <MonthProvider>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/app" element={<Layout />}>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="analytics" element={<Analytics />} />
-                  <Route path="budget" element={<Budget />} />
-                  <Route path="expenses" element={<Expenses />} />
-                  <Route path="goals" element={<Goals />} />
-                  <Route path="history" element={<History />} />
-                  <Route path="manage-funds" element={<ManageFunds />} />
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                </Route>
-                <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
+              <OfflineProvider>
+                <FinnyProvider>
+                  <Router>
+                    <div className="App">
+                      <Routes>
+                        {/* Public routes */}
+                        <Route 
+                          path="/auth" 
+                          element={
+                            <PublicRoute>
+                              <Auth />
+                            </PublicRoute>
+                          } 
+                        />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+
+                        {/* Protected routes */}
+                        <Route 
+                          path="/app/*" 
+                          element={
+                            <ProtectedRoute>
+                              <Layout>
+                                <Routes>
+                                  <Route path="dashboard" element={<Dashboard />} />
+                                  <Route path="expenses" element={<Expenses />} />
+                                  <Route path="analytics" element={<Analytics />} />
+                                  <Route path="budget" element={<Budget />} />
+                                  <Route path="goals" element={<Goals />} />
+                                  <Route path="history" element={<History />} />
+                                  <Route path="manage-funds" element={<ManageFunds />} />
+                                  <Route path="guide" element={<AppGuide />} />
+                                </Routes>
+                              </Layout>
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Default redirect */}
+                        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                        
+                        {/* 404 page */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </div>
+                  </Router>
+                  <Toaster />
+                </FinnyProvider>
+              </OfflineProvider>
             </MonthProvider>
-          </FinnyProvider>
+          </CurrencyProvider>
         </AuthProvider>
-      </Router>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
