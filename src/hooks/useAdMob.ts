@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { AdMobService } from '@/services/admobService';
-import { BannerAdPosition, BannerAdSize } from 'capacitor-admob';
 
 interface UseAdMobOptions {
   adId?: string;
-  position?: BannerAdPosition;
-  size?: BannerAdSize;
+  position?: string;
+  size?: string;
   autoShow?: boolean;
 }
 

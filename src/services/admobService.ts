@@ -1,5 +1,5 @@
 
-import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from 'capacitor-admob';
+import { CapacitorAdMob, AdOptions, AdSize, AdPosition } from 'capacitor-admob';
 
 export class AdMobService {
   private static isInitialized = false;
@@ -14,7 +14,7 @@ export class AdMobService {
 
       // Check if we're on a native platform
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await AdMob.initialize({
+        await CapacitorAdMob.initialize({
           requestTrackingAuthorization: true,
           testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID
           initializeForTesting: false, // Set to true during development
@@ -34,23 +34,23 @@ export class AdMobService {
   // Show banner ad
   static async showBannerAd(options?: {
     adId?: string;
-    position?: BannerAdPosition;
-    size?: BannerAdSize;
+    position?: string;
+    size?: string;
   }): Promise<void> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
-      const bannerOptions: BannerAdOptions = {
+      const bannerOptions: AdOptions = {
         adId: options?.adId || 'ca-app-pub-3940256099942544/6300978111', // Test banner ad unit ID
-        adSize: options?.size || BannerAdSize.BANNER,
-        position: options?.position || BannerAdPosition.BOTTOM_CENTER,
+        adSize: options?.size || 'BANNER',
+        position: options?.position || 'BOTTOM_CENTER',
         margin: 0,
         isTesting: true, // Set to false in production
       };
 
-      await AdMob.showBanner(bannerOptions);
+      await CapacitorAdMob.showBanner(bannerOptions);
       console.log('Banner ad shown successfully');
     } catch (error) {
       console.error('Failed to show banner ad:', error);
@@ -61,7 +61,7 @@ export class AdMobService {
   // Hide banner ad
   static async hideBannerAd(): Promise<void> {
     try {
-      await AdMob.hideBanner();
+      await CapacitorAdMob.hideBanner();
       console.log('Banner ad hidden successfully');
     } catch (error) {
       console.error('Failed to hide banner ad:', error);
@@ -72,7 +72,7 @@ export class AdMobService {
   // Resume banner ad
   static async resumeBannerAd(): Promise<void> {
     try {
-      await AdMob.resumeBanner();
+      await CapacitorAdMob.resumeBanner();
       console.log('Banner ad resumed successfully');
     } catch (error) {
       console.error('Failed to resume banner ad:', error);
@@ -83,7 +83,7 @@ export class AdMobService {
   // Remove banner ad
   static async removeBannerAd(): Promise<void> {
     try {
-      await AdMob.removeBanner();
+      await CapacitorAdMob.removeBanner();
       console.log('Banner ad removed successfully');
     } catch (error) {
       console.error('Failed to remove banner ad:', error);
