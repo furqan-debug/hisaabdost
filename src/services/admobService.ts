@@ -1,5 +1,5 @@
 
-import { AdMob, AdOptions, AdSize, AdPosition } from 'capacitor-admob';
+import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export class AdMobService {
   private static isInitialized = false;
@@ -15,7 +15,6 @@ export class AdMobService {
       // Check if we're on a native platform
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
         await AdMob.initialize({
-          requestTrackingAuthorization: true,
           testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID
           initializeForTesting: false, // Set to true during development
         });
@@ -34,19 +33,20 @@ export class AdMobService {
   // Show banner ad
   static async showBannerAd(options?: {
     adId?: string;
-    position?: string;
-    size?: string;
+    position?: BannerAdPosition;
+    size?: BannerAdSize;
   }): Promise<void> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
-      const bannerOptions: AdOptions = {
+      const bannerOptions: BannerAdOptions = {
         adId: options?.adId || 'ca-app-pub-3940256099942544/6300978111', // Test banner ad unit ID
-        adSize: (options?.size as AdSize) || AdSize.BANNER,
-        position: (options?.position as AdPosition) || AdPosition.BOTTOM_CENTER,
-        isTesting: true, // Set to false in production
+        adSize: (options?.size as BannerAdSize) || BannerAdSize.BANNER,
+        position: (options?.position as BannerAdPosition) || BannerAdPosition.BOTTOM_CENTER,
+        margin: 0,
+        // isTesting: true, // Set to false in production
       };
 
       await AdMob.showBanner(bannerOptions);

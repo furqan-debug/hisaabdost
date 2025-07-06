@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdMob } from '@/hooks/useAdMob';
+import { BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export const AdMobDemo: React.FC = () => {
   const {
@@ -13,8 +14,8 @@ export const AdMobDemo: React.FC = () => {
     isVisible,
     error
   } = useAdMob({
-    position: 'BOTTOM_CENTER',
-    size: 'BANNER',
+    position: BannerAdPosition.BOTTOM_CENTER,
+    size: BannerAdSize.BANNER,
   });
 
   return (
