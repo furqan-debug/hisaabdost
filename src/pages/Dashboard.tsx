@@ -2,7 +2,7 @@
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
-import { EnhancedDashboardContent } from "@/components/dashboard/EnhancedDashboardContent";
+import { StreamlinedDashboardContent } from "@/components/dashboard/StreamlinedDashboardContent";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
@@ -11,7 +11,7 @@ import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 
 /**
  * Dashboard page component that displays financial overview
- * and expense analytics with enhanced widgets and features.
+ * with a clean, streamlined design focused on user experience.
  */
 const Dashboard = () => {
   const { isLoading: isMonthDataLoading } = useMonthContext();
@@ -30,14 +30,10 @@ const Dashboard = () => {
     totalBalance,
     walletBalance,
     savingsRate,
-    chartType,
-    setChartType,
     expenseToEdit,
     setExpenseToEdit,
     showAddExpense,
     setShowAddExpense,
-    formatPercentage,
-    setMonthlyIncome
   } = useDashboardData();
 
   // Only setup notifications when we have complete data and user is not new
@@ -65,17 +61,14 @@ const Dashboard = () => {
     return <DashboardSkeleton />;
   }
 
-  // Render enhanced dashboard content
+  // Render streamlined dashboard content
   return (
-    <EnhancedDashboardContent 
+    <StreamlinedDashboardContent 
       isNewUser={isNewUser}
-      isLoading={isLoading}
       totalBalance={totalBalance}
       monthlyExpenses={monthlyExpenses}
       monthlyIncome={monthlyIncome}
-      setMonthlyIncome={setMonthlyIncome}
       savingsRate={savingsRate}
-      formatPercentage={formatPercentage}
       expenses={expenses}
       allExpenses={allExpenses}
       isExpensesLoading={isExpensesLoading}
@@ -83,8 +76,6 @@ const Dashboard = () => {
       setExpenseToEdit={setExpenseToEdit}
       showAddExpense={showAddExpense}
       setShowAddExpense={setShowAddExpense}
-      chartType={chartType}
-      setChartType={setChartType}
       walletBalance={walletBalance}
     />
   );
