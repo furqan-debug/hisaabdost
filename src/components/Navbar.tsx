@@ -30,15 +30,12 @@ const Navbar = () => {
 
   return (
     <nav className={`
-      sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 
+      sticky top-0 z-50 border-b bg-background/95 
       transition-all duration-300
       ${scrolled ? 'shadow-sm' : ''}
-      /* Safe area insets for all devices */
-      pt-safe-top
-      /* Fallback padding for devices without safe-area-inset support */
-      ${isMobile ? 'pt-[env(safe-area-inset-top,0px)] pt-[var(--safe-area-inset-top,0px)]' : ''}
+      ${isMobile ? 'pt-safe-top' : ''}
     `}>
-      <style jsx>{`
+      <style>{`
         /* CSS custom properties for safe area insets */
         :root {
           --safe-area-inset-top: env(safe-area-inset-top, 0px);

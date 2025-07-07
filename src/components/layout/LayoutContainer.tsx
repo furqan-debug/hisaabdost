@@ -26,7 +26,7 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
     )}>
-      <style jsx>{`
+      <style>{`
         .safe-area-container {
           /* Handle safe areas for different devices */
           padding-top: max(env(safe-area-inset-top, 0px), 1rem);

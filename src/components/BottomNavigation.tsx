@@ -46,8 +46,8 @@ export function BottomNavigation() {
   
   return (
     <div className={cn(
-      "fixed left-0 right-0 bottom-0 z-50 border-t transition-all duration-300 w-full",
-      isScrolled ? "border-border/40 bg-background/95 backdrop-blur-xl shadow-lg" : "border-border/20 bg-background/90 backdrop-blur-lg"
+      "fixed left-0 right-0 bottom-0 z-50 border-t transition-all duration-300 w-full bg-background",
+      isScrolled ? "border-border/40 shadow-lg" : "border-border/20"
     )}>
       <div className="flex h-16 items-center justify-around max-w-[480px] py-2 mx-auto">
         {navItems.map(item => {
@@ -56,7 +56,7 @@ export function BottomNavigation() {
             <Link key={item.path} to={item.path} className="w-1/5">
               <div className={cn(
                 "menu-item flex flex-col items-center justify-center h-12 transition-colors duration-300 rounded-lg",
-                isActive ? "text-primary bg-primary/10" : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/50"
+                isActive ? "text-primary" : "text-muted-foreground/60 hover:text-foreground"
               )}>
                 <div className="relative">
                   <item.icon size={22} className={cn(

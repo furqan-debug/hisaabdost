@@ -8,7 +8,7 @@ interface LayoutWrapperProps {
 export function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background overflow-hidden max-w-[100vw] safe-area-supported">
-      <style jsx>{`
+      <style>{`
         .safe-area-supported {
           /* Handle different device types */
           padding-top: env(safe-area-inset-top, 0px);
