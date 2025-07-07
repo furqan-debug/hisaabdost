@@ -119,7 +119,7 @@ function App() {
               <OfflineProvider>
                 <FinnyProvider>
                   <Router>
-                    <div className="App">
+                    <div className="App min-h-screen bg-background">
                       <AppRoutes />
                     </div>
                   </Router>

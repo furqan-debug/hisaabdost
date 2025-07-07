@@ -57,6 +57,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { sendPasswordResetCode } = usePasswordReset();
 
   useEffect(() => {
+    console.log('🔐 AuthProvider: Setting up auth listeners...');
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
