@@ -1,15 +1,6 @@
 
-/* Mobile optimizations - main file
-Most styles are now organized into component-specific files:
-- mobile-budget.css: Budget-specific styles
-- mobile-cards.css: Card component styles
-- mobile-navigation.css: Navigation elements
-- mobile-tables.css: Table optimizations
-- mobile-charts.css: Chart component adjustments
-- mobile-utils.css: General utilities and helpers
-*/
+/* Mobile optimizations - main file */
 
-/* This file now contains only the base mobile styles */
 @media (max-width: 640px) {
   /* Base mobile styles */
   body, html {
@@ -25,22 +16,10 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
   }
 
-  /* Adjust padding for main content with ads */
+  /* Adjust padding for main content */
   .max-w-full {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-  }
-  
-  /* Content spacing for ad-enabled screens - improved spacing */
-  .main-tab-content {
-    padding-bottom: 10rem; /* Increased space for nav + ads */
-  }
-  
-  /* Ensure content doesn't cause horizontal scrolling */
-  .overflow-guard {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
   }
   
   /* All scrollable containers should have smooth scrolling */
@@ -59,17 +38,6 @@ Most styles are now organized into component-specific files:
   button, a, input, select, textarea, [role="button"] {
     touch-action: manipulation;
   }
-  
-  /* Safe area for ads and navigation - better spacing */
-  .safe-bottom-area {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 8rem);
-  }
-  
-  /* Content container adjustments - improved spacing */
-  .content-container-with-ads {
-    min-height: calc(100vh - 10rem); /* Account for header + nav + ads + padding */
-    padding-bottom: 3rem;
-  }
 }
 
 /* Hide scrollbars globally */
@@ -84,39 +52,28 @@ Most styles are now organized into component-specific files:
   -ms-overflow-style: none;
 }
 
-/* Ad-specific spacing utilities - improved spacing */
-.ad-safe-zone {
-  padding-bottom: 5rem;
+/* Ensure proper spacing for pages with ads and navigation */
+@media (max-width: 640px) {
+  .main-tab-content {
+    padding-bottom: 8rem; /* Space for nav (4rem) + ads (4rem) */
+  }
+  
+  /* Safe area for content with ads */
+  .content-with-ads {
+    margin-bottom: 2rem;
+  }
 }
 
-.nav-safe-zone {
-  margin-bottom: 4rem;
-}
-
-/* Ensure floating elements respect ad space - better positioning */
-.floating-element-safe {
-  bottom: 8rem !important;
+/* Better mobile layout adjustments */
+@media (max-width: 640px) {
+  /* Ensure floating elements don't interfere with nav/ads */
+  .floating-element-safe {
+    bottom: 8.5rem !important; /* Above nav + ads */
+  }
 }
 
 @media (min-width: 768px) {
   .floating-element-safe {
     bottom: 2rem !important;
-  }
-}
-
-/* Better mobile layout for pages with ads */
-@media (max-width: 640px) {
-  .page-with-ads {
-    padding-bottom: 6rem;
-    min-height: calc(100vh - 6rem);
-  }
-  
-  .page-content-safe {
-    margin-bottom: 2rem;
-  }
-  
-  /* Ensure cards and content don't get too close to bottom */
-  .card-content-safe {
-    margin-bottom: 1rem;
   }
 }

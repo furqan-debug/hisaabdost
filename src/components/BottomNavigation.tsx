@@ -49,9 +49,9 @@ export function BottomNavigation() {
   
   return (
     <div className={cn(
-      "fixed left-0 right-0 z-40 border-t transition-all duration-300 w-full",
-      // Position properly above ads with better spacing
-      isMainTabRoute ? "bottom-16" : "bottom-0",
+      "fixed left-0 right-0 z-50 border-t transition-all duration-300 w-full",
+      // Position above banner ads with proper spacing
+      isMainTabRoute ? "bottom-14" : "bottom-0",
       isScrolled ? "border-border/40 bg-background/95 backdrop-blur-xl shadow-lg" : "border-border/20 bg-background/90 backdrop-blur-lg"
     )}>
       <div className="flex h-16 items-center justify-around max-w-[480px] py-2 mx-auto">

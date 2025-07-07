@@ -19,17 +19,15 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   return (
     <main className={cn(
       "flex-1 transition-all duration-300 overflow-x-hidden max-w-[100vw]",
-      // Improved spacing for mobile with ads - more comfortable bottom padding
-      isMobile && isMainTabRoute ? "pb-36 md:pb-8" : "pb-20 md:pb-8",
+      // Proper spacing for mobile with navigation and ads
+      isMobile && isMainTabRoute ? "pb-32" : isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
     )}>
       <div className={cn(
         "mx-auto w-full overflow-x-hidden",
         isMobile ? "max-w-full" : "max-w-5xl",
-        pageTransition ? "animate-fade-in" : "",
-        // Add extra spacing for main tab routes on mobile
-        isMobile && isMainTabRoute ? "page-with-ads" : ""
+        pageTransition ? "animate-fade-in" : ""
       )}>
         {children}
       </div>
