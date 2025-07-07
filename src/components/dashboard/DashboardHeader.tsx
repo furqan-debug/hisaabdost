@@ -85,7 +85,7 @@ export function DashboardHeader({
             </div>
             
             {/* Subtitle Section */}
-            <motion.div className="space-y-1 md:space-y-1.5" initial={{
+            <motion.div initial={{
             opacity: 0,
             y: 10
           }} animate={{
@@ -93,7 +93,7 @@ export function DashboardHeader({
             y: 0
           }} transition={{
             delay: 0.5
-          }}>
+          }} className="space-y-1 md:space-y-1.5 py-[6px]">
               {/* Month Overview */}
               <p className="text-sm md:text-lg font-semibold text-muted-foreground">
                 {format(selectedMonth, 'MMMM yyyy')} Overview
