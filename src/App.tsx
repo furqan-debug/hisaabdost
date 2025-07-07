@@ -25,7 +25,7 @@ import NotFound from '@/pages/NotFound';
 
 // Components
 import Layout from '@/components/Layout';
-import LoadingScreen from '@/components/shared/LoadingScreen';
+import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { useAuth } from '@/lib/auth';
 
 import './App.css';
