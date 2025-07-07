@@ -11,6 +11,8 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useGoalCalculations } from "@/hooks/useGoalCalculations";
 import { useGoalManagement } from "@/hooks/useGoalManagement";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { useAdMob } from "@/hooks/useAdMob";
+import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 
 interface Goal {
   id: string;
@@ -29,6 +31,14 @@ export default function Goals() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
+
+  // Initialize AdMob banner for Goals
+  useAdMob({
+    adId: 'ca-app-pub-8996865130200922/3045430696',
+    position: BannerAdPosition.BOTTOM_CENTER,
+    size: BannerAdSize.BANNER,
+    autoShow: true
+  });
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals', user?.id, refreshTrigger],

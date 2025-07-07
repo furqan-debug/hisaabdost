@@ -10,6 +10,8 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
+import { useAdMob } from "@/hooks/useAdMob";
+import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
@@ -17,6 +19,14 @@ const Expenses = () => {
   const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
   
   const [showAddExpense, setShowAddExpense] = useState(false);
+
+  // Initialize AdMob banner for Expenses
+  useAdMob({
+    adId: 'ca-app-pub-8996865130200922/6126889603',
+    position: BannerAdPosition.BOTTOM_CENTER,
+    size: BannerAdSize.BANNER,
+    autoShow: true
+  });
 
   const {
     searchTerm,

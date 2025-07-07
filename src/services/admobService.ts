@@ -42,11 +42,10 @@ export class AdMobService {
       }
 
       const bannerOptions: BannerAdOptions = {
-        adId: options?.adId || 'ca-app-pub-3940256099942544/6300978111', // Test banner ad unit ID
+        adId: options?.adId || 'ca-app-pub-8996865130200922/3757228200', // Default to Home ad unit
         adSize: (options?.size as BannerAdSize) || BannerAdSize.BANNER,
         position: (options?.position as BannerAdPosition) || BannerAdPosition.BOTTOM_CENTER,
         margin: 0,
-        // isTesting: true, // Set to false in production
       };
 
       await AdMob.showBanner(bannerOptions);

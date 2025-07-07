@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -26,6 +26,7 @@ import NotFound from '@/pages/NotFound';
 // Components
 import Layout from '@/components/Layout';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { AdMobService } from '@/services/admobService';
 
 import './App.css';
 
@@ -111,6 +112,19 @@ function AppRoutes() {
 
 function App() {
   console.log('🚀 App component rendering');
+
+  // Initialize AdMob on app startup
+  useEffect(() => {
+    const initializeAdMob = async () => {
+      try {
+        await AdMobService.initialize();
+      } catch (error) {
+        console.warn('AdMob initialization failed:', error);
+      }
+    };
+    
+    initializeAdMob();
+  }, []);
 
   return (
     <div className="App">

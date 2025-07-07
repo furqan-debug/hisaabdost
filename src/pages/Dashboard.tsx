@@ -8,6 +8,8 @@ import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
+import { useAdMob } from "@/hooks/useAdMob";
+import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 
 /**
  * Dashboard page component that displays financial overview
@@ -18,6 +20,14 @@ const Dashboard = () => {
   
   // Initialize Finny data synchronization
   useFinnyDataSync();
+
+  // Initialize AdMob banner for Dashboard
+  useAdMob({
+    adId: 'ca-app-pub-8996865130200922/3757228200',
+    position: BannerAdPosition.BOTTOM_CENTER,
+    size: BannerAdSize.BANNER,
+    autoShow: true
+  });
   
   const {
     expenses,

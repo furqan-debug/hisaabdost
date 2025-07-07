@@ -5,6 +5,8 @@ import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { useAdMob } from "@/hooks/useAdMob";
+import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 
 export interface Budget {
   id: string;
@@ -20,6 +22,14 @@ const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Initialize AdMob banner for Budget
+  useAdMob({
+    adId: 'ca-app-pub-8996865130200922/1572281517',
+    position: BannerAdPosition.BOTTOM_CENTER,
+    size: BannerAdSize.BANNER,
+    autoShow: true
+  });
 
   const {
     budgets,
