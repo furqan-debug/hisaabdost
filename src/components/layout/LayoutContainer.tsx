@@ -12,10 +12,15 @@ interface LayoutContainerProps {
 export function LayoutContainer({ children, isMobile, pageTransition }: LayoutContainerProps) {
   const location = useLocation();
   const isBudgetRoute = location.pathname.includes('/budget');
+  
+  // Check if current route is a main tab that shows ads
+  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
 
   return (
     <main className={cn(
-      "flex-1 transition-all duration-300 pb-16 md:pb-8 overflow-x-hidden max-w-[100vw]",
+      "flex-1 transition-all duration-300 overflow-x-hidden max-w-[100vw]",
+      // Add extra bottom padding for mobile when ads are present
+      isMobile && isMainTabRoute ? "pb-32 md:pb-8" : "pb-16 md:pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
     )}>

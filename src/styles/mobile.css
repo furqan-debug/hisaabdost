@@ -25,10 +25,15 @@ Most styles are now organized into component-specific files:
     overflow-x: hidden;
   }
 
-  /* Adjust padding for main content */
+  /* Adjust padding for main content with ads */
   .max-w-full {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
+  
+  /* Content spacing for ad-enabled screens */
+  .main-tab-content {
+    padding-bottom: 8rem; /* Space for nav + ads */
   }
   
   /* Ensure content doesn't cause horizontal scrolling */
@@ -54,6 +59,17 @@ Most styles are now organized into component-specific files:
   button, a, input, select, textarea, [role="button"] {
     touch-action: manipulation;
   }
+  
+  /* Safe area for ads and navigation */
+  .safe-bottom-area {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 7rem);
+  }
+  
+  /* Content container adjustments */
+  .content-container-with-ads {
+    min-height: calc(100vh - 8rem); /* Account for header + nav + ads */
+    padding-bottom: 2rem;
+  }
 }
 
 /* Hide scrollbars globally */
@@ -66,4 +82,24 @@ Most styles are now organized into component-specific files:
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* Ad-specific spacing utilities */
+.ad-safe-zone {
+  padding-bottom: 4rem;
+}
+
+.nav-safe-zone {
+  margin-bottom: 3.5rem;
+}
+
+/* Ensure floating elements respect ad space */
+.floating-element-safe {
+  bottom: 7rem !important;
+}
+
+@media (min-width: 768px) {
+  .floating-element-safe {
+    bottom: 2rem !important;
+  }
 }

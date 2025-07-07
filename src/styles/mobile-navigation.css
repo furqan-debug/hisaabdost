@@ -10,6 +10,11 @@
     @apply py-3;
   }
   
+  /* Bottom navigation positioning to account for ads */
+  .bottom-nav-with-ads {
+    bottom: 60px !important; /* Position above banner ad */
+  }
+  
   /* Improved mobile menu transitions */
   .mobile-menu-enter {
     @apply transform translate-x-full;
@@ -57,15 +62,22 @@
     @apply p-0 flex flex-col h-full;
   }
 
-  /* Fix for chatbot positioning with bottom nav */
+  /* Fix for chatbot positioning with bottom nav and ads */
   .finny-chat-container {
-    @apply pb-14;
+    @apply pb-32; /* Space for both nav and ads */
+  }
+  
+  /* Ad-aware content spacing */
+  .content-with-ads {
+    @apply pb-20; /* Extra padding when ads are present */
   }
 }
 
 /* Enhanced floating action button */
 .floating-action-button {
-  @apply fixed z-40 bottom-20 right-4 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
+  @apply fixed z-40 shadow-lg rounded-full bg-primary text-primary-foreground h-14 w-14 flex items-center justify-center transition-all hover:scale-105 active:scale-95;
+  bottom: 100px; /* Position above nav + ads */
+  right: 1rem;
 }
 
 @media (min-width: 768px) {
