@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useSmartNotifications } from '@/hooks/useSmartNotifications';
 import { Brain, Bell, BarChart3, TestTube } from 'lucide-react';
 import { NotificationAnalytics } from './NotificationAnalytics';
+import { SmartNotificationTester } from './SmartNotificationTester';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -34,6 +35,7 @@ export const SmartNotificationTest = () => {
 
   return (
     <div className="space-y-6">
+      <SmartNotificationTester />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

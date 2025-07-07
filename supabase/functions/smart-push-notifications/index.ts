@@ -151,8 +151,32 @@ async function processUserNotifications(
   const notification = await generateSmartNotification(context, user);
   
   if (notification) {
-    // Send the notification (placeholder - would integrate with push service)
-    console.log(`📱 Would send notification to ${user.id}:`, notification);
+    // Send actual push notification
+    console.log(`📱 Sending notification to ${user.id}:`, notification);
+    
+    try {
+      // Call the send-push-notification function
+      const { error: pushError } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: user.id,
+          title: getNotificationTitle(notification.type),
+          body: notification.message,
+          data: {
+            type: notification.type,
+            priority: notification.priority,
+            context: context
+          }
+        }
+      });
+
+      if (pushError) {
+        console.error(`Failed to send push notification to ${user.id}:`, pushError);
+      } else {
+        console.log(`✅ Push notification sent successfully to ${user.id}`);
+      }
+    } catch (error) {
+      console.error(`Error sending push notification to ${user.id}:`, error);
+    }
     
     // Store notification analytics
     await supabase
@@ -250,4 +274,19 @@ async function generateSmartNotification(
   }
 
   return { type, priority, reasoning, message };
+}
+
+function getNotificationTitle(type: string): string {
+  switch (type) {
+    case 'budget':
+      return '🎯 Budget Alert';
+    case 'wastage':
+      return '⚠️ Spending Alert';
+    case 'savings':
+      return '🌟 Savings Opportunity';
+    case 'general':
+      return '📊 Financial Update';
+    default:
+      return '💡 Smart Insight';
+  }
 }
