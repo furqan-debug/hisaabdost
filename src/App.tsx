@@ -40,7 +40,11 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+interface RouteProps {
+  children: React.ReactNode;
+}
+
+function ProtectedRoute({ children }: RouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -54,7 +58,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function PublicRoute({ children }: { children: React.ReactNode }) {
+function PublicRoute({ children }: RouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
