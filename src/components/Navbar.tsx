@@ -31,8 +31,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/20">
-      <div className="flex h-16 items-center justify-between px-4 lg:px-6 mx-auto max-w-full">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
+      <div className="flex h-14 items-center justify-between px-3 lg:px-4 mx-auto max-w-full">
         {/* Left: Menu Button (Mobile only) */}
         {isMobile && (
           <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -40,9 +40,9 @@ const Navbar = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-10 w-10 p-0"
+                className="h-8 w-8 p-0"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
@@ -60,10 +60,10 @@ const Navbar = () => {
           <img 
             src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" 
             alt="Hisaab Dost logo" 
-            className="h-8 w-8 mr-3" 
+            className="h-6 w-6 mr-2" 
           />
           <div className="flex flex-col">
-            <h2 className="font-bold text-lg text-foreground leading-tight">
+            <h2 className="font-bold text-sm text-foreground leading-tight">
               Hisaab Dost
             </h2>
             <span className="text-xs text-muted-foreground font-medium leading-none">
@@ -73,7 +73,7 @@ const Navbar = () => {
         </div>
         
         {/* Right: Notification and User Avatar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <NotificationBell />
           
           <DropdownMenu>
@@ -81,14 +81,14 @@ const Navbar = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-10 w-10 p-0 rounded-full"
+                className="h-8 w-8 p-0 rounded-full"
               >
-                <Avatar className="h-9 w-9">
+                <Avatar className="h-7 w-7">
                   <AvatarImage 
                     src="https://images.unsplash.com/photo-1501286353178-1ec881214838?w=100&h=100&fit=crop&crop=face" 
                     alt={user?.email || "User"} 
                   />
-                  <AvatarFallback className="text-sm">
+                  <AvatarFallback className="text-xs">
                     🐵
                   </AvatarFallback>
                 </Avatar>

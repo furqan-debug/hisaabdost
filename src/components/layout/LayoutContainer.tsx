@@ -18,7 +18,7 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
 
   return (
     <main className={cn(
-      "flex-1 overflow-x-hidden pt-16", // Add pt-16 to account for fixed navbar
+      "flex-1 overflow-x-hidden pt-14", // Reduced from pt-16 to pt-14 to match navbar height
       // Proper spacing for mobile with navigation and safe areas
       isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
