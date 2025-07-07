@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut, Menu, User } from "lucide-react";
@@ -12,6 +13,7 @@ import SettingsSidebar from "./SettingsSidebar";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -25,7 +27,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogoClick = () => {
-    window.location.href = '/app/dashboard';
+    navigate('/app/dashboard');
   };
 
   return (
