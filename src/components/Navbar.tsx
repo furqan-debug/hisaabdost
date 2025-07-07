@@ -29,8 +29,35 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 ${scrolled ? 'shadow-sm' : ''}`}>
-      <div className="flex h-14 items-center justify-between max-w-full px-4 mx-auto">
+    <nav className={`
+      sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 
+      transition-all duration-300
+      ${scrolled ? 'shadow-sm' : ''}
+      /* Safe area insets for all devices */
+      pt-safe-top
+      /* Fallback padding for devices without safe-area-inset support */
+      ${isMobile ? 'pt-[env(safe-area-inset-top,0px)] pt-[var(--safe-area-inset-top,0px)]' : ''}
+    `}>
+      <style jsx>{`
+        /* CSS custom properties for safe area insets */
+        :root {
+          --safe-area-inset-top: env(safe-area-inset-top, 0px);
+        }
+        
+        /* Tailwind safe area utility classes */
+        .pt-safe-top {
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+        
+        /* Additional mobile-specific safe area handling */
+        @media (max-width: 640px) {
+          .mobile-safe-area {
+            padding-top: max(env(safe-area-inset-top, 0px), 20px);
+          }
+        }
+      `}</style>
+      
+      <div className={`flex h-14 items-center justify-between max-w-full px-4 mx-auto ${isMobile ? 'mobile-safe-area' : ''}`}>
         {/* Left: Menu Button (Mobile only) */}
         {isMobile && (
           <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -53,7 +80,7 @@ const Navbar = () => {
             alt="Hisaab Dost logo" 
             className="h-7 w-7 mr-2 rounded-md" 
           />
-          <h2 className="font-semibold text-lg text-foreground">
+          <h2 className="font-semibold text-lg text-foreground truncate">
             Hisaab Dost
           </h2>
         </div>
