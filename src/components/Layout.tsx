@@ -23,12 +23,10 @@ const Layout = () => {
 
   console.log('Layout: loading =', loading, 'user =', !!user);
 
-  // Show loading screen while auth is being determined
   if (loading) {
     return <OptimizedLoadingScreen message="Loading app..." />;
   }
 
-  // If user is not authenticated, redirect to auth page
   if (!user) {
     console.log('Layout: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
