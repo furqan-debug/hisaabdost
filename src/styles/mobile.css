@@ -31,9 +31,9 @@ Most styles are now organized into component-specific files:
     padding-right: 0.5rem;
   }
   
-  /* Content spacing for ad-enabled screens */
+  /* Content spacing for ad-enabled screens - improved spacing */
   .main-tab-content {
-    padding-bottom: 8rem; /* Space for nav + ads */
+    padding-bottom: 10rem; /* Increased space for nav + ads */
   }
   
   /* Ensure content doesn't cause horizontal scrolling */
@@ -60,15 +60,15 @@ Most styles are now organized into component-specific files:
     touch-action: manipulation;
   }
   
-  /* Safe area for ads and navigation */
+  /* Safe area for ads and navigation - better spacing */
   .safe-bottom-area {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 7rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8rem);
   }
   
-  /* Content container adjustments */
+  /* Content container adjustments - improved spacing */
   .content-container-with-ads {
-    min-height: calc(100vh - 8rem); /* Account for header + nav + ads */
-    padding-bottom: 2rem;
+    min-height: calc(100vh - 10rem); /* Account for header + nav + ads + padding */
+    padding-bottom: 3rem;
   }
 }
 
@@ -84,22 +84,39 @@ Most styles are now organized into component-specific files:
   -ms-overflow-style: none;
 }
 
-/* Ad-specific spacing utilities */
+/* Ad-specific spacing utilities - improved spacing */
 .ad-safe-zone {
-  padding-bottom: 4rem;
+  padding-bottom: 5rem;
 }
 
 .nav-safe-zone {
-  margin-bottom: 3.5rem;
+  margin-bottom: 4rem;
 }
 
-/* Ensure floating elements respect ad space */
+/* Ensure floating elements respect ad space - better positioning */
 .floating-element-safe {
-  bottom: 7rem !important;
+  bottom: 8rem !important;
 }
 
 @media (min-width: 768px) {
   .floating-element-safe {
     bottom: 2rem !important;
+  }
+}
+
+/* Better mobile layout for pages with ads */
+@media (max-width: 640px) {
+  .page-with-ads {
+    padding-bottom: 6rem;
+    min-height: calc(100vh - 6rem);
+  }
+  
+  .page-content-safe {
+    margin-bottom: 2rem;
+  }
+  
+  /* Ensure cards and content don't get too close to bottom */
+  .card-content-safe {
+    margin-bottom: 1rem;
   }
 }

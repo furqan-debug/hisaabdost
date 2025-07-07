@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,9 +25,9 @@ export default function Analytics() {
 
   const useCustomDateRange = true;
 
-  // Initialize AdMob banner for Analytics
+  // Initialize AdMob banner for Analytics with updated ad unit ID
   useAdMob({
-    adId: 'ca-app-pub-8996865130200922/9874562928',
+    adId: 'ca-app-pub-8996865130200922/9771138062',
     position: BannerAdPosition.BOTTOM_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
@@ -101,7 +100,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-5 px-3 md:px-6 py-4 pb-20">
+    <div className="space-y-5 px-3 md:px-6 py-4 pb-24 md:pb-8">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
         <motion.div variants={itemVariants}>
           <AnalyticsHeader />

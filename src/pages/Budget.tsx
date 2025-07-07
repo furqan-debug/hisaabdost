@@ -23,9 +23,9 @@ const Budget = () => {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Initialize AdMob banner for Budget
+  // Initialize AdMob banner for Budget with updated ad unit ID
   useAdMob({
-    adId: 'ca-app-pub-8996865130200922/1572281517',
+    adId: 'ca-app-pub-8996865130200922/6547043073',
     position: BannerAdPosition.BOTTOM_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
@@ -89,7 +89,7 @@ const Budget = () => {
 
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
-      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData} 

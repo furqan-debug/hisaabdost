@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -21,7 +20,7 @@ const Dashboard = () => {
   // Initialize Finny data synchronization
   useFinnyDataSync();
 
-  // Initialize AdMob banner for Dashboard
+  // Initialize AdMob banner for Dashboard (keeping existing ID)
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/3757228200',
     position: BannerAdPosition.BOTTOM_CENTER,
@@ -50,53 +49,49 @@ const Dashboard = () => {
     setMonthlyIncome
   } = useDashboardData();
 
-  // Only setup notifications when we have complete data and user is not new
   const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && expenses.length > 0;
 
-  // Setup notification triggers for dashboard - only for established users
   useNotificationTriggers({
     monthlyExpenses: shouldSetupNotifications ? monthlyExpenses : 0,
     monthlyIncome: shouldSetupNotifications ? monthlyIncome : 0,
     walletBalance: shouldSetupNotifications ? walletBalance : 0,
     expenses: shouldSetupNotifications ? expenses : [],
-    previousMonthExpenses: 0, // Would need to fetch from previous month
+    previousMonthExpenses: 0,
   });
 
-  // Setup month carryover logic
   useMonthCarryover();
 
-  // Setup analytics notifications - only for established users with sufficient data
   useAnalyticsNotifications({ 
     expenses: shouldSetupNotifications && expenses.length >= 20 ? expenses : [] 
   });
 
-  // Show skeleton while loading
   if (isLoading || isMonthDataLoading) {
     return <DashboardSkeleton />;
   }
 
-  // Render enhanced dashboard content
   return (
-    <EnhancedDashboardContent 
-      isNewUser={isNewUser}
-      isLoading={isLoading}
-      totalBalance={totalBalance}
-      monthlyExpenses={monthlyExpenses}
-      monthlyIncome={monthlyIncome}
-      setMonthlyIncome={setMonthlyIncome}
-      savingsRate={savingsRate}
-      formatPercentage={formatPercentage}
-      expenses={expenses}
-      allExpenses={allExpenses}
-      isExpensesLoading={isExpensesLoading}
-      expenseToEdit={expenseToEdit}
-      setExpenseToEdit={setExpenseToEdit}
-      showAddExpense={showAddExpense}
-      setShowAddExpense={setShowAddExpense}
-      chartType={chartType}
-      setChartType={setChartType}
-      walletBalance={walletBalance}
-    />
+    <div className="pb-24 md:pb-8">
+      <EnhancedDashboardContent 
+        isNewUser={isNewUser}
+        isLoading={isLoading}
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        expenses={expenses}
+        allExpenses={allExpenses}
+        isExpensesLoading={isExpensesLoading}
+        expenseToEdit={expenseToEdit}
+        setExpenseToEdit={setExpenseToEdit}
+        showAddExpense={showAddExpense}
+        setShowAddExpense={setShowAddExpense}
+        chartType={chartType}
+        setChartType={setChartType}
+        walletBalance={walletBalance}
+      />
+    </div>
   );
 };
 

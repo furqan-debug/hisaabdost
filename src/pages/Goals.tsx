@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -32,9 +31,9 @@ export default function Goals() {
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
 
-  // Initialize AdMob banner for Goals
+  // Initialize AdMob banner for Goals with updated ad unit ID
   useAdMob({
-    adId: 'ca-app-pub-8996865130200922/3045430696',
+    adId: 'ca-app-pub-8996865130200922/8964520523',
     position: BannerAdPosition.BOTTOM_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
@@ -66,7 +65,6 @@ export default function Goals() {
     refetchOnWindowFocus: true,
   });
 
-  // Fetch all expenses for use in savings calculations
   const { data: expenses } = useQuery({
     queryKey: ['expenses', user?.id],
     queryFn: async () => {
@@ -81,7 +79,6 @@ export default function Goals() {
     enabled: !!user
   });
 
-  // Fetch budgets to calculate savings (budget amount - expenses)
   const { data: budgets } = useQuery({
     queryKey: ['budgets', user?.id],
     queryFn: async () => {
@@ -122,7 +119,7 @@ export default function Goals() {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="container mx-auto p-4 md:p-6 space-y-8">
+        <div className="container mx-auto p-4 md:p-6 space-y-8 pb-24 md:pb-8">
           <GoalsHeader onCreateGoal={handleCreateGoal} />
 
           {goals?.length === 0 ? (
