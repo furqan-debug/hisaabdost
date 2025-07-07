@@ -1,23 +1,18 @@
 
-import React from "react";
-import { motion } from "framer-motion";
+import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingScreenProps {
   message?: string;
 }
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = "Loading..." }) => {
+export function LoadingScreen({ message = "Loading..." }: LoadingScreenProps) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[200px] w-full">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col items-center p-4"
-      >
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-3"></div>
-        <p className="text-sm text-muted-foreground">{message}</p>
-      </motion.div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <p className="text-muted-foreground">{message}</p>
+      </div>
     </div>
   );
-};
+}

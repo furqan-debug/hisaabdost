@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { CurrencyProvider } from '@/hooks/use-currency';
 import { MonthProvider } from '@/hooks/use-month-context';
 import { OfflineProvider } from '@/components/offline/OfflineProvider';
-import { AuthProvider } from '@/lib/auth';
+import { AuthProvider, useAuth } from '@/lib/auth';
 import { FinnyProvider } from '@/components/finny/FinnyProvider';
 import { ThemeProvider } from 'next-themes';
 
@@ -26,7 +26,6 @@ import NotFound from '@/pages/NotFound';
 // Components
 import Layout from '@/components/Layout';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { useAuth } from '@/lib/auth';
 
 import './App.css';
 
@@ -40,15 +39,11 @@ const queryClient = new QueryClient({
   },
 });
 
-interface RouteProps {
-  children: React.ReactNode;
-}
-
-function ProtectedRoute({ children }: RouteProps) {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Loading app..." />;
   }
 
   if (!user) {
@@ -58,11 +53,11 @@ function ProtectedRoute({ children }: RouteProps) {
   return <>{children}</>;
 }
 
-function PublicRoute({ children }: RouteProps) {
+function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Checking authentication..." />;
   }
 
   if (user) {
@@ -70,6 +65,48 @@ function PublicRoute({ children }: RouteProps) {
   }
 
   return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route 
+        path="/auth" 
+        element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        } 
+      />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* Protected routes */}
+      <Route 
+        path="/app" 
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="expenses" element={<Expenses />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="budget" element={<Budget />} />
+        <Route path="goals" element={<Goals />} />
+        <Route path="history" element={<History />} />
+        <Route path="manage-funds" element={<ManageFunds />} />
+        <Route path="guide" element={<AppGuide />} />
+      </Route>
+
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      
+      {/* 404 page */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
 
 function App() {
@@ -83,43 +120,7 @@ function App() {
                 <FinnyProvider>
                   <Router>
                     <div className="App">
-                      <Routes>
-                        {/* Public routes */}
-                        <Route 
-                          path="/auth" 
-                          element={
-                            <PublicRoute>
-                              <Auth />
-                            </PublicRoute>
-                          } 
-                        />
-                        <Route path="/reset-password" element={<ResetPassword />} />
-
-                        {/* Protected routes */}
-                        <Route 
-                          path="/app" 
-                          element={
-                            <ProtectedRoute>
-                              <Layout />
-                            </ProtectedRoute>
-                          }
-                        >
-                          <Route path="dashboard" element={<Dashboard />} />
-                          <Route path="expenses" element={<Expenses />} />
-                          <Route path="analytics" element={<Analytics />} />
-                          <Route path="budget" element={<Budget />} />
-                          <Route path="goals" element={<Goals />} />
-                          <Route path="history" element={<History />} />
-                          <Route path="manage-funds" element={<ManageFunds />} />
-                          <Route path="guide" element={<AppGuide />} />
-                        </Route>
-
-                        {/* Default redirect */}
-                        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                        
-                        {/* 404 page */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
+                      <AppRoutes />
                     </div>
                   </Router>
                   <Toaster />

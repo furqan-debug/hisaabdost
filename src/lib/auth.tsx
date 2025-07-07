@@ -1,68 +1,91 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
-import { useAuthSession } from "@/hooks/auth/useAuthSession";
-import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
-import { useVerification } from "@/hooks/auth/useVerification";
-import { useSignOut } from "@/hooks/auth/useSignOut";
-import { useOnboarding } from "@/hooks/auth/useOnboarding";
-import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
-import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
-  verifyOtp: (email: string, token: string) => Promise<void>;
-  resendOtp: (email: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  sendPasswordResetCode: (email: string) => Promise<void>;
-  verifyPasswordResetCode: (email: string, token: string) => Promise<void>;
-  verifyPasswordResetToken: (email: string, token: string) => Promise<void>;
-  updatePassword: (email: string, code: string, newPassword: string) => Promise<void>;
-};
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log("AuthProvider rendering");
-  
-  const { user, loading, session } = useAuthSession();
-  const { signInWithEmail, signUp } = useEmailAuth();
-  const { verifyOtp, resendOtp } = useVerification();
-  const { signOut } = useSignOut();
-  const { showOnboarding } = useOnboarding(user);
-  const { sendPasswordResetCode, verifyPasswordResetCode, verifyPasswordResetToken, updatePassword } = usePasswordReset();
-
-  const contextValue: AuthContextType = {
-    user,
-    loading,
-    signInWithEmail,
-    signUp,
-    verifyOtp,
-    resendOtp,
-    signOut,
-    sendPasswordResetCode,
-    verifyPasswordResetCode,
-    verifyPasswordResetToken,
-    updatePassword,
-  };
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-      {showOnboarding && user && (
-        <OnboardingDialog open={showOnboarding} />
-      )}
-    </AuthContext.Provider>
-  );
-};
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        console.log('🔐 Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('🔐 Error getting session:', error);
+        } else {
+          console.log('🔐 Initial session:', session ? 'found' : 'none');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('🔐 Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔐 Auth state change:', event, session ? 'session exists' : 'no session');
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const value = {
+    user,
+    session,
+    loading,
+  };
+
+  console.log('🔐 AuthProvider rendering with state:', {
+    loading,
+    hasUser: !!user,
+    hasSession: !!session
+  });
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
