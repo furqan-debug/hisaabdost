@@ -31,7 +31,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40 safe-top">
       <div className="flex h-14 items-center justify-between px-3 lg:px-4 mx-auto max-w-full">
         {/* Left: Menu Button (Mobile only) */}
         {isMobile && (

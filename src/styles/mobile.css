@@ -26,6 +26,12 @@
   padding-right: var(--safe-area-inset-right);
 }
 
+/* Enhanced safe area support for navbar */
+.navbar-safe-area {
+  padding-top: max(var(--safe-area-inset-top), 0px);
+  top: 0;
+}
+
 @media (max-width: 640px) {
   /* Base mobile styles */
   body, html {
@@ -43,7 +49,7 @@
 
   /* Safe area handling for main content */
   .main-content-safe {
-    padding-top: max(var(--safe-area-inset-top), 4rem);
+    padding-top: max(calc(3.5rem + var(--safe-area-inset-top)), 4rem);
     padding-bottom: max(var(--safe-area-inset-bottom), 5rem);
     padding-left: var(--safe-area-inset-left);
     padding-right: var(--safe-area-inset-right);
@@ -113,5 +119,33 @@
     padding-bottom: max(var(--safe-area-inset-bottom), 0px);
     padding-left: max(var(--safe-area-inset-left), 0px);
     padding-right: max(var(--safe-area-inset-right), 0px);
+  }
+}
+
+/* Specific fixes for notched devices */
+@media screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) {
+  /* iPhone 14 Pro */
+  .safe-top {
+    padding-top: max(47px, var(--safe-area-inset-top));
+  }
+}
+
+@media screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) {
+  /* iPhone 11 */
+  .safe-top {
+    padding-top: max(44px, var(--safe-area-inset-top));
+  }
+}
+
+/* Fallback for devices that don't support env() */
+@supports not (padding: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: 44px; /* Standard iOS status bar height */
+  }
+  
+  @media (max-width: 640px) {
+    .main-content-safe {
+      padding-top: calc(3.5rem + 44px); /* navbar height + status bar */
+    }
   }
 }
