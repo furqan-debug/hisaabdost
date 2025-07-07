@@ -20,17 +20,7 @@ interface AuthContextType {
   sendPasswordResetCode: (email: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
-  loading: true,
-  signInWithEmail: async () => {},
-  signUp: async () => undefined,
-  signOut: async () => {},
-  verifyOtp: async () => {},
-  resendOtp: async () => {},
-  sendPasswordResetCode: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -57,47 +47,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { sendPasswordResetCode } = usePasswordReset();
 
   useEffect(() => {
-    console.log('🔐 AuthProvider: Setting up auth listeners...');
+    console.log('🔐 AuthProvider: Initializing auth...');
     
+    let mounted = true;
+
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('🔐 Auth state change:', event, currentSession ? 'session exists' : 'no session');
+        
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          setLoading(false);
+        }
+      }
+    );
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('🔐 Getting initial session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('🔐 Error getting session:', error);
         } else {
-          console.log('🔐 Initial session:', session ? 'found' : 'none');
-          setSession(session);
-          setUser(session?.user ?? null);
+          console.log('🔐 Initial session:', initialSession ? 'found' : 'none');
+        }
+        
+        if (mounted) {
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          setLoading(false);
         }
       } catch (error) {
         console.error('🔐 Error in getInitialSession:', error);
-      } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     getInitialSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔐 Auth state change:', event, session ? 'session exists' : 'no session');
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,

@@ -6,10 +6,9 @@ import './index.css';
 
 console.log('🚀 Starting application...');
 
-// Optimized preload operations
-const preloadResources = () => {
+// Simple initialization
+const initialize = () => {
   try {
-    // Initialize theme without DOM manipulation during render
     const savedTheme = localStorage.getItem("color-theme");
     if (!savedTheme) {
       document.documentElement.classList.add("purple");
@@ -21,17 +20,13 @@ const preloadResources = () => {
   }
 };
 
-// Run initialization
-preloadResources();
+initialize();
 
-// Get root element and render app
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
   console.log('✅ Root element found, creating React root...');
   const root = createRoot(rootElement);
-  
-  // Remove React.StrictMode in development for better performance during development
   root.render(<App />);
   console.log('✅ App rendered successfully');
 } else {

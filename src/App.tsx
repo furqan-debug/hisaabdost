@@ -101,7 +101,7 @@ function AppRoutes() {
       </Route>
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/auth" replace />} />
       
       {/* 404 page */}
       <Route path="*" element={<NotFound />} />
@@ -110,27 +110,31 @@ function AppRoutes() {
 }
 
 function App() {
+  console.log('🚀 App component rendering');
+
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <CurrencyProvider>
-            <MonthProvider>
-              <OfflineProvider>
-                <FinnyProvider>
-                  <Router>
-                    <div className="App min-h-screen bg-background">
-                      <AppRoutes />
-                    </div>
-                  </Router>
-                  <Toaster />
-                </FinnyProvider>
-              </OfflineProvider>
-            </MonthProvider>
-          </CurrencyProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <div className="App">
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <CurrencyProvider>
+              <MonthProvider>
+                <OfflineProvider>
+                  <FinnyProvider>
+                    <Router>
+                      <div className="min-h-screen bg-background">
+                        <AppRoutes />
+                      </div>
+                    </Router>
+                    <Toaster />
+                  </FinnyProvider>
+                </OfflineProvider>
+              </MonthProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </div>
   );
 }
 
