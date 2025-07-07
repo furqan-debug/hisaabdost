@@ -19,10 +19,10 @@ const Expenses = () => {
   
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Initialize AdMob banner for Expenses with updated ad unit ID
+  // Initialize AdMob banner for Expenses at the top
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/9173206417',
-    position: BannerAdPosition.BOTTOM_CENTER,
+    position: BannerAdPosition.TOP_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
   });

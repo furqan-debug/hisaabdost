@@ -23,10 +23,10 @@ const Budget = () => {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Initialize AdMob banner for Budget with updated ad unit ID
+  // Initialize AdMob banner for Budget at the top
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/6547043073',
-    position: BannerAdPosition.BOTTOM_CENTER,
+    position: BannerAdPosition.TOP_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
   });

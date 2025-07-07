@@ -33,9 +33,6 @@ export function BottomNavigation() {
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
-  // Check if current route shows ads
-  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
-  
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
@@ -49,9 +46,7 @@ export function BottomNavigation() {
   
   return (
     <div className={cn(
-      "fixed left-0 right-0 z-50 border-t transition-all duration-300 w-full",
-      // Position above banner ads with proper spacing
-      isMainTabRoute ? "bottom-14" : "bottom-0",
+      "fixed left-0 right-0 bottom-0 z-50 border-t transition-all duration-300 w-full",
       isScrolled ? "border-border/40 bg-background/95 backdrop-blur-xl shadow-lg" : "border-border/20 bg-background/90 backdrop-blur-lg"
     )}>
       <div className="flex h-16 items-center justify-around max-w-[480px] py-2 mx-auto">

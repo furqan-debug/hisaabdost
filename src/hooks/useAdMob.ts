@@ -22,7 +22,8 @@ export const useAdMob = (options: UseAdMobOptions = {}) => {
       
       await AdMobService.showBannerAd({
         adId: options.adId,
-        position: options.position,
+        // Position ads at the top instead of bottom to avoid navigation interference
+        position: BannerAdPosition.TOP_CENTER,
         size: options.size,
       });
       

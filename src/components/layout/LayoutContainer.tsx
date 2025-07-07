@@ -19,8 +19,8 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   return (
     <main className={cn(
       "flex-1 transition-all duration-300 overflow-x-hidden max-w-[100vw]",
-      // Proper spacing for mobile with navigation and ads
-      isMobile && isMainTabRoute ? "pb-32" : isMobile ? "pb-20" : "pb-8",
+      // Proper spacing for mobile with navigation and top ads
+      isMobile && isMainTabRoute ? "pt-14 pb-20" : isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0"
     )}>

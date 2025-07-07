@@ -20,10 +20,10 @@ const Dashboard = () => {
   // Initialize Finny data synchronization
   useFinnyDataSync();
 
-  // Initialize AdMob banner for Dashboard (keeping existing ID)
+  // Initialize AdMob banner for Dashboard at the top
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/3757228200',
-    position: BannerAdPosition.BOTTOM_CENTER,
+    position: BannerAdPosition.TOP_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
   });

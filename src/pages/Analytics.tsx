@@ -25,10 +25,10 @@ export default function Analytics() {
 
   const useCustomDateRange = true;
 
-  // Initialize AdMob banner for Analytics with updated ad unit ID
+  // Initialize AdMob banner for Analytics at the top
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/9771138062',
-    position: BannerAdPosition.BOTTOM_CENTER,
+    position: BannerAdPosition.TOP_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
   });

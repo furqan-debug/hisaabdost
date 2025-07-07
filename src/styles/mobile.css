@@ -16,7 +16,7 @@
     overflow-x: hidden;
   }
 
-  /* Adjust padding for main content */
+  /* Adjust padding for main content with top ads */
   .max-w-full {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
@@ -52,23 +52,24 @@
   -ms-overflow-style: none;
 }
 
-/* Ensure proper spacing for pages with ads and navigation */
+/* Ensure proper spacing for pages with top ads and bottom navigation */
 @media (max-width: 640px) {
   .main-tab-content {
-    padding-bottom: 8rem; /* Space for nav (4rem) + ads (4rem) */
+    padding-top: 3.5rem; /* Space for top ads */
+    padding-bottom: 5rem; /* Space for bottom nav */
   }
   
-  /* Safe area for content with ads */
+  /* Safe area for content with top ads */
   .content-with-ads {
-    margin-bottom: 2rem;
+    margin-top: 3.5rem;
   }
 }
 
 /* Better mobile layout adjustments */
 @media (max-width: 640px) {
-  /* Ensure floating elements don't interfere with nav/ads */
+  /* Ensure floating elements don't interfere with nav */
   .floating-element-safe {
-    bottom: 8.5rem !important; /* Above nav + ads */
+    bottom: 5.5rem !important; /* Above bottom nav only */
   }
 }
 

@@ -31,10 +31,10 @@ export default function Goals() {
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
 
-  // Initialize AdMob banner for Goals with updated ad unit ID
+  // Initialize AdMob banner for Goals at the top
   useAdMob({
     adId: 'ca-app-pub-8996865130200922/8964520523',
-    position: BannerAdPosition.BOTTOM_CENTER,
+    position: BannerAdPosition.TOP_CENTER,
     size: BannerAdSize.BANNER,
     autoShow: true
   });
