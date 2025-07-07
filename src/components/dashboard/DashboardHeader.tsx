@@ -54,7 +54,7 @@ export function DashboardHeader({
                 </motion.div>
                 
                 {/* Main Title */}
-                <motion.h1 className="text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent leading-tight" initial={{
+                <motion.h1 initial={{
                 opacity: 0,
                 y: 20
               }} animate={{
@@ -62,7 +62,7 @@ export function DashboardHeader({
                 y: 0
               }} transition={{
                 delay: 0.3
-              }}>
+              }} className="md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent leading-tight text-2xl">
                   Dashboard
                 </motion.h1>
               </div>
