@@ -97,24 +97,22 @@ function App() {
 
                         {/* Protected routes */}
                         <Route 
-                          path="/app/*" 
+                          path="/app" 
                           element={
                             <ProtectedRoute>
-                              <Layout>
-                                <Routes>
-                                  <Route path="dashboard" element={<Dashboard />} />
-                                  <Route path="expenses" element={<Expenses />} />
-                                  <Route path="analytics" element={<Analytics />} />
-                                  <Route path="budget" element={<Budget />} />
-                                  <Route path="goals" element={<Goals />} />
-                                  <Route path="history" element={<History />} />
-                                  <Route path="manage-funds" element={<ManageFunds />} />
-                                  <Route path="guide" element={<AppGuide />} />
-                                </Routes>
-                              </Layout>
+                              <Layout />
                             </ProtectedRoute>
                           }
-                        />
+                        >
+                          <Route path="dashboard" element={<Dashboard />} />
+                          <Route path="expenses" element={<Expenses />} />
+                          <Route path="analytics" element={<Analytics />} />
+                          <Route path="budget" element={<Budget />} />
+                          <Route path="goals" element={<Goals />} />
+                          <Route path="history" element={<History />} />
+                          <Route path="manage-funds" element={<ManageFunds />} />
+                          <Route path="guide" element={<AppGuide />} />
+                        </Route>
 
                         {/* Default redirect */}
                         <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
