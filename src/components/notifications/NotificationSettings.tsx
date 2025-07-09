@@ -91,7 +91,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           
           {permissionStatus === 'denied' && (
             <p className="text-xs text-muted-foreground">
-              Notifications are blocked. Please enable them in your browser settings.
+              Notifications are blocked. Please enable them in your device's app settings.
             </p>
           )}
         </div>
