@@ -1,9 +1,12 @@
 
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
+import { PushNotificationService } from '@/services/pushNotificationService';
+import { Settings, Bell, BellOff, Check, X } from 'lucide-react';
 
 interface NotificationSettingsProps {
   onClose: () => void;
@@ -11,119 +14,121 @@ interface NotificationSettingsProps {
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const { settings, setSettings } = useNotifications();
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default');
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
-  const handleToggle = (key: keyof typeof settings) => {
+  useEffect(() => {
+    // Check initial permission status
+    setPermissionStatus(PushNotificationService.getPermissionStatus());
+  }, []);
+
+  const handlePermissionRequest = async () => {
+    setIsRequestingPermission(true);
+    try {
+      const permission = await PushNotificationService.requestPermission();
+      setPermissionStatus(permission);
+      
+      if (permission === 'granted') {
+        // Initialize push notifications after permission granted
+        await PushNotificationService.initialize();
+      }
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
+
+  const getPermissionBadge = () => {
+    switch (permissionStatus) {
+      case 'granted':
+        return <Badge variant="default" className="bg-green-500"><Check className="w-3 h-3 mr-1" />Granted</Badge>;
+      case 'denied':
+        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Denied</Badge>;
+      default:
+        return <Badge variant="secondary">Not Requested</Badge>;
+    }
+  };
+
+  const handleSettingChange = (key: keyof typeof settings, value: boolean) => {
     setSettings(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: value
     }));
   };
 
   return (
-    <div className="w-full bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-xl">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border/40">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Push Notification Settings</h3>
-          <p className="text-sm text-muted-foreground">Manage your mobile push notifications</p>
+    <Card className="w-full max-w-md bg-background/95 backdrop-blur-sm border border-border/50 shadow-xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Notification Settings
+        </CardTitle>
+        <CardDescription>
+          Manage your notification preferences and permissions
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        {/* Permission Status */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Permission Status</span>
+            {getPermissionBadge()}
+          </div>
+          
+          {permissionStatus !== 'granted' && (
+            <Button 
+              onClick={handlePermissionRequest}
+              disabled={isRequestingPermission}
+              className="w-full"
+              size="sm"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              {isRequestingPermission ? 'Requesting...' : 'Enable Notifications'}
+            </Button>
+          )}
+          
+          {permissionStatus === 'denied' && (
+            <p className="text-xs text-muted-foreground">
+              Notifications are blocked. Please enable them in your browser settings.
+            </p>
+          )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-8 w-8 p-0 hover:bg-muted/50"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
 
-      {/* Settings */}
-      <div className="p-6 space-y-6">
+        {/* Notification Categories */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="budget-warnings" className="text-sm font-medium">
-              Budget Warnings
-            </Label>
-            <Switch
-              id="budget-warnings"
-              checked={settings.budgetWarnings}
-              onCheckedChange={() => handleToggle('budgetWarnings')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="overspending-alerts" className="text-sm font-medium">
-              Overspending Alerts
-            </Label>
-            <Switch
-              id="overspending-alerts"
-              checked={settings.overspendingAlerts}
-              onCheckedChange={() => handleToggle('overspendingAlerts')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="monthly-reset" className="text-sm font-medium">
-              Monthly Reset Notifications
-            </Label>
-            <Switch
-              id="monthly-reset"
-              checked={settings.monthlyReset}
-              onCheckedChange={() => handleToggle('monthlyReset')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="daily-reminders" className="text-sm font-medium">
-              Daily Reminders
-            </Label>
-            <Switch
-              id="daily-reminders"
-              checked={settings.dailyReminders}
-              onCheckedChange={() => handleToggle('dailyReminders')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="weekly-reports" className="text-sm font-medium">
-              Weekly Reports
-            </Label>
-            <Switch
-              id="weekly-reports"
-              checked={settings.weeklyReports}
-              onCheckedChange={() => handleToggle('weeklyReports')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="category-insights" className="text-sm font-medium">
-              Category Insights
-            </Label>
-            <Switch
-              id="category-insights"
-              checked={settings.categoryInsights}
-              onCheckedChange={() => handleToggle('categoryInsights')}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="savings-updates" className="text-sm font-medium">
-              Savings Updates
-            </Label>
-            <Switch
-              id="savings-updates"
-              checked={settings.savingsUpdates}
-              onCheckedChange={() => handleToggle('savingsUpdates')}
-            />
-          </div>
+          <h4 className="text-sm font-semibold text-foreground">Notification Types</h4>
+          
+          {[
+            { key: 'budgetWarnings', label: 'Budget Warnings', desc: 'When approaching budget limits' },
+            { key: 'overspendingAlerts', label: 'Overspending Alerts', desc: 'When exceeding budgets' },
+            { key: 'monthlyReset', label: 'Monthly Reset', desc: 'Start of new month notifications' },
+            { key: 'dailyReminders', label: 'Daily Reminders', desc: 'Daily expense tracking reminders' },
+            { key: 'weeklyReports', label: 'Weekly Reports', desc: 'Weekly spending summaries' },
+            { key: 'categoryInsights', label: 'Category Insights', desc: 'Smart spending insights' },
+            { key: 'savingsUpdates', label: 'Savings Updates', desc: 'Goal progress updates' }
+          ].map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium">{label}</div>
+                <div className="text-xs text-muted-foreground">{desc}</div>
+              </div>
+              <Switch
+                checked={settings[key as keyof typeof settings]}
+                onCheckedChange={(checked) => handleSettingChange(key as keyof typeof settings, checked)}
+                disabled={permissionStatus !== 'granted'}
+              />
+            </div>
+          ))}
         </div>
 
-        <div className="pt-4 border-t border-border/40">
-          <p className="text-xs text-muted-foreground">
-            Push notifications will be sent directly to your mobile device. Make sure you have enabled notifications for this app in your device settings.
-          </p>
+        <div className="pt-4 border-t">
+          <Button onClick={onClose} variant="outline" size="sm" className="w-full">
+            Close Settings
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -27,6 +27,7 @@ import NotFound from '@/pages/NotFound';
 import Layout from '@/components/Layout';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { AdMobService } from '@/services/admobService';
+import { PushNotificationService } from '@/services/pushNotificationService';
 
 import './App.css';
 
@@ -113,17 +114,27 @@ function AppRoutes() {
 function App() {
   console.log('🚀 App component rendering');
 
-  // Initialize AdMob on app startup
+  // Initialize services on app startup
   useEffect(() => {
-    const initializeAdMob = async () => {
+    const initializeServices = async () => {
       try {
+        // Initialize AdMob
         await AdMobService.initialize();
+        console.log('✅ AdMob initialized');
       } catch (error) {
         console.warn('AdMob initialization failed:', error);
       }
+
+      try {
+        // Initialize Push Notifications
+        await PushNotificationService.initialize();
+        console.log('✅ Push notifications initialized');
+      } catch (error) {
+        console.warn('Push notification initialization failed:', error);
+      }
     };
     
-    initializeAdMob();
+    initializeServices();
   }, []);
 
   return (

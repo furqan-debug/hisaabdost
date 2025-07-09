@@ -39,8 +39,23 @@ export function usePushNotifications() {
     }
   };
 
+  const requestPermission = async () => {
+    try {
+      return await PushNotificationService.requestPermission();
+    } catch (error) {
+      console.error('Failed to request notification permission:', error);
+      return 'denied' as NotificationPermission;
+    }
+  };
+
+  const isPermissionGranted = () => {
+    return PushNotificationService.isPermissionGranted();
+  };
+
   return { 
     sendNotification, 
-    sendBroadcastNotification 
+    sendBroadcastNotification,
+    requestPermission,
+    isPermissionGranted
   };
 }
