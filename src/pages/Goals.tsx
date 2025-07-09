@@ -10,8 +10,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useGoalCalculations } from "@/hooks/useGoalCalculations";
 import { useGoalManagement } from "@/hooks/useGoalManagement";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { useAdMob } from "@/hooks/useAdMob";
-import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
+import { NativeAd } from "@/components/ads/NativeAd";
 
 interface Goal {
   id: string;
@@ -31,13 +30,6 @@ export default function Goals() {
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
 
-  // Initialize AdMob banner for Goals at the top
-  useAdMob({
-    adId: 'ca-app-pub-8996865130200922/8964520523',
-    position: BannerAdPosition.TOP_CENTER,
-    size: BannerAdSize.BANNER,
-    autoShow: true
-  });
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals', user?.id, refreshTrigger],
@@ -136,6 +128,9 @@ export default function Goals() {
               syncGoalProgress={handleSyncGoalProgress}
             />
           )}
+          
+          {/* Native Ad after goals section */}
+          <NativeAd adId="ca-app-pub-8996865130200922/2625863956" />
         </div>
       </div>
 

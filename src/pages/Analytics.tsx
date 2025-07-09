@@ -10,8 +10,6 @@ import { motion } from "framer-motion";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
-import { useAdMob } from "@/hooks/useAdMob";
-import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -25,13 +23,6 @@ export default function Analytics() {
 
   const useCustomDateRange = true;
 
-  // Initialize AdMob banner for Analytics at the top
-  useAdMob({
-    adId: 'ca-app-pub-8996865130200922/9771138062',
-    position: BannerAdPosition.TOP_CENTER,
-    size: BannerAdSize.BANNER,
-    autoShow: true
-  });
 
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],

@@ -9,8 +9,7 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
-import { useAdMob } from "@/hooks/useAdMob";
-import { BannerAdPosition, BannerAdSize } from '@capacitor-community/admob';
+import { NativeAd } from "@/components/ads/NativeAd";
 
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
@@ -19,13 +18,6 @@ const Expenses = () => {
   
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Initialize AdMob banner for Expenses at the top
-  useAdMob({
-    adId: 'ca-app-pub-8996865130200922/9173206417',
-    position: BannerAdPosition.TOP_CENTER,
-    size: BannerAdSize.BANNER,
-    autoShow: true
-  });
 
   const {
     searchTerm,
@@ -133,6 +125,9 @@ const Expenses = () => {
         selectedMonth={selectedMonth}
         useCustomDateRange={useCustomDateRange}
       />
+      
+      {/* Native Ad after expense list */}
+      <NativeAd adId="ca-app-pub-8996865130200922/4509505859" />
     </div>
   );
 };
