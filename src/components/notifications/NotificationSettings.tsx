@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
 import { PushNotificationService } from '@/services/pushNotificationService';
 import { Settings, Bell, BellOff, Check, X } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 interface NotificationSettingsProps {
   onClose: () => void;
@@ -14,19 +15,38 @@ interface NotificationSettingsProps {
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const { settings, setSettings } = useNotifications();
-  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default');
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   useEffect(() => {
-    // Check initial permission status
-    setPermissionStatus(PushNotificationService.getPermissionStatus());
+    checkPermissionStatus();
   }, []);
+
+  const checkPermissionStatus = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const permissions = await PushNotificationService.checkPermissions();
+        setPermissionStatus(permissions.receive || 'prompt');
+      } else {
+        setPermissionStatus(PushNotificationService.getPermissionStatus());
+      }
+    } catch (error) {
+      console.error('Failed to check permission status:', error);
+      setPermissionStatus('denied');
+    }
+  };
 
   const handlePermissionRequest = async () => {
     setIsRequestingPermission(true);
     try {
       const permission = await PushNotificationService.requestPermission();
-      setPermissionStatus(permission);
+      
+      if (Capacitor.isNativePlatform()) {
+        // For mobile, check the actual permission status after request
+        await checkPermissionStatus();
+      } else {
+        setPermissionStatus(permission);
+      }
       
       if (permission === 'granted') {
         // Initialize push notifications after permission granted
@@ -55,6 +75,17 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       ...prev,
       [key]: value
     }));
+  };
+
+  const getPermissionHelperText = () => {
+    if (permissionStatus === 'denied') {
+      if (Capacitor.isNativePlatform()) {
+        return 'Notifications are disabled. Please enable them in your device\'s app settings: Settings > Apps > Hisaab Dost > Notifications.';
+      } else {
+        return 'Notifications are blocked. Please enable them in your browser settings.';
+      }
+    }
+    return null;
   };
 
   return (
@@ -89,9 +120,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             </Button>
           )}
           
-          {permissionStatus === 'denied' && (
+          {getPermissionHelperText() && (
             <p className="text-xs text-muted-foreground">
-              Notifications are blocked. Please enable them in your device's app settings.
+              {getPermissionHelperText()}
             </p>
           )}
         </div>
