@@ -30,10 +30,10 @@ export class AdMobService {
     }
   }
 
-  // Show native ad
-  static async showNativeAd(options: {
+  // Show banner ad (native ads aren't directly supported in this plugin version)
+  static async showBannerAd(options: {
     adId: string;
-    containerId: string;
+    containerId?: string;
   }): Promise<void> {
     try {
       if (!this.isInitialized) {
@@ -42,29 +42,65 @@ export class AdMobService {
 
       // Only show ads on native platform
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await AdMob.showNativeAd({
+        // Use banner ad as closest alternative to native ad
+        await AdMob.showBanner({
           adId: options.adId,
-          // The plugin will handle positioning the ad in the native view
+          adSize: 'ADAPTIVE_BANNER',
+          position: 'BOTTOM_CENTER',
         });
-        console.log('Native ad shown successfully');
+        console.log('Banner ad shown successfully');
       } else {
-        console.log('Native ad skipped - not on native platform');
+        console.log('Banner ad skipped - not on native platform');
       }
     } catch (error) {
-      console.error('Failed to show native ad:', error);
+      console.error('Failed to show banner ad:', error);
       throw error;
     }
   }
 
-  // Hide native ad
-  static async hideNativeAd(): Promise<void> {
+  // Hide banner ad
+  static async hideBannerAd(): Promise<void> {
     try {
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await AdMob.hideNativeAd();
-        console.log('Native ad hidden successfully');
+        await AdMob.hideBanner();
+        console.log('Banner ad hidden successfully');
       }
     } catch (error) {
-      console.error('Failed to hide native ad:', error);
+      console.error('Failed to hide banner ad:', error);
     }
+  }
+
+  // Show interstitial ad (alternative approach)
+  static async showInterstitialAd(adId: string): Promise<void> {
+    try {
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+
+      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+        await AdMob.prepareInterstitial({
+          adId: adId,
+        });
+        
+        await AdMob.showInterstitial();
+        console.log('Interstitial ad shown successfully');
+      }
+    } catch (error) {
+      console.error('Failed to show interstitial ad:', error);
+    }
+  }
+
+  // Legacy method for backward compatibility
+  static async showNativeAd(options: {
+    adId: string;
+    containerId: string;
+  }): Promise<void> {
+    // For now, use banner ad as fallback
+    return this.showBannerAd(options);
+  }
+
+  // Legacy method for backward compatibility
+  static async hideNativeAd(): Promise<void> {
+    return this.hideBannerAd();
   }
 }
