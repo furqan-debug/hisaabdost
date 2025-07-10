@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { AdMobService } from '@/services/admobService';
 
 interface UseNativeAdOptions {
@@ -12,7 +13,7 @@ export const useNativeAd = (options: UseNativeAdOptions) => {
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const showNativeAd = async () => {
+  const showNativeAd = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -29,17 +30,27 @@ export const useNativeAd = (options: UseNativeAdOptions) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [options.adId, options.containerId]);
+
+  const hideNativeAd = useCallback(async () => {
+    try {
+      await AdMobService.hideNativeAd();
+      setIsVisible(false);
+    } catch (err) {
+      console.error('Error hiding native ad:', err);
+    }
+  }, []);
 
   // Auto-show native ad on mount if enabled
   useEffect(() => {
     if (options.autoShow) {
       showNativeAd();
     }
-  }, [options.autoShow, options.adId]);
+  }, [options.autoShow, showNativeAd]);
 
   return {
     showNativeAd,
+    hideNativeAd,
     isLoading,
     isVisible,
     error,

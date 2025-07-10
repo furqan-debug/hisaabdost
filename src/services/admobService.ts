@@ -40,21 +40,31 @@ export class AdMobService {
         await this.initialize();
       }
 
-      // For now, we'll create a placeholder since native ads aren't directly supported
-      // In a real implementation, you'd use the native ad API when available
-      const container = document.getElementById(options.containerId);
-      if (container && typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        // Create a native ad placeholder
-        container.innerHTML = `
-          <div class="bg-muted/20 border border-border rounded-lg p-4 text-center">
-            <p class="text-sm text-muted-foreground">Native Ad (${options.adId})</p>
-          </div>
-        `;
+      // Only show ads on native platform
+      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+        await AdMob.showNativeAd({
+          adId: options.adId,
+          // The plugin will handle positioning the ad in the native view
+        });
         console.log('Native ad shown successfully');
+      } else {
+        console.log('Native ad skipped - not on native platform');
       }
     } catch (error) {
       console.error('Failed to show native ad:', error);
       throw error;
+    }
+  }
+
+  // Hide native ad
+  static async hideNativeAd(): Promise<void> {
+    try {
+      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+        await AdMob.hideNativeAd();
+        console.log('Native ad hidden successfully');
+      }
+    } catch (error) {
+      console.error('Failed to hide native ad:', error);
     }
   }
 }

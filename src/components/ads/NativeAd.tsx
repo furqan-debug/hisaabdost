@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useNativeAd } from '@/hooks/useNativeAd';
 
 interface NativeAdProps {
@@ -9,14 +10,29 @@ interface NativeAdProps {
 export const NativeAd = ({ adId, className = '' }: NativeAdProps) => {
   const containerId = `native-ad-${adId.replace(/[^a-zA-Z0-9]/g, '-')}`;
   
-  const { isLoading, error } = useNativeAd({
+  const { isLoading, error, showNativeAd, hideNativeAd } = useNativeAd({
     adId,
     containerId,
-    autoShow: true,
+    autoShow: false, // We'll handle showing manually
   });
+
+  useEffect(() => {
+    // Show ad on mount
+    showNativeAd();
+
+    // Hide ad on unmount
+    return () => {
+      hideNativeAd();
+    };
+  }, [showNativeAd, hideNativeAd]);
 
   if (error) {
     console.error('Native ad error:', error);
+    return null;
+  }
+
+  // Only show loading state on native platform
+  if (typeof window !== 'undefined' && !window.Capacitor?.isNativePlatform()) {
     return null;
   }
 
