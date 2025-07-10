@@ -1,4 +1,3 @@
-
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export class AdMobService {
@@ -57,15 +56,13 @@ export class AdMobService {
 
         console.log('Container found:', container);
 
-        // For now, use banner ads as the closest alternative since native ads 
-        // aren't directly supported in the current plugin version
-        await AdMob.showBanner({
+        // Use the proper native ad method with parent parameter
+        await AdMob.showNativeAd({
           adId: options.adId,
-          adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
+          parent: options.containerId,
         });
         
-        console.log('✅ Banner ad (native ad fallback) shown successfully');
+        console.log('✅ Native ad shown successfully');
       } else {
         console.log('🌐 Web platform detected - showing placeholder');
         // For web platform, show a placeholder
@@ -115,8 +112,8 @@ export class AdMobService {
   static async hideNativeAd(): Promise<void> {
     try {
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await AdMob.hideBanner();
-        console.log('✅ Native ad (banner fallback) hidden successfully');
+        await AdMob.hideNativeAd();
+        console.log('✅ Native ad hidden successfully');
       } else {
         console.log('🌐 Web platform - clearing ad containers');
         // Clear any web placeholders
