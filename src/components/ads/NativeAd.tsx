@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useNativeAd } from '@/hooks/useNativeAd';
 
 interface NativeAdProps {
@@ -12,8 +12,11 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerError, setContainerError] = useState<string | null>(null);
   
-  // Generate a unique container ID
-  const containerId = `native-ad-${adId.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
+  // Generate a stable container ID per component mount (no timestamp)
+  const containerId = useMemo(() => 
+    `native-ad-${adId.replace(/[^a-zA-Z0-9]/g, '-')}`, 
+    [adId]
+  );
   
   const actualAdId = testMode ? 'ca-app-pub-3940256099942544/2247696110' : adId;
   
