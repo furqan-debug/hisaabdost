@@ -45,7 +45,7 @@ const Navbar = () => {
         
         {/* Center: Logo and Title */}
         <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-center md:justify-start">
-          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-6 w-6 mr-2" />
+          <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-9 w-9 mr-2" />
           <div className="flex flex-col">
             <h2 className="font-bold text-sm text-foreground leading-tight">
               Hisaab Dost
