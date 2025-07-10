@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
@@ -126,7 +127,6 @@ const Expenses = () => {
         useCustomDateRange={useCustomDateRange}
       />
       
-      {/* Native Ad after expense list */}
       <NativeAd adId="ca-app-pub-8996865130200922/4509505859" />
     </div>
   );

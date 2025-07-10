@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -111,7 +112,6 @@ const Budget = () => {
           totalBudget={totalBudget}
         />
         
-        {/* Native Ad at end of Budget page */}
         <NativeAd adId="ca-app-pub-8996865130200922/1655277650" />
       </div>
     </div>

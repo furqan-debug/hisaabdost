@@ -153,7 +153,6 @@ export const RecentExpensesCard = ({
           </div>
         )}
         
-        {/* Native Ad below recent expenses - Home page */}
         {!isNewUser && !isLoading && (
           <NativeAd adId="ca-app-pub-8996865130200922/3082510590" />
         )}

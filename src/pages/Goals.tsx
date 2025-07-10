@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -129,7 +130,6 @@ export default function Goals() {
             />
           )}
           
-          {/* Native Ad after goals section */}
           <NativeAd adId="ca-app-pub-8996865130200922/2625863956" />
         </div>
       </div>
