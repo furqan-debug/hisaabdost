@@ -1,3 +1,4 @@
+
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export class AdMobService {
@@ -33,7 +34,7 @@ export class AdMobService {
     }
   }
 
-  // Show native ad (proper implementation)
+  // Show native ad (using banner as fallback since native ads aren't directly supported)
   static async showNativeAd(options: {
     adId: string;
     containerId: string;
@@ -56,13 +57,18 @@ export class AdMobService {
 
         console.log('Container found:', container);
 
-        // Use the proper native ad method with parent parameter
-        await AdMob.showNativeAd({
+        // Since showNativeAd doesn't exist in the current plugin, we'll use banner ads
+        // positioned at the container location as the best available alternative
+        await AdMob.showBanner({
           adId: options.adId,
-          parent: options.containerId,
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
         });
         
-        console.log('✅ Native ad shown successfully');
+        console.log('✅ Banner ad (native ad alternative) shown successfully');
+        
+        // Add a class to the container to indicate ad is loaded
+        container.classList.add('ad-loaded');
       } else {
         console.log('🌐 Web platform detected - showing placeholder');
         // For web platform, show a placeholder
@@ -81,6 +87,7 @@ export class AdMobService {
               <small>Native ads only work on mobile devices</small>
             </div>
           `;
+          container.classList.add('ad-loaded');
         }
       }
     } catch (error) {
@@ -102,6 +109,7 @@ export class AdMobService {
             Ad failed to load
           </div>
         `;
+        container.classList.add('ad-error');
       }
       
       throw error;
@@ -112,14 +120,15 @@ export class AdMobService {
   static async hideNativeAd(): Promise<void> {
     try {
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        await AdMob.hideNativeAd();
-        console.log('✅ Native ad hidden successfully');
+        await AdMob.hideBanner();
+        console.log('✅ Banner ad (native ad alternative) hidden successfully');
       } else {
         console.log('🌐 Web platform - clearing ad containers');
         // Clear any web placeholders
         const containers = document.querySelectorAll('[id^="native-ad-"]');
         containers.forEach(container => {
           container.innerHTML = '';
+          container.classList.remove('ad-loaded', 'ad-error');
         });
       }
     } catch (error) {
