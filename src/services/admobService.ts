@@ -1,5 +1,5 @@
 
-import { AdMob } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export class AdMobService {
   private static isInitialized = false;
@@ -45,8 +45,8 @@ export class AdMobService {
         // Use banner ad as closest alternative to native ad
         await AdMob.showBanner({
           adId: options.adId,
-          adSize: 'ADAPTIVE_BANNER',
-          position: 'BOTTOM_CENTER',
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
         });
         console.log('Banner ad shown successfully');
       } else {
