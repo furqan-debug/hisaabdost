@@ -69,7 +69,7 @@ const Dashboard = () => {
         adId="ca-app-pub-8996865130200922/2236789637" 
         visible={!isModalOpen} 
       />
-      <div className="pb-24 md:pb-8 px-4 md:px-6">
+      <div className="pb-24 md:pb-8">
         <EnhancedDashboardContent 
           isNewUser={isNewUser}
           isLoading={isLoading}
