@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -64,7 +65,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="pb-24 md:pb-8">
+    <div className="space-y-4">
+      <div className="mt-2 mb-4">
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/2236789637" 
+          visible={!isModalOpen} 
+        />
+      </div>
+      
       <EnhancedDashboardContent 
         isNewUser={isNewUser}
         isLoading={isLoading}
@@ -84,10 +92,6 @@ const Dashboard = () => {
         chartType={chartType}
         setChartType={setChartType}
         walletBalance={walletBalance}
-      />
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/2236789637" 
-        visible={!isModalOpen} 
       />
     </div>
   );

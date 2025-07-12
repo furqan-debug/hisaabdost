@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -24,7 +25,6 @@ const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-
 
   const {
     budgets,
@@ -84,7 +84,14 @@ const Budget = () => {
 
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
-      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pb-24 md:pb-8">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8">
+        <div className="mt-2 mb-4">
+          <BannerAd 
+            adId="ca-app-pub-8996865130200922/5239708561" 
+            visible={!isModalOpen} 
+          />
+        </div>
+        
         <BudgetHeader 
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData} 
@@ -112,11 +119,6 @@ const Budget = () => {
           onSuccess={handleBudgetSuccess}
           monthlyIncome={monthlyIncome}
           totalBudget={totalBudget}
-        />
-        
-        <BannerAd 
-          adId="ca-app-pub-8996865130200922/5239708561" 
-          visible={!isModalOpen} 
         />
       </div>
     </div>

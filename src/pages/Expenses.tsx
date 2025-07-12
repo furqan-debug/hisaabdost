@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
@@ -20,7 +21,6 @@ const Expenses = () => {
   const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
   
   const [showAddExpense, setShowAddExpense] = useState(false);
-
 
   const {
     searchTerm,
@@ -97,7 +97,14 @@ const Expenses = () => {
   }
 
   return (
-    <div className="space-y-5 pb-24 md:pb-8">
+    <div className="space-y-5">
+      <div className="mt-2 mb-4">
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/9923707960" 
+          visible={!isModalOpen} 
+        />
+      </div>
+      
       <ExpenseHeader 
         selectedExpenses={selectedExpenses}
         onDeleteSelected={handleDeleteSelected}
@@ -127,11 +134,6 @@ const Expenses = () => {
         totalFilteredAmount={totalFilteredAmount}
         selectedMonth={selectedMonth}
         useCustomDateRange={useCustomDateRange}
-      />
-      
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/9923707960" 
-        visible={!isModalOpen} 
       />
     </div>
   );

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
@@ -13,16 +14,13 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   const location = useLocation();
   const isBudgetRoute = location.pathname.includes('/budget');
   
-  // Check if current route is a main tab that shows ads
-  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
-
   return (
     <main className={cn(
       "flex-1 overflow-x-hidden",
       // Safe area aware padding for mobile devices
       "pt-[calc(3.5rem+env(safe-area-inset-top))]", // 3.5rem = 14 * 0.25rem (h-14)
-      // Proper spacing for mobile with navigation and safe areas
-      isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
+      // Bottom navigation spacing only
+      isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0",
       "transition-all duration-300"

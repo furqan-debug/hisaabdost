@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,7 +26,6 @@ export default function Analytics() {
   });
 
   const useCustomDateRange = true;
-
 
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
@@ -94,7 +94,14 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-5 px-3 md:px-6 py-4 pb-24 md:pb-8">
+    <div className="space-y-5 px-3 md:px-6 py-4">
+      <div className="mt-2 mb-4">
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/1155642258" 
+          visible={!isModalOpen} 
+        />
+      </div>
+      
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
         <motion.div variants={itemVariants}>
           <AnalyticsHeader />
@@ -118,10 +125,6 @@ export default function Analytics() {
           <AnalyticsTabs filteredExpenses={filteredExpenses} />
         </motion.div>
       </motion.div>
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/1155642258" 
-        visible={!isModalOpen} 
-      />
     </div>
   );
 }
