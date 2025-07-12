@@ -7,6 +7,8 @@ interface BannerAdProps {
 }
 
 export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
+  console.log(`🎯 BannerAd: Component rendered with adId: ${adId}, visible: ${visible}`);
+  
   const { isLoading, error, showBannerAd, hideBannerAd } = useBannerAd({
     adId,
     autoShow: false, // We'll manually control when to show
