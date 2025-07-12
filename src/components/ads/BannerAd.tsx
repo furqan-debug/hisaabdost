@@ -31,11 +31,13 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     console.error(`❌ BannerAd error for ${adId}:`, error);
   }
 
-  // Return a sticky container that positions the ad at the top
+  if (!visible) return null;
+
+  // Position sticky right below the header bar (h-14 = 3.5rem)
   return (
-    <div className="sticky top-[3.5rem] z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border/20">
-      <div className="h-12 flex items-center justify-center bg-muted/30">
-        <div className="text-xs text-muted-foreground">Advertisement</div>
+    <div className="sticky top-14 z-40 w-full bg-background/95 backdrop-blur-sm border-b border-border/20">
+      <div className="h-16 flex items-center justify-center bg-muted/30 mx-4 my-2 rounded-lg border border-dashed border-muted-foreground/30">
+        <div className="text-sm text-muted-foreground font-medium">Advertisement</div>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
@@ -17,8 +16,8 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   return (
     <main className={cn(
       "flex-1 overflow-x-hidden",
-      // Safe area aware padding for mobile devices
-      "pt-[calc(3.5rem+env(safe-area-inset-top))]", // 3.5rem = 14 * 0.25rem (h-14)
+      // Safe area aware padding for mobile devices - account for header (3.5rem) + banner ad (5rem)
+      "pt-[calc(3.5rem+env(safe-area-inset-top))]",
       // Bottom navigation spacing only
       isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
