@@ -50,22 +50,19 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
       <div 
         ref={containerRef}
         id="banner-ad-container" 
-        className="fixed left-0 right-0 z-40 w-full h-12 bg-muted/10 border-b border-border/20 flex items-center justify-center"
-        style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
+        className="w-full h-12 bg-muted/10 border-b border-border/20 flex items-center justify-center"
       >
         <div className="text-xs text-muted-foreground">Ad unavailable</div>
       </div>
     );
   }
 
-  // The actual AdMob banner will be rendered natively by Capacitor
-  // This div serves as a placeholder/spacer for the native ad
+  // Simple container - no fixed/sticky positioning for testing
   return (
     <div 
       ref={containerRef}
       id="banner-ad-container" 
-      className="fixed left-0 right-0 z-40 w-full h-12 bg-transparent"
-      style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
+      className="w-full h-12 bg-transparent"
     >
       {/* Native AdMob banner will be positioned here */}
       {isLoading && (

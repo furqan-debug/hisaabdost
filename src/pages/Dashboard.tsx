@@ -65,10 +65,13 @@ const Dashboard = () => {
 
   return (
     <div className="relative">
-      <BannerAd 
-        adId="ca-app-pub-3940256099942544/6300978111" 
-        visible={!isModalOpen} 
-      />
+      {/* Test Banner Ad - Simple div, no sticky/fixed positioning */}
+      <div className="w-full bg-gray-100 border-b">
+        <BannerAd 
+          adId="ca-app-pub-3940256099942544/6300978111" 
+          visible={!isModalOpen} 
+        />
+      </div>
       
       <div className="space-y-4 pt-4">
         <EnhancedDashboardContent 
