@@ -4,7 +4,7 @@ import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admo
 export class AdMobService {
   private static isInitialized = false;
 
-  // Initialize AdMob
+  // Initialize AdMob for production
   static async initialize(): Promise<void> {
     try {
       if (this.isInitialized) {
@@ -14,121 +14,170 @@ export class AdMobService {
 
       // Check if we're on a native platform
       if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        console.log('Initializing AdMob on native platform...');
+        console.log('🚀 Initializing AdMob on native platform for PRODUCTION...');
         
         await AdMob.initialize({
-          testingDevices: ['YOUR_DEVICE_ID'], // Add your test device ID
-          initializeForTesting: true, // Set to true during development
+          initializeForTesting: false, // Production mode
+          testingDevices: [], // No test devices for production
         });
         
         this.isInitialized = true;
-        console.log('✅ AdMob initialized successfully on native platform');
+        console.log('✅ AdMob initialized successfully for PRODUCTION');
       } else {
-        console.log('AdMob initialization skipped - not on native platform');
+        console.log('🌐 Not on native platform - AdMob initialization skipped');
         // For web testing, we'll simulate initialization
         this.isInitialized = true;
       }
     } catch (error) {
-      console.error('❌ Failed to initialize AdMob:', error);
+      console.error('❌ CRITICAL: Failed to initialize AdMob:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }
 
-  // Show native ad
+  // Show native ad with enhanced error handling
   static async showNativeAd(options: {
     adId: string;
     containerId: string;
   }): Promise<void> {
+    console.log(`🎯 showNativeAd called with:`, {
+      adId: options.adId,
+      containerId: options.containerId,
+      isNative: typeof window !== 'undefined' && window.Capacitor?.isNativePlatform(),
+      capacitorExists: typeof window !== 'undefined' && !!window.Capacitor,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       if (!this.isInitialized) {
         console.log('AdMob not initialized, initializing now...');
         await this.initialize();
       }
 
-      console.log(`Attempting to show native ad: ${options.adId} in container: ${options.containerId}`);
+      // Verify container exists before attempting ad load
+      const container = document.getElementById(options.containerId);
+      if (!container) {
+        const error = `Container element with ID '${options.containerId}' not found in DOM`;
+        console.error('❌ CONTAINER ERROR:', error);
+        throw new Error(error);
+      }
 
-      // Check if we're on a native platform
-      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        // Verify container exists
-        const container = document.getElementById(options.containerId);
-        if (!container) {
-          throw new Error(`Container element with ID '${options.containerId}' not found`);
-        }
+      console.log('✅ Container found:', {
+        id: options.containerId,
+        element: container,
+        bounds: container.getBoundingClientRect()
+      });
 
-        console.log('Container found:', container);
+      // Check if we're on a native platform with enhanced detection
+      const isNative = typeof window !== 'undefined' && 
+                      window.Capacitor?.isNativePlatform && 
+                      window.Capacitor.isNativePlatform();
+      
+      console.log('🔍 Platform detection:', {
+        windowExists: typeof window !== 'undefined',
+        capacitorExists: typeof window !== 'undefined' && !!window.Capacitor,
+        isNativePlatform: isNative,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
+      });
 
+      if (isNative) {
+        console.log(`🚀 Loading PRODUCTION native ad: ${options.adId}`);
+        
         try {
-          // Try to use native ad first (if available in future plugin versions)
-          // For now, we'll use banner ads positioned in the container
+          // For native ads, we need to use the banner approach positioned in container
+          // This is the current available method until true native ad support is added
           await AdMob.showBanner({
             adId: options.adId,
             adSize: BannerAdSize.ADAPTIVE_BANNER,
             position: BannerAdPosition.TOP_CENTER,
           });
           
-          console.log('✅ Ad shown successfully');
+          console.log('✅ PRODUCTION ad loaded successfully');
           
-          // Clear loading state and add success indicator
+          // Update container to show successful ad load
           container.innerHTML = `
             <div style="
-              background: #f8f9fa; 
-              border: 1px solid #e9ecef; 
-              padding: 8px; 
+              background: #f0f9ff; 
+              border: 2px solid #0ea5e9; 
+              padding: 12px; 
               text-align: center; 
               border-radius: 8px;
-              color: #6c757d;
-              font-size: 11px;
+              color: #0369a1;
+              font-size: 12px;
+              font-weight: 500;
             ">
-              Ad Loaded Successfully
+              ✅ Production Ad Loaded
             </div>
           `;
           container.classList.add('ad-loaded');
           
         } catch (adError) {
-          console.error('❌ Failed to show ad:', adError);
+          console.error('❌ CRITICAL: Native ad load failed:', adError);
+          console.error('Ad error details:', JSON.stringify(adError, null, 2));
+          
+          // Show specific error in container
+          container.innerHTML = `
+            <div style="
+              background: #fef2f2; 
+              border: 2px solid #ef4444; 
+              padding: 12px; 
+              text-align: center; 
+              border-radius: 8px;
+              color: #dc2626;
+              font-size: 11px;
+            ">
+              ❌ Ad Load Failed: ${adError.message || 'Unknown error'}
+            </div>
+          `;
+          container.classList.add('ad-error');
+          
           throw adError;
         }
         
       } else {
-        console.log('🌐 Web platform detected - showing enhanced placeholder');
-        // For web platform, show a more realistic placeholder
-        const container = document.getElementById(options.containerId);
-        if (container) {
-          container.innerHTML = `
-            <div style="
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-              border: 1px solid #ddd; 
-              padding: 20px; 
-              text-align: center; 
-              border-radius: 12px;
-              color: white;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            ">
-              <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Sample Ad Content</div>
-              <div style="font-size: 11px; opacity: 0.8;">Native ads work on mobile devices</div>
-            </div>
-          `;
-          container.classList.add('ad-loaded');
-        }
+        console.log('🌐 Web platform detected - showing realistic placeholder');
+        // Enhanced web placeholder for testing
+        container.innerHTML = `
+          <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            text-align: center; 
+            border-radius: 12px;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          ">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Web Preview</div>
+            <div style="font-size: 11px; opacity: 0.8;">Native ads work on mobile devices</div>
+          </div>
+        `;
+        container.classList.add('ad-loaded');
       }
     } catch (error) {
-      console.error('❌ Failed to show native ad:', error);
+      console.error('❌ CRITICAL showNativeAd error:', error);
+      console.error('Full error context:', {
+        adId: options.adId,
+        containerId: options.containerId,
+        errorMessage: error.message,
+        errorStack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       
-      // Show error in container
+      // Show error in container if it exists
       const container = document.getElementById(options.containerId);
       if (container) {
         container.innerHTML = `
           <div style="
-            background: #ffebee; 
-            border: 1px solid #f44336; 
+            background: #fef2f2; 
+            border: 1px solid #f87171; 
             padding: 12px; 
             text-align: center; 
             border-radius: 8px;
-            color: #d32f2f;
+            color: #dc2626;
             font-size: 12px;
           ">
-            Failed to load ad
+            ❌ Ad Error: ${error.message}
           </div>
         `;
         container.classList.add('ad-error');
@@ -141,9 +190,13 @@ export class AdMobService {
   // Hide native ad
   static async hideNativeAd(): Promise<void> {
     try {
-      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
+      const isNative = typeof window !== 'undefined' && 
+                      window.Capacitor?.isNativePlatform && 
+                      window.Capacitor.isNativePlatform();
+
+      if (isNative) {
         await AdMob.hideBanner();
-        console.log('✅ Ad hidden successfully');
+        console.log('✅ Production ad hidden successfully');
       } else {
         console.log('🌐 Web platform - clearing ad containers');
         // Clear any web placeholders
@@ -158,38 +211,6 @@ export class AdMobService {
     }
   }
 
-  // Test with Google's sample ad ID
-  static async testNativeAd(containerId: string): Promise<void> {
-    const testAdId = 'ca-app-pub-3940256099942544/2247696110'; // Google's test native ad ID
-    console.log('🧪 Testing with Google sample native ad ID');
-    
-    try {
-      await this.showNativeAd({
-        adId: testAdId,
-        containerId: containerId,
-      });
-      console.log('✅ Test ad loaded successfully');
-    } catch (error) {
-      console.error('❌ Test ad failed:', error);
-    }
-  }
-
-  // Show banner ad (legacy method)
-  static async showBannerAd(options: {
-    adId: string;
-    containerId?: string;
-  }): Promise<void> {
-    return this.showNativeAd({ 
-      adId: options.adId, 
-      containerId: options.containerId || 'banner-container' 
-    });
-  }
-
-  // Hide banner ad (legacy method)
-  static async hideBannerAd(): Promise<void> {
-    return this.hideNativeAd();
-  }
-
   // Show interstitial ad
   static async showInterstitialAd(adId: string): Promise<void> {
     try {
@@ -197,19 +218,24 @@ export class AdMobService {
         await this.initialize();
       }
 
-      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform()) {
-        console.log('Preparing interstitial ad...');
+      const isNative = typeof window !== 'undefined' && 
+                      window.Capacitor?.isNativePlatform && 
+                      window.Capacitor.isNativePlatform();
+
+      if (isNative) {
+        console.log('🚀 Loading PRODUCTION interstitial ad...');
         await AdMob.prepareInterstitial({
           adId: adId,
         });
         
         await AdMob.showInterstitial();
-        console.log('✅ Interstitial ad shown successfully');
+        console.log('✅ PRODUCTION interstitial ad shown successfully');
       } else {
         console.log('🌐 Interstitial ad skipped - web platform');
       }
     } catch (error) {
       console.error('❌ Failed to show interstitial ad:', error);
+      console.error('Interstitial error details:', JSON.stringify(error, null, 2));
     }
   }
 }

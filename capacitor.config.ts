@@ -30,7 +30,7 @@ const config: CapacitorConfig = {
     resizeOnFullScreen: true
   },
   
-  // Enhanced plugin configuration
+  // Enhanced plugin configuration for production
   plugins: {
     CapacitorHttp: {
       enabled: true
@@ -53,23 +53,20 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true,
       style: "dark"
     },
-    // Enhanced Filesystem plugin configuration for Android
     Filesystem: {
       androidRequestLegacyExternalStorage: true,
       androidScheme: "https"
     },
-    // Enhanced Share plugin configuration
     Share: {
       enabled: true
     },
-    // App plugin for deep link handling
     App: {
       enabled: true
     },
-    // AdMob configuration
+    // Production AdMob configuration
     AdMob: {
       appId: "ca-app-pub-8996865130200922~6761545939",
-      testingDevices: ["YOUR_DEVICE_ID"], // Add your test device ID here
+      testingDevices: [], // Empty for production
       tagForChildDirectedTreatment: false,
       tagForUnderAgeOfConsent: false,
       maxAdContentRating: "G"

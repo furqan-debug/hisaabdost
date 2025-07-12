@@ -14,19 +14,42 @@ export const useNativeAd = (options: UseNativeAdOptions) => {
   const [error, setError] = useState<string | null>(null);
 
   const showNativeAd = useCallback(async () => {
-    console.log(`🎯 useNativeAd: Attempting to show ad ${options.adId} in ${options.containerId}`);
+    console.log(`🚀 useNativeAd: Starting ad load process`, {
+      adId: options.adId,
+      containerId: options.containerId,
+      timestamp: new Date().toISOString()
+    });
     
     try {
       setIsLoading(true);
       setError(null);
       
-      // Double check container exists
+      // Enhanced container verification
       const container = document.getElementById(options.containerId);
       if (!container) {
-        throw new Error(`Container ${options.containerId} not found in DOM`);
+        const error = `Container ${options.containerId} not found in DOM`;
+        console.error(`❌ CONTAINER ERROR:`, error);
+        throw new Error(error);
       }
       
-      console.log(`📦 Container ${options.containerId} confirmed in DOM`);
+      console.log(`✅ Container verified:`, {
+        containerId: options.containerId,
+        bounds: container.getBoundingClientRect(),
+        visible: container.offsetParent !== null,
+        classes: container.className
+      });
+      
+      // Enhanced platform detection logging
+      const platformInfo = {
+        windowExists: typeof window !== 'undefined',
+        capacitorExists: typeof window !== 'undefined' && !!window.Capacitor,
+        isNativePlatform: typeof window !== 'undefined' && 
+                         window.Capacitor?.isNativePlatform && 
+                         window.Capacitor.isNativePlatform(),
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
+      };
+      
+      console.log(`🔍 Platform detection:`, platformInfo);
       
       await AdMobService.showNativeAd({
         adId: options.adId,
@@ -34,19 +57,18 @@ export const useNativeAd = (options: UseNativeAdOptions) => {
       });
       
       setIsVisible(true);
-      console.log(`✅ Ad ${options.adId} shown successfully`);
+      console.log(`✅ Ad shown successfully for ${options.containerId}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to show native ad';
       setError(errorMessage);
-      console.error(`❌ useNativeAd error for ${options.containerId}:`, err);
-      
-      // Log additional debugging info
-      console.log(`🔍 Debug info:`, {
+      console.error(`❌ useNativeAd CRITICAL ERROR:`, {
         containerId: options.containerId,
         adId: options.adId,
+        error: err,
+        errorMessage,
+        errorStack: err instanceof Error ? err.stack : undefined,
         containerExists: !!document.getElementById(options.containerId),
-        isNativePlatform: typeof window !== 'undefined' && window.Capacitor?.isNativePlatform(),
-        capacitorAvailable: typeof window !== 'undefined' && !!window.Capacitor,
+        timestamp: new Date().toISOString()
       });
     } finally {
       setIsLoading(false);
@@ -59,7 +81,7 @@ export const useNativeAd = (options: UseNativeAdOptions) => {
     try {
       await AdMobService.hideNativeAd();
       setIsVisible(false);
-      console.log(`✅ Ad hidden for ${options.containerId}`);
+      console.log(`✅ Ad hidden successfully for ${options.containerId}`);
     } catch (err) {
       console.error(`❌ Error hiding native ad for ${options.containerId}:`, err);
     }
