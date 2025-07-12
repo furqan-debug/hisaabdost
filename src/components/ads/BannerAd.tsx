@@ -30,9 +30,9 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     console.error(`❌ BannerAd error for ${adId}:`, error);
   }
 
-  // Sticky banner positioned directly below header with no gap
+  // Fixed banner positioned directly below header
   return (
-    <div className="sticky top-14 z-40 w-full h-12 bg-muted/20 border-b border-border/20 flex items-center justify-center m-0 p-0">
+    <div className="fixed top-14 left-0 right-0 z-40 w-full h-12 bg-muted/20 border-b border-border/20 flex items-center justify-center">
       <div className="text-xs text-muted-foreground">
         {isLoading ? 'Loading ad...' : error ? 'Ad unavailable' : 'Advertisement'}
       </div>

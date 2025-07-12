@@ -10,11 +10,8 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
-import { BannerAd } from "@/components/ads/BannerAd";
-import { useModalState } from "@/hooks/useModalState";
 
 const Expenses = () => {
-  const { isModalOpen } = useModalState();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
@@ -97,12 +94,7 @@ const Expenses = () => {
   }
 
   return (
-    <>
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/9923707960" 
-        visible={!isModalOpen} 
-      />
-      <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
+    <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
         <ExpenseHeader 
           selectedExpenses={selectedExpenses}
           onDeleteSelected={handleDeleteSelected}
@@ -133,8 +125,7 @@ const Expenses = () => {
           selectedMonth={selectedMonth}
           useCustomDateRange={useCustomDateRange}
         />
-      </div>
-    </>
+    </div>
   );
 };
 

@@ -10,11 +10,8 @@ import { motion } from "framer-motion";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
-import { BannerAd } from "@/components/ads/BannerAd";
-import { useModalState } from "@/hooks/useModalState";
 
 export default function Analytics() {
-  const { isModalOpen } = useModalState();
   const { user } = useAuth();
   const { selectedMonth } = useMonthContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -94,12 +91,7 @@ export default function Analytics() {
   }
 
   return (
-    <>
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/1155642258" 
-        visible={!isModalOpen} 
-      />
-      <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
+    <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
           <motion.div variants={itemVariants}>
             <AnalyticsHeader />
@@ -123,7 +115,6 @@ export default function Analytics() {
             <AnalyticsTabs filteredExpenses={filteredExpenses} />
           </motion.div>
         </motion.div>
-      </div>
-    </>
+    </div>
   );
 }

@@ -8,12 +8,18 @@ import Navbar from './Navbar';
 import { BottomNavigation } from './BottomNavigation';
 import { LayoutWrapper } from './layout/LayoutWrapper';
 import { LayoutContainer } from './layout/LayoutContainer';
+import { BannerAd } from './ads/BannerAd';
+import { useModalState } from '@/hooks/useModalState';
 
 const Layout = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const [pageTransition, setPageTransition] = useState(false);
   const { user, loading } = useAuth();
+  const { isModalOpen } = useModalState();
+  
+  // Check if current route is a main tab that shows ads
+  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
   
   useEffect(() => {
     setPageTransition(true);
@@ -37,6 +43,12 @@ const Layout = () => {
   return (
     <LayoutWrapper>
       <Navbar />
+      {isMainTabRoute && (
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/2236789637" 
+          visible={!isModalOpen} 
+        />
+      )}
       <LayoutContainer 
         isMobile={isMobile} 
         pageTransition={pageTransition}

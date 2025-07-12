@@ -11,8 +11,6 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useGoalCalculations } from "@/hooks/useGoalCalculations";
 import { useGoalManagement } from "@/hooks/useGoalManagement";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { BannerAd } from "@/components/ads/BannerAd";
-import { useModalState } from "@/hooks/useModalState";
 
 interface Goal {
   id: string;
@@ -26,7 +24,6 @@ interface Goal {
 }
 
 export default function Goals() {
-  const { isModalOpen } = useModalState();
   const { user } = useAuth();
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -112,12 +109,7 @@ export default function Goals() {
   }
 
   return (
-    <>
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/7297544623" 
-        visible={!isModalOpen} 
-      />
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto p-4 md:p-6 pt-6 space-y-8 pb-24 md:pb-8">
           <GoalsHeader onCreateGoal={handleCreateGoal} />
 
@@ -136,13 +128,12 @@ export default function Goals() {
             />
           )}
         </div>
+        
+        <GoalForm 
+          open={showGoalForm} 
+          onOpenChange={setShowGoalForm} 
+          goal={selectedGoal} 
+        />
       </div>
-
-      <GoalForm 
-        open={showGoalForm} 
-        onOpenChange={setShowGoalForm} 
-        goal={selectedGoal} 
-      />
-    </>
   );
 }

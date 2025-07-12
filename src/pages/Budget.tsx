@@ -6,8 +6,6 @@ import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
-import { BannerAd } from "@/components/ads/BannerAd";
-import { useModalState } from "@/hooks/useModalState";
 
 export interface Budget {
   id: string;
@@ -20,7 +18,6 @@ export interface Budget {
 }
 
 const Budget = () => {
-  const { isModalOpen } = useModalState();
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -84,10 +81,6 @@ const Budget = () => {
 
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/5239708561" 
-        visible={!isModalOpen} 
-      />
       <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
