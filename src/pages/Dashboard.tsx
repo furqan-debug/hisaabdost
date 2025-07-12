@@ -8,12 +8,15 @@ import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 /**
  * Dashboard page component that displays financial overview
  * and expense analytics with enhanced widgets and features.
  */
 const Dashboard = () => {
+  const { isModalOpen } = useModalState();
   const { isLoading: isMonthDataLoading } = useMonthContext();
   
   // Initialize Finny data synchronization
@@ -61,8 +64,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="pb-24 md:pb-8">
-      <EnhancedDashboardContent
+    <div className="relative">
+      <BannerAd 
+        adId="ca-app-pub-3940256099942544/6300978111" 
+        visible={!isModalOpen} 
+      />
+      
+      <div className="space-y-4 pt-4">
+        <EnhancedDashboardContent 
           isNewUser={isNewUser}
           isLoading={isLoading}
           totalBalance={totalBalance}
@@ -82,6 +91,7 @@ const Dashboard = () => {
           setChartType={setChartType}
           walletBalance={walletBalance}
         />
+      </div>
     </div>
   );
 };
