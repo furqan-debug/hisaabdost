@@ -30,7 +30,7 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     console.error(`❌ BannerAd error for ${adId}:`, error);
   }
 
-  // Sticky banner positioned below header with visual placeholder
+  // Sticky banner positioned directly below header with no gap
   return (
     <div className="sticky top-14 z-40 w-full h-12 bg-muted/20 border-b border-border/20 flex items-center justify-center">
       <div className="text-xs text-muted-foreground">

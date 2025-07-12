@@ -102,7 +102,7 @@ const Expenses = () => {
         adId="ca-app-pub-8996865130200922/9923707960" 
         visible={!isModalOpen} 
       />
-      <div className="space-y-5 pb-24 md:pb-8">
+      <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
         <ExpenseHeader 
           selectedExpenses={selectedExpenses}
           onDeleteSelected={handleDeleteSelected}

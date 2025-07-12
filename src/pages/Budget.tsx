@@ -88,7 +88,7 @@ const Budget = () => {
         adId="ca-app-pub-8996865130200922/5239708561" 
         visible={!isModalOpen} 
       />
-      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pb-24 md:pb-8">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData} 
