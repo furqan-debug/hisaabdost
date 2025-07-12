@@ -11,6 +11,7 @@ interface NativeAdProps {
 export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerError, setContainerError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   
   // Generate a stable container ID per component mount (no timestamp)
   const containerId = useMemo(() => 
@@ -26,7 +27,15 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
     autoShow: false,
   });
 
+  // Set mounted state
   useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     console.log(`NativeAd component mounted with ID: ${containerId}`);
     
     // Verify container exists before showing ad
@@ -43,14 +52,14 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
     };
 
     // Small delay to ensure DOM is ready
-    const timer = setTimeout(checkContainer, 100);
+    const timer = setTimeout(checkContainer, 200);
 
     return () => {
       clearTimeout(timer);
       console.log(`Hiding ad for container: ${containerId}`);
       hideNativeAd();
     };
-  }, [showNativeAd, hideNativeAd, containerId]);
+  }, [showNativeAd, hideNativeAd, containerId, mounted]);
 
   // Log any errors
   useEffect(() => {
@@ -71,12 +80,13 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
       {/* Loading state */}
       {isLoading && (
         <div className="bg-muted/20 border border-border rounded-lg p-4 text-center animate-pulse">
+          <div className="w-full h-16 bg-muted/40 rounded animate-pulse mb-2"></div>
           <p className="text-sm text-muted-foreground">Loading ad...</p>
         </div>
       )}
       
       {/* Error states */}
-      {(error || containerError) && (
+      {(error || containerError) && !isLoading && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-center">
           <p className="text-xs text-destructive">
             Ad Error: {error || containerError}
@@ -88,7 +98,7 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
       <div 
         id={containerId} 
         ref={containerRef}
-        className="native-ad-container min-h-[50px]"
+        className="native-ad-container min-h-[80px]"
         style={{ 
           position: 'relative',
           display: 'block',
@@ -99,7 +109,7 @@ export const NativeAd = ({ adId, className = '', testMode = false }: NativeAdPro
       {/* Debug info in development */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-2 text-xs text-muted-foreground opacity-50">
-          Container ID: {containerId} | Ad ID: {actualAdId}
+          Container ID: {containerId} | Ad ID: {actualAdId} | Mounted: {mounted.toString()}
         </div>
       )}
     </div>
