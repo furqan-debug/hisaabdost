@@ -19,8 +19,9 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   return (
     <main className={cn(
       "flex-1 overflow-x-hidden",
-      // Safe area aware padding for mobile devices
-      "pt-[calc(3.5rem+env(safe-area-inset-top))]", // 3.5rem = 14 * 0.25rem (h-14)
+      // Safe area aware padding for mobile devices  
+      // Header height (3.5rem) + banner ad height (3rem) + safe area
+      "pt-[calc(6.5rem+env(safe-area-inset-top))]", 
       // Proper spacing for mobile with navigation and safe areas
       isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",

@@ -64,32 +64,34 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="pb-24 md:pb-8">
-      <EnhancedDashboardContent 
-        isNewUser={isNewUser}
-        isLoading={isLoading}
-        totalBalance={totalBalance}
-        monthlyExpenses={monthlyExpenses}
-        monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
-        savingsRate={savingsRate}
-        formatPercentage={formatPercentage}
-        expenses={expenses}
-        allExpenses={allExpenses}
-        isExpensesLoading={isExpensesLoading}
-        expenseToEdit={expenseToEdit}
-        setExpenseToEdit={setExpenseToEdit}
-        showAddExpense={showAddExpense}
-        setShowAddExpense={setShowAddExpense}
-        chartType={chartType}
-        setChartType={setChartType}
-        walletBalance={walletBalance}
-      />
+    <>
       <BannerAd 
         adId="ca-app-pub-8996865130200922/2236789637" 
         visible={!isModalOpen} 
       />
-    </div>
+      <div className="pb-24 md:pb-8">
+        <EnhancedDashboardContent 
+          isNewUser={isNewUser}
+          isLoading={isLoading}
+          totalBalance={totalBalance}
+          monthlyExpenses={monthlyExpenses}
+          monthlyIncome={monthlyIncome}
+          setMonthlyIncome={setMonthlyIncome}
+          savingsRate={savingsRate}
+          formatPercentage={formatPercentage}
+          expenses={expenses}
+          allExpenses={allExpenses}
+          isExpensesLoading={isExpensesLoading}
+          expenseToEdit={expenseToEdit}
+          setExpenseToEdit={setExpenseToEdit}
+          showAddExpense={showAddExpense}
+          setShowAddExpense={setShowAddExpense}
+          chartType={chartType}
+          setChartType={setChartType}
+          walletBalance={walletBalance}
+        />
+      </div>
+    </>
   );
 };
 

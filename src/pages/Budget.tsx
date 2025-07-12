@@ -84,6 +84,10 @@ const Budget = () => {
 
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/5239708561" 
+        visible={!isModalOpen} 
+      />
       <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
@@ -112,11 +116,6 @@ const Budget = () => {
           onSuccess={handleBudgetSuccess}
           monthlyIncome={monthlyIncome}
           totalBudget={totalBudget}
-        />
-        
-        <BannerAd 
-          adId="ca-app-pub-8996865130200922/5239708561" 
-          visible={!isModalOpen} 
         />
       </div>
     </div>

@@ -22,8 +22,6 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     }
   }, [visible, adId, showBannerAd, hideBannerAd]);
 
-  // Banner ads are rendered natively by AdMob at the bottom of the screen
-  // This component just controls when they show/hide
   if (isLoading) {
     console.log(`⏳ BannerAd loading: ${adId}`);
   }
@@ -32,6 +30,12 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     console.error(`❌ BannerAd error for ${adId}:`, error);
   }
 
-  // No visual component needed - AdMob handles the banner display
-  return null;
+  // Sticky banner positioned below header with visual placeholder
+  return (
+    <div className="sticky top-14 z-40 w-full h-12 bg-muted/20 border-b border-border/20 flex items-center justify-center">
+      <div className="text-xs text-muted-foreground">
+        {isLoading ? 'Loading ad...' : error ? 'Ad unavailable' : 'Advertisement'}
+      </div>
+    </div>
+  );
 };

@@ -97,43 +97,44 @@ const Expenses = () => {
   }
 
   return (
-    <div className="space-y-5 pb-24 md:pb-8">
-      <ExpenseHeader 
-        selectedExpenses={selectedExpenses}
-        onDeleteSelected={handleDeleteSelected}
-        onAddExpense={handleExpenseAdded}
-        showAddExpense={showAddExpense}
-        setShowAddExpense={setShowAddExpense}
-        exportToCSV={exportToCSV}
-        exportToPDF={exportToPDF}
-      />
-
-      <ExpenseList
-        filteredExpenses={filteredExpenses}
-        isLoading={isLoading}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        sortConfig={sortConfig}
-        handleSort={handleSort}
-        selectedExpenses={selectedExpenses}
-        toggleSelectAll={() => toggleSelectAll(filteredExpenses.map(exp => exp.id))}
-        toggleExpenseSelection={toggleExpenseSelection}
-        onAddExpense={handleAddExpense}
-        onDelete={handleSingleDelete}
-        totalFilteredAmount={totalFilteredAmount}
-        selectedMonth={selectedMonth}
-        useCustomDateRange={useCustomDateRange}
-      />
-      
+    <>
       <BannerAd 
         adId="ca-app-pub-8996865130200922/9923707960" 
         visible={!isModalOpen} 
       />
-    </div>
+      <div className="space-y-5 pb-24 md:pb-8">
+        <ExpenseHeader 
+          selectedExpenses={selectedExpenses}
+          onDeleteSelected={handleDeleteSelected}
+          onAddExpense={handleExpenseAdded}
+          showAddExpense={showAddExpense}
+          setShowAddExpense={setShowAddExpense}
+          exportToCSV={exportToCSV}
+          exportToPDF={exportToPDF}
+        />
+
+        <ExpenseList
+          filteredExpenses={filteredExpenses}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          sortConfig={sortConfig}
+          handleSort={handleSort}
+          selectedExpenses={selectedExpenses}
+          toggleSelectAll={() => toggleSelectAll(filteredExpenses.map(exp => exp.id))}
+          toggleExpenseSelection={toggleExpenseSelection}
+          onAddExpense={handleAddExpense}
+          onDelete={handleSingleDelete}
+          totalFilteredAmount={totalFilteredAmount}
+          selectedMonth={selectedMonth}
+          useCustomDateRange={useCustomDateRange}
+        />
+      </div>
+    </>
   );
 };
 
