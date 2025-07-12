@@ -6,7 +6,8 @@ import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
-import { NativeAd } from "@/components/ads/NativeAd";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 export interface Budget {
   id: string;
@@ -112,7 +113,10 @@ const Budget = () => {
           totalBudget={totalBudget}
         />
         
-        <NativeAd adId="ca-app-pub-8996865130200922/1655277650" />
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/5239708561" 
+          visible={!useModalState().isModalOpen} 
+        />
       </div>
     </div>
   );

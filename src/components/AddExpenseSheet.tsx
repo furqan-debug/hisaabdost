@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import { ReceiptScanDialog } from "./expenses/form-fields/receipt/ReceiptScanDialog";
 import { toast } from "sonner";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
+import { useModalState } from "@/hooks/useModalState";
 
 interface AddExpenseSheetProps {
   onAddExpense: (expense?: Expense) => void;
@@ -35,6 +36,7 @@ const AddExpenseSheet = ({
   const initialFileProcessed = useRef(false);
   const initialFileFingerprint = useRef<string | null>(null);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const { setModalOpen } = useModalState();
 
   const {
     formData,
@@ -132,6 +134,8 @@ const AddExpenseSheet = ({
 
   // Handle sheet close
   const handleSheetClose = (open: boolean) => {
+    setModalOpen(open); // Track modal state for banner ads
+    
     if (!open) {
       // Clean up any resources
       handleScanDialogCleanup();

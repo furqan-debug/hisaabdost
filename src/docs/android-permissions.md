@@ -1,7 +1,7 @@
 
 # Android Permissions Required for AdMob
 
-To ensure native ads work properly on Android devices, you need to add the following permissions to your `android/app/src/main/AndroidManifest.xml` file:
+To ensure banner ads work properly on Android devices, you need to add the following permissions to your `android/app/src/main/AndroidManifest.xml` file:
 
 ## Required Permissions
 
@@ -55,7 +55,7 @@ After adding these permissions:
 
 1. Run `npx cap sync android` to sync changes
 2. Rebuild your Android app
-3. Test native ads on your device
+3. Test banner ads on your device
 
 ## Troubleshooting
 

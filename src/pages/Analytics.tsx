@@ -10,6 +10,8 @@ import { motion } from "framer-motion";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -115,6 +117,10 @@ export default function Analytics() {
           <AnalyticsTabs filteredExpenses={filteredExpenses} />
         </motion.div>
       </motion.div>
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/1155642258" 
+        visible={!useModalState().isModalOpen} 
+      />
     </div>
   );
 }

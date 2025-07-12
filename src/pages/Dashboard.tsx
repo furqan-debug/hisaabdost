@@ -8,6 +8,8 @@ import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 /**
  * Dashboard page component that displays financial overview
@@ -82,6 +84,10 @@ const Dashboard = () => {
         chartType={chartType}
         setChartType={setChartType}
         walletBalance={walletBalance}
+      />
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/2236789637" 
+        visible={!useModalState().isModalOpen} 
       />
     </div>
   );

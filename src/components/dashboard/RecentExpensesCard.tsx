@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
-import { NativeAd } from "@/components/ads/NativeAd";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,9 +153,6 @@ export const RecentExpensesCard = ({
           </div>
         )}
         
-        {!isNewUser && !isLoading && (
-          <NativeAd adId="ca-app-pub-8996865130200922/3082510590" />
-        )}
       </CardContent>
     </Card>
   );

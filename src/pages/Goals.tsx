@@ -11,7 +11,8 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useGoalCalculations } from "@/hooks/useGoalCalculations";
 import { useGoalManagement } from "@/hooks/useGoalManagement";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { NativeAd } from "@/components/ads/NativeAd";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 interface Goal {
   id: string;
@@ -130,7 +131,10 @@ export default function Goals() {
             />
           )}
           
-          <NativeAd adId="ca-app-pub-8996865130200922/2625863956" />
+          <BannerAd 
+            adId="ca-app-pub-8996865130200922/7297544623" 
+            visible={!useModalState().isModalOpen} 
+          />
         </div>
       </div>
 

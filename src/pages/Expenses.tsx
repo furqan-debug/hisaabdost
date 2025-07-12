@@ -10,7 +10,8 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
-import { NativeAd } from "@/components/ads/NativeAd";
+import { BannerAd } from "@/components/ads/BannerAd";
+import { useModalState } from "@/hooks/useModalState";
 
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
@@ -127,7 +128,10 @@ const Expenses = () => {
         useCustomDateRange={useCustomDateRange}
       />
       
-      <NativeAd adId="ca-app-pub-8996865130200922/4509505859" />
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/9923707960" 
+        visible={!useModalState().isModalOpen} 
+      />
     </div>
   );
 };
