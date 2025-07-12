@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from 'react';
 import { AdMobService } from '@/services/admobService';
 
@@ -23,12 +24,17 @@ export const useBannerAd = (options: UseBannerAdOptions) => {
     setError(null);
 
     try {
+      // Initialize AdMob first if needed
+      await AdMobService.initialize();
+      
+      // Show the banner
       await AdMobService.showBannerAd(options.adId);
       setIsVisible(true);
       console.log(`✅ Banner ad shown successfully: ${options.adId}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to show banner ad';
       setError(errorMessage);
+      setIsVisible(false);
       console.error(`❌ useBannerAd ERROR for ${options.adId}:`, {
         error: errorMessage,
         originalError: err,
@@ -48,15 +54,27 @@ export const useBannerAd = (options: UseBannerAdOptions) => {
       console.log(`✅ Banner ad hidden successfully: ${options.adId}`);
     } catch (err) {
       console.error(`❌ Error hiding banner ad for ${options.adId}:`, err);
+      // Don't throw here, just log the error
     }
   }, [options.adId]);
 
   // Auto-show banner ad on mount if enabled
   useEffect(() => {
     if (options.autoShow !== false) {
+      console.log(`🔄 Auto-showing banner ad: ${options.adId}`);
       showBannerAd();
     }
   }, [options.autoShow, showBannerAd]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isVisible) {
+        console.log(`🧹 Cleaning up banner ad: ${options.adId}`);
+        hideBannerAd();
+      }
+    };
+  }, [isVisible, hideBannerAd, options.adId]);
 
   return {
     isLoading,

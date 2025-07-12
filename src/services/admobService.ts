@@ -1,7 +1,9 @@
+
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 
 export class AdMobService {
   private static isInitialized = false;
+  private static currentBannerAdId: string | null = null;
 
   // Initialize AdMob for production
   static async initialize(): Promise<void> {
@@ -44,13 +46,20 @@ export class AdMobService {
         await this.initialize();
       }
 
+      // Hide any existing banner first
+      if (this.currentBannerAdId && this.currentBannerAdId !== adId) {
+        console.log(`🔄 Hiding existing banner: ${this.currentBannerAdId}`);
+        await this.hideBannerAd();
+      }
+
       const isNative = typeof window !== 'undefined' && 
                       window.Capacitor?.isNativePlatform && 
                       window.Capacitor.isNativePlatform();
       
       console.log('🔍 Platform detection for banner:', {
         isNative,
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+        adId
       });
 
       if (isNative) {
@@ -59,16 +68,22 @@ export class AdMobService {
         await AdMob.showBanner({
           adId: adId,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
+          position: BannerAdPosition.TOP_CENTER, // Changed to TOP_CENTER for sticky header
         });
         
+        this.currentBannerAdId = adId;
         console.log('✅ PRODUCTION banner ad loaded successfully');
       } else {
         console.log('🌐 Web platform detected - banner ad skipped for web');
+        // For web testing, we can simulate a successful load
+        this.currentBannerAdId = adId;
       }
     } catch (error) {
       console.error('❌ Failed to show banner ad:', error);
       console.error('Banner error details:', JSON.stringify(error, null, 2));
+      
+      // Reset current banner ID on error
+      this.currentBannerAdId = null;
       throw error;
     }
   }
@@ -86,8 +101,11 @@ export class AdMobService {
       } else {
         console.log('🌐 Web platform - banner ad hide skipped');
       }
+      
+      this.currentBannerAdId = null;
     } catch (error) {
       console.error('❌ Failed to hide banner ad:', error);
+      this.currentBannerAdId = null;
     }
   }
 
@@ -117,5 +135,10 @@ export class AdMobService {
       console.error('❌ Failed to show interstitial ad:', error);
       console.error('Interstitial error details:', JSON.stringify(error, null, 2));
     }
+  }
+
+  // Get current banner status
+  static getCurrentBannerAdId(): string | null {
+    return this.currentBannerAdId;
   }
 }
