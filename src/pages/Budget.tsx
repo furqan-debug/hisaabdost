@@ -1,5 +1,3 @@
-
-
 import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -39,7 +37,6 @@ const Budget = () => {
     budgetNotificationData,
   } = useBudgetData();
 
-  // Setup notification triggers for budget page
   useNotificationTriggers({
     budgets: budgetNotificationData,
     monthlyExpenses: totalSpent,
@@ -83,15 +80,13 @@ const Budget = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
-      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8">
-        <div className="mt-2 mb-4">
-          <BannerAd 
-            adId="ca-app-pub-8996865130200922/5239708561" 
-            visible={!isModalOpen} 
-          />
-        </div>
-        
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden relative">
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/5239708561" 
+        visible={!isModalOpen} 
+      />
+      
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pt-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData} 

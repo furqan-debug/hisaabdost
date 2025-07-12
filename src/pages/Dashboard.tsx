@@ -1,5 +1,4 @@
 
-
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -65,34 +64,34 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="mt-2 mb-4">
-        <BannerAd 
-          adId="ca-app-pub-8996865130200922/2236789637" 
-          visible={!isModalOpen} 
+    <div className="relative">
+      <BannerAd 
+        adId="ca-app-pub-8996865130200922/2236789637" 
+        visible={!isModalOpen} 
+      />
+      
+      <div className="space-y-4 pt-4">
+        <EnhancedDashboardContent 
+          isNewUser={isNewUser}
+          isLoading={isLoading}
+          totalBalance={totalBalance}
+          monthlyExpenses={monthlyExpenses}
+          monthlyIncome={monthlyIncome}
+          setMonthlyIncome={setMonthlyIncome}
+          savingsRate={savingsRate}
+          formatPercentage={formatPercentage}
+          expenses={expenses}
+          allExpenses={allExpenses}
+          isExpensesLoading={isExpensesLoading}
+          expenseToEdit={expenseToEdit}
+          setExpenseToEdit={setExpenseToEdit}
+          showAddExpense={showAddExpense}
+          setShowAddExpense={setShowAddExpense}
+          chartType={chartType}
+          setChartType={setChartType}
+          walletBalance={walletBalance}
         />
       </div>
-      
-      <EnhancedDashboardContent 
-        isNewUser={isNewUser}
-        isLoading={isLoading}
-        totalBalance={totalBalance}
-        monthlyExpenses={monthlyExpenses}
-        monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
-        savingsRate={savingsRate}
-        formatPercentage={formatPercentage}
-        expenses={expenses}
-        allExpenses={allExpenses}
-        isExpensesLoading={isExpensesLoading}
-        expenseToEdit={expenseToEdit}
-        setExpenseToEdit={setExpenseToEdit}
-        showAddExpense={showAddExpense}
-        setShowAddExpense={setShowAddExpense}
-        chartType={chartType}
-        setChartType={setChartType}
-        walletBalance={walletBalance}
-      />
     </div>
   );
 };
