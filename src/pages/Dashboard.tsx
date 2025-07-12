@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -8,7 +9,7 @@ import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 import { BannerAd } from "@/components/ads/BannerAd";
-import { useModalState } from "@hooks/useModalState";
+import { useModalState } from "@/hooks/useModalState";
 
 /**
  * Dashboard page component that displays financial overview
