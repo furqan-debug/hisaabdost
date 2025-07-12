@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
@@ -24,6 +25,7 @@ const Budget = () => {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
+
   const {
     budgets,
     expenses,
@@ -37,6 +39,7 @@ const Budget = () => {
     budgetNotificationData,
   } = useBudgetData();
 
+  // Setup notification triggers for budget page
   useNotificationTriggers({
     budgets: budgetNotificationData,
     monthlyExpenses: totalSpent,
@@ -80,13 +83,8 @@ const Budget = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden relative">
-      <BannerAd 
-        adId="ca-app-pub-8996865130200922/5239708561" 
-        visible={!isModalOpen} 
-      />
-      
-      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pt-8">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+      <div className="container mx-auto max-w-7xl px-2 sm:px-4 py-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData} 
@@ -114,6 +112,11 @@ const Budget = () => {
           onSuccess={handleBudgetSuccess}
           monthlyIncome={monthlyIncome}
           totalBudget={totalBudget}
+        />
+        
+        <BannerAd 
+          adId="ca-app-pub-8996865130200922/5239708561" 
+          visible={!isModalOpen} 
         />
       </div>
     </div>

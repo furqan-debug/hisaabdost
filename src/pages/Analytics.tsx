@@ -26,6 +26,7 @@ export default function Analytics() {
 
   const useCustomDateRange = true;
 
+
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ['expenses', dateRange, user?.id],
     queryFn: async () => {
@@ -93,37 +94,34 @@ export default function Analytics() {
   }
 
   return (
-    <div className="relative">
+    <div className="space-y-5 px-3 md:px-6 py-4 pb-24 md:pb-8">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
+        <motion.div variants={itemVariants}>
+          <AnalyticsHeader />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <ExpenseFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            selectedMonth={selectedMonth}
+            useCustomDateRange={useCustomDateRange}
+            className="mx-0 px-0"
+          />
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <AnalyticsTabs filteredExpenses={filteredExpenses} />
+        </motion.div>
+      </motion.div>
       <BannerAd 
         adId="ca-app-pub-8996865130200922/1155642258" 
         visible={!isModalOpen} 
       />
-      
-      <div className="space-y-5 px-3 md:px-6 py-4 pt-8">
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
-          <motion.div variants={itemVariants}>
-            <AnalyticsHeader />
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <ExpenseFilters
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-              selectedMonth={selectedMonth}
-              useCustomDateRange={useCustomDateRange}
-              className="mx-0 px-0"
-            />
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <AnalyticsTabs filteredExpenses={filteredExpenses} />
-          </motion.div>
-        </motion.div>
-      </div>
     </div>
   );
 }

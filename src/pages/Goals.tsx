@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -31,6 +32,7 @@ export default function Goals() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
+
 
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals', user?.id, refreshTrigger],
@@ -111,13 +113,8 @@ export default function Goals() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative">
-        <BannerAd 
-          adId="ca-app-pub-8996865130200922/7297544623" 
-          visible={!isModalOpen} 
-        />
-        
-        <div className="container mx-auto p-4 md:p-6 space-y-8 pt-8">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto p-4 md:p-6 space-y-8 pb-24 md:pb-8">
           <GoalsHeader onCreateGoal={handleCreateGoal} />
 
           {goals?.length === 0 ? (
@@ -134,6 +131,11 @@ export default function Goals() {
               syncGoalProgress={handleSyncGoalProgress}
             />
           )}
+          
+          <BannerAd 
+            adId="ca-app-pub-8996865130200922/7297544623" 
+            visible={!isModalOpen} 
+          />
         </div>
       </div>
 
