@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
   //   cleartext: true
   // },
   
-  // Android specific optimizations
+  // Android specific optimizations with conflict resolution
   android: {
     allowMixedContent: true,
     captureInput: true,
@@ -27,7 +27,13 @@ const config: CapacitorConfig = {
     statusBarStyle: "dark",
     statusBarBackgroundColor: "#ffffff",
     statusBarOverlaysWebView: true,
-    resizeOnFullScreen: true
+    resizeOnFullScreen: true,
+    // Add build configuration to handle duplicate classes
+    buildOptions: {
+      keystorePath: undefined,
+      keystoreAlias: undefined,
+      signingType: 'apksigner'
+    }
   },
   
   // Enhanced plugin configuration for production
@@ -63,13 +69,15 @@ const config: CapacitorConfig = {
     App: {
       enabled: true
     },
-    // Production AdMob configuration
+    // Simplified AdMob configuration to avoid conflicts
     AdMob: {
       appId: "ca-app-pub-8996865130200922~6761545939",
       testingDevices: [], // Empty for production
       tagForChildDirectedTreatment: false,
       tagForUnderAgeOfConsent: false,
-      maxAdContentRating: "G"
+      maxAdContentRating: "G",
+      // Add configuration to handle build conflicts
+      androidManifestApplicationExtras: []
     }
   },
   
