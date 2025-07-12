@@ -27,7 +27,10 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
       pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0",
       "transition-all duration-300"
-    )}>
+    )} 
+    style={{ 
+      paddingTop: `calc(6.5rem + env(safe-area-inset-top))` 
+    }}>
       <div className={cn(
         "mx-auto w-full overflow-x-hidden",
         isMobile ? "max-w-full" : "max-w-5xl",

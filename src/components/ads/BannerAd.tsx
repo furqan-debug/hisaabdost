@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useBannerAd } from '@/hooks/useBannerAd';
 
@@ -32,12 +33,15 @@ export const BannerAd = ({ adId, visible = true }: BannerAdProps) => {
     console.error(`❌ BannerAd error for ${adId}:`, error);
   }
 
-  // Fixed banner positioned directly below header
+  // The actual AdMob banner will be rendered natively by Capacitor
+  // This div serves as a placeholder/spacer for the native ad
   return (
-    <div className="fixed top-14 left-0 right-0 z-40 w-full h-12 bg-muted/20 border-b border-border/20 flex items-center justify-center">
-      <div className="text-xs text-muted-foreground">
-        {isLoading ? 'Loading ad...' : error ? 'Ad unavailable' : 'Advertisement'}
-      </div>
+    <div 
+      id="banner-ad-container" 
+      className="fixed top-14 left-0 right-0 z-40 w-full h-12 bg-transparent"
+      style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
+    >
+      {/* Native AdMob banner will be positioned here */}
     </div>
   );
 };
