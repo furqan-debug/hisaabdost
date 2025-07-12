@@ -20,6 +20,7 @@ export interface Budget {
 }
 
 const Budget = () => {
+  const { isModalOpen } = useModalState();
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -115,7 +116,7 @@ const Budget = () => {
         
         <BannerAd 
           adId="ca-app-pub-8996865130200922/5239708561" 
-          visible={!useModalState().isModalOpen} 
+          visible={!isModalOpen} 
         />
       </div>
     </div>

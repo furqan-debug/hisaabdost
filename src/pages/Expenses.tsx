@@ -14,6 +14,7 @@ import { BannerAd } from "@/components/ads/BannerAd";
 import { useModalState } from "@/hooks/useModalState";
 
 const Expenses = () => {
+  const { isModalOpen } = useModalState();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
@@ -130,7 +131,7 @@ const Expenses = () => {
       
       <BannerAd 
         adId="ca-app-pub-8996865130200922/9923707960" 
-        visible={!useModalState().isModalOpen} 
+        visible={!isModalOpen} 
       />
     </div>
   );

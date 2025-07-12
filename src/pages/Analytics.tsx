@@ -14,6 +14,7 @@ import { BannerAd } from "@/components/ads/BannerAd";
 import { useModalState } from "@/hooks/useModalState";
 
 export default function Analytics() {
+  const { isModalOpen } = useModalState();
   const { user } = useAuth();
   const { selectedMonth } = useMonthContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,7 +120,7 @@ export default function Analytics() {
       </motion.div>
       <BannerAd 
         adId="ca-app-pub-8996865130200922/1155642258" 
-        visible={!useModalState().isModalOpen} 
+        visible={!isModalOpen} 
       />
     </div>
   );

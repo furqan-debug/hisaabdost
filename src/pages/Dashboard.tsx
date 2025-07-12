@@ -16,6 +16,7 @@ import { useModalState } from "@/hooks/useModalState";
  * and expense analytics with enhanced widgets and features.
  */
 const Dashboard = () => {
+  const { isModalOpen } = useModalState();
   const { isLoading: isMonthDataLoading } = useMonthContext();
   
   // Initialize Finny data synchronization
@@ -87,7 +88,7 @@ const Dashboard = () => {
       />
       <BannerAd 
         adId="ca-app-pub-8996865130200922/2236789637" 
-        visible={!useModalState().isModalOpen} 
+        visible={!isModalOpen} 
       />
     </div>
   );

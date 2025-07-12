@@ -26,6 +26,7 @@ interface Goal {
 }
 
 export default function Goals() {
+  const { isModalOpen } = useModalState();
   const { user } = useAuth();
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -133,7 +134,7 @@ export default function Goals() {
           
           <BannerAd 
             adId="ca-app-pub-8996865130200922/7297544623" 
-            visible={!useModalState().isModalOpen} 
+            visible={!isModalOpen} 
           />
         </div>
       </div>
