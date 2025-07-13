@@ -60,13 +60,19 @@ export function useExpenseDelete() {
         console.error('Failed to log expense deletion activity:', logError);
       }
 
-      // Direct cache update instead of invalidation
+      // Direct cache update AND invalidate analytics queries
       console.log("Updating expense cache after delete");
       updateExpenseCache({
         queryClient,
         userId: user.id,
         expense,
         operation: 'delete'
+      });
+
+      // CRITICAL: Invalidate analytics queries for real-time updates
+      await queryClient.invalidateQueries({ 
+        queryKey: ['expenses'], 
+        predicate: (query) => query.queryKey.includes(user.id)
       });
 
       toast({
@@ -128,6 +134,12 @@ export function useExpenseDelete() {
           expense,
           operation: 'delete'
         });
+      });
+
+      // CRITICAL: Invalidate analytics queries for real-time updates
+      await queryClient.invalidateQueries({ 
+        queryKey: ['expenses'], 
+        predicate: (query) => query.queryKey.includes(user.id)
       });
 
       toast({

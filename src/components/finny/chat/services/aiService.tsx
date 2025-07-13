@@ -168,7 +168,8 @@ export async function processMessageWithAI(
             'expenses-updated',
             'finny-expense-added',
             'expense-refresh',
-            'dashboard-refresh'
+            'dashboard-refresh',
+            'analytics-refresh'
           ], { expenseData: data.action });
           break;
 
@@ -178,7 +179,8 @@ export async function processMessageWithAI(
             'expense-edited',
             'expenses-updated',
             'expense-refresh',
-            'dashboard-refresh'
+            'dashboard-refresh',
+            'analytics-refresh'
           ], { expenseData: data.action });
           break;
 
@@ -188,7 +190,8 @@ export async function processMessageWithAI(
             'expense-deleted',
             'expenses-updated',
             'expense-refresh',
-            'dashboard-refresh'
+            'dashboard-refresh',
+            'analytics-refresh'
           ], { expenseData: data.action });
           break;
 

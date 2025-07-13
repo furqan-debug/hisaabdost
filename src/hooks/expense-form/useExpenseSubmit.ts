@@ -87,13 +87,19 @@ export function useExpenseSubmit({
           console.error('Failed to log expense update activity:', logError);
         }
 
-        // Direct cache update instead of invalidation
+        // Direct cache update AND invalidate analytics queries
         console.log("Updating expense cache after edit");
         updateExpenseCache({
           queryClient,
           userId: user.id,
           expense: updatedExpense,
           operation: 'update'
+        });
+
+        // CRITICAL: Invalidate analytics queries for real-time updates
+        await queryClient.invalidateQueries({ 
+          queryKey: ['expenses'], 
+          predicate: (query) => query.queryKey.includes(user.id)
         });
 
         if (onAddExpense) {
@@ -139,13 +145,19 @@ export function useExpenseSubmit({
             console.error('Failed to log expense creation activity:', logError);
           }
 
-          // Direct cache update instead of invalidation
+          // Direct cache update AND invalidate analytics queries
           console.log("Updating expense cache after new expense");
           updateExpenseCache({
             queryClient,
             userId: user.id,
             expense: newExpense,
             operation: 'add'
+          });
+
+          // CRITICAL: Invalidate analytics queries for real-time updates
+          await queryClient.invalidateQueries({ 
+            queryKey: ['expenses'], 
+            predicate: (query) => query.queryKey.includes(user.id)
           });
 
           if (onAddExpense) {

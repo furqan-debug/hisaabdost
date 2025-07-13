@@ -42,6 +42,16 @@ export function useFinnyDataSync() {
               await queryClient.refetchQueries({ 
                 queryKey: ['all-expenses', user.id] 
               });
+              
+              // CRITICAL: Also invalidate analytics queries that use dateRange format
+              console.log('Invalidating analytics queries for expense changes');
+              await queryClient.invalidateQueries({ 
+                queryKey: ['expenses'], 
+                predicate: (query) => {
+                  // Invalidate any expenses query that includes user.id
+                  return query.queryKey.includes(user.id);
+                }
+              });
             }
             break;
 
@@ -93,7 +103,8 @@ export function useFinnyDataSync() {
             break;
 
           case 'dashboard-refresh':
-            // Refresh everything for dashboard
+          case 'analytics-refresh':
+            // Refresh everything for dashboard and analytics
             await queryClient.invalidateQueries();
             break;
 
@@ -138,7 +149,8 @@ export function useFinnyDataSync() {
       'goal-updated',
       'goal-deleted',
       'wallet-updated',
-      'dashboard-refresh'
+      'dashboard-refresh',
+      'analytics-refresh'
     ];
 
     eventTypes.forEach(eventType => {
