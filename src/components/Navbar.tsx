@@ -32,7 +32,7 @@ const Navbar = () => {
     paddingTop: 'env(safe-area-inset-top)',
     top: 0
   }}>
-      <div className="flex h-14 items-center justify-between px-3 lg:px-4 max-w-full my-[19px] py-[3px] mx-0">
+      <div className="flex h-14 items-center justify-between px-3 lg:px-4 max-w-full mt-[25px] mb-[19px] py-[3px] mx-0">
         {/* Left: Menu Button (Mobile only) */}
         {isMobile && <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
             <SheetTrigger asChild>
