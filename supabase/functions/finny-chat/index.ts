@@ -47,15 +47,26 @@ ${EXPENSE_CATEGORIES.map(cat => `- ${cat}`).join('\n')}
 ACTION CAPABILITIES:
 1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
 2. Set budgets: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly"}]
-3. Set goals: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31"}]
-4. Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly budget"}]
-5. Set income: [ACTION:{"type":"set_income","amount":75000,"period":"monthly"}]
+3. Update budgets: [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
+4. Set goals: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31"}]
+5. Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly budget"}]
+6. Set income: [ACTION:{"type":"set_income","amount":75000,"period":"monthly"}]
+
+IMPORTANT: Always use [ACTION:...] format when user wants to create, update, or modify expenses, budgets, goals, or income.
+For budget updates, use "set_budget" action type even if budget already exists - the system will handle the update automatically.
 
 RESPONSE EXAMPLES:
-- "Added $15 lunch expense to Food category."
-- "Set Food budget to $300/month."
-- "Emergency fund goal created for $500."
-- "Added $100 to wallet."
+- "Added $15 lunch expense to Food category." [ACTION:{"type":"add_expense","amount":15,"category":"Food","description":"lunch"}]
+- "Set Food budget to $300/month." [ACTION:{"type":"set_budget","category":"Food","amount":300,"period":"monthly"}]
+- "Updated Rent budget to $1200/month." [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
+- "Emergency fund goal created for $500." [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":500,"deadline":"2024-12-31"}]
+- "Added $100 to wallet." [ACTION:{"type":"add_wallet_funds","amount":100,"description":"Budget addition"}]
+
+CRITICAL: User requests to update, change, set, or modify budgets MUST include the [ACTION:...] format.
+Examples of budget update requests:
+- "update rent budget to 1200" → [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
+- "set food budget to 500" → [ACTION:{"type":"set_budget","category":"Food","amount":500,"period":"monthly"}]
+- "change utilities budget to 150" → [ACTION:{"type":"set_budget","category":"Utilities","amount":150,"period":"monthly"}]
 
 Keep responses under 2 sentences when possible.`;
 
