@@ -10,6 +10,7 @@ import { PushNotificationService } from '@/services/pushNotificationService';
 import { Settings, Bell, BellOff, Check, X, TestTube } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NotificationSettingsProps {
   onClose: () => void;
@@ -77,31 +78,81 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     setIsTesting(true);
     try {
       console.log('🧪 Testing push notification...');
+      console.log('Permission status:', permissionStatus);
+      console.log('Is native platform:', Capacitor.isNativePlatform());
       
-      if (permissionStatus === 'granted') {
-        await sendNotification(
-          "🧪 Test Notification",
-          "Great! Push notifications are working correctly.",
-          { test: true, timestamp: new Date().toISOString() }
-        );
-        
-        toast({
-          title: "Test Sent! 📤",
-          description: "Check for the notification on your device",
-        });
-      } else {
+      if (permissionStatus !== 'granted') {
         toast({
           title: "Permission Required",
           description: "Please enable notifications first",
           variant: "destructive",
         });
+        return;
+      }
+
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to test notifications",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (Capacitor.isNativePlatform()) {
+        // For mobile devices, send via the edge function directly with user ID
+        console.log('📱 Sending test notification for mobile user:', user.id);
+        
+        const { data, error } = await supabase.functions.invoke('send-push-notification', {
+          body: {
+            user_id: user.id,
+            title: "🧪 Test Notification",
+            body: "Great! Push notifications are working correctly on your mobile device.",
+            data: { 
+              test: true, 
+              timestamp: new Date().toISOString(),
+              source: 'test_button'
+            }
+          }
+        });
+
+        if (error) {
+          console.error('❌ Test notification failed:', error);
+          toast({
+            title: "Test Failed",
+            description: `Failed to send test notification: ${error.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log('✅ Test notification sent successfully:', data);
+          toast({
+            title: "Test Sent! 📤",
+            description: "Check for the notification on your mobile device",
+          });
+        }
+      } else {
+        // For web browsers, use local notification
+        console.log('🌐 Sending test notification for web browser');
+        
+        await sendNotification(
+          "🧪 Test Notification",
+          "Great! Push notifications are working correctly in your browser.",
+          { test: true, timestamp: new Date().toISOString() }
+        );
+        
+        toast({
+          title: "Test Sent! 📤",
+          description: "Check for the notification in your browser",
+        });
       }
       
     } catch (error) {
-      console.error('Test notification failed:', error);
+      console.error('❌ Test notification failed:', error);
       toast({
         title: "Test Failed",
-        description: "Failed to send test notification",
+        description: `Failed to send test notification: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
