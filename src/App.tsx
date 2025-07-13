@@ -6,15 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
-import { Layout } from "@/components/Layout";
-import { Dashboard } from "@/pages/Dashboard";
-import { Auth } from "@/pages/Auth";
-import { Analytics } from "@/pages/Analytics";
-import { Expenses } from "@/pages/Expenses";
-import { Goals } from "@/pages/Goals";
-import { Budgets } from "@/pages/Budgets";
-import { Settings } from "@/pages/Settings";
-import { FinnyChat } from "@/pages/FinnyChat";
+import Layout from "@/components/Layout";
+import Dashboard from "@/pages/Dashboard";
+import Auth from "@/pages/Auth";
+import Analytics from "@/pages/Analytics";
+import Expenses from "@/pages/Expenses";
+import Goals from "@/pages/Goals";
+import Budget from "@/pages/Budget";
+import Settings from "@/pages/Settings";
+import FinnyChat from "@/pages/FinnyChat";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useEffect } from "react";
 
@@ -61,20 +61,16 @@ function App() {
               <PushNotificationInitializer />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/app/*" element={
-                  <Layout>
-                    <Routes>
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="expenses" element={<Expenses />} />
-                      <Route path="goals" element={<Goals />} />
-                      <Route path="budgets" element={<Budgets />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="finny" element={<FinnyChat />} />
-                      <Route path="" element={<Navigate to="dashboard" replace />} />
-                    </Routes>
-                  </Layout>
-                } />
+                <Route path="/app" element={<Layout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="expenses" element={<Expenses />} />
+                  <Route path="goals" element={<Goals />} />
+                  <Route path="budgets" element={<Budget />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="finny" element={<FinnyChat />} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
+                </Route>
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               </Routes>
             </CurrencyProvider>
