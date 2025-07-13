@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { MonthProvider } from "@/hooks/use-month-context";
+import { FinnyProvider } from "@/components/finny";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
@@ -60,6 +61,7 @@ function App() {
           <AuthProvider>
             <CurrencyProvider>
               <MonthProvider>
+                <FinnyProvider>
               <PushNotificationInitializer />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -75,6 +77,7 @@ function App() {
                 </Route>
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               </Routes>
+                </FinnyProvider>
               </MonthProvider>
             </CurrencyProvider>
           </AuthProvider>
