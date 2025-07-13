@@ -290,6 +290,14 @@ serve(async (req) => {
             // Send FCM v1 notification for Android
             console.log(`Sending FCM v1 notification to user ${token.user_id}`);
             
+            // Convert all data values to strings (FCM requirement)
+            const stringifiedData: Record<string, string> = {};
+            if (data) {
+              Object.keys(data).forEach(key => {
+                stringifiedData[key] = String(data[key]);
+              });
+            }
+
             const fcmPayload = {
               message: {
                 token: token.device_token,
@@ -297,7 +305,7 @@ serve(async (req) => {
                   title,
                   body,
                 },
-                data: data || {},
+                data: stringifiedData,
               }
             };
 
