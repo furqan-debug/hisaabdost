@@ -54,24 +54,21 @@ const SettingsSidebar = ({
     updatePreferences({ auto_carryover_enabled: enabled });
   };
 
-  const handleCurrencyChange = (value: string) => {
+  const handleCurrencyChange = async (value: string) => {
     console.log('Currency changing from:', currencyCode, 'to:', value);
     try {
       const newCurrency = value as CurrencyCode;
       
-      // Update the context
+      // Update the context first
       setCurrencyCode(newCurrency);
       
-      // Force immediate UI update
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-      
-      console.log('Currency change completed');
+      // Show success toast
       toast({
         title: "Currency Updated",
-        description: `Currency changed to ${value}. Page will refresh to apply changes.`,
+        description: `Currency changed to ${value}`,
       });
+      
+      console.log('Currency change completed successfully');
     } catch (error) {
       console.error('Error changing currency:', error);
       toast({

@@ -49,13 +49,12 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Save to localStorage
       localStorage.setItem('preferred-currency', code);
       
-      // Force immediate re-render of all components
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('currency-updated', { 
-          detail: { code, version: version + 1 } 
-        }));
-      }, 0);
+      // Dispatch event for other components to listen
+      window.dispatchEvent(new CustomEvent('currency-updated', { 
+        detail: { code, version: version + 1 } 
+      }));
       
+      console.log('Currency updated successfully:', code);
     } catch (error) {
       console.error('Error saving currency to localStorage:', error);
     }
@@ -71,8 +70,10 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const handleCurrencyChange = (e: CustomEvent) => {
-      setCurrencyCodeState(e.detail.code);
-      setVersion(e.detail.version);
+      const { code, version: eventVersion } = e.detail;
+      console.log('Received currency change event:', code, eventVersion);
+      setCurrencyCodeState(code);
+      setVersion(eventVersion);
     };
 
     window.addEventListener('storage', handleStorageChange);
