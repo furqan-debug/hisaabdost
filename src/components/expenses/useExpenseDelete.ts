@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { updateExpenseCache } from "@/utils/expenseCacheUtils";
 import { Expense } from "@/components/expenses/types";
+import { logExpenseActivity } from "@/services/activityLogService";
 
 export function useExpenseDelete() {
   const { user } = useAuth();
@@ -46,6 +47,18 @@ export function useExpenseDelete() {
         isRecurring: expenseData.is_recurring || false,
         receiptUrl: expenseData.receipt_url || undefined,
       };
+
+      // Log expense deletion activity
+      try {
+        await logExpenseActivity('deleted', {
+          description: expense.description,
+          amount: expense.amount,
+          category: expense.category,
+          id: expense.id
+        });
+      } catch (logError) {
+        console.error('Failed to log expense deletion activity:', logError);
+      }
 
       // Direct cache update instead of invalidation
       console.log("Updating expense cache after delete");

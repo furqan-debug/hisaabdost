@@ -71,15 +71,33 @@ async function updateBudget(actionData: any, userId: string, supabase: SupabaseC
   if (amount !== undefined) updateData.amount = parseFloat(amount);
   if (period !== undefined) updateData.period = period;
   
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('budgets')
     .update(updateData)
     .eq('user_id', userId)
-    .eq('category', category);
+    .eq('category', category)
+    .select()
+    .single();
 
   if (error) {
     console.error('Error updating budget:', error);
     return `I couldn't update that budget: ${error.message}`;
+  }
+
+  // Log budget update activity
+  try {
+    await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: userId,
+        action_type: 'budget',
+        action_description: `Updated ${category} budget${period ? ` for ${period}` : ''}`,
+        amount: amount || data.amount,
+        category: category,
+        metadata: { budget_id: data.id }
+      });
+  } catch (logError) {
+    console.error('Failed to log budget update activity:', logError);
   }
 
   // Trigger UI refresh

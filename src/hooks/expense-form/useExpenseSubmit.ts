@@ -8,6 +8,7 @@ import { ExpenseFormData, UseExpenseFormProps } from "./types";
 import { Expense } from "@/components/expenses/types";
 import { saveExpenseOffline } from "@/services/offlineExpenseService";
 import { updateExpenseCache } from "@/utils/expenseCacheUtils";
+import { logExpenseActivity } from "@/services/activityLogService";
 
 interface UseExpenseSubmitProps extends UseExpenseFormProps {
   formData: ExpenseFormData;
@@ -74,6 +75,18 @@ export function useExpenseSubmit({
           receiptUrl: formData.receiptUrl
         };
 
+        // Log expense update activity
+        try {
+          await logExpenseActivity('updated', {
+            description: updatedExpense.description,
+            amount: updatedExpense.amount,
+            category: updatedExpense.category,
+            id: updatedExpense.id
+          });
+        } catch (logError) {
+          console.error('Failed to log expense update activity:', logError);
+        }
+
         // Direct cache update instead of invalidation
         console.log("Updating expense cache after edit");
         updateExpenseCache({
@@ -114,6 +127,18 @@ export function useExpenseSubmit({
         const success = await saveExpenseOffline(newExpense);
         
         if (success && user) {
+          // Log expense creation activity
+          try {
+            await logExpenseActivity('added', {
+              description: newExpense.description,
+              amount: newExpense.amount,
+              category: newExpense.category,
+              id: newExpense.id
+            });
+          } catch (logError) {
+            console.error('Failed to log expense creation activity:', logError);
+          }
+
           // Direct cache update instead of invalidation
           console.log("Updating expense cache after new expense");
           updateExpenseCache({
