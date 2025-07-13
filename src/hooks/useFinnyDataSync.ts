@@ -48,10 +48,17 @@ export function useFinnyDataSync() {
           case 'budget-added':
           case 'budget-updated':
           case 'budget-deleted':
+          case 'set_budget':
+          case 'update_budget':
+            console.log('Processing budget event, invalidating all budget queries');
             await queryClient.invalidateQueries({ queryKey: ['budgets'] });
             if (user?.id) {
               await queryClient.refetchQueries({ 
                 queryKey: ['budgets', monthKey, user.id] 
+              });
+              // Also refetch without monthKey for budget page
+              await queryClient.refetchQueries({ 
+                queryKey: ['budgets', user.id] 
               });
             }
             break;
@@ -104,14 +111,14 @@ export function useFinnyDataSync() {
       setTimeout(async () => {
         console.log('Secondary refresh for', event.type);
         await invalidateAndRefetch();
-      }, 500);
+      }, 100);
       
-      // Final refresh after 2 seconds for Finny actions
+      // Final refresh after 1 second for Finny actions (reduced from 2s)
       if (detail?.source === 'finny-chat') {
         setTimeout(async () => {
           console.log('Final Finny refresh for', event.type);
           await invalidateAndRefetch();
-        }, 2000);
+        }, 1000);
       }
     };
 
@@ -124,6 +131,8 @@ export function useFinnyDataSync() {
       'budget-added',
       'budget-updated',
       'budget-deleted',
+      'set_budget',
+      'update_budget',
       'income-updated',
       'goal-added',
       'goal-updated',

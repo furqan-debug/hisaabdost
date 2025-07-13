@@ -140,22 +140,24 @@ export async function processMessageWithAI(
       const triggerMultipleEvents = (eventNames: string[], additionalDetail = {}) => {
         const detail = { ...baseDetail, ...additionalDetail };
         
+        // Immediate trigger
         eventNames.forEach(eventName => {
           dispatchEvent(eventName, detail);
         });
         
-        // Additional delayed triggers to ensure all components update
+        // Shorter delays for better responsiveness
         setTimeout(() => {
           eventNames.forEach(eventName => {
             dispatchEvent(eventName, detail);
           });
-        }, 100);
+        }, 50);
         
+        // Final confirmation trigger
         setTimeout(() => {
           eventNames.forEach(eventName => {
             dispatchEvent(eventName, detail);
           });
-        }, 500);
+        }, 200);
       };
 
       switch (data.action.type) {
@@ -194,6 +196,7 @@ export async function processMessageWithAI(
         case 'update_budget':
           console.log('Budget was added or updated, triggering refresh events');
           triggerMultipleEvents([
+            'budget-added',
             'budget-updated',
             'budget-refresh',
             'expenses-updated',

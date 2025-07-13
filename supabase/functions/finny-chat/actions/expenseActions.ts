@@ -64,15 +64,36 @@ export async function addExpense(
 
   console.log(`Inserting expense with data:`, JSON.stringify(expenseData, null, 2));
   
-  // Insert the expense
-  const { data, error } = await supabase
-    .from("expenses")
-    .insert(expenseData)
-    .select();
+  // Add retry logic for expense creation
+  let retryCount = 0;
+  const maxRetries = 3;
+  let data;
+  
+  while (retryCount < maxRetries) {
+    try {
+      const result = await supabase
+        .from("expenses")
+        .insert(expenseData)
+        .select();
 
-  if (error) {
-    console.error("Error inserting expense:", error);
-    throw new Error(`Failed to save expense: ${error.message}`);
+      if (result.error) {
+        throw result.error;
+      }
+      
+      data = result.data;
+      break;
+    } catch (error) {
+      retryCount++;
+      console.warn(`Expense creation attempt ${retryCount} failed:`, error);
+      
+      if (retryCount >= maxRetries) {
+        console.error("Final expense creation error after retries:", error);
+        throw new Error(`Failed to save expense: ${error.message}`);
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    }
   }
 
   if (!data || data.length === 0) {
@@ -80,7 +101,7 @@ export async function addExpense(
     throw new Error("Expense was not saved properly");
   }
 
-  console.log("Expense added successfully:", JSON.stringify(data[0], null, 2));
+  console.log("Expense added successfully after", retryCount + 1, "attempts:", JSON.stringify(data[0], null, 2));
 
   // Log expense creation activity
   await logExpenseActivity(supabase, userId, 'added', {

@@ -82,17 +82,40 @@ export async function setBudget(
     return `I've updated your ${action.category} budget to ${action.amount}.`;
   } else {
     console.log("Creating new budget for:", action.category);
-    const { data: newBudget, error } = await supabase.from("budgets").insert({
-      user_id: userId,
-      category: action.category,
-      amount: action.amount,
-      period: period,
-      carry_forward: false
-    }).select().single();
+    
+    // Add retry logic for budget creation
+    let retryCount = 0;
+    const maxRetries = 3;
+    let newBudget;
+    
+    while (retryCount < maxRetries) {
+      try {
+        const { data, error } = await supabase.from("budgets").insert({
+          user_id: userId,
+          category: action.category,
+          amount: action.amount,
+          period: period,
+          carry_forward: false
+        }).select().single();
 
-    if (error) {
-      console.error("Budget creation error:", error);
-      throw error;
+        if (error) {
+          throw error;
+        }
+        
+        newBudget = data;
+        break;
+      } catch (error) {
+        retryCount++;
+        console.warn(`Budget creation attempt ${retryCount} failed:`, error);
+        
+        if (retryCount >= maxRetries) {
+          console.error("Final budget creation error after retries:", error);
+          throw error;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
     }
     
     // Log budget creation activity
@@ -103,7 +126,7 @@ export async function setBudget(
       id: newBudget?.id
     });
     
-    console.log("Budget created successfully");
+    console.log("Budget created successfully after", retryCount + 1, "attempts");
     return `I've set a ${period} budget of ${action.amount} for ${action.category}.`;
   }
 }
