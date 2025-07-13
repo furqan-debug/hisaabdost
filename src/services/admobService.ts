@@ -83,6 +83,9 @@ export class AdMobService {
           adId: adId,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: BannerAdPosition.TOP_CENTER,
+          margin: 0,
+          // Add offset for safe area - banner will be pushed down to avoid status bar
+          isTesting: false,
         });
         
         this.currentBannerAdId = adId;
