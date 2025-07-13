@@ -194,8 +194,8 @@ const AddExpenseSheet = ({
   return (
     <>
       <Drawer open={open} onOpenChange={handleSheetClose}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="text-center">
+        <DrawerContent className="max-h-[95dvh] md:max-h-[90vh]">
+          <DrawerHeader className="text-center pb-2">
             <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
             <DrawerDescription>
               {expenseToEdit 
@@ -205,7 +205,7 @@ const AddExpenseSheet = ({
             </DrawerDescription>
           </DrawerHeader>
           
-          <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+          <div className="px-4 pb-6 flex-1 overflow-y-auto min-h-0">
             <ExpenseForm
               formData={formData}
               isSubmitting={isSubmitting}

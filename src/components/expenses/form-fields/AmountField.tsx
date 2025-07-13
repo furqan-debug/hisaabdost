@@ -21,6 +21,13 @@ export function AmountField({ value, onChange }: AmountFieldProps) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Enter amount"
         required
+        className="focus:ring-2 focus:ring-primary"
+        onFocus={(e) => {
+          // Ensure input is visible on mobile when keyboard appears
+          setTimeout(() => {
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }}
       />
     </div>
   );
