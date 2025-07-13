@@ -17,6 +17,7 @@ export interface BroadcastNotificationPayload extends NotificationPayload {
 export class PushNotificationService {
   private static isInitialized = false;
   private static permissionRequested = false;
+  private static currentDeviceToken: string | null = null;
 
   static async initialize(): Promise<void> {
     if (this.isInitialized) {
@@ -25,6 +26,8 @@ export class PushNotificationService {
     }
 
     try {
+      console.log('🔔 Initializing push notifications...');
+      
       // Check if we're running on a mobile platform
       if (Capacitor.isNativePlatform()) {
         console.log('Initializing mobile push notifications with Capacitor');
@@ -34,32 +37,39 @@ export class PushNotificationService {
         await this.initializeWeb();
       }
 
-      console.log('Push notifications initialized successfully');
+      console.log('✅ Push notifications initialized successfully');
       this.isInitialized = true;
     } catch (error) {
-      console.error('Failed to initialize push notifications:', error);
+      console.error('❌ Failed to initialize push notifications:', error);
       throw error;
     }
   }
 
   private static async initializeMobile(): Promise<void> {
     // Add listeners for push notification events
-    await PushNotifications.addListener('registration', (token) => {
-      console.log('Push registration success, token:', token.value);
-      // Store the token if needed
+    await PushNotifications.addListener('registration', async (token) => {
+      console.log('📱 Push registration success, token:', token.value);
+      this.currentDeviceToken = token.value;
+      await this.saveDeviceToken(token.value, 'android'); // Adjust platform detection as needed
     });
 
     await PushNotifications.addListener('registrationError', (error) => {
-      console.error('Push registration error:', error);
+      console.error('❌ Push registration error:', error);
     });
 
     await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received:', notification);
+      console.log('📨 Push notification received:', notification);
     });
 
     await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('Push notification action performed:', notification);
+      console.log('👆 Push notification action performed:', notification);
     });
+
+    // Request permissions and register immediately
+    const permStatus = await PushNotifications.checkPermissions();
+    if (permStatus.receive === 'granted') {
+      await PushNotifications.register();
+    }
   }
 
   private static async initializeWeb(): Promise<void> {
@@ -74,13 +84,50 @@ export class PushNotificationService {
       console.log('Notifications not supported in this browser');
       return;
     }
+
+    // If permission is already granted, we're good to go
+    if (Notification.permission === 'granted') {
+      console.log('✅ Web notifications already permitted');
+    }
+  }
+
+  private static async saveDeviceToken(token: string, platform: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No authenticated user, skipping token save');
+        return;
+      }
+
+      console.log('💾 Saving device token for user:', user.id);
+
+      // Insert or update the device token
+      const { error } = await supabase
+        .from('user_device_tokens')
+        .upsert({
+          user_id: user.id,
+          device_token: token,
+          platform: platform,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'device_token,user_id'
+        });
+
+      if (error) {
+        console.error('❌ Failed to save device token:', error);
+      } else {
+        console.log('✅ Device token saved successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error saving device token:', error);
+    }
   }
 
   static async requestPermission(): Promise<NotificationPermission | 'granted' | 'denied'> {
     this.permissionRequested = true;
 
     if (Capacitor.isNativePlatform()) {
-      console.log('Requesting mobile push notification permission');
+      console.log('📱 Requesting mobile push notification permission');
       try {
         const result = await PushNotifications.requestPermissions();
         console.log('Mobile permission result:', result);
@@ -93,7 +140,7 @@ export class PushNotificationService {
           return 'denied';
         }
       } catch (error) {
-        console.error('Failed to request mobile push permissions:', error);
+        console.error('❌ Failed to request mobile push permissions:', error);
         return 'denied';
       }
     } else {
@@ -104,7 +151,7 @@ export class PushNotificationService {
       }
 
       if (Notification.permission === 'default') {
-        console.log('Requesting web notification permission...');
+        console.log('🔔 Requesting web notification permission...');
         const permission = await Notification.requestPermission();
         console.log('Web notification permission result:', permission);
         return permission;
@@ -116,18 +163,21 @@ export class PushNotificationService {
 
   static async sendNotification(payload: NotificationPayload): Promise<void> {
     try {
-      console.log('Sending push notification:', payload);
+      console.log('📤 Sending push notification:', payload);
       
       if (Capacitor.isNativePlatform()) {
-        // For mobile, we would typically send this through a backend service
-        // For now, we'll just log it
-        console.log('Mobile notification would be sent via backend service');
+        // For mobile, send via backend service
+        console.log('📱 Sending mobile notification via backend service');
+        await this.sendBroadcastNotification({
+          ...payload,
+          sendToAll: false
+        });
       } else {
         // Web implementation
         const permission = await this.requestPermission();
         
         if (permission !== 'granted') {
-          console.log('Notification permission not granted:', permission);
+          console.log('❌ Notification permission not granted:', permission);
           return;
         }
 
@@ -146,16 +196,16 @@ export class PushNotificationService {
         }, 5000);
       }
 
-      console.log('Notification sent successfully');
+      console.log('✅ Notification sent successfully');
     } catch (error) {
-      console.error('Failed to send push notification:', error);
+      console.error('❌ Failed to send push notification:', error);
       throw error;
     }
   }
 
   static async sendBroadcastNotification(payload: BroadcastNotificationPayload): Promise<any> {
     try {
-      console.log('Sending broadcast notification via edge function:', payload);
+      console.log('📡 Sending broadcast notification via edge function:', payload);
       
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
@@ -168,14 +218,14 @@ export class PushNotificationService {
       });
 
       if (error) {
-        console.error('Edge function error:', error);
+        console.error('❌ Edge function error:', error);
         throw error;
       }
 
-      console.log('Broadcast notification sent successfully:', data);
+      console.log('✅ Broadcast notification sent successfully:', data);
       return data;
     } catch (error) {
-      console.error('Failed to send broadcast notification:', error);
+      console.error('❌ Failed to send broadcast notification:', error);
       throw error;
     }
   }
@@ -183,7 +233,6 @@ export class PushNotificationService {
   static getPermissionStatus(): NotificationPermission | 'granted' | 'denied' | 'default' {
     if (Capacitor.isNativePlatform()) {
       // For mobile, we need to check the actual permission status
-      // This is a simplified version - in reality, you'd want to track this properly
       return this.permissionRequested ? 'granted' : 'default';
     } else {
       if (!('Notification' in window)) {
@@ -201,9 +250,11 @@ export class PushNotificationService {
   static async checkPermissions(): Promise<any> {
     if (Capacitor.isNativePlatform()) {
       try {
-        return await PushNotifications.checkPermissions();
+        const permissions = await PushNotifications.checkPermissions();
+        console.log('📱 Mobile push permissions:', permissions);
+        return permissions;
       } catch (error) {
-        console.error('Failed to check mobile push permissions:', error);
+        console.error('❌ Failed to check mobile push permissions:', error);
         return { receive: 'prompt' };
       }
     } else {
@@ -211,5 +262,11 @@ export class PushNotificationService {
         receive: this.getPermissionStatus()
       };
     }
+  }
+
+  // Force initialization - useful for debugging
+  static async forceInitialize(): Promise<void> {
+    this.isInitialized = false;
+    await this.initialize();
   }
 }

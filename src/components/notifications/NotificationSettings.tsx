@@ -5,9 +5,11 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PushNotificationService } from '@/services/pushNotificationService';
-import { Settings, Bell, BellOff, Check, X } from 'lucide-react';
+import { Settings, Bell, BellOff, Check, X, TestTube } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { useToast } from '@/components/ui/use-toast';
 
 interface NotificationSettingsProps {
   onClose: () => void;
@@ -15,8 +17,11 @@ interface NotificationSettingsProps {
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const { settings, setSettings } = useNotifications();
+  const { sendNotification, sendBroadcastNotification, forceReinitialize } = usePushNotifications();
+  const { toast } = useToast();
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
     checkPermissionStatus();
@@ -39,6 +44,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const handlePermissionRequest = async () => {
     setIsRequestingPermission(true);
     try {
+      await forceReinitialize();
       const permission = await PushNotificationService.requestPermission();
       
       if (Capacitor.isNativePlatform()) {
@@ -49,13 +55,57 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       }
       
       if (permission === 'granted') {
-        // Initialize push notifications after permission granted
-        await PushNotificationService.initialize();
+        toast({
+          title: "Notifications Enabled! 🔔",
+          description: "You'll now receive push notifications",
+        });
       }
+      
     } catch (error) {
       console.error('Failed to request notification permission:', error);
+      toast({
+        title: "Permission Failed",
+        description: "Failed to enable notifications. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsRequestingPermission(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTesting(true);
+    try {
+      console.log('🧪 Testing push notification...');
+      
+      if (permissionStatus === 'granted') {
+        await sendNotification(
+          "🧪 Test Notification",
+          "Great! Push notifications are working correctly.",
+          { test: true, timestamp: new Date().toISOString() }
+        );
+        
+        toast({
+          title: "Test Sent! 📤",
+          description: "Check for the notification on your device",
+        });
+      } else {
+        toast({
+          title: "Permission Required",
+          description: "Please enable notifications first",
+          variant: "destructive",
+        });
+      }
+      
+    } catch (error) {
+      console.error('Test notification failed:', error);
+      toast({
+        title: "Test Failed",
+        description: "Failed to send test notification",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -108,17 +158,32 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             {getPermissionBadge()}
           </div>
           
-          {permissionStatus !== 'granted' && (
-            <Button 
-              onClick={handlePermissionRequest}
-              disabled={isRequestingPermission}
-              className="w-full"
-              size="sm"
-            >
-              <Bell className="w-4 h-4 mr-2" />
-              {isRequestingPermission ? 'Requesting...' : 'Enable Notifications'}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {permissionStatus !== 'granted' && (
+              <Button 
+                onClick={handlePermissionRequest}
+                disabled={isRequestingPermission}
+                className="flex-1"
+                size="sm"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                {isRequestingPermission ? 'Requesting...' : 'Enable Notifications'}
+              </Button>
+            )}
+            
+            {permissionStatus === 'granted' && (
+              <Button 
+                onClick={handleTestNotification}
+                disabled={isTesting}
+                variant="outline"
+                className="flex-1"
+                size="sm"
+              >
+                <TestTube className="w-4 h-4 mr-2" />
+                {isTesting ? 'Testing...' : 'Test Notification'}
+              </Button>
+            )}
+          </div>
           
           {getPermissionHelperText() && (
             <p className="text-xs text-muted-foreground">

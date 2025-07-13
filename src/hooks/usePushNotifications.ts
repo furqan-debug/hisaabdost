@@ -7,19 +7,30 @@ export function usePushNotifications() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      // Initialize push notifications when user is available
-      PushNotificationService.initialize().catch(error => {
-        console.log('Push notification initialization failed:', error);
-      });
-    }
+    const initializePushNotifications = async () => {
+      if (user) {
+        console.log('🔔 Initializing push notifications for authenticated user');
+        try {
+          await PushNotificationService.initialize();
+          
+          // Auto-request permission for better UX
+          const permission = await PushNotificationService.requestPermission();
+          console.log('📱 Push notification permission:', permission);
+          
+        } catch (error) {
+          console.log('❌ Push notification initialization failed:', error);
+        }
+      }
+    };
+
+    initializePushNotifications();
   }, [user]);
 
   const sendNotification = async (title: string, body: string, data?: Record<string, any>) => {
     try {
       await PushNotificationService.sendNotification({ title, body, data });
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      console.error('❌ Failed to send notification:', error);
       throw error;
     }
   };
@@ -34,7 +45,7 @@ export function usePushNotifications() {
       });
       return result;
     } catch (error) {
-      console.error('Failed to send broadcast notification:', error);
+      console.error('❌ Failed to send broadcast notification:', error);
       throw error;
     }
   };
@@ -43,7 +54,7 @@ export function usePushNotifications() {
     try {
       return await PushNotificationService.requestPermission();
     } catch (error) {
-      console.error('Failed to request notification permission:', error);
+      console.error('❌ Failed to request notification permission:', error);
       return 'denied' as NotificationPermission;
     }
   };
@@ -52,10 +63,19 @@ export function usePushNotifications() {
     return PushNotificationService.isPermissionGranted();
   };
 
+  const forceReinitialize = async () => {
+    try {
+      await PushNotificationService.forceInitialize();
+    } catch (error) {
+      console.error('❌ Failed to reinitialize push notifications:', error);
+    }
+  };
+
   return { 
     sendNotification, 
     sendBroadcastNotification,
     requestPermission,
-    isPermissionGranted
+    isPermissionGranted,
+    forceReinitialize
   };
 }

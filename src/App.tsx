@@ -1,165 +1,87 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { CurrencyProvider } from '@/hooks/use-currency';
-import { MonthProvider } from '@/hooks/use-month-context';
-import { OfflineProvider } from '@/components/offline/OfflineProvider';
-import { AuthProvider, useAuth } from '@/lib/auth';
-import { FinnyProvider } from '@/components/finny/FinnyProvider';
-import { ThemeProvider } from 'next-themes';
-
-// Pages
-import Auth from '@/pages/Auth';
-import Dashboard from '@/pages/Dashboard';
-import Expenses from '@/pages/Expenses';
-import Analytics from '@/pages/Analytics';
-import Budget from '@/pages/Budget';
-import Goals from '@/pages/Goals';  
-import History from '@/pages/History';
-import ManageFunds from '@/pages/ManageFunds';
-import AppGuide from '@/pages/AppGuide';
-import ResetPassword from '@/pages/ResetPassword';
-import NotFound from '@/pages/NotFound';
-
-// Components
-import Layout from '@/components/Layout';
-import { LoadingScreen } from '@/components/shared/LoadingScreen';
-import { AdMobService } from '@/services/admobService';
-import { PushNotificationService } from '@/services/pushNotificationService';
-
-import './App.css';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth";
+import { CurrencyProvider } from "@/hooks/use-currency";
+import { Layout } from "@/components/Layout";
+import { Dashboard } from "@/pages/Dashboard";
+import { Auth } from "@/pages/Auth";
+import { Analytics } from "@/pages/Analytics";
+import { Expenses } from "@/pages/Expenses";
+import { Goals } from "@/pages/Goals";
+import { Budgets } from "@/pages/Budgets";
+import { Settings } from "@/pages/Settings";
+import { FinnyChat } from "@/pages/FinnyChat";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
     },
   },
 });
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+// Component to initialize push notifications
+function PushNotificationInitializer() {
+  const { forceReinitialize } = usePushNotifications();
+  
+  useEffect(() => {
+    // Force initialization on app startup
+    const initNotifications = async () => {
+      console.log('🚀 App startup - initializing push notifications');
+      try {
+        await forceReinitialize();
+        console.log('✅ Push notifications initialized on app startup');
+      } catch (error) {
+        console.error('❌ Failed to initialize push notifications on startup:', error);
+      }
+    };
 
-  if (loading) {
-    return <LoadingScreen message="Loading app..." />;
-  }
+    initNotifications();
+  }, [forceReinitialize]);
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen message="Checking authentication..." />;
-  }
-
-  if (user) {
-    return <Navigate to="/app/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-function AppRoutes() {
-  return (
-    <Routes>
-      {/* Public routes */}
-      <Route 
-        path="/auth" 
-        element={
-          <PublicRoute>
-            <Auth />
-          </PublicRoute>
-        } 
-      />
-      <Route path="/reset-password" element={<ResetPassword />} />
-
-      {/* Protected routes */}
-      <Route 
-        path="/app" 
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="expenses" element={<Expenses />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="budget" element={<Budget />} />
-        <Route path="goals" element={<Goals />} />
-        <Route path="history" element={<History />} />
-        <Route path="manage-funds" element={<ManageFunds />} />
-        <Route path="guide" element={<AppGuide />} />
-      </Route>
-
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/auth" replace />} />
-      
-      {/* 404 page */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  return null;
 }
 
 function App() {
-  console.log('🚀 App component rendering');
-
-  // Initialize services on app startup
-  useEffect(() => {
-    const initializeServices = async () => {
-      try {
-        // Initialize AdMob
-        await AdMobService.initialize();
-        console.log('✅ AdMob initialized');
-      } catch (error) {
-        console.warn('AdMob initialization failed:', error);
-      }
-
-      try {
-        // Initialize Push Notifications
-        await PushNotificationService.initialize();
-        console.log('✅ Push notifications initialized');
-      } catch (error) {
-        console.warn('Push notification initialization failed:', error);
-      }
-    };
-    
-    initializeServices();
-  }, []);
-
   return (
-    <div className="App">
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
           <AuthProvider>
             <CurrencyProvider>
-              <MonthProvider>
-                <OfflineProvider>
-                  <FinnyProvider>
-                    <Router>
-                      <div className="min-h-screen bg-background">
-                        <AppRoutes />
-                      </div>
-                    </Router>
-                    <Toaster />
-                  </FinnyProvider>
-                </OfflineProvider>
-              </MonthProvider>
+              <PushNotificationInitializer />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/app/*" element={
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="expenses" element={<Expenses />} />
+                      <Route path="goals" element={<Goals />} />
+                      <Route path="budgets" element={<Budgets />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="finny" element={<FinnyChat />} />
+                      <Route path="" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                  </Layout>
+                } />
+                <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+              </Routes>
             </CurrencyProvider>
           </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

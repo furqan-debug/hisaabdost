@@ -32,6 +32,7 @@ interface NotificationContext {
   spendingTrend: number;
   topCategory: string;
   daysInMonth: number;
+  expenseCount: number;
 }
 
 serve(async (req) => {
@@ -53,11 +54,10 @@ serve(async (req) => {
     const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
     const currentDate = now.toISOString().slice(0, 10); // YYYY-MM-DD
 
-    // Get users who haven't received a notification today
+    // Get users who haven't received a notification today (more relaxed criteria)
     const { data: users, error: usersError } = await supabaseAdmin
       .from('profiles')
       .select('id, monthly_income, notification_timezone, last_notification_date')
-      .neq('monthly_income', null)
       .or(`last_notification_date.is.null,last_notification_date.neq.${currentDate}`);
 
     if (usersError) {
@@ -72,8 +72,8 @@ serve(async (req) => {
 
     for (const user of users || []) {
       try {
-        await processUserNotifications(supabaseAdmin, user, currentMonth, currentDate);
-        notificationsSent++;
+        const sent = await processUserNotifications(supabaseAdmin, user, currentMonth, currentDate);
+        if (sent) notificationsSent++;
       } catch (error) {
         console.error(`Error processing user ${user.id}:`, error);
       }
@@ -112,7 +112,7 @@ async function processUserNotifications(
   user: User, 
   currentMonth: string, 
   currentDate: string
-) {
+): Promise<boolean> {
   console.log(`Processing notifications for user: ${user.id}`);
 
   // Get user's expenses for current month
@@ -138,10 +138,21 @@ async function processUserNotifications(
     .maybeSingle();
 
   const monthlyIncome = monthlyIncomeData?.income_amount || user.monthly_income || 0;
+  const expenseCount = expenses?.length || 0;
 
-  if (!expenses?.length && !budgets?.length) {
+  console.log(`User ${user.id} financial data:`, {
+    expenseCount,
+    budgetCount: budgets?.length || 0,
+    monthlyIncome,
+    hasData: expenseCount > 0 || (budgets?.length || 0) > 0 || monthlyIncome > 0
+  });
+
+  // More relaxed criteria - send notification if user has ANY financial activity
+  const hasAnyData = expenseCount > 0 || (budgets?.length || 0) > 0 || monthlyIncome > 0;
+  
+  if (!hasAnyData) {
     console.log(`No financial data for user ${user.id}, skipping`);
-    return;
+    return false;
   }
 
   // Calculate financial context
@@ -195,7 +206,11 @@ async function processUserNotifications(
       .from('profiles')
       .update({ last_notification_date: currentDate })
       .eq('id', user.id);
+
+    return true;
   }
+
+  return false;
 }
 
 function calculateFinancialContext(
@@ -213,7 +228,7 @@ function calculateFinancialContext(
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const currentDay = now.getDate();
-  const expectedSpending = (totalSpent / currentDay) * daysInMonth;
+  const expectedSpending = totalSpent > 0 ? (totalSpent / currentDay) * daysInMonth : 0;
   const spendingTrend = monthlyIncome > 0 ? ((expectedSpending - monthlyIncome) / monthlyIncome) * 100 : 0;
 
   // Find top spending category
@@ -223,14 +238,15 @@ function calculateFinancialContext(
   });
   
   const topCategory = Object.entries(categorySpending)
-    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown';
+    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'General';
 
   return {
     totalSpent,
     budgetUtilization,
     spendingTrend,
     topCategory,
-    daysInMonth
+    daysInMonth,
+    expenseCount: expenses.length
   };
 }
 
@@ -245,6 +261,7 @@ async function generateSmartNotification(
   let reasoning = '';
   let message = '';
 
+  // More aggressive notification logic to ensure users get notifications
   if (context.budgetUtilization > 90) {
     type = 'budget';
     priority = 5;
@@ -260,17 +277,23 @@ async function generateSmartNotification(
     priority = 3;
     reasoning = `Budget utilization at ${context.budgetUtilization.toFixed(1)}% - moderate concern`;
     message = `💡 Budget Update: You're at ${context.budgetUtilization.toFixed(1)}% of your monthly budget. Keep an eye on ${context.topCategory} expenses.`;
-  } else if (context.totalSpent < user.monthly_income * 0.3) {
+  } else if (context.expenseCount > 0 && context.totalSpent < user.monthly_income * 0.3) {
     type = 'savings';
     priority = 2;
     reasoning = `Low spending detected - opportunity for savings goals`;
-    message = `🌟 Great Job! Your spending is well under control. Consider setting aside some funds for your financial goals.`;
-  } else {
-    // Default encouraging message
+    message = `🌟 Great Job! Your spending is well under control at $${context.totalSpent.toFixed(2)}. Consider setting aside some funds for your financial goals.`;
+  } else if (context.expenseCount > 0) {
+    // Default encouraging message for any user with expenses
     type = 'general';
     priority = 1;
     reasoning = 'Regular check-in to maintain financial awareness';
     message = `📊 Financial Update: You've spent $${context.totalSpent.toFixed(2)} this month, with most going to ${context.topCategory}. Keep tracking!`;
+  } else {
+    // Even for users with no expenses, send a motivating message
+    type = 'general';
+    priority = 1;
+    reasoning = 'Encouraging user to start tracking expenses';
+    message = `💪 Ready to Track? Start logging your expenses to get personalized insights and stay on top of your financial goals!`;
   }
 
   return { type, priority, reasoning, message };
