@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
+import { MonthProvider } from "@/hooks/use-month-context";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
@@ -58,6 +59,7 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <CurrencyProvider>
+              <MonthProvider>
               <PushNotificationInitializer />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -73,6 +75,7 @@ function App() {
                 </Route>
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               </Routes>
+              </MonthProvider>
             </CurrencyProvider>
           </AuthProvider>
         </BrowserRouter>
