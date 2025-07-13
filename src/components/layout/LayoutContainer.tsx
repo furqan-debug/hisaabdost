@@ -20,8 +20,8 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
     <main className={cn(
       "flex-1 overflow-x-hidden",
       // Safe area aware padding for mobile devices  
-      // Header height (3.5rem) + banner ad height (3rem) + safe area + additional margin for status bar
-      "pt-[calc(6.5rem+env(safe-area-inset-top)+1rem)]",
+      // Header height (3.5rem) + banner ad height (3rem) + safe area (mobile only)
+      isMobile && isMainTabRoute ? "pt-[calc(6.5rem+env(safe-area-inset-top)+1rem)]" : "pt-[calc(6.5rem+env(safe-area-inset-top))]",
       // Proper spacing for mobile with navigation and safe areas
       isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
       isBudgetRoute ? "px-0" : "px-2 md:px-6",
@@ -29,7 +29,7 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
       "transition-all duration-300"
     )} 
     style={{ 
-      paddingTop: `calc(6.5rem + env(safe-area-inset-top) + 1rem)` 
+      paddingTop: isMobile && isMainTabRoute ? `calc(6.5rem + env(safe-area-inset-top) + 1rem)` : `calc(6.5rem + env(safe-area-inset-top))`
     }}>
       <div className={cn(
         "mx-auto w-full overflow-x-hidden",
