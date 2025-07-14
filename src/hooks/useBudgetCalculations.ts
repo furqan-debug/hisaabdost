@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 
@@ -22,16 +22,8 @@ export function useBudgetCalculations(
   const currentMonthData = getCurrentMonthData();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Refs to store previous values to prevent unnecessary updates
-  const prevValuesRef = useRef({
-    totalBudget: 0,
-    totalSpent: 0,
-    remainingBalance: 0,
-    usagePercentage: 0
-  });
-
-  // Local state to prevent glitching during calculation
-  const [stableValues, setStableValues] = useState<BudgetCalculationValues>({
+  // Local state for calculated values
+  const [calculatedValues, setCalculatedValues] = useState<BudgetCalculationValues>({
     totalBudget: currentMonthData.totalBudget || 0,
     totalSpent: currentMonthData.monthlyExpenses || 0,
     remainingBalance: currentMonthData.remainingBudget || 0,
@@ -39,10 +31,7 @@ export function useBudgetCalculations(
     monthlyIncome: currentMonthData.monthlyIncome || 0
   });
 
-  // Update debounce timer ref
-  const updateTimerRef = useRef<number | null>(null);
-
-  // Calculate and debounce summary data updates
+  // Calculate values when data changes
   useEffect(() => {
     if (isLoading || !budgets || !expenses || !incomeData) return;
     
@@ -55,16 +44,7 @@ export function useBudgetCalculations(
     const remainingBalance = totalBudget - totalSpent;
     const usagePercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
     
-    // Check if values have meaningfully changed
-    const hasChanged = 
-      Math.abs(totalBudget - prevValuesRef.current.totalBudget) > 0.01 ||
-      Math.abs(totalSpent - prevValuesRef.current.totalSpent) > 0.01 ||
-      Math.abs(remainingBalance - prevValuesRef.current.remainingBalance) > 0.01 ||
-      Math.abs(usagePercentage - prevValuesRef.current.usagePercentage) > 0.01;
-    
-    if (!hasChanged && monthlyIncome === stableValues.monthlyIncome) return;
-    
-    console.log('Budget data changed, updating values:', {
+    console.log('Calculating budget values:', {
       totalBudget,
       totalSpent,
       remainingBalance,
@@ -72,45 +52,24 @@ export function useBudgetCalculations(
       monthlyIncome
     });
     
-    // Store new values in ref
-    prevValuesRef.current = {
+    const newValues = {
       totalBudget,
       totalSpent,
       remainingBalance,
-      usagePercentage
+      usagePercentage,
+      monthlyIncome
     };
     
-    // Clear any existing timeout
-    if (updateTimerRef.current) {
-      window.clearTimeout(updateTimerRef.current);
-    }
+    setCalculatedValues(newValues);
     
-    // Debounce the state update
-    updateTimerRef.current = window.setTimeout(() => {
-      setStableValues({
-        totalBudget,
-        totalSpent,
-        remainingBalance,
-        usagePercentage,
-        monthlyIncome
-      });
-      
-      // Update monthly context with stable values
-      updateMonthData(monthKey, {
-        totalBudget,
-        remainingBudget: remainingBalance,
-        budgetUsagePercentage: usagePercentage,
-        monthlyIncome,
-      });
-    }, 200);
-    
-    // Cleanup timeout on unmount
-    return () => {
-      if (updateTimerRef.current) {
-        window.clearTimeout(updateTimerRef.current);
-      }
-    };
-  }, [budgets, expenses, incomeData, currentMonthData, monthKey, updateMonthData, isLoading, stableValues.monthlyIncome]);
+    // Update monthly context
+    updateMonthData(monthKey, {
+      totalBudget,
+      remainingBudget: remainingBalance,
+      budgetUsagePercentage: usagePercentage,
+      monthlyIncome,
+    });
+  }, [budgets, expenses, incomeData, isLoading, monthKey, updateMonthData]);
 
-  return stableValues;
+  return calculatedValues;
 }

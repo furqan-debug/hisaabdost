@@ -21,35 +21,14 @@ export function useBudgetData() {
   // Simplified refresh trigger
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
-  // Debounced event handling to prevent excessive refreshes
+  // Simplified event handling
   useEffect(() => {
-    let debounceTimer: NodeJS.Timeout;
-    
-    const handleBudgetUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const detail = customEvent.detail || {};
-      const isFinnyEvent = detail.source === 'finny-chat';
-      
-      console.log("Budget update detected", e.type, { isFinnyEvent });
-      
-      // Clear existing timer
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      
-      // Debounced refresh
-      debounceTimer = setTimeout(() => {
-        if (isFinnyEvent) {
-          // Immediate refresh for Finny events
-          queryClient.invalidateQueries({ queryKey: ['budgets'] });
-          queryClient.invalidateQueries({ queryKey: ['expenses'] });
-          queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
-          setRefreshTrigger(Date.now());
-        } else {
-          // Standard refresh for other events
-          setRefreshTrigger(prev => prev + 1);
-        }
-      }, isFinnyEvent ? 100 : 300);
+    const handleBudgetUpdate = () => {
+      console.log("Budget update detected");
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+      setRefreshTrigger(Date.now());
     };
     
     const eventTypes = [
@@ -65,14 +44,11 @@ export function useBudgetData() {
     });
     
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleBudgetUpdate);
       });
     };
-  }, [queryClient, monthKey, user?.id]);
+  }, [queryClient]);
   
   // Use the separated query hook
   const { budgets, expenses, incomeData, isLoading } = useBudgetQueries(selectedMonth, refreshTrigger);

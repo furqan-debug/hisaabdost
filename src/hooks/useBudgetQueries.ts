@@ -10,7 +10,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Query budgets with better caching
+  // Query budgets with better loading behavior
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
     queryKey: ['budgets', user?.id, refreshTrigger],
     queryFn: async () => {
@@ -32,12 +32,12 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    staleTime: 1000 * 30, // Reduced to 30 seconds
+    refetchOnMount: true, // Enable refetch on mount
     refetchOnWindowFocus: false,
   });
   
-  // Query monthly income with better caching
+  // Query monthly income with better loading behavior
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
     queryKey: ['monthly_income', user?.id, monthKey],
     queryFn: async () => {
@@ -51,12 +51,12 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return { monthlyIncome: income };
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    staleTime: 1000 * 30, // Reduced to 30 seconds
+    refetchOnMount: true, // Enable refetch on mount
     refetchOnWindowFocus: false,
   });
 
-  // Query expenses with better caching
+  // Query expenses with better loading behavior
   const { data: expenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
@@ -79,8 +79,8 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return data;
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    staleTime: 1000 * 30, // Reduced to 30 seconds
+    refetchOnMount: true, // Enable refetch on mount
     refetchOnWindowFocus: false,
   });
 
