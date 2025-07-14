@@ -6,17 +6,17 @@ import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
-export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
+export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Query budgets with forced refresh
+  // Query budgets with better caching
   const { data: budgets, isLoading: budgetsLoading } = useQuery({
-    queryKey: ['budgets', monthKey, user?.id, refreshTrigger],
+    queryKey: ['budgets', user?.id, refreshTrigger],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching budgets for user:", user.id, "refreshTrigger:", refreshTrigger);
+      console.log("Fetching budgets for user:", user.id);
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
@@ -28,22 +28,22 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
         throw error;
       }
       
-      console.log(`Fetched ${data?.length || 0} budgets:`, data);
+      console.log(`Fetched ${data?.length || 0} budgets`);
       return data as Budget[];
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: true, // Always fetch on first mount
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
   
-  // Query monthly income using the new service
+  // Query monthly income with better caching
   const { data: incomeData, isLoading: incomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id, monthKey, refreshTrigger],
+    queryKey: ['monthly_income', user?.id, monthKey],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
-      console.log("Fetching income for user:", user.id, "month:", monthKey, "refreshTrigger:", refreshTrigger);
+      console.log("Fetching income for user:", user.id, "month:", monthKey);
       
       const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
       console.log("Income from service:", income);
@@ -52,20 +52,20 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: true, // Always fetch on first mount
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 
-  // Query expenses with forced refresh
+  // Query expenses with better caching
   const { data: expenses, isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', monthKey, user?.id, refreshTrigger],
+    queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
-      console.log("Fetching expenses for user:", user.id, "month:", monthKey, "refreshTrigger:", refreshTrigger);
+      console.log("Fetching expenses for user:", user.id, "month:", monthKey);
       
       const { data, error } = await supabase
         .from('expenses')
@@ -80,7 +80,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: true, // Always fetch on first mount
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 

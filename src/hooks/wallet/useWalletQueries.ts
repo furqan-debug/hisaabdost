@@ -13,9 +13,9 @@ export function useWalletQueries() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month (excluding deleted carryover funds)
+  // Query wallet additions for current month with better performance
   const { data: walletAdditions = [], isLoading } = useQuery({
-    queryKey: ['wallet-additions', user?.id, firstDayOfMonth, lastDayOfMonth],
+    queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
       if (!user) return [];
 
@@ -38,13 +38,13 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Always fetch on first mount
+    refetchOnMount: false,
     refetchOnReconnect: false,
   });
 
-  // Query all wallet additions (for manage funds page, excluding soft-deleted)
+  // Query all wallet additions with better caching
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
@@ -67,7 +67,7 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

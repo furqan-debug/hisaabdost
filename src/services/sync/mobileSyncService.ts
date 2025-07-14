@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { offlineStorage } from "../offlineStorageService";
 import { toast } from "sonner";
@@ -14,7 +15,9 @@ export class MobileSyncService {
     averageLatency: 0
   };
   private retryCount = 0;
-  private maxRetries = 3;
+  private maxRetries = 2; // Reduced from 3
+  private lastSyncTime = 0;
+  private syncCooldown = 30000; // 30 seconds cooldown between syncs
 
   static getInstance(): MobileSyncService {
     if (!this.instance) {
@@ -24,15 +27,29 @@ export class MobileSyncService {
   }
 
   async syncPendingData(): Promise<boolean> {
+    // Check cooldown period to prevent excessive syncing
+    const now = Date.now();
+    if (now - this.lastSyncTime < this.syncCooldown) {
+      console.log('Sync cooldown active, skipping');
+      return false;
+    }
+
     if (this.syncInProgress) {
       console.log('Sync already in progress, skipping');
       return false;
     }
 
     this.syncInProgress = true;
+    this.lastSyncTime = now;
     console.log('Starting mobile-optimized data sync...');
 
     try {
+      // Quick connection check - don't proceed if offline
+      if (!navigator.onLine) {
+        console.log('Device is offline, skipping sync');
+        return false;
+      }
+
       // Detect connection quality first
       this.connectionQuality = await ConnectionUtils.detectConnectionQuality();
       console.log('Connection quality:', this.connectionQuality);
@@ -46,10 +63,20 @@ export class MobileSyncService {
       const pendingData = offlineStorage.getPendingSync();
       let totalSyncCount = 0;
 
-      // Show progress toast for mobile users
-      const progressToast = toast.loading("Syncing data to cloud...", {
-        duration: Infinity
-      });
+      // Check if there's actually data to sync
+      const hasDataToSync = (pendingData.expense?.length || 0) + 
+                           (pendingData.wallet?.length || 0) + 
+                           (pendingData.budget?.length || 0) > 0;
+
+      if (!hasDataToSync) {
+        console.log('No pending data to sync');
+        return false;
+      }
+
+      // Show progress toast for mobile users only if there's significant data
+      const progressToast = totalSyncCount > 5 ? toast.loading("Syncing data to cloud...", {
+        duration: 10000 // Shorter duration
+      }) : null;
 
       try {
         // Sync expenses first (highest priority)
@@ -60,13 +87,6 @@ export class MobileSyncService {
             this.connectionQuality
           );
           totalSyncCount += expenseCount;
-          
-          if (expenseCount > 0) {
-            toast.dismiss(progressToast);
-            toast.loading(`Synced ${expenseCount} expenses. Continuing...`, {
-              duration: 2000
-            });
-          }
         }
 
         // Sync wallet additions
@@ -89,7 +109,9 @@ export class MobileSyncService {
           totalSyncCount += budgetCount;
         }
 
-        toast.dismiss(progressToast);
+        if (progressToast) {
+          toast.dismiss(progressToast);
+        }
 
         if (totalSyncCount > 0) {
           // Clear pending data only if we had some success
@@ -100,26 +122,29 @@ export class MobileSyncService {
             window.dispatchEvent(new CustomEvent('data-synced', {
               detail: { syncCount: totalSyncCount, source: 'mobile-sync' }
             }));
-          }, 200);
+          }, 500); // Increased delay to prevent conflicts
 
-          toast.success(`Successfully synced ${totalSyncCount} items to the cloud`);
+          // Only show toast for significant syncs
+          if (totalSyncCount > 1) {
+            toast.success(`Successfully synced ${totalSyncCount} items to the cloud`);
+          }
           this.retryCount = 0; // Reset retry count on success
-        } else {
-          toast.error('No data was synced. Will retry automatically.');
         }
 
         console.log(`Mobile sync completed. Synced ${totalSyncCount} items.`);
         return totalSyncCount > 0;
 
       } catch (error) {
-        toast.dismiss(progressToast);
+        if (progressToast) {
+          toast.dismiss(progressToast);
+        }
         throw error;
       }
 
     } catch (error) {
       console.error('Mobile sync failed:', error);
       
-      // Implement retry logic with exponential backoff
+      // Simplified retry logic
       if (this.retryCount < this.maxRetries) {
         this.retryCount++;
         console.log(`Scheduling retry ${this.retryCount}/${this.maxRetries}`);
@@ -127,12 +152,15 @@ export class MobileSyncService {
         setTimeout(async () => {
           await TimeoutUtils.exponentialBackoff(this.retryCount - 1);
           this.syncPendingData(); // Retry
-        }, 1000);
+        }, 5000 * this.retryCount); // Longer delays
         
-        toast.error(`Sync failed. Retrying... (${this.retryCount}/${this.maxRetries})`);
+        // Don't show toast for every retry attempt
+        if (this.retryCount === 1) {
+          toast.error(`Sync failed. Retrying...`);
+        }
       } else {
         this.retryCount = 0;
-        toast.error('Sync failed after multiple attempts. Will retry when app reopens.');
+        toast.error('Sync failed. Will retry when app reopens.');
       }
       
       return false;

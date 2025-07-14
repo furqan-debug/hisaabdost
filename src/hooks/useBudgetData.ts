@@ -18,61 +18,45 @@ export function useBudgetData() {
   // Initialize Finny data sync
   useFinnyDataSync();
   
-  // Add refresh trigger state with current timestamp
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(Date.now());
+  // Simplified refresh trigger
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
-  // Listen for budget update events
+  // Debounced event handling to prevent excessive refreshes
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+    
     const handleBudgetUpdate = (e: Event) => {
       const customEvent = e as CustomEvent;
       const detail = customEvent.detail || {};
       const isFinnyEvent = detail.source === 'finny-chat';
       
-      console.log("Budget update detected, immediate refresh", e, { isFinnyEvent });
+      console.log("Budget update detected", e.type, { isFinnyEvent });
       
-      // Immediate invalidation for Finny events
-      if (isFinnyEvent) {
-        console.log("IMMEDIATE budget refresh for Finny event");
-        
-        // Force immediate invalidation
-        queryClient.invalidateQueries({ queryKey: ['budgets'] });
-        queryClient.invalidateQueries({ queryKey: ['expenses'] });
-        queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
-        
-        // Update refresh trigger immediately
-        setRefreshTrigger(Date.now());
-        
-        // Force immediate refetch
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
-          queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user?.id] });
-          queryClient.refetchQueries({ queryKey: ['monthly_income', user?.id] });
-        }, 50);
-      } else {
-        // Standard refresh for other events
-        queryClient.invalidateQueries({ queryKey: ['budgets'] });
-        queryClient.invalidateQueries({ queryKey: ['expenses'] });
-        queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
-        
-        // Update refresh trigger
-        setRefreshTrigger(Date.now());
-        
-        // Delayed refetch
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ['budgets', monthKey, user?.id] });
-        }, 100);
+      // Clear existing timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+      
+      // Debounced refresh
+      debounceTimer = setTimeout(() => {
+        if (isFinnyEvent) {
+          // Immediate refresh for Finny events
+          queryClient.invalidateQueries({ queryKey: ['budgets'] });
+          queryClient.invalidateQueries({ queryKey: ['expenses'] });
+          queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+          setRefreshTrigger(Date.now());
+        } else {
+          // Standard refresh for other events
+          setRefreshTrigger(prev => prev + 1);
+        }
+      }, isFinnyEvent ? 100 : 300);
     };
     
     const eventTypes = [
       'budget-updated', 
       'budget-deleted', 
-      'budget-refresh',
       'budget-added',
       'income-updated',
-      'income-refresh',
-      'expenses-updated',
-      'expense-refresh',
       'expense-added'
     ];
     
@@ -81,6 +65,9 @@ export function useBudgetData() {
     });
     
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleBudgetUpdate);
       });

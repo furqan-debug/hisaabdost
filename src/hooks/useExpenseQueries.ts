@@ -7,18 +7,18 @@ import { Expense } from "@/components/expenses/types";
 export function useExpenseQueries() {
   const { user } = useAuth();
 
-  // Main expenses query - simplified with no overlapping invalidations
+  // Simplified expenses query with better performance
   const {
     data: expenses = [],
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['all_expenses', user?.id],
+    queryKey: ['expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log("Fetching all expenses for user:", user.id);
+      console.log("Fetching expenses for user:", user.id);
 
       const { data, error } = await supabase
         .from('expenses')
@@ -46,11 +46,11 @@ export function useExpenseQueries() {
       })) as Expense[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60,       // 1 minute
-    gcTime: 1000 * 300,         // 5 minutes (renamed from cacheTime)
+    staleTime: 1000 * 60 * 5,     // 5 minutes - increased from 1 minute
+    gcTime: 1000 * 60 * 10,       // 10 minutes
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
+    refetchOnReconnect: true,     // Only refetch on reconnect
+    refetchOnMount: false,        // Don't refetch on every mount
   });
 
   return {

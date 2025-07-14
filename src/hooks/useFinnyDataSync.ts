@@ -12,46 +12,41 @@ export function useFinnyDataSync() {
   const monthKey = format(selectedMonth, 'yyyy-MM');
 
   useEffect(() => {
-    // Listen for various Finny action events
+    // Debounced refresh function to prevent excessive invalidations
+    let debounceTimer: NodeJS.Timeout;
+    
     const handleDataRefresh = async (event: CustomEvent) => {
       const { detail } = event;
       console.log('Finny data refresh event:', event.type, detail);
 
-      // Force immediate invalidation and refetch for all expense-related queries
-      const invalidateAndRefetch = async () => {
+      // Clear existing debounce timer
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+
+      // Debounce invalidations to prevent spam
+      debounceTimer = setTimeout(async () => {
+        const isFinnyEvent = detail?.source === 'finny-chat';
+        
         switch (event.type) {
           case 'expense-added':
           case 'expense-updated':
           case 'expense-deleted':
           case 'finny-expense-added':
-            console.log('Processing expense event, invalidating all expense queries');
+            console.log('Processing expense event');
             
-            // Invalidate all possible expense query variations
-            await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            await queryClient.invalidateQueries({ queryKey: ['all_expenses'] });
-            await queryClient.invalidateQueries({ queryKey: ['all-expenses'] });
-            
-            // Force immediate refetch with current user and month data
             if (user?.id) {
-              await queryClient.refetchQueries({ 
-                queryKey: ['expenses', monthKey, user.id] 
-              });
-              await queryClient.refetchQueries({ 
-                queryKey: ['all_expenses', user.id] 
-              });
-              await queryClient.refetchQueries({ 
-                queryKey: ['all-expenses', user.id] 
+              // Only invalidate specific expense queries
+              await queryClient.invalidateQueries({ 
+                queryKey: ['expenses', user.id] 
               });
               
-              // CRITICAL: Also invalidate analytics queries that use dateRange format
-              console.log('Invalidating analytics queries for expense changes');
-              await queryClient.invalidateQueries({ 
-                queryKey: ['expenses'], 
-                predicate: (query) => {
-                  // Invalidate any expenses query that includes user.id
-                  return query.queryKey.includes(user.id);
-                }
-              });
+              if (isFinnyEvent) {
+                // Force immediate refetch for Finny events only
+                await queryClient.refetchQueries({ 
+                  queryKey: ['expenses', user.id] 
+                });
+              }
             }
             break;
 
@@ -60,24 +55,26 @@ export function useFinnyDataSync() {
           case 'budget-deleted':
           case 'set_budget':
           case 'update_budget':
-            console.log('Processing budget event, invalidating all budget queries');
-            await queryClient.invalidateQueries({ queryKey: ['budgets'] });
+            console.log('Processing budget event');
             if (user?.id) {
-              await queryClient.refetchQueries({ 
-                queryKey: ['budgets', monthKey, user.id] 
-              });
-              // Also refetch without monthKey for budget page
-              await queryClient.refetchQueries({ 
+              await queryClient.invalidateQueries({ 
                 queryKey: ['budgets', user.id] 
               });
             }
             break;
 
           case 'income-updated':
-            await queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
             if (user?.id) {
-              await queryClient.refetchQueries({ 
-                queryKey: ['monthly_income', user.id, monthKey] 
+              await queryClient.invalidateQueries({ 
+                queryKey: ['monthly_income', user.id] 
+              });
+            }
+            break;
+
+          case 'wallet-updated':
+            if (user?.id) {
+              await queryClient.invalidateQueries({ 
+                queryKey: ['wallet-additions', user.id] 
               });
             }
             break;
@@ -85,55 +82,24 @@ export function useFinnyDataSync() {
           case 'goal-added':
           case 'goal-updated':
           case 'goal-deleted':
-            await queryClient.invalidateQueries({ queryKey: ['goals'] });
             if (user?.id) {
-              await queryClient.refetchQueries({ 
+              await queryClient.invalidateQueries({ 
                 queryKey: ['goals', user.id] 
               });
             }
             break;
 
-          case 'wallet-updated':
-            await queryClient.invalidateQueries({ queryKey: ['wallet_additions'] });
-            if (user?.id) {
-              await queryClient.refetchQueries({ 
-                queryKey: ['wallet_additions', user.id] 
-              });
+          default:
+            // For unknown events, only invalidate if it's a Finny event
+            if (isFinnyEvent) {
+              await queryClient.invalidateQueries();
             }
             break;
-
-          case 'dashboard-refresh':
-          case 'analytics-refresh':
-            // Refresh everything for dashboard and analytics
-            await queryClient.invalidateQueries();
-            break;
-
-          default:
-            // General refresh for unknown events
-            await queryClient.invalidateQueries();
-            break;
         }
-      };
-
-      // Execute immediately
-      await invalidateAndRefetch();
-      
-      // Additional delayed refreshes to ensure data consistency
-      setTimeout(async () => {
-        console.log('Secondary refresh for', event.type);
-        await invalidateAndRefetch();
-      }, 100);
-      
-      // Final refresh after 1 second for Finny actions (reduced from 2s)
-      if (detail?.source === 'finny-chat') {
-        setTimeout(async () => {
-          console.log('Final Finny refresh for', event.type);
-          await invalidateAndRefetch();
-        }, 1000);
-      }
+      }, isFinnyEvent ? 100 : 500); // Shorter debounce for Finny events
     };
 
-    // Register event listeners for all relevant events
+    // Reduced number of event listeners
     const eventTypes = [
       'expense-added',
       'expense-updated', 
@@ -142,15 +108,11 @@ export function useFinnyDataSync() {
       'budget-added',
       'budget-updated',
       'budget-deleted',
-      'set_budget',
-      'update_budget',
       'income-updated',
       'goal-added',
       'goal-updated',
       'goal-deleted',
-      'wallet-updated',
-      'dashboard-refresh',
-      'analytics-refresh'
+      'wallet-updated'
     ];
 
     eventTypes.forEach(eventType => {
@@ -158,6 +120,9 @@ export function useFinnyDataSync() {
     });
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleDataRefresh as EventListener);
       });
