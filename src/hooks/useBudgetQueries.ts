@@ -10,11 +10,16 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
-  // Query budgets with better loading behavior
-  const { data: budgets, isLoading: budgetsLoading } = useQuery({
+  console.log("useBudgetQueries: Starting queries for user:", user?.id, "month:", monthKey);
+  
+  // Query budgets
+  const { data: budgets = [], isLoading: budgetsLoading, error: budgetsError } = useQuery({
     queryKey: ['budgets', user?.id, refreshTrigger],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log("useBudgetQueries: No user, returning empty budgets");
+        return [];
+      }
       
       console.log("Fetching budgets for user:", user.id);
       const { data, error } = await supabase
@@ -32,35 +37,46 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // Reduced to 30 seconds
-    refetchOnMount: true, // Enable refetch on mount
+    staleTime: 1000 * 30,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
   
-  // Query monthly income with better loading behavior
-  const { data: incomeData, isLoading: incomeLoading } = useQuery({
+  // Query monthly income
+  const { data: incomeData = { monthlyIncome: 0 }, isLoading: incomeLoading, error: incomeError } = useQuery({
     queryKey: ['monthly_income', user?.id, monthKey],
     queryFn: async () => {
-      if (!user) return { monthlyIncome: 0 };
+      if (!user) {
+        console.log("useBudgetQueries: No user, returning default income");
+        return { monthlyIncome: 0 };
+      }
       
       console.log("Fetching income for user:", user.id, "month:", monthKey);
       
-      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
-      console.log("Income from service:", income);
-      
-      return { monthlyIncome: income };
+      try {
+        const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
+        console.log("Income from service:", income);
+        
+        return { monthlyIncome: income };
+      } catch (error) {
+        console.error("Error fetching income:", error);
+        return { monthlyIncome: 0 };
+      }
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // Reduced to 30 seconds
-    refetchOnMount: true, // Enable refetch on mount
+    staleTime: 1000 * 30,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
-  // Query expenses with better loading behavior
-  const { data: expenses, isLoading: expensesLoading } = useQuery({
+  // Query expenses
+  const { data: expenses = [], isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log("useBudgetQueries: No user, returning empty expenses");
+        return [];
+      }
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
@@ -74,20 +90,32 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching expenses:", error);
+        throw error;
+      }
+      
       console.log(`Fetched ${data?.length || 0} expenses for ${monthKey}`);
-      return data;
+      return data || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // Reduced to 30 seconds
-    refetchOnMount: true, // Enable refetch on mount
+    staleTime: 1000 * 30,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
-  return {
+  // Log any errors
+  if (budgetsError) console.error("Budgets query error:", budgetsError);
+  if (incomeError) console.error("Income query error:", incomeError);
+  if (expensesError) console.error("Expenses query error:", expensesError);
+
+  const result = {
     budgets,
     expenses,
     incomeData,
     isLoading: budgetsLoading || expensesLoading || incomeLoading
   };
+  
+  console.log("useBudgetQueries: returning", result);
+  return result;
 }

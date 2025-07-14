@@ -56,7 +56,13 @@ export function useBudgetData() {
   const queryResults = useBudgetQueries(selectedMonth, refreshTrigger);
   console.log("useBudgetData: query results", queryResults);
   
-  const { budgets, expenses, incomeData, isLoading } = queryResults;
+  // Ensure we have valid data structure
+  if (!queryResults) {
+    console.error("useBudgetData: No query results received");
+    return null;
+  }
+  
+  const { budgets = [], expenses = [], incomeData = { monthlyIncome: 0 }, isLoading = false } = queryResults;
   
   // Use the separated calculations hook
   const calculatedValues = useBudgetCalculations(budgets, expenses, incomeData, isLoading, selectedMonth);
@@ -65,7 +71,9 @@ export function useBudgetData() {
   // Export function wrapper
   const handleExportBudgetData = () => {
     console.log("Exporting budget data");
-    exportBudgetData(budgets, expenses, selectedMonth);
+    if (exportBudgetData) {
+      exportBudgetData(budgets, expenses, selectedMonth);
+    }
   };
 
   // Transform budgets data for notification triggers

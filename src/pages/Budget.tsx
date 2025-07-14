@@ -25,20 +25,20 @@ const Budget = () => {
   console.log("Budget component rendering");
 
   const budgetData = useBudgetData();
-  console.log("Budget data:", budgetData);
+  console.log("Budget data received:", budgetData);
 
   const {
-    budgets,
-    expenses,
-    isLoading,
+    budgets = [],
+    expenses = [],
+    isLoading = false,
     exportBudgetData,
-    totalBudget,
-    totalSpent,
-    remainingBalance,
-    usagePercentage,
-    monthlyIncome,
-    budgetNotificationData,
-  } = budgetData;
+    totalBudget = 0,
+    totalSpent = 0,
+    remainingBalance = 0,
+    usagePercentage = 0,
+    monthlyIncome = 0,
+    budgetNotificationData = [],
+  } = budgetData || {};
 
   // Setup notification triggers for budget page
   useNotificationTriggers({
@@ -73,7 +73,20 @@ const Budget = () => {
     window.dispatchEvent(new Event('budget-updated'));
   };
 
-  console.log("Rendering with isLoading:", isLoading);
+  console.log("Rendering with isLoading:", isLoading, "budgets:", budgets?.length);
+
+  // Show error state if there's a critical issue
+  if (!budgetData) {
+    console.error("No budget data available");
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Unable to load budget data</h2>
+          <p className="text-muted-foreground">Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     console.log("Showing loading state");
@@ -97,19 +110,19 @@ const Budget = () => {
       <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
         <BudgetHeader 
           onAddBudget={handleAddBudget}
-          onExport={exportBudgetData} 
+          onExport={exportBudgetData || (() => {})} 
         />
         
         <BudgetSummaryCards 
-          totalBudget={totalBudget || 0}
-          remainingBalance={remainingBalance || 0}
-          usagePercentage={usagePercentage || 0}
-          monthlyIncome={monthlyIncome || 0}
+          totalBudget={totalBudget}
+          remainingBalance={remainingBalance}
+          usagePercentage={usagePercentage}
+          monthlyIncome={monthlyIncome}
           isLoading={isLoading}
         />
         
         <BudgetTabs 
-          budgets={budgets || []}
+          budgets={budgets}
           onEditBudget={handleEditBudget}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -120,8 +133,8 @@ const Budget = () => {
           onOpenChange={setShowBudgetForm}
           budget={editingBudget}
           onSuccess={handleBudgetSuccess}
-          monthlyIncome={monthlyIncome || 0}
-          totalBudget={totalBudget || 0}
+          monthlyIncome={monthlyIncome}
+          totalBudget={totalBudget}
         />
       </div>
     </div>
