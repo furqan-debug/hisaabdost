@@ -46,11 +46,11 @@ export function useExpenseQueries() {
       })) as Expense[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5,     // 5 minutes - increased from 1 minute
+    staleTime: 1000 * 60 * 2,     // 2 minutes for mobile optimization
     gcTime: 1000 * 60 * 10,       // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,     // Only refetch on reconnect
-    refetchOnMount: false,        // Don't refetch on every mount
+    refetchOnMount: false,        // Only fetch if data is stale
   });
 
   return {

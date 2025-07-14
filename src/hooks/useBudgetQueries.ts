@@ -6,7 +6,7 @@ import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
-export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
+export function useBudgetQueries(selectedMonth: Date) {
   const { user } = useAuth();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
@@ -14,7 +14,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
   
   // Query budgets
   const { data: budgets = [], isLoading: budgetsLoading, error: budgetsError } = useQuery({
-    queryKey: ['budgets', user?.id, refreshTrigger],
+    queryKey: ['budgets', user?.id],
     queryFn: async () => {
       if (!user) {
         console.log("useBudgetQueries: No user, returning empty budgets");
@@ -37,8 +37,8 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 1000 * 30,
-    refetchOnMount: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
     refetchOnWindowFocus: false,
   });
   
@@ -64,8 +64,8 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 30,
-    refetchOnMount: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
     refetchOnWindowFocus: false,
   });
 
@@ -99,8 +99,8 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger?: number) {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 30,
-    refetchOnMount: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
     refetchOnWindowFocus: false,
   });
 

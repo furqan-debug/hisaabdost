@@ -38,8 +38,8 @@ export function useDashboardData() {
       return { monthlyIncome: income };
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: true, // Always fetch on first mount
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
     refetchOnWindowFocus: false,
   });
   
@@ -91,8 +91,8 @@ export function useDashboardData() {
       }));
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchOnMount: true, // Always fetch on first mount
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
     refetchOnWindowFocus: false,
   });
 

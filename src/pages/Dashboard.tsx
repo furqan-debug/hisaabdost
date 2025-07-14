@@ -7,7 +7,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
-import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
+import { useOptimizedDataSync } from "@/hooks/useOptimizedDataSync";
 
 /**
  * Dashboard page component that displays financial overview
@@ -16,8 +16,8 @@ import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 const Dashboard = () => {
   const { isLoading: isMonthDataLoading } = useMonthContext();
   
-  // Initialize Finny data synchronization
-  useFinnyDataSync();
+  // Initialize optimized data synchronization
+  const { syncInProgress } = useOptimizedDataSync();
 
   const {
     expenses,
@@ -40,23 +40,30 @@ const Dashboard = () => {
     setMonthlyIncome
   } = useDashboardData();
 
-  const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && expenses.length > 0;
+  // Reduced notification triggers - only for established users with significant data
+  const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && 
+    expenses.length > 10 && !syncInProgress; // Require more data before notifications
 
-  useNotificationTriggers({
-    monthlyExpenses: shouldSetupNotifications ? monthlyExpenses : 0,
-    monthlyIncome: shouldSetupNotifications ? monthlyIncome : 0,
-    walletBalance: shouldSetupNotifications ? walletBalance : 0,
-    expenses: shouldSetupNotifications ? expenses : [],
-    previousMonthExpenses: 0,
-  });
+  // Only trigger notifications if user has significant usage
+  if (shouldSetupNotifications) {
+    useNotificationTriggers({
+      monthlyExpenses,
+      monthlyIncome,
+      walletBalance,
+      expenses,
+      previousMonthExpenses: 0,
+    });
+  }
 
-  useMonthCarryover();
+  // Conditional hooks - only run for users with enough data
+  if (shouldSetupNotifications) {
+    useMonthCarryover();
+    useAnalyticsNotifications({ 
+      expenses: expenses.length >= 20 ? expenses : [] 
+    });
+  }
 
-  useAnalyticsNotifications({ 
-    expenses: shouldSetupNotifications && expenses.length >= 20 ? expenses : [] 
-  });
-
-  if (isLoading || isMonthDataLoading) {
+  if (isLoading || isMonthDataLoading || syncInProgress) {
     return <DashboardSkeleton />;
   }
 

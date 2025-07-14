@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { useBudgetQueries } from "./useBudgetQueries";
 import { useBudgetCalculations } from "./useBudgetCalculations";
 import { exportBudgetData } from "@/services/budgetExportService";
-import { useFinnyDataSync } from "./useFinnyDataSync";
+import { useOptimizedDataSync } from "./useOptimizedDataSync";
 
 export function useBudgetData() {
   const { selectedMonth } = useMonthContext();
@@ -17,43 +17,13 @@ export function useBudgetData() {
   
   console.log("useBudgetData: initializing for month", monthKey, "user:", user?.id);
   
-  // Initialize Finny data sync
-  useFinnyDataSync();
+  // Initialize optimized data sync
+  const { syncInProgress } = useOptimizedDataSync();
   
-  // Simplified refresh trigger
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  
-  // Simplified event handling
-  useEffect(() => {
-    const handleBudgetUpdate = () => {
-      console.log("Budget update detected in useBudgetData");
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
-      setRefreshTrigger(Date.now());
-    };
-    
-    const eventTypes = [
-      'budget-updated', 
-      'budget-deleted', 
-      'budget-added',
-      'income-updated',
-      'expense-added'
-    ];
-    
-    eventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleBudgetUpdate);
-    });
-    
-    return () => {
-      eventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleBudgetUpdate);
-      });
-    };
-  }, [queryClient]);
+  // Remove excessive event handling - now handled by useOptimizedDataSync
   
   // Use the separated query hook
-  const queryResults = useBudgetQueries(selectedMonth, refreshTrigger);
+  const queryResults = useBudgetQueries(selectedMonth);
   console.log("useBudgetData: query results", queryResults);
   
   // Ensure we have valid data structure
@@ -91,7 +61,7 @@ export function useBudgetData() {
   const result = {
     budgets: budgets || [],
     expenses: expenses || [],
-    isLoading,
+    isLoading: isLoading || syncInProgress, // Include sync progress in loading state
     exportBudgetData: handleExportBudgetData,
     budgetNotificationData,
     ...calculatedValues

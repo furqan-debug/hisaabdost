@@ -52,9 +52,9 @@ export default function Goals() {
       return data as Goal[];
     },
     enabled: !!user,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: expenses } = useQuery({
