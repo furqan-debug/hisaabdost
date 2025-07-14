@@ -91,14 +91,14 @@ export class MobileSyncService {
 
         const timeout = this.getTimeoutForOperation(8000); // 8 second base timeout
         
-        const { error } = await this.withTimeout(
+        const result = await this.withTimeout(
           supabase.from('expenses').insert(expenseData),
           timeout,
           `Expense batch insert (chunk ${Math.floor(i / chunkSize) + 1})`
         );
 
-        if (error) {
-          console.error(`Error inserting expense chunk:`, error);
+        if (result.error) {
+          console.error(`Error inserting expense chunk:`, result.error);
           // Continue with next chunk instead of failing completely
         } else {
           successCount += chunk.length;
@@ -134,14 +134,14 @@ export class MobileSyncService {
 
       const timeout = this.getTimeoutForOperation(6000);
       
-      const { error } = await this.withTimeout(
+      const result = await this.withTimeout(
         supabase.from('wallet_additions').insert(walletData),
         timeout,
         'Wallet additions batch insert'
       );
 
-      if (error) {
-        console.error('Error inserting wallet additions:', error);
+      if (result.error) {
+        console.error('Error inserting wallet additions:', result.error);
         return 0;
       }
 
@@ -168,14 +168,14 @@ export class MobileSyncService {
 
       const timeout = this.getTimeoutForOperation(6000);
       
-      const { error } = await this.withTimeout(
+      const result = await this.withTimeout(
         supabase.from('budgets').insert(budgetData),
         timeout,
         'Budgets batch insert'
       );
 
-      if (error) {
-        console.error('Error inserting budgets:', error);
+      if (result.error) {
+        console.error('Error inserting budgets:', result.error);
         return 0;
       }
 
