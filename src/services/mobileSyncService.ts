@@ -97,7 +97,7 @@ export class MobileSyncService {
         const timeout = this.getTimeoutForOperation(8000); // 8 second base timeout
         
         const result = await this.withTimeout(
-          supabase.from('expenses').insert(expenseData) as Promise<SupabaseResponse>,
+          supabase.from('expenses').insert(expenseData) as unknown as Promise<SupabaseResponse>,
           timeout,
           `Expense batch insert (chunk ${Math.floor(i / chunkSize) + 1})`
         );
@@ -140,7 +140,7 @@ export class MobileSyncService {
       const timeout = this.getTimeoutForOperation(6000);
       
       const result = await this.withTimeout(
-        supabase.from('wallet_additions').insert(walletData) as Promise<SupabaseResponse>,
+        supabase.from('wallet_additions').insert(walletData) as unknown as Promise<SupabaseResponse>,
         timeout,
         'Wallet additions batch insert'
       );
@@ -174,7 +174,7 @@ export class MobileSyncService {
       const timeout = this.getTimeoutForOperation(6000);
       
       const result = await this.withTimeout(
-        supabase.from('budgets').insert(budgetData) as Promise<SupabaseResponse>,
+        supabase.from('budgets').insert(budgetData) as unknown as Promise<SupabaseResponse>,
         timeout,
         'Budgets batch insert'
       );
