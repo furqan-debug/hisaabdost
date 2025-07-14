@@ -19,14 +19,16 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
       offlineData.expenses.push(expense);
       offlineStorage.saveOfflineData(offlineData);
       
-      // Dispatch event to update UI
-      window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+      // Debounced event dispatch for mobile performance
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+      }, 100);
       
       toast.success("Expense saved offline. Will sync when online.");
       return true;
     }
 
-    // If online, try to save to server
+    // If online, try to save to server with timeout for mobile
     const expenseData = {
       user_id: user.id,
       amount: parseFloat(expense.amount.toString()),
@@ -39,15 +41,27 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
       receipt_url: expense.receiptUrl || null
     };
 
-    const { error } = await supabase
+    // Add timeout for mobile networks (5 seconds)
+    const savePromise = supabase
       .from('expenses')
       .insert([expenseData]);
+
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 5000)
+    );
+
+    const { error } = await Promise.race([savePromise, timeoutPromise]) as any;
 
     if (error) {
       // If server save fails, save offline
       console.log('Server save failed, saving offline:', error);
       offlineStorage.addToPendingSync('expense', expense);
-      window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+      
+      // Debounced event dispatch for mobile performance
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+      }, 100);
+      
       toast.success("Expense saved offline. Will sync when connection is restored.");
       return true;
     }
@@ -57,7 +71,12 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
     // If any error occurs, save offline
     console.log('Error saving expense, storing offline:', error);
     offlineStorage.addToPendingSync('expense', expense);
-    window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+    
+    // Debounced event dispatch for mobile performance
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('pending-sync-updated'));
+    }, 100);
+    
     toast.success("Expense saved offline. Will sync when online.");
     return true;
   }
