@@ -44,24 +44,21 @@ const Dashboard = () => {
   const shouldSetupNotifications = !isNewUser && !isLoading && !isExpensesLoading && 
     expenses.length > 10 && !syncInProgress; // Require more data before notifications
 
-  // Only trigger notifications if user has significant usage
-  if (shouldSetupNotifications) {
-    useNotificationTriggers({
-      monthlyExpenses,
-      monthlyIncome,
-      walletBalance,
-      expenses,
-      previousMonthExpenses: 0,
-    });
-  }
+  // Always call hooks - but pass the condition as a parameter
+  useNotificationTriggers({
+    monthlyExpenses,
+    monthlyIncome,
+    walletBalance,
+    expenses,
+    previousMonthExpenses: 0,
+    enabled: shouldSetupNotifications,
+  });
 
-  // Conditional hooks - only run for users with enough data
-  if (shouldSetupNotifications) {
-    useMonthCarryover();
-    useAnalyticsNotifications({ 
-      expenses: expenses.length >= 20 ? expenses : [] 
-    });
-  }
+  useMonthCarryover({ enabled: shouldSetupNotifications });
+  useAnalyticsNotifications({ 
+    expenses: expenses.length >= 20 ? expenses : [],
+    enabled: shouldSetupNotifications
+  });
 
   if (isLoading || isMonthDataLoading || syncInProgress) {
     return <DashboardSkeleton />;

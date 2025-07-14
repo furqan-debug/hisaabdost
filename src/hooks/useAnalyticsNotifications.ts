@@ -13,14 +13,20 @@ interface Expense {
 
 interface AnalyticsNotificationsProps {
   expenses: Expense[];
+  enabled?: boolean;
 }
 
-export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsProps) {
+export function useAnalyticsNotifications({ expenses, enabled = true }: AnalyticsNotificationsProps) {
   const { addNotification } = useNotifications();
   const insights = useAnalyticsInsights(expenses);
   const processedSession = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!enabled) {
+      console.log('Analytics notifications disabled by enabled flag');
+      return;
+    }
+    
     // Very strict requirements - only for very established users with significant data
     if (!expenses || expenses.length < 50) {
       console.log('Analytics notifications disabled - insufficient data (need 50+ expenses)');
@@ -78,7 +84,7 @@ export function useAnalyticsNotifications({ expenses }: AnalyticsNotificationsPr
     } else {
       console.log('Analytics notification blocked by rate limiting');
     }
-  }, [insights, addNotification, expenses]);
+  }, [insights, addNotification, expenses, enabled]);
 
   return { insights };
 }

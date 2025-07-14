@@ -18,6 +18,7 @@ interface NotificationTriggersProps {
   walletBalance?: number;
   expenses?: any[];
   previousMonthExpenses?: number;
+  enabled?: boolean;
 }
 
 export function useNotificationTriggers({
@@ -27,6 +28,7 @@ export function useNotificationTriggers({
   walletBalance = 0,
   expenses = [],
   previousMonthExpenses = 0,
+  enabled = true,
 }: NotificationTriggersProps) {
   const { addNotification, settings } = useNotifications();
   const { selectedMonth } = useMonthContext();
@@ -68,9 +70,9 @@ export function useNotificationTriggers({
     processedSessionSize: processedSession.current.size
   });
 
-  // Only process notifications for established users
-  if (!isEstablishedUser) {
-    console.log('Skipping all notifications - user needs more established data');
+  // Only process notifications for established users and when enabled
+  if (!isEstablishedUser || !enabled) {
+    console.log('Skipping all notifications - user needs more established data or notifications disabled');
     return;
   }
 

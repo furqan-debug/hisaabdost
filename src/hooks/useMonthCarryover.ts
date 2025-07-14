@@ -5,7 +5,7 @@ import { useCarryoverPreferences } from '@/hooks/useCarryoverPreferences';
 import { format, startOfMonth, subMonths, isAfter, isSameMonth } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 
-export function useMonthCarryover() {
+export function useMonthCarryover({ enabled = true }: { enabled?: boolean } = {}) {
   const { selectedMonth, monthsData } = useMonthContext();
   const { addFunds } = useWalletAdditions();
   const { preferences, isMonthProcessed, markMonthAsProcessed, checkCarryoverExists } = useCarryoverPreferences();
@@ -14,6 +14,8 @@ export function useMonthCarryover() {
   const processedInSessionRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!enabled) return;
+    
     const processCarryover = async () => {
       const currentMonthKey = format(selectedMonth, 'yyyy-MM');
       const currentDate = new Date();
@@ -123,7 +125,7 @@ export function useMonthCarryover() {
       const timeoutId = setTimeout(processCarryover, 2000);
       return () => clearTimeout(timeoutId);
     }
-  }, [selectedMonth, monthsData, preferences, addFunds, isMonthProcessed, markMonthAsProcessed, checkCarryoverExists]);
+  }, [selectedMonth, monthsData, preferences, addFunds, isMonthProcessed, markMonthAsProcessed, checkCarryoverExists, enabled]);
 
   // Clear session tracking when month changes
   useEffect(() => {
