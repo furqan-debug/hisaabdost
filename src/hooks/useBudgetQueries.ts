@@ -32,9 +32,9 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale to force refresh
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
   
   // Query monthly income using the new service
@@ -51,9 +51,9 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       return { monthlyIncome: income };
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale to force refresh
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Query expenses with forced refresh
@@ -79,9 +79,9 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
       return data;
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale to force refresh
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   return {

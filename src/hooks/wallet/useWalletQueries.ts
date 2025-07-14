@@ -38,10 +38,10 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale to force refresh
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // Query all wallet additions (for manage funds page, excluding soft-deleted)
@@ -67,10 +67,10 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale to force refresh
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // Calculate total additions
