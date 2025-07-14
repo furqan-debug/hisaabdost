@@ -24,10 +24,11 @@ export function useFinnyDataSync() {
         clearTimeout(debounceTimer);
       }
 
-      // Debounce invalidations to prevent spam
+      // Check if this is a Finny event
+      const isFinnyEvent = detail?.source === 'finny-chat';
+
+      // Debounce invalidations to prevent spam - shorter debounce for Finny events
       debounceTimer = setTimeout(async () => {
-        const isFinnyEvent = detail?.source === 'finny-chat';
-        
         switch (event.type) {
           case 'expense-added':
           case 'expense-updated':
@@ -96,7 +97,7 @@ export function useFinnyDataSync() {
             }
             break;
         }
-      }, isFinnyEvent ? 100 : 500); // Shorter debounce for Finny events
+      }, isFinnyEvent ? 100 : 500);
     };
 
     // Reduced number of event listeners
