@@ -89,11 +89,10 @@ export class MobileSyncService {
           receipt_url: expense.receiptUrl || null
         }));
 
-        const insertPromise = supabase.from('expenses').insert(expenseData);
         const timeout = this.getTimeoutForOperation(8000); // 8 second base timeout
         
         const { error } = await this.withTimeout(
-          insertPromise,
+          supabase.from('expenses').insert(expenseData),
           timeout,
           `Expense batch insert (chunk ${Math.floor(i / chunkSize) + 1})`
         );
@@ -133,11 +132,10 @@ export class MobileSyncService {
         fund_type: addition.fund_type || 'manual'
       }));
 
-      const insertPromise = supabase.from('wallet_additions').insert(walletData);
       const timeout = this.getTimeoutForOperation(6000);
       
       const { error } = await this.withTimeout(
-        insertPromise,
+        supabase.from('wallet_additions').insert(walletData),
         timeout,
         'Wallet additions batch insert'
       );
@@ -168,11 +166,10 @@ export class MobileSyncService {
         monthly_income: budget.monthly_income || 0
       }));
 
-      const insertPromise = supabase.from('budgets').insert(budgetData);
       const timeout = this.getTimeoutForOperation(6000);
       
       const { error } = await this.withTimeout(
-        insertPromise,
+        supabase.from('budgets').insert(budgetData),
         timeout,
         'Budgets batch insert'
       );
