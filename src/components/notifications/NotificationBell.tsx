@@ -31,7 +31,7 @@ export function NotificationBell() {
   return <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm" className="relative">
-          <Bell className={`h-5 w-5 ${hasPermission ? 'text-green-600' : 'text-muted-foreground'}`} />
+          
           {!hasPermission}
         </Button>
       </PopoverTrigger>
