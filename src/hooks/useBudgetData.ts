@@ -15,6 +15,8 @@ export function useBudgetData() {
   const monthKey = format(selectedMonth, 'yyyy-MM');
   const queryClient = useQueryClient();
   
+  console.log("useBudgetData: initializing for month", monthKey, "user:", user?.id);
+  
   // Initialize Finny data sync
   useFinnyDataSync();
   
@@ -24,7 +26,7 @@ export function useBudgetData() {
   // Simplified event handling
   useEffect(() => {
     const handleBudgetUpdate = () => {
-      console.log("Budget update detected");
+      console.log("Budget update detected in useBudgetData");
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
@@ -51,13 +53,18 @@ export function useBudgetData() {
   }, [queryClient]);
   
   // Use the separated query hook
-  const { budgets, expenses, incomeData, isLoading } = useBudgetQueries(selectedMonth, refreshTrigger);
+  const queryResults = useBudgetQueries(selectedMonth, refreshTrigger);
+  console.log("useBudgetData: query results", queryResults);
+  
+  const { budgets, expenses, incomeData, isLoading } = queryResults;
   
   // Use the separated calculations hook
   const calculatedValues = useBudgetCalculations(budgets, expenses, incomeData, isLoading, selectedMonth);
+  console.log("useBudgetData: calculated values", calculatedValues);
 
   // Export function wrapper
   const handleExportBudgetData = () => {
+    console.log("Exporting budget data");
     exportBudgetData(budgets, expenses, selectedMonth);
   };
 
@@ -73,12 +80,15 @@ export function useBudgetData() {
     };
   }) || [];
 
-  return {
-    budgets,
-    expenses,
+  const result = {
+    budgets: budgets || [],
+    expenses: expenses || [],
     isLoading,
     exportBudgetData: handleExportBudgetData,
     budgetNotificationData,
     ...calculatedValues
   };
+  
+  console.log("useBudgetData: returning result", result);
+  return result;
 }

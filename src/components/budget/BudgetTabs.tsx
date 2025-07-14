@@ -24,6 +24,8 @@ export const BudgetTabs = ({
 }: BudgetTabsProps) => {
   const [stableActiveTab, setStableActiveTab] = useState(activeTab);
 
+  console.log("BudgetTabs rendering with:", { budgets: budgets?.length, activeTab });
+
   useEffect(() => {
     if (activeTab !== stableActiveTab) {
       setStableActiveTab(activeTab);
@@ -31,6 +33,7 @@ export const BudgetTabs = ({
   }, [activeTab, stableActiveTab]);
 
   const handleValueChange = (value: string) => {
+    console.log("Tab changed to:", value);
     setStableActiveTab(value);
     onTabChange(value);
   };
@@ -62,10 +65,7 @@ export const BudgetTabs = ({
     >
       <Tabs value={stableActiveTab} onValueChange={handleValueChange} className="w-full">
         <div className="w-full mb-8">
-          <TabsList className={`
-            w-full md:w-auto h-auto p-1.5 bg-muted/50 rounded-xl
-            flex flex-wrap gap-1 justify-start md:justify-center
-          `}>
+          <TabsList className="w-full md:w-auto h-auto p-1.5 bg-muted/50 rounded-xl flex flex-wrap gap-1 justify-start md:justify-center">
             {tabs.map((tab, index) => (
               <motion.div
                 key={tab.id}
@@ -76,12 +76,7 @@ export const BudgetTabs = ({
               >
                 <TabsTrigger 
                   value={tab.id} 
-                  className={`
-                    relative inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200
-                    data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm
-                    hover:bg-muted/80 hover:text-foreground
-                    whitespace-nowrap
-                  `}
+                  className="relative inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm hover:bg-muted/80 hover:text-foreground whitespace-nowrap"
                 >
                   <tab.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="font-medium text-sm">
@@ -102,7 +97,7 @@ export const BudgetTabs = ({
               transition={{ duration: 0.4, ease: "easeOut" }}
               key="overview"
             >
-              <BudgetOverview budgets={budgets} />
+              <BudgetOverview budgets={budgets || []} />
             </motion.div>
           </TabsContent>
 
@@ -114,7 +109,7 @@ export const BudgetTabs = ({
               transition={{ duration: 0.4, ease: "easeOut" }}
               key="categories"
             >
-              <CategoryBudgets budgets={budgets} />
+              <CategoryBudgets budgets={budgets || []} />
             </motion.div>
           </TabsContent>
 
@@ -126,7 +121,7 @@ export const BudgetTabs = ({
               transition={{ duration: 0.4, ease: "easeOut" }}
               key="transactions"
             >
-              <BudgetTransactions budgets={budgets} />
+              <BudgetTransactions budgets={budgets || []} />
             </motion.div>
           </TabsContent>
 
@@ -138,7 +133,7 @@ export const BudgetTabs = ({
               transition={{ duration: 0.4, ease: "easeOut" }}
               key="comparison"
             >
-              <BudgetComparison budgets={budgets} />
+              <BudgetComparison budgets={budgets || []} />
             </motion.div>
           </TabsContent>
         </div>

@@ -22,6 +22,10 @@ const Budget = () => {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
+  console.log("Budget component rendering");
+
+  const budgetData = useBudgetData();
+  console.log("Budget data:", budgetData);
 
   const {
     budgets,
@@ -34,7 +38,7 @@ const Budget = () => {
     usagePercentage,
     monthlyIncome,
     budgetNotificationData,
-  } = useBudgetData();
+  } = budgetData;
 
   // Setup notification triggers for budget page
   useNotificationTriggers({
@@ -45,27 +49,34 @@ const Budget = () => {
   });
 
   const handleAddBudget = () => {
+    console.log("Add budget clicked");
     setEditingBudget(null);
     setShowBudgetForm(true);
   };
 
   const handleEditBudget = (budget: Budget) => {
+    console.log("Edit budget clicked:", budget);
     setEditingBudget(budget);
     setShowBudgetForm(true);
   };
 
   const handleBudgetFormClose = () => {
+    console.log("Budget form close");
     setShowBudgetForm(false);
     setEditingBudget(null);
   };
 
   const handleBudgetSuccess = () => {
+    console.log("Budget success");
     handleBudgetFormClose();
     // Trigger a refresh of budget data
     window.dispatchEvent(new Event('budget-updated'));
   };
 
+  console.log("Rendering with isLoading:", isLoading);
+
   if (isLoading) {
+    console.log("Showing loading state");
     return (
       <div className="min-h-screen bg-background p-4 space-y-6">
         <div className="h-24 bg-muted/20 rounded-lg animate-pulse" />
@@ -79,6 +90,8 @@ const Budget = () => {
     );
   }
 
+  console.log("Rendering main budget content");
+
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
@@ -88,10 +101,10 @@ const Budget = () => {
         />
         
         <BudgetSummaryCards 
-          totalBudget={totalBudget}
-          remainingBalance={remainingBalance}
-          usagePercentage={usagePercentage}
-          monthlyIncome={monthlyIncome}
+          totalBudget={totalBudget || 0}
+          remainingBalance={remainingBalance || 0}
+          usagePercentage={usagePercentage || 0}
+          monthlyIncome={monthlyIncome || 0}
           isLoading={isLoading}
         />
         
@@ -107,8 +120,8 @@ const Budget = () => {
           onOpenChange={setShowBudgetForm}
           budget={editingBudget}
           onSuccess={handleBudgetSuccess}
-          monthlyIncome={monthlyIncome}
-          totalBudget={totalBudget}
+          monthlyIncome={monthlyIncome || 0}
+          totalBudget={totalBudget || 0}
         />
       </div>
     </div>
