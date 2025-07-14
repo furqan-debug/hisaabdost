@@ -1,14 +1,16 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { PushNotificationService } from '@/services/pushNotificationService';
 import { useAuth } from '@/lib/auth';
 
 export function usePushNotifications() {
   const { user } = useAuth();
+  const isInitializing = useRef(false);
 
   useEffect(() => {
     const initializePushNotifications = async () => {
-      if (user) {
+      if (user && !isInitializing.current) {
+        isInitializing.current = true;
         console.log('🔔 Initializing push notifications for authenticated user');
         try {
           await PushNotificationService.initialize();
@@ -19,6 +21,8 @@ export function usePushNotifications() {
           
         } catch (error) {
           console.log('❌ Push notification initialization failed:', error);
+        } finally {
+          isInitializing.current = false;
         }
       }
     };

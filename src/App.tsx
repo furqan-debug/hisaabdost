@@ -17,9 +17,6 @@ import Goals from "@/pages/Goals";
 import Budget from "@/pages/Budget";
 import Settings from "@/pages/Settings";
 import FinnyChat from "@/pages/FinnyChat";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useEffect } from "react";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -28,28 +25,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Component to initialize push notifications
-function PushNotificationInitializer() {
-  const { forceReinitialize } = usePushNotifications();
-  
-  useEffect(() => {
-    // Force initialization on app startup
-    const initNotifications = async () => {
-      console.log('🚀 App startup - initializing push notifications');
-      try {
-        await forceReinitialize();
-        console.log('✅ Push notifications initialized on app startup');
-      } catch (error) {
-        console.error('❌ Failed to initialize push notifications on startup:', error);
-      }
-    };
-
-    initNotifications();
-  }, [forceReinitialize]);
-
-  return null;
-}
 
 function App() {
   return (
@@ -62,7 +37,6 @@ function App() {
             <CurrencyProvider>
               <MonthProvider>
                 <FinnyProvider>
-              <PushNotificationInitializer />
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/app" element={<Layout />}>
