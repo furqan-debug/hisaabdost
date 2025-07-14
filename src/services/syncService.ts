@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { offlineStorage } from "./offlineStorageService";
 import { toast } from "sonner";
+import { mobileSyncService } from "./mobileSyncService";
 
 export class SyncService {
   private static instance: SyncService;
@@ -14,7 +14,19 @@ export class SyncService {
     return this.instance;
   }
 
+  // Detect if we're on mobile device
+  private isMobileDevice(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
   async syncPendingData(): Promise<boolean> {
+    // Use mobile-optimized sync service for mobile devices
+    if (this.isMobileDevice()) {
+      console.log('Using mobile-optimized sync service');
+      return await mobileSyncService.syncPendingData();
+    }
+
+    // Keep existing sync logic for web/desktop
     if (this.syncInProgress) {
       console.log('Sync already in progress, skipping');
       return false;
@@ -136,7 +148,7 @@ export class SyncService {
   }
 
   isSyncInProgress(): boolean {
-    return this.syncInProgress;
+    return this.syncInProgress || mobileSyncService.isSyncInProgress();
   }
 }
 
