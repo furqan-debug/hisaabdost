@@ -70,7 +70,7 @@ function App() {
                   <Route path="analytics" element={<Analytics />} />
                   <Route path="expenses" element={<Expenses />} />
                   <Route path="goals" element={<Goals />} />
-                  <Route path="budgets" element={<Budget />} />
+                  <Route path="budget" element={<Budget />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="finny" element={<FinnyChat />} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />
