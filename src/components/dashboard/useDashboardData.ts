@@ -34,11 +34,13 @@ export function useDashboardData() {
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
       
-      console.log("Fetching monthly income for:", user.id, currentMonthKey);
       const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
       return { monthlyIncome: income };
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: true, // Always fetch on first mount
+    refetchOnWindowFocus: false,
   });
   
   // Update local income state when data is fetched
@@ -60,8 +62,6 @@ export function useDashboardData() {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching expenses for month:", format(selectedMonth, 'yyyy-MM'));
-      
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
@@ -78,8 +78,6 @@ export function useDashboardData() {
         return [];
       }
       
-      console.log(`Fetched ${data.length} expenses for the month`);
-      
       return data.map(exp => ({
         id: exp.id,
         amount: Number(exp.amount),
@@ -93,16 +91,16 @@ export function useDashboardData() {
       }));
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: true, // Always fetch on first mount
+    refetchOnWindowFocus: false,
   });
 
-  // Fetch ALL expenses for the last 6 months for spending trends
+  // Fetch ALL expenses for the last 6 months for spending trends (load this lazily)
   const { data: allExpenses = [] } = useQuery({
     queryKey: ['all_expenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
-      console.log("Fetching all expenses for spending trends");
       
       // Get expenses from 6 months ago to now
       const sixMonthsAgo = subMonths(new Date(), 5);
@@ -120,8 +118,6 @@ export function useDashboardData() {
         return [];
       }
       
-      console.log(`Fetched ${data.length} total expenses for spending trends`);
-      
       return data.map(exp => ({
         id: exp.id,
         amount: Number(exp.amount),
@@ -134,8 +130,10 @@ export function useDashboardData() {
         receiptUrl: exp.receipt_url || undefined,
       }));
     },
-    enabled: !!user,
-    staleTime: 1000 * 30, // 30 seconds
+    enabled: !!user && expenses.length > 0, // Only load after current month expenses are loaded
+    staleTime: 1000 * 60 * 10, // 10 minutes - this data changes less frequently
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Calculate financial metrics for the current month

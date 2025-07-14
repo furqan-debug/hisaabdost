@@ -33,7 +33,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    refetchOnMount: true, // Always fetch on first mount
     refetchOnWindowFocus: false,
   });
   
@@ -52,7 +52,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    refetchOnMount: true, // Always fetch on first mount
     refetchOnWindowFocus: false,
   });
 
@@ -80,7 +80,7 @@ export function useBudgetQueries(selectedMonth: Date, refreshTrigger: number) {
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnMount: false,
+    refetchOnMount: true, // Always fetch on first mount
     refetchOnWindowFocus: false,
   });
 

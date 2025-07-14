@@ -40,7 +40,7 @@ export function useWalletQueries() {
     enabled: !!user,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true, // Always fetch on first mount
     refetchOnReconnect: false,
   });
 
