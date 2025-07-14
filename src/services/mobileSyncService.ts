@@ -8,6 +8,11 @@ interface ConnectionQuality {
   averageLatency: number;
 }
 
+interface SupabaseResponse<T = any> {
+  data: T | null;
+  error: any;
+}
+
 export class MobileSyncService {
   private static instance: MobileSyncService;
   private syncInProgress = false;
@@ -95,7 +100,7 @@ export class MobileSyncService {
           supabase.from('expenses').insert(expenseData),
           timeout,
           `Expense batch insert (chunk ${Math.floor(i / chunkSize) + 1})`
-        );
+        ) as SupabaseResponse;
 
         if (result.error) {
           console.error(`Error inserting expense chunk:`, result.error);
@@ -138,7 +143,7 @@ export class MobileSyncService {
         supabase.from('wallet_additions').insert(walletData),
         timeout,
         'Wallet additions batch insert'
-      );
+      ) as SupabaseResponse;
 
       if (result.error) {
         console.error('Error inserting wallet additions:', result.error);
@@ -172,7 +177,7 @@ export class MobileSyncService {
         supabase.from('budgets').insert(budgetData),
         timeout,
         'Budgets batch insert'
-      );
+      ) as SupabaseResponse;
 
       if (result.error) {
         console.error('Error inserting budgets:', result.error);
