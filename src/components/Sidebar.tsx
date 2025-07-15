@@ -16,6 +16,7 @@ import {
   Target,
   Calendar,
   CreditCard,
+  BookOpen,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { MonthSelector } from "./MonthSelector";
@@ -29,6 +30,7 @@ const menuItems = [
   { icon: Target, label: "Goals", path: "/app/goals" },
   { icon: CreditCard, label: "Manage Funds", path: "/app/manage-funds" },
   { icon: Calendar, label: "Monthly Summary", path: "/app/history" },
+  { icon: BookOpen, label: "App Guide", path: "/app/guide" },
 ];
 
 const Sidebar = () => {
