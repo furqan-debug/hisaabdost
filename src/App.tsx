@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,6 +19,7 @@ import Auth from '@/pages/Auth';
 import { AuthProvider } from '@/lib/auth';
 import { MonthProvider } from '@/hooks/use-month-context';
 import { CurrencyProvider } from '@/hooks/use-currency';
+import { FinnyProvider } from '@/components/finny';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 const queryClient = new QueryClient({
@@ -50,26 +52,28 @@ function App() {
           <AuthProvider>
             <MonthProvider>
               <CurrencyProvider>
-                <Routes>
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/app" element={<Layout />}>
-                    <Route index element={<Navigate to="/app/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="expenses" element={<Expenses />} />
-                    <Route path="budget" element={<Budget />} />
-                    <Route path="analytics" element={<Analytics />} />
-                    <Route path="goals" element={<Goals />} />
-                    <Route path="settings" element={<Settings />} />
-                    <Route path="history" element={<History />} />
-                    <Route path="manage-funds" element={<ManageFunds />} />
-                  </Route>
-                  <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                </Routes>
-                
-                <Toaster />
-                <SonnerToaster />
-                <ReactQueryDevtools initialIsOpen={false} />
+                <FinnyProvider>
+                  <Routes>
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/app" element={<Layout />}>
+                      <Route index element={<Navigate to="/app/dashboard" replace />} />
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="expenses" element={<Expenses />} />
+                      <Route path="budget" element={<Budget />} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="goals" element={<Goals />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="history" element={<History />} />
+                      <Route path="manage-funds" element={<ManageFunds />} />
+                    </Route>
+                    <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                  </Routes>
+                  
+                  <Toaster />
+                  <SonnerToaster />
+                  <ReactQueryDevtools initialIsOpen={false} />
+                </FinnyProvider>
               </CurrencyProvider>
             </MonthProvider>
           </AuthProvider>
@@ -80,3 +84,4 @@ function App() {
 }
 
 export default App;
+
