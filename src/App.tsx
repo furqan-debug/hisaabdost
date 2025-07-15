@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,12 +14,11 @@ import Goals from '@/pages/Goals';
 import Settings from '@/pages/Settings';
 import History from '@/pages/History';
 import ManageFunds from '@/pages/ManageFunds';
-import AuthPage from '@/pages/AuthPage';
+import Auth from '@/pages/Auth';
 import { AuthProvider } from '@/lib/auth';
-import { MonthContextProvider } from '@/hooks/use-month-context';
+import { MonthProvider } from '@/hooks/use-month-context';
 import { CurrencyProvider } from '@/hooks/use-currency';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ModalStateProvider } from '@/hooks/useModalState';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,32 +48,30 @@ function App() {
           disableTransitionOnChange={false}
         >
           <AuthProvider>
-            <MonthContextProvider>
+            <MonthProvider>
               <CurrencyProvider>
-                <ModalStateProvider>
-                  <Routes>
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/app" element={<Layout />}>
-                      <Route index element={<Navigate to="/app/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="expenses" element={<Expenses />} />
-                      <Route path="budget" element={<Budget />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="goals" element={<Goals />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="history" element={<History />} />
-                      <Route path="manage-funds" element={<ManageFunds />} />
-                    </Route>
-                    <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                  </Routes>
-                  
-                  <Toaster />
-                  <SonnerToaster />
-                  <ReactQueryDevtools initialIsOpen={false} />
-                </ModalStateProvider>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/app" element={<Layout />}>
+                    <Route index element={<Navigate to="/app/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="expenses" element={<Expenses />} />
+                    <Route path="budget" element={<Budget />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="goals" element={<Goals />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="history" element={<History />} />
+                    <Route path="manage-funds" element={<ManageFunds />} />
+                  </Route>
+                  <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                  <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                </Routes>
+                
+                <Toaster />
+                <SonnerToaster />
+                <ReactQueryDevtools initialIsOpen={false} />
               </CurrencyProvider>
-            </MonthContextProvider>
+            </MonthProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
