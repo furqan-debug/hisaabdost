@@ -174,6 +174,11 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       
       // Invalidate all wallet-related queries to refresh data immediately
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      
+      // Force refetch to ensure UI updates
+      queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+      queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
       
       // Log the wallet activity as a deduction with fund type
       try {
