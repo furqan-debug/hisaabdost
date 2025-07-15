@@ -27,17 +27,15 @@ export function ThemeToggle() {
     localStorage.setItem("color-theme", "purple");
   }, []);
 
-  // Force theme application when theme changes with better persistence
+  // Force theme application when theme changes
   useEffect(() => {
     if (mounted && theme) {
-      // Force immediate theme application with storage
+      // Force immediate theme application
       setTimeout(() => {
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
-          localStorage.setItem('hisaabdost-theme', 'dark');
         } else if (theme === 'light') {
           document.documentElement.classList.remove('dark');
-          localStorage.setItem('hisaabdost-theme', 'light');
         } else if (theme === 'system') {
           const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (isDark) {
@@ -45,9 +43,7 @@ export function ThemeToggle() {
           } else {
             document.documentElement.classList.remove('dark');
           }
-          localStorage.setItem('hisaabdost-theme', 'system');
         }
-        console.log(`Theme applied: ${theme}, localStorage: ${localStorage.getItem('hisaabdost-theme')}`);
       }, 0);
     }
   }, [theme, mounted]);
@@ -55,7 +51,6 @@ export function ThemeToggle() {
   if (!mounted) return null;
 
   const handleThemeChange = (newTheme: string) => {
-    console.log(`ThemeToggle: Changing theme to ${newTheme}`);
     setTheme(newTheme);
     setIsOpen(false);
   };

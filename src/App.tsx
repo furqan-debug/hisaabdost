@@ -1,87 +1,64 @@
 
-
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
-import Layout from '@/components/Layout';
-import Dashboard from '@/pages/Dashboard';
-import Expenses from '@/pages/Expenses';
-import Budget from '@/pages/Budget';
-import Analytics from '@/pages/Analytics';
-import Goals from '@/pages/Goals';
-import Settings from '@/pages/Settings';
-import History from '@/pages/History';
-import ManageFunds from '@/pages/ManageFunds';
-import Auth from '@/pages/Auth';
-import { AuthProvider } from '@/lib/auth';
-import { MonthProvider } from '@/hooks/use-month-context';
-import { CurrencyProvider } from '@/hooks/use-currency';
-import { FinnyProvider } from '@/components/finny';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth";
+import { CurrencyProvider } from "@/hooks/use-currency";
+import { MonthProvider } from "@/hooks/use-month-context";
+import { FinnyProvider } from "@/components/finny";
+import Layout from "@/components/Layout";
+import Dashboard from "@/pages/Dashboard";
+import Auth from "@/pages/Auth";
+import Analytics from "@/pages/Analytics";
+import Expenses from "@/pages/Expenses";
+import Goals from "@/pages/Goals";
+import Budget from "@/pages/Budget";
+import Settings from "@/pages/Settings";
+import FinnyChat from "@/pages/FinnyChat";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: true,
-      retry: (failureCount, error) => {
-        if (error?.message?.includes('Failed to fetch')) return failureCount < 2;
-        return failureCount < 1;
-      },
+      retry: 1,
     },
   },
 });
 
 function App() {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="dark" 
-          enableSystem={true}
-          storageKey="hisaabdost-theme"
-          disableTransitionOnChange={false}
-        >
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
           <AuthProvider>
-            <MonthProvider>
-              <CurrencyProvider>
+            <CurrencyProvider>
+              <MonthProvider>
                 <FinnyProvider>
-                  <Routes>
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/app" element={<Layout />}>
-                      <Route index element={<Navigate to="/app/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="expenses" element={<Expenses />} />
-                      <Route path="budget" element={<Budget />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="goals" element={<Goals />} />
-                      <Route path="settings" element={<Settings />} />
-                      <Route path="history" element={<History />} />
-                      <Route path="manage-funds" element={<ManageFunds />} />
-                    </Route>
-                    <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                    <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                  </Routes>
-                  
-                  <Toaster />
-                  <SonnerToaster />
-                  <ReactQueryDevtools initialIsOpen={false} />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/app" element={<Layout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="expenses" element={<Expenses />} />
+                  <Route path="goals" element={<Goals />} />
+                  <Route path="budget" element={<Budget />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="finny" element={<FinnyChat />} />
+                  <Route path="" element={<Navigate to="dashboard" replace />} />
+                </Route>
+                <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+              </Routes>
                 </FinnyProvider>
-              </CurrencyProvider>
-            </MonthProvider>
+              </MonthProvider>
+            </CurrencyProvider>
           </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
 export default App;
-

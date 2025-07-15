@@ -33,40 +33,11 @@ export function ThemeSettings() {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, []);
-
-  // Force theme application when theme changes
-  useEffect(() => {
-    if (mounted && theme) {
-      // Force immediate theme application with proper persistence
-      setTimeout(() => {
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('hisaabdost-theme', 'dark');
-        } else if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('hisaabdost-theme', 'light');
-        } else if (theme === 'system') {
-          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-          localStorage.setItem('hisaabdost-theme', 'system');
-        }
-      }, 0);
-    }
-  }, [theme, mounted]);
   
   if (!mounted) return null;
   
   // Determine the actual theme to display (for UI indication)
   const displayTheme = theme === 'system' ? systemTheme : resolvedTheme;
-
-  const handleThemeChange = (newTheme: string) => {
-    console.log(`Theme changing from ${theme} to ${newTheme}`);
-    setTheme(newTheme);
-  };
   
   return (
     <div className="px-4 py-3">
@@ -75,7 +46,7 @@ export function ThemeSettings() {
         <Button 
           variant="outline" 
           className={`justify-start h-9 ${displayTheme === 'light' && theme === 'light' ? 'bg-accent' : ''}`}
-          onClick={() => handleThemeChange('light')}
+          onClick={() => setTheme('light')}
         >
           <Sun className="mr-2 h-4 w-4" />
           Light
@@ -83,7 +54,7 @@ export function ThemeSettings() {
         <Button 
           variant="outline" 
           className={`justify-start h-9 ${displayTheme === 'dark' && theme === 'dark' ? 'bg-accent' : ''}`}
-          onClick={() => handleThemeChange('dark')}
+          onClick={() => setTheme('dark')}
         >
           <Moon className="mr-2 h-4 w-4" />
           Dark
@@ -91,7 +62,7 @@ export function ThemeSettings() {
         <Button 
           variant="outline" 
           className={`justify-start h-9 ${theme === 'system' ? 'bg-accent' : ''}`}
-          onClick={() => handleThemeChange('system')}
+          onClick={() => setTheme('system')}
         >
           <Settings className="mr-2 h-4 w-4" />
           System ({systemTheme})
@@ -99,7 +70,7 @@ export function ThemeSettings() {
       </div>
       <div className="mt-4 p-3 bg-muted/50 rounded-md">
         <p className="text-xs text-muted-foreground">
-          Purple color theme is active for all users. Current theme: {theme}
+          Purple color theme is active for all users
         </p>
       </div>
     </div>
