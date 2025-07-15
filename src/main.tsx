@@ -6,22 +6,6 @@ import './index.css';
 
 console.log('🚀 Starting application...');
 
-// Simple initialization
-const initialize = () => {
-  try {
-    const savedTheme = localStorage.getItem("color-theme");
-    if (!savedTheme) {
-      document.documentElement.classList.add("purple");
-      localStorage.setItem("color-theme", "purple");
-    }
-    console.log('✅ Theme initialized');
-  } catch (error) {
-    console.warn('Theme initialization failed:', error);
-  }
-};
-
-initialize();
-
 const rootElement = document.getElementById("root");
 
 if (rootElement) {

@@ -27,27 +27,6 @@ export function ThemeToggle() {
     localStorage.setItem("color-theme", "purple");
   }, []);
 
-  // Force theme application when theme changes
-  useEffect(() => {
-    if (mounted && theme) {
-      // Force immediate theme application
-      setTimeout(() => {
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-        } else if (theme === 'system') {
-          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
-      }, 0);
-    }
-  }, [theme, mounted]);
-
   if (!mounted) return null;
 
   const handleThemeChange = (newTheme: string) => {

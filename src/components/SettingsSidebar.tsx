@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -253,7 +254,7 @@ const SettingsSidebar = ({
             </div>
           </div>
 
-          {/* Theme - Fixed to properly handle theme changes */}
+          {/* Theme - Updated to work properly with ThemeProvider */}
           <div className="p-6 border-b">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
@@ -265,13 +266,7 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'light' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => {
-                  setTheme('light');
-                  // Force immediate application
-                  setTimeout(() => {
-                    document.documentElement.classList.remove('dark');
-                  }, 0);
-                }}
+                onClick={() => setTheme('light')}
               >
                 <Sun className="w-4 h-4 mr-3" />
                 Light
@@ -279,13 +274,7 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'dark' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => {
-                  setTheme('dark');
-                  // Force immediate application
-                  setTimeout(() => {
-                    document.documentElement.classList.add('dark');
-                  }, 0);
-                }}
+                onClick={() => setTheme('dark')}
               >
                 <Moon className="w-4 h-4 mr-3" />
                 Dark
@@ -293,18 +282,7 @@ const SettingsSidebar = ({
               <Button 
                 variant={theme === 'system' ? 'default' : 'ghost'} 
                 className="w-full justify-start" 
-                onClick={() => {
-                  setTheme('system');
-                  // Force immediate application based on system preference
-                  setTimeout(() => {
-                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    if (isDark) {
-                      document.documentElement.classList.add('dark');
-                    } else {
-                      document.documentElement.classList.remove('dark');
-                    }
-                  }, 0);
-                }}
+                onClick={() => setTheme('system')}
               >
                 <Monitor className="w-4 h-4 mr-3" />
                 System
