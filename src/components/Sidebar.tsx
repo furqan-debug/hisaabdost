@@ -15,6 +15,7 @@ import {
   Receipt,
   Target,
   Calendar,
+  CreditCard,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { MonthSelector } from "./MonthSelector";
@@ -26,6 +27,7 @@ const menuItems = [
   { icon: Wallet, label: "Budget", path: "/app/budget" },
   { icon: BarChart2, label: "Analytics", path: "/app/analytics" },
   { icon: Target, label: "Goals", path: "/app/goals" },
+  { icon: CreditCard, label: "Manage Funds", path: "/app/manage-funds" },
   { icon: Calendar, label: "Monthly Summary", path: "/app/history" },
 ];
 

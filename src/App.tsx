@@ -17,6 +17,8 @@ import Goals from "@/pages/Goals";
 import Budget from "@/pages/Budget";
 import Settings from "@/pages/Settings";
 import FinnyChat from "@/pages/FinnyChat";
+import History from "@/pages/History";
+import ManageFunds from "@/pages/ManageFunds";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,6 +49,8 @@ function App() {
                   <Route path="budget" element={<Budget />} />
                   <Route path="settings" element={<Settings />} />
                   <Route path="finny" element={<FinnyChat />} />
+                  <Route path="history" element={<History />} />
+                  <Route path="manage-funds" element={<ManageFunds />} />
                   <Route path="" element={<Navigate to="dashboard" replace />} />
                 </Route>
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
