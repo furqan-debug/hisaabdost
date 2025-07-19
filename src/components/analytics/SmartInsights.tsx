@@ -44,10 +44,10 @@ export function SmartInsights({ expenses, totalSpending }: SmartInsightsProps) {
   
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'hard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'easy': return 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/50';
+      case 'medium': return 'text-yellow-700 bg-yellow-100 dark:text-yellow-300 dark:bg-yellow-900/50';
+      case 'hard': return 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/50';
+      default: return 'text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-900/50';
     }
   };
   
@@ -62,48 +62,48 @@ export function SmartInsights({ expenses, totalSpending }: SmartInsightsProps) {
   
   return (
     <div className="space-y-4">
-      {/* Savings Potential Overview */}
-      <Card className="border-blue-200 bg-blue-50/30">
+      {/* Savings Potential Overview with enhanced contrast */}
+      <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 dark:border-blue-600">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-blue-500" />
+            <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             Savings Potential
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             Smart insights to optimize your spending
           </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-xl font-bold text-blue-600">
+            <div className="text-center bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+              <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
                 {formatAmount(savingsImpact.monthlyPotential)}
               </p>
-              <p className="text-xs text-muted-foreground">Monthly Potential</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Monthly Potential</p>
             </div>
-            <div className="text-center">
-              <p className="text-xl font-bold text-green-600">
+            <div className="text-center bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+              <p className="text-xl font-bold text-green-700 dark:text-green-300">
                 {formatAmount(savingsImpact.yearlyPotential)}
               </p>
-              <p className="text-xs text-muted-foreground">Yearly Potential</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Yearly Potential</p>
             </div>
-            <div className="text-center">
-              <p className="text-xl font-bold text-emerald-600">
+            <div className="text-center bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+              <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
                 {formatAmount(savingsImpact.easyWins)}
               </p>
-              <p className="text-xs text-muted-foreground">Easy Wins</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Easy Wins</p>
             </div>
-            <div className="text-center">
-              <p className="text-xl font-bold text-purple-600">
+            <div className="text-center bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+              <p className="text-xl font-bold text-purple-700 dark:text-purple-300">
                 {formatAmount(savingsImpact.longTermSavings)}
               </p>
-              <p className="text-xs text-muted-foreground">Long-term</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Long-term</p>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      {/* Individual Insights */}
+      {/* Individual Insights with improved contrast */}
       <div className="space-y-3">
         {insights.map((insight, index) => (
           <motion.div
@@ -112,63 +112,63 @@ export function SmartInsights({ expenses, totalSpending }: SmartInsightsProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow border-gray-200 dark:border-gray-600 bg-white/95 dark:bg-gray-800/95">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getTimeframeIcon(insight.timeframe)}</span>
-                    <h4 className="font-semibold">{insight.title}</h4>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-100">{insight.title}</h4>
                   </div>
                   <div className="flex gap-2">
                     <Badge className={getDifficultyColor(insight.difficulty)}>
                       {insight.difficulty}
                     </Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                       {insight.category}
                     </Badge>
                   </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                   {insight.description}
                 </p>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Current Spending:</p>
-                    <p className="font-bold text-lg">{formatAmount(insight.currentSpending)}</p>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                    <p className="text-gray-600 dark:text-gray-300">Current Spending:</p>
+                    <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{formatAmount(insight.currentSpending)}</p>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Potential Savings:</p>
-                    <p className="font-bold text-lg text-green-600">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                    <p className="text-gray-600 dark:text-gray-300">Potential Savings:</p>
+                    <p className="font-bold text-lg text-green-700 dark:text-green-300">
                       {formatAmount(insight.potentialSavings)}
                     </p>
                   </div>
                 </div>
                 
-                <div className="bg-muted/30 rounded-lg p-3">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-3 border border-gray-200 dark:border-gray-500">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-700">Action Steps:</span>
+                    <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium text-blue-700 dark:text-blue-300">Action Steps:</span>
                   </div>
                   <ul className="space-y-1">
                     {insight.actionSteps.map((step, stepIndex) => (
                       <li key={stepIndex} className="flex items-start gap-2 text-sm">
-                        <ArrowRight className="h-3 w-3 mt-0.5 text-blue-500 flex-shrink-0" />
-                        <span>{step}</span>
+                        <ArrowRight className="h-3 w-3 mt-0.5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-200">{step}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
                 
-                <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                     <Clock className="h-4 w-4" />
                     <span>Impact timeframe: {insight.timeframe.replace('_', ' ')}</span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-muted-foreground">Yearly savings: </span>
-                    <span className="font-bold text-green-600">
+                    <span className="text-gray-600 dark:text-gray-300">Yearly savings: </span>
+                    <span className="font-bold text-green-700 dark:text-green-300">
                       {formatAmount(insight.potentialSavings * 12)}
                     </span>
                   </div>
@@ -179,14 +179,14 @@ export function SmartInsights({ expenses, totalSpending }: SmartInsightsProps) {
         ))}
       </div>
       
-      {/* Implementation Tip */}
-      <Card className="border-green-200 bg-green-50/30">
+      {/* Implementation Tip with better contrast */}
+      <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 dark:border-green-600">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <span className="font-medium text-green-800">Pro Tip</span>
+            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <span className="font-medium text-green-800 dark:text-green-300">Pro Tip</span>
           </div>
-          <p className="text-sm text-green-700">
+          <p className="text-sm text-green-700 dark:text-green-200">
             Start with the "easy" difficulty insights first. Small changes compound over time, 
             and early wins will motivate you to tackle the bigger optimizations!
           </p>
