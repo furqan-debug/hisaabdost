@@ -21,7 +21,7 @@ const AppGuideContent = () => {
       title: t('features.dashboard.title'),
       purpose: t('features.dashboard.purpose'),
       description: t('features.dashboard.description'),
-      howTo: t('features.dashboard.howTo') as string[],
+      howTo: t('features.dashboard.howTo'),
       whyItMatters: t('features.dashboard.whyItMatters')
     },
     {
@@ -29,7 +29,7 @@ const AppGuideContent = () => {
       title: t('features.expenses.title'),
       purpose: t('features.expenses.purpose'),
       description: t('features.expenses.description'),
-      howTo: t('features.expenses.howTo') as string[],
+      howTo: t('features.expenses.howTo'),
       whyItMatters: t('features.expenses.whyItMatters')
     },
     {
@@ -178,12 +178,17 @@ const AppGuideContent = () => {
                   <div className="space-y-2">
                     <h4 className="font-semibold text-sm text-foreground">How to use it:</h4>
                     <ul className="space-y-1">
-                      {feature.howTo.map((item, idx) => (
+                      {Array.isArray(feature.howTo) ? feature.howTo.map((item, idx) => (
                         <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
                           {item}
                         </li>
-                      ))}
+                      )) : (
+                        <li className="text-sm text-muted-foreground flex items-start gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-2 flex-shrink-0" />
+                          {feature.howTo}
+                        </li>
+                      )}
                     </ul>
                   </div>
 

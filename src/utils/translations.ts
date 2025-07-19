@@ -32,7 +32,6 @@ export const translations = {
         ],
         whyItMatters: "You can't manage what you don't measure. Tracking expenses reveals spending patterns, identifies waste, and helps you make better financial choices."
       },
-      // Add more translations as needed...
     },
     footerTitle: "Ready to Take Control?",
     footerDescription: "Financial success isn't about perfection—it's about progress. Start with one feature, build the habit, then gradually incorporate others. Your future self will thank you.",
@@ -73,10 +72,9 @@ export const translations = {
     footerDescription: "El éxito financiero no se trata de perfección, se trata de progreso. Comienza con una característica, construye el hábito, luego incorpora gradualmente otras.",
     startButton: "Inicia tu Viaje Financiero"
   },
-  // Add more languages as needed...
 };
 
-export const getTranslation = (language: Language, key: string): string => {
+export const getTranslation = (language: Language, key: string): any => {
   const keys = key.split('.');
   let value: any = translations[language] || translations.en;
   
