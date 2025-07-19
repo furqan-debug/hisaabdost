@@ -1,39 +1,36 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Wallet, PieChart, Target, TrendingUp, Bot, Receipt, Calendar, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { LanguageProvider, useLanguage } from '@/hooks/use-language';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { getTranslation } from '@/utils/translations';
 
-export default function AppGuide() {
+const AppGuideContent = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+
+  const t = (key: string) => getTranslation(language, key);
 
   const features = [
     {
       icon: Wallet,
-      title: "Dashboard & Wallet",
-      purpose: "Your financial command center",
-      description: "The dashboard gives you an instant overview of your financial health. Your wallet balance combines income and added funds, showing exactly what you have available to spend.",
-      howTo: [
-        "View your current wallet balance at a glance",
-        "Add extra funds when you receive unexpected income",
-        "Edit your monthly income to keep calculations accurate",
-        "Monitor your savings rate to track financial progress"
-      ],
-      whyItMatters: "Having a clear view of your available funds prevents overspending and helps you make informed financial decisions. The savings rate shows if you're building wealth or just breaking even."
+      title: t('features.dashboard.title'),
+      purpose: t('features.dashboard.purpose'),
+      description: t('features.dashboard.description'),
+      howTo: t('features.dashboard.howTo') as string[],
+      whyItMatters: t('features.dashboard.whyItMatters')
     },
     {
       icon: Receipt,
-      title: "Expense Tracking",
-      purpose: "Capture every penny spent",
-      description: "Track all your expenses with detailed categorization and receipt scanning. This is the foundation of financial awareness.",
-      howTo: [
-        "Add expenses manually or scan receipts automatically",
-        "Categorize expenses to understand spending patterns",
-        "Add notes and payment methods for detailed records",
-        "Set up recurring expenses for regular bills"
-      ],
-      whyItMatters: "You can't manage what you don't measure. Tracking expenses reveals spending patterns, identifies waste, and helps you make better financial choices."
+      title: t('features.expenses.title'),
+      purpose: t('features.expenses.purpose'),
+      description: t('features.expenses.description'),
+      howTo: t('features.expenses.howTo') as string[],
+      whyItMatters: t('features.expenses.whyItMatters')
     },
     {
       icon: PieChart,
@@ -120,19 +117,22 @@ export default function AppGuide() {
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">App Guide</h1>
-              <p className="text-muted-foreground">Understanding your financial management tools</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="h-8 w-8"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">{t('title')}</h1>
+                <p className="text-muted-foreground">{t('subtitle')}</p>
+              </div>
             </div>
+            <LanguageSelector />
           </div>
         </div>
       </div>
@@ -144,14 +144,12 @@ export default function AppGuide() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              Welcome to Your Financial Journey
+              {t('welcomeTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed">
-              This app isn't just about tracking expenses—it's about transforming your relationship with money. 
-              Each feature is designed to give you deeper insights, better control, and ultimately, financial peace of mind. 
-              Let's explore how each tool can help you achieve your financial goals.
+              {t('welcomeDescription')}
             </p>
           </CardContent>
         </Card>
@@ -209,21 +207,28 @@ export default function AppGuide() {
         <Card className="mt-8 bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200/50">
           <CardContent className="p-6 text-center">
             <div className="space-y-2">
-              <h3 className="font-semibold text-green-800 dark:text-green-200">Ready to Take Control?</h3>
+              <h3 className="font-semibold text-green-800 dark:text-green-200">{t('footerTitle')}</h3>
               <p className="text-sm text-green-700 dark:text-green-300 max-w-2xl mx-auto">
-                Financial success isn't about perfection—it's about progress. Start with one feature, 
-                build the habit, then gradually incorporate others. Your future self will thank you.
+                {t('footerDescription')}
               </p>
               <Button 
                 onClick={() => navigate('/app/dashboard')}
                 className="mt-4 bg-green-600 hover:bg-green-700"
               >
-                Start Your Financial Journey
+                {t('startButton')}
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+};
+
+export default function AppGuide() {
+  return (
+    <LanguageProvider>
+      <AppGuideContent />
+    </LanguageProvider>
   );
 }
