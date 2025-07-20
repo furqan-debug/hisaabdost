@@ -191,28 +191,52 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify user exists using getUserByEmail
+    // Verify user exists using listUsers with pagination
     console.log("👤 Checking if user exists...");
     
+    let userExists = false;
+    let page = 1;
+    const perPage = 1000;
+    
     try {
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-      
-      console.log("👤 User lookup result:", userData ? "Found user" : "No user found");
-      console.log("👤 User lookup error:", userError);
-      
-      if (userError) {
-        console.log("👤 User error details:", userError.message, userError.status);
-        // If user not found, that's expected - we'll handle it below
-        if (userError.status !== 404) {
-          console.error("❌ Unexpected error checking user:", userError);
+      while (!userExists) {
+        const { data: usersData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage
+        });
+        
+        console.log(`👤 User lookup page ${page}:`, usersData ? `Got ${usersData.users?.length || 0} users` : "No users data");
+        console.log("👤 User lookup error:", userError);
+        
+        if (userError) {
+          console.error("❌ Error checking users:", userError);
           return new Response(
             JSON.stringify({ error: "Failed to verify user" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
+        
+        if (!usersData || !usersData.users || usersData.users.length === 0) {
+          // No more users to check
+          break;
+        }
+        
+        // Check if user exists in this batch
+        userExists = usersData.users.some(user => user.email === email);
+        
+        if (userExists) {
+          console.log("👤 User found in page", page);
+          break;
+        }
+        
+        // If we got less than perPage users, we've reached the end
+        if (usersData.users.length < perPage) {
+          break;
+        }
+        
+        page++;
       }
-
-      const userExists = userData && userData.user;
+      
       console.log("👤 User exists check result:", userExists ? "true" : "false", "for email:", email);
       
       if (!userExists) {
