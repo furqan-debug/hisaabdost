@@ -191,22 +191,22 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify user exists using getUserByEmail
+    // Verify user exists using the correct API method
     console.log("👤 Checking if user exists...");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    const { data: usersData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
-    console.log("👤 User lookup result:", userData ? "Found user" : "No user found");
+    console.log("👤 User lookup result:", usersData ? "Got users list" : "No users data");
     console.log("👤 User lookup error:", userError);
     
-    if (userError && userError.status !== 404) {
-      console.error("❌ Error checking user:", userError);
+    if (userError) {
+      console.error("❌ Error checking users:", userError);
       return new Response(
         JSON.stringify({ error: "Failed to verify user" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userExists = userData && userData.user;
+    const userExists = usersData && usersData.users && usersData.users.some(user => user.email === email);
     console.log("👤 User exists check result:", userExists ? "true" : "false", "for email:", email);
     
     if (!userExists) {
