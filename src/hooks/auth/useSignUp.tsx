@@ -7,6 +7,7 @@ export const useSignUp = () => {
     try {
       console.log("Starting signup process for:", email);
       
+      // First, try to sign up the user with Supabase
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -28,7 +29,26 @@ export const useSignUp = () => {
       // Check if user needs confirmation
       if (data.user && !data.session) {
         console.log("User needs email confirmation");
-        toast.success("Account created! Please check your email for verification code.");
+        
+        // Send custom verification email
+        try {
+          const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-email', {
+            body: { email }
+          });
+          
+          if (emailError) {
+            console.error("Custom verification email error:", emailError);
+            // Fall back to default message
+            toast.success("Account created! Please check your email for verification.");
+          } else {
+            console.log("Custom verification email sent successfully");
+            toast.success("Account created! Please check your email for your 6-digit verification code.");
+          }
+        } catch (customEmailError) {
+          console.error("Failed to send custom verification email:", customEmailError);
+          toast.success("Account created! Please check your email for verification.");
+        }
+        
         return { email };
       }
 
