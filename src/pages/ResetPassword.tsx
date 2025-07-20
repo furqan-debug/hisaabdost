@@ -17,6 +17,7 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [isValidToken, setIsValidToken] = useState(false);
+  const [resetSuccessful, setResetSuccessful] = useState(false);
 
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -126,11 +127,7 @@ const ResetPassword = () => {
       }
 
       if (data?.success) {
-        toast({
-          title: "Password reset successful",
-          description: "Your password has been updated. You can now log in with your new password.",
-        });
-        navigate("/auth");
+        setResetSuccessful(true);
       } else {
         toast({
           variant: "destructive",
@@ -167,6 +164,33 @@ const ResetPassword = () => {
 
   if (!isValidToken) {
     return null; // Will redirect to auth page
+  }
+
+  if (resetSuccessful) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center text-green-600">
+              ✅ Password Reset Successful
+            </CardTitle>
+            <CardDescription className="text-center">
+              Your password has been successfully changed
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              Your password has been updated successfully. You can now log in to your mobile app with your new password.
+            </p>
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm font-medium">
+                Please return to your mobile app and log in with your new password.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
