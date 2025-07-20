@@ -8,9 +8,9 @@ export const useVerification = () => {
 
   const verifyOtp = async (email: string, token: string) => {
     try {
-      console.log("Verifying OTP:", email, token);
+      console.log("Verifying OTP for email:", email, "token:", token);
       
-      // Try Supabase's built-in OTP verification first
+      // Try Supabase's built-in OTP verification
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
@@ -18,27 +18,8 @@ export const useVerification = () => {
       });
       
       if (error) {
-        console.error("Standard OTP verification error:", error);
-        
-        // If standard OTP fails, try manual confirmation
-        // This is a fallback for when custom email verification is used
-        try {
-          const { error: confirmError } = await supabase.auth.admin.updateUserById(
-            data?.user?.id || '',
-            { email_confirm: true }
-          );
-          
-          if (confirmError) {
-            throw error; // Throw original error if fallback also fails
-          }
-          
-          console.log("Manual email confirmation successful");
-          toast.success("Email verified successfully!");
-          navigate("/app/dashboard");
-          return;
-        } catch (fallbackError) {
-          throw error; // Throw original error
-        }
+        console.error("Standard OTP verification failed:", error);
+        throw error;
       }
       
       if (data.user) {
@@ -55,38 +36,59 @@ export const useVerification = () => {
 
   const resendOtp = async (email: string) => {
     try {
-      console.log("Resending OTP to:", email);
+      console.log("Resending verification code to:", email);
       
       // Try both standard resend and custom verification email
-      const promises = [
-        supabase.auth.resend({
-          type: 'signup',
-          email: email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-          }
-        }),
-        supabase.functions.invoke('send-verification-email', {
-          body: { email }
-        })
-      ];
+      const standardResendPromise = supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        }
+      });
+
+      const customEmailPromise = supabase.functions.invoke('send-verification-email', {
+        body: { email }
+      });
       
-      const results = await Promise.allSettled(promises);
+      const results = await Promise.allSettled([standardResendPromise, customEmailPromise]);
       
-      // Check if at least one succeeded
-      const hasSuccess = results.some(result => result.status === 'fulfilled' && !result.value.error);
+      // Check results
+      const standardResult = results[0];
+      const customResult = results[1];
+      
+      console.log("Standard resend result:", standardResult);
+      console.log("Custom email result:", customResult);
+      
+      let hasSuccess = false;
+      let errorMessage = "";
+      
+      // Check standard resend
+      if (standardResult.status === 'fulfilled' && !standardResult.value.error) {
+        hasSuccess = true;
+      } else if (standardResult.status === 'fulfilled' && standardResult.value.error) {
+        console.error("Standard resend error:", standardResult.value.error);
+        errorMessage = standardResult.value.error.message || "Failed to resend code";
+      }
+      
+      // Check custom email
+      if (customResult.status === 'fulfilled' && customResult.value.data?.success) {
+        hasSuccess = true;
+      } else if (customResult.status === 'fulfilled' && customResult.value.error) {
+        console.error("Custom email error:", customResult.value.error);
+        if (!hasSuccess) {
+          errorMessage = customResult.value.error.message || "Failed to send verification email";
+        }
+      }
       
       if (hasSuccess) {
         toast.success("New verification code sent! Please check your email.");
       } else {
-        // If both failed, check the errors
-        const standardError = results[0].status === 'fulfilled' ? results[0].value.error : results[0].reason;
-        const customError = results[1].status === 'fulfilled' ? results[1].value.error : results[1].reason;
-        
-        if (standardError?.message?.includes('rate limit') || customError?.message?.includes('rate limit')) {
+        if (errorMessage.includes('rate limit') || errorMessage.includes('wait a minute')) {
           toast.warning("Please wait a moment before requesting another code.");
         } else {
-          throw standardError || customError || new Error("Failed to resend verification code");
+          toast.error(errorMessage || "Failed to resend verification code");
+          throw new Error(errorMessage || "Failed to resend verification code");
         }
       }
     } catch (error: any) {

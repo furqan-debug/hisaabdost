@@ -19,12 +19,13 @@ const supabaseAdmin = createClient(
 const sendVerificationEmail = async (email: string, token: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
-  console.log("Sending verification email to:", email);
-  console.log("Using verification token:", token);
+  console.log("Attempting to send verification email to:", email);
+  console.log("Verification token:", token);
+  console.log("Resend API key available:", resendApiKey ? "Yes" : "No");
   
   if (!resendApiKey) {
-    console.log("No Resend API key found, verification code:", token);
-    return;
+    console.log("No Resend API key found - verification code:", token);
+    throw new Error("Email service not configured");
   }
 
   const emailHtml = `
@@ -80,6 +81,8 @@ const sendVerificationEmail = async (email: string, token: string) => {
   `;
 
   try {
+    console.log("Making request to Resend API for verification email...");
+    
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -94,18 +97,18 @@ const sendVerificationEmail = async (email: string, token: string) => {
       }),
     });
 
-    const responseData = await response.text();
-    console.log("Verification email response status:", response.status);
-    console.log("Verification email response:", responseData);
+    const responseText = await response.text();
+    console.log("Resend API response status:", response.status);
+    console.log("Resend API response body:", responseText);
 
     if (!response.ok) {
-      throw new Error(`Email service error: ${response.status} - ${responseData}`);
+      throw new Error(`Email service error: ${response.status} - ${responseText}`);
     }
 
     console.log("Verification email sent successfully to:", email);
+    return JSON.parse(responseText);
   } catch (error) {
     console.error("Failed to send verification email:", error);
-    console.log(`Verification code for ${email}: ${token}`);
     throw error;
   }
 };
@@ -117,6 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email }: SendVerificationRequest = await req.json();
+    console.log("Verification email request received for:", email);
 
     if (!email || !email.includes("@")) {
       return new Response(
@@ -127,20 +131,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate a 6-digit verification code
     const token = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("Generated verification token:", token, "for email:", email);
 
     // Send verification email
     try {
-      await sendVerificationEmail(email, token);
+      const emailResult = await sendVerificationEmail(email, token);
+      console.log("Verification email sent successfully:", emailResult);
     } catch (emailError) {
       console.error("Verification email sending failed:", emailError);
-      // Continue anyway, user might see the code in logs
+      return new Response(
+        JSON.stringify({ error: "Failed to send verification email. Please try again later." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: "Verification email sent successfully",
-        token: token // Return token for testing/debugging (remove in production)
+        token: token // For debugging purposes - remove in production
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

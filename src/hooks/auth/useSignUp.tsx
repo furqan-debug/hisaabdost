@@ -24,29 +24,35 @@ export const useSignUp = () => {
         throw signUpError;
       }
 
-      console.log("Signup successful, user created:", data.user?.id);
+      console.log("Supabase signup successful, user created:", data.user?.id);
 
       // Check if user needs confirmation
       if (data.user && !data.session) {
-        console.log("User needs email confirmation");
+        console.log("User needs email confirmation, sending custom verification email");
         
         // Send custom verification email
         try {
+          console.log("Calling send-verification-email function...");
           const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-email', {
             body: { email }
           });
           
           if (emailError) {
             console.error("Custom verification email error:", emailError);
-            // Fall back to default message
-            toast.success("Account created! Please check your email for verification.");
+            toast.error("Failed to send verification email. Please try again.");
+            throw emailError;
+          } else if (emailData?.error) {
+            console.error("Custom verification email data error:", emailData.error);
+            toast.error("Failed to send verification email. Please try again.");
+            throw new Error(emailData.error);
           } else {
-            console.log("Custom verification email sent successfully");
+            console.log("Custom verification email sent successfully:", emailData);
             toast.success("Account created! Please check your email for your 6-digit verification code.");
           }
         } catch (customEmailError) {
           console.error("Failed to send custom verification email:", customEmailError);
-          toast.success("Account created! Please check your email for verification.");
+          toast.error("Failed to send verification email. Please try again.");
+          throw customEmailError;
         }
         
         return { email };

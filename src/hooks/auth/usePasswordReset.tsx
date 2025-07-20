@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,27 +10,41 @@ export const usePasswordReset = () => {
         body: { email }
       });
       
+      console.log("Password reset response:", { data, error });
+      
       if (error) {
         console.error("Password reset function error:", error);
         if (error.message?.includes('wait a minute') || error.message?.includes('rate limit')) {
           toast.warning("Too many requests. Please wait a minute before trying again.");
+        } else if (error.message?.includes('Email service not configured')) {
+          toast.error("Email service is not properly configured. Please contact support.");
         } else {
-          throw error;
+          toast.error(error.message || "Error sending password reset link");
         }
+        throw error;
       } else if (data?.error) {
         console.error("Password reset data error:", data.error);
         if (data.error.includes('wait a minute') || data.error.includes('rate limit')) {
           toast.warning("Too many requests. Please wait a minute before trying again.");
+        } else if (data.error.includes('Email service not configured')) {
+          toast.error("Email service is not properly configured. Please contact support.");
         } else {
-          throw new Error(data.error);
+          toast.error(data.error);
         }
-      } else {
+        throw new Error(data.error);
+      } else if (data?.success) {
         console.log("Password reset email sent successfully");
         toast.success("Password reset link sent! Please check your email.");
+      } else {
+        console.error("Unexpected response format:", data);
+        toast.error("Unexpected response from server");
+        throw new Error("Unexpected response from server");
       }
     } catch (error: any) {
       console.error("Error sending password reset link:", error);
-      toast.error(error.message || "Error sending password reset link");
+      if (!error.message?.includes('Too many requests') && !error.message?.includes('Email service')) {
+        toast.error(error.message || "Error sending password reset link");
+      }
       throw error;
     }
   };

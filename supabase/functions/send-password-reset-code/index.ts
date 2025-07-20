@@ -23,13 +23,13 @@ const generateResetToken = (): string => {
 const sendResetEmail = async (email: string, resetToken: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
-  console.log("Checking Resend API key availability:", resendApiKey ? "Found" : "Not found");
+  console.log("Attempting to send password reset email to:", email);
+  console.log("Resend API key available:", resendApiKey ? "Yes" : "No");
   
   if (!resendApiKey) {
-    console.log("No Resend API key found, logging reset link instead");
     const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-    console.log(`Password reset link for ${email}: ${resetLink}`);
-    return;
+    console.log(`No Resend API key - Password reset link for ${email}: ${resetLink}`);
+    throw new Error("Email service not configured");
   }
 
   const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
@@ -71,7 +71,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         </div>
         
         <p style="font-size: 14px; color: #666; margin: 25px 0;">
-          If the button doesn't work, you can copy and paste this link into your browser:
+          If the button doesn't work, copy and paste this link into your browser:
         </p>
         
         <div style="background: #fff; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; word-break: break-all; font-family: monospace; font-size: 12px;">
@@ -86,7 +86,6 @@ const sendResetEmail = async (email: string, resetToken: string) => {
             <li>This link will expire in 15 minutes for security</li>
             <li>If you didn't request this reset, please ignore this email</li>
             <li>Never share this link with anyone</li>
-            <li>After resetting your password, you can use it to log in to the mobile app</li>
           </ul>
         </div>
         
@@ -100,7 +99,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
   `;
 
   try {
-    console.log("Attempting to send email via Resend API");
+    console.log("Making request to Resend API...");
     
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -116,19 +115,18 @@ const sendResetEmail = async (email: string, resetToken: string) => {
       }),
     });
 
-    const responseData = await response.text();
+    const responseText = await response.text();
     console.log("Resend API response status:", response.status);
-    console.log("Resend API response:", responseData);
+    console.log("Resend API response body:", responseText);
 
     if (!response.ok) {
-      throw new Error(`Email service error: ${response.status} - ${responseData}`);
+      throw new Error(`Email service error: ${response.status} - ${responseText}`);
     }
 
-    console.log("Reset email sent successfully to:", email);
+    console.log("Password reset email sent successfully to:", email);
+    return JSON.parse(responseText);
   } catch (error) {
-    console.error("Failed to send email:", error);
-    // Fallback to logging
-    console.log(`Password reset link for ${email}: ${resetLink}`);
+    console.error("Failed to send password reset email:", error);
     throw error;
   }
 };
@@ -140,6 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email }: SendResetCodeRequest = await req.json();
+    console.log("Password reset request received for:", email);
 
     if (!email || !email.includes("@")) {
       return new Response(
@@ -148,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check rate limiting - only allow one request per minute per email
+    // Check rate limiting
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
     const { data: recentCodes } = await supabaseAdmin
       .from("password_reset_codes")
@@ -157,6 +156,7 @@ const handler = async (req: Request): Promise<Response> => {
       .gte("created_at", oneMinuteAgo);
 
     if (recentCodes && recentCodes.length > 0) {
+      console.log("Rate limit hit for email:", email);
       return new Response(
         JSON.stringify({ error: "Please wait a minute before requesting another reset link" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -175,9 +175,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const userExists = userData.users.some(user => user.email === email);
+    console.log("User exists:", userExists, "for email:", email);
     
     if (!userExists) {
       // For security, we don't reveal if the email exists or not
+      console.log("User does not exist, but returning success for security");
       return new Response(
         JSON.stringify({ success: true, message: "If the email exists, a reset link has been sent" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -185,15 +187,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Invalidate any existing unused codes for this email
-    await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from("password_reset_codes")
       .update({ used: true })
       .eq("email", email)
       .eq("used", false);
 
+    if (updateError) {
+      console.error("Error invalidating old codes:", updateError);
+    }
+
     // Generate new token
     const token = generateResetToken();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    console.log("Generated reset token for:", email, "expires at:", expiresAt);
 
     // Store the token
     const { error: insertError } = await supabaseAdmin
@@ -215,9 +223,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Send reset email
     try {
       await sendResetEmail(email, token);
+      console.log("Password reset process completed successfully for:", email);
     } catch (emailError) {
-      console.error("Email sending failed, but continuing:", emailError);
-      // Don't fail the request if email fails - user might still see the link in logs
+      console.error("Email sending failed:", emailError);
+      return new Response(
+        JSON.stringify({ error: "Failed to send reset email. Please try again later." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
     return new Response(
