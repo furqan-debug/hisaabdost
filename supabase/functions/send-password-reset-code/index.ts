@@ -23,16 +23,19 @@ const generateResetToken = (): string => {
 const sendResetEmail = async (email: string, resetToken: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
-  console.log("Attempting to send password reset email to:", email);
-  console.log("Resend API key available:", resendApiKey ? "Yes" : "No");
+  console.log("=== EMAIL SENDING DEBUG ===");
+  console.log("Email to send to:", email);
+  console.log("Reset token:", resetToken);
+  console.log("Resend API key exists:", resendApiKey ? "YES" : "NO");
+  console.log("Resend API key length:", resendApiKey ? resendApiKey.length : 0);
   
   if (!resendApiKey) {
-    const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-    console.log(`No Resend API key - Password reset link for ${email}: ${resetLink}`);
-    throw new Error("Email service not configured");
+    console.error("❌ RESEND_API_KEY is not configured");
+    throw new Error("Email service not configured - missing RESEND_API_KEY");
   }
 
   const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.lovableproject.com/auth/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+  console.log("Reset link generated:", resetLink);
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -98,8 +101,18 @@ const sendResetEmail = async (email: string, resetToken: string) => {
     </html>
   `;
 
+  const emailPayload = {
+    from: "HisaabDost <noreply@hisaabdost.com>",
+    to: [email],
+    subject: "Reset Your HisaabDost Password",
+    html: emailHtml,
+  };
+
+  console.log("📧 Preparing to send email with payload:", JSON.stringify(emailPayload, null, 2));
+
   try {
-    console.log("Making request to Resend API...");
+    console.log("🚀 Making request to Resend API...");
+    console.log("Resend API URL: https://api.resend.com/emails");
     
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -107,40 +120,49 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "HisaabDost <noreply@hisaabdost.com>",
-        to: [email],
-        subject: "Reset Your HisaabDost Password",
-        html: emailHtml,
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
+    console.log("📨 Resend API response status:", response.status);
+    console.log("📨 Resend API response headers:", Object.fromEntries(response.headers.entries()));
+
     const responseText = await response.text();
-    console.log("Resend API response status:", response.status);
-    console.log("Resend API response body:", responseText);
+    console.log("📨 Resend API response body:", responseText);
 
     if (!response.ok) {
+      console.error("❌ Resend API error:", response.status, responseText);
       throw new Error(`Email service error: ${response.status} - ${responseText}`);
     }
 
-    console.log("Password reset email sent successfully to:", email);
+    console.log("✅ Password reset email sent successfully to:", email);
     return JSON.parse(responseText);
   } catch (error) {
-    console.error("Failed to send password reset email:", error);
+    console.error("💥 Failed to send password reset email:", error);
+    console.error("Error details:", error.message);
+    console.error("Error stack:", error.stack);
     throw error;
   }
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("🔥 Password reset handler started");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
+
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email }: SendResetCodeRequest = await req.json();
-    console.log("Password reset request received for:", email);
+    const requestBody = await req.text();
+    console.log("📥 Raw request body:", requestBody);
+    
+    const { email }: SendResetCodeRequest = JSON.parse(requestBody);
+    console.log("📧 Password reset request received for email:", email);
 
     if (!email || !email.includes("@")) {
+      console.error("❌ Invalid email provided:", email);
       return new Response(
         JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -149,14 +171,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check rate limiting
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
-    const { data: recentCodes } = await supabaseAdmin
+    console.log("⏰ Checking rate limiting since:", oneMinuteAgo);
+    
+    const { data: recentCodes, error: rateLimitError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("id")
       .eq("email", email)
       .gte("created_at", oneMinuteAgo);
 
+    if (rateLimitError) {
+      console.error("❌ Rate limit check error:", rateLimitError);
+    }
+
     if (recentCodes && recentCodes.length > 0) {
-      console.log("Rate limit hit for email:", email);
+      console.log("🛑 Rate limit hit for email:", email, "recent codes:", recentCodes.length);
       return new Response(
         JSON.stringify({ error: "Please wait a minute before requesting another reset link" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -164,10 +192,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Verify user exists
+    console.log("👤 Checking if user exists...");
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
     if (userError) {
-      console.error("Error listing users:", userError);
+      console.error("❌ Error listing users:", userError);
       return new Response(
         JSON.stringify({ error: "Failed to verify user" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -175,11 +204,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const userExists = userData.users.some(user => user.email === email);
-    console.log("User exists:", userExists, "for email:", email);
+    console.log("👤 User exists check result:", userExists, "for email:", email);
     
     if (!userExists) {
-      // For security, we don't reveal if the email exists or not
-      console.log("User does not exist, but returning success for security");
+      // For security, we still send a success response but don't actually send an email
+      console.log("🔒 User does not exist, returning success for security (no email sent)");
       return new Response(
         JSON.stringify({ success: true, message: "If the email exists, a reset link has been sent" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -187,6 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Invalidate any existing unused codes for this email
+    console.log("🗑️ Invalidating old reset codes...");
     const { error: updateError } = await supabaseAdmin
       .from("password_reset_codes")
       .update({ used: true })
@@ -194,16 +224,18 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("used", false);
 
     if (updateError) {
-      console.error("Error invalidating old codes:", updateError);
+      console.error("❌ Error invalidating old codes:", updateError);
     }
 
     // Generate new token
     const token = generateResetToken();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    console.log("Generated reset token for:", email, "expires at:", expiresAt);
+    console.log("🎫 Generated reset token:", token);
+    console.log("⏰ Token expires at:", expiresAt);
 
     // Store the token
+    console.log("💾 Storing reset token in database...");
     const { error: insertError } = await supabaseAdmin
       .from("password_reset_codes")
       .insert({
@@ -213,40 +245,49 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (insertError) {
-      console.error("Error storing reset token:", insertError);
+      console.error("❌ Error storing reset token:", insertError);
       return new Response(
         JSON.stringify({ error: "Failed to generate reset link" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("✅ Reset token stored successfully");
+
     // Send reset email
+    console.log("📧 Attempting to send reset email...");
     try {
       await sendResetEmail(email, token);
-      console.log("Password reset process completed successfully for:", email);
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.log("🎉 Password reset process completed successfully for:", email);
+      
       return new Response(
-        JSON.stringify({ error: "Failed to send reset email. Please try again later." }),
+        JSON.stringify({ 
+          success: true, 
+          message: "Password reset link has been sent to your email"
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (emailError) {
+      console.error("💥 Email sending failed:", emailError);
+      console.error("Email error message:", emailError.message);
+      
+      return new Response(
+        JSON.stringify({ error: `Failed to send reset email: ${emailError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Password reset link has been sent to your email"
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
 
   } catch (error) {
-    console.error("Error in send-password-reset-code:", error);
+    console.error("💥 Error in send-password-reset-code handler:", error);
+    console.error("Handler error message:", error.message);
+    console.error("Handler error stack:", error.stack);
+    
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: `Internal server error: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 };
 
+console.log("🚀 Password reset edge function initialized");
 serve(handler);

@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface SendVerificationRequest {
+interface SendVerificationEmailRequest {
   email: string;
 }
 
@@ -16,16 +16,22 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
-const sendVerificationEmail = async (email: string, token: string) => {
+const generateVerificationCode = (): string => {
+  return Math.random().toString().slice(2, 8); // 6-digit code
+};
+
+const sendVerificationEmail = async (email: string, verificationCode: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
-  console.log("Attempting to send verification email to:", email);
-  console.log("Verification token:", token);
-  console.log("Resend API key available:", resendApiKey ? "Yes" : "No");
+  console.log("=== VERIFICATION EMAIL DEBUG ===");
+  console.log("Email to send to:", email);
+  console.log("Verification code:", verificationCode);
+  console.log("Resend API key exists:", resendApiKey ? "YES" : "NO");
+  console.log("Resend API key length:", resendApiKey ? resendApiKey.length : 0);
   
   if (!resendApiKey) {
-    console.log("No Resend API key found - verification code:", token);
-    throw new Error("Email service not configured");
+    console.error("❌ RESEND_API_KEY is not configured");
+    throw new Error("Email service not configured - missing RESEND_API_KEY");
   }
 
   const emailHtml = `
@@ -45,29 +51,25 @@ const sendVerificationEmail = async (email: string, token: string) => {
         <p style="font-size: 16px; margin-bottom: 20px;">Welcome to HisaabDost!</p>
         
         <p style="font-size: 16px; margin-bottom: 25px;">
-          Thank you for signing up. To complete your registration, please enter this verification code in the app:
+          To complete your account setup, please enter the following verification code in the app:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <div style="background: #fff; border: 2px solid #667eea; border-radius: 8px; padding: 20px; display: inline-block;">
-            <span style="font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; font-family: monospace;">
-              ${token}
-            </span>
+          <div style="background: #fff; padding: 20px; border-radius: 8px; border: 2px solid #667eea; display: inline-block;">
+            <div style="font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 4px; font-family: monospace;">
+              ${verificationCode}
+            </div>
           </div>
         </div>
-        
-        <p style="font-size: 14px; color: #666; margin: 25px 0; text-align: center;">
-          This verification code will expire in 24 hours.
-        </p>
         
         <div style="border-top: 1px solid #ddd; margin-top: 30px; padding-top: 20px;">
           <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
             <strong>Security Notes:</strong>
           </p>
           <ul style="font-size: 14px; color: #666; padding-left: 20px;">
-            <li>If you didn't sign up for HisaabDost, please ignore this email</li>
-            <li>Never share this verification code with anyone</li>
-            <li>This code is only valid for 24 hours</li>
+            <li>This code will expire in 10 minutes</li>
+            <li>If you didn't create an account, please ignore this email</li>
+            <li>Never share this code with anyone</li>
           </ul>
         </div>
         
@@ -80,8 +82,17 @@ const sendVerificationEmail = async (email: string, token: string) => {
     </html>
   `;
 
+  const emailPayload = {
+    from: "HisaabDost <noreply@hisaabdost.com>",
+    to: [email],
+    subject: "Verify Your HisaabDost Account",
+    html: emailHtml,
+  };
+
+  console.log("📧 Preparing to send verification email with payload:", JSON.stringify(emailPayload, null, 2));
+
   try {
-    console.log("Making request to Resend API for verification email...");
+    console.log("🚀 Making request to Resend API...");
     
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -89,78 +100,150 @@ const sendVerificationEmail = async (email: string, token: string) => {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "HisaabDost <noreply@hisaabdost.com>",
-        to: [email],
-        subject: "Verify Your HisaabDost Account",
-        html: emailHtml,
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
+    console.log("📨 Resend API response status:", response.status);
+    console.log("📨 Resend API response headers:", Object.fromEntries(response.headers.entries()));
+
     const responseText = await response.text();
-    console.log("Resend API response status:", response.status);
-    console.log("Resend API response body:", responseText);
+    console.log("📨 Resend API response body:", responseText);
 
     if (!response.ok) {
+      console.error("❌ Resend API error:", response.status, responseText);
       throw new Error(`Email service error: ${response.status} - ${responseText}`);
     }
 
-    console.log("Verification email sent successfully to:", email);
+    console.log("✅ Verification email sent successfully to:", email);
     return JSON.parse(responseText);
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    console.error("💥 Failed to send verification email:", error);
+    console.error("Error details:", error.message);
+    console.error("Error stack:", error.stack);
     throw error;
   }
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("🔥 Verification email handler started");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
+
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email }: SendVerificationRequest = await req.json();
-    console.log("Verification email request received for:", email);
+    const requestBody = await req.text();
+    console.log("📥 Raw request body:", requestBody);
+    
+    const { email }: SendVerificationEmailRequest = JSON.parse(requestBody);
+    console.log("📧 Verification email request received for email:", email);
 
     if (!email || !email.includes("@")) {
+      console.error("❌ Invalid email provided:", email);
       return new Response(
         JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Generate a 6-digit verification code
-    const token = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("Generated verification token:", token, "for email:", email);
+    // Check rate limiting
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    console.log("⏰ Checking rate limiting since:", oneMinuteAgo);
+    
+    const { data: recentCodes, error: rateLimitError } = await supabaseAdmin
+      .from("verification_codes")
+      .select("id")
+      .eq("email", email)
+      .gte("created_at", oneMinuteAgo);
 
-    // Send verification email
-    try {
-      const emailResult = await sendVerificationEmail(email, token);
-      console.log("Verification email sent successfully:", emailResult);
-    } catch (emailError) {
-      console.error("Verification email sending failed:", emailError);
+    if (rateLimitError) {
+      console.error("❌ Rate limit check error:", rateLimitError);
+    }
+
+    if (recentCodes && recentCodes.length > 0) {
+      console.log("🛑 Rate limit hit for email:", email, "recent codes:", recentCodes.length);
       return new Response(
-        JSON.stringify({ error: "Failed to send verification email. Please try again later." }),
+        JSON.stringify({ error: "Please wait a minute before requesting another verification code" }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Invalidate any existing unused codes for this email
+    console.log("🗑️ Invalidating old verification codes...");
+    const { error: updateError } = await supabaseAdmin
+      .from("verification_codes")
+      .update({ used: true })
+      .eq("email", email)
+      .eq("used", false);
+
+    if (updateError) {
+      console.error("❌ Error invalidating old codes:", updateError);
+    }
+
+    // Generate new verification code
+    const code = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    console.log("🎫 Generated verification code:", code);
+    console.log("⏰ Code expires at:", expiresAt);
+
+    // Store the verification code
+    console.log("💾 Storing verification code in database...");
+    const { error: insertError } = await supabaseAdmin
+      .from("verification_codes")
+      .insert({
+        email,
+        code,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (insertError) {
+      console.error("❌ Error storing verification code:", insertError);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate verification code" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Verification email sent successfully",
-        token: token // For debugging purposes - remove in production
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+
+    console.log("✅ Verification code stored successfully");
+
+    // Send verification email
+    console.log("📧 Attempting to send verification email...");
+    try {
+      await sendVerificationEmail(email, code);
+      console.log("🎉 Verification email process completed successfully for:", email);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Verification code has been sent to your email"
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (emailError) {
+      console.error("💥 Email sending failed:", emailError);
+      console.error("Email error message:", emailError.message);
+      
+      return new Response(
+        JSON.stringify({ error: `Failed to send verification email: ${emailError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
   } catch (error) {
-    console.error("Error in send-verification-email:", error);
+    console.error("💥 Error in send-verification-email handler:", error);
+    console.error("Handler error message:", error.message);
+    console.error("Handler error stack:", error.stack);
+    
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: `Internal server error: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 };
 
+console.log("🚀 Verification email edge function initialized");
 serve(handler);
