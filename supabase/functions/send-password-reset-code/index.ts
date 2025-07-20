@@ -191,20 +191,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify user exists
+    // Verify user exists using getUserByEmail
     console.log("👤 Checking if user exists...");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
     
-    if (userError) {
-      console.error("❌ Error listing users:", userError);
+    console.log("👤 User lookup result:", userData ? "Found user" : "No user found");
+    console.log("👤 User lookup error:", userError);
+    
+    if (userError && userError.status !== 404) {
+      console.error("❌ Error checking user:", userError);
       return new Response(
         JSON.stringify({ error: "Failed to verify user" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userExists = userData.users.some(user => user.email === email);
-    console.log("👤 User exists check result:", userExists, "for email:", email);
+    const userExists = userData && userData.user;
+    console.log("👤 User exists check result:", userExists ? "true" : "false", "for email:", email);
     
     if (!userExists) {
       // For security, we still send a success response but don't actually send an email
