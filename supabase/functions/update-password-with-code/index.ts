@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -8,8 +7,8 @@ const corsHeaders = {
 };
 
 interface UpdatePasswordRequest {
-  email: string;
   token: string;
+  email: string;
   newPassword: string;
 }
 
@@ -19,84 +18,97 @@ const supabaseAdmin = createClient(
 );
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("🔐 Update password handler started");
+  console.log("Request method:", req.method);
+
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, token, newPassword }: UpdatePasswordRequest = await req.json();
+    const requestBody = await req.text();
+    console.log("📥 Raw request body:", requestBody);
+    
+    const { token, email, newPassword }: UpdatePasswordRequest = JSON.parse(requestBody);
+    console.log("🔐 Updating password for email:", email, "token:", token);
 
-    if (!email || !token || !newPassword) {
+    if (!token || !email || !newPassword) {
+      console.error("❌ Missing required fields");
       return new Response(
-        JSON.stringify({ error: "Email, token, and new password are required" }),
+        JSON.stringify({ error: "Token, email, and new password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (newPassword.length < 6) {
+      console.error("❌ Password too short");
       return new Response(
         JSON.stringify({ error: "Password must be at least 6 characters long" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Verify the token is still valid and unused
-    const { data: resetCodes, error: selectError } = await supabaseAdmin
+    // Verify the token is valid and not expired
+    const { data: resetCode, error: queryError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
-      .eq("email", email)
       .eq("token", token)
+      .eq("email", email)
       .eq("used", false)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .gte("expires_at", new Date().toISOString())
+      .single();
 
-    if (selectError) {
-      console.error("Error finding reset token:", selectError);
+    if (queryError || !resetCode) {
+      console.error("❌ Invalid or expired token:", queryError);
       return new Response(
-        JSON.stringify({ error: "Failed to verify token" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!resetCodes || resetCodes.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired reset link" }),
+        JSON.stringify({ error: "Invalid or expired reset token" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const resetCode = resetCodes[0];
+    console.log("✅ Reset token verified, updating password...");
 
-    // Check if token has expired
-    const now = new Date();
-    const expiresAt = new Date(resetCode.expires_at);
+    // Get the user by email
+    let userExists = false;
+    let page = 1;
+    const perPage = 1000;
+    let userId = null;
     
-    if (now > expiresAt) {
-      await supabaseAdmin
-        .from("password_reset_codes")
-        .update({ used: true })
-        .eq("id", resetCode.id);
-
-      return new Response(
-        JSON.stringify({ error: "Reset link has expired" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    while (!userExists) {
+      const { data: usersData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage
+      });
+      
+      if (userError) {
+        console.error("❌ Error checking users:", userError);
+        return new Response(
+          JSON.stringify({ error: "Failed to find user" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      if (!usersData || !usersData.users || usersData.users.length === 0) {
+        break;
+      }
+      
+      const user = usersData.users.find(user => user.email === email);
+      if (user) {
+        userExists = true;
+        userId = user.id;
+        break;
+      }
+      
+      if (usersData.users.length < perPage) {
+        break;
+      }
+      
+      page++;
     }
 
-    // Get all users and find the one with the matching email
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (userError) {
-      console.error("Error listing users:", userError);
-      return new Response(
-        JSON.stringify({ error: "Failed to find user" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const user = userData.users.find(u => u.email === email);
-    
-    if (!user) {
+    if (!userExists || !userId) {
+      console.error("❌ User not found");
       return new Response(
         JSON.stringify({ error: "User not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -105,25 +117,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Update the user's password
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      user.id,
+      userId,
       { password: newPassword }
     );
 
     if (updateError) {
-      console.error("Error updating password:", updateError);
+      console.error("❌ Error updating password:", updateError);
       return new Response(
         JSON.stringify({ error: "Failed to update password" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Mark the token as used and invalidate all other tokens for this email
-    await supabaseAdmin
+    console.log("✅ Password updated successfully");
+
+    // Mark the reset code as used
+    const { error: markUsedError } = await supabaseAdmin
       .from("password_reset_codes")
       .update({ used: true })
-      .eq("email", email)
-      .eq("used", false);
+      .eq("token", token)
+      .eq("email", email);
 
+    if (markUsedError) {
+      console.error("❌ Error marking reset code as used:", markUsedError);
+      // Don't fail the request, password was already updated
+    }
+
+    console.log("🎉 Password reset completed successfully");
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -133,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error) {
-    console.error("Error in update-password-with-code:", error);
+    console.error("💥 Error in update-password-with-code handler:", error);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -141,4 +161,5 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
+console.log("🚀 Update password edge function initialized");
 serve(handler);

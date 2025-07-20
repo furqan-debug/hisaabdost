@@ -1,64 +1,226 @@
-
-import { useEffect, useState } from "react";
-import { useSearchParams, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Lock } from "lucide-react";
-import { NewPasswordForm } from "@/components/auth/NewPasswordForm";
-import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
-  const [passwordUpdated, setPasswordUpdated] = useState(false);
-  const { updatePassword } = usePasswordReset();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true);
+  const [isValidToken, setIsValidToken] = useState(false);
 
-  const handlePasswordUpdate = async (email: string, token: string, newPassword: string) => {
-    await updatePassword(email, token, newPassword);
-    setPasswordUpdated(true);
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token || !email) {
+        toast({
+          variant: "destructive",
+          title: "Invalid reset link",
+          description: "The reset link is missing required parameters.",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      try {
+        console.log("🔍 Verifying reset token:", token, "for email:", email);
+        
+        const { data, error } = await supabase.functions.invoke('verify-reset-code', {
+          body: { token, email }
+        });
+
+        console.log("✅ Token verification response:", data, error);
+
+        if (error) {
+          console.error("❌ Token verification error:", error);
+          toast({
+            variant: "destructive",
+            title: "Invalid or expired link",
+            description: "This reset link is invalid or has expired. Please request a new one.",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        if (data?.valid) {
+          setIsValidToken(true);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Invalid reset link",
+            description: "This reset link is invalid or has expired.",
+          });
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("💥 Error verifying token:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to verify reset link. Please try again.",
+        });
+        navigate("/auth");
+      } finally {
+        setVerifying(false);
+      }
+    };
+
+    verifyToken();
+  }, [token, email, navigate, toast]);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "Please make sure both passwords are identical.",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log("🔐 Resetting password for token:", token);
+      
+      const { data, error } = await supabase.functions.invoke('update-password-with-code', {
+        body: { 
+          token, 
+          email, 
+          newPassword: password 
+        }
+      });
+
+      console.log("🔄 Password reset response:", data, error);
+
+      if (error) {
+        console.error("❌ Password reset error:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to reset password",
+          description: error.message || "An error occurred while resetting your password.",
+        });
+        return;
+      }
+
+      if (data?.success) {
+        toast({
+          title: "Password reset successful",
+          description: "Your password has been updated. You can now log in with your new password.",
+        });
+        navigate("/auth");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to reset password",
+          description: "The reset link may have expired. Please request a new one.",
+        });
+      }
+    } catch (error) {
+      console.error("💥 Error resetting password:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!token || !email) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (passwordUpdated) {
+  if (verifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/10 flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verifying reset link...</span>
             </div>
-            <CardTitle className="text-green-600">Password Updated Successfully!</CardTitle>
-            <CardDescription>
-              Your password has been updated. You can now log in to the mobile app using your new password.
-            </CardDescription>
-          </CardHeader>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
+  if (!isValidToken) {
+    return null; // Will redirect to auth page
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
-            <Lock className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle>Reset Your Password</CardTitle>
-          <CardDescription>
-            Enter your new password below to complete the reset process.
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">
+            Reset Your Password
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your new password below
           </CardDescription>
         </CardHeader>
-        
         <CardContent>
-          <NewPasswordForm
-            email={email}
-            token={token}
-            onPasswordUpdate={handlePasswordUpdate}
-          />
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">New Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resetting Password...
+                </>
+              ) : (
+                "Reset Password"
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

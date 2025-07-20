@@ -12,6 +12,7 @@ import { FinnyProvider } from "@/components/finny";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import Analytics from "@/pages/Analytics";
 import Expenses from "@/pages/Expenses";
 import Goals from "@/pages/Goals";
@@ -51,6 +52,7 @@ function App() {
                   <FinnyProvider>
                     <Routes>
                       <Route path="/auth" element={<Auth />} />
+                      <Route path="/auth/reset-password" element={<ResetPassword />} />
                       <Route path="/app" element={<Layout />}>
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="analytics" element={<Analytics />} />

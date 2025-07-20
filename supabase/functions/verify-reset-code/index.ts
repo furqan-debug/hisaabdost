@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,9 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface VerifyTokenRequest {
-  email: string;
+interface VerifyResetCodeRequest {
   token: string;
+  email: string;
 }
 
 const supabaseAdmin = createClient(
@@ -18,82 +17,69 @@ const supabaseAdmin = createClient(
 );
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("🔍 Verify reset code handler started");
+  console.log("Request method:", req.method);
+
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, token }: VerifyTokenRequest = await req.json();
+    const requestBody = await req.text();
+    console.log("📥 Raw request body:", requestBody);
+    
+    const { token, email }: VerifyResetCodeRequest = JSON.parse(requestBody);
+    console.log("🔍 Verifying reset code for email:", email, "token:", token);
 
-    if (!email || !token) {
+    if (!token || !email) {
+      console.error("❌ Missing token or email");
       return new Response(
-        JSON.stringify({ error: "Email and token are required" }),
+        JSON.stringify({ error: "Token and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Find the token
-    const { data: resetCodes, error: selectError } = await supabaseAdmin
+    // Check if the token exists and is not expired
+    const { data: resetCode, error: queryError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
-      .eq("email", email)
       .eq("token", token)
+      .eq("email", email)
       .eq("used", false)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .gte("expires_at", new Date().toISOString())
+      .single();
 
-    if (selectError) {
-      console.error("Error finding reset token:", selectError);
+    if (queryError) {
+      console.error("❌ Query error:", queryError);
       return new Response(
-        JSON.stringify({ error: "Failed to verify token" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ valid: false, error: "Invalid or expired token" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!resetCodes || resetCodes.length === 0) {
+    if (!resetCode) {
+      console.log("🔒 Reset code not found or expired");
       return new Response(
-        JSON.stringify({ error: "Invalid or expired reset link" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ valid: false, error: "Invalid or expired token" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const resetCode = resetCodes[0];
-
-    // Check if token has expired
-    const now = new Date();
-    const expiresAt = new Date(resetCode.expires_at);
-    
-    if (now > expiresAt) {
-      // Mark as used to prevent reuse
-      await supabaseAdmin
-        .from("password_reset_codes")
-        .update({ used: true })
-        .eq("id", resetCode.id);
-
-      return new Response(
-        JSON.stringify({ error: "Reset link has expired" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Token is valid - return success but don't mark as used yet
-    // It will be marked as used when the password is actually updated
+    console.log("✅ Reset code is valid");
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Reset link verified successfully",
-        tokenId: resetCode.id
-      }),
+      JSON.stringify({ valid: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error in verify-reset-code:", error);
+    console.error("💥 Error in verify-reset-code handler:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ valid: false, error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 };
 
+console.log("🚀 Verify reset code edge function initialized");
 serve(handler);
