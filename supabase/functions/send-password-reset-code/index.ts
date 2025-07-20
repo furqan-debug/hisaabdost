@@ -191,30 +191,43 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Verify user exists using the correct API method
+    // Verify user exists using getUserByEmail
     console.log("👤 Checking if user exists...");
-    const { data: usersData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
     
-    console.log("👤 User lookup result:", usersData ? "Got users list" : "No users data");
-    console.log("👤 User lookup error:", userError);
-    
-    if (userError) {
-      console.error("❌ Error checking users:", userError);
+    try {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+      
+      console.log("👤 User lookup result:", userData ? "Found user" : "No user found");
+      console.log("👤 User lookup error:", userError);
+      
+      if (userError) {
+        console.log("👤 User error details:", userError.message, userError.status);
+        // If user not found, that's expected - we'll handle it below
+        if (userError.status !== 404) {
+          console.error("❌ Unexpected error checking user:", userError);
+          return new Response(
+            JSON.stringify({ error: "Failed to verify user" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      const userExists = userData && userData.user;
+      console.log("👤 User exists check result:", userExists ? "true" : "false", "for email:", email);
+      
+      if (!userExists) {
+        // For security, we still send a success response but don't actually send an email
+        console.log("🔒 User does not exist, returning success for security (no email sent)");
+        return new Response(
+          JSON.stringify({ success: true, message: "If the email exists, a reset link has been sent" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (userCheckError) {
+      console.error("💥 Error checking user existence:", userCheckError);
       return new Response(
         JSON.stringify({ error: "Failed to verify user" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const userExists = usersData && usersData.users && usersData.users.some(user => user.email === email);
-    console.log("👤 User exists check result:", userExists ? "true" : "false", "for email:", email);
-    
-    if (!userExists) {
-      // For security, we still send a success response but don't actually send an email
-      console.log("🔒 User does not exist, returning success for security (no email sent)");
-      return new Response(
-        JSON.stringify({ success: true, message: "If the email exists, a reset link has been sent" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
