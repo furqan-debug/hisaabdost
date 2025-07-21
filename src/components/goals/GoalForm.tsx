@@ -124,7 +124,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{goal ? "Edit" : "New"} Goal</SheetTitle>
         </SheetHeader>
