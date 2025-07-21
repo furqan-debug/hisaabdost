@@ -43,75 +43,162 @@ export function GoalCard({
   const isOverspent = savings < 0;
 
   return (
-    <Card className="p-4 hover:shadow-sm transition-shadow border border-border/50">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-medium text-foreground">{goal.title}</h3>
-            {progress >= 100 && (
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">{goal.category}</p>
+    <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+      {/* Progress Ring Background */}
+      <div className="absolute top-4 right-4 w-16 h-16">
+        <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 64 64">
+          <circle
+            cx="32"
+            cy="32"
+            r="28"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            className="text-muted/20"
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r="28"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeDasharray={`${(progress / 100) * 176} 176`}
+            className={
+              isOverspent ? "text-destructive" : 
+              progress >= 100 ? "text-green-500" : 
+              progress > 50 ? "text-primary" : 
+              progress > 25 ? "text-amber-500" : "text-red-500"
+            }
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-bold">{formattedProgress}%</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{formattedProgress}%</span>
+      </div>
+
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between pr-20">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <div className={`p-2 rounded-lg ${
+                progress >= 100 ? "bg-green-100 text-green-600" : 
+                progress > 50 ? "bg-primary/10 text-primary" : 
+                "bg-muted text-muted-foreground"
+              }`}>
+                {progress >= 100 ? (
+                  <Trophy className="h-4 w-4" />
+                ) : (
+                  <Target className="h-4 w-4" />
+                )}
+              </div>
+              <span className="font-semibold">{goal.title}</span>
+            </CardTitle>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <DollarSign className="h-3 w-3" />
+                <span>{formatCurrency(goal.target_amount, currencyCode as CurrencyCode)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>{format(parseISO(goal.deadline), 'MMM dd')}</span>
+              </div>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={() => onDelete(goal.id)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+            <span className="sr-only">Delete</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M3 6h18"></path>
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
             </svg>
           </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      <div className="space-y-3">
-        <Progress 
-          value={progress} 
-          className="h-1.5"
-          indicatorClassName={
-            progress >= 100 ? "bg-green-500" : 
-            progress > 50 ? "bg-primary" : "bg-muted-foreground"
-          } 
-        />
-
-        <div className="flex items-center justify-between text-sm">
-          <div>
-            <span className="text-muted-foreground">Saved: </span>
-            <span className="font-medium">
-              {formatCurrency(Math.max(0, savings), currencyCode as CurrencyCode)}
-            </span>
+      <CardContent className="space-y-4">
+        {/* Progress Section */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-end">
+            <div>
+              <p className="text-sm text-muted-foreground">Current Progress</p>
+              <p className="text-lg font-semibold">
+                {isOverspent ? (
+                  <span className="text-destructive flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4 rotate-180" />
+                    -{formatCurrency(Math.abs(savings), currencyCode as CurrencyCode)}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                    {formatCurrency(Math.max(0, savings), currencyCode as CurrencyCode)}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Category</p>
+              <p className="text-sm font-medium">{goal.category}</p>
+            </div>
           </div>
-          <div>
-            <span className="text-muted-foreground">Target: </span>
-            <span className="font-medium">
-              {formatCurrency(goal.target_amount, currencyCode as CurrencyCode)}
-            </span>
-          </div>
+          
+          {!hasBudget ? (
+            <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-700 dark:text-amber-400">
+                Set a budget for {goal.category} to track progress automatically
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              <Progress 
+                value={progress} 
+                className="h-2"
+                indicatorClassName={
+                  isOverspent ? "bg-destructive" : 
+                  progress >= 100 ? "bg-green-500" : 
+                  progress > 50 ? "bg-primary" : 
+                  progress > 25 ? "bg-amber-500" : "bg-red-500"
+                } 
+              />
+              <p className="text-xs text-muted-foreground">
+                Based on {goal.category} budget savings this month
+              </p>
+            </>
+          )}
         </div>
 
-        <div className="text-xs text-muted-foreground">
-          Due {format(parseISO(goal.deadline), 'MMM dd, yyyy')}
-        </div>
-
-        {!hasBudget && (
-          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded">
-            Set a budget for {goal.category} to track progress
-          </div>
+        {/* Status Alerts */}
+        {isOverspent && (
+          <Alert variant="destructive" className="border-destructive/20">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Budget exceeded. Reduce {goal.category} spending to resume progress.
+            </AlertDescription>
+          </Alert>
         )}
 
         {progress >= 100 && (
-          <div className="text-xs text-green-600 bg-green-50 dark:bg-green-950/20 p-2 rounded">
-            🎉 Goal achieved!
-          </div>
+          <Alert className="border-green-200 bg-green-50 dark:bg-green-950/20">
+            <Trophy className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700 dark:text-green-400 text-sm">
+              🎉 Congratulations! Goal achieved!
+            </AlertDescription>
+          </Alert>
         )}
-      </div>
+
+        {/* Tip Section */}
+        <div className="p-3 rounded-lg bg-muted/50 border border-muted/30">
+          <p className="text-xs text-muted-foreground font-medium mb-1">💡 Smart Tip</p>
+          <p className="text-sm">{tip}</p>
+        </div>
+      </CardContent>
     </Card>
   );
 }
