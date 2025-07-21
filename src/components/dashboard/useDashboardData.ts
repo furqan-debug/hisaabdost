@@ -1,20 +1,18 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { Expense } from "@/components/expenses/types";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useMonthContext } from "@/hooks/use-month-context";
-import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
+import { format } from "date-fns";
+import { useAuth } from "@/lib/auth";
+import { useDashboardQueries } from "@/hooks/dashboard/useDashboardQueries";
+import { useDashboardCalculations } from "@/hooks/dashboard/useDashboardCalculations";
+import { useDashboardState } from "@/hooks/dashboard/useDashboardState";
 
 export function useDashboardData() {
   const { user } = useAuth();
   const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
-  const { totalAdditions } = useWalletAdditions();
   
   // Initialize month carryover functionality
   useMonthCarryover();
@@ -24,24 +22,11 @@ export function useDashboardData() {
   const currentMonthData = getCurrentMonthData();
   
   const [monthlyIncome, setMonthlyIncome] = useState<number>(currentMonthData.monthlyIncome || 0);
-  const [expenseToEdit, setExpenseToEdit] = useState<Expense | undefined>();
-  const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
-  const [showAddExpense, setShowAddExpense] = useState(false);
   
-  // Fetch monthly income using the new service
-  const { data: incomeData, isLoading: isIncomeLoading } = useQuery({
-    queryKey: ['monthly_income', user?.id, currentMonthKey],
-    queryFn: async () => {
-      if (!user) return { monthlyIncome: 0 };
-      
-      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
-      return { monthlyIncome: income };
-    },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
-    refetchOnMount: false, // Only fetch if data is stale
-    refetchOnWindowFocus: false,
-  });
+  // Use specialized hooks
+  const { expenses, allExpenses, isExpensesLoading, isIncomeLoading, incomeData } = useDashboardQueries(selectedMonth);
+  const { monthlyExpenses, totalBalance, walletBalance, totalAdditions, savingsRate, formatPercentage } = useDashboardCalculations({ expenses, monthlyIncome });
+  const { expenseToEdit, setExpenseToEdit, chartType, setChartType, showAddExpense, setShowAddExpense } = useDashboardState();
   
   // Update local income state when data is fetched
   useEffect(() => {
@@ -55,101 +40,15 @@ export function useDashboardData() {
       });
     }
   }, [incomeData, isIncomeLoading, updateMonthData, currentMonthKey]);
-  
-  // Fetch current month's expenses from Supabase using React Query
-  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
-    queryKey: ['expenses', format(selectedMonth, 'yyyy-MM'), user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
-      
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', monthStart.toISOString().split('T')[0])
-        .lte('date', monthEnd.toISOString().split('T')[0])
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching expenses:', error);
-        return [];
-      }
-      
-      return data.map(exp => ({
-        id: exp.id,
-        amount: Number(exp.amount),
-        description: exp.description,
-        date: exp.date,
-        category: exp.category,
-        paymentMethod: exp.payment || undefined,
-        notes: exp.notes || undefined,
-        isRecurring: exp.is_recurring || false,
-        receiptUrl: exp.receipt_url || undefined,
-      }));
-    },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
-    refetchOnMount: false, // Only fetch if data is stale
-    refetchOnWindowFocus: false,
-  });
-
-  // Fetch ALL expenses for the last 6 months for spending trends (load this lazily)
-  const { data: allExpenses = [] } = useQuery({
-    queryKey: ['all_expenses', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      // Get expenses from 6 months ago to now
-      const sixMonthsAgo = subMonths(new Date(), 5);
-      const startDate = startOfMonth(sixMonthsAgo);
-      
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .order('date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching all expenses:', error);
-        return [];
-      }
-      
-      return data.map(exp => ({
-        id: exp.id,
-        amount: Number(exp.amount),
-        description: exp.description,
-        date: exp.date,
-        category: exp.category,
-        paymentMethod: exp.payment || undefined,
-        notes: exp.notes || undefined,
-        isRecurring: exp.is_recurring || false,
-        receiptUrl: exp.receipt_url || undefined,
-      }));
-    },
-    enabled: !!user && expenses.length > 0, // Only load after current month expenses are loaded
-    staleTime: 1000 * 60 * 10, // 10 minutes - this data changes less frequently
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-
-  // Calculate financial metrics for the current month
-  const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
-  const totalBalance = monthlyIncome - monthlyExpenses;
-  const walletBalance = monthlyIncome + totalAdditions - monthlyExpenses;
-  const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
 
   // Setup notification triggers with enhanced alerts
   useNotificationTriggers({
-    budgets: [], // Will be populated when budget data is available
+    budgets: [],
     monthlyExpenses,
     monthlyIncome,
     walletBalance,
-    expenses, // Add expenses for more detailed notifications
-    previousMonthExpenses: 0, // Could be enhanced to fetch actual previous month data
+    expenses,
+    previousMonthExpenses: 0,
   });
 
   // Update month data when income or expenses change
@@ -163,22 +62,12 @@ export function useDashboardData() {
     });
   }, [monthlyIncome, monthlyExpenses, totalAdditions, currentMonthKey, updateMonthData]);
 
-  const formatPercentage = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value / 100);
-  };
-
   const isNewUser = expenses.length === 0;
   const isLoading = isExpensesLoading || isIncomeLoading;
-
-  // NO expense refresh function - removed to prevent cascading invalidations
   
   return {
     expenses,
-    allExpenses, // Add all expenses for spending trends
+    allExpenses,
     isExpensesLoading,
     isLoading,
     isNewUser,

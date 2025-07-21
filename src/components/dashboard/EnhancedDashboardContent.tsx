@@ -1,17 +1,8 @@
 
 import React from "react";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { StatCards } from "@/components/dashboard/StatCards";
-import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
-import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
-import { FinnyCard } from "@/components/dashboard/FinnyCard";
-import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import AddExpenseSheet from "@/components/AddExpenseSheet";
-import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
-import { useExpenseFile } from "@/hooks/use-expense-file";
-import { useState } from "react";
+import { DashboardMainContent } from "@/components/dashboard/sections/DashboardMainContent";
+import { DashboardExpenseSheet } from "@/components/dashboard/sections/DashboardExpenseSheet";
+import { useDashboardActions } from "@/hooks/dashboard/useDashboardActions";
 
 interface EnhancedDashboardContentProps {
   isNewUser: boolean;
@@ -54,70 +45,33 @@ export const EnhancedDashboardContent = ({
   setChartType,
   walletBalance
 }: EnhancedDashboardContentProps) => {
-  const isMobile = useIsMobile();
-  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
-
-  // Use the expense file hook to handle file operations
   const {
+    captureMode,
+    setCaptureMode,
     selectedFile,
     setSelectedFile,
     fileInputRef,
     cameraInputRef,
     handleFileChange,
-    triggerFileUpload,
-    triggerCameraCapture
-  } = useExpenseFile();
+    handleAddExpense,
+    handleUploadReceipt,
+    handleTakePhoto,
+    handleAddBudget
+  } = useDashboardActions();
 
-  const handleAddExpense = () => {
-    console.log('Dashboard: handleAddExpense called');
-    setCaptureMode('manual');
+  const handleExpenseAction = (action: string) => {
+    setCaptureMode(action as 'manual' | 'upload' | 'camera');
     setShowAddExpense(true);
   };
 
-  const handleUploadReceipt = () => {
-    console.log('Dashboard: handleUploadReceipt called');
-    setCaptureMode('upload');
-    triggerFileUpload();
-  };
-
-  const handleTakePhoto = () => {
-    console.log('Dashboard: handleTakePhoto called');
-    setCaptureMode('camera');
-    triggerCameraCapture();
-  };
-
-  const handleAddBudget = () => {
-    console.log('Dashboard: handleAddBudget called - navigating to budget page');
-    window.location.href = '/app/budget';
-  };
-
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = handleFileChange(e);
-    if (file) {
-      setSelectedFile(file);
-      setShowAddExpense(true);
-    }
-  };
-
-  const handleSheetClose = () => {
-    setShowAddExpense(false);
-    setSelectedFile(null);
-    setCaptureMode('manual');
-    setExpenseToEdit(undefined);
-  };
-
-  // Simple expense added handler - no manual refresh needed as React Query handles it automatically
   const handleExpenseAdded = () => {
     console.log('Dashboard: Expense added - React Query will handle refresh automatically');
   };
 
   return (
     <div className="space-y-6 pb-6">
-      {/* Header */}
-      <DashboardHeader isNewUser={isNewUser} />
-      
-      {/* Stats Cards */}
-      <StatCards 
+      <DashboardMainContent
+        isNewUser={isNewUser}
         totalBalance={totalBalance}
         monthlyExpenses={monthlyExpenses}
         monthlyIncome={monthlyIncome}
@@ -125,58 +79,29 @@ export const EnhancedDashboardContent = ({
         savingsRate={savingsRate}
         formatPercentage={formatPercentage}
         walletBalance={walletBalance}
-        isNewUser={isNewUser}
+        expenses={expenses}
+        allExpenses={allExpenses}
+        isExpensesLoading={isExpensesLoading}
+        setShowAddExpense={setShowAddExpense}
+        onAddExpense={handleAddExpense}
+        onUploadReceipt={handleUploadReceipt}
+        onTakePhoto={handleTakePhoto}
+        onAddBudget={handleAddBudget}
       />
 
-      {/* Main Content - Single Column Layout */}
-      <div className="space-y-6">
-        {/* 1. Talk to Finny */}
-        <FinnyCard />
-        
-        {/* 2. Quick Actions */}
-        <QuickActionsWidget
-          onAddExpense={handleAddExpense}
-          onUploadReceipt={handleUploadReceipt}
-          onTakePhoto={handleTakePhoto}
-          onAddBudget={handleAddBudget}
-        />
-        
-        {/* 3. Spending Trends */}
-        <SpendingTrendsWidget expenses={allExpenses} />
-        
-        {/* 4. Recent Expenses */}
-        <RecentExpensesCard 
-          expenses={expenses}
-          isNewUser={isNewUser}
-          isLoading={isExpensesLoading}
-          setShowAddExpense={setShowAddExpense}
-        />
-      </div>
-
-      {/* Hidden file inputs for receipt processing */}
-      <ReceiptFileInput 
-        onChange={handleFileSelection} 
-        inputRef={fileInputRef} 
-        id="dashboard-receipt-upload" 
-        useCamera={false} 
-      />
-      
-      <ReceiptFileInput 
-        onChange={handleFileSelection} 
-        inputRef={cameraInputRef} 
-        id="dashboard-camera-capture" 
-        useCamera={true} 
-      />
-
-      {/* Expense Sheet - triggered from Quick Actions */}
-      <AddExpenseSheet 
-        onAddExpense={handleExpenseAdded} 
-        expenseToEdit={expenseToEdit} 
-        onClose={handleSheetClose} 
-        open={showAddExpense || expenseToEdit !== undefined} 
-        onOpenChange={setShowAddExpense} 
-        initialCaptureMode={captureMode} 
-        initialFile={selectedFile}
+      <DashboardExpenseSheet
+        showAddExpense={showAddExpense}
+        setShowAddExpense={setShowAddExpense}
+        expenseToEdit={expenseToEdit}
+        setExpenseToEdit={setExpenseToEdit}
+        captureMode={captureMode}
+        setCaptureMode={setCaptureMode}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        fileInputRef={fileInputRef}
+        cameraInputRef={cameraInputRef}
+        handleFileChange={handleFileChange}
+        onExpenseAdded={handleExpenseAdded}
       />
     </div>
   );
