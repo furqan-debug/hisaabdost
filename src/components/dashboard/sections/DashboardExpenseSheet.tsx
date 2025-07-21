@@ -33,7 +33,8 @@ export const DashboardExpenseSheet = ({
   onExpenseAdded
 }: DashboardExpenseSheetProps) => {
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = handleFileChange(e);
+    handleFileChange(e);
+    const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
       setShowAddExpense(true);
