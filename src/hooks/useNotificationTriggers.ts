@@ -35,6 +35,17 @@ export function useNotificationTriggers({
   const processedSession = useRef<Set<string>>(new Set());
   const lastProcessedData = useRef<string>('');
 
+  // Ensure settings has default values to prevent undefined errors
+  const safeSettings = settings || {
+    budgetWarnings: true,
+    overspendingAlerts: true,
+    monthlyReset: true,
+    dailyReminders: true,
+    weeklyReports: true,
+    categoryInsights: true,
+    savingsUpdates: true,
+  };
+
   // Reasonable requirements for notifications
   const hasSignificantData = expenses.length >= 5 && monthlyExpenses > 100;
   const hasEstablishedBudgets = budgets.length >= 1 || expenses.length >= 10; // Allow notifications even without budgets if user has expenses
@@ -78,7 +89,7 @@ export function useNotificationTriggers({
 
   // Budget warnings - only for severe cases and once per session per category
   useEffect(() => {
-    if (!settings.budgetWarnings && !settings.overspendingAlerts) return;
+    if (!safeSettings.budgetWarnings && !safeSettings.overspendingAlerts) return;
     if (lastProcessedData.current !== currentDataSignature) return;
     
     budgets.forEach(({ category, budget, spent }) => {
@@ -90,7 +101,7 @@ export function useNotificationTriggers({
       const percentage = (spent / budget) * 100;
       
       // Only notify for critical budget issues
-      if (settings.overspendingAlerts && percentage > 200 && spent > 1000) {
+      if (safeSettings.overspendingAlerts && percentage > 200 && spent > 1000) {
         if (NotificationService.canSendNotification('budget-exceeded', category)) {
           const notification = NotificationService.createNotification({
             type: 'budget-exceeded',
@@ -104,7 +115,7 @@ export function useNotificationTriggers({
         }
       }
       // Very high threshold for warnings
-      else if (settings.budgetWarnings && percentage >= 95 && percentage <= 100 && spent > 500) {
+      else if (safeSettings.budgetWarnings && percentage >= 95 && percentage <= 100 && spent > 500) {
         if (NotificationService.canSendNotification('budget-warning', category)) {
           const notification = NotificationService.createNotification({
             type: 'budget-warning',
@@ -118,7 +129,7 @@ export function useNotificationTriggers({
         }
       }
     });
-  }, [budgets, addNotification, settings.budgetWarnings, settings.overspendingAlerts, selectedMonth, currentDataSignature]);
+  }, [budgets, addNotification, safeSettings.budgetWarnings, safeSettings.overspendingAlerts, selectedMonth, currentDataSignature]);
 
   // Monthly comparison - only for very significant changes
   useEffect(() => {
