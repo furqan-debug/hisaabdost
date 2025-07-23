@@ -6,6 +6,7 @@ import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
+import { NotificationPermissionBanner } from "@/components/notifications/NotificationPermissionBanner";
 
 interface DashboardMainContentProps {
   isNewUser: boolean;
@@ -48,6 +49,9 @@ export const DashboardMainContent = ({
     <div className="space-y-6">
       {/* Header */}
       <DashboardHeader isNewUser={isNewUser} />
+      
+      {/* Notification Permission Banner */}
+      <NotificationPermissionBanner />
       
       {/* Stats Cards */}
       <StatCards 

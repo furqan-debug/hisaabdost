@@ -16,7 +16,8 @@ export type NotificationType =
   | 'weekly-summary'
   | 'monthly-comparison'
   | 'category-insight'
-  | 'progress-update';
+  | 'progress-update'
+  | 'spending-insight';
 
 export interface NotificationTrigger {
   type: NotificationType;
@@ -28,6 +29,11 @@ export interface NotificationTrigger {
     current: number;
     previous: number;
     change: number;
+  };
+  spendingData?: {
+    total: number;
+    daily: number;
+    expenseCount: number;
   };
 }
 
@@ -224,6 +230,13 @@ export class NotificationService {
           type: 'warning',
           title: 'Critical Wallet Balance',
           description: `Your wallet balance is critically low. Immediate attention needed.`,
+        };
+
+      case 'spending-insight':
+        return {
+          type: 'info',
+          title: '💡 Spending Insight',
+          description: `You've spent ${trigger.spendingData?.total?.toFixed(2)} this month across ${trigger.spendingData?.expenseCount} expenses. That's ${trigger.spendingData?.daily?.toFixed(2)} per day on average.`,
         };
 
       default:

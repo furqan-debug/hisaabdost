@@ -35,10 +35,10 @@ export function useNotificationTriggers({
   const processedSession = useRef<Set<string>>(new Set());
   const lastProcessedData = useRef<string>('');
 
-  // Very strict requirements to prevent spam for new users
-  const hasSignificantData = expenses.length >= 20 && monthlyExpenses > 500; // Much higher thresholds
-  const hasEstablishedBudgets = budgets.length >= 3 && budgets.some(b => b.budget > 100);
-  const hasIncomeData = monthlyIncome > 1000; // Minimum income requirement
+  // Reasonable requirements for notifications
+  const hasSignificantData = expenses.length >= 5 && monthlyExpenses > 100;
+  const hasEstablishedBudgets = budgets.length >= 1 || expenses.length >= 10; // Allow notifications even without budgets if user has expenses
+  const hasIncomeData = monthlyIncome > 0;
   const isEstablishedUser = hasSignificantData && hasEstablishedBudgets && hasIncomeData;
 
   // Create a data signature to prevent duplicate processing
@@ -196,4 +196,31 @@ export function useNotificationTriggers({
       processedSession.current.add(sessionKey);
     }
   }, [monthlyIncome, monthlyExpenses, addNotification, selectedMonth, currentDataSignature]);
+
+  // Spending insights for users without budgets
+  useEffect(() => {
+    if (lastProcessedData.current !== currentDataSignature) return;
+    if (budgets.length > 0) return; // Only for users without budgets
+    
+    const sessionKey = `spending-insight-${selectedMonth}`;
+    if (processedSession.current.has(sessionKey)) return;
+    
+    if (expenses.length >= 10 && monthlyExpenses > 500 && 
+        NotificationService.canSendNotification('spending-insight')) {
+      
+      const avgDailySpending = monthlyExpenses / 30;
+      const notification = NotificationService.createNotification({
+        type: 'spending-insight',
+        spendingData: {
+          total: monthlyExpenses,
+          daily: avgDailySpending,
+          expenseCount: expenses.length,
+        },
+      });
+      
+      addNotification(notification);
+      NotificationService.markNotificationSent('spending-insight');
+      processedSession.current.add(sessionKey);
+    }
+  }, [expenses.length, monthlyExpenses, budgets.length, addNotification, selectedMonth, currentDataSignature]);
 }
