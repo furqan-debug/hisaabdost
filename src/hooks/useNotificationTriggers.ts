@@ -35,6 +35,17 @@ export function useNotificationTriggers({
   const processedSession = useRef<Set<string>>(new Set());
   const lastProcessedData = useRef<string>('');
 
+  // Early return if critical dependencies are not ready
+  if (!addNotification) {
+    console.log('⚠️ addNotification not ready, skipping notification triggers');
+    return;
+  }
+
+  if (!selectedMonth) {
+    console.log('⚠️ selectedMonth not ready, skipping notification triggers');
+    return;
+  }
+
   // Ensure all dependencies are defined with safe defaults
   const safeBudgets = budgets || [];
   const safeExpenses = expenses || [];
@@ -98,9 +109,24 @@ export function useNotificationTriggers({
 
   // Budget warnings - only for severe cases and once per session per category
   useEffect(() => {
-    if (!safeSettings.budgetWarnings && !safeSettings.overspendingAlerts) return;
+    // Debug logging to identify undefined values
+    console.log('🔍 DEBUG: useEffect dependencies check:', {
+      safeBudgets: safeBudgets?.length || 'undefined',
+      addNotification: typeof addNotification,
+      budgetWarnings: safeSettings?.budgetWarnings,
+      overspendingAlerts: safeSettings?.overspendingAlerts,
+      selectedMonth: safeSelectedMonth,
+      dataSignature: currentDataSignature?.length || 'undefined'
+    });
+
+    if (!safeSettings?.budgetWarnings && !safeSettings?.overspendingAlerts) return;
     if (lastProcessedData.current !== currentDataSignature) return;
     
+    if (!safeBudgets || !Array.isArray(safeBudgets)) {
+      console.log('⚠️ safeBudgets is not an array:', safeBudgets);
+      return;
+    }
+
     safeBudgets.forEach(({ category, budget, spent }) => {
       if (budget <= 0 || spent <= 0) return;
       
@@ -118,7 +144,7 @@ export function useNotificationTriggers({
             percentage: Math.round(percentage),
           });
           
-          addNotification(notification);
+          addNotification && addNotification(notification);
           NotificationService.markNotificationSent('budget-exceeded', category);
           processedSession.current.add(sessionKey);
         }
@@ -132,13 +158,20 @@ export function useNotificationTriggers({
             percentage: Math.round(percentage),
           });
           
-          addNotification(notification);
+          addNotification && addNotification(notification);
           NotificationService.markNotificationSent('budget-warning', category);
           processedSession.current.add(sessionKey);
         }
       }
     });
-  }, [safeBudgets, addNotification, safeSettings.budgetWarnings, safeSettings.overspendingAlerts, safeSelectedMonth, currentDataSignature]);
+  }, [
+    safeBudgets, 
+    addNotification, 
+    safeSettings?.budgetWarnings, 
+    safeSettings?.overspendingAlerts, 
+    safeSelectedMonth, 
+    currentDataSignature
+  ].filter(dep => dep !== undefined)); // Filter out undefined dependencies
 
   // Monthly comparison - only for very significant changes
   useEffect(() => {
