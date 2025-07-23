@@ -32,7 +32,7 @@ const Navbar = () => {
     paddingTop: 'env(safe-area-inset-top)',
     top: 0
   }}>
-      <div className="flex h-14 items-center justify-between px-3 lg:px-4 max-w-7xl mx-auto mt-[25px] mb-[19px] py-[3px]">
+      <div className="flex h-14 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[25px] mb-[19px] py-[3px]">
         {/* Left: Menu Button (Mobile only) */}
         {isMobile && <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
             <SheetTrigger asChild>
@@ -47,7 +47,7 @@ const Navbar = () => {
           </Sheet>}
         
         {/* Center: Logo and Title */}
-        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-center md:justify-start mx-0 my-[3px]">
+        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-center md:justify-start mx-1 my-[3px]">
           <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-9 w-9 mr-2" />
           <div className="flex flex-col">
             <h2 className="font-bold text-sm text-foreground leading-tight">
@@ -60,7 +60,7 @@ const Navbar = () => {
         </div>
         
         {/* Right: Notification and User Avatar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <NotificationBell />
           
           <DropdownMenu>
