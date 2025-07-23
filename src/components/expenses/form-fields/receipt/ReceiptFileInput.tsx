@@ -22,7 +22,7 @@ export function ReceiptFileInput({
       id={id}
       name={id}
       accept={accept}
-      capture={useCamera ? "environment" : undefined}
+      capture={useCamera ? "environment" : false}
       className="hidden"
       onChange={onChange}
       ref={inputRef}
