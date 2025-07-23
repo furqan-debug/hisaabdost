@@ -35,6 +35,15 @@ export function useNotificationTriggers({
   const processedSession = useRef<Set<string>>(new Set());
   const lastProcessedData = useRef<string>('');
 
+  // Ensure all dependencies are defined with safe defaults
+  const safeBudgets = budgets || [];
+  const safeExpenses = expenses || [];
+  const safeMonthlyExpenses = monthlyExpenses || 0;
+  const safeMonthlyIncome = monthlyIncome || 0;
+  const safeWalletBalance = walletBalance || 0;
+  const safePreviousMonthExpenses = previousMonthExpenses || 0;
+  const safeSelectedMonth = selectedMonth || new Date();
+  
   // Ensure settings has default values to prevent undefined errors
   const safeSettings = settings || {
     budgetWarnings: true,
@@ -47,19 +56,19 @@ export function useNotificationTriggers({
   };
 
   // Reasonable requirements for notifications
-  const hasSignificantData = expenses.length >= 5 && monthlyExpenses > 100;
-  const hasEstablishedBudgets = budgets.length >= 1 || expenses.length >= 10; // Allow notifications even without budgets if user has expenses
-  const hasIncomeData = monthlyIncome > 0;
+  const hasSignificantData = safeExpenses.length >= 5 && safeMonthlyExpenses > 100;
+  const hasEstablishedBudgets = safeBudgets.length >= 1 || safeExpenses.length >= 10; // Allow notifications even without budgets if user has expenses
+  const hasIncomeData = safeMonthlyIncome > 0;
   const isEstablishedUser = hasSignificantData && hasEstablishedBudgets && hasIncomeData;
 
   // Create a data signature to prevent duplicate processing
   const currentDataSignature = JSON.stringify({
-    expenseCount: expenses.length,
-    monthlyExpenses: Math.round(monthlyExpenses),
-    monthlyIncome: Math.round(monthlyIncome),
-    walletBalance: Math.round(walletBalance),
-    budgetCount: budgets.length,
-    selectedMonth
+    expenseCount: safeExpenses.length,
+    monthlyExpenses: Math.round(safeMonthlyExpenses),
+    monthlyIncome: Math.round(safeMonthlyIncome),
+    walletBalance: Math.round(safeWalletBalance),
+    budgetCount: safeBudgets.length,
+    selectedMonth: safeSelectedMonth
   });
 
   // Prevent processing if data hasn't changed
@@ -75,9 +84,9 @@ export function useNotificationTriggers({
     hasSignificantData,
     hasEstablishedBudgets,
     hasIncomeData,
-    expenseCount: expenses.length,
-    monthlyExpenses,
-    budgetCount: budgets.length,
+    expenseCount: safeExpenses.length,
+    monthlyExpenses: safeMonthlyExpenses,
+    budgetCount: safeBudgets.length,
     processedSessionSize: processedSession.current.size
   });
 
@@ -92,10 +101,10 @@ export function useNotificationTriggers({
     if (!safeSettings.budgetWarnings && !safeSettings.overspendingAlerts) return;
     if (lastProcessedData.current !== currentDataSignature) return;
     
-    budgets.forEach(({ category, budget, spent }) => {
+    safeBudgets.forEach(({ category, budget, spent }) => {
       if (budget <= 0 || spent <= 0) return;
       
-      const sessionKey = `budget-${category}-${selectedMonth}`;
+      const sessionKey = `budget-${category}-${safeSelectedMonth}`;
       if (processedSession.current.has(sessionKey)) return;
       
       const percentage = (spent / budget) * 100;
@@ -129,18 +138,18 @@ export function useNotificationTriggers({
         }
       }
     });
-  }, [budgets, addNotification, safeSettings.budgetWarnings, safeSettings.overspendingAlerts, selectedMonth, currentDataSignature]);
+  }, [safeBudgets, addNotification, safeSettings.budgetWarnings, safeSettings.overspendingAlerts, safeSelectedMonth, currentDataSignature]);
 
   // Monthly comparison - only for very significant changes
   useEffect(() => {
     if (lastProcessedData.current !== currentDataSignature) return;
     
-    const sessionKey = `monthly-comparison-${selectedMonth}`;
+    const sessionKey = `monthly-comparison-${safeSelectedMonth}`;
     if (processedSession.current.has(sessionKey)) return;
     
-    if (monthlyExpenses > 1000 && previousMonthExpenses > 1000) {
-      const change = monthlyExpenses - previousMonthExpenses;
-      const changePercentage = Math.abs(change / previousMonthExpenses) * 100;
+    if (safeMonthlyExpenses > 1000 && safePreviousMonthExpenses > 1000) {
+      const change = safeMonthlyExpenses - safePreviousMonthExpenses;
+      const changePercentage = Math.abs(change / safePreviousMonthExpenses) * 100;
       
       // Only notify for very dramatic changes (>75% and >2000 currency units)
       if (changePercentage > 75 && Math.abs(change) > 2000 && 
@@ -149,8 +158,8 @@ export function useNotificationTriggers({
         const notification = NotificationService.createNotification({
           type: 'monthly-comparison',
           comparisonData: {
-            current: monthlyExpenses,
-            previous: previousMonthExpenses,
+            current: safeMonthlyExpenses,
+            previous: safePreviousMonthExpenses,
             change,
           },
         });
@@ -160,17 +169,17 @@ export function useNotificationTriggers({
         processedSession.current.add(sessionKey);
       }
     }
-  }, [monthlyExpenses, previousMonthExpenses, addNotification, selectedMonth, currentDataSignature]);
+  }, [safeMonthlyExpenses, safePreviousMonthExpenses, addNotification, safeSelectedMonth, currentDataSignature]);
 
   // Low wallet balance - only for critically low amounts
   useEffect(() => {
     if (lastProcessedData.current !== currentDataSignature) return;
     
-    const sessionKey = `low-balance-${selectedMonth}`;
+    const sessionKey = `low-balance-${safeSelectedMonth}`;
     if (processedSession.current.has(sessionKey)) return;
     
-    if (walletBalance < 50 && walletBalance > 0 && monthlyIncome > 0) {
-      const percentage = (walletBalance / monthlyIncome) * 100;
+    if (safeWalletBalance < 50 && safeWalletBalance > 0 && safeMonthlyIncome > 0) {
+      const percentage = (safeWalletBalance / safeMonthlyIncome) * 100;
       
       // Only alert if balance is extremely low (less than 1% of income)
       if (percentage < 1 && NotificationService.canSendNotification('low-balance')) {
@@ -183,19 +192,19 @@ export function useNotificationTriggers({
         processedSession.current.add(sessionKey);
       }
     }
-  }, [walletBalance, monthlyIncome, addNotification, selectedMonth, currentDataSignature]);
+  }, [safeWalletBalance, safeMonthlyIncome, addNotification, safeSelectedMonth, currentDataSignature]);
 
   // Savings progress - only for truly exceptional performance
   useEffect(() => {
     if (lastProcessedData.current !== currentDataSignature) return;
     
-    const sessionKey = `progress-update-${selectedMonth}`;
+    const sessionKey = `progress-update-${safeSelectedMonth}`;
     if (processedSession.current.has(sessionKey)) return;
     
-    const savingsRate = NotificationService.calculateSavingsRate(monthlyIncome, monthlyExpenses);
+    const savingsRate = NotificationService.calculateSavingsRate(safeMonthlyIncome, safeMonthlyExpenses);
     
     // Only celebrate truly exceptional savings rates (>80%) and ensure it's a meaningful amount
-    if (savingsRate >= 80 && monthlyIncome > 2000 && 
+    if (savingsRate >= 80 && safeMonthlyIncome > 2000 && 
         NotificationService.canSendNotification('progress-update')) {
       const notification = NotificationService.createNotification({
         type: 'progress-update',
@@ -206,26 +215,26 @@ export function useNotificationTriggers({
       NotificationService.markNotificationSent('progress-update');
       processedSession.current.add(sessionKey);
     }
-  }, [monthlyIncome, monthlyExpenses, addNotification, selectedMonth, currentDataSignature]);
+  }, [safeMonthlyIncome, safeMonthlyExpenses, addNotification, safeSelectedMonth, currentDataSignature]);
 
   // Spending insights for users without budgets
   useEffect(() => {
     if (lastProcessedData.current !== currentDataSignature) return;
-    if (budgets.length > 0) return; // Only for users without budgets
+    if (safeBudgets.length > 0) return; // Only for users without budgets
     
-    const sessionKey = `spending-insight-${selectedMonth}`;
+    const sessionKey = `spending-insight-${safeSelectedMonth}`;
     if (processedSession.current.has(sessionKey)) return;
     
-    if (expenses.length >= 10 && monthlyExpenses > 500 && 
+    if (safeExpenses.length >= 10 && safeMonthlyExpenses > 500 && 
         NotificationService.canSendNotification('spending-insight')) {
       
-      const avgDailySpending = monthlyExpenses / 30;
+      const avgDailySpending = safeMonthlyExpenses / 30;
       const notification = NotificationService.createNotification({
         type: 'spending-insight',
         spendingData: {
-          total: monthlyExpenses,
+          total: safeMonthlyExpenses,
           daily: avgDailySpending,
-          expenseCount: expenses.length,
+          expenseCount: safeExpenses.length,
         },
       });
       
@@ -233,5 +242,5 @@ export function useNotificationTriggers({
       NotificationService.markNotificationSent('spending-insight');
       processedSession.current.add(sessionKey);
     }
-  }, [expenses.length, monthlyExpenses, budgets.length, addNotification, selectedMonth, currentDataSignature]);
+  }, [safeExpenses.length, safeMonthlyExpenses, safeBudgets.length, addNotification, safeSelectedMonth, currentDataSignature]);
 }
