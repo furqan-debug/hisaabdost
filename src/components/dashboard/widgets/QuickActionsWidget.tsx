@@ -89,8 +89,9 @@ export function QuickActionsWidget({
     event.stopPropagation();
     console.log('Quick action: Add Budget clicked');
     
-    // Use Finny to set a budget
-    triggerChat('Help me set up a new budget');
+    // Navigate directly to budget page
+    window.history.pushState({}, '', '/app/budget');
+    window.dispatchEvent(new PopStateEvent('popstate'));
     
     // Also call the provided callback as fallback
     setTimeout(() => {

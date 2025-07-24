@@ -67,7 +67,7 @@ export const AddExpenseButton = ({
       setSelectedFile(file);
 
       // For upload or camera modes, we want to auto-process
-      if (captureMode !== 'manual') {
+      if (captureMode === 'upload' || captureMode === 'camera') {
         setShowAddExpense(true);
       }
       e.target.value = '';
