@@ -40,7 +40,17 @@ export const AddExpenseButton = ({
       console.log('AddExpenseButton: Received open-expense-form event', event.detail);
       const { mode } = event.detail;
       setCaptureMode(mode || 'manual');
-      setShowAddExpense(true);
+      
+      if (mode === 'camera' && cameraInputRef.current) {
+        // Trigger camera input for photo capture
+        cameraInputRef.current.click();
+      } else if (mode === 'upload' && fileInputRef.current) {
+        // Trigger file input for upload
+        fileInputRef.current.click();
+      } else {
+        // For manual mode, just open the sheet
+        setShowAddExpense(true);
+      }
     };
 
     window.addEventListener('open-expense-form', handleOpenExpenseForm as EventListener);
