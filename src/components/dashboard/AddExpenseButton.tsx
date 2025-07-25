@@ -43,12 +43,15 @@ export const AddExpenseButton = ({
       
       if (mode === 'camera' && cameraInputRef.current) {
         // Trigger camera input for photo capture
+        console.log('AddExpenseButton: Triggering camera input');
         cameraInputRef.current.click();
       } else if (mode === 'upload' && fileInputRef.current) {
         // Trigger file input for upload
+        console.log('AddExpenseButton: Triggering file input');
         fileInputRef.current.click();
-      } else {
+      } else if (mode === 'manual') {
         // For manual mode, just open the sheet
+        console.log('AddExpenseButton: Opening manual entry sheet');
         setShowAddExpense(true);
       }
     };
