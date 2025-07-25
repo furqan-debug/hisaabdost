@@ -1,8 +1,10 @@
 
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 
 export function useDashboardActions() {
+  const navigate = useNavigate();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   
   const {
@@ -37,8 +39,7 @@ export function useDashboardActions() {
 
   const handleAddBudget = () => {
     console.log('Dashboard: handleAddBudget called - navigating to budget page');
-    // Use proper navigation
-    window.location.href = '/app/budget';
+    navigate('/app/budget');
   };
 
   return {
