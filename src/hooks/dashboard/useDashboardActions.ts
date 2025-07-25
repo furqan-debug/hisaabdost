@@ -26,14 +26,20 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
     setCaptureMode('upload');
-    triggerFileUpload();
+    // Dispatch custom event for file upload
+    window.dispatchEvent(new CustomEvent('open-expense-form', { 
+      detail: { mode: 'upload' } 
+    }));
     return 'upload';
   };
 
   const handleTakePhoto = () => {
     console.log('Dashboard: handleTakePhoto called');
     setCaptureMode('camera');
-    triggerCameraCapture();
+    // Dispatch custom event for camera capture
+    window.dispatchEvent(new CustomEvent('open-expense-form', { 
+      detail: { mode: 'camera' } 
+    }));
     return 'camera';
   };
 
