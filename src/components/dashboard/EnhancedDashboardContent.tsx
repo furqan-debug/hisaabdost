@@ -83,9 +83,20 @@ export const EnhancedDashboardContent = ({
         allExpenses={allExpenses}
         isExpensesLoading={isExpensesLoading}
         setShowAddExpense={setShowAddExpense}
-        onAddExpense={handleAddExpense}
-        onUploadReceipt={handleUploadReceipt}
-        onTakePhoto={handleTakePhoto}
+        onAddExpense={() => {
+          handleAddExpense();
+          setShowAddExpense(true);
+        }}
+        onUploadReceipt={() => {
+          const mode = handleUploadReceipt() as 'manual' | 'upload' | 'camera';
+          setCaptureMode(mode);
+          setShowAddExpense(true);
+        }}
+        onTakePhoto={() => {
+          const mode = handleTakePhoto() as 'manual' | 'upload' | 'camera';
+          setCaptureMode(mode);
+          setShowAddExpense(true);
+        }}
         onAddBudget={handleAddBudget}
       />
 

@@ -18,13 +18,6 @@ export function useDashboardActions() {
   const handleAddExpense = () => {
     console.log('Dashboard: handleAddExpense called');
     setCaptureMode('manual');
-    
-    // Dispatch custom event to trigger expense form
-    const customEvent = new CustomEvent('open-expense-form', {
-      detail: { mode: 'manual' }
-    });
-    window.dispatchEvent(customEvent);
-    
     return 'manual';
   };
 
@@ -44,9 +37,8 @@ export function useDashboardActions() {
 
   const handleAddBudget = () => {
     console.log('Dashboard: handleAddBudget called - navigating to budget page');
-    // Use React Router for navigation
-    window.history.pushState({}, '', '/app/budget');
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    // Use proper navigation
+    window.location.href = '/app/budget';
   };
 
   return {
