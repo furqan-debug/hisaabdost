@@ -88,14 +88,10 @@ export const EnhancedDashboardContent = ({
           setShowAddExpense(true);
         }}
         onUploadReceipt={() => {
-          const mode = handleUploadReceipt() as 'manual' | 'upload' | 'camera';
-          setCaptureMode(mode);
-          setShowAddExpense(true);
+          handleUploadReceipt(); // This dispatches event, no need to manually open sheet
         }}
         onTakePhoto={() => {
-          const mode = handleTakePhoto() as 'manual' | 'upload' | 'camera';
-          setCaptureMode(mode);
-          setShowAddExpense(true);
+          handleTakePhoto(); // This dispatches event, no need to manually open sheet
         }}
         onAddBudget={handleAddBudget}
       />
