@@ -21,8 +21,8 @@ export function ReceiptFileInput({
       type="file"
       id={id}
       name={id}
-      accept={accept}
-      capture={useCamera ? "environment" : undefined}
+      accept={useCamera ? "image/*;capture=camera" : accept}
+      capture={useCamera ? true : undefined}
       className="hidden"
       onChange={onChange}
       ref={inputRef}
