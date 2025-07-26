@@ -105,9 +105,6 @@ export const EnhancedDashboardContent = ({
         setCaptureMode={setCaptureMode}
         selectedFile={selectedFile}
         setSelectedFile={setSelectedFile}
-        fileInputRef={fileInputRef}
-        cameraInputRef={cameraInputRef}
-        handleFileChange={handleFileChange}
         onExpenseAdded={handleExpenseAdded}
       />
     </div>
