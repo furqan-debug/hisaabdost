@@ -2,6 +2,7 @@
 import React from "react";
 import { DashboardMainContent } from "@/components/dashboard/sections/DashboardMainContent";
 import { DashboardExpenseSheet } from "@/components/dashboard/sections/DashboardExpenseSheet";
+import { AddExpenseButton } from "@/components/dashboard/AddExpenseButton";
 import { useDashboardActions } from "@/hooks/dashboard/useDashboardActions";
 
 interface EnhancedDashboardContentProps {
@@ -70,6 +71,18 @@ export const EnhancedDashboardContent = ({
 
   return (
     <div className="space-y-6 pb-6">
+      {/* Hidden AddExpenseButton component that listens for events */}
+      <div className="hidden">
+        <AddExpenseButton 
+          isNewUser={isNewUser}
+          expenseToEdit={expenseToEdit}
+          showAddExpense={showAddExpense}
+          setExpenseToEdit={setExpenseToEdit}
+          setShowAddExpense={setShowAddExpense}
+          onAddExpense={handleExpenseAdded}
+        />
+      </div>
+
       <DashboardMainContent
         isNewUser={isNewUser}
         totalBalance={totalBalance}
@@ -83,9 +96,16 @@ export const EnhancedDashboardContent = ({
         allExpenses={allExpenses}
         isExpensesLoading={isExpensesLoading}
         setShowAddExpense={setShowAddExpense}
-        onAddExpense={handleAddExpense}
-        onUploadReceipt={handleUploadReceipt}
-        onTakePhoto={handleTakePhoto}
+        onAddExpense={() => {
+          handleAddExpense();
+          setShowAddExpense(true);
+        }}
+        onUploadReceipt={() => {
+          handleUploadReceipt(); // This dispatches event, no need to manually open sheet
+        }}
+        onTakePhoto={() => {
+          handleTakePhoto(); // This dispatches event, no need to manually open sheet
+        }}
         onAddBudget={handleAddBudget}
       />
 
@@ -98,9 +118,6 @@ export const EnhancedDashboardContent = ({
         setCaptureMode={setCaptureMode}
         selectedFile={selectedFile}
         setSelectedFile={setSelectedFile}
-        fileInputRef={fileInputRef}
-        cameraInputRef={cameraInputRef}
-        handleFileChange={handleFileChange}
         onExpenseAdded={handleExpenseAdded}
       />
     </div>

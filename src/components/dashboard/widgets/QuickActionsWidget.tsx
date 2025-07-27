@@ -25,81 +25,28 @@ export function QuickActionsWidget({
     event.preventDefault();
     event.stopPropagation();
     console.log('Quick action: Add Expense clicked');
-    
-    // Dispatch custom event that AddExpenseButton listens for
-    const customEvent = new CustomEvent('open-expense-form', {
-      detail: { mode: 'manual' }
-    });
-    window.dispatchEvent(customEvent);
-    
-    // Also call the provided callback as fallback
-    setTimeout(() => {
-      try {
-        onAddExpense();
-      } catch (error) {
-        console.error('Error executing onAddExpense:', error);
-      }
-    }, 100);
+    onAddExpense();
   };
 
   const handleUploadReceipt = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     console.log('Quick action: Upload Receipt clicked');
-    
-    // Dispatch custom event for file upload
-    const customEvent = new CustomEvent('open-expense-form', {
-      detail: { mode: 'upload' }
-    });
-    window.dispatchEvent(customEvent);
-    
-    // Also call the provided callback as fallback
-    setTimeout(() => {
-      try {
-        onUploadReceipt();
-      } catch (error) {
-        console.error('Error executing onUploadReceipt:', error);
-      }
-    }, 100);
+    onUploadReceipt();
   };
 
   const handleTakePhoto = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     console.log('Quick action: Take Photo clicked');
-    
-    // Dispatch custom event for camera capture
-    const customEvent = new CustomEvent('open-expense-form', {
-      detail: { mode: 'camera' }
-    });
-    window.dispatchEvent(customEvent);
-    
-    // Also call the provided callback as fallback
-    setTimeout(() => {
-      try {
-        onTakePhoto();
-      } catch (error) {
-        console.error('Error executing onTakePhoto:', error);
-      }
-    }, 100);
+    onTakePhoto();
   };
 
   const handleAddBudget = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     console.log('Quick action: Add Budget clicked');
-    
-    // Use Finny to set a budget
-    triggerChat('Help me set up a new budget');
-    
-    // Also call the provided callback as fallback
-    setTimeout(() => {
-      try {
-        onAddBudget();
-      } catch (error) {
-        console.error('Error executing onAddBudget:', error);
-      }
-    }, 100);
+    onAddBudget();
   };
 
   const actions = [
