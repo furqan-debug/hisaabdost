@@ -1,10 +1,12 @@
 
 import { useState, useRef } from 'react';
+import { useNativeCamera } from './useNativeCamera';
 
 export function useExpenseFile() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { takePicture } = useNativeCamera();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -28,10 +30,13 @@ export function useExpenseFile() {
     }
   };
 
-  const triggerCameraCapture = () => {
-    if (cameraInputRef.current) {
-      cameraInputRef.current.click();
+  const triggerCameraCapture = async () => {
+    const file = await takePicture();
+    if (file) {
+      setSelectedFile(file);
+      return file;
     }
+    return null;
   };
 
   return {
