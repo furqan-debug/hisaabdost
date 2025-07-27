@@ -1,10 +1,8 @@
 
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 
 export function useDashboardActions() {
-  const navigate = useNavigate();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   
   const {
@@ -26,26 +24,20 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
     setCaptureMode('upload');
-    // Dispatch custom event for file upload
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'upload' } 
-    }));
+    triggerFileUpload();
     return 'upload';
   };
 
   const handleTakePhoto = () => {
     console.log('Dashboard: handleTakePhoto called');
     setCaptureMode('camera');
-    // Dispatch custom event for camera capture
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'camera' } 
-    }));
+    triggerCameraCapture();
     return 'camera';
   };
 
   const handleAddBudget = () => {
     console.log('Dashboard: handleAddBudget called - navigating to budget page');
-    navigate('/app/budget');
+    window.location.href = '/app/budget';
   };
 
   return {

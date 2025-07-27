@@ -40,25 +40,7 @@ export const AddExpenseButton = ({
       console.log('AddExpenseButton: Received open-expense-form event', event.detail);
       const { mode } = event.detail;
       setCaptureMode(mode || 'manual');
-      
-      if (mode === 'camera') {
-        console.log('AddExpenseButton: Camera mode - triggering camera input');
-        if (cameraInputRef.current) {
-          cameraInputRef.current.click();
-        } else {
-          console.warn('AddExpenseButton: Camera input ref not available');
-        }
-      } else if (mode === 'upload') {
-        console.log('AddExpenseButton: Upload mode - triggering file input');
-        if (fileInputRef.current) {
-          fileInputRef.current.click();
-        } else {
-          console.warn('AddExpenseButton: File input ref not available');
-        }
-      } else if (mode === 'manual') {
-        console.log('AddExpenseButton: Manual mode - opening expense sheet');
-        setShowAddExpense(true);
-      }
+      setShowAddExpense(true);
     };
 
     window.addEventListener('open-expense-form', handleOpenExpenseForm as EventListener);
@@ -75,7 +57,7 @@ export const AddExpenseButton = ({
       setSelectedFile(file);
 
       // For upload or camera modes, we want to auto-process
-      if (captureMode === 'upload' || captureMode === 'camera') {
+      if (captureMode !== 'manual') {
         setShowAddExpense(true);
       }
       e.target.value = '';
