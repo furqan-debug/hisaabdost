@@ -6,7 +6,7 @@ export function useExpenseFile() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { takePicture } = useNativeCamera();
+  const { capturePhoto } = useNativeCamera();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,11 +31,14 @@ export function useExpenseFile() {
   };
 
   const triggerCameraCapture = async () => {
-    const file = await takePicture();
+    console.log('Triggering native camera capture...');
+    const file = await capturePhoto();
     if (file) {
+      console.log('Camera capture successful, setting file:', file.name);
       setSelectedFile(file);
       return file;
     }
+    console.log('Camera capture failed or cancelled');
     return null;
   };
 
