@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 import { Expense } from "@/components/expenses/types";
@@ -8,6 +9,7 @@ import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { ReceiptFileInput } from "../expenses/form-fields/receipt/ReceiptFileInput";
 import { motion } from "framer-motion";
 import { useCurrency } from "@/hooks/use-currency";
+import { useNativeCamera } from "@/hooks/useNativeCamera";
 
 interface AddExpenseButtonProps {
   isNewUser: boolean;
@@ -28,6 +30,7 @@ export const AddExpenseButton = ({
 }: AddExpenseButtonProps) => {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { capturePhoto } = useNativeCamera();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,16 +41,16 @@ export const AddExpenseButton = ({
   useEffect(() => {
     const handleOpenExpenseForm = (event: CustomEvent) => {
       console.log('AddExpenseButton: Received open-expense-form event', event.detail);
-      const { mode } = event.detail;
+      const { mode, file } = event.detail;
       setCaptureMode(mode || 'manual');
       
-      if (mode === 'camera') {
-        console.log('AddExpenseButton: Camera mode - triggering camera input');
-        if (cameraInputRef.current) {
-          cameraInputRef.current.click();
-        } else {
-          console.warn('AddExpenseButton: Camera input ref not available');
-        }
+      if (file) {
+        console.log('AddExpenseButton: File provided in event:', file.name);
+        setSelectedFile(file);
+        setShowAddExpense(true);
+      } else if (mode === 'camera') {
+        console.log('AddExpenseButton: Camera mode - handling native camera capture');
+        handleNativeCameraCapture();
       } else if (mode === 'upload') {
         console.log('AddExpenseButton: Upload mode - triggering file input');
         if (fileInputRef.current) {
@@ -68,25 +71,42 @@ export const AddExpenseButton = ({
     };
   }, [setShowAddExpense]);
 
+  const handleNativeCameraCapture = async () => {
+    console.log('AddExpenseButton: Triggering native camera capture...');
+    try {
+      const file = await capturePhoto();
+      if (file) {
+        console.log('AddExpenseButton: Camera capture successful:', file.name);
+        setSelectedFile(file);
+        setShowAddExpense(true);
+      } else {
+        console.log('AddExpenseButton: Camera capture cancelled or failed');
+      }
+    } catch (error) {
+      console.error('AddExpenseButton: Camera capture error:', error);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       console.log('AddExpenseButton: File selected', file.name);
       setSelectedFile(file);
 
-      // For upload or camera modes, we want to auto-process
-      if (captureMode === 'upload' || captureMode === 'camera') {
+      // For upload mode, we want to auto-process
+      if (captureMode === 'upload') {
         setShowAddExpense(true);
       }
       e.target.value = '';
     }
   };
 
-  const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+  const handleOpenSheet = async (mode: 'manual' | 'upload' | 'camera') => {
     console.log('AddExpenseButton: Opening sheet with mode', mode);
     setActiveButton(mode);
     setCaptureMode(mode);
-    setTimeout(() => {
+    
+    setTimeout(async () => {
       setActiveButton(null);
       if (mode === 'manual') {
         // Just open the manual entry form
@@ -94,9 +114,9 @@ export const AddExpenseButton = ({
       } else if (mode === 'upload' && fileInputRef.current) {
         // Trigger file upload
         fileInputRef.current.click();
-      } else if (mode === 'camera' && cameraInputRef.current) {
-        // Trigger camera
-        cameraInputRef.current.click();
+      } else if (mode === 'camera') {
+        // Trigger native camera directly
+        await handleNativeCameraCapture();
       }
     }, 300);
   };
@@ -194,18 +214,12 @@ export const AddExpenseButton = ({
         </motion.div>
       </OnboardingTooltip>
       
+      {/* Hidden file input for upload mode */}
       <ReceiptFileInput 
         onChange={handleFileChange} 
         inputRef={fileInputRef} 
         id="receipt-upload-button" 
         useCamera={false} 
-      />
-      
-      <ReceiptFileInput 
-        onChange={handleFileChange} 
-        inputRef={cameraInputRef} 
-        id="camera-capture-button" 
-        useCamera={true} 
       />
       
       <AddExpenseSheet 

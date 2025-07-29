@@ -1,21 +1,50 @@
 
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useExpenseFile } from "@/hooks/use-expense-file";
+import { useNativeCamera } from "../useNativeCamera";
 
 export function useDashboardActions() {
   const navigate = useNavigate();
   const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
+  const { capturePhoto } = useNativeCamera();
   
-  const {
-    selectedFile,
-    setSelectedFile,
-    fileInputRef,
-    cameraInputRef,
-    handleFileChange,
-    triggerFileUpload,
-    triggerCameraCapture
-  } = useExpenseFile();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log('Dashboard: File selected:', file.name);
+      setSelectedFile(file);
+      
+      // Reset the input value to allow selecting the same file again
+      if (e.target) {
+        e.target.value = '';
+      }
+      
+      return file;
+    }
+    return null;
+  };
+
+  const triggerFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const triggerCameraCapture = async () => {
+    console.log('Dashboard: Triggering native camera capture...');
+    const file = await capturePhoto();
+    if (file) {
+      console.log('Dashboard: Camera capture successful, setting file:', file.name);
+      setSelectedFile(file);
+      return file;
+    }
+    console.log('Dashboard: Camera capture failed or cancelled');
+    return null;
+  };
 
   const handleAddExpense = () => {
     console.log('Dashboard: handleAddExpense called');
@@ -33,13 +62,18 @@ export function useDashboardActions() {
     return 'upload';
   };
 
-  const handleTakePhoto = () => {
-    console.log('Dashboard: handleTakePhoto called');
+  const handleTakePhoto = async () => {
+    console.log('Dashboard: handleTakePhoto called - directly opening camera');
     setCaptureMode('camera');
-    // Dispatch custom event for camera capture
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'camera' } 
-    }));
+    
+    // Directly capture photo instead of dispatching event
+    const file = await triggerCameraCapture();
+    if (file) {
+      // Dispatch event with the captured file
+      window.dispatchEvent(new CustomEvent('open-expense-form', { 
+        detail: { mode: 'camera', file: file } 
+      }));
+    }
     return 'camera';
   };
 
@@ -59,6 +93,8 @@ export function useDashboardActions() {
     handleAddExpense,
     handleUploadReceipt,
     handleTakePhoto,
-    handleAddBudget
+    handleAddBudget,
+    triggerCameraCapture,
+    triggerFileUpload
   };
 }

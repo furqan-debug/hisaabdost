@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSmartBudgetAlerts } from '@/hooks/useSmartBudgetAlerts';
+import { useNativeCamera } from '@/hooks/useNativeCamera';
 
 interface EnhancedQuickActionsWidgetProps {
   onAddExpense: () => void;
@@ -25,6 +25,25 @@ export function EnhancedQuickActionsWidget({
 }: EnhancedQuickActionsWidgetProps) {
   const [viewMode, setViewMode] = useState<'primary' | 'secondary'>('primary');
   const { alerts, hasWarnings, hasCritical } = useSmartBudgetAlerts();
+  const { capturePhoto } = useNativeCamera();
+
+  const handleNativeCameraCapture = async () => {
+    console.log('Enhanced Quick Actions: Taking native camera photo...');
+    try {
+      const file = await capturePhoto();
+      if (file) {
+        console.log('Enhanced Quick Actions: Camera capture successful');
+        // Dispatch event with the captured file
+        window.dispatchEvent(new CustomEvent('open-expense-form', { 
+          detail: { mode: 'camera', file: file } 
+        }));
+      } else {
+        console.log('Enhanced Quick Actions: Camera capture cancelled');
+      }
+    } catch (error) {
+      console.error('Enhanced Quick Actions: Camera capture error:', error);
+    }
+  };
 
   const primaryActions = [
     {
@@ -52,9 +71,9 @@ export function EnhancedQuickActionsWidget({
     {
       title: 'Take Photo',
       icon: Camera,
-      onClick: () => {
-        console.log('Quick Actions: Take Photo clicked');
-        onTakePhoto();
+      onClick: async () => {
+        console.log('Quick Actions: Take Photo clicked - using native camera');
+        await handleNativeCameraCapture();
       },
       color: 'bg-purple-500 hover:bg-purple-600',
       description: 'Camera capture',
@@ -123,14 +142,14 @@ export function EnhancedQuickActionsWidget({
 
   const currentActions = viewMode === 'primary' ? primaryActions : secondaryActions;
 
-  const handleActionClick = (action: typeof currentActions[0], event: React.MouseEvent) => {
+  const handleActionClick = async (action: typeof currentActions[0], event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     console.log(`Quick action clicked: ${action.title}`);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        action.onClick();
+        await action.onClick();
       } catch (error) {
         console.error(`Error executing ${action.title}:`, error);
       }
