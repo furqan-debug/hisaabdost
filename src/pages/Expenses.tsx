@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
@@ -14,9 +14,23 @@ import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
+  const { expenses, isLoading: isExpensesLoading, refetch } = useExpenseQueries();
   
   const [showAddExpense, setShowAddExpense] = useState(false);
+
+  // Listen for Finny expense additions to refresh the list
+  useEffect(() => {
+    const handleExpensesUpdated = () => {
+      console.log('Expenses updated event received - refetching...');
+      refetch();
+    };
+
+    window.addEventListener('expenses-updated', handleExpensesUpdated);
+    
+    return () => {
+      window.removeEventListener('expenses-updated', handleExpensesUpdated);
+    };
+  }, [refetch]);
 
 
   const {

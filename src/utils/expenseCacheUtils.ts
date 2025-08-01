@@ -13,6 +13,26 @@ export interface CacheUpdateOptions {
 export function updateExpenseCache({ queryClient, userId, expense, operation }: CacheUpdateOptions) {
   console.log(`Updating expense cache: ${operation} expense ${expense.id}`);
   
+  // Update main expenses cache (used by Expenses page)
+  const mainExpensesKey = ['expenses', userId];
+  queryClient.setQueryData(mainExpensesKey, (oldData: Expense[] | undefined) => {
+    if (!oldData) return [];
+    
+    switch (operation) {
+      case 'add':
+        console.log('Adding expense to main expenses cache');
+        return [expense, ...oldData];
+      case 'update':
+        console.log('Updating expense in main expenses cache');
+        return oldData.map(exp => exp.id === expense.id ? expense : exp);
+      case 'delete':
+        console.log('Removing expense from main expenses cache');
+        return oldData.filter(exp => exp.id !== expense.id);
+      default:
+        return oldData;
+    }
+  });
+  
   // Update all expenses cache
   const allExpensesKey = ['all_expenses', userId];
   queryClient.setQueryData(allExpensesKey, (oldData: Expense[] | undefined) => {
