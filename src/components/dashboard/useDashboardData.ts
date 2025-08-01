@@ -10,9 +10,12 @@ import { useDashboardQueries } from "@/hooks/dashboard/useDashboardQueries";
 import { useDashboardCalculations } from "@/hooks/dashboard/useDashboardCalculations";
 import { useDashboardState } from "@/hooks/dashboard/useDashboardState";
 
-export function useDashboardData() {
+export function useDashboardData(overrideMonth?: Date) {
   const { user } = useAuth();
-  const { selectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  const { selectedMonth: globalSelectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
+  
+  // Use override month if provided, otherwise use global context
+  const selectedMonth = overrideMonth || globalSelectedMonth;
   
   // Initialize month carryover functionality
   useMonthCarryover();

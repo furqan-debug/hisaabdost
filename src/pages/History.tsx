@@ -1,7 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDashboardData } from '@/components/dashboard/useDashboardData';
-import { useMonthContext } from '@/hooks/use-month-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,7 +9,9 @@ import { MonthlySummaryCards } from '@/components/monthly-summary/MonthlySummary
 import { ActivityHistorySection } from '@/components/monthly-summary/ActivityHistorySection';
 
 const History = () => {
-  const { selectedMonth, setSelectedMonth } = useMonthContext();
+  // Local month state for History page only - doesn't affect global app state
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  
   const {
     isLoading,
     monthlyIncome,
@@ -18,7 +19,7 @@ const History = () => {
     savingsRate,
     walletBalance,
     formatPercentage
-  } = useDashboardData();
+  } = useDashboardData(selectedMonth);
 
   const handleMonthChange = (date: Date) => {
     setSelectedMonth(date);
