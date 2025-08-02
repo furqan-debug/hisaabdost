@@ -82,17 +82,19 @@ const SelectContent = React.forwardRef<
       position={position}
       {...props}
     >
-      <ScrollArea className="max-h-[50vh]">
-        <SelectPrimitive.Viewport
-          className={cn(
-            "p-1 w-full",
-            position === "popper" &&
-              "w-full min-w-[var(--radix-select-trigger-width)]"
-          )}
-        >
-          {children}
-        </SelectPrimitive.Viewport>
-      </ScrollArea>
+      <SelectPrimitive.Viewport
+        className={cn(
+          "p-1 w-full max-h-[50vh] overflow-auto",
+          position === "popper" &&
+            "w-full min-w-[var(--radix-select-trigger-width)]"
+        )}
+        style={{
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y"
+        }}
+      >
+        {children}
+      </SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ))
