@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ExpenseForm } from "./expenses/ExpenseForm";
 import { useExpenseForm } from "@/hooks/useExpenseForm";
 import { Expense } from "./expenses/types";
@@ -193,13 +193,19 @@ const AddExpenseSheet = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={handleSheetClose}>
-        <DialogContent className="max-w-lg max-h-[95dvh] md:max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="text-center pb-2">
-            <DialogTitle className="text-xl font-semibold">{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DialogTitle>
-          </DialogHeader>
+      <Drawer open={open} onOpenChange={handleSheetClose}>
+        <DrawerContent className="max-h-[95dvh] md:max-h-[90vh]">
+          <DrawerHeader className="text-center pb-2">
+            <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
+            <DrawerDescription>
+              {expenseToEdit 
+                ? "Edit your expense details below." 
+                : "Enter your expense information"
+              }
+            </DrawerDescription>
+          </DrawerHeader>
           
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="px-4 pb-6 flex-1 overflow-y-auto min-h-0">
             <ExpenseForm
               formData={formData}
               isSubmitting={isSubmitting}
@@ -214,8 +220,8 @@ const AddExpenseSheet = ({
               isManualEntry={isManualEntry}
             />
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* Receipt scanning dialog - only shown for auto-process modes */}
       {!isManualEntry && initialFile && filePreviewUrl && (
