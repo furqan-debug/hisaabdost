@@ -244,6 +244,33 @@
   }
 }
 
+/* Keyboard-safe drawer styling */
+.keyboard-safe {
+  transition: height 0.3s ease-in-out;
+}
+
+/* Prevent aggressive scrolling on keyboard open */
+@media (max-height: 500px) {
+  .keyboard-safe {
+    max-height: 100vh !important;
+    height: 100vh !important;
+    overflow: hidden;
+  }
+  
+  .keyboard-safe .drawer-header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .keyboard-safe .form-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
 /* Scrollable area with momentum */
 .momentum-scroll {
   -webkit-overflow-scrolling: touch;
