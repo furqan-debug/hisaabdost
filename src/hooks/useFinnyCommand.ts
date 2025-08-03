@@ -1,10 +1,9 @@
-
 import { useFinny } from '@/components/finny';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
-import { DEFAULT_EXPENSE_CATEGORIES } from '@/constants/categories';
+import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 import { CurrencyCode } from '@/utils/currencyUtils';
 
 /**
@@ -35,17 +34,17 @@ export function useFinnyCommand() {
    * Validate a category against allowed expense categories
    */
   const validateCategory = (category: string): string => {
-    if (!category) return 'Other';
+    if (!category) return 'Miscellaneous';
     
     // Check for exact match
-    const exactMatch = DEFAULT_EXPENSE_CATEGORIES.find(
+    const exactMatch = EXPENSE_CATEGORIES.find(
       c => c.toLowerCase() === category.toLowerCase()
     );
     
     if (exactMatch) return exactMatch;
     
     // Look for partial matches
-    const partialMatches = DEFAULT_EXPENSE_CATEGORIES.filter(
+    const partialMatches = EXPENSE_CATEGORIES.filter(
       c => c.toLowerCase().includes(category.toLowerCase()) || 
            category.toLowerCase().includes(c.toLowerCase())
     );
@@ -54,7 +53,7 @@ export function useFinnyCommand() {
       return partialMatches[0]; // Return the first partial match
     }
     
-    // No match found, use Other as fallback
+    // No match found, use miscellaneous as fallback
     return 'Other';
   };
 
