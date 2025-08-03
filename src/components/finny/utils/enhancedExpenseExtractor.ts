@@ -1,5 +1,4 @@
-
-import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
+import { DEFAULT_EXPENSE_CATEGORIES } from '@/constants/categories';
 
 export interface EnhancedExpenseData {
   amount: number;
