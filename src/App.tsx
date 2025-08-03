@@ -1,32 +1,26 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/lib/auth";
-import { CurrencyProvider } from "@/hooks/use-currency";
-import { MonthProvider } from "@/hooks/use-month-context";
-import { FinnyProvider } from "@/components/finny";
-import Layout from "@/components/Layout";
-import Dashboard from "@/pages/Dashboard";
-import Auth from "@/pages/Auth";
-import ResetPassword from "@/pages/ResetPassword";
-import Analytics from "@/pages/Analytics";
-import Expenses from "@/pages/Expenses";
-import Goals from "@/pages/Goals";
-import Budget from "@/pages/Budget";
-import Settings from "@/pages/Settings";
-import FinnyChat from "@/pages/FinnyChat";
-import History from "@/pages/History";
-import ManageFunds from "@/pages/ManageFunds";
-import AppGuide from "@/pages/AppGuide";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Dashboard from '@/pages/Dashboard';
+import Settings from '@/pages/Settings';
+import Budget from '@/pages/Budget';
+import History from '@/pages/History';
+import ManageFunds from '@/pages/ManageFunds';
+import Guide from '@/pages/Guide';
+import ManageCategories from '@/pages/ManageCategories';
+import { AuthProvider } from '@/lib/auth';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import './App.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
     },
   },
@@ -40,40 +34,74 @@ function App() {
         defaultTheme="system"
         enableSystem
         disableTransitionOnChange
-        storageKey="theme-preference"
       >
-        <TooltipProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/app/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/budget"
+                element={
+                  <ProtectedRoute>
+                    <Budget />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/history"
+                element={
+                  <ProtectedRoute>
+                    <History />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/manage-funds"
+                element={
+                  <ProtectedRoute>
+                    <ManageFunds />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/guide"
+                element={
+                  <ProtectedRoute>
+                    <Guide />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/manage-categories"
+                element={
+                  <ProtectedRoute>
+                    <ManageCategories />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+            </Routes>
+          </Router>
           <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <CurrencyProvider>
-                <MonthProvider>
-                  <FinnyProvider>
-                    <Routes>
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/auth/reset-password" element={<ResetPassword />} />
-                      <Route path="/app" element={<Layout />}>
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="analytics" element={<Analytics />} />
-                        <Route path="expenses" element={<Expenses />} />
-                        <Route path="goals" element={<Goals />} />
-                        <Route path="budget" element={<Budget />} />
-                        <Route path="settings" element={<Settings />} />
-                        <Route path="finny" element={<FinnyChat />} />
-                        <Route path="history" element={<History />} />
-                        <Route path="manage-funds" element={<ManageFunds />} />
-                        <Route path="guide" element={<AppGuide />} />
-                        <Route path="" element={<Navigate to="dashboard" replace />} />
-                      </Route>
-                      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                    </Routes>
-                  </FinnyProvider>
-                </MonthProvider>
-              </CurrencyProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
+          <SonnerToaster />
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
