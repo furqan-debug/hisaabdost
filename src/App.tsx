@@ -15,6 +15,7 @@ import Guide from '@/pages/Guide';
 import ManageCategories from '@/pages/ManageCategories';
 import { AuthProvider } from '@/lib/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { MonthProvider } from '@/hooks/use-month-context';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -36,69 +37,71 @@ function App() {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/app/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/budget"
-                element={
-                  <ProtectedRoute>
-                    <Budget />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/history"
-                element={
-                  <ProtectedRoute>
-                    <History />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/manage-funds"
-                element={
-                  <ProtectedRoute>
-                    <ManageFunds />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/guide"
-                element={
-                  <ProtectedRoute>
-                    <Guide />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/manage-categories"
-                element={
-                  <ProtectedRoute>
-                    <ManageCategories />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-            </Routes>
-          </Router>
+          <MonthProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/app/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/settings"
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/budget"
+                  element={
+                    <ProtectedRoute>
+                      <Budget />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/history"
+                  element={
+                    <ProtectedRoute>
+                      <History />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/manage-funds"
+                  element={
+                    <ProtectedRoute>
+                      <ManageFunds />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/guide"
+                  element={
+                    <ProtectedRoute>
+                      <Guide />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/manage-categories"
+                  element={
+                    <ProtectedRoute>
+                      <ManageCategories />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+              </Routes>
+            </Router>
+          </MonthProvider>
           <Toaster />
           <SonnerToaster />
         </AuthProvider>
