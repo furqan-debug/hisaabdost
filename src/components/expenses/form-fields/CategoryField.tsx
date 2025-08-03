@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 export const EXPENSE_CATEGORIES = [
   "Food",
@@ -25,6 +26,8 @@ interface CategoryFieldProps {
 }
 
 export function CategoryField({ value, onChange }: CategoryFieldProps) {
+  const { categories, loading } = useAllCategories();
+
   return (
     <div className="space-y-2">
       <Label htmlFor="expense-category">Category</Label>
@@ -33,11 +36,28 @@ export function CategoryField({ value, onChange }: CategoryFieldProps) {
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
         <SelectContent className="touch-scroll-container max-h-[40vh]">
-          {EXPENSE_CATEGORIES.map((cat) => (
-            <SelectItem key={cat} value={cat}>
-              {cat}
-            </SelectItem>
-          ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            categories.map((cat) => (
+              <SelectItem key={`${cat.value}-${cat.isCustom}`} value={cat.value}>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: cat.color }}
+                  />
+                  <span>{cat.label}</span>
+                  {cat.isCustom && (
+                    <span className="text-xs px-1 py-0.5 bg-primary/10 text-primary rounded">
+                      Custom
+                    </span>
+                  )}
+                </div>
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     </div>

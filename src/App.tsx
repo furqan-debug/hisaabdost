@@ -21,6 +21,7 @@ import Settings from "@/pages/Settings";
 import FinnyChat from "@/pages/FinnyChat";
 import History from "@/pages/History";
 import ManageFunds from "@/pages/ManageFunds";
+import ManageCategories from "@/pages/ManageCategories";
 import AppGuide from "@/pages/AppGuide";
 
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ function App() {
                         <Route path="finny" element={<FinnyChat />} />
                         <Route path="history" element={<History />} />
                         <Route path="manage-funds" element={<ManageFunds />} />
+                        <Route path="manage-categories" element={<ManageCategories />} />
                         <Route path="guide" element={<AppGuide />} />
                         <Route path="" element={<Navigate to="dashboard" replace />} />
                       </Route>

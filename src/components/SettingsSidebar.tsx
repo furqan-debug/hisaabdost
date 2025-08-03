@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft, Calendar, BookOpen } from 'lucide-react';
+import { DollarSign, Palette, Sun, Moon, Monitor, History, LogOut, User, Settings, Wallet, ArrowRightLeft, Calendar, BookOpen, Tag } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCurrency } from '@/hooks/use-currency';
 import { useCarryoverPreferences } from '@/hooks/useCarryoverPreferences';
@@ -43,6 +43,11 @@ const SettingsSidebar = ({
 
   const handleAppGuideClick = () => {
     navigate('/app/guide');
+    onClose();
+  };
+
+  const handleManageCategoriesClick = () => {
+    navigate('/app/manage-categories');
     onClose();
   };
 
@@ -226,6 +231,26 @@ const SettingsSidebar = ({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="p-6 border-b">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h2 className="font-medium">Categories</h2>
+            </div>
+            <div className="ml-11">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                onClick={handleManageCategoriesClick}
+              >
+                <Tag className="w-4 h-4 mr-3" />
+                Manage Categories
+              </Button>
             </div>
           </div>
 
