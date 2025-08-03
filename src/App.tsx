@@ -13,6 +13,7 @@ import History from '@/pages/History';
 import ManageFunds from '@/pages/ManageFunds';
 import Guide from '@/pages/Guide';
 import ManageCategories from '@/pages/ManageCategories';
+import Auth from '@/pages/Auth';
 import { AuthProvider } from '@/lib/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { MonthProvider } from '@/hooks/use-month-context';
@@ -36,12 +37,13 @@ function App() {
         enableSystem
         disableTransitionOnChange
       >
-        <AuthProvider>
-          <MonthProvider>
-            <Router>
+        <Router>
+          <AuthProvider>
+            <MonthProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route
                   path="/app/dashboard"
                   element={
@@ -100,11 +102,11 @@ function App() {
                 />
                 <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               </Routes>
-            </Router>
-          </MonthProvider>
-          <Toaster />
-          <SonnerToaster />
-        </AuthProvider>
+            </MonthProvider>
+            <Toaster />
+            <SonnerToaster />
+          </AuthProvider>
+        </Router>
       </ThemeProvider>
     </QueryClientProvider>
   );
