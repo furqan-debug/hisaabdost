@@ -3,7 +3,6 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 const Select = SelectPrimitive.Root
 
@@ -74,7 +73,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-[50vh] min-w-[8rem] rounded-md border bg-popover text-popover-foreground shadow-md",
+        "relative z-50 max-h-[50vh] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md touch-scroll",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className
@@ -82,19 +81,17 @@ const SelectContent = React.forwardRef<
       position={position}
       {...props}
     >
+      <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1 w-full max-h-[50vh] overflow-auto",
+          "p-1 touch-scroll w-full h-full",
           position === "popper" &&
-            "w-full min-w-[var(--radix-select-trigger-width)]"
+            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
         )}
-        style={{
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y"
-        }}
       >
         {children}
       </SelectPrimitive.Viewport>
+      <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ))
