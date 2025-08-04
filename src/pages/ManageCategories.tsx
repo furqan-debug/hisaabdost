@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Plus, Edit, Trash2, Tag } from 'lucide-react';
 import { useCustomCategories, CustomCategory } from '@/hooks/useCustomCategories';
-import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
+import { useAllCategories } from '@/hooks/useAllCategories';
 import { AddEditCategoryModal } from '@/components/categories/AddEditCategoryModal';
 import {
   AlertDialog,
@@ -19,6 +19,7 @@ import {
 export default function ManageCategories() {
   const navigate = useNavigate();
   const { categories, loading, createCategory, updateCategory, deleteCategory } = useCustomCategories();
+  const { categories: allCategories } = useAllCategories();
   const [showAddEditModal, setShowAddEditModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -55,11 +56,13 @@ export default function ManageCategories() {
     }
   };
 
-  const defaultCategories = EXPENSE_CATEGORIES.map(name => ({
-    name,
-    color: '#6B7280',
-    isDefault: true
-  }));
+  const defaultCategories = allCategories
+    .filter(cat => !cat.isCustom)
+    .map(cat => ({
+      name: cat.value,
+      color: cat.color,
+      isDefault: true
+    }));
 
   return (
     <div className="min-h-screen bg-background">

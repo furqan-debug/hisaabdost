@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
+import { processMonthlyData } from "@/utils/chartUtils";
 import { Expense } from "@/components/expenses/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface ExpensesBarChartProps {
   expenses: Expense[];
@@ -15,10 +16,18 @@ interface ExpensesBarChartProps {
 export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { categories } = useAllCategories();
+  
+  // Create category colors map from all categories
+  const categoryColors = categories.reduce((acc, cat) => {
+    acc[cat.value] = cat.color;
+    return acc;
+  }, {} as Record<string, string>);
+  
   const data = processMonthlyData(expenses);
   
   // Filter out zero-value categories for cleaner display
-  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => {
+  const activeCategories = Object.keys(categoryColors).filter(category => {
     return data.some(item => item[category] > 0);
   });
   
@@ -107,7 +116,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             <Bar
               key={category}
               dataKey={category}
-              fill={CATEGORY_COLORS[category]}
+              fill={categoryColors[category]}
               radius={[4, 4, 0, 0]}
               maxBarSize={isMobile ? 28 : 40}
               animationDuration={800}
@@ -122,11 +131,11 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
-            style={{ background: (CATEGORY_COLORS[category] || "#eee") + "22" }}
+            style={{ background: (categoryColors[category] || "#eee") + "22" }}
           >
             <span 
               className="w-2 h-2 rounded-full" 
-              style={{ backgroundColor: CATEGORY_COLORS[category] }} 
+              style={{ backgroundColor: categoryColors[category] }} 
             />
             <span className="truncate">
               {category.length > (isMobile ? 8 : 12) ? 

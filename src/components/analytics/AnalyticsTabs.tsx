@@ -3,11 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { ChartContainer } from "@/components/ui/chart";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { TrendsTab } from "./tabs/TrendsTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
 import { SummaryTab } from "./tabs/SummaryTab";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface AnalyticsTabsProps {
   filteredExpenses: any[];
@@ -16,9 +16,11 @@ interface AnalyticsTabsProps {
 export function AnalyticsTabs({
   filteredExpenses
 }: AnalyticsTabsProps) {
-  const chartConfig = Object.entries(CATEGORY_COLORS).reduce((acc, [key, color]) => {
-    acc[key] = {
-      color
+  const { categories } = useAllCategories();
+
+  const chartConfig = categories.reduce((acc, category) => {
+    acc[category.value] = {
+      color: category.color
     };
     return acc;
   }, {} as Record<string, {

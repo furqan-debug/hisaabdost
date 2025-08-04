@@ -1,12 +1,12 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Budget } from "@/pages/Budget";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface BudgetOverviewProps {
   budgets: Budget[];
@@ -15,6 +15,13 @@ interface BudgetOverviewProps {
 export function BudgetOverview({ budgets }: BudgetOverviewProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { categories } = useAllCategories();
+
+  // Create category colors map from all categories
+  const categoryColors = categories.reduce((acc, cat) => {
+    acc[cat.value] = cat.color;
+    return acc;
+  }, {} as Record<string, string>);
 
   const filteredBudgets = budgets.filter(budget => budget.category !== "CurrencyPreference" && budget.category !== "income");
   const totalBudget = filteredBudgets.reduce((sum, budget) => sum + budget.amount, 0);
@@ -72,7 +79,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                     {data.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`}
-                        fill={CATEGORY_COLORS[entry.name]} 
+                        fill={categoryColors[entry.name] || '#6B7280'} 
                         className="focus:outline-none"
                       />
                     ))}
@@ -119,7 +126,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                 >
                   <div 
                     className="w-3 h-3 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: CATEGORY_COLORS[entry.name] }}
+                    style={{ backgroundColor: categoryColors[entry.name] || '#6B7280' }}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium truncate">{entry.name}</p>

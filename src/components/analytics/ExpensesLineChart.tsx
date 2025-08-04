@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
-import { CATEGORY_COLORS, processMonthlyData } from "@/utils/chartUtils";
+import { processMonthlyData } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from '@/hooks/use-currency';
 import { motion } from "framer-motion";
 import { Expense } from "@/components/expenses/types";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface ExpensesLineChartProps {
   expenses: Expense[];
@@ -17,10 +18,18 @@ export function ExpensesLineChart({
 }: ExpensesLineChartProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { categories } = useAllCategories();
+  
+  // Create category colors map from all categories
+  const categoryColors = categories.reduce((acc, cat) => {
+    acc[cat.value] = cat.color;
+    return acc;
+  }, {} as Record<string, string>);
+  
   const data = processMonthlyData(expenses);
 
   // Only show categories with non-zero data
-  const activeCategories = Object.keys(CATEGORY_COLORS).filter(category => 
+  const activeCategories = Object.keys(categoryColors).filter(category => 
     data.some(item => item[category] > 0)
   );
 
@@ -125,19 +134,19 @@ export function ExpensesLineChart({
               key={category}
               type="monotone"
               dataKey={category}
-              stroke={CATEGORY_COLORS[category]}
+              stroke={categoryColors[category]}
               strokeWidth={isMobile ? 2 : 2.5}
               dot={{
                 r: isMobile ? 3 : 4,
                 strokeWidth: isMobile ? 1.5 : 2,
                 fill: "var(--background)",
-                stroke: CATEGORY_COLORS[category]
+                stroke: categoryColors[category]
               }}
               activeDot={{
                 r: isMobile ? 5 : 6,
                 strokeWidth: 2,
                 fill: "var(--background)",
-                stroke: CATEGORY_COLORS[category]
+                stroke: categoryColors[category]
               }}
               animationDuration={1000}
               animationBegin={500}
@@ -153,11 +162,11 @@ export function ExpensesLineChart({
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
-            style={{ background: (CATEGORY_COLORS[category] || "#eee") + "22" }}
+            style={{ background: (categoryColors[category] || "#eee") + "22" }}
           >
             <span 
               className="w-2 h-2 rounded-full" 
-              style={{ backgroundColor: CATEGORY_COLORS[category] }}
+              style={{ backgroundColor: categoryColors[category] }}
             />
             <span className="truncate">
               {category.length > 12 ? category.slice(0, 12) + "…" : category}
