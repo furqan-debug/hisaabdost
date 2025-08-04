@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { CustomCategory } from '@/hooks/useCustomCategories';
+import { useAllCategories } from '@/hooks/useAllCategories';
+import { toast } from 'sonner';
 
 interface AddEditCategoryModalProps {
   open: boolean;
@@ -43,8 +45,19 @@ export function AddEditCategoryModal({
   const [name, setName] = useState('');
   const [color, setColor] = useState('#6B7280');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { categories } = useAllCategories();
 
   const isEditing = !!category;
+
+  // Get colors that are already in use by other categories
+  const usedColors = categories
+    .filter(cat => isEditing ? cat.value !== category?.name : true)
+    .map(cat => cat.color.toLowerCase());
+
+  // Filter preset colors to exclude already used ones
+  const availablePresetColors = PRESET_COLORS.filter(
+    presetColor => !usedColors.includes(presetColor.toLowerCase())
+  );
 
   useEffect(() => {
     if (category) {
@@ -58,6 +71,13 @@ export function AddEditCategoryModal({
 
   const handleSave = async () => {
     if (!name.trim()) return;
+
+    // Check if color is already in use
+    const isColorTaken = usedColors.includes(color.toLowerCase());
+    if (isColorTaken) {
+      toast.error('This color is already taken. Please choose another.');
+      return;
+    }
 
     setIsSubmitting(true);
     const success = await onSave(name.trim(), color);
@@ -106,21 +126,25 @@ export function AddEditCategoryModal({
 
           <div className="space-y-3">
             <Label>Category Color</Label>
-            <div className="grid grid-cols-6 gap-3">
-              {PRESET_COLORS.map((presetColor) => (
-                <button
-                  key={presetColor}
-                  type="button"
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    color === presetColor 
-                      ? 'border-foreground scale-110' 
-                      : 'border-muted-foreground/30 hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: presetColor }}
-                  onClick={() => setColor(presetColor)}
-                />
-              ))}
-            </div>
+            {availablePresetColors.length > 0 ? (
+              <div className="grid grid-cols-6 gap-3">
+                {availablePresetColors.map((presetColor) => (
+                  <button
+                    key={presetColor}
+                    type="button"
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      color === presetColor 
+                        ? 'border-foreground scale-110' 
+                        : 'border-muted-foreground/30 hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: presetColor }}
+                    onClick={() => setColor(presetColor)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">All preset colors are in use. Use the custom color picker below.</p>
+            )}
             
             <div className="flex items-center gap-3">
               <Label htmlFor="custom-color" className="text-sm">Custom:</Label>
