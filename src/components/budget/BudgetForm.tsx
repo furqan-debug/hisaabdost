@@ -21,7 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
+import { useAllCategories } from "@/hooks/useAllCategories";
 import { Budget } from "@/pages/Budget";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -59,6 +59,7 @@ export function BudgetForm({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { categories, loading } = useAllCategories();
   
   // Convert Budget period to form period, defaulting weekly to monthly
   const getFormDefaultValues = (budget: Budget | null) => {
@@ -156,16 +157,29 @@ export function BudgetForm({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
-                {Object.keys(CATEGORY_COLORS).map((category) => (
-                  <SelectItem key={category} value={category}>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full mr-2" 
-                           style={{ backgroundColor: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] }}></div>
-                      {category}
-                    </div>
-                  </SelectItem>
-                ))}
+              <SelectContent className="touch-scroll-container max-h-[40vh]">
+                {loading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  categories.map((cat) => (
+                    <SelectItem key={`${cat.value}-${cat.isCustom}`} value={cat.value}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        <span>{cat.label}</span>
+                        {cat.isCustom && (
+                          <span className="text-xs px-1 py-0.5 bg-primary/10 text-primary rounded">
+                            Custom
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {errors.category && (
