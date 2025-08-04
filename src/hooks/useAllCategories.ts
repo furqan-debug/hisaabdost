@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useCustomCategories } from './useCustomCategories';
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
-import { getCategoryColor } from '@/utils/chartUtils';
 
 export interface CategoryOption {
   value: string;
@@ -17,7 +16,7 @@ export function useAllCategories() {
     const defaultCategories: CategoryOption[] = EXPENSE_CATEGORIES.map(cat => ({
       value: cat,
       label: cat,
-      color: getCategoryColor(cat),
+      color: '#6B7280',
       isCustom: false
     }));
 
