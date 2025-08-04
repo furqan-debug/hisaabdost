@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatCards } from "@/components/dashboard/StatCards";
@@ -5,6 +6,7 @@ import { FinnyCard } from "@/components/dashboard/FinnyCard";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
 import { SpendingTrendsWidget } from "@/components/dashboard/widgets/SpendingTrendsWidget";
 import { RecentExpensesCard } from "@/components/dashboard/RecentExpensesCard";
+
 interface DashboardMainContentProps {
   isNewUser: boolean;
   totalBalance: number;
@@ -23,6 +25,7 @@ interface DashboardMainContentProps {
   onTakePhoto: () => void;
   onAddBudget: () => void;
 }
+
 export const DashboardMainContent = ({
   isNewUser,
   totalBalance,
@@ -41,12 +44,22 @@ export const DashboardMainContent = ({
   onTakePhoto,
   onAddBudget
 }: DashboardMainContentProps) => {
-  return <div className="space-y--3 py-0">
+  return (
+    <div className="space-y-6">
       {/* Header */}
       <DashboardHeader isNewUser={isNewUser} />
       
       {/* Stats Cards */}
-      <StatCards totalBalance={totalBalance} monthlyExpenses={monthlyExpenses} monthlyIncome={monthlyIncome} setMonthlyIncome={setMonthlyIncome} savingsRate={savingsRate} formatPercentage={formatPercentage} walletBalance={walletBalance} isNewUser={isNewUser} />
+      <StatCards 
+        totalBalance={totalBalance}
+        monthlyExpenses={monthlyExpenses}
+        monthlyIncome={monthlyIncome}
+        setMonthlyIncome={setMonthlyIncome}
+        savingsRate={savingsRate}
+        formatPercentage={formatPercentage}
+        walletBalance={walletBalance}
+        isNewUser={isNewUser}
+      />
 
       {/* Main Content - Single Column Layout */}
       <div className="space-y-6">
@@ -54,13 +67,24 @@ export const DashboardMainContent = ({
         <FinnyCard />
         
         {/* 2. Quick Actions */}
-        <QuickActionsWidget onAddExpense={onAddExpense} onUploadReceipt={onUploadReceipt} onTakePhoto={onTakePhoto} onAddBudget={onAddBudget} />
+        <QuickActionsWidget
+          onAddExpense={onAddExpense}
+          onUploadReceipt={onUploadReceipt}
+          onTakePhoto={onTakePhoto}
+          onAddBudget={onAddBudget}
+        />
         
         {/* 3. Spending Trends */}
         <SpendingTrendsWidget expenses={allExpenses} />
         
         {/* 4. Recent Expenses */}
-        <RecentExpensesCard expenses={expenses} isNewUser={isNewUser} isLoading={isExpensesLoading} setShowAddExpense={setShowAddExpense} />
+        <RecentExpensesCard 
+          expenses={expenses}
+          isNewUser={isNewUser}
+          isLoading={isExpensesLoading}
+          setShowAddExpense={setShowAddExpense}
+        />
       </div>
-    </div>;
+    </div>
+  );
 };
