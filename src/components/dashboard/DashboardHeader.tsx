@@ -23,7 +23,7 @@ export function DashboardHeader({
     duration: 0.5,
     ease: "easeOut"
   }} className="relative overflow-hidden mt-2">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm my-[-9px] py-px">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm my-0 py-[2px]">
         <CardContent className="py-2 md:py-4 px-3 md:px-4 relative">
           {/* Subtle background pattern */}
           <div className="absolute inset-0 opacity-5">
