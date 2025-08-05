@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,45 +17,84 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
+  const [isOnLeftSide, setIsOnLeftSide] = useState(false);
   const { user } = useAuth();
+  const constraintsRef = useRef(null);
+
+  // Motion values for dragging
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const screenWidth = window.innerWidth;
+    const centerX = screenWidth / 2;
+    
+    // Calculate final position based on drag endpoint
+    const finalX = info.point.x;
+    const shouldBeOnLeft = finalX < centerX;
+    
+    setIsOnLeftSide(shouldBeOnLeft);
+    
+    // Snap to the appropriate side
+    x.set(0); // Reset to 0 since we'll change the CSS class
+  };
   
   return (
-    <motion.div 
-      className={`fixed z-40 ${isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4'}`} 
-      initial={{
-        scale: 0,
-        opacity: 0,
-        y: 20
-      }} 
-      animate={{
-        scale: 1,
-        opacity: 1,
-        y: 0
-      }} 
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 25,
-        delay: 0.2
-      }} 
-      whileTap={{
-        scale: 0.9
-      }}
-      whileHover={{
-        scale: 1.05,
-        y: -2
-      }}
-      onHoverStart={() => setIsHovering(true)}
-      onHoverEnd={() => setIsHovering(false)}
-      style={{
-        // Add padding to prevent clipping of glow effects
-        padding: '16px',
-        margin: '-16px'
-      }}
-    >
+    <>
+      {/* Invisible drag constraints - full screen */}
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
+      
+      <motion.div 
+        className={`fixed z-40 ${
+          isOnLeftSide 
+            ? (isMobile ? 'left-2 bottom-20' : 'left-2 bottom-4')
+            : (isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4')
+        }`}
+        initial={{
+          scale: 0,
+          opacity: 0,
+          y: 20
+        }} 
+        animate={{
+          scale: 1,
+          opacity: 1,
+          y: 0
+        }} 
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 25,
+          delay: 0.2
+        }} 
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.1}
+        dragMomentum={false}
+        onDragEnd={handleDragEnd}
+        whileDrag={{
+          scale: 1.1,
+          zIndex: 50
+        }}
+        whileTap={{
+          scale: 0.9
+        }}
+        whileHover={{
+          scale: 1.05,
+          y: -2
+        }}
+        onHoverStart={() => setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        style={{
+          // Add padding to prevent clipping of glow effects
+          padding: '16px',
+          margin: '-16px',
+          x,
+          y
+        }}
+      >
       {/* Outer glow effect */}
       <motion.div
         className="absolute inset-4 rounded-full pointer-events-none"
@@ -152,7 +191,8 @@ const FinnyButton = ({
           <div className="absolute inset-1 bg-white rounded-full opacity-30" />
         </motion.div>
       </Button>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

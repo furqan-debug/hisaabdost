@@ -26,7 +26,7 @@ export function ExpensesLineChart({
     return acc;
   }, {} as Record<string, string>);
   
-  const data = processMonthlyData(expenses);
+  const data = processMonthlyData(expenses, categories.map(cat => cat.value));
 
   // Only show categories with non-zero data
   const activeCategories = Object.keys(categoryColors).filter(category => 
