@@ -23,16 +23,7 @@ export function OverviewCard({ expenses }: OverviewCardProps) {
         </CardHeader>
         <CardContent className="pt-0">
           {expenses.length > 0 ? (
-            <>
-              <div className="h-[280px]">
-                <ExpensesPieChart expenses={expenses} />
-              </div>
-              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground text-center">
-                  💡 Your spending breakdown by category
-                </p>
-              </div>
-            </>
+            <ExpensesPieChart expenses={expenses} />
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📊</div>
