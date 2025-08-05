@@ -17,8 +17,11 @@ export const getCategoryColor = (category: string): string => {
 };
 
 // Process expenses data for monthly charts (bar and line charts)
-export const processMonthlyData = (expenses: any[]) => {
+export const processMonthlyData = (expenses: any[], allCategories?: string[]) => {
   const monthlyData: Record<string, any> = {};
+  
+  // Get unique categories from expenses if allCategories not provided
+  const uniqueCategories = allCategories || [...new Set(expenses.map(expense => expense.category || 'Other'))];
   
   expenses.forEach(expense => {
     const date = new Date(expense.date);
@@ -27,7 +30,7 @@ export const processMonthlyData = (expenses: any[]) => {
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { month: monthKey };
       // Initialize all categories to 0
-      Object.keys(CATEGORY_COLORS).forEach(category => {
+      uniqueCategories.forEach(category => {
         monthlyData[monthKey][category] = 0;
       });
     }

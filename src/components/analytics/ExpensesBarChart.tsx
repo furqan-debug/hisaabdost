@@ -24,7 +24,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     return acc;
   }, {} as Record<string, string>);
   
-  const data = processMonthlyData(expenses);
+  const data = processMonthlyData(expenses, categories.map(cat => cat.value));
   
   // Filter out zero-value categories for cleaner display
   const activeCategories = Object.keys(categoryColors).filter(category => {
