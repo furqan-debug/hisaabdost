@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -8,16 +7,15 @@ import { TrendsTab } from "./tabs/TrendsTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
 import { SummaryTab } from "./tabs/SummaryTab";
 import { useAllCategories } from "@/hooks/useAllCategories";
-
 interface AnalyticsTabsProps {
   filteredExpenses: any[];
 }
-
 export function AnalyticsTabs({
   filteredExpenses
 }: AnalyticsTabsProps) {
-  const { categories } = useAllCategories();
-
+  const {
+    categories
+  } = useAllCategories();
   const chartConfig = categories.reduce((acc, category) => {
     acc[category.value] = {
       color: category.color
@@ -26,34 +24,20 @@ export function AnalyticsTabs({
   }, {} as Record<string, {
     color: string;
   }>);
-
-  return (
-    <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md overflow-hidden rounded-xl">
+  return <Card className="border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md overflow-hidden rounded-xl mx-0 px-0">
       <CardContent className="p-0">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="w-full rounded-none border-b-0 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm p-2 h-auto">
-            <TabsTrigger 
-              value="summary" 
-              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
-            >
+          <TabsList className="w-full rounded-none border-b-0 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm p-2 h-auto px-[7px] mx-0 py-[11px]">
+            <TabsTrigger value="summary" className="rounded-lg border-0 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20 py-[9px] my-0 mx-px px-[16px]">
               Smart Summary
             </TabsTrigger>
-            <TabsTrigger 
-              value="overview" 
-              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
-            >
+            <TabsTrigger value="overview" className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20">
               Overview
             </TabsTrigger>
-            <TabsTrigger 
-              value="trends" 
-              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
-            >
+            <TabsTrigger value="trends" className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20">
               Trends
             </TabsTrigger>
-            <TabsTrigger 
-              value="comparison" 
-              className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20"
-            >
+            <TabsTrigger value="comparison" className="rounded-lg border-0 px-2 py-2.5 text-xs md:text-sm font-medium transition-all duration-300 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-primary/20">
               Compare
             </TabsTrigger>
           </TabsList>
@@ -117,6 +101,5 @@ export function AnalyticsTabs({
           </div>
         </Tabs>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
