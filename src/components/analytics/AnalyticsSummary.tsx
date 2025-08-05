@@ -17,9 +17,19 @@ export function AnalyticsSummary({ expenses }: AnalyticsSummaryProps) {
     );
   }
 
+  // Helper function to safely convert amount to number
+  const getValidAmount = (amount: any): number => {
+    if (typeof amount === 'number') return isNaN(amount) ? 0 : amount;
+    if (typeof amount === 'string') {
+      const parsed = parseFloat(amount);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
   // Calculate top spending category with proper number handling
   const categoryTotals = expenses.reduce((acc, exp) => {
-    const amount = typeof exp.amount === 'string' ? parseFloat(exp.amount) : Number(exp.amount);
+    const amount = getValidAmount(exp.amount);
     acc[exp.category] = (acc[exp.category] || 0) + amount;
     return acc;
   }, {} as Record<string, number>);
@@ -28,7 +38,7 @@ export function AnalyticsSummary({ expenses }: AnalyticsSummaryProps) {
     .sort(([,a], [,b]) => b - a)[0];
 
   const totalSpent = expenses.reduce((sum, exp) => {
-    const amount = typeof exp.amount === 'string' ? parseFloat(exp.amount) : Number(exp.amount);
+    const amount = getValidAmount(exp.amount);
     return sum + amount;
   }, 0);
 
