@@ -1,11 +1,12 @@
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { AnalyticsSummary } from "./AnalyticsSummary";
-import { OverviewCard } from "./cards/OverviewCard";
-import { TrendsCard } from "./cards/TrendsCard";
-import { InsightsCard } from "./cards/InsightsCard";
-import { CompareCard } from "./cards/CompareCard";
+import { OverviewTab } from "./tabs/OverviewTab";
+import { TrendsTab } from "./tabs/TrendsTab";
+import { InsightsTab } from "./tabs/InsightsTab";
+import { ComparisonTab } from "./tabs/ComparisonTab";
 import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface AnalyticsTabsProps {
@@ -34,13 +35,43 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
           {/* Friendly Summary */}
           <AnalyticsSummary expenses={filteredExpenses} />
           
-          {/* Card Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OverviewCard expenses={filteredExpenses} />
-            <TrendsCard expenses={filteredExpenses} />
-            <InsightsCard expenses={filteredExpenses} />
-            <CompareCard expenses={filteredExpenses} />
-          </div>
+          {/* Tabbed Analytics */}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <span className="text-lg">📊</span>
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="trends" className="flex items-center gap-2">
+                <span className="text-lg">📈</span>
+                <span className="hidden sm:inline">Trends</span>
+              </TabsTrigger>
+              <TabsTrigger value="insights" className="flex items-center gap-2">
+                <span className="text-lg">🤖</span>
+                <span className="hidden sm:inline">Insights</span>
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="flex items-center gap-2">
+                <span className="text-lg">⚖️</span>
+                <span className="hidden sm:inline">Compare</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="mt-6">
+              <OverviewTab expenses={filteredExpenses} config={chartConfig} />
+            </TabsContent>
+            
+            <TabsContent value="trends" className="mt-6">
+              <TrendsTab expenses={filteredExpenses} config={chartConfig} />
+            </TabsContent>
+            
+            <TabsContent value="insights" className="mt-6">
+              <InsightsTab expenses={filteredExpenses} />
+            </TabsContent>
+            
+            <TabsContent value="compare" className="mt-6">
+              <ComparisonTab expenses={filteredExpenses} />
+            </TabsContent>
+          </Tabs>
         </motion.div>
       </CardContent>
     </Card>
