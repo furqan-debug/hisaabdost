@@ -17,16 +17,20 @@ export function AnalyticsSummary({ expenses }: AnalyticsSummaryProps) {
     );
   }
 
-  // Calculate top spending category
+  // Calculate top spending category with proper number handling
   const categoryTotals = expenses.reduce((acc, exp) => {
-    acc[exp.category] = (acc[exp.category] || 0) + Number(exp.amount);
+    const amount = typeof exp.amount === 'string' ? parseFloat(exp.amount) : Number(exp.amount);
+    acc[exp.category] = (acc[exp.category] || 0) + amount;
     return acc;
   }, {} as Record<string, number>);
 
   const topCategory = Object.entries(categoryTotals)
     .sort(([,a], [,b]) => b - a)[0];
 
-  const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+  const totalSpent = expenses.reduce((sum, exp) => {
+    const amount = typeof exp.amount === 'string' ? parseFloat(exp.amount) : Number(exp.amount);
+    return sum + amount;
+  }, 0);
 
   if (!topCategory) return null;
 
