@@ -280,8 +280,8 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
                         data={chartData}
                         margin={{ 
                           top: 40, 
-                          right: 20, 
-                          left: 30, 
+                          right: chartData.length > 6 ? 40 : 20, 
+                          left: chartData.length > 6 ? 40 : 30, 
                           bottom: 80 
                         }}
                         barCategoryGap={viewType === 'weekly' ? "35%" : "25%"}
