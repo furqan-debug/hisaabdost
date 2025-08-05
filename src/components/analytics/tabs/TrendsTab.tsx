@@ -28,8 +28,8 @@ export function TrendsTab({
       </Card>
 
       <Card className="border-0 shadow-sm bg-card/80">
-        <CardHeader className="pb-3 py-0 my-[4px]">
-          <CardTitle className="text-lg font-medium text-center py-0 my-[62px]">Category Trends</CardTitle>
+        <CardHeader className="pb-3 py-[2px] my-[33px]">
+          <CardTitle className="text-lg font-medium text-center my-[70px] py-[3px] px-0 mx-px">Category Trends</CardTitle>
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
