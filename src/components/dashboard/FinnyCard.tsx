@@ -55,12 +55,12 @@ export function FinnyCard() {
     icon: Zap,
     text: "Instant Actions"
   }];
-  return <Card className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg">
-      <motion.div className="p-6 flex flex-col gap-4" whileHover={{
+  return <Card className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20 shadow-lg px-[11px] my-0 py-0 mx-0">
+      <motion.div whileHover={{
       scale: 1.02
     }} transition={{
       duration: 0.2
-    }}>
+    }} className="p-6 flex flex-col gap-4 mx-px px-[16px]">
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
