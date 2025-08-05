@@ -34,7 +34,7 @@ export function AnalyticsSummary({ expenses }: AnalyticsSummaryProps) {
     return acc;
   }, {} as Record<string, number>);
 
-  const topCategory = Object.entries(categoryTotals)
+  const topCategory = (Object.entries(categoryTotals) as [string, number][])
     .sort(([,a], [,b]) => b - a)[0];
 
   const totalSpent = expenses.reduce((sum, exp) => {
