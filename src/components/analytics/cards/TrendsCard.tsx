@@ -39,7 +39,7 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
       case 'weekly':
         const last8Weeks = subWeeks(now, 7);
         periods = eachWeekOfInterval({ start: last8Weeks, end: now });
-        formatKey = 'yyyy-ww';
+        formatKey = 'yyyy-MM-dd'; // Use full date for week start
         formatLabel = 'MMM dd';
         break;
       case 'quarterly':
@@ -64,20 +64,22 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
     // Group expenses by period
     expenses.forEach(expense => {
       const expenseDate = parseISO(expense.date);
-      let periodStart: Date;
+      let key: string;
 
       switch (viewType) {
         case 'weekly':
-          periodStart = startOfWeek(expenseDate);
+          const weekStart = startOfWeek(expenseDate);
+          key = format(weekStart, 'yyyy-MM-dd');
           break;
         case 'quarterly':
-          periodStart = startOfQuarter(expenseDate);
+          const quarterStart = startOfQuarter(expenseDate);
+          key = format(quarterStart, 'yyyy-QQQ');
           break;
         default:
-          periodStart = startOfMonth(expenseDate);
+          const monthStart = startOfMonth(expenseDate);
+          key = format(monthStart, 'yyyy-MM');
       }
 
-      const key = format(periodStart, formatKey);
       if (groupedData.hasOwnProperty(key)) {
         groupedData[key] += Number(expense.amount);
       }
@@ -86,10 +88,39 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
     // Convert to chart format
     return Object.entries(groupedData)
       .map(([key, amount]) => {
-        const date = new Date(key.replace('-Q', '-').replace('Q1', '01').replace('Q2', '04').replace('Q3', '07').replace('Q4', '10'));
+        let date: Date;
+        let label: string;
+
+        try {
+          switch (viewType) {
+            case 'weekly':
+              // Key format: 'yyyy-MM-dd' -> already a valid date
+              date = parseISO(key);
+              label = format(date, formatLabel);
+              break;
+            case 'quarterly':
+              // Key format: 'yyyy-QQQ' -> parse as first day of that quarter
+              const [qYear, quarter] = key.split('-');
+              const quarterNum = quarter.replace('Q', '');
+              const monthStart = (parseInt(quarterNum) - 1) * 3;
+              date = new Date(parseInt(qYear), monthStart, 1);
+              label = format(date, formatLabel);
+              break;
+            default: // monthly
+              // Key format: 'yyyy-MM' -> parse as first day of that month
+              const [mYear, month] = key.split('-');
+              date = new Date(parseInt(mYear), parseInt(month) - 1, 1);
+              label = format(date, formatLabel);
+          }
+        } catch (error) {
+          // Fallback to key as label if date parsing fails
+          console.warn('Date parsing failed for key:', key, error);
+          label = key;
+        }
+
         return {
           period: key,
-          label: format(date, formatLabel),
+          label,
           amount,
           color: amount > 0 ? (amount > 1000 ? '#ef4444' : amount > 500 ? '#f97316' : '#22c55e') : '#94a3b8'
         };
