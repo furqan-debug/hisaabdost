@@ -389,11 +389,22 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
                   </div>
                 </div>
                 
-                {/* Scroll Indicator */}
+                {/* Visual Scroll Indicators */}
                 {chartData.length > 6 && (
-                  <div className="absolute top-2 right-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full border">
-                    ← Scroll to see more →
-                  </div>
+                  <>
+                    {/* Left fade gradient */}
+                    <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background/90 to-transparent pointer-events-none z-10" />
+                    
+                    {/* Right fade gradient */}
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background/90 to-transparent pointer-events-none z-10" />
+                    
+                    {/* Subtle scroll hint */}
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 text-xs text-muted-foreground/60">
+                      <div className="w-1 h-1 rounded-full bg-current opacity-40" />
+                      <div className="w-1 h-1 rounded-full bg-current opacity-60" />
+                      <div className="w-1 h-1 rounded-full bg-current opacity-80" />
+                    </div>
+                  </>
                 )}
               </div>
             </>
