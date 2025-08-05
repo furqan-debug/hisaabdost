@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
@@ -38,26 +37,26 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
           
           {/* Tabbed Analytics */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <span className="text-lg">📊</span>
-                <span className="hidden sm:inline">Overview</span>
+            <TabsList className="w-full">
+              <TabsTrigger value="overview" className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">📊</span>
+                <span className="text-xs sm:text-sm">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="trends" className="flex items-center gap-2">
-                <span className="text-lg">📈</span>
-                <span className="hidden sm:inline">Trends</span>
+              <TabsTrigger value="trends" className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">📈</span>
+                <span className="text-xs sm:text-sm">Trends</span>
               </TabsTrigger>
-              <TabsTrigger value="groups" className="flex items-center gap-2">
-                <span className="text-lg">📦</span>
-                <span className="hidden sm:inline">Groups</span>
+              <TabsTrigger value="groups" className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">📦</span>
+                <span className="text-xs sm:text-sm">Groups</span>
               </TabsTrigger>
-              <TabsTrigger value="insights" className="flex items-center gap-2">
-                <span className="text-lg">🤖</span>
-                <span className="hidden sm:inline">Insights</span>
+              <TabsTrigger value="insights" className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">🤖</span>
+                <span className="text-xs sm:text-sm">Insights</span>
               </TabsTrigger>
-              <TabsTrigger value="compare" className="flex items-center gap-2">
-                <span className="text-lg">⚖️</span>
-                <span className="hidden sm:inline">Compare</span>
+              <TabsTrigger value="compare" className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-lg">⚖️</span>
+                <span className="text-xs sm:text-sm">Compare</span>
               </TabsTrigger>
             </TabsList>
             
