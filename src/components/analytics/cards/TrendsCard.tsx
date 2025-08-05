@@ -233,103 +233,169 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
         <CardContent className="pt-0">
           {expenses.length > 0 ? (
             <>
-              {/* Chart with no internal scrolling */}
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
-                    barCategoryGap="20%"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                    <XAxis 
-                      dataKey="label"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: isMobile ? 10 : 11, fill: 'hsl(var(--muted-foreground))' }}
-                      interval={0}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                    />
-                    <YAxis 
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      tickFormatter={(value) => {
-                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                        return value.toString();
-                      }}
-                      label={{ 
-                        value: 'Amount Spent', 
-                        angle: -90, 
-                        position: 'insideLeft',
-                        style: { textAnchor: 'middle', fontSize: '12px', fill: 'hsl(var(--muted-foreground))' }
-                      }}
-                    />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.[0]) return null;
-                        const data = payload[0].payload;
-                        return (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur-sm"
-                          >
-                            <div className="text-sm font-medium mb-1">{label}</div>
-                            <div className="text-lg font-bold text-primary">
-                              {formatCurrency(data.amount, currencyCode)}
-                            </div>
-                          </motion.div>
-                        );
-                      }}
-                    />
-                    <Bar 
-                      dataKey="amount" 
-                      radius={[4, 4, 0, 0]}
-                      label={({ value, x, y, width }) => {
-                        if (value === 0) return null;
-                        return (
-                          <text
-                            x={x + width / 2}
-                            y={y - 5}
-                            fill="hsl(var(--muted-foreground))"
-                            textAnchor="middle"
-                            fontSize="10"
-                            fontWeight="500"
-                          >
-                            {value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}
-                          </text>
-                        );
-                      }}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Smart Insights */}
+              {/* Smart Insights - Above Chart */}
               {insights && (
-                <div className="mt-4 p-3 bg-muted/20 rounded-lg border border-muted/30">
-                  <div className="flex items-start gap-2">
-                    <div className="text-lg">💡</div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="text-xl flex-shrink-0">💡</div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground leading-relaxed">
                         {insights.insight}
                       </p>
                       {insights.topCategory && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Top category: {insights.topCategory}
-                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground">Top category:</span>
+                          <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded-full">
+                            {insights.topCategory}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
+
+              {/* Chart Container with Horizontal Scroll */}
+              <div className="relative">
+                <div 
+                  className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+                  style={{ 
+                    minWidth: '100%',
+                    maxWidth: '100%'
+                  }}
+                >
+                  <div 
+                    style={{ 
+                      width: chartData.length > 6 ? `${chartData.length * (isMobile ? 80 : 120)}px` : '100%',
+                      minWidth: isMobile ? '400px' : '600px',
+                      height: '320px'
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={chartData}
+                        margin={{ 
+                          top: 40, 
+                          right: 20, 
+                          left: 30, 
+                          bottom: 80 
+                        }}
+                        barCategoryGap={viewType === 'weekly' ? "35%" : "25%"}
+                        maxBarSize={isMobile ? 35 : 50}
+                      >
+                        <CartesianGrid 
+                          strokeDasharray="3 3" 
+                          vertical={false} 
+                          opacity={0.2}
+                          className="stroke-muted"
+                        />
+                        <XAxis 
+                          dataKey="label"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ 
+                            fontSize: isMobile ? 10 : 11, 
+                            fill: 'hsl(var(--muted-foreground))',
+                            textAnchor: 'end'
+                          }}
+                          interval={0}
+                          angle={-35}
+                          height={80}
+                          className="text-muted-foreground"
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ 
+                            fontSize: 11, 
+                            fill: 'hsl(var(--muted-foreground))' 
+                          }}
+                          tickFormatter={(value) => {
+                            if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                            return value.toString();
+                          }}
+                          label={{ 
+                            value: 'Amount Spent', 
+                            angle: -90, 
+                            position: 'insideLeft',
+                            style: { 
+                              textAnchor: 'middle', 
+                              fontSize: '12px', 
+                              fill: 'hsl(var(--muted-foreground))' 
+                            }
+                          }}
+                          width={50}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload?.[0]) return null;
+                            const data = payload[0].payload;
+                            return (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                className="rounded-xl border bg-background/95 backdrop-blur-sm shadow-xl p-4 min-w-[140px]"
+                              >
+                                <div className="text-center space-y-2">
+                                  <div className="text-sm font-medium text-muted-foreground">
+                                    {label}
+                                  </div>
+                                  <div className="text-xl font-bold text-primary">
+                                    {formatCurrency(data.amount, currencyCode)}
+                                  </div>
+                                  {data.amount > 0 && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {data.amount > 1000 ? 'High spending' : 
+                                       data.amount > 500 ? 'Moderate spending' : 
+                                       'Low spending'}
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            );
+                          }}
+                          cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }}
+                        />
+                        <Bar 
+                          dataKey="amount" 
+                          radius={[6, 6, 0, 0]}
+                          label={({ value, x, y, width }) => {
+                            if (value === 0) return null;
+                            return (
+                              <text
+                                x={x + width / 2}
+                                y={y - 8}
+                                fill="hsl(var(--muted-foreground))"
+                                textAnchor="middle"
+                                fontSize="10"
+                                fontWeight="600"
+                                className="drop-shadow-sm"
+                              >
+                                {value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
+                              </text>
+                            );
+                          }}
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                {/* Scroll Indicator */}
+                {chartData.length > 6 && (
+                  <div className="absolute top-2 right-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full border">
+                    ← Scroll to see more →
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <div className="text-center py-12">
