@@ -1,34 +1,157 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExpensesBarChart } from "@/components/analytics/ExpensesBarChart";
-import { ChartContainer } from "@/components/ui/chart";
+import { Button } from "@/components/ui/button";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
 import { useAllCategories } from "@/hooks/useAllCategories";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/hooks/use-currency";
+import { formatCurrency } from "@/utils/formatters";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useMemo } from "react";
+import { TrendingUp, TrendingDown, Calendar, BarChart3 } from "lucide-react";
+import { format, parseISO, startOfWeek, startOfMonth, startOfQuarter, eachWeekOfInterval, eachMonthOfInterval, eachQuarterOfInterval, endOfWeek, endOfMonth, endOfQuarter, subWeeks, subMonths, subQuarters } from "date-fns";
 
 interface TrendsCardProps {
   expenses: any[];
 }
 
+type ViewType = 'weekly' | 'monthly' | 'quarterly';
+
 export function TrendsCard({ expenses }: TrendsCardProps) {
   const { categories } = useAllCategories();
-  
-  const chartConfig = categories.reduce((acc, category) => {
-    acc[category.value] = {
-      color: category.color
-    };
-    return acc;
-  }, {} as Record<string, { color: string }>);
+  const { currencyCode } = useCurrency();
+  const isMobile = useIsMobile();
+  const [viewType, setViewType] = useState<ViewType>('monthly');
 
-  // Simple trend analysis
-  const getRandomTrendMessage = () => {
-    const messages = [
-      "📈 Your spending patterns are looking good!",
-      "🎯 Keep tracking to spot trends easier",
-      "💫 Every expense tells a story",
-      "🔍 Trends become clearer with more data"
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
-  };
+  // Process data based on view type
+  const chartData = useMemo(() => {
+    if (!expenses.length) return [];
+
+    const groupedData: Record<string, number> = {};
+    const now = new Date();
+
+    // Determine periods based on view type
+    let periods: Date[] = [];
+    let formatKey: string = '';
+    let formatLabel: string = '';
+
+    switch (viewType) {
+      case 'weekly':
+        const last8Weeks = subWeeks(now, 7);
+        periods = eachWeekOfInterval({ start: last8Weeks, end: now });
+        formatKey = 'yyyy-ww';
+        formatLabel = 'MMM dd';
+        break;
+      case 'quarterly':
+        const last4Quarters = subQuarters(now, 3);
+        periods = eachQuarterOfInterval({ start: last4Quarters, end: now });
+        formatKey = 'yyyy-QQQ';
+        formatLabel = 'QQQ yyyy';
+        break;
+      default: // monthly
+        const last6Months = subMonths(now, 5);
+        periods = eachMonthOfInterval({ start: last6Months, end: now });
+        formatKey = 'yyyy-MM';
+        formatLabel = 'MMM yyyy';
+    }
+
+    // Initialize periods with zero
+    periods.forEach(period => {
+      const key = format(period, formatKey);
+      groupedData[key] = 0;
+    });
+
+    // Group expenses by period
+    expenses.forEach(expense => {
+      const expenseDate = parseISO(expense.date);
+      let periodStart: Date;
+
+      switch (viewType) {
+        case 'weekly':
+          periodStart = startOfWeek(expenseDate);
+          break;
+        case 'quarterly':
+          periodStart = startOfQuarter(expenseDate);
+          break;
+        default:
+          periodStart = startOfMonth(expenseDate);
+      }
+
+      const key = format(periodStart, formatKey);
+      if (groupedData.hasOwnProperty(key)) {
+        groupedData[key] += Number(expense.amount);
+      }
+    });
+
+    // Convert to chart format
+    return Object.entries(groupedData)
+      .map(([key, amount]) => {
+        const date = new Date(key.replace('-Q', '-').replace('Q1', '01').replace('Q2', '04').replace('Q3', '07').replace('Q4', '10'));
+        return {
+          period: key,
+          label: format(date, formatLabel),
+          amount,
+          color: amount > 0 ? (amount > 1000 ? '#ef4444' : amount > 500 ? '#f97316' : '#22c55e') : '#94a3b8'
+        };
+      })
+      .sort((a, b) => a.period.localeCompare(b.period));
+  }, [expenses, viewType]);
+
+  // Calculate trend and insights
+  const insights = useMemo(() => {
+    if (chartData.length < 2) return null;
+
+    const current = chartData[chartData.length - 1];
+    const previous = chartData[chartData.length - 2];
+    const change = current.amount - previous.amount;
+    const percentChange = previous.amount > 0 ? (change / previous.amount) * 100 : 0;
+
+    // Get top category for current period
+    const currentPeriodExpenses = expenses.filter(expense => {
+      const expenseDate = parseISO(expense.date);
+      const currentPeriodStart = viewType === 'weekly' 
+        ? startOfWeek(new Date()) 
+        : viewType === 'quarterly' 
+        ? startOfQuarter(new Date()) 
+        : startOfMonth(new Date());
+      
+      return expenseDate >= currentPeriodStart;
+    });
+
+    const categoryTotals = currentPeriodExpenses.reduce((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topCategory = Object.entries(categoryTotals)
+      .sort(([,a], [,b]) => Number(b) - Number(a))[0];
+
+    // Generate smart insight
+    let insight = "";
+    if (Math.abs(percentChange) > 5) {
+      const direction = change > 0 ? "more" : "less";
+      const verb = change > 0 ? "increased" : "decreased";
+      const period = viewType === 'weekly' ? 'week' : viewType === 'quarterly' ? 'quarter' : 'month';
+      
+      if (topCategory) {
+        insight = `You spent ${Math.abs(percentChange).toFixed(0)}% ${direction} than last ${period}${topCategory && Number(topCategory[1]) > 0 ? `, mostly on ${topCategory[0]}` : ''}!`;
+      } else {
+        insight = `Your spending ${verb} by ${Math.abs(percentChange).toFixed(0)}% compared to last ${period}.`;
+      }
+    } else {
+      insight = `Your spending has been relatively stable this ${viewType.replace('ly', '')}.`;
+    }
+
+    return {
+      change,
+      percentChange,
+      insight,
+      trend: change > 50 ? 'up' : change < -50 ? 'down' : 'stable',
+      topCategory: topCategory?.[0] || null
+    };
+  }, [chartData, expenses, viewType]);
+
+  const maxAmount = Math.max(...chartData.map(d => d.amount), 0);
 
   return (
     <motion.div
@@ -37,25 +160,145 @@ export function TrendsCard({ expenses }: TrendsCardProps) {
       transition={{ duration: 0.4, delay: 0.1 }}
     >
       <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md">
-        <CardHeader className="text-center pb-4">
-          <CardTitle className="flex items-center justify-center gap-2 text-xl font-semibold">
-            <span className="text-2xl">📈</span>
-            Trends
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+              <span className="text-2xl">📈</span>
+              Trends
+            </CardTitle>
+            {insights && (
+              <div className={`flex items-center gap-1 text-sm ${
+                insights.trend === 'up' ? 'text-red-500' : 
+                insights.trend === 'down' ? 'text-green-500' : 
+                'text-muted-foreground'
+              }`}>
+                {insights.trend === 'up' && <TrendingUp className="h-3 w-3" />}
+                {insights.trend === 'down' && <TrendingDown className="h-3 w-3" />}
+                {insights.percentChange !== 0 && (
+                  <span className="font-medium">
+                    {insights.percentChange > 0 ? '+' : ''}{insights.percentChange.toFixed(0)}%
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* View Toggle */}
+          <div className="flex gap-1 mt-2">
+            {(['weekly', 'monthly', 'quarterly'] as ViewType[]).map((type) => (
+              <Button
+                key={type}
+                variant={viewType === type ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewType(type)}
+                className="h-7 px-2 text-xs"
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
+
         <CardContent className="pt-0">
           {expenses.length > 0 ? (
             <>
-              <div className="h-[280px]">
-                <ChartContainer config={chartConfig}>
-                  <ExpensesBarChart expenses={expenses} />
-                </ChartContainer>
+              {/* Chart with no internal scrolling */}
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
+                    barCategoryGap="20%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                    <XAxis 
+                      dataKey="label"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: isMobile ? 10 : 11, fill: 'hsl(var(--muted-foreground))' }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      tickFormatter={(value) => {
+                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                        return value.toString();
+                      }}
+                      label={{ 
+                        value: 'Amount Spent', 
+                        angle: -90, 
+                        position: 'insideLeft',
+                        style: { textAnchor: 'middle', fontSize: '12px', fill: 'hsl(var(--muted-foreground))' }
+                      }}
+                    />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.[0]) return null;
+                        const data = payload[0].payload;
+                        return (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur-sm"
+                          >
+                            <div className="text-sm font-medium mb-1">{label}</div>
+                            <div className="text-lg font-bold text-primary">
+                              {formatCurrency(data.amount, currencyCode)}
+                            </div>
+                          </motion.div>
+                        );
+                      }}
+                    />
+                    <Bar 
+                      dataKey="amount" 
+                      radius={[4, 4, 0, 0]}
+                      label={({ value, x, y, width }) => {
+                        if (value === 0) return null;
+                        return (
+                          <text
+                            x={x + width / 2}
+                            y={y - 5}
+                            fill="hsl(var(--muted-foreground))"
+                            textAnchor="middle"
+                            fontSize="10"
+                            fontWeight="500"
+                          >
+                            {value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}
+                          </text>
+                        );
+                      }}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground text-center">
-                  {getRandomTrendMessage()}
-                </p>
-              </div>
+
+              {/* Smart Insights */}
+              {insights && (
+                <div className="mt-4 p-3 bg-muted/20 rounded-lg border border-muted/30">
+                  <div className="flex items-start gap-2">
+                    <div className="text-lg">💡</div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {insights.insight}
+                      </p>
+                      {insights.topCategory && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Top category: {insights.topCategory}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-12">
