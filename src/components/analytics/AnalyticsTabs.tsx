@@ -7,6 +7,7 @@ import { OverviewTab } from "./tabs/OverviewTab";
 import { TrendsTab } from "./tabs/TrendsTab";
 import { InsightsTab } from "./tabs/InsightsTab";
 import { ComparisonTab } from "./tabs/ComparisonTab";
+import { GroupSpendingTab } from "./tabs/GroupSpendingTab";
 import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface AnalyticsTabsProps {
@@ -37,7 +38,7 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
           
           {/* Tabbed Analytics */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <span className="text-lg">📊</span>
                 <span className="hidden sm:inline">Overview</span>
@@ -45,6 +46,10 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
               <TabsTrigger value="trends" className="flex items-center gap-2">
                 <span className="text-lg">📈</span>
                 <span className="hidden sm:inline">Trends</span>
+              </TabsTrigger>
+              <TabsTrigger value="groups" className="flex items-center gap-2">
+                <span className="text-lg">📦</span>
+                <span className="hidden sm:inline">Groups</span>
               </TabsTrigger>
               <TabsTrigger value="insights" className="flex items-center gap-2">
                 <span className="text-lg">🤖</span>
@@ -62,6 +67,10 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
             
             <TabsContent value="trends" className="mt-6">
               <TrendsTab expenses={filteredExpenses} config={chartConfig} />
+            </TabsContent>
+            
+            <TabsContent value="groups" className="mt-6">
+              <GroupSpendingTab expenses={filteredExpenses} />
             </TabsContent>
             
             <TabsContent value="insights" className="mt-6">
