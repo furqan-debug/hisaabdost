@@ -1,10 +1,10 @@
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/utils/formatters";
 import { motion } from "framer-motion";
+import { useAllCategories } from "@/hooks/useAllCategories";
 
 interface Expense {
   amount: number;
@@ -18,6 +18,13 @@ interface ExpensesPieChartProps {
 export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const { categories } = useAllCategories();
+
+  // Create category colors map from all categories
+  const categoryColors = categories.reduce((acc, cat) => {
+    acc[cat.value] = cat.color;
+    return acc;
+  }, {} as Record<string, string>);
 
   const data = Object.entries(
     expenses.reduce((acc, expense) => {
@@ -29,7 +36,7 @@ export function ExpensesPieChart({ expenses }: ExpensesPieChartProps) {
     .map(([name, value]) => ({
       name,
       value,
-      color: CATEGORY_COLORS[name] || '#94A3B8',
+      color: categoryColors[name] || '#94A3B8',
       percent: 0
     }));
 

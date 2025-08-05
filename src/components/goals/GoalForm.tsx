@@ -23,8 +23,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAllCategories } from "@/hooks/useAllCategories";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
@@ -59,6 +59,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { categories } = useAllCategories();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -165,10 +166,21 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
-                {Object.keys(CATEGORY_COLORS).map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+              <SelectContent className="touch-scroll-container max-h-[40vh]">
+                {categories.map((cat) => (
+                  <SelectItem key={`${cat.value}-${cat.isCustom}`} value={cat.value}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span>{cat.label}</span>
+                      {cat.isCustom && (
+                        <span className="text-xs px-1 py-0.5 bg-primary/10 text-primary rounded">
+                          Custom
+                        </span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
