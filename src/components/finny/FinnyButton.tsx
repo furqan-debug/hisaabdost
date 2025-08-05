@@ -18,6 +18,9 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isOnLeftSide, setIsOnLeftSide] = useState(false);
+  const [yPosition, setYPosition] = useState(isMobile ? 80 : 16); // Distance from bottom
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartTime, setDragStartTime] = useState(0);
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -28,18 +31,52 @@ const FinnyButton = ({
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+    setDragStartTime(Date.now());
+  };
+
   const handleDragEnd = (event: any, info: PanInfo) => {
+    const dragDuration = Date.now() - dragStartTime;
+    const dragDistance = Math.sqrt(info.offset.x ** 2 + info.offset.y ** 2);
+    
+    // If it's a quick tap (short duration and small distance), trigger onClick
+    if (dragDuration < 200 && dragDistance < 10) {
+      setIsDragging(false);
+      onClick();
+      return;
+    }
+    
     const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     const centerX = screenWidth / 2;
     
     // Calculate final position based on drag endpoint
     const finalX = info.point.x;
+    const finalY = info.point.y;
     const shouldBeOnLeft = finalX < centerX;
     
     setIsOnLeftSide(shouldBeOnLeft);
     
-    // Snap to the appropriate side
-    x.set(0); // Reset to 0 since we'll change the CSS class
+    // Calculate Y position from bottom, ensuring it stays within bounds
+    const buttonHeight = 64; // 16 * 4 = 64px
+    const minY = 16; // Minimum distance from bottom
+    const maxY = screenHeight - buttonHeight - 16; // Maximum distance from top
+    const newYFromBottom = Math.max(minY, Math.min(maxY, screenHeight - finalY - buttonHeight));
+    
+    setYPosition(newYFromBottom);
+    setIsDragging(false);
+    
+    // Reset motion values since we're using CSS positioning
+    x.set(0);
+    y.set(0);
+  };
+
+  const handleClick = () => {
+    // Only trigger onClick if we're not in the middle of a drag
+    if (!isDragging) {
+      onClick();
+    }
   };
   
   return (
@@ -48,11 +85,17 @@ const FinnyButton = ({
       <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
       
       <motion.div 
-        className={`fixed z-40 ${
-          isOnLeftSide 
-            ? (isMobile ? 'left-2 bottom-20' : 'left-2 bottom-4')
-            : (isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4')
-        }`}
+        className="fixed z-40"
+        style={{
+          left: isOnLeftSide ? '8px' : 'auto',
+          right: isOnLeftSide ? 'auto' : '8px',
+          bottom: `${yPosition}px`,
+          // Add padding to prevent clipping of glow effects
+          padding: '16px',
+          margin: '-16px',
+          x,
+          y
+        }}
         initial={{
           scale: 0,
           opacity: 0,
@@ -70,9 +113,15 @@ const FinnyButton = ({
           delay: 0.2
         }} 
         drag
-        dragConstraints={constraintsRef}
-        dragElastic={0.1}
+        dragConstraints={{
+          left: -window.innerWidth / 2 + 32,
+          right: window.innerWidth / 2 - 32,
+          top: -window.innerHeight + yPosition + 80,
+          bottom: yPosition - 16
+        }}
+        dragElastic={0.05}
         dragMomentum={false}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         whileDrag={{
           scale: 1.1,
@@ -87,13 +136,6 @@ const FinnyButton = ({
         }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
-        style={{
-          // Add padding to prevent clipping of glow effects
-          padding: '16px',
-          margin: '-16px',
-          x,
-          y
-        }}
       >
       {/* Outer glow effect */}
       <motion.div
@@ -107,7 +149,7 @@ const FinnyButton = ({
       />
 
       <Button 
-        onClick={onClick} 
+        onClick={handleClick}
         aria-label="Open Finny AI Assistant" 
         className={`
           relative w-16 h-16 rounded-full shadow-lg
