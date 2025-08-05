@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
@@ -18,41 +18,90 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isOnLeftSide, setIsOnLeftSide] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const { user } = useAuth();
-  const constraintsRef = useRef(null);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   // Motion values for dragging
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+
+  // Create safe drag constraints that prevent the button from disappearing
+  const [dragConstraints, setDragConstraints] = useState({ 
+    left: 0, 
+    right: 0, 
+    top: 0, 
+    bottom: 0 
+  });
+
+  useEffect(() => {
+    const updateConstraints = () => {
+      const buttonSize = 64; // 16 * 4 = 64px (w-16 h-16)
+      const padding = 16; // Extra padding for glow effects
+      const safeMargin = 8; // Additional safe margin
+      
+      const totalBuffer = buttonSize / 2 + padding + safeMargin;
+      
+      setDragConstraints({
+        left: -window.innerWidth / 2 + totalBuffer,
+        right: window.innerWidth / 2 - totalBuffer,
+        top: -window.innerHeight / 2 + totalBuffer,
+        bottom: window.innerHeight / 2 - totalBuffer
+      });
+    };
+
+    updateConstraints();
+    window.addEventListener('resize', updateConstraints);
+    return () => window.removeEventListener('resize', updateConstraints);
+  }, []);
 
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
 
   const handleDragEnd = (event: any, info: PanInfo) => {
     const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     const centerX = screenWidth / 2;
     
-    // Calculate final position based on drag endpoint
-    const finalX = info.point.x;
-    const shouldBeOnLeft = finalX < centerX;
+    // Get current position from motion values
+    const currentX = x.get();
+    const currentY = y.get();
     
+    // Calculate final position based on current position + drag offset
+    const finalX = screenWidth / 2 + currentX;
+    const finalY = screenHeight / 2 + currentY;
+    
+    // Determine which side to snap to
+    const shouldBeOnLeft = finalX < centerX;
     setIsOnLeftSide(shouldBeOnLeft);
     
-    // Snap to the appropriate side
-    x.set(0); // Reset to 0 since we'll change the CSS class
+    // Calculate the Y position to maintain
+    const buttonSize = 64;
+    const minY = buttonSize / 2 + 8;
+    const maxY = screenHeight - buttonSize / 2 - 8;
+    const clampedY = Math.max(minY, Math.min(maxY, finalY));
+    
+    // Set the new position
+    setPosition({ 
+      x: 0, // Will be handled by CSS positioning 
+      y: clampedY - screenHeight / 2 // Relative to center
+    });
+    
+    // Reset motion values and set final Y position
+    x.set(0);
+    y.set(clampedY - screenHeight / 2);
   };
   
   return (
     <>
-      {/* Invisible drag constraints - full screen */}
-      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
+      {/* Drag constraints container positioned at screen center */}
+      <div 
+        ref={constraintsRef} 
+        className="fixed left-1/2 top-1/2 pointer-events-none w-0 h-0" 
+      />
       
       <motion.div 
-        className={`fixed z-40 ${
-          isOnLeftSide 
-            ? (isMobile ? 'left-2 bottom-20' : 'left-2 bottom-4')
-            : (isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4')
-        }`}
+        className={`fixed z-40 left-1/2 top-1/2`}
         initial={{
           scale: 0,
           opacity: 0,
@@ -70,8 +119,8 @@ const FinnyButton = ({
           delay: 0.2
         }} 
         drag
-        dragConstraints={constraintsRef}
-        dragElastic={0.1}
+        dragConstraints={dragConstraints}
+        dragElastic={0}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
         whileDrag={{
@@ -88,11 +137,18 @@ const FinnyButton = ({
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         style={{
+          // Position based on side and Y offset
+          marginLeft: isOnLeftSide 
+            ? `${-window.innerWidth / 2 + 32 + 8}px` 
+            : `${window.innerWidth / 2 - 32 - 8}px`,
+          marginTop: `${position.y}px`,
           // Add padding to prevent clipping of glow effects
           padding: '16px',
           margin: '-16px',
           x,
-          y
+          y,
+          // Ensure the button stays within bounds during drag
+          overflow: 'visible'
         }}
       >
       {/* Outer glow effect */}
