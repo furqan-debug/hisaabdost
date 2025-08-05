@@ -1,10 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Upload, Camera, PlusCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useFinny } from '@/components/finny/context/FinnyContext';
 
 interface QuickActionsWidgetProps {
   onAddExpense: () => void;
@@ -19,7 +16,6 @@ export function QuickActionsWidget({
   onTakePhoto,
   onAddBudget
 }: QuickActionsWidgetProps) {
-  const { triggerChat } = useFinny();
 
   const handleAddExpense = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -54,64 +50,51 @@ export function QuickActionsWidget({
       title: 'Add Expense',
       icon: Plus,
       onClick: handleAddExpense,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      description: 'Quick manual entry'
+      color: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      description: 'Manual entry'
     },
     {
       title: 'Upload Receipt',
       icon: Upload,
       onClick: handleUploadReceipt,
-      color: 'bg-green-500 hover:bg-green-600',
-      description: 'Scan from gallery'
+      color: 'bg-green-600 text-white hover:bg-green-700',
+      description: 'From gallery'
     },
     {
       title: 'Take Photo',
       icon: Camera,
       onClick: handleTakePhoto,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      description: 'Camera capture'
+      color: 'bg-purple-600 text-white hover:bg-purple-700',
+      description: 'Camera scan'
     },
     {
-      title: 'Add Budget',
+      title: 'Set Budget',
       icon: PlusCircle,
       onClick: handleAddBudget,
-      color: 'bg-orange-500 hover:bg-orange-600',
-      description: 'Set new budget'
+      color: 'bg-orange-600 text-white hover:bg-orange-700',
+      description: 'Budget planning'
     }
   ];
 
   return (
-    <Card className="cursor-default">
-      <CardHeader>
-        <CardTitle className="text-lg">Quick Actions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3">
-          {actions.map((action, index) => (
-            <motion.div
-              key={action.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Button
-                variant="outline"
-                onClick={action.onClick}
-                className="h-auto p-4 flex flex-col items-center gap-2 w-full hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95"
-                type="button"
-              >
-                <div className={`p-2 rounded-lg ${action.color} text-white transition-colors`}>
-                  <action.icon className="h-5 w-5" />
-                </div>
-                <div className="text-center">
-                  <div className="font-medium text-sm">{action.title}</div>
-                  <div className="text-xs text-muted-foreground">{action.description}</div>
-                </div>
-              </Button>
-            </motion.div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {actions.map((action) => (
+        <Button
+          key={action.title}
+          variant="outline"
+          onClick={action.onClick}
+          className="h-20 flex flex-col items-center justify-center gap-2 border-2 hover:border-primary/20 transition-all duration-200 cursor-pointer group"
+          type="button"
+        >
+          <div className={`p-2 rounded-lg ${action.color} transition-all duration-200 group-hover:scale-110`}>
+            <action.icon className="h-5 w-5" />
+          </div>
+          <div className="text-center">
+            <div className="font-medium text-xs">{action.title}</div>
+            <div className="text-xs text-muted-foreground">{action.description}</div>
+          </div>
+        </Button>
+      ))}
+    </div>
   );
 }
