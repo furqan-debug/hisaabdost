@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
@@ -37,7 +38,7 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
           
           {/* Tabbed Analytics */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="w-full">
+            <TabsList className="w-full grid grid-cols-2 lg:grid-cols-5 gap-1">
               <TabsTrigger value="overview" className="flex items-center gap-1.5 sm:gap-2">
                 <span className="text-base sm:text-lg">📊</span>
                 <span className="text-xs sm:text-sm">Overview</span>
@@ -46,15 +47,15 @@ export function AnalyticsTabs({ filteredExpenses }: AnalyticsTabsProps) {
                 <span className="text-base sm:text-lg">📈</span>
                 <span className="text-xs sm:text-sm">Trends</span>
               </TabsTrigger>
-              <TabsTrigger value="groups" className="flex items-center gap-1.5 sm:gap-2">
+              <TabsTrigger value="groups" className="flex items-center gap-1.5 sm:gap-2 lg:order-none order-4">
                 <span className="text-base sm:text-lg">📦</span>
                 <span className="text-xs sm:text-sm">Groups</span>
               </TabsTrigger>
-              <TabsTrigger value="insights" className="flex items-center gap-1.5 sm:gap-2">
+              <TabsTrigger value="insights" className="flex items-center gap-1.5 sm:gap-2 lg:order-none order-3">
                 <span className="text-base sm:text-lg">🤖</span>
                 <span className="text-xs sm:text-sm">Insights</span>
               </TabsTrigger>
-              <TabsTrigger value="compare" className="flex items-center gap-1.5 sm:gap-2">
+              <TabsTrigger value="compare" className="flex items-center gap-1.5 sm:gap-2 col-span-2 lg:col-span-1 lg:order-none order-5">
                 <span className="text-base sm:text-lg">⚖️</span>
                 <span className="text-xs sm:text-sm">Compare</span>
               </TabsTrigger>
