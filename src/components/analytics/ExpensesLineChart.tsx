@@ -33,20 +33,17 @@ export function ExpensesLineChart({
     data.some(item => item[category] > 0)
   );
 
-  // Sort categories by total amount and limit to top 3-5 depending on screen size
+  // Show all categories with data (not just top categories)
   const getCategoryTotal = (category: string) => 
     data.reduce((sum, item) => sum + (item[category] || 0), 0);
   
-  const topCategories = activeCategories
-    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
-    .slice(0, isMobile ? 3 : 5);
+  const allCategoriesWithData = activeCategories
+    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
 
-  // Find average value for reference line
-  const allValues = data.flatMap(item => 
-    topCategories.map(cat => item[cat] || 0).filter(val => val > 0)
-  );
-  const avgValue = allValues.length > 0 ? 
-    allValues.reduce((sum, val) => sum + val, 0) / allValues.length : 0;
+  // Calculate average value for all categories for reference line
+  const avgValue = allCategoriesWithData.length > 0 
+    ? allCategoriesWithData.reduce((sum, category) => sum + getCategoryTotal(category), 0) / allCategoriesWithData.length / data.length
+    : 0;
 
   return (
     <div className="w-full h-full">
@@ -128,8 +125,8 @@ export function ExpensesLineChart({
             }}
           />
           
-          {/* Only render lines for top categories */}
-          {topCategories.map(category => (
+          {/* Render lines for all categories with data */}
+          {allCategoriesWithData.map(category => (
             <Line
               key={category}
               type="monotone"
@@ -158,7 +155,7 @@ export function ExpensesLineChart({
       
       {/* Mobile-friendly legend */}
       <div className="flex flex-wrap justify-center gap-2 mt-3">
-        {topCategories.map(category => (
+        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"

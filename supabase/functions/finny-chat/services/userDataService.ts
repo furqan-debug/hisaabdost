@@ -1,6 +1,7 @@
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 import { formatCurrency } from "../utils/formatters.ts";
+import { fetchUserCategories } from "./categoryService.ts";
 
 export async function fetchUserFinancialData(
   userId: string, 
@@ -40,9 +41,13 @@ export async function fetchUserFinancialData(
     
     const totalThisMonth = monthlyExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
+    // Get user's available categories (including custom ones)
+    const userCategories = await fetchUserCategories(userId, supabase);
+
     return {
       recentExpenses: expenses || [],
       budgets: budgets || [],
+      categories: userCategories,
       summary: `Total expenses this month: ${formatCurrency(totalThisMonth, currencyCode)}. ${expenses?.length || 0} recent transactions.`,
       monthlyTotal: totalThisMonth
     };
@@ -51,6 +56,7 @@ export async function fetchUserFinancialData(
     return {
       recentExpenses: [],
       budgets: [],
+      categories: [],
       summary: `Unable to fetch financial data. Please try again.`,
       monthlyTotal: 0
     };

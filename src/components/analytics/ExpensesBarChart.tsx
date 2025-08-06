@@ -31,14 +31,13 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     return data.some(item => item[category] > 0);
   });
   
-  // Limit to top categories by total value
+  // Show all categories with data (not just top categories)
   const getCategoryTotal = (category: string) => {
     return data.reduce((sum, item) => sum + (item[category] || 0), 0);
   };
-  
-  const topCategories = activeCategories
-    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
-    .slice(0, isMobile ? 3 : 5);
+
+  const allCategoriesWithData = activeCategories
+    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
   
   return (
     <div className="w-full h-full">
@@ -111,8 +110,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               );
             }}
           />
-          {/* Only render bars for top categories */}
-          {topCategories.map(category => (
+          {/* Render bars for all categories with data */}
+          {allCategoriesWithData.map(category => (
             <Bar
               key={category}
               dataKey={category}
@@ -127,7 +126,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       
       {/* Mobile-friendly legend */}
       <div className="flex flex-wrap justify-center gap-2 mt-3">
-        {topCategories.slice(0, isMobile ? 3 : 5).map(category => (
+        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"

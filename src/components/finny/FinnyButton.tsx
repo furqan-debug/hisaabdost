@@ -18,6 +18,8 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isOnLeftSide, setIsOnLeftSide] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [verticalPosition, setVerticalPosition] = useState(isMobile ? 80 : 16); // bottom offset in pixels
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -28,18 +30,39 @@ const FinnyButton = ({
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
   const handleDragEnd = (event: any, info: PanInfo) => {
+    setIsDragging(false);
+    
     const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     const centerX = screenWidth / 2;
     
     // Calculate final position based on drag endpoint
     const finalX = info.point.x;
+    const finalY = info.point.y;
     const shouldBeOnLeft = finalX < centerX;
     
     setIsOnLeftSide(shouldBeOnLeft);
     
+    // Preserve vertical position where user dropped it
+    const bottomOffset = screenHeight - finalY;
+    const clampedBottomOffset = Math.max(16, Math.min(bottomOffset, screenHeight - 80)); // Keep within bounds
+    setVerticalPosition(clampedBottomOffset);
+    
     // Snap to the appropriate side
     x.set(0); // Reset to 0 since we'll change the CSS class
+    y.set(0); // Reset to 0 since we'll use CSS positioning
+  };
+
+  const handleClick = () => {
+    // Only trigger onClick if we weren't dragging
+    if (!isDragging) {
+      onClick();
+    }
   };
   
   return (
@@ -48,11 +71,7 @@ const FinnyButton = ({
       <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
       
       <motion.div 
-        className={`fixed z-40 ${
-          isOnLeftSide 
-            ? (isMobile ? 'left-2 bottom-20' : 'left-2 bottom-4')
-            : (isMobile ? 'right-2 bottom-20' : 'right-2 bottom-4')
-        }`}
+        className={`fixed z-40 ${isOnLeftSide ? 'left-2' : 'right-2'}`}
         initial={{
           scale: 0,
           opacity: 0,
@@ -73,6 +92,7 @@ const FinnyButton = ({
         dragConstraints={constraintsRef}
         dragElastic={0.1}
         dragMomentum={false}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         whileDrag={{
           scale: 1.1,
@@ -92,7 +112,8 @@ const FinnyButton = ({
           padding: '16px',
           margin: '-16px',
           x,
-          y
+          y,
+          bottom: `${verticalPosition}px`
         }}
       >
       {/* Outer glow effect */}
@@ -107,7 +128,7 @@ const FinnyButton = ({
       />
 
       <Button 
-        onClick={onClick} 
+        onClick={handleClick}
         aria-label="Open Finny AI Assistant" 
         className={`
           relative w-16 h-16 rounded-full shadow-lg

@@ -32,6 +32,18 @@ export default function Analytics() {
     queryKey: ['expenses', dateRange, user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
+      // Handle empty date range (when filters are cleared)
+      if (!dateRange.start || !dateRange.end) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+        if (error) throw error;
+        return data || [];
+      }
+      
       const {
         data,
         error

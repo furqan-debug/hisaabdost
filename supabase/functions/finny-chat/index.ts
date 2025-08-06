@@ -29,8 +29,9 @@ function getTodaysDate(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Simple and direct system message for Finny
-const FINNY_SYSTEM_MESSAGE = `You are Finny, a helpful AI financial assistant for the Expensify AI app.
+// Generate system message with user categories
+function generateSystemMessage(userCategories: string[]) {
+  return `You are Finny, a helpful AI financial assistant for the Expensify AI app.
 Keep all responses simple, direct, and to the point. For actions like adding expenses or updating budgets, just confirm the action without extra details.
 
 COMMUNICATION STYLE:
@@ -42,12 +43,12 @@ COMMUNICATION STYLE:
 - Get straight to the point
 
 EXPENSE CATEGORIES (ONLY use these):
-${EXPENSE_CATEGORIES.map(cat => `- ${cat}`).join('\n')}
+${userCategories.map(cat => `- ${cat}`).join('\n')}
 
 ACTION CAPABILITIES:
-1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
-2. Set budgets: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly"}]
-3. Update budgets: [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
+1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food & Dining","date":"${getTodaysDate()}","description":"Lunch"}]
+2. Set budgets: [ACTION:{"type":"set_budget","category":"Food & Dining","amount":3000,"period":"monthly"}]
+3. Update budgets: [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
 4. Set goals: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31"}]
 5. Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly budget"}]
 6. Set income: [ACTION:{"type":"set_income","amount":75000,"period":"monthly"}]
@@ -56,19 +57,21 @@ IMPORTANT: Always use [ACTION:...] format when user wants to create, update, or 
 For budget updates, use "set_budget" action type even if budget already exists - the system will handle the update automatically.
 
 RESPONSE EXAMPLES:
-- "Added $15 lunch expense to Food category." [ACTION:{"type":"add_expense","amount":15,"category":"Food","description":"lunch"}]
-- "Set Food budget to $300/month." [ACTION:{"type":"set_budget","category":"Food","amount":300,"period":"monthly"}]
-- "Updated Rent budget to $1200/month." [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
+- "Added $15 lunch expense to Food & Dining category." [ACTION:{"type":"add_expense","amount":15,"category":"Food & Dining","description":"lunch"}]
+- "Set Food & Dining budget to $300/month." [ACTION:{"type":"set_budget","category":"Food & Dining","amount":300,"period":"monthly"}]
+- "Updated Transportation budget to $1200/month." [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
 - "Emergency fund goal created for $500." [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":500,"deadline":"2024-12-31"}]
 - "Added $100 to wallet." [ACTION:{"type":"add_wallet_funds","amount":100,"description":"Budget addition"}]
 
 CRITICAL: User requests to update, change, set, or modify budgets MUST include the [ACTION:...] format.
 Examples of budget update requests:
-- "update rent budget to 1200" → [ACTION:{"type":"set_budget","category":"Rent","amount":1200,"period":"monthly"}]
-- "set food budget to 500" → [ACTION:{"type":"set_budget","category":"Food","amount":500,"period":"monthly"}]
-- "change utilities budget to 150" → [ACTION:{"type":"set_budget","category":"Utilities","amount":150,"period":"monthly"}]
+- "update transportation budget to 1200" → [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
+- "set food budget to 500" → [ACTION:{"type":"set_budget","category":"Food & Dining","amount":500,"period":"monthly"}]
+- "change utilities budget to 150" → [ACTION:{"type":"set_budget","category":"Bills & Utilities","amount":150,"period":"monthly"}]
 
 Keep responses under 2 sentences when possible.`;
+  
+}
 
 // Handle HTTP requests
 serve(async (req) => {
@@ -180,17 +183,28 @@ serve(async (req) => {
       });
     }
 
-    // Fetch basic financial context
-    const [expensesResult, budgetsResult, profileResult] = await Promise.allSettled([
+    // Fetch basic financial context and user categories
+    const [expensesResult, budgetsResult, profileResult, customCategoriesResult] = await Promise.allSettled([
       supabase.from('expenses').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(5),
       supabase.from('budgets').select('*').eq('user_id', userId),
-      supabase.from('profiles').select('monthly_income').eq('id', userId).single()
+      supabase.from('profiles').select('monthly_income').eq('id', userId).single(),
+      supabase.from('custom_categories').select('name').eq('user_id', userId)
     ]);
 
     // Extract data safely
     const expenses = expensesResult.status === 'fulfilled' ? expensesResult.value.data || [] : [];
     const budgets = budgetsResult.status === 'fulfilled' ? budgetsResult.value.data || [] : [];
     const monthlyIncome = profileResult.status === 'fulfilled' ? profileResult.value.data?.monthly_income || 'Not set' : 'Not set';
+    const customCategories = customCategoriesResult.status === 'fulfilled' ? customCategoriesResult.value.data || [] : [];
+
+    // Combine default and custom categories
+    const defaultCategories = [
+      'Food & Dining', 'Shopping', 'Transportation', 'Entertainment', 
+      'Bills & Utilities', 'Healthcare', 'Travel', 'Education',
+      'Gifts & Donations', 'Personal Care', 'Home & Garden', 'Business', 'Other'
+    ];
+    const customCategoryNames = customCategories.map((cat: any) => cat.name);
+    const allUserCategories = [...defaultCategories, ...customCategoryNames];
 
     // Prepare simple context for OpenAI
     const contextMessage = `USER: ${displayName}
@@ -198,6 +212,9 @@ Currency: ${currencyCode}
 Monthly Income: ${monthlyIncome}
 Recent Expenses: ${JSON.stringify(expenses.slice(0, 3))}
 Current Budgets: ${JSON.stringify(budgets)}`;
+
+    // Generate system message with user's categories
+    const FINNY_SYSTEM_MESSAGE = generateSystemMessage(allUserCategories);
 
     // Prepare messages for OpenAI
     const openAIMessages = [
