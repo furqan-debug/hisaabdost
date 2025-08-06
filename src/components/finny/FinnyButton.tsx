@@ -17,9 +17,9 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
+  const [isOnLeftSide, setIsOnLeftSide] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [hasDraggedFar, setHasDraggedFar] = useState(false);
-  const [verticalPosition, setVerticalPosition] = useState(-24); // Initially partially hidden behind bottom nav
+  const [verticalPosition, setVerticalPosition] = useState(isMobile ? 80 : 16); // bottom offset in pixels
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -32,42 +32,35 @@ const FinnyButton = ({
 
   const handleDragStart = () => {
     setIsDragging(true);
-    setHasDraggedFar(false);
-  };
-
-  const handleDrag = (event: any, info: PanInfo) => {
-    // Check if user has dragged far enough to consider it a drag (not a tap)
-    const dragDistance = Math.sqrt(info.offset.x ** 2 + info.offset.y ** 2);
-    if (dragDistance > 10) {
-      setHasDraggedFar(true);
-    }
   };
 
   const handleDragEnd = (event: any, info: PanInfo) => {
     setIsDragging(false);
     
+    const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
+    const centerX = screenWidth / 2;
     
     // Calculate final position based on drag endpoint
+    const finalX = info.point.x;
     const finalY = info.point.y;
+    const shouldBeOnLeft = finalX < centerX;
+    
+    setIsOnLeftSide(shouldBeOnLeft);
     
     // Preserve vertical position where user dropped it
-    // Limit to main content area: 80px from top (header) to 80px from bottom (nav bar)
     const bottomOffset = screenHeight - finalY;
-    const clampedBottomOffset = Math.max(-24, Math.min(bottomOffset, screenHeight - 160)); // -24 allows partial hiding behind nav
+    const clampedBottomOffset = Math.max(16, Math.min(bottomOffset, screenHeight - 80)); // Keep within bounds
     setVerticalPosition(clampedBottomOffset);
     
-    // Reset motion values since we'll use CSS positioning
-    x.set(0);
-    y.set(0);
-    
-    // Reset drag distance tracking after a short delay
-    setTimeout(() => setHasDraggedFar(false), 100);
+    // Snap to the appropriate side
+    x.set(0); // Reset to 0 since we'll change the CSS class
+    y.set(0); // Reset to 0 since we'll use CSS positioning
   };
 
   const handleClick = () => {
-    // Only trigger onClick if we weren't dragging far
-    if (!hasDraggedFar) {
+    // Only trigger onClick if we weren't dragging
+    if (!isDragging) {
       onClick();
     }
   };
@@ -78,7 +71,7 @@ const FinnyButton = ({
       <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
       
       <motion.div 
-        className="fixed z-40 right-2"
+        className={`fixed z-40 ${isOnLeftSide ? 'left-2' : 'right-2'}`}
         initial={{
           scale: 0,
           opacity: 0,
@@ -95,15 +88,11 @@ const FinnyButton = ({
           damping: 25,
           delay: 0.2
         }} 
-        drag="y"
-        dragConstraints={{
-          top: -window.innerHeight + 160, // 80px from top
-          bottom: 24 // Allow partial hiding behind nav
-        }}
+        drag
+        dragConstraints={constraintsRef}
         dragElastic={0.1}
         dragMomentum={false}
         onDragStart={handleDragStart}
-        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         whileDrag={{
           scale: 1.1,
