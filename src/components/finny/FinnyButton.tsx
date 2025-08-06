@@ -21,7 +21,7 @@ const FinnyButton = ({
   const [hasDraggedFar, setHasDraggedFar] = useState(false);
   const [verticalPosition, setVerticalPosition] = useState(-24); // Initially partially hidden behind bottom nav
   const { user } = useAuth();
-  const constraintsRef = useRef(null);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   // Motion values for dragging
   const x = useMotionValue(0);
@@ -74,7 +74,7 @@ const FinnyButton = ({
   
   return (
     <>
-      {/* Invisible drag constraints - full screen */}
+      {/* Drag constraints container */}
       <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
       
       <motion.div 
@@ -96,10 +96,7 @@ const FinnyButton = ({
           delay: 0.2
         }} 
         drag="y"
-        dragConstraints={{
-          top: -window.innerHeight + 160, // 80px from top
-          bottom: 24 // Allow partial hiding behind nav
-        }}
+        dragConstraints={constraintsRef}
         dragElastic={0.1}
         dragMomentum={false}
         onDragStart={handleDragStart}
