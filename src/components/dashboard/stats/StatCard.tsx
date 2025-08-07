@@ -31,10 +31,13 @@ export const StatCard = ({
   const isMobile = useIsMobile();
   
   return (
-    <Card className={`transition-all duration-300 hover:shadow-md h-full ${className}`}>
+    <Card className={`transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 h-full border-border/50 hover:border-primary/20 ${className}`}>
       <CardContent className="pt-4 pb-3 px-3 flex flex-col h-full">
         <div className="flex items-center justify-between mb-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="h-4 w-4 text-primary" />}
+            <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+          </div>
           {infoTooltip && (
             <InfoPopover
               title={title}
@@ -45,7 +48,7 @@ export const StatCard = ({
             </InfoPopover>
           )}
         </div>
-        <div className="text-2xl font-bold mb-1.5">
+        <div className="text-2xl font-bold mb-1.5 text-foreground">
           {value}
         </div>
         {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
