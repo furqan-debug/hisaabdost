@@ -39,29 +39,12 @@ const FinnyButton = ({
     
     const screenHeight = window.innerHeight;
     const finalY = info.point.y;
-    const buttonHeight = 64; // Button is 16*4 = 64px (w-16 h-16)
     
-    // More precise constraints: ensure button never overlaps header or nav
-    const topLimit = 120; // Increased to ensure complete clearance from header
-    const bottomLimit = 120; // Ensure complete clearance from bottom nav
-    
-    // Calculate position with proper bounds checking
-    const maxBottomOffset = screenHeight - topLimit - buttonHeight;
-    const minBottomOffset = bottomLimit;
-    
-    let newBottomOffset;
-    if (finalY <= topLimit + buttonHeight/2) {
-      // Too close to top, set to safe top position
-      newBottomOffset = maxBottomOffset;
-    } else if (finalY >= screenHeight - bottomLimit - buttonHeight/2) {
-      // Too close to bottom, set to safe bottom position
-      newBottomOffset = minBottomOffset;
-    } else {
-      // Normal position calculation
-      newBottomOffset = Math.max(minBottomOffset, Math.min(screenHeight - finalY, maxBottomOffset));
-    }
-    
-    setVerticalPosition(newBottomOffset);
+    // Constrain vertical position: min 80px from top (header), max 100px from bottom (completely above nav)
+    const topLimit = 80;
+    const bottomLimit = 100; // Increased to ensure button stays above nav
+    const bottomOffset = Math.max(bottomLimit, Math.min(screenHeight - finalY, screenHeight - topLimit));
+    setVerticalPosition(bottomOffset);
     
     // Reset motion values since we use CSS positioning
     x.set(0);
@@ -82,10 +65,10 @@ const FinnyButton = ({
         ref={constraintsRef} 
         className="fixed pointer-events-none"
         style={{
-          top: 120, // Increased for better header clearance
+          top: 80,
           right: 0,
           width: 100,
-          bottom: 120 // Increased for better nav clearance
+          bottom: 100 // Increased to ensure button stays above nav
         }}
       />
       
