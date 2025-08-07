@@ -21,42 +21,42 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-  const { user } = useAuth(); // We will only rely on the user object
-  const [authChecked, setAuthChecked] = useState(false); // New state to track the check
-  const y = useMotionValue(0); 
+  const { user, isLoading } = useAuth(); // We now get the isLoading state from your auth hook
+
+  const y = useMotionValue(0); // Start y at a neutral position
   
+  // This hook safely sets the initial position AFTER the component has mounted
   useEffect(() => {
-    // This effect now does two things:
-    // 1. It waits until the user object is loaded (is no longer undefined) to confirm the auth check is done.
-    if (user !== undefined) {
-      setAuthChecked(true);
-    }
-    // 2. It safely sets the button's initial position.
+    // This sets the starting position to "peek out" from behind the nav bar
     const initialY = window.innerHeight - NAV_HEIGHT + 20;
     y.set(initialY);
-  }, [user, y]); // This runs whenever the user object changes
-  
+  }, [y]);
+
   // --- NEW, RELIABLE DRAGGING LOGIC ---
   const handlePan = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const newY = y.get() + info.delta.y;
-  
+    
+    // Define the top and bottom limits for the button's center
     const topLimit = HEADER_HEIGHT + SAFE_MARGIN;
     const bottomLimit = window.innerHeight - NAV_HEIGHT - SAFE_MARGIN;
-  
+    
+    // Clamp the new Y position to stay within the safe boundaries. This prevents disappearing.
     const clampedY = Math.max(topLimit, Math.min(newY, bottomLimit));
     y.set(clampedY);
   };
-  
+
   const handlePanEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // This handles the "Tap vs. Drag" logic.
+    // If the button was dragged only a tiny amount, we consider it a tap.
     const dragDistance = Math.abs(info.offset.x) + Math.abs(info.offset.y);
     if (dragDistance < 5) {
       onClick();
     }
   };
   // --- END OF NEW DRAGGING LOGIC ---
-  
-  // This is the new, more robust check.
-  if (isOpen || !authChecked || !user) {
+
+  // This corrected check waits for authentication to finish before showing the button.
+  if (isOpen || isLoading || !user) {
     return null;
   }
   
@@ -64,8 +64,8 @@ const FinnyButton = ({
     <>
       <motion.div 
         className="fixed z-40 right-2"
-        onPan={handlePan} // Using the new reliable drag handler
-        onPanEnd={handlePanEnd} // Using the new tap vs. drag handler
+        onPan={handlePan}
+        onPanEnd={handlePanEnd}
         whileTap={{ scale: 0.9 }}
         whileHover={{ scale: 1.05, y: y.get() - 2 }}
         onHoverStart={() => setIsHovering(true)}
