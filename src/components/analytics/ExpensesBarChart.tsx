@@ -44,8 +44,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     
     if (maxValue === 0) return [0, 100];
     
-    // Use smaller increments - round up to next 2.5k
-    const increment = 2500;
+    // Round up to next 10k for clean spacing with 3 ticks (0, middle, max)
+    const increment = 10000;
     const roundedMax = Math.ceil(maxValue / increment) * increment;
     
     return [0, roundedMax];
@@ -71,7 +71,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             />
             <YAxis 
               domain={getYAxisDomain() as [number, number]}
-              tickCount={isMobile ? 5 : 5}
+              tickCount={isMobile ? 3 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {
                 if (isMobile) {
