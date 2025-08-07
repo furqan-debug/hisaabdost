@@ -226,6 +226,14 @@
   .safe-area-top {
     padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
   }
+
+  /* Fix attachment options visibility on mobile */
+  .finny-chat-input-container .attachment-options {
+    position: fixed !important;
+    bottom: auto !important;
+    top: auto !important;
+    transform: translateY(-100%) !important;
+  }
 }
 
 /* Focus states for accessibility */

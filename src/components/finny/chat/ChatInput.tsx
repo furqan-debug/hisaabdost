@@ -205,7 +205,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 left-0 flex gap-2 p-2 bg-popover border rounded-lg shadow-lg z-10"
+                    className="attachment-options absolute bottom-full mb-2 left-0 flex gap-2 p-2 bg-popover/95 backdrop-blur-sm border rounded-lg shadow-lg z-[10000] sm:z-10 sm:bg-popover sm:backdrop-blur-none"
                   >
                     <Button
                       type="button"
