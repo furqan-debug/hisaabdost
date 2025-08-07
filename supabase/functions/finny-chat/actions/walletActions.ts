@@ -8,12 +8,16 @@ export async function addWalletFunds(
 ): Promise<string> {
   console.log(`Adding wallet funds: ${action.amount} with description: ${action.description}`);
   
+  // Get current date in user's timezone or UTC if not specified
+  const currentDate = new Date();
+  const dateToUse = action.date || currentDate.toISOString().split('T')[0];
+  
   const { error } = await supabase.from("wallet_additions").insert({
     user_id: userId,
     amount: action.amount,
     description: action.description || "Added via Finny",
-    date: action.date || new Date().toISOString().split('T')[0],
-    fund_type: "manual"
+    date: dateToUse,
+    fund_type: "finny" // Changed from "manual" to "finny"
   });
 
   if (error) {

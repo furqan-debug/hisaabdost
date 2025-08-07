@@ -73,10 +73,25 @@ export function useFinnyDataSync() {
             break;
 
           case 'wallet-updated':
+          case 'wallet-refresh':
+            console.log('Processing wallet event');
             if (user?.id) {
               await queryClient.invalidateQueries({ 
                 queryKey: ['wallet-additions', user.id] 
               });
+              await queryClient.invalidateQueries({ 
+                queryKey: ['wallet-additions-all', user.id] 
+              });
+              
+              if (isFinnyEvent) {
+                // Force immediate refetch for Finny events
+                await queryClient.refetchQueries({ 
+                  queryKey: ['wallet-additions', user.id] 
+                });
+                await queryClient.refetchQueries({ 
+                  queryKey: ['wallet-additions-all', user.id] 
+                });
+              }
             }
             break;
 
@@ -113,7 +128,8 @@ export function useFinnyDataSync() {
       'goal-added',
       'goal-updated',
       'goal-deleted',
-      'wallet-updated'
+      'wallet-updated',
+      'wallet-refresh'
     ];
 
     eventTypes.forEach(eventType => {

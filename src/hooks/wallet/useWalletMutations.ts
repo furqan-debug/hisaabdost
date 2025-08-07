@@ -76,8 +76,25 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       return data;
     },
     onSuccess: async (data) => {
-      // Invalidate all wallet-related queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      // Invalidate and refetch all wallet-related queries immediately
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      
+      // Force immediate refetch
+      queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+      queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
+      
+      // Also invalidate dashboard queries that include wallet data
+      queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      
+      // Dispatch wallet update events for cross-component refresh
+      window.dispatchEvent(new CustomEvent('wallet-updated', { 
+        detail: { source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', data } 
+      }));
+      window.dispatchEvent(new CustomEvent('wallet-refresh', { 
+        detail: { source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', data } 
+      }));
       
       // Log the wallet activity with fund type (only if online)
       if (navigator.onLine) {

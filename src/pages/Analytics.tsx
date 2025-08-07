@@ -29,7 +29,7 @@ export default function Analytics() {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['expenses', dateRange, user?.id],
+    queryKey: ['analytics-expenses', dateRange, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
@@ -53,7 +53,10 @@ export default function Analytics() {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user
+    enabled: !!user,
+    staleTime: 1000 * 30, // 30 seconds
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
   });
   const filteredExpenses = expenses?.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || expense.category.toLowerCase().includes(searchTerm.toLowerCase());

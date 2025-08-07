@@ -245,7 +245,7 @@ export async function processMessageWithAI(
             'wallet-refresh',
             'expenses-updated',
             'dashboard-refresh'
-          ], { walletData: data.action });
+          ], { source: 'finny-chat', walletData: data.action });
           break;
 
         case 'set_income':
