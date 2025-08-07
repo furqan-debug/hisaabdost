@@ -38,34 +38,29 @@ const FinnyButton = ({
     setIsDragging(false);
     
     const screenHeight = window.innerHeight;
-    const finalY = info.point.y;
+    const currentY = y.get();
     
-    // More precise boundary calculations
-    const headerHeight = 64; // Standard header height
-    const navHeight = isMobile ? 80 : 0; // Mobile bottom nav height
-    const buttonSize = 64; // Button height (16 * 4 = 64px)
-    const safeMargin = 16; // Safe margin from boundaries
+    // Calculate the new bottom position based on current drag offset
+    const currentBottomPosition = verticalPosition - currentY;
     
-    // Calculate limits with safe margins
-    const topLimit = headerHeight + safeMargin;
-    const bottomLimit = navHeight + safeMargin;
+    // Boundary calculations matching your preferred limits from the images
+    const headerHeight = 64;
+    const navHeight = isMobile ? 80 : 0;
+    const buttonSize = 64;
+    const safeMargin = 16;
     
-    // Convert screen Y to bottom offset, ensuring button stays within safe boundaries
-    let newBottomOffset = screenHeight - finalY - (buttonSize / 2);
+    const topLimit = headerHeight + safeMargin; // ~80px from top
+    const bottomLimit = navHeight + safeMargin; // ~96px from bottom on mobile, 16px on desktop
     
-    // Constrain to safe boundaries with elastic behavior
-    if (newBottomOffset < bottomLimit) {
-      newBottomOffset = bottomLimit;
-    } else if (newBottomOffset > screenHeight - topLimit - buttonSize) {
-      newBottomOffset = screenHeight - topLimit - buttonSize;
-    }
+    // Calculate max bottom position (when button is at top limit)
+    const maxBottomPosition = screenHeight - topLimit - buttonSize;
     
-    // Ensure minimum and maximum bounds are respected
-    newBottomOffset = Math.max(bottomLimit, Math.min(newBottomOffset, screenHeight - topLimit - buttonSize));
+    // Clamp the position to stay within bounds
+    let newBottomPosition = Math.max(bottomLimit, Math.min(currentBottomPosition, maxBottomPosition));
     
-    setVerticalPosition(newBottomOffset);
+    setVerticalPosition(newBottomPosition);
     
-    // Reset motion values smoothly
+    // Reset motion values to prevent conflicts
     x.set(0);
     y.set(0);
   };
