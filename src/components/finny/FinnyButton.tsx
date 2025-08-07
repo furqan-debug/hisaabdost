@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion, useMotionValue, PanInfo } from 'framer-motion';
+import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -18,106 +18,127 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const { user, loading } = useAuth();
-  
-  // Single motion value for Y position
+  // Initial position: completely above bottom nav (around 100px from bottom)
+  const [verticalPosition, setVerticalPosition] = useState(100);
+  const { user } = useAuth();
+  const constraintsRef = useRef(null);
+
+  // Motion values for dragging
+  const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  // Wait for auth to complete and set initial position
-  useEffect(() => {
-    if (!loading) {
-      if (user) {
-        // Calculate safe initial position
-        const screenHeight = window.innerHeight;
-        const headerHeight = 64;
-        const navHeight = isMobile ? 80 : 0;
-        const safeMargin = 16;
-        const initialBottomDistance = navHeight + safeMargin + 84; // 100px from bottom as shown in images
-        const initialYPosition = screenHeight - initialBottomDistance;
-        
-        y.set(initialYPosition);
-        setIsReady(true);
-      } else {
-        setIsReady(false);
-      }
-    }
-  }, [user, loading, isMobile, y]);
+  // Don't show the button when chat is open or user is not authenticated
+  if (isOpen || !user) return null;
 
-  // Don't render until auth is complete and user is authenticated
-  if (loading || !user || !isReady || isOpen) {
-    return null;
-  }
-
-  const handlePan = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragStart = () => {
     setIsDragging(true);
+  };
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    setIsDragging(false);
     
     const screenHeight = window.innerHeight;
+    const currentY = y.get();
+    
+    // Calculate the new bottom position based on current drag offset
+    const currentBottomPosition = verticalPosition - currentY;
+    
+    // Boundary calculations matching your preferred limits from the images
     const headerHeight = 64;
     const navHeight = isMobile ? 80 : 0;
     const buttonSize = 64;
     const safeMargin = 16;
     
-    // Calculate safe boundaries
-    const topLimit = headerHeight + safeMargin; // ~80px from top as shown in images
-    const bottomLimit = screenHeight - navHeight - safeMargin - buttonSize; // ~96px from bottom as shown in images
+    const topLimit = headerHeight + safeMargin; // ~80px from top
+    const bottomLimit = navHeight + safeMargin; // ~96px from bottom on mobile, 16px on desktop
     
-    // Get current position and apply offset
-    const currentY = y.get();
-    const newY = currentY + info.delta.y;
+    // Calculate max bottom position (when button is at top limit)
+    const maxBottomPosition = screenHeight - topLimit - buttonSize;
     
-    // Clamp position to safe boundaries
-    const clampedY = Math.max(topLimit, Math.min(newY, bottomLimit));
+    // Clamp the position to stay within bounds
+    let newBottomPosition = Math.max(bottomLimit, Math.min(currentBottomPosition, maxBottomPosition));
     
-    // Update position
-    y.set(clampedY);
+    setVerticalPosition(newBottomPosition);
+    
+    // Reset motion values to prevent conflicts
+    x.set(0);
+    y.set(0);
   };
 
-  const handlePanEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false);
-    
-    // Check if this was a tap (small movement) vs drag
-    const totalMovement = Math.abs(info.offset.y);
-    const isClick = totalMovement < 5;
-    
-    if (isClick) {
+  const handleClick = () => {
+    // Only trigger onClick if we weren't dragging
+    if (!isDragging) {
       onClick();
     }
   };
-
+  
   return (
-    <motion.div 
-      className="fixed z-40 right-2"
-      initial={{
-        scale: 0,
-        opacity: 0
-      }} 
-      animate={{
-        scale: 1,
-        opacity: 1
-      }} 
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 25,
-        delay: 0.2
-      }}
-      onPan={handlePan}
-      onPanEnd={handlePanEnd}
-      whileTap={{
-        scale: 0.9
-      }}
-      whileHover={{
-        scale: 1.05
-      }}
-      onHoverStart={() => setIsHovering(true)}
-      onHoverEnd={() => setIsHovering(false)}
-      style={{
-        y,
-        padding: '16px',
-        margin: '-16px'
-      }}
-    >
+    <>
+      {/* Invisible drag constraints - restrict to right side vertical movement only */}
+      <div 
+        ref={constraintsRef} 
+        className="fixed pointer-events-none"
+        style={{
+          top: isMobile ? 80 : 64, // Account for mobile vs desktop header
+          right: 0,
+          width: 120, // Slightly wider for better drag area
+          bottom: isMobile ? 96 : 16 // Account for mobile nav
+        }}
+      />
+      
+      <motion.div 
+        className="fixed z-40 right-2"
+        initial={{
+          scale: 0,
+          opacity: 0,
+          y: 20
+        }} 
+        animate={{
+          scale: 1,
+          opacity: 1,
+          y: 0
+        }} 
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 25,
+          delay: 0.2
+        }} 
+        drag="y"
+        dragConstraints={constraintsRef}
+        dragElastic={{
+          top: 0.2,
+          bottom: 0.2
+        }}
+        dragMomentum={false}
+        dragTransition={{
+          bounceStiffness: 300,
+          bounceDamping: 40
+        }}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        whileDrag={{
+          scale: 1.1,
+          zIndex: 50
+        }}
+        whileTap={{
+          scale: 0.9
+        }}
+        whileHover={{
+          scale: 1.05,
+          y: -2
+        }}
+        onHoverStart={() => setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        style={{
+          // Add padding to prevent clipping of glow effects
+          padding: '16px',
+          margin: '-16px',
+          x,
+          y,
+          bottom: `${verticalPosition}px`
+        }}
+      >
       {/* Outer glow effect */}
       <motion.div
         className="absolute inset-4 rounded-full pointer-events-none"
@@ -130,7 +151,7 @@ const FinnyButton = ({
       />
 
       <Button 
-        onClick={() => {}} // Handled by pan logic
+        onClick={handleClick}
         aria-label="Open Finny AI Assistant" 
         className={`
           relative w-16 h-16 rounded-full shadow-lg
@@ -142,7 +163,7 @@ const FinnyButton = ({
           shadow-purple-500/25 hover:shadow-purple-400/40
           before:absolute before:inset-0 before:rounded-full 
           before:bg-gradient-to-br before:from-white/20 before:to-transparent
-          before:opacity-0 hover:before:opacity-100 before:before:transition-opacity before:duration-300
+          before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
         `}
       >
         {/* Animated pulse rings */}
@@ -214,7 +235,8 @@ const FinnyButton = ({
           <div className="absolute inset-1 bg-white rounded-full opacity-30" />
         </motion.div>
       </Button>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 
