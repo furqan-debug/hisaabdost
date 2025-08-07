@@ -27,6 +27,22 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
   const allCategoriesWithData = Object.keys(categoryColors)
     .filter(category => data.some(item => item[category] > 0));
 
+  // Calculate max value for equal Y-axis spacing
+  const maxValue = Math.max(...data.map(item => 
+    Object.keys(categoryColors).reduce((sum, cat) => sum + (item[cat] || 0), 0)
+  ));
+  
+  // Create evenly spaced domain for mobile
+  const getYAxisDomain = () => {
+    if (!isMobile) return [0, 'dataMax'];
+    
+    if (maxValue === 0) return [0, 100];
+    
+    // Round up to nearest significant number for clean ticks
+    const roundedMax = Math.ceil(maxValue / 1000) * 1000;
+    return [0, roundedMax];
+  };
+
   return (
     <div className="w-full h-auto">
       <div className="h-[300px] w-full">
@@ -46,7 +62,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
               height={30}
             />
             <YAxis 
-              domain={[0, 'dataMax']}
+              domain={getYAxisDomain()}
               tickCount={isMobile ? 5 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {

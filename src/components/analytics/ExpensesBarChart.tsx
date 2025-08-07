@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { processMonthlyData } from "@/utils/chartUtils";
@@ -33,6 +32,22 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   const allCategoriesWithData = Object.keys(categoryColors)
     .filter(category => data.some(item => item[category] > 0))
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
+
+  // Calculate max value for equal Y-axis spacing
+  const maxValue = Math.max(...data.map(item => 
+    Object.keys(categoryColors).reduce((sum, cat) => sum + (item[cat] || 0), 0)
+  ));
+  
+  // Create evenly spaced domain for mobile
+  const getYAxisDomain = () => {
+    if (!isMobile) return [0, 'dataMax'];
+    
+    if (maxValue === 0) return [0, 100];
+    
+    // Round up to nearest significant number for clean ticks
+    const roundedMax = Math.ceil(maxValue / 1000) * 1000;
+    return [0, roundedMax];
+  };
   
   return (
     <div className="w-full h-auto">
@@ -53,7 +68,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               height={30}
             />
             <YAxis 
-              domain={[0, 'dataMax']}
+              domain={getYAxisDomain()}
               tickCount={isMobile ? 5 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {
@@ -122,4 +137,3 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     </div>
   );
 }
-
