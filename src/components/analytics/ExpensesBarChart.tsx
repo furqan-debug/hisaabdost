@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { processMonthlyData } from "@/utils/chartUtils";
@@ -53,7 +54,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             />
             <YAxis 
               domain={[0, 'dataMax']}
-              tickCount={isMobile ? 4 : 5}
+              tickCount={isMobile ? 5 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {
                 if (isMobile) {
@@ -121,3 +122,4 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     </div>
   );
 }
+

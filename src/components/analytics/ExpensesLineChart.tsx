@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { processMonthlyData } from "@/utils/chartUtils";
@@ -48,7 +47,7 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
             />
             <YAxis 
               domain={[0, 'dataMax']}
-              tickCount={isMobile ? 4 : 5}
+              tickCount={isMobile ? 5 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {
                 if (isMobile) {
