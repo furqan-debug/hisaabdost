@@ -1,7 +1,7 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -18,112 +18,130 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState(100); // Bottom offset in pixels
+  // Initial position: completely above bottom nav (around 100px from bottom)
+  const [verticalPosition, setVerticalPosition] = useState(100);
   const { user } = useAuth();
-  const dragStartY = useRef(0);
-  const dragStartPosition = useRef(0);
+  const constraintsRef = useRef(null);
+
+  // Motion values for dragging
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   // Don't show the button when chat is open or user is not authenticated
   if (isOpen || !user) return null;
 
-  const getBoundaries = useCallback(() => {
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    setIsDragging(false);
+    
     const screenHeight = window.innerHeight;
+    const currentY = y.get();
+    
+    // Calculate the new bottom position based on current drag offset
+    const currentBottomPosition = verticalPosition - currentY;
+    
+    // Boundary calculations matching your preferred limits from the images
     const headerHeight = 64;
     const navHeight = isMobile ? 80 : 0;
     const buttonSize = 64;
     const safeMargin = 16;
     
-    const minBottom = navHeight + safeMargin; // Bottom limit
-    const maxBottom = screenHeight - headerHeight - buttonSize - safeMargin; // Top limit
+    const topLimit = headerHeight + safeMargin; // ~80px from top
+    const bottomLimit = navHeight + safeMargin; // ~96px from bottom on mobile, 16px on desktop
     
-    return { minBottom, maxBottom };
-  }, [isMobile]);
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartY.current = e.clientY;
-    dragStartPosition.current = position;
+    // Calculate max bottom position (when button is at top limit)
+    const maxBottomPosition = screenHeight - topLimit - buttonSize;
     
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = dragStartY.current - e.clientY; // Inverted because we're using bottom positioning
-      const newPosition = dragStartPosition.current + deltaY;
-      const { minBottom, maxBottom } = getBoundaries();
-      
-      // Clamp position to boundaries
-      const clampedPosition = Math.max(minBottom, Math.min(newPosition, maxBottom));
-      setPosition(clampedPosition);
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [position, getBoundaries]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartY.current = e.touches[0].clientY;
-    dragStartPosition.current = position;
+    // Clamp the position to stay within bounds
+    let newBottomPosition = Math.max(bottomLimit, Math.min(currentBottomPosition, maxBottomPosition));
     
-    const handleTouchMove = (e: TouchEvent) => {
-      const deltaY = dragStartY.current - e.touches[0].clientY; // Inverted because we're using bottom positioning
-      const newPosition = dragStartPosition.current + deltaY;
-      const { minBottom, maxBottom } = getBoundaries();
-      
-      // Clamp position to boundaries
-      const clampedPosition = Math.max(minBottom, Math.min(newPosition, maxBottom));
-      setPosition(clampedPosition);
-    };
+    setVerticalPosition(newBottomPosition);
+    
+    // Reset motion values to prevent conflicts
+    x.set(0);
+    y.set(0);
+  };
 
-    const handleTouchEnd = () => {
-      setIsDragging(false);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-  }, [position, getBoundaries]);
-
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
+    // Only trigger onClick if we weren't dragging
     if (!isDragging) {
       onClick();
     }
-  }, [isDragging, onClick]);
+  };
   
   return (
-    <motion.div 
-      className="fixed z-40 right-2"
-      initial={{
-        scale: 0,
-        opacity: 0
-      }} 
-      animate={{
-        scale: 1,
-        opacity: 1
-      }} 
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 25,
-        delay: 0.2
-      }}
-      style={{
-        bottom: `${position}px`,
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
+    <>
+      {/* Invisible drag constraints - restrict to right side vertical movement only */}
+      <div 
+        ref={constraintsRef} 
+        className="fixed pointer-events-none"
+        style={{
+          top: isMobile ? 80 : 64, // Account for mobile vs desktop header
+          right: 0,
+          width: 120, // Slightly wider for better drag area
+          bottom: isMobile ? 96 : 16 // Account for mobile nav
+        }}
+      />
+      
+      <motion.div 
+        className="fixed z-40 right-2"
+        initial={{
+          scale: 0,
+          opacity: 0,
+          y: 20
+        }} 
+        animate={{
+          scale: 1,
+          opacity: 1,
+          y: 0
+        }} 
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 25,
+          delay: 0.2
+        }} 
+        drag="y"
+        dragConstraints={constraintsRef}
+        dragElastic={{
+          top: 0.2,
+          bottom: 0.2
+        }}
+        dragMomentum={false}
+        dragTransition={{
+          bounceStiffness: 300,
+          bounceDamping: 40
+        }}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        whileDrag={{
+          scale: 1.1,
+          zIndex: 50
+        }}
+        whileTap={{
+          scale: 0.9
+        }}
+        whileHover={{
+          scale: 1.05,
+          y: -2
+        }}
+        onHoverStart={() => setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        style={{
+          // Add padding to prevent clipping of glow effects
+          padding: '16px',
+          margin: '-16px',
+          x,
+          y,
+          bottom: `${verticalPosition}px`
+        }}
+      >
       {/* Outer glow effect */}
       <motion.div
-        className="absolute inset-0 rounded-full pointer-events-none"
+        className="absolute inset-4 rounded-full pointer-events-none"
         animate={{
           boxShadow: isHovering 
             ? '0 0 30px rgba(147, 51, 234, 0.4), 0 0 60px rgba(147, 51, 234, 0.2)' 
@@ -134,8 +152,6 @@ const FinnyButton = ({
 
       <Button 
         onClick={handleClick}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
         aria-label="Open Finny AI Assistant" 
         className={`
           relative w-16 h-16 rounded-full shadow-lg
@@ -148,7 +164,6 @@ const FinnyButton = ({
           before:absolute before:inset-0 before:rounded-full 
           before:bg-gradient-to-br before:from-white/20 before:to-transparent
           before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
-          ${isDragging ? 'scale-110' : 'hover:scale-105'}
         `}
       >
         {/* Animated pulse rings */}
@@ -220,7 +235,8 @@ const FinnyButton = ({
           <div className="absolute inset-1 bg-white rounded-full opacity-30" />
         </motion.div>
       </Button>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 
