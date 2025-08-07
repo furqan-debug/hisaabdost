@@ -46,7 +46,7 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
   );
 
   // Enhanced message sending with insights handling
-  const enhancedHandleSendMessage = async (e?: React.FormEvent, quickAction?: string, attachedFile?: any) => {
+  const enhancedHandleSendMessage = async (e?: React.FormEvent, quickAction?: string) => {
     if (e) e.preventDefault();
     
     const messageToSend = quickAction || newMessage.trim();
@@ -62,8 +62,6 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
       content: messageToSend,
       isUser: true,
       timestamp: new Date(),
-      hasImage: !!attachedFile,
-      imageUrl: attachedFile?.preview,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -75,41 +73,17 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     try {
       console.log('Sending advanced message to AI service:', messageToSend);
       
-      // Prepare request body with optional image
-      const requestBody: any = {
-        message: messageToSend,
-        userId: user.id,
-        chatHistory: messages.slice(-8),
-        currencyCode,
-        userName: user.user_metadata?.full_name,
-        userAge: user.user_metadata?.age,
-        userGender: user.user_metadata?.gender
-      };
-
-      // If there's an attached image, convert it to base64 and include it
-      if (attachedFile) {
-        try {
-          const reader = new FileReader();
-          const base64Promise = new Promise<string>((resolve, reject) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(reader.error);
-          });
-          reader.readAsDataURL(attachedFile.file);
-          const base64Image = await base64Promise;
-          
-          requestBody.image = base64Image;
-          requestBody.hasImage = true;
-          console.log('Including image with message:', attachedFile.file.name);
-        } catch (error) {
-          console.error('Error converting image to base64:', error);
-          toast.error('Failed to process image');
-          return;
-        }
-      }
-
       // Use Supabase edge function instead of /api/ endpoint
       const { data, error } = await supabase.functions.invoke('finny-chat', {
-        body: requestBody
+        body: {
+          message: messageToSend,
+          userId: user.id,
+          chatHistory: messages.slice(-8),
+          currencyCode,
+          userName: user.user_metadata?.full_name,
+          userAge: user.user_metadata?.age,
+          userGender: user.user_metadata?.gender
+        }
       });
 
       if (error) {
@@ -218,7 +192,7 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
       return;
     }
     console.log("Advanced quick reply selected:", reply.action);
-    enhancedHandleSendMessage(undefined, reply.action, undefined);
+    enhancedHandleSendMessage(undefined, reply.action);
   };
   
   const resetChat = () => {

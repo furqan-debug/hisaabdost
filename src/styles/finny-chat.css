@@ -226,11 +226,6 @@
   .safe-area-top {
     padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
   }
-
-  /* Clean attachment popup for mobile */
-  .finny-chat-input-container {
-    position: relative;
-  }
 }
 
 /* Focus states for accessibility */
