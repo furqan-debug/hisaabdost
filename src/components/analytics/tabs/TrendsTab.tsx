@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensesBarChart } from "../ExpensesBarChart";
 import { ExpensesLineChart } from "../ExpensesLineChart";
@@ -26,7 +27,6 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* --- Monthly Trends Card --- */}
       <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
@@ -35,14 +35,14 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* THE PROBLEMATIC DIV HAS BEEN REMOVED FROM HERE */}
-          <ChartContainer config={config}>
-            <ExpensesBarChart expenses={expenses} />
-          </ChartContainer>
+          <div className="h-auto w-full min-h-[400px]">
+            <ChartContainer config={config}>
+              <ExpensesBarChart expenses={expenses} />
+            </ChartContainer>
+          </div>
         </CardContent>
       </Card>
 
-      {/* --- Category Trends Card --- */}
       <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
@@ -51,10 +51,11 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* THE PROBLEMATIC DIV HAS BEEN REMOVED FROM HERE AS WELL */}
-          <ChartContainer config={config}>
-            <ExpensesLineChart expenses={expenses} />
-          </ChartContainer>
+          <div className="h-auto w-full min-h-[400px]">
+            <ChartContainer config={config}>
+              <ExpensesLineChart expenses={expenses} />
+            </ChartContainer>
+          </div>
         </CardContent>
       </Card>
     </div>
