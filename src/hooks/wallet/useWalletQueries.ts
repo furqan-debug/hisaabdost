@@ -13,7 +13,7 @@ export function useWalletQueries() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month with more aggressive refetching for real-time updates
+  // Query wallet additions for current month with immediate updates
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
@@ -38,14 +38,14 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // Reduced from 5 minutes to 30 seconds
+    staleTime: 0, // Always consider data stale for immediate updates
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 10000, // Reduced to 10 seconds
   });
 
-  // Query all wallet additions with more aggressive caching for real-time updates
+  // Query all wallet additions with immediate updates
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
@@ -68,11 +68,11 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60, // Reduced from 10 minutes to 1 minute
+    staleTime: 0, // Always consider data stale for immediate updates
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 15000, // Reduced to 15 seconds
   });
 
   // Calculate total additions

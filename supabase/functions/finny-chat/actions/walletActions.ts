@@ -25,7 +25,7 @@ export async function addWalletFunds(
     amount: action.amount,
     description: action.description || "Added via Finny",
     date: dateToUse,
-    fund_type: "finny" // Use 'finny' for AI-added funds
+    fund_type: "manual" // Change from "finny" to "manual" to match format expected by UI
   });
 
   if (error) {

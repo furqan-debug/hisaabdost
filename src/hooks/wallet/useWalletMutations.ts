@@ -11,7 +11,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Add funds mutation with enhanced real-time updates
+  // Add funds mutation with immediate real-time updates
   const addFundsMutation = useMutation({
     mutationFn: async (addition: WalletAdditionInput) => {
       if (!user) throw new Error('User not authenticated');
@@ -76,55 +76,51 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       return data;
     },
     onSuccess: async (data) => {
-      console.log('🔄 Starting comprehensive cache invalidation for fund addition');
+      console.log('🔄 Starting immediate cache invalidation for fund addition');
       
-      // Immediate invalidation of all wallet queries
+      // IMMEDIATE invalidation and refetch - no delays
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
       // Force immediate refetch
       queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
       queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
+      queryClient.refetchQueries({ queryKey: ['activity_logs'] });
       
-      // Also invalidate dashboard and activity-related queries
+      // Also invalidate dashboard and activity-related queries immediately
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
-      // Dispatch comprehensive wallet update events
+      // Dispatch IMMEDIATE wallet update events
       const eventDetail = { 
-        source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', 
+        source: 'finny-chat', // Always mark as finny-chat for tracking
         data,
         timestamp: Date.now()
       };
       
-      console.log('🚀 Dispatching wallet update events:', eventDetail);
+      console.log('🚀 Dispatching immediate wallet update events:', eventDetail);
       
-      // Multiple event dispatches for different listeners
+      // Immediate event dispatches - NO delays
       window.dispatchEvent(new CustomEvent('wallet-updated', { detail: eventDetail }));
       window.dispatchEvent(new CustomEvent('wallet-refresh', { detail: eventDetail }));
+      window.dispatchEvent(new CustomEvent('finny-advanced-action', { detail: eventDetail }));
       
-      if (data.fund_type === 'finny') {
-        window.dispatchEvent(new CustomEvent('finny-advanced-action', { detail: eventDetail }));
-      }
-      
-      // Additional delayed events to ensure all components update
-      setTimeout(() => {
-        console.log('🔄 Secondary wallet event dispatch');
-        window.dispatchEvent(new CustomEvent('wallet-updated', { detail: eventDetail }));
-        window.dispatchEvent(new CustomEvent('wallet-refresh', { detail: eventDetail }));
-        queryClient.refetchQueries({ queryKey: ['activity_logs'] });
-      }, 200);
-      
-      // Log the wallet activity (only if online)
+      // Log the wallet activity immediately (only if online)
       if (navigator.onLine) {
         try {
           await logWalletActivity(
             data.amount, 
             data.description || 'Added funds to wallet',
-            data.fund_type || 'manual'
+            'manual' // Use 'manual' to ensure it appears in Monthly Summary
           );
           console.log('✅ Wallet activity logged successfully');
+          
+          // Trigger activity log refresh immediately after logging
+          setTimeout(() => {
+            queryClient.refetchQueries({ queryKey: ['activity_logs'] });
+          }, 100);
+          
         } catch (error) {
           console.error('❌ Failed to log wallet activity:', error);
         }
@@ -223,7 +219,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         await logWalletActivity(
           -deletedFund.amount, 
           `Deleted ${deletedFund.fund_type === 'carryover' ? 'carryover' : 'manual'} fund entry: ${deletedFund.description || 'Added funds'}`,
-          deletedFund.fund_type || 'manual'
+          'manual' // Use 'manual' to ensure activity appears in Monthly Summary
         );
       } catch (error) {
         console.error('❌ Failed to log wallet activity:', error);
