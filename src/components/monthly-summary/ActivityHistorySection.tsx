@@ -51,10 +51,20 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
 
   // Listen for real-time updates from Finny and other sources
   useEffect(() => {
-    const handleActivityUpdate = () => {
-      console.log('Activity update event received, refreshing activities');
+    const handleActivityUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      console.log('Activity update event received:', event.type, detail);
+      
       if (user) {
-        fetchActivities();
+        // Add a small delay for Finny events to ensure database is updated
+        const isFinnyEvent = detail.source === 'finny-chat' || detail.source === 'finny';
+        const delay = isFinnyEvent ? 200 : 50;
+        
+        setTimeout(() => {
+          console.log('Refreshing activities after delay:', delay);
+          fetchActivities();
+        }, delay);
       }
     };
 
