@@ -28,6 +28,10 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     return data.reduce((sum, item) => sum + (item[category] || 0), 0);
   };
 
+  const activeCategories = Object.keys(categoryColors).filter(category => {
+    return data.some(item => item[category] > 0);
+  });
+
   const allCategoriesWithData = activeCategories
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
   
