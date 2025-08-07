@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, useMotionValue, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
@@ -21,13 +21,19 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth(); // We now get the isLoading state
 
-  // --- NEW DRAGGING LOGIC ---
-  // We control the Y position directly with a motion value.
-  // Initial position is set to "peek out" from behind the bottom nav bar.
-  const y = useMotionValue(window.innerHeight - NAV_HEIGHT - 40);
+  // We control the Y position directly with a motion value, starting at 0
+  const y = useMotionValue(0); 
+  
+  // This hook safely sets the initial position AFTER the component has mounted
+  useEffect(() => {
+    // This sets the starting position to "peek out" from behind the nav bar
+    const initialY = window.innerHeight - NAV_HEIGHT + 20;
+    y.set(initialY);
+  }, [y]);
 
+  // --- NEW, RELIABLE DRAGGING LOGIC ---
   const handlePan = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const newY = y.get() + info.delta.y;
     
@@ -42,6 +48,7 @@ const FinnyButton = ({
 
   const handlePanEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     // This handles the "Tap vs. Drag" logic.
+    // If the button was dragged only a tiny amount, we consider it a tap.
     const dragDistance = Math.abs(info.offset.x) + Math.abs(info.offset.y);
     if (dragDistance < 5) {
       onClick();
@@ -49,16 +56,15 @@ const FinnyButton = ({
   };
   // --- END OF NEW DRAGGING LOGIC ---
 
-  if (isOpen || !user) return null;
+  // This is the corrected check. It now waits for authentication to finish.
+  if (isOpen || isLoading || !user) {
+    return null;
+  }
 
   return (
     <>
-      {/* The main motion div now uses the new pan handlers */}
       <motion.div 
         className="fixed z-50 right-4" // Always on the right side
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.2 }}
         onPan={handlePan}
         onPanEnd={handlePanEnd}
         whileTap={{ scale: 0.9 }}
@@ -66,7 +72,7 @@ const FinnyButton = ({
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         style={{
-          y, // Position is now controlled solely by the y motion value
+          y, // Position is now controlled solely by this motion value
           // Add padding to prevent clipping of glow effects
           padding: '16px',
           margin: '-16px',
