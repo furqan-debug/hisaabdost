@@ -1,29 +1,33 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpensesBarChart } from "../ExpensesBarChart";
 import { ExpensesLineChart } from "../ExpensesLineChart";
 import { ChartContainer } from "@/components/ui/chart";
+
 interface TrendsTabProps {
   expenses: any[];
   config: Record<string, {
     color: string;
   }>;
 }
-export function TrendsTab({
-  expenses,
-  config
-}: TrendsTabProps) {
+
+export function TrendsTab({ expenses, config }: TrendsTabProps) {
   if (expenses.length === 0) {
-    return <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+    return (
+      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardContent className="pt-6">
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📈</div>
             <p className="text-muted-foreground">Add expenses to see spending trends</p>
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
-  return <div className="space-y-4">
-      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm my-0 -bottom-64 -space-y-64">
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
             Monthly Trends
@@ -54,5 +58,6 @@ export function TrendsTab({
           </div>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 }
