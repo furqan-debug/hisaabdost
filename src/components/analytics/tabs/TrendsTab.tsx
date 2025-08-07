@@ -25,7 +25,7 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
   }
 
   return (
-    <div className="-space-y-4">
+    <div className="space-y-4">
       <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
