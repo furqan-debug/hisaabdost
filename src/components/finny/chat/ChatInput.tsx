@@ -201,31 +201,31 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <AnimatePresence>
                 {showAttachmentOptions && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.9, y: 8 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    transition={{ duration: 0.15 }}
-                    className="attachment-options absolute bottom-full mb-2 left-0 flex gap-2 p-2 bg-popover/95 backdrop-blur-sm border rounded-lg shadow-lg z-[10000] sm:z-10 sm:bg-popover sm:backdrop-blur-none"
+                    exit={{ opacity: 0, scale: 0.9, y: 8 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="fixed bottom-24 left-4 right-4 sm:absolute sm:bottom-full sm:left-0 sm:right-auto sm:mb-2 sm:w-auto flex gap-2 p-3 bg-background/95 backdrop-blur-sm border rounded-xl shadow-xl z-[10000]"
                   >
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted flex items-center justify-center"
+                      className="w-12 h-12 p-0 rounded-xl hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-all duration-200 border border-border/50"
                       title="Choose from gallery"
                     >
-                      <Image className="w-4 h-4" />
+                      <Image className="w-5 h-5" />
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={handleCameraCapture}
-                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted flex items-center justify-center"
+                      className="w-12 h-12 p-0 rounded-xl hover:bg-primary/10 hover:text-primary flex items-center justify-center transition-all duration-200 border border-border/50"
                       title="Take photo"
                     >
-                      <Camera className="w-4 h-4" />
+                      <Camera className="w-5 h-5" />
                     </Button>
                   </motion.div>
                 )}

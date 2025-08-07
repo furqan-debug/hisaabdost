@@ -220,28 +220,46 @@ Current Budgets: ${JSON.stringify(budgets)}`;
 
     // Handle image processing if present
     let imageAnalysis = '';
+    let isReceiptDetected = false;
+    let receiptData = null;
+
     if (hasImage && image) {
       try {
-        console.log("Processing image with OpenAI Vision API");
+        console.log("Processing image with smart bill detection");
         
-        // Extract base64 data from data URL
-        const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
-        
-        const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        // First, check if this is a bill/receipt
+        const detectionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: "gpt-4o",
+            model: "gpt-4o-mini",
             messages: [
               {
                 role: "user",
                 content: [
                   {
                     type: "text",
-                    text: "Analyze this image and extract any financial information such as receipts, bills, or expenses. If it's a receipt or bill, extract the total amount, merchant name, date, and any individual items with their prices. Return the information in a structured format."
+                    text: `Analyze this image and determine if it's a bill, receipt, or invoice that contains expense information. 
+
+Look for these elements:
+- Store/merchant names
+- Purchase amounts or totals
+- Dates
+- Item lists with prices
+- Tax information
+- Receipt formats
+
+Return ONLY this JSON format:
+{
+  "is_bill": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "brief explanation"
+}
+
+Be strict - only return is_bill: true if it's clearly a financial document with expense information.`
                   },
                   {
                     type: "image_url",
@@ -252,22 +270,93 @@ Current Budgets: ${JSON.stringify(budgets)}`;
                 ]
               }
             ],
-            max_tokens: 500,
+            max_tokens: 200,
             temperature: 0.1
           }),
         });
 
-        if (visionResponse.ok) {
-          const visionData = await visionResponse.json();
-          imageAnalysis = visionData.choices?.[0]?.message?.content || 'Could not analyze the image.';
-          console.log("Image analysis:", imageAnalysis.substring(0, 200) + '...');
-        } else {
-          console.error("Vision API error:", visionResponse.status);
-          imageAnalysis = 'Unable to process the image at this time.';
+        if (detectionResponse.ok) {
+          const detectionData = await detectionResponse.json();
+          const detectionContent = detectionData.choices?.[0]?.message?.content || '';
+          console.log("Detection response:", detectionContent);
+          
+          try {
+            const jsonMatch = detectionContent.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const detection = JSON.parse(jsonMatch[0]);
+              isReceiptDetected = detection.is_bill && detection.confidence > 0.7;
+              console.log("Receipt detection result:", { isReceiptDetected, confidence: detection.confidence });
+              
+              if (!isReceiptDetected) {
+                imageAnalysis = `This doesn't look like a bill or receipt. I can only help process financial documents like receipts, invoices, or bills. Please upload a clear image of a receipt if you'd like me to create an expense entry.`;
+                console.log("Image rejected - not a receipt");
+              }
+            }
+          } catch (parseError) {
+            console.error("Error parsing detection response:", parseError);
+            isReceiptDetected = false;
+          }
+        }
+
+        // If it's detected as a receipt, process it with our OCR system
+        if (isReceiptDetected) {
+          console.log("Detected as receipt - processing with OCR");
+          
+          // Extract base64 data from data URL
+          const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
+          const fileType = image.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+          
+          try {
+            // Call our scan-receipt function
+            const scanResponse = await fetch(`${SUPABASE_URL}/functions/v1/scan-receipt`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                file: base64Data,
+                fileType,
+                fileName: 'receipt.jpg'
+              }),
+            });
+
+            if (scanResponse.ok) {
+              receiptData = await scanResponse.json();
+              console.log("OCR processing successful:", receiptData);
+              
+              if (receiptData.success && receiptData.items && receiptData.items.length > 0) {
+                // Auto-categorize and create expenses
+                const totalAmount = receiptData.items.reduce((sum: number, item: any) => 
+                  sum + parseFloat(item.amount || '0'), 0);
+                
+                // Auto-create the expense using our action system
+                const mainItem = receiptData.items.length === 1 ? receiptData.items[0] : {
+                  description: `${receiptData.merchant || 'Purchase'} - ${receiptData.items.length} items`,
+                  amount: totalAmount.toFixed(2),
+                  category: receiptData.items[0].category || 'Other',
+                  date: receiptData.date || getTodaysDate(),
+                  paymentMethod: 'Card'
+                };
+
+                imageAnalysis = `Perfect! I've scanned your receipt and found ${receiptData.items.length} item${receiptData.items.length > 1 ? 's' : ''} from ${receiptData.merchant || 'your purchase'} totaling $${totalAmount.toFixed(2)}. Creating your expense entry now...
+
+[ACTION:{"type":"add_expense","amount":${totalAmount},"category":"${mainItem.category}","date":"${mainItem.date}","description":"${mainItem.description}","paymentMethod":"${mainItem.paymentMethod}"}]`;
+              } else {
+                imageAnalysis = "I could see this is a receipt, but I had trouble extracting the details clearly. Could you try with a clearer image or different angle?";
+              }
+            } else {
+              console.error("OCR scan failed:", scanResponse.status);
+              imageAnalysis = "I detected this is a receipt, but our scanning service is currently unavailable. Please try again later.";
+            }
+          } catch (ocrError) {
+            console.error("OCR processing error:", ocrError);
+            imageAnalysis = "I detected this is a receipt, but had trouble processing it. Please try again with a clearer image.";
+          }
         }
       } catch (imageError) {
         console.error("Error processing image:", imageError);
-        imageAnalysis = 'Error processing the image.';
+        imageAnalysis = 'Error processing the image. Please try again.';
       }
     }
 
