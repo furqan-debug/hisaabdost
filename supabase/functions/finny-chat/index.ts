@@ -106,7 +106,9 @@ serve(async (req) => {
       currencyCode = 'USD',
       userName,
       userAge,
-      userGender
+      userGender,
+      image,
+      hasImage = false
     } = requestBody;
 
     // Validate required fields
@@ -136,7 +138,7 @@ serve(async (req) => {
       });
     }
 
-    console.log("Processing request:", { message: message.substring(0, 100) + '...', userId, currencyCode });
+    console.log("Processing request:", { message: message.substring(0, 100) + '...', userId, currencyCode, hasImage });
 
     // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -216,7 +218,65 @@ Current Budgets: ${JSON.stringify(budgets)}`;
     // Generate system message with user's categories
     const FINNY_SYSTEM_MESSAGE = generateSystemMessage(allUserCategories);
 
+    // Handle image processing if present
+    let imageAnalysis = '';
+    if (hasImage && image) {
+      try {
+        console.log("Processing image with OpenAI Vision API");
+        
+        // Extract base64 data from data URL
+        const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
+        
+        const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Analyze this image and extract any financial information such as receipts, bills, or expenses. If it's a receipt or bill, extract the total amount, merchant name, date, and any individual items with their prices. Return the information in a structured format."
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: image
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 500,
+            temperature: 0.1
+          }),
+        });
+
+        if (visionResponse.ok) {
+          const visionData = await visionResponse.json();
+          imageAnalysis = visionData.choices?.[0]?.message?.content || 'Could not analyze the image.';
+          console.log("Image analysis:", imageAnalysis.substring(0, 200) + '...');
+        } else {
+          console.error("Vision API error:", visionResponse.status);
+          imageAnalysis = 'Unable to process the image at this time.';
+        }
+      } catch (imageError) {
+        console.error("Error processing image:", imageError);
+        imageAnalysis = 'Error processing the image.';
+      }
+    }
+
     // Prepare messages for OpenAI
+    let userMessage = message;
+    if (hasImage && imageAnalysis) {
+      userMessage = `${message}\n\nImage Analysis: ${imageAnalysis}`;
+    }
+
     const openAIMessages = [
       { role: "system", content: FINNY_SYSTEM_MESSAGE },
       { role: "system", content: contextMessage },
@@ -224,7 +284,7 @@ Current Budgets: ${JSON.stringify(budgets)}`;
         role: msg.isUser ? "user" : "assistant",
         content: msg.content
       })),
-      { role: "user", content: message }
+      { role: "user", content: userMessage }
     ];
 
     console.log("Sending request to OpenAI");

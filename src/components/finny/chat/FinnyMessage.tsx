@@ -37,9 +37,23 @@ export const FinnyMessage: React.FC<FinnyMessageProps> = ({ message, isLatest = 
             : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
           }
         `}>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
-            {message.content}
-          </p>
+          {/* Display image if present */}
+          {message.hasImage && message.imageUrl && (
+            <div className="mb-3">
+              <img
+                src={message.imageUrl}
+                alt="Attached image"
+                className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
+                style={{ maxHeight: '200px', objectFit: 'contain' }}
+              />
+            </div>
+          )}
+          
+          {message.content && (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {message.content}
+            </p>
+          )}
           
           {message.hasAction && (
             <div className="mt-2">

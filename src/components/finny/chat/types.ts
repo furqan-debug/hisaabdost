@@ -9,6 +9,8 @@ export interface Message {
   hasAction?: boolean;
   visualData?: any;
   expiresAt?: Date;
+  hasImage?: boolean;
+  imageUrl?: string;
 }
 
 export interface QuickReply {

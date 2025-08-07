@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessagesArea } from './MessagesArea';
 import ChatInput from '../ChatInput';
 import { Message, QuickReply } from '../types';
+import { AttachedFile } from '@/hooks/useFileAttachment';
 
 interface ChatContainerProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface ChatContainerProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   newMessage: string;
   setNewMessage: (message: string) => void;
-  handleSendMessage: (e?: React.FormEvent, quickAction?: string) => void;
+  handleSendMessage: (e?: React.FormEvent, quickAction?: string, attachedFile?: AttachedFile) => void;
   handleQuickReply: (reply: QuickReply) => void;
   resetChat: () => void;
   isAuthPromptOnly: boolean;
@@ -168,7 +169,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               <ChatInput
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onSubmit={handleSendMessage}
+                onSubmit={(e, attachedFile) => handleSendMessage(e, undefined, attachedFile)}
                 disabled={isLoading}
                 isLoading={isLoading}
                 isAuthenticated={!!user}
