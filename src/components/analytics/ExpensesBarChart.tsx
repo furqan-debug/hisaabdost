@@ -81,7 +81,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 // Convert ValueType to number for safe comparison
                 const value = entry.value !== undefined ? Number(entry.value) : 0;
                 return value > 0;
-              }); // Limit to top 3 for cleaner mobile display
+              }).slice(0, isMobile ? 3 : 5); // Limit to top 3 for cleaner mobile display
             
               return (
                 <motion.div 
@@ -125,8 +125,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       </ResponsiveContainer>
       
       {/* Mobile-friendly legend */}
-      <div className="flex flex-wrap justify-center gap-2 mt-3 w-full max-w-full overflow-x-hidden px-2">
-        {allCategoriesWithData.map(category => (
+      <div className="flex flex-wrap justify-center gap-2 mt-3">
+        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
@@ -136,8 +136,10 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               className="w-2 h-2 rounded-full" 
               style={{ backgroundColor: categoryColors[category] }} 
             />
-            <span className="truncate max-w-[80px]">
-              {category}
+            <span className="truncate">
+              {category.length > (isMobile ? 8 : 12) ? 
+                category.slice(0, isMobile ? 8 : 12) + "…" : 
+                category}
             </span>
           </div>
         ))}
