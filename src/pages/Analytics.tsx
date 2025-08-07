@@ -29,7 +29,7 @@ export default function Analytics() {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['analytics-expenses', dateRange, user?.id],
+    queryKey: ['analytics-expenses', dateRange.start, dateRange.end, user?.id],
     queryFn: async () => {
       if (!user) return [];
       
@@ -44,19 +44,22 @@ export default function Analytics() {
         return data || [];
       }
       
-      const {
-        data,
-        error
-      } = await supabase.from('expenses').select('*').eq('user_id', user.id).gte('date', dateRange.start).lte('date', dateRange.end).order('date', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', dateRange.start)
+        .lte('date', dateRange.end)
+        .order('date', { ascending: false });
+      
       if (error) throw error;
       return data || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60, // 60 seconds 
     refetchOnMount: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    placeholderData: [] // Provides fallback data to prevent UI jumping
   });
   const filteredExpenses = expenses?.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) || expense.category.toLowerCase().includes(searchTerm.toLowerCase());

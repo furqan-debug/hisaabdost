@@ -8,16 +8,24 @@ export async function addWalletFunds(
 ): Promise<string> {
   console.log(`Adding wallet funds: ${action.amount} with description: ${action.description}`);
   
-  // Get current date in user's timezone or UTC if not specified
-  const currentDate = new Date();
-  const dateToUse = action.date || currentDate.toISOString().split('T')[0];
+  // Always use today's date in the user's timezone
+  const today = new Date();
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const todayFormatted = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: userTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(today);
+  
+  const dateToUse = action.date || todayFormatted;
   
   const { error } = await supabase.from("wallet_additions").insert({
     user_id: userId,
     amount: action.amount,
     description: action.description || "Added via Finny",
     date: dateToUse,
-    fund_type: "finny" // Changed from "manual" to "finny"
+    fund_type: "finny" // Use 'finny' for AI-added funds
   });
 
   if (error) {
