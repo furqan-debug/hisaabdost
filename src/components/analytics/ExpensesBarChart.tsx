@@ -25,16 +25,6 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   }, {} as Record<string, string>);
   
   const data = processMonthlyData(expenses, categories.map(cat => cat.value));
-  // --- START: New code to add ---
-  // This manually calculates the highest value for the Y-axis
-  const allValues = data.flatMap(month => 
-    Object.values(month).filter(val => typeof val === 'number')
-  );
-  const maxValue = Math.max(0, ...allValues);
-
-  // This creates an array with exactly three points for the axis
-  const yAxisTicks = [0, Math.ceil(maxValue / 2), Math.ceil(maxValue)];
-  // --- END: New code to add ---
   
   // Filter out zero-value categories for cleaner display
   const activeCategories = Object.keys(categoryColors).filter(category => {
@@ -69,21 +59,18 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             height={40}
           />
           <YAxis 
-            // This forces the chart to use our 3 calculated points
-            ticks={yAxisTicks}
-            domain={[0, 'dataMax']}
-            allowDataOverflow={false}
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
-            width={isMobile ? 35 : 60}
             tickFormatter={(value) => {
               if (isMobile) {
+                // Simplified formatter for mobile to save space
                 if (value >= 1000) return `${Math.floor(value / 1000)}k`;
                 return value.toString();
               }
               return formatCurrency(value, currencyCode);
             }}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+            width={isMobile ? 35 : 60}
           />
           <Tooltip
             content={({ active, payload, label }) => {
@@ -94,7 +81,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 // Convert ValueType to number for safe comparison
                 const value = entry.value !== undefined ? Number(entry.value) : 0;
                 return value > 0;
-              }); // Limit to top 3 for cleaner mobile display
+              }).slice(0, isMobile ? 3 : 5); // Limit to top 3 for cleaner mobile display
             
               return (
                 <motion.div 
