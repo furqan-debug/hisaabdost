@@ -34,7 +34,6 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* FIX #5: The problematic div with min-h-[400px] has been removed. */}
           <ChartContainer config={config}>
             <ExpensesBarChart expenses={expenses} />
           </ChartContainer>
@@ -45,11 +44,10 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
             Category Trends
-          </Title>
+          </CardTitle>
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* FIX #5: The problematic div with min-h-[400px] has been removed here too. */}
           <ChartContainer config={config}>
             <ExpensesLineChart expenses={expenses} />
           </ChartContainer>
