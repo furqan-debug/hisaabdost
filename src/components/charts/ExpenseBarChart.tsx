@@ -27,9 +27,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
     return data.reduce((sum, item) => sum + (item[category] || 0), 0);
   };
   
-  const topCategories = activeCategories
-    .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a))
-    .slice(0, isMobile ? 3 : 5);
+  const allActiveCategories = activeCategories;
   
   return (
     <div className="w-full h-[250px] md:h-[300px]">
@@ -51,18 +49,20 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             height={isMobile ? 30 : 40}
           />
           <YAxis 
+            domain={[0, 'dataMax']}
+            tickCount={3}
+            allowDataOverflow={false}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
+            width={isMobile ? 30 : 60}
             tickFormatter={(value) => {
               if (isMobile) {
-                // Simplified formatter for mobile to save space
                 if (value >= 1000) return `${Math.floor(value / 1000)}k`;
                 return value.toString();
               }
               return formatCurrency(value, currencyCode);
             }}
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: isMobile ? 10 : 12, fill: 'var(--foreground)' }}
-            width={isMobile ? 30 : 60}
           />
           <Tooltip
             content={({ active, payload, label }) => {
@@ -103,7 +103,7 @@ export const ExpenseBarChart = ({ expenses }: ExpenseBarChartProps) => {
             }}
           />
           {/* Only render bars for top categories */}
-          {topCategories.map(category => (
+          {{allActiveCategories.map(category => (
             <Bar
               key={category}
               dataKey={category}
