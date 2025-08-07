@@ -65,12 +65,10 @@
   .trends-chart-wrapper {
     @apply w-full overflow-visible;
     height: auto !important;
-    min-height: auto !important;
   }
   
   .trends-chart-container {
     @apply h-auto mx-auto w-full overflow-visible;
-    min-height: auto !important;
   }
 
   /* Better axis label visibility */
@@ -83,21 +81,6 @@
     height: auto !important;
     min-height: auto !important;
     max-height: none !important;
-  }
-
-  /* Fix trends tab chart scrolling issues */
-  .trends-tab-chart {
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  .trends-tab-chart .recharts-wrapper,
-  .trends-tab-chart .recharts-responsive-container {
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
   }
 }
 
@@ -265,22 +248,6 @@
 .category-breakdown-card .chart-container,
 .category-breakdown-card .recharts-wrapper,
 .category-breakdown-card .recharts-responsive-container {
-  height: auto !important;
-  min-height: auto !important;
-  overflow: visible !important;
-}
-
-/* Trends tab specific fixes */
-.trends-tab-container {
-  height: auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-.trends-tab-container .chart-container,
-.trends-tab-container .recharts-wrapper,
-.trends-tab-container .recharts-responsive-container {
   height: auto !important;
   min-height: auto !important;
   overflow: visible !important;
