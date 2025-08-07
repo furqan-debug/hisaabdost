@@ -205,14 +205,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-full mb-2 left-0 flex gap-2 p-2 bg-popover border rounded-lg shadow-lg"
+                    className="absolute bottom-full mb-2 left-0 flex gap-2 p-2 bg-popover border rounded-lg shadow-lg z-10"
                   >
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted"
+                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted flex items-center justify-center"
+                      title="Choose from gallery"
                     >
                       <Image className="w-4 h-4" />
                     </Button>
@@ -221,7 +222,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={handleCameraCapture}
-                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted"
+                      className="w-9 h-9 p-0 rounded-lg hover:bg-muted flex items-center justify-center"
+                      title="Take photo"
                     >
                       <Camera className="w-4 h-4" />
                     </Button>
