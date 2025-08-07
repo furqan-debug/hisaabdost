@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Bot } from 'lucide-react';
@@ -17,60 +17,46 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  // Initial position: completely above bottom nav (around 100px from bottom)
-  const [verticalPosition, setVerticalPosition] = useState(100);
-  const { user } = useAuth();
-  const constraintsRef = useRef(null);
-
-  // Motion values for dragging
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Don't show the button when chat is open or user is not authenticated
-  if (isOpen || !user) return null;
-
-  const handleDragStart = () => {
-    setIsDragging(true);
+  const { user } = useAuth(); // We will only rely on the user object
+  const [authChecked, setAuthChecked] = useState(false); // New state to track if the check is done
+  const y = useMotionValue(0); // Start y at a neutral position
+  
+  useEffect(() => {
+    // This hook now waits for the user object to be loaded (when it's not undefined)
+    // before confirming the authentication check is complete.
+    if (user !== undefined) {
+      setAuthChecked(true);
+    }
+    // This also safely sets the button's initial "peeking" position.
+    const initialY = window.innerHeight - NAV_HEIGHT + 20;
+    y.set(initialY);
+  }, [user, y]); // This runs whenever the user object changes
+  
+  // --- NEW, RELIABLE DRAGGING LOGIC ---
+  const handlePan = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const newY = y.get() + info.delta.y;
+  
+    const topLimit = HEADER_HEIGHT + SAFE_MARGIN;
+    const bottomLimit = window.innerHeight - NAV_HEIGHT - SAFE_MARGIN;
+  
+    // This "clamps" the position within the boundaries, making it impossible to disappear.
+    const clampedY = Math.max(topLimit, Math.min(newY, bottomLimit));
+    y.set(clampedY);
   };
-
-  const handleDragEnd = (event: any, info: PanInfo) => {
-    setIsDragging(false);
-    
-    const screenHeight = window.innerHeight;
-    const currentY = y.get();
-    
-    // Calculate the new bottom position based on current drag offset
-    const currentBottomPosition = verticalPosition - currentY;
-    
-    // Boundary calculations matching your preferred limits from the images
-    const headerHeight = 64;
-    const navHeight = isMobile ? 80 : 0;
-    const buttonSize = 64;
-    const safeMargin = 16;
-    
-    const topLimit = headerHeight + safeMargin; // ~80px from top
-    const bottomLimit = navHeight + safeMargin; // ~96px from bottom on mobile, 16px on desktop
-    
-    // Calculate max bottom position (when button is at top limit)
-    const maxBottomPosition = screenHeight - topLimit - buttonSize;
-    
-    // Clamp the position to stay within bounds
-    let newBottomPosition = Math.max(bottomLimit, Math.min(currentBottomPosition, maxBottomPosition));
-    
-    setVerticalPosition(newBottomPosition);
-    
-    // Reset motion values to prevent conflicts
-    x.set(0);
-    y.set(0);
-  };
-
-  const handleClick = () => {
-    // Only trigger onClick if we weren't dragging
-    if (!isDragging) {
+  
+  const handlePanEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // This handles the "Tap vs. Drag" logic.
+    const dragDistance = Math.abs(info.offset.x) + Math.abs(info.offset.y);
+    if (dragDistance < 5) {
       onClick();
     }
   };
+  // --- END OF NEW DRAGGING LOGIC ---
+  
+  // This is the new, more robust check that solves the "not showing" bug.
+  if (isOpen || !authChecked || !user) {
+    return null;
+  }
   
   return (
     <>
@@ -88,55 +74,16 @@ const FinnyButton = ({
       
       <motion.div 
         className="fixed z-40 right-2"
-        initial={{
-          scale: 0,
-          opacity: 0,
-          y: 20
-        }} 
-        animate={{
-          scale: 1,
-          opacity: 1,
-          y: 0
-        }} 
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 25,
-          delay: 0.2
-        }} 
-        drag="y"
-        dragConstraints={constraintsRef}
-        dragElastic={{
-          top: 0.2,
-          bottom: 0.2
-        }}
-        dragMomentum={false}
-        dragTransition={{
-          bounceStiffness: 300,
-          bounceDamping: 40
-        }}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        whileDrag={{
-          scale: 1.1,
-          zIndex: 50
-        }}
-        whileTap={{
-          scale: 0.9
-        }}
-        whileHover={{
-          scale: 1.05,
-          y: -2
-        }}
+        onPan={handlePan}
+        onPanEnd={handlePanEnd}
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05, y: y.get() - 2 }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         style={{
-          // Add padding to prevent clipping of glow effects
+          y, // Position is now controlled solely by this motion value
           padding: '16px',
           margin: '-16px',
-          x,
-          y,
-          bottom: `${verticalPosition}px`
         }}
       >
       {/* Outer glow effect */}
@@ -151,7 +98,6 @@ const FinnyButton = ({
       />
 
       <Button 
-        onClick={handleClick}
         aria-label="Open Finny AI Assistant" 
         className={`
           relative w-16 h-16 rounded-full shadow-lg
