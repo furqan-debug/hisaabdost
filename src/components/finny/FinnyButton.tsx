@@ -132,7 +132,10 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
       className="fixed z-40 right-2"
       style={{
         bottom: `${position.y}px`,
-        touchAction: 'none', // Prevent default touch behaviors
+        touchAction: 'none',
+        padding: '16px',
+        margin: '-16px',
+        cursor: isDragging ? 'grabbing' : 'grab'
       }}
       initial={{ scale: 0, opacity: 0, y: 20 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -149,13 +152,6 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      style={{
-        bottom: `${position.y}px`,
-        touchAction: 'none',
-        padding: '16px',
-        margin: '-16px',
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
     >
       {/* Outer glow effect */}
       <motion.div
