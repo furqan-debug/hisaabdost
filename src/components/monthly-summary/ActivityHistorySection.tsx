@@ -49,6 +49,40 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
     }
   }, [user, selectedMonth]);
 
+  // Listen for real-time updates from Finny and other sources
+  useEffect(() => {
+    const handleActivityUpdate = () => {
+      console.log('Activity update event received, refreshing activities');
+      if (user) {
+        fetchActivities();
+      }
+    };
+
+    // Listen for all relevant events
+    const eventTypes = [
+      'wallet-updated',
+      'wallet-refresh', 
+      'expense-added',
+      'expense-updated',
+      'expense-deleted',
+      'budget-added',
+      'budget-updated',
+      'goal-added',
+      'goal-updated',
+      'income-updated'
+    ];
+
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleActivityUpdate);
+    });
+
+    return () => {
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleActivityUpdate);
+      });
+    };
+  }, [user]);
+
   useEffect(() => {
     filterActivities();
   }, [activities, searchTerm, typeFilter]);

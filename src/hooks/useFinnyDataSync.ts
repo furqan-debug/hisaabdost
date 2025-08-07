@@ -72,28 +72,47 @@ export function useFinnyDataSync() {
             }
             break;
 
-          case 'wallet-updated':
-          case 'wallet-refresh':
-            console.log('Processing wallet event');
-            if (user?.id) {
-              await queryClient.invalidateQueries({ 
+        case 'wallet-updated':
+        case 'wallet-refresh':
+          console.log('Processing wallet event');
+          if (user?.id) {
+            // Invalidate all wallet-related queries
+            await queryClient.invalidateQueries({ 
+              queryKey: ['wallet-additions', user.id] 
+            });
+            await queryClient.invalidateQueries({ 
+              queryKey: ['wallet-additions-all', user.id] 
+            });
+            await queryClient.invalidateQueries({ 
+              queryKey: ['dashboard-data', user.id] 
+            });
+            await queryClient.invalidateQueries({ 
+              queryKey: ['monthly-data', user.id] 
+            });
+            await queryClient.invalidateQueries({ 
+              queryKey: ['activity_logs', user.id] 
+            });
+            
+            if (isFinnyEvent) {
+              // Force immediate refetch for Finny events
+              await queryClient.refetchQueries({ 
                 queryKey: ['wallet-additions', user.id] 
               });
-              await queryClient.invalidateQueries({ 
+              await queryClient.refetchQueries({ 
                 queryKey: ['wallet-additions-all', user.id] 
               });
-              
-              if (isFinnyEvent) {
-                // Force immediate refetch for Finny events
-                await queryClient.refetchQueries({ 
-                  queryKey: ['wallet-additions', user.id] 
-                });
-                await queryClient.refetchQueries({ 
-                  queryKey: ['wallet-additions-all', user.id] 
-                });
-              }
+              await queryClient.refetchQueries({ 
+                queryKey: ['dashboard-data', user.id] 
+              });
+              await queryClient.refetchQueries({ 
+                queryKey: ['monthly-data', user.id] 
+              });
+              await queryClient.refetchQueries({ 
+                queryKey: ['activity_logs', user.id] 
+              });
             }
-            break;
+          }
+          break;
 
           case 'goal-added':
           case 'goal-updated':
