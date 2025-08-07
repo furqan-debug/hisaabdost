@@ -28,9 +28,9 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
   const allCategoriesWithData = Object.keys(categoryColors)
     .filter(category => data.some(item => item[category] > 0));
 
-  // Calculate max value for equal Y-axis spacing
-  const maxValue = Math.max(...data.map(item => 
-    Object.keys(categoryColors).reduce((sum, cat) => sum + (item[cat] || 0), 0)
+  // Calculate max value from individual category values (not sum of all categories)
+  const maxValue = Math.max(...data.flatMap(item => 
+    Object.keys(categoryColors).map(cat => item[cat] || 0)
   ));
   
   // Create evenly spaced domain for mobile
