@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExpensesBarChart } from "../ExpensesBarChart"; // Make sure this path is correct!
+import { ExpensesBarChart } from "../ExpensesBarChart"; // Make sure this path is correct based on your project structure
 import { ExpensesLineChart } from "../ExpensesLineChart";
 import { ChartContainer } from "@/components/ui/chart";
 
@@ -30,7 +30,7 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
             Monthly Trends
-          </CardTitle>
+          </Title>
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
