@@ -40,13 +40,32 @@ const FinnyButton = ({
     const screenHeight = window.innerHeight;
     const finalY = info.point.y;
     
-    // Constrain vertical position: min 80px from top (header), max 100px from bottom (completely above nav)
-    const topLimit = 80;
-    const bottomLimit = 100; // Increased to ensure button stays above nav
-    const bottomOffset = Math.max(bottomLimit, Math.min(screenHeight - finalY, screenHeight - topLimit));
-    setVerticalPosition(bottomOffset);
+    // More precise boundary calculations
+    const headerHeight = 64; // Standard header height
+    const navHeight = isMobile ? 80 : 0; // Mobile bottom nav height
+    const buttonSize = 64; // Button height (16 * 4 = 64px)
+    const safeMargin = 16; // Safe margin from boundaries
     
-    // Reset motion values since we use CSS positioning
+    // Calculate limits with safe margins
+    const topLimit = headerHeight + safeMargin;
+    const bottomLimit = navHeight + safeMargin;
+    
+    // Convert screen Y to bottom offset, ensuring button stays within safe boundaries
+    let newBottomOffset = screenHeight - finalY - (buttonSize / 2);
+    
+    // Constrain to safe boundaries with elastic behavior
+    if (newBottomOffset < bottomLimit) {
+      newBottomOffset = bottomLimit;
+    } else if (newBottomOffset > screenHeight - topLimit - buttonSize) {
+      newBottomOffset = screenHeight - topLimit - buttonSize;
+    }
+    
+    // Ensure minimum and maximum bounds are respected
+    newBottomOffset = Math.max(bottomLimit, Math.min(newBottomOffset, screenHeight - topLimit - buttonSize));
+    
+    setVerticalPosition(newBottomOffset);
+    
+    // Reset motion values smoothly
     x.set(0);
     y.set(0);
   };
@@ -65,10 +84,10 @@ const FinnyButton = ({
         ref={constraintsRef} 
         className="fixed pointer-events-none"
         style={{
-          top: 80,
+          top: isMobile ? 80 : 64, // Account for mobile vs desktop header
           right: 0,
-          width: 100,
-          bottom: 100 // Increased to ensure button stays above nav
+          width: 120, // Slightly wider for better drag area
+          bottom: isMobile ? 96 : 16 // Account for mobile nav
         }}
       />
       
@@ -90,10 +109,17 @@ const FinnyButton = ({
           damping: 25,
           delay: 0.2
         }} 
-        drag
+        drag="y"
         dragConstraints={constraintsRef}
-        dragElastic={0.1}
+        dragElastic={{
+          top: 0.2,
+          bottom: 0.2
+        }}
         dragMomentum={false}
+        dragTransition={{
+          bounceStiffness: 300,
+          bounceDamping: 40
+        }}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         whileDrag={{
