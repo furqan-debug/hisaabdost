@@ -18,8 +18,8 @@ const FinnyButton = ({
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  // Initial position: partially hidden behind bottom nav (around 40px from bottom)
-  const [verticalPosition, setVerticalPosition] = useState(40);
+  // Initial position: completely above bottom nav (around 100px from bottom)
+  const [verticalPosition, setVerticalPosition] = useState(100);
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -40,9 +40,9 @@ const FinnyButton = ({
     const screenHeight = window.innerHeight;
     const finalY = info.point.y;
     
-    // Constrain vertical position: min 80px from top (header), max 40px from bottom (nav)
+    // Constrain vertical position: min 80px from top (header), max 100px from bottom (completely above nav)
     const topLimit = 80;
-    const bottomLimit = 40;
+    const bottomLimit = 100; // Increased to ensure button stays above nav
     const bottomOffset = Math.max(bottomLimit, Math.min(screenHeight - finalY, screenHeight - topLimit));
     setVerticalPosition(bottomOffset);
     
@@ -68,7 +68,7 @@ const FinnyButton = ({
           top: 80,
           right: 0,
           width: 100,
-          bottom: 40
+          bottom: 100 // Increased to ensure button stays above nav
         }}
       />
       

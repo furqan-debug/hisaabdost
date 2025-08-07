@@ -57,7 +57,7 @@ export class MonthlyIncomeService {
     try {
       console.log("Setting monthly income:", userId, monthKey, amount);
       
-      // Update in monthly_incomes table
+      // Update in monthly_incomes table using proper upsert with onConflict
       const { error: monthlyError } = await supabase
         .from('monthly_incomes')
         .upsert({
@@ -65,6 +65,8 @@ export class MonthlyIncomeService {
           month_year: monthKey,
           income_amount: amount,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,month_year'
         });
 
       if (monthlyError) {
