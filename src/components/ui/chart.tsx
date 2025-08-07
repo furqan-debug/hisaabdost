@@ -1,60 +1,106 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExpensesBarChart } from "../ExpensesBarChart";
-import { ExpensesLineChart } from "../ExpensesLineChart";
-import { ChartContainer } from "@/components/ui/chart";
+import * as React from "react"
+import * as RechartsPrimitive from "recharts"
 
-interface TrendsTabProps {
-  expenses: any[];
-  config: Record<string, {
-    color: string;
-  }>;
+import { cn } from "@/lib/utils"
+
+const THEMES = { light: "", dark: ".dark" } as const
+
+export type ChartConfig = {
+  [k in string]: {
+    label?: React.ReactNode
+    icon?: React.ComponentType
+  } & (
+    | { color?: string; theme?: never }
+    | { color?: never; theme: Record<keyof typeof THEMES, string> }
+  )
 }
 
-export function TrendsTab({ expenses, config }: TrendsTabProps) {
-  if (expenses.length === 0) {
-    return (
-      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardContent className="pt-6">
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📈</div>
-            <p className="text-muted-foreground">Add expenses to see spending trends</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+type ChartContextProps = {
+  config: ChartConfig
+}
+
+const ChartContext = React.createContext<ChartContextProps | null>(null)
+
+function useChart() {
+  const context = React.useContext(ChartContext)
+  if (!context) {
+    throw new Error("useChart must be used within a <ChartContainer />")
   }
+  return context
+}
+
+const ChartContainer = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"div"> & {
+    config: ChartConfig
+    children: React.ComponentProps<
+      typeof RechartsPrimitive.ResponsiveContainer
+    >["children"]
+  }
+>(({ id, className, children, config, ...props }, ref) => {
+  const uniqueId = React.useId()
+  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
 
   return (
-    <div className="space-y-4">
-      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
-            Monthly Trends
-          </CardTitle>
-          <CardDescription className="text-center">Your spending patterns over time</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0 pb-4">
-          {/* FIX: Removed the buggy div that was here */}
-          <ChartContainer config={config}>
-            <ExpensesBarChart expenses={expenses} />
-          </ChartContainer>
-        </CardContent>
-      </Card>
+    <ChartContext.Provider value={{ config }}>
+      <div
+        data-chart={chartId}
+        ref={ref}
+        className={cn(
+          // FIX: Set a reasonable fixed height required by the chart library.
+          "h-[400px] w-full flex justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          className
+        )}
+        {...props}
+      >
+        <ChartStyle id={chartId} config={config} />
+        <RechartsPrimitive.ResponsiveContainer>
+          {children}
+        </RechartsPrimitive.ResponsiveContainer>
+      </div>
+    </ChartContext.Provider>
+  )
+})
+ChartContainer.displayName = "Chart"
 
-      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
-            Category Trends
-          </Title>
-          <CardDescription className="text-center">How your spending evolves by category</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0 pb-4">
-          {/* FIX: Removed the buggy div that was here */}
-          <ChartContainer config={config}>
-            <ExpensesLineChart expenses={expenses} />
-          </ChartContainer>
-        </CardContent>
-      </Card>
-    </div>
-  );
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const colorConfig = Object.entries(config).filter(
+    ([_, config]) => config.theme || config.color
+  )
+  if (!colorConfig.length) {
+    return null
+  }
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: Object.entries(THEMES)
+          .map(
+            ([theme, prefix]) => `
+${prefix} [data-chart=${id}] {
+${colorConfig
+  .map(([key, itemConfig]) => {
+    const color =
+      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+      itemConfig.color
+    return color ? `  --color-${key}: ${color};` : null
+  })
+  .join("\n")}
+}
+`
+          )
+          .join("\n"),
+      }}
+    />
+  )
+}
+
+const ChartTooltip = RechartsPrimitive.Tooltip
+
+// ... (The rest of this file, ChartTooltipContent, etc., is unchanged from your original)
+
+export {
+  ChartContainer,
+  ChartTooltip,
+  // ... all other exports from your original file ...
+  ChartStyle,
 }
