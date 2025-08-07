@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Edit } from "lucide-react";
+import { Edit, LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { PercentageChange } from "./PercentageChange";
@@ -21,6 +21,7 @@ interface EditableIncomeCardProps {
   currencyCode: string;
   className?: string;
   infoTooltip?: string;
+  icon?: LucideIcon;
 }
 
 export const EditableIncomeCard = ({
@@ -30,7 +31,8 @@ export const EditableIncomeCard = ({
   formatCurrency,
   currencyCode,
   className = "",
-  infoTooltip
+  infoTooltip,
+  icon
 }: EditableIncomeCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(monthlyIncome.toString());
@@ -152,6 +154,7 @@ export const EditableIncomeCard = ({
     <StatCard
       title="Monthly Income"
       value={formatCurrency(monthlyIncome, currencyCode)}
+      icon={icon}
       subtext={percentageChange !== undefined ? <PercentageChange value={percentageChange} /> : undefined}
       actionElement={actionElement}
       className={className}
