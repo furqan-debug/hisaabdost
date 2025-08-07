@@ -2,8 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNativeCamera } from '@/hooks/useNativeCamera';
 
 interface ChatInputProps {
   value: string;
@@ -14,6 +15,7 @@ interface ChatInputProps {
   isAuthenticated?: boolean;
   isConnecting?: boolean;
   placeholder?: string;
+  onCameraScan?: () => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -25,11 +27,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isAuthenticated = false,
   isConnecting = false,
   placeholder = "Type your message...",
+  onCameraScan,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { capturePhoto } = useNativeCamera();
 
   // Enhanced keyboard visibility handling
   useEffect(() => {
@@ -112,6 +116,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const canSend = value.trim() && !disabled && !isLoading && isAuthenticated;
 
+  const handleCameraClick = async () => {
+    if (!isAuthenticated || disabled || isLoading) return;
+    
+    try {
+      const file = await capturePhoto();
+      if (file && onCameraScan) {
+        onCameraScan();
+      }
+    } catch (error) {
+      console.error('Camera capture error:', error);
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -145,6 +162,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
             autoCorrect="off"
             autoCapitalize="sentences"
           />
+          
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleCameraClick}
+            disabled={!isAuthenticated || disabled || isLoading}
+            className={`
+              w-9 h-9 p-0 rounded-lg flex-shrink-0 mr-2
+              ${isAuthenticated && !disabled && !isLoading
+                ? 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              }
+            `}
+          >
+            <Camera className="w-4 h-4" />
+          </Button>
           
           <Button
             type="submit"
