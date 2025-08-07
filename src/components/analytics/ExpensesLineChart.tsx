@@ -39,10 +39,14 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
     
     if (maxValue === 0) return [0, 100];
     
-    // Calculate step size for equal spacing with 5 ticks (0, step, 2*step, 3*step, 4*step)
-    const stepSize = Math.ceil(maxValue / 4 / 1000) * 1000;
-    const roundedMax = stepSize * 4;
-    return [0, roundedMax];
+    // Round up to next 5k increment, then ensure 4 equal steps
+    const increment = 5000;
+    const roundedMax = Math.ceil(maxValue / increment) * increment;
+    
+    // If rounded max is too close to actual max, add one more increment
+    const finalMax = (roundedMax - maxValue) < (increment * 0.2) ? roundedMax + increment : roundedMax;
+    
+    return [0, finalMax];
   };
 
   return (
