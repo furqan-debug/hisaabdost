@@ -40,7 +40,6 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
   
   return (
-    <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -59,6 +58,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             height={40}
           />
           <YAxis 
+            domain={[0, 'dataMax']}
+            tickCount={3}
             tickFormatter={(value) => {
               if (isMobile) {
                 // Simplified formatter for mobile to save space
@@ -123,27 +124,4 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
           ))}
         </BarChart>
       </ResponsiveContainer>
-      
-      {/* Mobile-friendly legend */}
-      <div className="flex flex-wrap justify-center gap-2 mt-3">
-        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
-          <div 
-            key={category} 
-            className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
-            style={{ background: (categoryColors[category] || "#eee") + "22" }}
-          >
-            <span 
-              className="w-2 h-2 rounded-full" 
-              style={{ backgroundColor: categoryColors[category] }} 
-            />
-            <span className="truncate">
-              {category.length > (isMobile ? 8 : 12) ? 
-                category.slice(0, isMobile ? 8 : 12) + "…" : 
-                category}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+    );
