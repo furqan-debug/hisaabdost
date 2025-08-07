@@ -81,7 +81,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 // Convert ValueType to number for safe comparison
                 const value = entry.value !== undefined ? Number(entry.value) : 0;
                 return value > 0;
-              }).slice(0, isMobile ? 3 : 5); // Limit to top 3 for cleaner mobile display
+              }); // Limit to top 3 for cleaner mobile display
             
               return (
                 <motion.div 
@@ -125,8 +125,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       </ResponsiveContainer>
       
       {/* Mobile-friendly legend */}
-      <div className="flex flex-wrap justify-center gap-2 mt-3">
-        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
+      <div className="flex flex-wrap justify-center gap-2 mt-3 max-w-full overflow-hidden">
+        {allCategoriesWithData.map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
