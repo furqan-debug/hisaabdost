@@ -25,6 +25,16 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
   }, {} as Record<string, string>);
   
   const data = processMonthlyData(expenses, categories.map(cat => cat.value));
+  // --- START: New code to add ---
+  // This manually calculates the highest value for the Y-axis
+  const allValues = data.flatMap(month => 
+    Object.values(month).filter(val => typeof val === 'number')
+  );
+  const maxValue = Math.max(0, ...allValues);
+
+  // This creates an array with exactly three points for the axis
+  const yAxisTicks = [0, Math.ceil(maxValue / 2), Math.ceil(maxValue)];
+  // --- END: New code to add ---
   
   // Filter out zero-value categories for cleaner display
   const activeCategories = Object.keys(categoryColors).filter(category => {
@@ -59,8 +69,9 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
             height={40}
           />
           <YAxis 
+            // This forces the chart to use our 3 calculated points
+            ticks={yAxisTicks}
             domain={[0, 'dataMax']}
-            tickCount={isMobile ? 3 : 5}
             allowDataOverflow={false}
             axisLine={false}
             tickLine={false}
