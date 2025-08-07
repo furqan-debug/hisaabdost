@@ -11,12 +11,12 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Add funds mutation with offline support
+  // Add funds mutation with enhanced real-time updates
   const addFundsMutation = useMutation({
     mutationFn: async (addition: WalletAdditionInput) => {
       if (!user) throw new Error('User not authenticated');
       
-      console.log('Adding funds:', addition);
+      console.log('🚀 Adding funds:', addition);
       
       // If offline, save to pending sync
       if (!navigator.onLine) {
@@ -52,7 +52,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         .single();
 
       if (error) {
-        console.error('Error adding funds:', error);
+        console.error('❌ Error adding funds:', error);
         // If server error, save offline as fallback
         const offlineFund = {
           id: `temp_${Date.now()}`,
@@ -72,11 +72,13 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         return offlineFund;
       }
       
-      console.log('Funds added successfully:', data);
+      console.log('✅ Funds added successfully:', data);
       return data;
     },
     onSuccess: async (data) => {
-      // Invalidate and refetch all wallet-related queries immediately
+      console.log('🔄 Starting comprehensive cache invalidation for fund addition');
+      
+      // Immediate invalidation of all wallet queries
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
       
@@ -84,19 +86,37 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
       queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
       
-      // Also invalidate dashboard queries that include wallet data
+      // Also invalidate dashboard and activity-related queries
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
       
-      // Dispatch wallet update events for cross-component refresh
-      window.dispatchEvent(new CustomEvent('wallet-updated', { 
-        detail: { source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', data } 
-      }));
-      window.dispatchEvent(new CustomEvent('wallet-refresh', { 
-        detail: { source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', data } 
-      }));
+      // Dispatch comprehensive wallet update events
+      const eventDetail = { 
+        source: data.fund_type === 'finny' ? 'finny-chat' : 'manual', 
+        data,
+        timestamp: Date.now()
+      };
       
-      // Log the wallet activity with fund type (only if online)
+      console.log('🚀 Dispatching wallet update events:', eventDetail);
+      
+      // Multiple event dispatches for different listeners
+      window.dispatchEvent(new CustomEvent('wallet-updated', { detail: eventDetail }));
+      window.dispatchEvent(new CustomEvent('wallet-refresh', { detail: eventDetail }));
+      
+      if (data.fund_type === 'finny') {
+        window.dispatchEvent(new CustomEvent('finny-advanced-action', { detail: eventDetail }));
+      }
+      
+      // Additional delayed events to ensure all components update
+      setTimeout(() => {
+        console.log('🔄 Secondary wallet event dispatch');
+        window.dispatchEvent(new CustomEvent('wallet-updated', { detail: eventDetail }));
+        window.dispatchEvent(new CustomEvent('wallet-refresh', { detail: eventDetail }));
+        queryClient.refetchQueries({ queryKey: ['activity_logs'] });
+      }, 200);
+      
+      // Log the wallet activity (only if online)
       if (navigator.onLine) {
         try {
           await logWalletActivity(
@@ -104,8 +124,9 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
             data.description || 'Added funds to wallet',
             data.fund_type || 'manual'
           );
+          console.log('✅ Wallet activity logged successfully');
         } catch (error) {
-          console.error('Failed to log wallet activity:', error);
+          console.error('❌ Failed to log wallet activity:', error);
         }
       }
       
@@ -123,7 +144,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       }
     },
     onError: (error) => {
-      console.error('Error adding funds:', error);
+      console.error('❌ Error adding funds:', error);
       toast({
         title: "Error",
         description: "Failed to add funds. Please try again.",
@@ -141,19 +162,19 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         throw new Error('Delete operation requires internet connection');
       }
       
-      console.log('Starting delete process for fund ID:', fundId);
+      console.log('🗑️ Starting delete process for fund ID:', fundId);
       
       // First get the fund details from our local data
       const fund = allWalletAdditions.find(f => f.id === fundId);
       if (!fund) {
-        console.error('Fund not found in local data:', fundId);
+        console.error('❌ Fund not found in local data:', fundId);
         throw new Error('Fund not found');
       }
       
-      console.log('Found fund to delete:', fund);
+      console.log('✅ Found fund to delete:', fund);
       
       if (fund.fund_type === 'carryover') {
-        console.log('Soft deleting carryover fund...');
+        console.log('🔄 Soft deleting carryover fund...');
         // Soft delete carryover funds by marking them as deleted by user
         const { data, error } = await supabase
           .from('wallet_additions')
@@ -164,13 +185,13 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
           .single();
 
         if (error) {
-          console.error('Error soft deleting carryover fund:', error);
+          console.error('❌ Error soft deleting carryover fund:', error);
           throw error;
         }
-        console.log('Carryover fund soft deleted successfully:', data);
+        console.log('✅ Carryover fund soft deleted successfully:', data);
         return fund;
       } else {
-        console.log('Hard deleting manual fund...');
+        console.log('🔄 Hard deleting manual fund...');
         // Hard delete manual funds
         const { error } = await supabase
           .from('wallet_additions')
@@ -179,15 +200,15 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error hard deleting manual fund:', error);
+          console.error('❌ Error hard deleting manual fund:', error);
           throw error;
         }
-        console.log('Manual fund hard deleted successfully');
+        console.log('✅ Manual fund hard deleted successfully');
         return fund;
       }
     },
     onSuccess: async (deletedFund) => {
-      console.log('Delete mutation successful, invalidating queries...');
+      console.log('✅ Delete mutation successful, invalidating queries...');
       
       // Invalidate all wallet-related queries to refresh data immediately
       await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
@@ -205,7 +226,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
           deletedFund.fund_type || 'manual'
         );
       } catch (error) {
-        console.error('Failed to log wallet activity:', error);
+        console.error('❌ Failed to log wallet activity:', error);
       }
       
       toast({
@@ -214,7 +235,7 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       });
     },
     onError: (error) => {
-      console.error('Delete mutation failed:', error);
+      console.error('❌ Delete mutation failed:', error);
       const message = error.message.includes('internet connection') 
         ? 'Delete operation requires internet connection'
         : 'Failed to delete fund entry. Please try again.';

@@ -13,46 +13,59 @@ export function useWalletAdditions() {
 
   // Listen for wallet update events from Finny and manual operations
   useEffect(() => {
-    const handleWalletUpdate = (e: Event) => {
+    const handleWalletUpdate = async (e: Event) => {
       const customEvent = e as CustomEvent;
       const detail = customEvent.detail || {};
       const isFinnyEvent = detail.source === 'finny-chat' || detail.source === 'finny';
       
-      console.log("Wallet update detected, immediate refresh", e.type, { isFinnyEvent, detail });
+      console.log("🔄 Wallet update detected - immediate refresh", e.type, { isFinnyEvent, detail });
       
-      // Always invalidate all wallet queries immediately
-      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      // Force immediate invalidation of all wallet queries
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      
+      // Force immediate refetch with no delay
+      queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
+      queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
       
       if (isFinnyEvent) {
-        console.log("IMMEDIATE wallet refresh for Finny event");
+        console.log("🚀 FINNY EVENT - Enhanced refresh sequence");
         
-        // Force immediate refetch for Finny events with multiple attempts
-        queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
-        queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
-        
-        // Additional refresh with shorter intervals for Finny
-        setTimeout(() => {
-          console.log("Secondary wallet refresh for Finny event");
+        // Multiple refresh attempts for Finny events
+        setTimeout(async () => {
+          console.log("🔄 Secondary refresh for Finny event");
+          await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+          await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
           queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
           queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
         }, 100);
         
-        setTimeout(() => {
-          console.log("Tertiary wallet refresh for Finny event");
+        setTimeout(async () => {
+          console.log("🔄 Tertiary refresh for Finny event");
+          await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+          await queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
           queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
           queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
+        }, 300);
+        
+        // Also refresh dashboard and activity logs for Finny events
+        setTimeout(async () => {
+          console.log("🔄 Refreshing dashboard and activity logs");
+          await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
+          await queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+          await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+          queryClient.refetchQueries({ queryKey: ['activity_logs'] });
         }, 500);
-      } else {
-        // Standard refresh for manual operations
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
-          queryClient.refetchQueries({ queryKey: ['wallet-additions-all'] });
-        }, 50);
       }
     };
     
-    const eventTypes = ['wallet-updated', 'wallet-refresh'];
+    // Listen to multiple event types for comprehensive coverage
+    const eventTypes = [
+      'wallet-updated', 
+      'wallet-refresh',
+      'finny-advanced-action',
+      'finny-expense-added'  // Also listen for Finny expense events that might affect wallet
+    ];
     
     eventTypes.forEach(eventType => {
       window.addEventListener(eventType, handleWalletUpdate);

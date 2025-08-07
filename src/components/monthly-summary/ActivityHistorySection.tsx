@@ -53,23 +53,74 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
     filterActivities();
   }, [activities, searchTerm, typeFilter]);
 
+  // Listen for real-time updates from Finny and other sources
+  useEffect(() => {
+    const handleActivityUpdate = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      const isFinnyEvent = detail.source === 'finny-chat' || detail.source === 'finny';
+      
+      console.log('🔄 Activity update event received:', event.type, { isFinnyEvent, detail });
+      
+      // Refresh activities immediately for Finny events
+      if (isFinnyEvent || event.type === 'finny-advanced-action' || event.type === 'wallet-updated') {
+        console.log('🚀 Refreshing activities for Finny wallet event');
+        setTimeout(() => {
+          fetchActivities();
+        }, 100);
+        
+        // Also refresh after a longer delay to catch any delayed logs
+        setTimeout(() => {
+          console.log('🔄 Secondary activity refresh');
+          fetchActivities();
+        }, 1000);
+      }
+    };
+
+    const eventTypes = [
+      'wallet-updated',
+      'wallet-refresh', 
+      'finny-advanced-action',
+      'expense-added',
+      'finny-expense-added'
+    ];
+    
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleActivityUpdate);
+    });
+
+    return () => {
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleActivityUpdate);
+      });
+    };
+  }, [user?.id, selectedMonth]);
+
   const fetchActivities = async () => {
+    if (!user?.id) return;
+    
     try {
+      console.log('🔄 Fetching activities for month:', format(selectedMonth, 'yyyy-MM'));
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
       const { data, error } = await supabase
         .from('activity_logs')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .gte('created_at', monthStart.toISOString())
         .lte('created_at', monthEnd.toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching activities:', error);
+        throw error;
+      }
+      
+      console.log(`✅ Found ${data?.length || 0} activities for ${format(selectedMonth, 'yyyy-MM')}`);
       setActivities(data || []);
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      console.error('❌ Error fetching activities:', error);
     } finally {
       setLoading(false);
     }

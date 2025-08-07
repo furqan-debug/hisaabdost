@@ -13,13 +13,13 @@ export function useWalletQueries() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month with better performance
+  // Query wallet additions for current month with more aggressive refetching for real-time updates
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('Fetching wallet additions for current month');
+      console.log('🔄 Fetching wallet additions for current month');
       const { data, error } = await supabase
         .from('wallet_additions')
         .select('*')
@@ -30,27 +30,28 @@ export function useWalletQueries() {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching wallet additions:', error);
+        console.error('❌ Error fetching wallet additions:', error);
         return [];
       }
 
-      console.log(`Found ${data?.length || 0} wallet additions`);
+      console.log(`✅ Found ${data?.length || 0} wallet additions for current month`);
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 1000 * 30, // Reduced from 5 minutes to 30 seconds
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  // Query all wallet additions with better caching
+  // Query all wallet additions with more aggressive caching for real-time updates
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('Fetching all wallet additions');
+      console.log('🔄 Fetching all wallet additions');
       const { data, error } = await supabase
         .from('wallet_additions')
         .select('*')
@@ -59,18 +60,19 @@ export function useWalletQueries() {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching all wallet additions:', error);
+        console.error('❌ Error fetching all wallet additions:', error);
         return [];
       }
 
-      console.log(`Found ${data?.length || 0} total wallet additions`);
+      console.log(`✅ Found ${data?.length || 0} total wallet additions`);
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 1000 * 60, // Reduced from 10 minutes to 1 minute
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchInterval: 60000, // Refetch every minute
   });
 
   // Calculate total additions
