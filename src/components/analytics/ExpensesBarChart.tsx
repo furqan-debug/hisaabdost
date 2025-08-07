@@ -81,7 +81,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
                 // Convert ValueType to number for safe comparison
                 const value = entry.value !== undefined ? Number(entry.value) : 0;
                 return value > 0;
-              }).slice(0, isMobile ? 3 : 5); // Limit to top 3 for cleaner mobile display
+              }); // Limit to top 3 for cleaner mobile display
             
               return (
                 <motion.div 
