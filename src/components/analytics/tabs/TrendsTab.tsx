@@ -35,8 +35,8 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          <div className="w-full h-auto">
-            <ChartContainer config={config} className="h-auto">
+          <div className="w-full h-auto trends-tab-container">
+            <ChartContainer config={config} className="h-auto trends-tab-chart">
               <ExpensesBarChart expenses={expenses} />
             </ChartContainer>
           </div>
@@ -51,8 +51,8 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          <div className="w-full h-auto">
-            <ChartContainer config={config} className="h-auto">
+          <div className="w-full h-auto trends-tab-container">
+            <ChartContainer config={config} className="h-auto trends-tab-chart">
               <ExpensesLineChart expenses={expenses} />
             </ChartContainer>
           </div>
