@@ -8,7 +8,7 @@ interface DashboardCalculationsProps {
 }
 
 export function useDashboardCalculations({ expenses, monthlyIncome }: DashboardCalculationsProps) {
-  const { totalAdditions } = useWalletAdditions();
+  const { totalAdditions, isLoading } = useWalletAdditions();
 
   // Calculate financial metrics
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
@@ -30,6 +30,7 @@ export function useDashboardCalculations({ expenses, monthlyIncome }: DashboardC
     walletBalance,
     totalAdditions,
     savingsRate,
-    formatPercentage
+    formatPercentage,
+    isLoadingWallet: isLoading
   };
 }

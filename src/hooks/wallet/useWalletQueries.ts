@@ -42,7 +42,7 @@ export function useWalletQueries() {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 10000, // Reduced to 10 seconds
+    refetchInterval: 2000, // Reduced to 2 seconds for near real-time updates
   });
 
   // Query all wallet additions with immediate updates
@@ -72,7 +72,7 @@ export function useWalletQueries() {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 15000, // Reduced to 15 seconds
+    refetchInterval: 3000, // Reduced to 3 seconds for near real-time updates
   });
 
   // Calculate total additions

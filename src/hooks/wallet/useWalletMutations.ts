@@ -106,24 +106,22 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
       window.dispatchEvent(new CustomEvent('wallet-refresh', { detail: eventDetail }));
       window.dispatchEvent(new CustomEvent('finny-advanced-action', { detail: eventDetail }));
       
-      // Log the wallet activity immediately (only if online)
-      if (navigator.onLine) {
-        try {
-          await logWalletActivity(
-            data.amount, 
-            data.description || 'Added funds to wallet',
-            'manual' // Use 'manual' to ensure it appears in Monthly Summary
-          );
-          console.log('✅ Wallet activity logged successfully');
-          
-          // Trigger activity log refresh immediately after logging
-          setTimeout(() => {
-            queryClient.refetchQueries({ queryKey: ['activity_logs'] });
-          }, 100);
-          
-        } catch (error) {
-          console.error('❌ Failed to log wallet activity:', error);
-        }
+      // Log the wallet activity immediately (always, regardless of source)
+      try {
+        await logWalletActivity(
+          data.amount, 
+          data.description || 'Added funds to wallet',
+          'manual' // Always use 'manual' to ensure it appears in Monthly Summary
+        );
+        console.log('✅ Wallet activity logged successfully');
+        
+        // Immediate activity log refresh after logging
+        await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
+        queryClient.refetchQueries({ queryKey: ['activity_logs'] });
+        
+      } catch (error) {
+        console.error('❌ Failed to log wallet activity:', error);
+        // Continue even if activity logging fails
       }
       
       // Show appropriate toast message
