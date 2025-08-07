@@ -39,14 +39,11 @@ export function ExpensesLineChart({ expenses }: ExpensesLineChartProps) {
     
     if (maxValue === 0) return [0, 100];
     
-    // Round up to next 5k increment, then ensure 4 equal steps
-    const increment = 5000;
+    // Use smaller increments - round up to next 2.5k
+    const increment = 2500;
     const roundedMax = Math.ceil(maxValue / increment) * increment;
     
-    // If rounded max is too close to actual max, add one more increment
-    const finalMax = (roundedMax - maxValue) < (increment * 0.2) ? roundedMax + increment : roundedMax;
-    
-    return [0, finalMax];
+    return [0, roundedMax];
   };
 
   return (
