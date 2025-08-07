@@ -26,22 +26,22 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
   }
 
   return (
-    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
-          Monthly Trends
-        </CardTitle>
-        <CardDescription className="text-center">
-          Your spending patterns over time
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0 pb-4">
-        {/* The problematic div has been removed. */}
-        <ChartContainer config={config}>
-          <ExpensesBarChart expenses={expenses} />
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
+            Monthly Trends
+          </CardTitle>
+          <CardDescription className="text-center">Your spending patterns over time</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0 pb-4">
+          <div className="h-auto w-full min-h-[400px]">
+            <ChartContainer config={config}>
+              <ExpensesBarChart expenses={expenses} />
+            </ChartContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
