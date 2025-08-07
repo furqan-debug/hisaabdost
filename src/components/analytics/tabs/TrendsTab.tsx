@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExpensesBarChart } from "../ExpensesBarChart"; // Make sure this path is correct
-import { ExpensesLineChart } from "../ExpensesLineChart"; // Make sure this path is correct
+import { ExpensesBarChart } from "../ExpensesBarChart";
+import { ExpensesLineChart } from "../ExpensesLineChart";
 import { ChartContainer } from "@/components/ui/chart";
 
 interface TrendsTabProps {
