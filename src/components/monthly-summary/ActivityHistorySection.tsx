@@ -49,50 +49,6 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
     }
   }, [user, selectedMonth]);
 
-  // Listen for real-time updates from Finny and other sources
-  useEffect(() => {
-    const handleActivityUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const detail = customEvent.detail || {};
-      console.log('Activity update event received:', event.type, detail);
-      
-      if (user) {
-        // Add a small delay for Finny events to ensure database is updated
-        const isFinnyEvent = detail.source === 'finny-chat' || detail.source === 'finny';
-        const delay = isFinnyEvent ? 200 : 50;
-        
-        setTimeout(() => {
-          console.log('Refreshing activities after delay:', delay);
-          fetchActivities();
-        }, delay);
-      }
-    };
-
-    // Listen for all relevant events
-    const eventTypes = [
-      'wallet-updated',
-      'wallet-refresh', 
-      'expense-added',
-      'expense-updated',
-      'expense-deleted',
-      'budget-added',
-      'budget-updated',
-      'goal-added',
-      'goal-updated',
-      'income-updated'
-    ];
-
-    eventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleActivityUpdate);
-    });
-
-    return () => {
-      eventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleActivityUpdate);
-      });
-    };
-  }, [user]);
-
   useEffect(() => {
     filterActivities();
   }, [activities, searchTerm, typeFilter]);
