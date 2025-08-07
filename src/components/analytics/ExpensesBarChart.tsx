@@ -44,8 +44,9 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     
     if (maxValue === 0) return [0, 100];
     
-    // Round up to nearest significant number for clean ticks
-    const roundedMax = Math.ceil(maxValue / 1000) * 1000;
+    // Calculate step size for equal spacing with 5 ticks (0, step, 2*step, 3*step, 4*step)
+    const stepSize = Math.ceil(maxValue / 4 / 1000) * 1000;
+    const roundedMax = stepSize * 4;
     return [0, roundedMax];
   };
   
@@ -68,7 +69,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
               height={30}
             />
             <YAxis 
-              domain={getYAxisDomain()}
+              domain={getYAxisDomain() as [number, number]}
               tickCount={isMobile ? 5 : 5}
               allowDataOverflow={false}
               tickFormatter={(value) => {
