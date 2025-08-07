@@ -40,7 +40,7 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
     .sort((a, b) => getCategoryTotal(b) - getCategoryTotal(a));
   
   return (
-    <div className="w-full h-full">
+    <div className="w-full max-w-full overflow-x-hidden">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -125,8 +125,8 @@ export function ExpensesBarChart({ expenses }: ExpensesBarChartProps) {
       </ResponsiveContainer>
       
       {/* Mobile-friendly legend */}
-      <div className="flex flex-wrap justify-center gap-2 mt-3 max-w-full overflow-hidden">
-        {allCategoriesWithData.map(category => (
+      <div className="flex flex-wrap justify-center gap-2 mt-3">
+        {allCategoriesWithData.slice(0, isMobile ? 6 : 10).map(category => (
           <div 
             key={category} 
             className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
