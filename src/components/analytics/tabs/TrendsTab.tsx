@@ -31,7 +31,7 @@ export function TrendsTab({
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          <div className="h-auto w-full min-h-[400px]">
+          <div className="h-auto w-full min-h-[150px] my-0">
             <ChartContainer config={config}>
               <ExpensesBarChart expenses={expenses} />
             </ChartContainer>
