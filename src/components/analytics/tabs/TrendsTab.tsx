@@ -46,7 +46,7 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
             Category Trends
           </Title>
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
-        </Header>
+        </CardHeader>
         <CardContent className="pt-0 pb-4">
           <ChartContainer config={config}>
             <ExpensesLineChart expenses={expenses} />
