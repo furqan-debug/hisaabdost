@@ -1,6 +1,5 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExpensesBarChart } from "../ExpensesBarChart";
+import { ExpensesBarChart } from "../ExpensesBarChart"; // Make sure this path is correct!
 import { ExpensesLineChart } from "../ExpensesLineChart";
 import { ChartContainer } from "@/components/ui/chart";
 
@@ -31,15 +30,13 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
             Monthly Trends
-          </CardTitle>
+          </Title>
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          <div className="h-auto w-full min-h-[400px]">
-            <ChartContainer config={config}>
-              <ExpensesBarChart expenses={expenses} />
-            </ChartContainer>
-          </div>
+          <ChartContainer config={config}>
+            <ExpensesBarChart expenses={expenses} />
+          </ChartContainer>
         </CardContent>
       </Card>
 
@@ -47,15 +44,13 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent text-center">
             Category Trends
-          </CardTitle>
+          </Title>
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          <div className="h-auto w-full min-h-[400px]">
-            <ChartContainer config={config}>
-              <ExpensesLineChart expenses={expenses} />
-            </ChartContainer>
-          </div>
+          <ChartContainer config={config}>
+            <ExpensesLineChart expenses={expenses} />
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>
