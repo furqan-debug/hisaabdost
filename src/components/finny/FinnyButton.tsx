@@ -17,9 +17,9 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-  const [isOnLeftSide, setIsOnLeftSide] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [verticalPosition, setVerticalPosition] = useState(isMobile ? 80 : 16); // bottom offset in pixels
+  // Initial position: partially hidden behind bottom nav (around 40px from bottom)
+  const [verticalPosition, setVerticalPosition] = useState(40);
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -37,25 +37,18 @@ const FinnyButton = ({
   const handleDragEnd = (event: any, info: PanInfo) => {
     setIsDragging(false);
     
-    const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    const centerX = screenWidth / 2;
-    
-    // Calculate final position based on drag endpoint
-    const finalX = info.point.x;
     const finalY = info.point.y;
-    const shouldBeOnLeft = finalX < centerX;
     
-    setIsOnLeftSide(shouldBeOnLeft);
+    // Constrain vertical position: min 80px from top (header), max 40px from bottom (nav)
+    const topLimit = 80;
+    const bottomLimit = 40;
+    const bottomOffset = Math.max(bottomLimit, Math.min(screenHeight - finalY, screenHeight - topLimit));
+    setVerticalPosition(bottomOffset);
     
-    // Preserve vertical position where user dropped it
-    const bottomOffset = screenHeight - finalY;
-    const clampedBottomOffset = Math.max(16, Math.min(bottomOffset, screenHeight - 80)); // Keep within bounds
-    setVerticalPosition(clampedBottomOffset);
-    
-    // Snap to the appropriate side
-    x.set(0); // Reset to 0 since we'll change the CSS class
-    y.set(0); // Reset to 0 since we'll use CSS positioning
+    // Reset motion values since we use CSS positioning
+    x.set(0);
+    y.set(0);
   };
 
   const handleClick = () => {
@@ -67,11 +60,20 @@ const FinnyButton = ({
   
   return (
     <>
-      {/* Invisible drag constraints - full screen */}
-      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none" />
+      {/* Invisible drag constraints - restrict to right side vertical movement only */}
+      <div 
+        ref={constraintsRef} 
+        className="fixed pointer-events-none"
+        style={{
+          top: 80,
+          right: 0,
+          width: 100,
+          bottom: 40
+        }}
+      />
       
       <motion.div 
-        className={`fixed z-40 ${isOnLeftSide ? 'left-2' : 'right-2'}`}
+        className="fixed z-40 right-2"
         initial={{
           scale: 0,
           opacity: 0,
