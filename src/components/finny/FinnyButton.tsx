@@ -17,9 +17,9 @@ const FinnyButton = ({
 }: FinnyButtonProps) => {
   const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  // Initial position: completely above bottom nav (around 100px from bottom)
-  const [verticalPosition, setVerticalPosition] = useState(100);
+  const [hasDragged, setHasDragged] = useState(false);
+  // Initial position: partially hidden behind bottom nav (40px from bottom)
+  const [verticalPosition, setVerticalPosition] = useState(40);
   const { user } = useAuth();
   const constraintsRef = useRef(null);
 
@@ -31,29 +31,39 @@ const FinnyButton = ({
   if (isOpen || !user) return null;
 
   const handleDragStart = () => {
-    setIsDragging(true);
+    setHasDragged(false);
+  };
+
+  const handleDrag = () => {
+    setHasDragged(true);
   };
 
   const handleDragEnd = (event: any, info: PanInfo) => {
-    setIsDragging(false);
-    
     const screenHeight = window.innerHeight;
-    const finalY = info.point.y;
+    const buttonHeight = 64; // Button height in pixels
+    const headerHeight = 64; // Approximate header height
+    const navBarHeight = 80; // Bottom navigation height
     
-    // Constrain vertical position: min 80px from top (header), max 100px from bottom (completely above nav)
-    const topLimit = 80;
-    const bottomLimit = 100; // Increased to ensure button stays above nav
-    const bottomOffset = Math.max(bottomLimit, Math.min(screenHeight - finalY, screenHeight - topLimit));
-    setVerticalPosition(bottomOffset);
+    // Calculate safe boundaries with buffer
+    const topLimit = headerHeight + 16; // Stop before header with buffer
+    const bottomLimit = navBarHeight + 16; // Stop before nav bar with buffer
     
-    // Reset motion values since we use CSS positioning
+    // Calculate new position from drag position
+    const newPosition = Math.max(
+      bottomLimit,
+      Math.min(screenHeight - info.point.y, screenHeight - topLimit - buttonHeight)
+    );
+    
+    setVerticalPosition(newPosition);
+    
+    // Reset motion values
     x.set(0);
     y.set(0);
   };
 
   const handleClick = () => {
-    // Only trigger onClick if we weren't dragging
-    if (!isDragging) {
+    // Only trigger onClick if we haven't dragged
+    if (!hasDragged) {
       onClick();
     }
   };
@@ -67,8 +77,8 @@ const FinnyButton = ({
         style={{
           top: 80,
           right: 0,
-          width: 100,
-          bottom: 100 // Increased to ensure button stays above nav
+          width: 80,
+          bottom: 96 // Ensure proper bottom boundary
         }}
       />
       
@@ -90,11 +100,12 @@ const FinnyButton = ({
           damping: 25,
           delay: 0.2
         }} 
-        drag
+        drag="y"
         dragConstraints={constraintsRef}
-        dragElastic={0.1}
+        dragElastic={0}
         dragMomentum={false}
         onDragStart={handleDragStart}
+        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         whileDrag={{
           scale: 1.1,
@@ -110,9 +121,6 @@ const FinnyButton = ({
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         style={{
-          // Add padding to prevent clipping of glow effects
-          padding: '16px',
-          margin: '-16px',
           x,
           y,
           bottom: `${verticalPosition}px`
