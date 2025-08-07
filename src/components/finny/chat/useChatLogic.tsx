@@ -50,17 +50,6 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     if (e) e.preventDefault();
     
     const messageToSend = quickAction || newMessage.trim();
-    
-    // Check for scan bill intent
-    const scanIntents = ['scan bill', 'scan receipt', 'scan expense', 'bill scan', 'receipt scan'];
-    if (scanIntents.some(intent => messageToSend.toLowerCase().includes(intent))) {
-      window.dispatchEvent(new CustomEvent('open-expense-form', { 
-        detail: { mode: 'camera' } 
-      }));
-      setNewMessage('');
-      return;
-    }
-    
     if (!messageToSend || isLoading || !user || isMessageLimitReached) {
       if (isMessageLimitReached) {
         toast.error(`Daily message limit reached (10 messages). Your advanced AI assistant will be available again tomorrow! 🌟`);
