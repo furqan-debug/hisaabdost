@@ -34,7 +34,6 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">Your spending patterns over time</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* FIX: Removed the buggy div that was here */}
           <ChartContainer config={config}>
             <ExpensesBarChart expenses={expenses} />
           </ChartContainer>
@@ -49,7 +48,6 @@ export function TrendsTab({ expenses, config }: TrendsTabProps) {
           <CardDescription className="text-center">How your spending evolves by category</CardDescription>
         </CardHeader>
         <CardContent className="pt-0 pb-4">
-          {/* FIX: Removed the buggy div that was here */}
           <ChartContainer config={config}>
             <ExpensesLineChart expenses={expenses} />
           </ChartContainer>
