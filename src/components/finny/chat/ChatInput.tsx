@@ -1,9 +1,8 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface ChatInputProps {
   value: string;
@@ -27,61 +26,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   placeholder = "Type your message...",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Enhanced keyboard visibility handling
-  useEffect(() => {
-    const handleResize = () => {
-      if (typeof window !== 'undefined') {
-        // Get viewport dimensions
-        const viewportHeight = window.visualViewport?.height || window.innerHeight;
-        const windowHeight = window.innerHeight;
-        const heightDiff = windowHeight - viewportHeight;
-        
-        // Detect keyboard open (more sensitive detection)
-        if (heightDiff > 100) {
-          setKeyboardHeight(heightDiff);
-          document.body.classList.add('keyboard-open');
-          
-          // Scroll input into view with proper timing
-          setTimeout(() => {
-            if (containerRef.current && isFocused) {
-              containerRef.current.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'end',
-                inline: 'nearest'
-              });
-            }
-          }, 150);
-        } else {
-          setKeyboardHeight(0);
-          document.body.classList.remove('keyboard-open');
-        }
-      }
-    };
-
-    // Listen to both resize and visualViewport events
-    const setupListeners = () => {
-      if (typeof window !== 'undefined') {
-        if (window.visualViewport) {
-          window.visualViewport.addEventListener('resize', handleResize);
-        }
-        window.addEventListener('resize', handleResize);
-        
-        return () => {
-          if (window.visualViewport) {
-            window.visualViewport.removeEventListener('resize', handleResize);
-          }
-          window.removeEventListener('resize', handleResize);
-          document.body.classList.remove('keyboard-open');
-        };
-      }
-    };
-
-    return setupListeners();
-  }, [isFocused]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,39 +36,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-    document.body.classList.add('finny-input-focused');
-    
-    // Ensure input is visible after keyboard appears
-    setTimeout(() => {
-      if (containerRef.current) {
-        containerRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'nearest',
-          inline: 'nearest'
-        });
-      }
-    }, 300);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
-    document.body.classList.remove('finny-input-focused');
   };
 
   const canSend = value.trim() && !disabled && !isLoading && isAuthenticated;
 
   return (
-    <div 
-      ref={containerRef}
-      className={`
-        finny-chat-input-container
-        ${keyboardHeight > 0 ? 'keyboard-active' : ''}
-        ${isFocused ? 'input-focused' : ''}
-      `}
-      style={{
-        '--keyboard-height': `${keyboardHeight}px`
-      } as React.CSSProperties}
-    >
+    <div className="finny-chat-input-container">
       <form onSubmit={handleSubmit} className="w-full">
         <div className={`
           flex items-center gap-2 p-3 rounded-xl border transition-all duration-200

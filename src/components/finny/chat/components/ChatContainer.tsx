@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessagesArea } from './MessagesArea';
 import ChatInput from '../ChatInput';
 import { Message, QuickReply } from '../types';
+import { useKeyboardViewportFix } from '@/hooks/useKeyboardViewportFix';
 
 interface ChatContainerProps {
   isOpen: boolean;
@@ -54,6 +55,14 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Use the keyboard viewport fix hook
+  useKeyboardViewportFix({
+    sheetRef,
+    scrollRef: scrollAreaRef,
+    enabled: isOpen
+  });
 
   useEffect(() => {
     if (isOpen && chatRef.current) {
@@ -102,7 +111,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onClick={onClose}
       >
         <motion.div
-          ref={chatRef}
+          ref={sheetRef}
           initial={{ y: "100%", opacity: 0, scale: 0.95 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: "100%", opacity: 0, scale: 0.95 }}
