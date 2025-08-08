@@ -134,7 +134,6 @@ const Budget = () => {
           budget={editingBudget}
           onSuccess={handleBudgetSuccess}
           monthlyIncome={monthlyIncome}
-          totalBudget={totalBudget}
         />
       </div>
     </div>

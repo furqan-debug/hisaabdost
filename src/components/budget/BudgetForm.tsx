@@ -29,6 +29,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { useBudgetValidation } from "@/hooks/useBudgetValidation";
+import { useBudgetQueries } from "@/hooks/useBudgetQueries";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -45,7 +47,6 @@ interface BudgetFormProps {
   budget: Budget | null;
   onSuccess: () => void;
   monthlyIncome: number;
-  totalBudget: number;
 }
 
 export function BudgetForm({
@@ -54,12 +55,14 @@ export function BudgetForm({
   budget,
   onSuccess,
   monthlyIncome,
-  totalBudget,
 }: BudgetFormProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const { categories, loading } = useAllCategories();
+  
+  // Get all budgets for validation
+  const { budgets = [] } = useBudgetQueries(new Date());
   
   // Convert Budget period to form period, defaulting weekly to monthly
   const getFormDefaultValues = (budget: Budget | null) => {
@@ -85,22 +88,22 @@ export function BudgetForm({
     defaultValues: getFormDefaultValues(budget),
   });
 
-  const currentAmount = watch("amount");
-  const willExceedIncome = !budget 
-    ? (totalBudget + currentAmount > monthlyIncome && monthlyIncome > 0) 
-    : ((totalBudget - (budget?.amount || 0) + currentAmount) > monthlyIncome && monthlyIncome > 0);
+  const currentAmount = watch("amount") || 0;
+  const currentPeriod = watch("period") || "monthly";
   
-  const exceedAmount = !budget 
-    ? (totalBudget + currentAmount - monthlyIncome) 
-    : ((totalBudget - (budget?.amount || 0) + currentAmount) - monthlyIncome);
+  // Use the new smart validation system
+  const validation = useBudgetValidation({
+    budgets,
+    currentAmount,
+    currentPeriod,
+    monthlyIncome,
+    editingBudget: budget
+  });
 
   const onSubmit = async (formData: BudgetFormData) => {
     if (!user) return;
     
-    // Prevent adding budget if it would exceed monthly income
-    if (willExceedIncome) {
-      return;
-    }
+    // No validation blocking - always allow budget creation
     
     try {
       const budgetData = {
@@ -139,11 +142,24 @@ export function BudgetForm({
         </SheetHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-6 budget-form-container">
-          {willExceedIncome && (
+          {/* Level 1: Sustainability Warning */}
+          {validation.sustainabilityWarning.show && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Warning: Your total budget will exceed your monthly income by {formatCurrency(exceedAmount, currencyCode)}
+                <div className="font-medium mb-1">Long-term Sustainability Concern</div>
+                {validation.sustainabilityWarning.message}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Level 2: Immediate Affordability Warning */}
+          {validation.affordabilityWarning.show && (
+            <Alert className="border-orange-200 bg-orange-50 text-orange-800">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription>
+                <div className="font-medium mb-1">Immediate Affordability Alert</div>
+                {validation.affordabilityWarning.message}
               </AlertDescription>
             </Alert>
           )}
@@ -242,7 +258,6 @@ export function BudgetForm({
             </SheetClose>
             <Button 
               type="submit"
-              disabled={willExceedIncome}
             >
               {budget ? "Update" : "Create"} Budget
             </Button>
