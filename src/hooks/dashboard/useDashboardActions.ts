@@ -12,10 +12,23 @@ export function useDashboardActions() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       console.log('Dashboard: File selected:', file.name);
+      
+      // Validate file before processing
+      const { validateReceiptFile, showReceiptError } = await import('@/utils/receipt/errorHandling');
+      const validation = validateReceiptFile(file);
+      if (!validation.isValid) {
+        showReceiptError(validation.error!);
+        // Reset the input value
+        if (e.target) {
+          e.target.value = '';
+        }
+        return null;
+      }
+      
       setSelectedFile(file);
       
       // Reset the input value to allow selecting the same file again
@@ -39,6 +52,15 @@ export function useDashboardActions() {
     const file = await capturePhoto();
     if (file) {
       console.log('Dashboard: Camera capture successful, setting file:', file.name);
+      
+      // Validate file before processing
+      const { validateReceiptFile, showReceiptError } = await import('@/utils/receipt/errorHandling');
+      const validation = validateReceiptFile(file);
+      if (!validation.isValid) {
+        showReceiptError(validation.error!);
+        return null;
+      }
+      
       setSelectedFile(file);
       return file;
     }
@@ -55,10 +77,8 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
     setCaptureMode('upload');
-    // Open expense form in upload mode; the sheet will trigger the gallery picker
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'upload' }
-    }));
+    // Trigger file upload directly
+    triggerFileUpload();
     return 'upload';
   };
 

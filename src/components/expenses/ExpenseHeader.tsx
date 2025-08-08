@@ -51,6 +51,13 @@ export function ExpenseHeader({
     try {
       const file = await triggerCameraCapture();
       if (file) {
+        // Validate file before processing
+        const validation = validateReceiptFile(file);
+        if (!validation.isValid) {
+          showReceiptError(validation.error!);
+          return;
+        }
+        
         setCaptureMode('camera');
         setShowAddExpense(true);
       }

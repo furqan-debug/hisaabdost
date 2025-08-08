@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from "react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 import { toast } from "sonner";
+import { validateReceiptFile, showReceiptError } from "@/utils/receipt/errorHandling";
 
 interface DashboardExpenseSheetProps {
   showAddExpense: boolean;
@@ -27,7 +28,7 @@ export const DashboardExpenseSheet = ({
   setSelectedFile,
   onExpenseAdded
 }: DashboardExpenseSheetProps) => {
-  const { handleFileChange, fileInputRef } = useExpenseFile();
+  const { handleFileChange, fileInputRef, triggerFileUpload } = useExpenseFile();
 
   useEffect(() => {
     const handleExpenseFormEvent = async (event: any) => {
@@ -63,14 +64,41 @@ export const DashboardExpenseSheet = ({
   };
 
   return (
-    <AddExpenseSheet 
-      onAddExpense={onExpenseAdded} 
-      expenseToEdit={expenseToEdit} 
-      onClose={handleSheetClose} 
-      open={showAddExpense || expenseToEdit !== undefined} 
-      onOpenChange={setShowAddExpense} 
-      initialCaptureMode={captureMode} 
-      initialFile={selectedFile}
-    />
+    <>
+      <AddExpenseSheet 
+        onAddExpense={onExpenseAdded} 
+        expenseToEdit={expenseToEdit} 
+        onClose={handleSheetClose} 
+        open={showAddExpense || expenseToEdit !== undefined} 
+        onOpenChange={setShowAddExpense} 
+        initialCaptureMode={captureMode} 
+        initialFile={selectedFile}
+      />
+      
+      {/* Hidden file inputs with validation for dashboard actions */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept="image/*"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const validation = validateReceiptFile(file);
+            if (!validation.isValid) {
+              showReceiptError(validation.error!);
+              e.target.value = '';
+              return;
+            }
+            
+            setSelectedFile(file);
+            // Dispatch event to open expense form with upload mode
+            window.dispatchEvent(new CustomEvent('open-expense-form', { 
+              detail: { mode: 'upload', file: file } 
+            }));
+          }
+        }}
+      />
+    </>
   );
 };
