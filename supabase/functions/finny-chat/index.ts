@@ -46,8 +46,8 @@ EXPENSE CATEGORIES (ONLY use these):
 ${userCategories.map(cat => `- ${cat}`).join('\n')}
 
 ACTION CAPABILITIES:
-1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food & Dining","date":"${getTodaysDate()}","description":"Lunch"}]
-2. Set budgets: [ACTION:{"type":"set_budget","category":"Food & Dining","amount":3000,"period":"monthly"}]
+1. Add expenses: [ACTION:{"type":"add_expense","amount":1500,"category":"Food","date":"${getTodaysDate()}","description":"Lunch"}]
+2. Set budgets: [ACTION:{"type":"set_budget","category":"Food","amount":3000,"period":"monthly"}]
 3. Update budgets: [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
 4. Set goals: [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":50000,"deadline":"2024-12-31"}]
 5. Add wallet funds: [ACTION:{"type":"add_wallet_funds","amount":10000,"description":"Monthly budget"}]
@@ -57,8 +57,8 @@ IMPORTANT: Always use [ACTION:...] format when user wants to create, update, or 
 For budget updates, use "set_budget" action type even if budget already exists - the system will handle the update automatically.
 
 RESPONSE EXAMPLES:
-- "Added $15 lunch expense to Food & Dining category." [ACTION:{"type":"add_expense","amount":15,"category":"Food & Dining","description":"lunch"}]
-- "Set Food & Dining budget to $300/month." [ACTION:{"type":"set_budget","category":"Food & Dining","amount":300,"period":"monthly"}]
+- "Added $15 lunch expense to Food category." [ACTION:{"type":"add_expense","amount":15,"category":"Food","description":"lunch"}]
+- "Set Food budget to $300/month." [ACTION:{"type":"set_budget","category":"Food","amount":300,"period":"monthly"}]
 - "Updated Transportation budget to $1200/month." [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
 - "Emergency fund goal created for $500." [ACTION:{"type":"set_goal","title":"Emergency Fund","targetAmount":500,"deadline":"2024-12-31"}]
 - "Added $100 to wallet." [ACTION:{"type":"add_wallet_funds","amount":100,"description":"Budget addition"}]
@@ -66,8 +66,8 @@ RESPONSE EXAMPLES:
 CRITICAL: User requests to update, change, set, or modify budgets MUST include the [ACTION:...] format.
 Examples of budget update requests:
 - "update transportation budget to 1200" → [ACTION:{"type":"set_budget","category":"Transportation","amount":1200,"period":"monthly"}]
-- "set food budget to 500" → [ACTION:{"type":"set_budget","category":"Food & Dining","amount":500,"period":"monthly"}]
-- "change utilities budget to 150" → [ACTION:{"type":"set_budget","category":"Bills & Utilities","amount":150,"period":"monthly"}]
+- "set food budget to 500" → [ACTION:{"type":"set_budget","category":"Food","amount":500,"period":"monthly"}]
+- "change utilities budget to 150" → [ACTION:{"type":"set_budget","category":"Utilities","amount":150,"period":"monthly"}]
 
 Keep responses under 2 sentences when possible.`;
   
@@ -197,11 +197,10 @@ serve(async (req) => {
     const monthlyIncome = profileResult.status === 'fulfilled' ? profileResult.value.data?.monthly_income || 'Not set' : 'Not set';
     const customCategories = customCategoriesResult.status === 'fulfilled' ? customCategoriesResult.value.data || [] : [];
 
-    // Combine default and custom categories
+    // Combine default and custom categories (official app categories)
     const defaultCategories = [
-      'Food & Dining', 'Shopping', 'Transportation', 'Entertainment', 
-      'Bills & Utilities', 'Healthcare', 'Travel', 'Education',
-      'Gifts & Donations', 'Personal Care', 'Home & Garden', 'Business', 'Other'
+      'Food', 'Rent', 'Utilities', 'Transportation', 
+      'Entertainment', 'Shopping', 'Healthcare', 'Other'
     ];
     const customCategoryNames = customCategories.map((cat: any) => cat.name);
     const allUserCategories = [...defaultCategories, ...customCategoryNames];
