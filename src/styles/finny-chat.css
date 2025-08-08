@@ -281,7 +281,7 @@
     border-top: 1px solid var(--border);
   }
   
-  /* Enhanced keyboard open state for Android */
+  /* Enhanced keyboard open state for all devices */
   .keyboard-open .finny-input-mobile,
   .keyboard-open .finny-chat-input-container {
     position: fixed !important;
@@ -292,6 +292,19 @@
     background: var(--background) !important;
     border-top: 1px solid var(--border) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
+    transform: translateY(0) !important;
+  }
+  
+  /* Ensure chat container adjusts properly when keyboard opens */
+  .keyboard-open .finny-chat-mobile-fix {
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  
+  /* Ensure messages area has proper padding when keyboard is open */
+  .keyboard-open .finny-messages-mobile {
+    padding-bottom: 120px !important; /* Extra space for keyboard */
   }
 }
 

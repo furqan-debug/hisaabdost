@@ -21,8 +21,9 @@ export function useKeyboardViewportFix({ sheetRef, scrollRef, enabled = true }: 
       const delta = lastHeight - currentHeight; // positive when keyboard opens
       const absDelta = Math.abs(delta);
 
-      // Use threshold to filter out minor viewport changes
-      if (absDelta > 80) {
+      // Use adaptive threshold based on screen height for better tall screen support
+      const threshold = Math.min(150, window.innerHeight * 0.15); // 15% of screen height or 150px max
+      if (absDelta > threshold) {
         if (delta > 0) {
           // Keyboard opened
           const kbHeight = Math.max(0, (window.innerHeight - currentHeight));

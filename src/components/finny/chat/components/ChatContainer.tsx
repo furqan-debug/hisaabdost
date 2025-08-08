@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessagesArea } from './MessagesArea';
 import ChatInput from '../ChatInput';
 import { Message, QuickReply } from '../types';
+import { useKeyboardViewportFix } from '@/hooks/useKeyboardViewportFix';
 
 interface ChatContainerProps {
   isOpen: boolean;
@@ -54,6 +55,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Enable robust keyboard viewport handling for mobile
+  useKeyboardViewportFix({ 
+    sheetRef: chatRef, 
+    scrollRef: scrollAreaRef, 
+    enabled: isOpen 
+  });
 
   useEffect(() => {
     if (isOpen && chatRef.current) {
