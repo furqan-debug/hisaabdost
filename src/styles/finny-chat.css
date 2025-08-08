@@ -42,6 +42,24 @@
   transition: all 0.3s ease;
 }
 
+/* Keyboard active state */
+.finny-chat-input-container.keyboard-active {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: var(--background) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Input focused state */
+.finny-chat-input-container.input-focused {
+  background: var(--background) !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
 /* Clean input styles */
 .finny-chat-input input {
   @apply text-sm bg-transparent text-gray-900 dark:text-gray-100
@@ -63,7 +81,7 @@
   min-height: 100dvh;
 }
 
-/* Global keyboard open state with enhanced tall screen support */
+/* Global keyboard open state */
 .keyboard-open {
   overflow: hidden !important;
 }
@@ -160,7 +178,7 @@
   }
 }
 
-/* Mobile optimizations with enhanced support for tall screens */
+/* Mobile optimizations with enhanced Android keyboard fixes */
 @media (max-width: 640px) {
   .finny-chat-card {
     @apply h-[100dvh] rounded-none border-0 shadow-none;
@@ -180,6 +198,19 @@
     min-height: 80px;
   }
   
+  /* Enhanced keyboard handling for mobile */
+  .finny-chat-input-container.keyboard-active {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
+    padding: 16px !important;
+  }
+  
   .quick-reply-button {
     @apply text-sm py-2 px-3;
   }
@@ -190,34 +221,10 @@
     word-break: break-word;
     overflow-wrap: break-word;
   }
-}
-
-/* Enhanced mobile layout for tall screens (1080x2400 and similar) */
-@media (max-width: 640px) and (min-height: 800px) {
-  .finny-chat-mobile-fix {
-    height: 100vh !important;
-    height: 100dvh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    position: relative !important;
-  }
   
-  .finny-messages-mobile {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 120px !important; /* Increased space for tall screens */
-  }
-  
-  .finny-input-mobile {
-    position: sticky !important;
-    bottom: 0 !important;
-    background: var(--background) !important;
-    z-index: 50 !important;
-    border-top: 1px solid var(--border) !important;
-    flex-shrink: 0 !important;
+  /* Android status bar fix */
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
   }
 }
 
@@ -231,10 +238,6 @@
 /* Safe area support for modern mobile devices */
 .safe-area-bottom {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
-}
-
-.safe-area-top {
-  padding-top: max(24px, env(safe-area-inset-top));
 }
 
 /* Touch-friendly scrolling */
@@ -251,11 +254,52 @@
   display: none;
 }
 
+/* Enhanced Android-specific mobile chat layout */
+@media (max-width: 640px) {
+  .finny-chat-mobile-fix {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .finny-messages-mobile {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 100px; /* Space for input */
+  }
+  
+  .finny-input-mobile {
+    position: sticky;
+    bottom: 0;
+    background: var(--background);
+    z-index: 50;
+    border-top: 1px solid var(--border);
+  }
+  
+  /* Enhanced keyboard open state for Android */
+  .keyboard-open .finny-input-mobile,
+  .keyboard-open .finny-chat-input-container {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
+  }
+}
+
 /* Visual Viewport API support for better keyboard handling */
 @supports (height: 100dvh) {
   @media (max-width: 640px) {
     .finny-chat-mobile-fix {
-      height: 100dvh !important;
+      height: 100dvh;
     }
   }
 }
@@ -274,21 +318,24 @@
   width: 100% !important;
 }
 
-/* Enhanced tall screen keyboard handling */
-@media (max-width: 640px) and (min-height: 800px) {
-  .keyboard-open .finny-input-mobile,
-  .keyboard-open .finny-chat-input-container {
+.finny-input-focused .finny-input-mobile,
+.finny-input-focused .finny-chat-input-container {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background: var(--background) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced viewport handling */
+@media (max-width: 640px) {
+  .keyboard-active {
+    transform: translateY(0) !important;
     position: fixed !important;
     bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 9999 !important;
-    background: var(--background) !important;
-    border-top: 1px solid var(--border) !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
-  }
-  
-  .keyboard-open .finny-messages-mobile {
-    padding-bottom: 20px !important; /* Reduced padding when keyboard is open */
+    width: 100% !important;
   }
 }
