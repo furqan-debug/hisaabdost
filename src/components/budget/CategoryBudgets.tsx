@@ -85,21 +85,39 @@ export function CategoryBudgets({
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  // Listen for budget update events
+  // Listen for budget and expense update events
   useEffect(() => {
-    const handleBudgetUpdate = () => {
-      console.log("Budget update detected in CategoryBudgets, invalidating queries");
+    const handleDataUpdate = (event: CustomEvent) => {
+      console.log("CategoryBudgets: Data update detected, refreshing queries", event.type);
       queryClient.invalidateQueries({
         queryKey: ['budgets']
       });
+      queryClient.invalidateQueries({
+        queryKey: ['expenses']
+      });
+      queryClient.refetchQueries({
+        queryKey: ['expenses']
+      });
     };
-    window.addEventListener('budget-updated', handleBudgetUpdate);
-    window.addEventListener('budget-deleted', handleBudgetUpdate);
-    window.addEventListener('budget-refresh', handleBudgetUpdate);
+
+    const eventTypes = [
+      'budget-updated', 
+      'budget-deleted', 
+      'budget-refresh',
+      'expense-added',
+      'expense-updated', 
+      'expense-deleted',
+      'finny-expense-added'
+    ];
+
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleDataUpdate as EventListener);
+    });
+
     return () => {
-      window.removeEventListener('budget-updated', handleBudgetUpdate);
-      window.removeEventListener('budget-deleted', handleBudgetUpdate);
-      window.removeEventListener('budget-refresh', handleBudgetUpdate);
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleDataUpdate as EventListener);
+      });
     };
   }, [queryClient]);
 
@@ -153,7 +171,9 @@ export function CategoryBudgets({
         throw error;
       }
       return data || [];
-    }
+    },
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache
   });
 
   if (expensesError) {

@@ -68,13 +68,13 @@ export function useMessageLimit(user: User | null) {
 
     try {
       // Save the user message to database to track the count
+      // REMOVED expires_at field to prevent chat history deletion
       const { error } = await supabase
         .from('chat_messages')
         .insert({
           user_id: user.id,
           content: 'Message count tracking',
-          is_user: true,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          is_user: true
         });
 
       if (error) {

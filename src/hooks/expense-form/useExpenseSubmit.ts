@@ -87,7 +87,7 @@ export function useExpenseSubmit({
           console.error('Failed to log expense update activity:', logError);
         }
 
-        // Direct cache update AND invalidate analytics queries
+        // Update cache and invalidate all relevant queries
         console.log("Updating expense cache after edit");
         updateExpenseCache({
           queryClient,
@@ -96,11 +96,18 @@ export function useExpenseSubmit({
           operation: 'update'
         });
 
-        // CRITICAL: Invalidate analytics queries for real-time updates
+        // Invalidate ALL expense-related queries to ensure budget page updates
         await queryClient.invalidateQueries({ 
-          queryKey: ['expenses'], 
-          predicate: (query) => query.queryKey.includes(user.id)
+          queryKey: ['expenses']
         });
+
+        // Dispatch multiple events to ensure all components update
+        window.dispatchEvent(new CustomEvent('expense-updated', { 
+          detail: { expense: updatedExpense, timestamp: Date.now() } 
+        }));
+        window.dispatchEvent(new CustomEvent('budget-refresh', { 
+          detail: { timestamp: Date.now() } 
+        }));
 
         if (onAddExpense) {
           onAddExpense(updatedExpense);
@@ -110,11 +117,6 @@ export function useExpenseSubmit({
           title: "Expense Updated",
           description: "Your expense has been updated successfully.",
         });
-
-        // Temporary fix: Force page reload after expense update to prevent UI freeze
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
 
       } else {
         // For new expenses, use offline-capable service
@@ -145,7 +147,7 @@ export function useExpenseSubmit({
             console.error('Failed to log expense creation activity:', logError);
           }
 
-          // Direct cache update AND invalidate analytics queries
+          // Update cache and invalidate all relevant queries
           console.log("Updating expense cache after new expense");
           updateExpenseCache({
             queryClient,
@@ -154,11 +156,21 @@ export function useExpenseSubmit({
             operation: 'add'
           });
 
-          // CRITICAL: Invalidate analytics queries for real-time updates
+          // Invalidate ALL expense-related queries to ensure budget page updates
           await queryClient.invalidateQueries({ 
-            queryKey: ['expenses'], 
-            predicate: (query) => query.queryKey.includes(user.id)
+            queryKey: ['expenses']
           });
+
+          // Dispatch multiple events to ensure all components update immediately
+          window.dispatchEvent(new CustomEvent('expense-added', { 
+            detail: { expense: newExpense, timestamp: Date.now() } 
+          }));
+          window.dispatchEvent(new CustomEvent('budget-refresh', { 
+            detail: { timestamp: Date.now() } 
+          }));
+          window.dispatchEvent(new CustomEvent('finny-expense-added', { 
+            detail: { expense: newExpense, source: 'manual-entry', timestamp: Date.now() } 
+          }));
 
           if (onAddExpense) {
             onAddExpense(newExpense);

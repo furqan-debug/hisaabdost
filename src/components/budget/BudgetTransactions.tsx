@@ -1,13 +1,15 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { useEffect } from "react";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -17,6 +19,34 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const queryClient = useQueryClient();
+  
+  // Listen for expense-related events and refresh data immediately
+  useEffect(() => {
+    const handleExpenseUpdate = (event: CustomEvent) => {
+      console.log('BudgetTransactions: Expense update detected, refreshing data', event.type);
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.refetchQueries({ queryKey: ['expenses'] });
+    };
+
+    const eventTypes = [
+      'expense-added',
+      'expense-updated', 
+      'expense-deleted',
+      'finny-expense-added',
+      'budget-refresh'
+    ];
+
+    eventTypes.forEach(eventType => {
+      window.addEventListener(eventType, handleExpenseUpdate as EventListener);
+    });
+
+    return () => {
+      eventTypes.forEach(eventType => {
+        window.removeEventListener(eventType, handleExpenseUpdate as EventListener);
+      });
+    };
+  }, [queryClient]);
   
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ['expenses'],
@@ -37,6 +67,8 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
       return data;
     },
     enabled: !!user,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache
   });
 
   const hasBudgets = budgets.length > 0 && budgets.some(budget => Number(budget.amount) > 0);
