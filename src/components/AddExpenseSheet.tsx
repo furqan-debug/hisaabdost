@@ -199,35 +199,38 @@ const AddExpenseSheet = ({
 
   return (
     <>
-      <Drawer open={open} onOpenChange={handleSheetClose}>
-        <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
-          <DrawerHeader className="text-center pb-2">
-            <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
-            <DrawerDescription>
-              {expenseToEdit 
-                ? "Edit your expense details below." 
-                : "Enter your expense information"
-              }
-            </DrawerDescription>
-          </DrawerHeader>
-          
-          <div ref={scrollRef} className="px-4 pb-6 flex-1 overflow-y-auto min-h-0 form-container">
-            <ExpenseForm
-              formData={formData}
-              isSubmitting={isSubmitting}
-              isEditing={!!expenseToEdit}
-              isUploading={isUploading}
-              onSubmit={handleSubmit}
-              onFieldChange={updateField}
-              onFileChange={handleFileChange}
-              setFileInputRef={setFileInputRef}
-              setCameraInputRef={setCameraInputRef}
-              onScanComplete={handleScanComplete}
-              isManualEntry={isManualEntry}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
+      {/* Only show the expense form sheet for manual entry or editing */}
+      {(isManualEntry || !initialFile) && (
+        <Drawer open={open} onOpenChange={handleSheetClose}>
+          <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
+            <DrawerHeader className="text-center pb-2">
+              <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
+              <DrawerDescription>
+                {expenseToEdit 
+                  ? "Edit your expense details below." 
+                  : "Enter your expense information"
+                }
+              </DrawerDescription>
+            </DrawerHeader>
+            
+            <div ref={scrollRef} className="px-4 pb-6 flex-1 overflow-y-auto min-h-0 form-container">
+              <ExpenseForm
+                formData={formData}
+                isSubmitting={isSubmitting}
+                isEditing={!!expenseToEdit}
+                isUploading={isUploading}
+                onSubmit={handleSubmit}
+                onFieldChange={updateField}
+                onFileChange={handleFileChange}
+                setFileInputRef={setFileInputRef}
+                setCameraInputRef={setCameraInputRef}
+                onScanComplete={handleScanComplete}
+                isManualEntry={isManualEntry}
+              />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
 
       {/* Receipt scanning dialog - only shown for auto-process modes */}
       {!isManualEntry && initialFile && filePreviewUrl && (
