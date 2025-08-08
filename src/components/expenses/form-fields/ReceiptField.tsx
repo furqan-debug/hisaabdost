@@ -78,14 +78,14 @@ export function ReceiptField({
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Failed to upload receipt: Please select an image file (JPG, PNG, etc.)');
       return;
     }
     
     // Validate file size (2MB limit)
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      toast.error('Image file too large. Please select a file smaller than 2MB.');
+      toast.error('File size exceeds the 2MB limit. Please upload a smaller file.');
       return;
     }
     

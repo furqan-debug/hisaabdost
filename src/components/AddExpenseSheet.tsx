@@ -200,7 +200,7 @@ const AddExpenseSheet = ({
   return (
     <>
       {/* Only show the expense form sheet for manual entry or editing */}
-      {(isManualEntry || !initialFile) && (
+      {isManualEntry && (
         <Drawer open={open} onOpenChange={handleSheetClose}>
           <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
             <DrawerHeader className="text-center pb-2">

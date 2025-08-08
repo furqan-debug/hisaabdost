@@ -48,7 +48,7 @@ export function ExpenseHeader({
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = handleFileChange(e);
     if (file) {
-      // Automatically open the sheet with the selected file and appropriate mode
+      // Only open the sheet for auto-processing, not manual expense entry
       setShowAddExpense(true);
     }
   };

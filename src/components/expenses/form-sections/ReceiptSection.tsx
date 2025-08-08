@@ -56,7 +56,7 @@ export function ReceiptSection({
           Uploading receipt...
         </p>
       )}
-      {hasReceipt && !isUploading && (
+      {hasReceipt && !isUploading && isManualForm && (
         <p className="text-xs text-green-600 mt-2">
           Receipt successfully uploaded
         </p>
