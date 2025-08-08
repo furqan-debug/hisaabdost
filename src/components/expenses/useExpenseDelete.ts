@@ -69,16 +69,29 @@ export function useExpenseDelete() {
         operation: 'delete'
       });
 
-      // CRITICAL: Invalidate analytics queries for real-time updates
+      // CRITICAL: Invalidate ALL analytics queries for real-time updates
+      await queryClient.invalidateQueries({ 
+        queryKey: ['analytics-expenses'], 
+        exact: false
+      });
+      
       await queryClient.invalidateQueries({ 
         queryKey: ['expenses'], 
         predicate: (query) => query.queryKey.includes(user.id)
-      });
+       });
 
-      toast({
-        title: "Expense Deleted",
-        description: "Expense has been deleted successfully.",
-      });
+       // Dispatch events for real-time updates
+       window.dispatchEvent(new CustomEvent('expense-deleted', { 
+         detail: { expenseId, source: 'expense-page' } 
+       }));
+       window.dispatchEvent(new CustomEvent('expenses-updated', { 
+         detail: { action: 'delete', expenseId } 
+       }));
+
+       toast({
+         title: "Expense Deleted",
+         description: "Expense has been deleted successfully.",
+       });
 
       return true;
     } catch (error) {
@@ -136,16 +149,29 @@ export function useExpenseDelete() {
         });
       });
 
-      // CRITICAL: Invalidate analytics queries for real-time updates
+      // CRITICAL: Invalidate ALL analytics queries for real-time updates
+      await queryClient.invalidateQueries({ 
+        queryKey: ['analytics-expenses'], 
+        exact: false
+      });
+      
       await queryClient.invalidateQueries({ 
         queryKey: ['expenses'], 
         predicate: (query) => query.queryKey.includes(user.id)
-      });
+       });
 
-      toast({
-        title: "Expenses Deleted",
-        description: `${expenseIds.length} expenses have been deleted successfully.`,
-      });
+       // Dispatch events for real-time updates
+       window.dispatchEvent(new CustomEvent('expense-deleted', { 
+         detail: { expenseIds, source: 'expense-page' } 
+       }));
+       window.dispatchEvent(new CustomEvent('expenses-updated', { 
+         detail: { action: 'delete', expenseIds } 
+       }));
+
+       toast({
+         title: "Expenses Deleted",
+         description: `${expenseIds.length} expenses have been deleted successfully.`,
+       });
 
       return true;
     } catch (error) {
