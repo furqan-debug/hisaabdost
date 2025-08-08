@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { useEffect } from "react";
+import { getQueryOptions } from "@/lib/queryConfig";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -21,20 +22,24 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { currencyCode } = useCurrency();
   const queryClient = useQueryClient();
   
-  // Listen for expense-related events and refresh data immediately
+  // Optimized event handling with debounce
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+    
     const handleExpenseUpdate = (event: CustomEvent) => {
-      console.log('BudgetTransactions: Expense update detected, refreshing data', event.type);
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.refetchQueries({ queryKey: ['expenses'] });
+      if (debounceTimer) clearTimeout(debounceTimer);
+      
+      debounceTimer = setTimeout(() => {
+        console.log('BudgetTransactions: Expense update detected, refreshing data', event.type);
+        queryClient.invalidateQueries({ queryKey: ['budget-transactions'] });
+      }, 300); // 300ms debounce
     };
 
     const eventTypes = [
       'expense-added',
       'expense-updated', 
       'expense-deleted',
-      'finny-expense-added',
-      'budget-refresh'
+      'finny-expense-added'
     ];
 
     eventTypes.forEach(eventType => {
@@ -42,6 +47,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
     });
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleExpenseUpdate as EventListener);
       });
@@ -49,7 +55,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   }, [queryClient]);
   
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['budget-transactions'],
     queryFn: async () => {
       if (!user) return [];
       
@@ -67,8 +73,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
       return data;
     },
     enabled: !!user,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache
+    ...getQueryOptions('EXPENSES'),
   });
 
   const hasBudgets = budgets.length > 0 && budgets.some(budget => Number(budget.amount) > 0);

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { WalletAddition } from "./types";
+import { getQueryOptions } from "@/lib/queryConfig";
 
 export function useWalletQueries() {
   const { user } = useAuth();
@@ -13,7 +14,7 @@ export function useWalletQueries() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month with immediate updates
+  // Query wallet additions for current month with optimized settings
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
@@ -38,14 +39,10 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale for immediate updates
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    refetchInterval: 2000, // Reduced to 2 seconds for near real-time updates
+    ...getQueryOptions('WALLET'),
   });
 
-  // Query all wallet additions with immediate updates
+  // Query all wallet additions with optimized settings
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
@@ -68,11 +65,7 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale for immediate updates
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    refetchInterval: 3000, // Reduced to 3 seconds for near real-time updates
+    ...getQueryOptions('WALLET'),
   });
 
   // Calculate total additions

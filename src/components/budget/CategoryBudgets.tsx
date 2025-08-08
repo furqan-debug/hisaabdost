@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { useEffect } from "react";
 import { CurrencyCode } from "@/utils/currencyUtils";
+import { getQueryOptions } from "@/lib/queryConfig";
 
 interface CategoryBudgetsProps {
   budgets: Budget[];
@@ -85,25 +86,22 @@ export function CategoryBudgets({
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
 
-  // Listen for budget and expense update events
+  // Optimized event handling with debounce
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+    
     const handleDataUpdate = (event: CustomEvent) => {
-      console.log("CategoryBudgets: Data update detected, refreshing queries", event.type);
-      queryClient.invalidateQueries({
-        queryKey: ['budgets']
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['expenses']
-      });
-      queryClient.refetchQueries({
-        queryKey: ['expenses']
-      });
+      if (debounceTimer) clearTimeout(debounceTimer);
+      
+      debounceTimer = setTimeout(() => {
+        console.log("CategoryBudgets: Data update detected, refreshing queries", event.type);
+        queryClient.invalidateQueries({ queryKey: ['category-expenses'] });
+      }, 300); // 300ms debounce
     };
 
     const eventTypes = [
       'budget-updated', 
       'budget-deleted', 
-      'budget-refresh',
       'expense-added',
       'expense-updated', 
       'expense-deleted',
@@ -115,6 +113,7 @@ export function CategoryBudgets({
     });
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       eventTypes.forEach(eventType => {
         window.removeEventListener(eventType, handleDataUpdate as EventListener);
       });
@@ -125,7 +124,6 @@ export function CategoryBudgets({
     try {
       console.log(`Deleting budget for category: ${category}`);
 
-      // Delete directly from the database
       const { error } = await supabase.from("budgets").delete().eq("id", budgetId);
       if (error) {
         console.error("Error deleting budget:", error);
@@ -141,15 +139,9 @@ export function CategoryBudgets({
           description: `${category} budget deleted successfully.`
         });
 
-        // Manually trigger refresh events
-        setTimeout(() => {
-          const budgetEvent = new CustomEvent('budget-refresh', {
-            detail: {
-              timestamp: Date.now()
-            }
-          });
-          window.dispatchEvent(budgetEvent);
-        }, 200);
+        // Trigger optimized refresh
+        queryClient.invalidateQueries({ queryKey: ['budgets'] });
+        queryClient.invalidateQueries({ queryKey: ['category-expenses'] });
       }
     } catch (error) {
       console.error('Error deleting budget:', error);
@@ -162,7 +154,7 @@ export function CategoryBudgets({
   };
 
   const { data: expenses = [], error: expensesError } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['category-expenses'],
     queryFn: async () => {
       const startDate = startOfMonth(new Date());
       const { data, error } = await supabase.from('expenses').select('*').gte('date', startDate.toISOString().split('T')[0]);
@@ -172,8 +164,7 @@ export function CategoryBudgets({
       }
       return data || [];
     },
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache
+    ...getQueryOptions('EXPENSES'),
   });
 
   if (expensesError) {
