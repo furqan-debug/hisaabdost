@@ -7,10 +7,8 @@ import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
-import { useExpenseFile } from "@/hooks/use-expense-file";
 import { ExportActions } from "@/components/expenses/header/ExportActions";
-import { validateReceiptFile, showReceiptError } from "@/utils/receipt/errorHandling";
-import { toast } from "sonner";
+import { useReceiptCapture } from "@/hooks/useReceiptCapture";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -32,78 +30,48 @@ export function ExpenseHeader({
   exportToPDF
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
-  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
   const [expandAddOptions, setExpandAddOptions] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
   const {
+    captureMode,
+    setCaptureMode,
     selectedFile,
     setSelectedFile,
     fileInputRef,
     cameraInputRef,
-    handleFileChange,
-    triggerFileUpload,
-    triggerCameraCapture
-  } = useExpenseFile();
+    handleFileSelection,
+    handleUploadAction,
+    handleCameraAction
+  } = useReceiptCapture();
 
-  const handleCameraCapture = async () => {
-    try {
-      const file = await triggerCameraCapture();
-      if (file) {
-        // Validate file before processing
-        const validation = validateReceiptFile(file);
-        if (!validation.isValid) {
-          showReceiptError(validation.error!);
-          return;
-        }
-        
-        setCaptureMode('camera');
-        setShowAddExpense(true);
-      }
-    } catch (error) {
-      console.error('Camera capture failed:', error);
-      toast.error('Camera capture failed. Please try again.');
-    }
-  };
-
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      console.log("No file selected");
-      return;
-    }
-    
-    // Validate file before processing
-    const validation = validateReceiptFile(file);
-    if (!validation.isValid) {
-      showReceiptError(validation.error!);
-      return;
-    }
-    
-    // Process the file through the hook
-    const processedFile = handleFileChange(e);
-    if (processedFile) {
+  const handleFileSelectionWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = handleFileSelection(e);
+    if (file) {
       // Always show the AddExpenseSheet which will handle the appropriate mode
       setShowAddExpense(true);
     }
   };
 
-  const handleOpenSheet = (mode: 'manual' | 'upload' | 'camera') => {
+  const handleOpenSheet = async (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
     setCaptureMode(mode);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setActiveButton(null);
       setExpandAddOptions(false);
       
       if (mode === 'manual') {
         setShowAddExpense(true);
       } else if (mode === 'upload') {
-        triggerFileUpload();
-        } else if (mode === 'camera') {
-          handleCameraCapture();
+        handleUploadAction();
+      } else if (mode === 'camera') {
+        const file = await handleCameraAction();
+        if (file) {
+          setShowAddExpense(true);
         }
+      }
     }, 300);
   };
 
@@ -242,14 +210,14 @@ export function ExpenseHeader({
         />
         
         <ReceiptFileInput 
-          onChange={handleFileSelection} 
+          onChange={handleFileSelectionWrapper} 
           inputRef={fileInputRef} 
           id="receipt-upload-button" 
           useCamera={false} 
         />
         
         <ReceiptFileInput 
-          onChange={handleFileSelection} 
+          onChange={handleFileSelectionWrapper} 
           inputRef={cameraInputRef} 
           id="camera-capture-button" 
           useCamera={true} 

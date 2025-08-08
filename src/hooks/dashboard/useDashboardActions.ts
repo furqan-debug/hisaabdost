@@ -1,44 +1,31 @@
 
-import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNativeCamera } from "../useNativeCamera";
+import { useReceiptCapture } from "@/hooks/useReceiptCapture";
 
 export function useDashboardActions() {
   const navigate = useNavigate();
-  const [captureMode, setCaptureMode] = useState<'manual' | 'upload' | 'camera'>('manual');
-  const { capturePhoto } = useNativeCamera();
   
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const {
+    captureMode,
+    setCaptureMode,
+    selectedFile,
+    setSelectedFile,
+    fileInputRef,
+    cameraInputRef,
+    handleFileSelection,
+    handleUploadAction,
+    handleCameraAction
+  } = useReceiptCapture();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = handleFileSelection(e);
     if (file) {
-      console.log('Dashboard: File selected:', file.name);
-      
-      // Validate file before processing
-      const { validateReceiptFile, showReceiptError } = await import('@/utils/receipt/errorHandling');
-      const validation = validateReceiptFile(file);
-      if (!validation.isValid) {
-        showReceiptError(validation.error!);
-        // Reset the input value
-        if (e.target) {
-          e.target.value = '';
-        }
-        return null;
-      }
-      
-      setSelectedFile(file);
-      
-      // Reset the input value to allow selecting the same file again
-      if (e.target) {
-        e.target.value = '';
-      }
-      
-      return file;
+      // Dispatch event to open expense form with upload mode
+      window.dispatchEvent(new CustomEvent('open-expense-form', { 
+        detail: { mode: 'upload', file: file } 
+      }));
     }
-    return null;
+    return file;
   };
 
   const triggerFileUpload = () => {
@@ -48,48 +35,39 @@ export function useDashboardActions() {
   };
 
   const triggerCameraCapture = async () => {
-    console.log('Dashboard: Triggering native camera capture...');
-    const file = await capturePhoto();
+    const file = await handleCameraAction();
     if (file) {
-      console.log('Dashboard: Camera capture successful, setting file:', file.name);
-      
-      // Validate file before processing
-      const { validateReceiptFile, showReceiptError } = await import('@/utils/receipt/errorHandling');
-      const validation = validateReceiptFile(file);
-      if (!validation.isValid) {
-        showReceiptError(validation.error!);
-        return null;
-      }
-      
-      setSelectedFile(file);
-      return file;
+      // Dispatch event to open expense form with camera mode
+      window.dispatchEvent(new CustomEvent('open-expense-form', { 
+        detail: { mode: 'camera', file: file } 
+      }));
     }
-    console.log('Dashboard: Camera capture failed or cancelled');
-    return null;
+    return file;
   };
 
   const handleAddExpense = () => {
     console.log('Dashboard: handleAddExpense called');
     setCaptureMode('manual');
+    window.dispatchEvent(new CustomEvent('open-expense-form', { 
+      detail: { mode: 'manual' }
+    }));
     return 'manual';
   };
 
   const handleUploadReceipt = () => {
-    console.log('Dashboard: handleUploadReceipt called');
+    console.log('Dashboard: handleUploadReceipt called - using same logic as expenses page');
     setCaptureMode('upload');
-    // Trigger file upload directly
-    triggerFileUpload();
+    // Use the same logic as expenses page upload button
+    handleUploadAction();
     return 'upload';
   };
 
   const handleTakePhoto = async () => {
-    console.log('Dashboard: handleTakePhoto called - directly opening camera');
+    console.log('Dashboard: handleTakePhoto called - using same logic as expenses page');
     setCaptureMode('camera');
-    
-    // Directly capture photo
-    const file = await triggerCameraCapture();
+    // Use the same logic as expenses page camera button
+    const file = await handleCameraAction();
     if (file) {
-      setSelectedFile(file);
       // Dispatch event to open expense form with camera mode
       window.dispatchEvent(new CustomEvent('open-expense-form', { 
         detail: { mode: 'camera', file: file } 

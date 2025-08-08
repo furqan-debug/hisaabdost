@@ -64,6 +64,23 @@ export const EnhancedDashboardContent = ({
     console.log('Dashboard: Expense added - React Query will handle refresh automatically');
   };
   return <div className="space-y--4 pb-6">
+      {/* Hidden file inputs for dashboard upload functionality */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept="image/*"
+        onChange={handleFileChange}
+      />
+      <input
+        type="file"
+        ref={cameraInputRef}
+        style={{ display: 'none' }}
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+      />
+      
       {/* Hidden AddExpenseButton component that listens for events */}
       <div className="hidden">
         <AddExpenseButton isNewUser={isNewUser} expenseToEdit={expenseToEdit} showAddExpense={showAddExpense} setExpenseToEdit={setExpenseToEdit} setShowAddExpense={setShowAddExpense} onAddExpense={handleExpenseAdded} />
