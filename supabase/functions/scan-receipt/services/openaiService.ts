@@ -128,14 +128,23 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     const content = result.choices?.[0]?.message?.content || "";
     console.log("OpenAI raw response:", content.substring(0, 200) + "...");
 
-    const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
-                      content.match(/```\s*([\s\S]*?)\s*```/) ||
-                      content.match(/{[\s\S]*}/);
+    // Clean and extract JSON from the response
+    let jsonString = content.trim();
+    
+    // Remove any markdown formatting
+    if (jsonString.startsWith('```json')) {
+      jsonString = jsonString.replace(/```json\s*/, '').replace(/\s*```$/, '');
+    } else if (jsonString.startsWith('```')) {
+      jsonString = jsonString.replace(/```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Extract JSON object
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No JSON found in response");
+    }
 
-    const jsonString = jsonMatch?.[1] || jsonMatch?.[0];
-    if (!jsonString) throw new Error("No JSON found in response");
-
-    const parsed = JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonMatch[0]);
     console.log("Parsed receipt data:", JSON.stringify(parsed).substring(0, 200) + "...");
 
     // Ensure items array exists

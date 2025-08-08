@@ -40,7 +40,7 @@ export function ReceiptSection({
       <h3 className="text-base font-medium mb-2">Receipt</h3>
       <p className="text-sm text-muted-foreground mb-3">
         {isManualForm 
-          ? "Upload a receipt image to attach to this expense" 
+          ? "Upload a receipt image to attach to this expense (optional)" 
           : "Upload a receipt image and we'll automatically extract and save all items as expenses"}
       </p>
       <ReceiptField 

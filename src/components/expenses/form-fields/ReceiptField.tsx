@@ -100,22 +100,27 @@ export function ReceiptField({
       return;
     }
     
-    // Record that we're processing this file
-    processingCache.set(fingerprint, true);
-    currentFileFingerprint.current = fingerprint;
-    
-    // Flag that we've started processing to prevent reopening
-    setProcessingStarted(true);
-    
-    // Store the file for scanning
-    setReceiptFile(file);
-    
     // Call the original onFileChange to handle storage
     onFileChange(e);
     
-    // Open scan dialog for processing
-    console.log("🔍 Opening scan dialog for automatic processing...");
-    setScanDialogOpen(true);
+    // Only proceed with auto-processing if autoProcess is enabled
+    if (autoProcess) {
+      // Record that we're processing this file
+      processingCache.set(fingerprint, true);
+      currentFileFingerprint.current = fingerprint;
+      
+      // Flag that we've started processing to prevent reopening
+      setProcessingStarted(true);
+      
+      // Store the file for scanning
+      setReceiptFile(file);
+      
+      // Open scan dialog for processing
+      console.log("🔍 Opening scan dialog for automatic processing...");
+      setScanDialogOpen(true);
+    } else {
+      console.log("📎 File uploaded for manual form - no auto-processing");
+    }
     
     // Reset the file input so the same file can be selected again later
     if (e.target) {

@@ -109,7 +109,8 @@ serve(async (req) => {
     - Default payment method to "Card"
     - Ensure every item has a valid amount greater than 0
     - Do not create fake or placeholder items
-    - If you cannot read the receipt clearly, return success: false`;
+    - If you cannot read the receipt clearly, return success: false
+    - Return ONLY valid JSON, no additional text or formatting`;
 
     console.log("Making OpenAI API request...");
 
@@ -166,8 +167,18 @@ serve(async (req) => {
     console.log("OpenAI response received, parsing...");
 
     try {
-      // Extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      // Clean and extract JSON from the response
+      let jsonString = content.trim();
+      
+      // Remove any markdown formatting
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Extract JSON object
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         console.error("No JSON found in response:", content);
         throw new Error('No JSON found in OpenAI response');
