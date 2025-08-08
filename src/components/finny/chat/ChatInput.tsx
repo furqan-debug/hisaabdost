@@ -111,14 +111,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <motion.div 
         ref={containerRef}
         className={`
-          finny-chat-input-container
-          ${isKeyboardVisible ? 'custom-keyboard-active' : ''}
+          finny-chat-input-container fixed bottom-0 left-0 right-0 z-40 p-4 bg-background border-t border-border
+          ${isKeyboardVisible && useCustomKeyboardMode ? 'custom-keyboard-active' : ''}
           ${isFocused ? 'input-focused' : ''}
         `}
-        animate={{
-          y: isKeyboardVisible && useCustomKeyboardMode ? -350 : 0 // Move input up when custom keyboard is visible
+        style={{
+          transform: isKeyboardVisible && useCustomKeyboardMode ? 'translateY(-350px)' : 'translateY(0)',
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
       <form onSubmit={handleSubmit} className="w-full">
         <div className={`
