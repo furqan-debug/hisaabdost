@@ -182,6 +182,14 @@ const AddExpenseSheet = ({
     
     // Reset processing state to allow new uploads
     initialFileProcessed.current = false;
+    
+    // Close the entire sheet when scan is canceled
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+    if (onClose) {
+      onClose();
+    }
   };
 
   // Handle scan completion by closing the sheet after a delay
