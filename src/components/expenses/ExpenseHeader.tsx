@@ -76,19 +76,12 @@ export function ExpenseHeader({
       console.log('Auto-expanding expense options for:', expandParam);
       setExpandAddOptions(true);
       
-      // Auto-trigger the appropriate action after expanding
+      // Clean up URL parameter after expanding
       setTimeout(() => {
-        if (expandParam === 'upload') {
-          handleOpenSheet('upload');
-        } else if (expandParam === 'camera') {
-          handleOpenSheet('camera');
-        }
-        
-        // Clean up URL parameter
         setSearchParams(new URLSearchParams());
-      }, 500);
+      }, 100);
     }
-  }, [searchParams, setSearchParams, handleOpenSheet]);
+  }, [searchParams, setSearchParams]);
 
   const handleFileSelectionWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = handleFileSelection(e);
