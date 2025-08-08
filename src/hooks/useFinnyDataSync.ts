@@ -18,7 +18,7 @@ export function useFinnyDataSync() {
       console.log('🔄 Finny data refresh event received:', event.type, detail);
 
       // Check if this is a Finny event for immediate processing
-      const isFinnyEvent = detail?.source === 'finny-chat' || detail?.source === 'finny' || detail?.source === 'finny-advanced-chat';
+      const isFinnyEvent = detail?.source === 'finny-chat' || detail?.source === 'finny';
       const isFinnyAdvancedEvent = event.type === 'finny-advanced-action';
 
       // Process immediately - NO debounce for any events
@@ -48,19 +48,11 @@ export function useFinnyDataSync() {
         case 'budget-deleted':
         case 'set_budget':
         case 'update_budget':
-        case 'delete_budget':
-          console.log('🔄 Processing budget event - IMMEDIATE refresh');
+          console.log('🔄 Processing budget event');
           await queryClient.invalidateQueries({ queryKey: ['budgets', user.id] });
           await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-          // Also invalidate expenses as they're related to budget calculations
-          await queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user.id] });
-          await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-          // Force immediate refetch
           queryClient.refetchQueries({ queryKey: ['budgets', user.id] });
           queryClient.refetchQueries({ queryKey: ['budgets'] });
-          queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user.id] });
-          queryClient.refetchQueries({ queryKey: ['expenses'] });
-          console.log('🚀 IMMEDIATE budget queries refreshed');
           break;
 
         case 'income-updated':
@@ -108,11 +100,8 @@ export function useFinnyDataSync() {
             await queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
             await queryClient.invalidateQueries({ queryKey: ['activity_logs'] });
             await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-            await queryClient.invalidateQueries({ queryKey: ['budgets'] });
             queryClient.refetchQueries({ queryKey: ['wallet-additions'] });
             queryClient.refetchQueries({ queryKey: ['activity_logs'] });
-            queryClient.refetchQueries({ queryKey: ['expenses'] });
-            queryClient.refetchQueries({ queryKey: ['budgets'] });
           }
           break;
       }
@@ -129,7 +118,6 @@ export function useFinnyDataSync() {
       'budget-deleted',
       'set_budget',
       'update_budget',
-      'delete_budget',
       'income-updated',
       'goal-added',
       'goal-updated',

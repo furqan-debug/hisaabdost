@@ -23,48 +23,8 @@ export function useBudgetData() {
   
   // Initialize Finny data sync for real-time updates
   useFinnyDataSync();
-
-  // Additional event handling specifically for budget updates
-  useEffect(() => {
-    const handleBudgetRefresh = async (event: CustomEvent) => {
-      console.log("useBudgetData: Received budget refresh event", event.type);
-      
-      if (user?.id) {
-        // Force immediate refresh of all budget-related queries
-        await queryClient.invalidateQueries({ queryKey: ['budgets', user.id] });
-        await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-        await queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user.id] });
-        await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-        
-        // Trigger immediate refetch
-        queryClient.refetchQueries({ queryKey: ['budgets', user.id] });
-        queryClient.refetchQueries({ queryKey: ['budgets'] });
-        queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user.id] });
-        queryClient.refetchQueries({ queryKey: ['expenses'] });
-        
-        console.log("useBudgetData: All budget queries refreshed");
-      }
-    };
-
-    const budgetEvents = [
-      'budget-added',
-      'budget-updated', 
-      'budget-deleted',
-      'set_budget',
-      'update_budget',
-      'delete_budget'
-    ];
-
-    budgetEvents.forEach(eventType => {
-      window.addEventListener(eventType, handleBudgetRefresh as EventListener);
-    });
-
-    return () => {
-      budgetEvents.forEach(eventType => {
-        window.removeEventListener(eventType, handleBudgetRefresh as EventListener);
-      });
-    };
-  }, [queryClient, user?.id, monthKey]);
+  
+  // Remove excessive event handling - now handled by useOptimizedDataSync
   
   // Use the separated query hook
   const queryResults = useBudgetQueries(selectedMonth);

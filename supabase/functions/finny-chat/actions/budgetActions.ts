@@ -35,12 +35,6 @@ async function logBudgetActivity(
   }
 }
 
-// Helper function to trigger UI refresh events
-async function triggerBudgetRefresh(eventType: string, data: any) {
-  console.log(`Triggering ${eventType} refresh for budget:`, data);
-  // This will be handled by the client-side event system
-}
-
 export async function setBudget(
   action: any,
   userId: string,
@@ -82,15 +76,6 @@ export async function setBudget(
       amount: action.amount,
       period: period,
       id: existingBudget.id
-    });
-
-    // Trigger comprehensive refresh events
-    await triggerBudgetRefresh('budget-updated', {
-      category: action.category,
-      amount: action.amount,
-      period: period,
-      userId,
-      budgetId: existingBudget.id
     });
     
     console.log("Budget updated successfully");
@@ -140,15 +125,6 @@ export async function setBudget(
       period: period,
       id: newBudget?.id
     });
-
-    // Trigger comprehensive refresh events for new budget
-    await triggerBudgetRefresh('budget-added', {
-      category: action.category,
-      amount: action.amount,
-      period: period,
-      userId,
-      budgetId: newBudget?.id
-    });
     
     console.log("Budget created successfully after", retryCount + 1, "attempts");
     return `I've set a ${period} budget of ${action.amount} for ${action.category}.`;
@@ -181,13 +157,6 @@ export async function deleteBudget(
       amount: data[0].amount,
       period: data[0].period,
       id: data[0].id
-    });
-
-    // Trigger comprehensive refresh events for deleted budget
-    await triggerBudgetRefresh('budget-deleted', {
-      category: action.category,
-      userId,
-      budgetId: data[0].id
     });
     
     console.log("Budget deleted successfully:", data);

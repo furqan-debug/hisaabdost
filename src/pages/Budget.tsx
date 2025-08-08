@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useBudgetData } from "@/hooks/useBudgetData";
 import { BudgetHeader } from "@/components/budget/BudgetHeader";
 import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
 
 export interface Budget {
   id: string;
@@ -23,8 +21,6 @@ const Budget = () => {
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   console.log("Budget component rendering");
 
@@ -43,48 +39,6 @@ const Budget = () => {
     monthlyIncome = 0,
     budgetNotificationData = [],
   } = budgetData || {};
-
-  // Enhanced budget event listener for immediate updates
-  useEffect(() => {
-    const handleBudgetUpdate = async (event: CustomEvent) => {
-      console.log('Budget page: Budget update event received', event.type, event.detail);
-      
-      if (user?.id) {
-        // Immediately invalidate and refetch budget-related queries
-        await queryClient.invalidateQueries({ queryKey: ['budgets', user.id] });
-        await queryClient.invalidateQueries({ queryKey: ['budgets'] });
-        await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-        
-        // Force immediate refetch for quick UI updates
-        queryClient.refetchQueries({ queryKey: ['budgets', user.id] });
-        queryClient.refetchQueries({ queryKey: ['budgets'] });
-        queryClient.refetchQueries({ queryKey: ['expenses'] });
-        
-        console.log('Budget page: Queries refreshed after budget update');
-      }
-    };
-
-    const budgetEventTypes = [
-      'budget-added',
-      'budget-updated',
-      'budget-deleted',
-      'set_budget',
-      'update_budget',
-      'delete_budget',
-      'budget-refresh',
-      'finny-advanced-action'
-    ];
-
-    budgetEventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleBudgetUpdate as EventListener);
-    });
-
-    return () => {
-      budgetEventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleBudgetUpdate as EventListener);
-      });
-    };
-  }, [queryClient, user?.id]);
 
   // Setup notification triggers for budget page
   useNotificationTriggers({
