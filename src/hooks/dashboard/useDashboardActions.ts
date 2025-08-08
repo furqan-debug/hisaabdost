@@ -57,7 +57,7 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called - using same logic as expenses page');
     setCaptureMode('upload');
-    // Use the same logic as expenses page upload button
+    // Directly trigger file upload like expenses page
     handleUploadAction();
     return 'upload';
   };
