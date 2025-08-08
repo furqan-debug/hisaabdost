@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth";
 import { useBudgetQueries } from "./useBudgetQueries";
 import { useBudgetCalculations } from "./useBudgetCalculations";
 import { exportBudgetData } from "@/services/budgetExportService";
+import { useOptimizedDataSync } from "./useOptimizedDataSync";
+import { useFinnyDataSync } from "./useFinnyDataSync";
 
 export function useBudgetData() {
   const { selectedMonth } = useMonthContext();
@@ -15,6 +17,14 @@ export function useBudgetData() {
   const queryClient = useQueryClient();
   
   console.log("useBudgetData: initializing for month", monthKey, "user:", user?.id);
+  
+  // Initialize optimized data sync
+  const { syncInProgress } = useOptimizedDataSync();
+  
+  // Initialize Finny data sync for real-time updates
+  useFinnyDataSync();
+  
+  // Remove excessive event handling - now handled by useOptimizedDataSync
   
   // Use the separated query hook
   const queryResults = useBudgetQueries(selectedMonth);
@@ -31,58 +41,6 @@ export function useBudgetData() {
   // Use the separated calculations hook
   const calculatedValues = useBudgetCalculations(budgets, expenses, incomeData, isLoading, selectedMonth);
   console.log("useBudgetData: calculated values", calculatedValues);
-
-  // Optimized event handling with debounce
-  useEffect(() => {
-    let debounceTimer: NodeJS.Timeout;
-    
-    const handleBudgetUpdate = (event: CustomEvent) => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      
-      debounceTimer = setTimeout(() => {
-        console.log("useBudgetData: Budget update event received", event.type);
-        
-        // Only invalidate specific queries instead of full refresh
-        queryClient.invalidateQueries({ queryKey: ['budgets', user?.id] });
-        queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user?.id] });
-      }, 300); // 300ms debounce
-    };
-
-    const handleExpenseUpdate = (event: CustomEvent) => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      
-      debounceTimer = setTimeout(() => {
-        console.log("useBudgetData: Expense update event received", event.type);
-        
-        // Only invalidate expense queries
-        queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user?.id] });
-      }, 300); // 300ms debounce
-    };
-
-    // Listen only to essential events
-    const budgetEvents = ['budget-added', 'budget-updated', 'budget-deleted', 'set_budget', 'update_budget'];
-    const expenseEvents = ['expense-added', 'expense-updated', 'expense-deleted', 'finny-expense-added'];
-    
-    budgetEvents.forEach(eventType => {
-      window.addEventListener(eventType, handleBudgetUpdate as EventListener);
-    });
-    
-    expenseEvents.forEach(eventType => {
-      window.addEventListener(eventType, handleExpenseUpdate as EventListener);
-    });
-
-    return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      
-      budgetEvents.forEach(eventType => {
-        window.removeEventListener(eventType, handleBudgetUpdate as EventListener);
-      });
-      
-      expenseEvents.forEach(eventType => {
-        window.removeEventListener(eventType, handleExpenseUpdate as EventListener);
-      });
-    };
-  }, [queryClient, user?.id, monthKey]);
 
   // Export function wrapper
   const handleExportBudgetData = () => {
@@ -107,7 +65,7 @@ export function useBudgetData() {
   const result = {
     budgets: budgets || [],
     expenses: expenses || [],
-    isLoading: isLoading,
+    isLoading: isLoading || syncInProgress, // Include sync progress in loading state
     exportBudgetData: handleExportBudgetData,
     budgetNotificationData,
     ...calculatedValues

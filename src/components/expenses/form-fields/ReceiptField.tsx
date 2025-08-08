@@ -1,11 +1,13 @@
-import { useState, useRef } from "react";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { useState, useRef, useEffect } from "react";
+import { ReceiptPreview } from "./receipt/ReceiptPreview";
 import { ReceiptScanDialog } from "./receipt/ReceiptScanDialog";
-import { useNativeCamera } from "@/hooks/useNativeCamera";
+import { ReceiptActions } from "./receipt/ReceiptActions";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
+import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
+import { toast } from "sonner";
 
 interface ReceiptFieldProps {
   receiptUrl: string;
@@ -22,241 +24,208 @@ interface ReceiptFieldProps {
   autoProcess?: boolean;
 }
 
-export function ReceiptField({
-  receiptUrl,
+// Track processing events to prevent duplicates across instances
+const processingCache = new Map<string, boolean>();
+
+export function ReceiptField({ 
+  receiptUrl, 
   onFileChange,
   setFileInputRef,
   setCameraInputRef,
   onCapture,
   autoProcess = true
 }: ReceiptFieldProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [scanDialogOpen, setScanDialogOpen] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { capturePhoto } = useNativeCamera();
+  const isMobile = useIsMobile();
+  
+  // State for receipt scanning dialog
+  const [scanDialogOpen, setScanDialogOpen] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [processingStarted, setProcessingStarted] = useState(false);
+  const currentFileFingerprint = useRef<string | null>(null);
+  
+  // Expose the refs to the parent component if needed
+  useEffect(() => {
+    if (setFileInputRef && fileInputRef.current) {
+      setFileInputRef(fileInputRef.current);
+    }
+    
+    if (setCameraInputRef && cameraInputRef.current) {
+      setCameraInputRef(cameraInputRef.current);
+    }
+  }, [setFileInputRef, setCameraInputRef]);
 
-  // Set refs for parent component access
-  if (setFileInputRef && fileInputRef.current) {
-    setFileInputRef(fileInputRef.current);
-  }
-  if (setCameraInputRef && cameraInputRef.current) {
-    setCameraInputRef(cameraInputRef.current);
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = () => {
+    if (!processingStarted && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleCameraCapture = () => {
+    if (!processingStarted && cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+  
+  // Handle file selection and open scan dialog
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    console.log(`📁 File selected: ${file.name} (${file.size} bytes, ${file.type})`);
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error("Please select an image file");
+      toast.error('Please select an image file');
       return;
     }
-
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024;
+    
+    // Validate file size (2MB limit)
+    const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      toast.error("Image size must be less than 5MB");
+      toast.error('Image file too large. Please select a file smaller than 2MB.');
       return;
     }
-
-    setSelectedFile(file);
     
-    // Create preview URL
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    // Generate fingerprint for the file
+    const fingerprint = generateFileFingerprint(file);
+    console.log(`📁 File selected: ${file.name} (${file.size} bytes, type: ${file.type}, fingerprint: ${fingerprint})`);
     
-    // If autoProcess is enabled, open scan dialog immediately
-    if (autoProcess) {
-      console.log("🚀 Auto-processing enabled, opening scan dialog");
+    // Check if this file is already being processed in any component
+    if (processingCache.has(fingerprint)) {
+      console.log(`⚠️ File is already being processed: ${fingerprint}`);
+      toast.info('This receipt is already being processed');
+      return;
+    }
+    
+    // Record that we're processing this file
+    processingCache.set(fingerprint, true);
+    currentFileFingerprint.current = fingerprint;
+    
+    // Flag that we've started processing to prevent reopening
+    setProcessingStarted(true);
+    
+    // Store the file for scanning
+    setReceiptFile(file);
+    
+    // Call the original onFileChange to handle storage
+    onFileChange(e);
+    
+    // Open scan dialog for processing
+    console.log("🔍 Opening scan dialog for automatic processing...");
+    setScanDialogOpen(true);
+    
+    // Reset the file input so the same file can be selected again later
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+  
+  // Handle retrying the scan with the existing file
+  const handleRetryScan = () => {
+    if (receiptFile) {
+      console.log("🔄 Retrying scan with existing file");
       setScanDialogOpen(true);
-    } else {
-      // For manual mode, just call the parent's onFileChange
-      onFileChange(e);
     }
   };
-
-  const handleNativeCamera = async () => {
-    setIsCapturing(true);
-    try {
-      console.log("📸 Starting native camera capture...");
-      const photo = await capturePhoto();
-      
-      if (photo) {
-        console.log(`📷 Photo captured: ${photo.name} (${photo.size} bytes)`);
-        setSelectedFile(photo);
-        
-        const url = URL.createObjectURL(photo);
-        setPreviewUrl(url);
-        
-        if (autoProcess) {
-          console.log("🚀 Auto-processing camera photo");
-          setScanDialogOpen(true);
-        } else {
-          // Create a synthetic event for manual mode
-          const syntheticEvent = {
-            target: { files: [photo] }
-          } as React.ChangeEvent<HTMLInputElement>;
-          onFileChange(syntheticEvent);
-        }
-      }
-    } catch (error) {
-      console.error("📸 Camera capture failed:", error);
-      toast.error("Failed to capture photo");
-    } finally {
-      setIsCapturing(false);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-    
-    // Reset file inputs
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-  };
-
-  const handleScanSuccess = () => {
-    console.log("✅ Receipt scan completed successfully");
-    toast.success("Receipt processed successfully!");
-    
-    // Clean up after successful scan
-    setTimeout(() => {
-      handleRemoveFile();
-    }, 1000);
-  };
-
-  const handleDialogClose = () => {
-    setScanDialogOpen(false);
-  };
-
+  
+  // Clean up resources when dialog is closed
   const handleCleanup = () => {
-    console.log("🧹 Cleaning up receipt scan resources");
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+    console.log("🧹 Cleaning up resources for file:", currentFileFingerprint.current);
+    // Remove from processing cache
+    if (currentFileFingerprint.current) {
+      processingCache.delete(currentFileFingerprint.current);
+      currentFileFingerprint.current = null;
     }
+    
+    setReceiptFile(null);
+    setProcessingStarted(false); // Allow new uploads after cleanup
   };
+  
+  // Handle successful scan completion
+  const handleScanSuccess = () => {
+    console.log("✅ Receipt scan completed successfully, triggering refresh");
+    
+    // Show success message
+    toast.success('Receipt processed successfully!');
+    
+    // Dispatch events to refresh expense lists
+    const eventDetail = { 
+      timestamp: Date.now(), 
+      action: 'receipt-scan',
+      source: 'receipt-field' 
+    };
+    
+    window.dispatchEvent(new CustomEvent('expenses-updated', { detail: eventDetail }));
+    window.dispatchEvent(new CustomEvent('receipt-scanned', { detail: eventDetail }));
+    window.dispatchEvent(new CustomEvent('expense-refresh', { detail: eventDetail }));
+    
+    console.log("📡 Refresh events dispatched from ReceiptField");
+  };
+  
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clean up processing cache
+      if (currentFileFingerprint.current) {
+        processingCache.delete(currentFileFingerprint.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="space-y-3">
-      <Label htmlFor="receipt" className="text-sm font-medium">
-        Receipt Image
-      </Label>
-      
-      {/* File Input Controls */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex-1"
-          disabled={isCapturing}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Image
-        </Button>
+    <div className="space-y-2">
+      <Label htmlFor="expense-receipt">Receipt</Label>
+      <div className="space-y-2">
+        <ReceiptPreview 
+          receiptUrl={receiptUrl} 
+          onReplace={handleUpload} 
+        />
         
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleNativeCamera}
-          className="flex-1"
-          disabled={isCapturing}
-        >
-          {isCapturing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Camera className="h-4 w-4 mr-2" />
-          )}
-          {isCapturing ? "Capturing..." : "Take Photo"}
-        </Button>
+        {/* Hidden file inputs */}
+        <ReceiptFileInput
+          id="expense-receipt"
+          onChange={handleFileSelection}
+          inputRef={fileInputRef}
+          useCamera={false}
+          accept="image/*"
+        />
+        
+        <ReceiptFileInput
+          id="camera-capture"
+          onChange={handleFileSelection}
+          inputRef={cameraInputRef}
+          useCamera={true}
+          accept="image/*"
+        />
+        
+        <ReceiptActions
+          receiptUrl={receiptUrl}
+          onUpload={handleUpload}
+          onCapture={isMobile ? handleCameraCapture : undefined}
+          onRetry={receiptFile && autoProcess ? handleRetryScan : undefined}
+          showCameraButton={isMobile}
+          showRetryButton={!!receiptFile && autoProcess}
+          isProcessing={processingStarted}
+        />
       </div>
-
-      {/* Hidden File Inputs */}
-      <Input
-        ref={fileInputRef}
-        id="receipt"
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
       
-      <Input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-
-      {/* Preview Section */}
-      {selectedFile && previewUrl && (
-        <div className="relative">
-          <div className="border border-dashed border-muted-foreground/25 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img
-                  src={previewUrl}
-                  alt="Receipt preview"
-                  className="w-16 h-16 object-cover rounded"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {(selectedFile.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
-              </div>
-              
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleRemoveFile}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Scan Dialog - shown when a file is selected for auto-processing */}
+      {receiptFile && (
+        <ReceiptScanDialog
+          file={receiptFile}
+          previewUrl={null}
+          open={scanDialogOpen}
+          setOpen={setScanDialogOpen}
+          onCleanup={handleCleanup}
+          onCapture={onCapture}
+          autoSave={true}
+          autoProcess={autoProcess}
+          onSuccess={handleScanSuccess}
+        />
       )}
-
-      {/* Existing Receipt URL Display */}
-      {receiptUrl && !selectedFile && (
-        <div className="text-sm text-muted-foreground">
-          Receipt uploaded successfully
-        </div>
-      )}
-
-      {/* Scan Dialog */}
-      <ReceiptScanDialog
-        file={selectedFile}
-        previewUrl={previewUrl}
-        open={scanDialogOpen}
-        setOpen={setScanDialogOpen}
-        onCleanup={handleCleanup}
-        onCapture={onCapture}
-        autoSave={true}
-        autoProcess={autoProcess}
-        onSuccess={handleScanSuccess}
-      />
     </div>
   );
 }

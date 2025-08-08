@@ -5,7 +5,6 @@ import { Budget } from "@/pages/Budget";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
-import { getQueryOptions } from "@/lib/queryConfig";
 
 export function useBudgetQueries(selectedMonth: Date) {
   const { user } = useAuth();
@@ -13,7 +12,7 @@ export function useBudgetQueries(selectedMonth: Date) {
   
   console.log("useBudgetQueries: Starting queries for user:", user?.id, "month:", monthKey);
   
-  // Query budgets with optimized settings
+  // Query budgets
   const { data: budgets = [], isLoading: budgetsLoading, error: budgetsError } = useQuery({
     queryKey: ['budgets', user?.id],
     queryFn: async () => {
@@ -38,10 +37,12 @@ export function useBudgetQueries(selectedMonth: Date) {
       return data as Budget[];
     },
     enabled: !!user,
-    ...getQueryOptions('BUDGETS'),
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
+    refetchOnWindowFocus: false,
   });
   
-  // Query monthly income with optimized settings
+  // Query monthly income
   const { data: incomeData = { monthlyIncome: 0 }, isLoading: incomeLoading, error: incomeError } = useQuery({
     queryKey: ['monthly_income', user?.id, monthKey],
     queryFn: async () => {
@@ -63,10 +64,12 @@ export function useBudgetQueries(selectedMonth: Date) {
       }
     },
     enabled: !!user,
-    ...getQueryOptions('INCOME'),
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
+    refetchOnWindowFocus: false,
   });
 
-  // Query expenses with optimized settings
+  // Query expenses
   const { data: expenses = [], isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
@@ -96,7 +99,9 @@ export function useBudgetQueries(selectedMonth: Date) {
       return data || [];
     },
     enabled: !!user,
-    ...getQueryOptions('EXPENSES'),
+    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
+    refetchOnMount: false, // Only fetch if data is stale
+    refetchOnWindowFocus: false,
   });
 
   // Log any errors
