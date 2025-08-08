@@ -44,14 +44,12 @@ export function markFileInProgress(fingerprint: string): void {
 }
 
 /**
- * Mark file processing as complete
+ * Mark file processing as complete and clear from in-progress state
  */
 export function markFileComplete(fingerprint: string, receiptUrl?: string): void {
-  processedFiles.set(fingerprint, { 
-    timestamp: Date.now(), 
-    inProgress: false,
-    receiptUrl 
-  });
+  // Remove from in-progress tracking entirely to allow reprocessing
+  processedFiles.delete(fingerprint);
+  console.log(`File processing completed and cleared: ${fingerprint}`);
 }
 
 /**

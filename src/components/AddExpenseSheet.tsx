@@ -173,7 +173,11 @@ const AddExpenseSheet = ({
     // Remove from processing tracking
     if (initialFileFingerprint.current) {
       processingFiles.delete(initialFileFingerprint.current);
+      initialFileFingerprint.current = null;
     }
+    
+    // Reset processing state to allow new uploads
+    initialFileProcessed.current = false;
   };
 
   // Handle scan completion by closing the sheet after a delay

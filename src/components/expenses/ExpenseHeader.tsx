@@ -48,8 +48,13 @@ export function ExpenseHeader({
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = handleFileChange(e);
     if (file) {
-      // Only open the sheet for auto-processing, not manual expense entry
-      setShowAddExpense(true);
+      // For non-manual modes (upload/camera), only show scan dialog - no manual expense sheet
+      if (captureMode === 'manual') {
+        setShowAddExpense(true);
+      } else {
+        // For auto-processing modes, the AddExpenseSheet will handle opening the scan dialog
+        setShowAddExpense(true);
+      }
     }
   };
 

@@ -147,6 +147,9 @@ export function ReceiptField({
     
     setReceiptFile(null);
     setProcessingStarted(false); // Allow new uploads after cleanup
+    
+    // Also clear the scan dialog state
+    setScanDialogOpen(false);
   };
   
   // Handle successful scan completion

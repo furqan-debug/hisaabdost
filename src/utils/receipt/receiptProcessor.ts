@@ -57,7 +57,7 @@ export async function processReceiptFile(
         if (supabaseUrl.includes('supabase.co')) {
           updateField('receiptUrl', supabaseUrl);
           markFileComplete(fileFingerprint, supabaseUrl);
-          toast.success("Receipt uploaded successfully");
+          // Don't show success toast for auto-processing - let the scan dialog handle it
           return supabaseUrl;
         } else {
           console.error("Invalid URL returned from upload:", supabaseUrl);
