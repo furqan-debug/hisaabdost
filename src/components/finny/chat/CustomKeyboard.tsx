@@ -57,8 +57,11 @@ const CustomKeyboard: React.FC<CustomKeyboardProps> = ({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: '100%', opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed bottom-0 left-0 right-0 z-[60] bg-background border-t border-border"
+      style={{ 
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        maxHeight: '320px'
+      }}
     >
       <div className="p-3 space-y-2">
         {/* Numbers Row */}

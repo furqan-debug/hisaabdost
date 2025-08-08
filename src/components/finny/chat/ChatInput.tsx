@@ -108,16 +108,17 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <>
-      <motion.div 
+      <div 
         ref={containerRef}
         className={`
-          finny-chat-input-container fixed bottom-0 left-0 right-0 z-40 p-4 bg-background border-t border-border
+          finny-chat-input-container relative w-full
           ${isKeyboardVisible && useCustomKeyboardMode ? 'custom-keyboard-active' : ''}
           ${isFocused ? 'input-focused' : ''}
         `}
         style={{
-          transform: isKeyboardVisible && useCustomKeyboardMode ? 'translateY(-350px)' : 'translateY(0)',
-          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          transform: isKeyboardVisible && useCustomKeyboardMode ? 'translateY(-320px)' : 'translateY(0)',
+          transition: 'transform 0.3s ease-out',
+          zIndex: 50
         }}
       >
       <form onSubmit={handleSubmit} className="w-full">
@@ -180,7 +181,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           </button>
         </div>
       </form>
-      </motion.div>
+      </div>
 
       {/* Custom Keyboard */}
       <CustomKeyboard
