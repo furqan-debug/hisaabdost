@@ -6,29 +6,29 @@ export interface ValidationResult {
 }
 
 export function validateReceiptFile(file: File): ValidationResult {
-  // Check file type
+  // FIRST: Check file type (most important validation)
   if (!file.type.startsWith('image/')) {
     return {
       isValid: false,
-      error: 'Please upload an image file (JPG, PNG, etc.)'
+      error: 'Please upload an image file (JPG or PNG only)'
     };
   }
   
-  // Check file size (2MB limit)
-  const maxSize = 2 * 1024 * 1024; // 2MB
-  if (file.size > maxSize) {
-    return {
-      isValid: false,
-      error: 'File size exceeds 2MB limit. Please choose a smaller image.'
-    };
-  }
-  
-  // Check if file is too small (likely corrupted or empty)
+  // SECOND: Check if file is too small (likely corrupted or empty)
   const minSize = 1024; // 1KB
   if (file.size < minSize) {
     return {
       isValid: false,
       error: 'Image file is too small. Please upload a clear receipt image.'
+    };
+  }
+  
+  // THIRD: Check file size limit (2MB limit)
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  if (file.size > maxSize) {
+    return {
+      isValid: false,
+      error: 'File size exceeds 2MB limit. Please choose a smaller image.'
     };
   }
   
