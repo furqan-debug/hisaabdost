@@ -22,24 +22,7 @@ export function useDashboardActions() {
     if (file) {
       // Dispatch event to open expense form with upload mode
       window.dispatchEvent(new CustomEvent('open-expense-form', { 
-        detail: { mode: 'upload', file: file } 
-      }));
-    }
-    return file;
-  };
-
-  const triggerFileUpload = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const triggerCameraCapture = async () => {
-    const file = await handleCameraAction();
-    if (file) {
-      // Dispatch event to open expense form with camera mode
-      window.dispatchEvent(new CustomEvent('open-expense-form', { 
-        detail: { mode: 'camera', file: file } 
+        detail: { mode: captureMode, file: file } 
       }));
     }
     return file;
@@ -55,17 +38,14 @@ export function useDashboardActions() {
   };
 
   const handleUploadReceipt = () => {
-    console.log('Dashboard: handleUploadReceipt called - using same logic as expenses page');
+    console.log('Dashboard: handleUploadReceipt called - behaving exactly like expenses page upload button');
     setCaptureMode('upload');
-    // Directly trigger file upload like expenses page
     handleUploadAction();
-    return 'upload';
   };
 
   const handleTakePhoto = async () => {
-    console.log('Dashboard: handleTakePhoto called - using same logic as expenses page');
+    console.log('Dashboard: handleTakePhoto called - behaving exactly like expenses page camera button');
     setCaptureMode('camera');
-    // Use the same logic as expenses page camera button
     const file = await handleCameraAction();
     if (file) {
       // Dispatch event to open expense form with camera mode
@@ -92,8 +72,6 @@ export function useDashboardActions() {
     handleAddExpense,
     handleUploadReceipt,
     handleTakePhoto,
-    handleAddBudget,
-    triggerCameraCapture,
-    triggerFileUpload
+    handleAddBudget
   };
 }
