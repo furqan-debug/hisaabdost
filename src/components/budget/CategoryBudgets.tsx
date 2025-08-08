@@ -153,8 +153,36 @@ export function CategoryBudgets({
         throw error;
       }
       return data || [];
-    }
+    },
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true
   });
+
+  // Listen for expense changes and refresh data
+  useEffect(() => {
+    const handleExpenseUpdate = () => {
+      console.log('CategoryBudgets: Refreshing expenses due to expense change');
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    };
+
+    const events = [
+      'expense-added',
+      'expense-updated', 
+      'expense-deleted',
+      'expenses-updated',
+      'budget-refresh'
+    ];
+
+    events.forEach(event => {
+      window.addEventListener(event, handleExpenseUpdate);
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleExpenseUpdate);
+      });
+    };
+  }, [queryClient]);
 
   if (expensesError) {
     console.error('Error fetching expenses:', expensesError);
