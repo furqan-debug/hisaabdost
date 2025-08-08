@@ -7,7 +7,7 @@ export interface ExpenseData {
   confidence: number;
 }
 
-// Official predefined expense categories - MUST match CategoryField.tsx exactly
+// Predefined expense categories - only these are allowed
 const PREDEFINED_CATEGORIES = [
   "Food",
   "Rent",
@@ -19,7 +19,7 @@ const PREDEFINED_CATEGORIES = [
   "Other"
 ];
 
-// Common expense keywords mapped to official categories with clean descriptions
+// Common expense keywords mapped to categories with clean descriptions
 const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; cleanNames: Record<string, string> }> = {
   "Food": {
     category: "Food",
@@ -27,7 +27,7 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
       // English
       "food", "eat", "ate", "lunch", "dinner", "breakfast", "snack", "meal", "restaurant", 
       "cafe", "coffee", "pizza", "burger", "sandwich", "grocery", "groceries", "chicken",
-      "beef", "mutton", "fish", "vegetables", "fruit", "bread", "rice", "dining",
+      "beef", "mutton", "fish", "vegetables", "fruit", "bread", "rice",
       // Urdu/Hindi
       "khana", "khaya", "nashta", "dophar", "raat", "bakra", "gosht", "chawal", "daal",
       "sabzi", "roti", "naan", "biryani", "karahi", "tikka", "kebab", "chai", "dudh"
@@ -58,7 +58,6 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
     keywords: [
       // English
       "taxi", "uber", "fuel", "gas", "petrol", "bus", "train", "flight", "parking", "toll",
-      "transport", "metro", "subway", "car", "vehicle", "ride",
       // Urdu/Hindi
       "rickshaw", "qingqi", "metro", "bus", "gari", "petrol", "diesel"
     ],
@@ -80,7 +79,6 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
     keywords: [
       // English
       "shopping", "clothes", "shirt", "shoes", "buy", "bought", "purchase", "store", "mall",
-      "dress", "pants", "jacket", "accessories", "bag", "wallet",
       // Urdu/Hindi
       "kapray", "jooty", "kharida", "dukan", "bazaar", "market"
     ],
@@ -98,7 +96,6 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
     keywords: [
       // English 
       "movie", "cinema", "game", "concert", "show", "ticket", "netflix", "spotify",
-      "gaming", "music", "theater", "party", "club", "fun",
       // Urdu/Hindi
       "film", "tamasha", "khel", "ticket"
     ],
@@ -114,8 +111,7 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
     category: "Utilities",
     keywords: [
       // English
-      "electricity", "gas", "water", "internet", "phone", "wifi", "bill", "utility",
-      "mobile", "cable", "power", "electric", "telephone",
+      "electricity", "gas", "water", "internet", "phone", "wifi", "bill",
       // Urdu/Hindi 
       "bijli", "gas", "pani", "internet", "phone", "bill"
     ],
@@ -133,8 +129,7 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
     category: "Rent",
     keywords: [
       // English
-      "rent", "mortgage", "house", "apartment", "condo", "housing", "property",
-      "rental", "lease", "home"
+      "rent", "mortgage", "house", "apartment", "condo", "housing", "property"
     ],
     cleanNames: {
       "rent": "Rent",
@@ -149,7 +144,7 @@ const EXPENSE_KEYWORDS: Record<string, { category: string; keywords: string[]; c
       // English
       "doctor", "medical", "medicine", "health", "dental", "vision", "prescription", 
       "drug", "fitness", "gym", "exercise", "vitamin", "supplement", "therapy", 
-      "hospital", "clinic", "insurance", "pharmacy", "checkup"
+      "hospital", "clinic", "insurance"
     ],
     cleanNames: {
       "doctor": "Doctor",

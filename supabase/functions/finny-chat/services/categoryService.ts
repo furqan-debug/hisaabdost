@@ -1,4 +1,3 @@
-
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 export async function fetchUserCategories(
@@ -8,15 +7,20 @@ export async function fetchUserCategories(
   console.log("Fetching user categories for user:", userId);
   
   try {
-    // Official default categories - must match CategoryField.tsx exactly
+    // Get all default categories
     const defaultCategories = [
-      'Food',
-      'Rent', 
-      'Utilities',
+      'Food & Dining',
+      'Shopping',
       'Transportation',
       'Entertainment',
-      'Shopping',
+      'Bills & Utilities',
       'Healthcare',
+      'Travel',
+      'Education',
+      'Gifts & Donations',
+      'Personal Care',
+      'Home & Garden',
+      'Business',
       'Other'
     ];
 
@@ -41,13 +45,18 @@ export async function fetchUserCategories(
   } catch (error) {
     console.error('Error in fetchUserCategories:', error);
     return [
-      'Food',
-      'Rent',
-      'Utilities', 
+      'Food & Dining',
+      'Shopping',
       'Transportation',
       'Entertainment',
-      'Shopping',
+      'Bills & Utilities',
       'Healthcare',
+      'Travel',
+      'Education',
+      'Gifts & Donations',
+      'Personal Care',
+      'Home & Garden',
+      'Business',
       'Other'
     ];
   }

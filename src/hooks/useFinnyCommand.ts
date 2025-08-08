@@ -31,45 +31,29 @@ export function useFinnyCommand() {
   }
 
   /**
-   * Validate a category against official expense categories
+   * Validate a category against allowed expense categories
    */
   const validateCategory = (category: string): string => {
-    if (!category) return 'Other';
+    if (!category) return 'Miscellaneous';
     
-    // Check for exact match with official categories
+    // Check for exact match
     const exactMatch = EXPENSE_CATEGORIES.find(
       c => c.toLowerCase() === category.toLowerCase()
     );
     
     if (exactMatch) return exactMatch;
     
-    // Handle legacy category mappings to official categories
-    const categoryMappings: Record<string, string> = {
-      'food & dining': 'Food',
-      'food and dining': 'Food',
-      'bills & utilities': 'Utilities', 
-      'bills and utilities': 'Utilities',
-      'transport': 'Transportation',
-      'medical': 'Healthcare',
-      'health': 'Healthcare'
-    };
-    
-    const lowerCategory = category.toLowerCase();
-    if (categoryMappings[lowerCategory]) {
-      return categoryMappings[lowerCategory];
-    }
-    
-    // Look for partial matches with official categories
+    // Look for partial matches
     const partialMatches = EXPENSE_CATEGORIES.filter(
-      c => c.toLowerCase().includes(lowerCategory) || 
-           lowerCategory.toLowerCase().includes(c.toLowerCase())
+      c => c.toLowerCase().includes(category.toLowerCase()) || 
+           category.toLowerCase().includes(c.toLowerCase())
     );
     
     if (partialMatches.length > 0) {
       return partialMatches[0]; // Return the first partial match
     }
     
-    // No match found, use Other as fallback
+    // No match found, use miscellaneous as fallback
     return 'Other';
   };
 
