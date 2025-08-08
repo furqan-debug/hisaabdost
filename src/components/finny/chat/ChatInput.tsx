@@ -29,7 +29,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
   placeholder = "Type your message...",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [useCustomKeyboardMode, setUseCustomKeyboardMode] = useState(true);
+  // Load custom keyboard preference from localStorage
+  const [useCustomKeyboardMode, setUseCustomKeyboardMode] = useState(() => {
+    const saved = localStorage.getItem('finny-use-custom-keyboard');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Custom keyboard hook
@@ -112,7 +116,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           ${isFocused ? 'input-focused' : ''}
         `}
         animate={{
-          y: isKeyboardVisible ? -320 : 0 // Move input up when custom keyboard is visible
+          y: isKeyboardVisible && useCustomKeyboardMode ? -350 : 0 // Move input up when custom keyboard is visible
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
@@ -165,7 +169,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <button
             type="button"
             onClick={() => {
-              setUseCustomKeyboardMode(!useCustomKeyboardMode);
+              const newMode = !useCustomKeyboardMode;
+              setUseCustomKeyboardMode(newMode);
+              localStorage.setItem('finny-use-custom-keyboard', JSON.stringify(newMode));
               if (isKeyboardVisible) hideKeyboard();
             }}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"

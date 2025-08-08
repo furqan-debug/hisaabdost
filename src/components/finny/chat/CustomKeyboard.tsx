@@ -132,8 +132,13 @@ const CustomKeyboard: React.FC<CustomKeyboardProps> = ({
         {/* Close keyboard button */}
         <div className="flex justify-center pt-2">
           <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors active:scale-95"
           >
             Hide Keyboard
           </button>
