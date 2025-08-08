@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/formatters';
@@ -10,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Receipt, Wallet, Target, BarChart2, User, DollarSign } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useKeyboardViewportFix } from '@/hooks/useKeyboardViewportFix';
 
 interface ActivityLog {
   id: string;
@@ -30,21 +28,11 @@ interface ActivityHistorySectionProps {
 export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySectionProps) => {
   const { user } = useAuth();
   const { currencyCode } = useCurrency();
-  const isMobile = useIsMobile();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Enable keyboard viewport fix for mobile
-  useKeyboardViewportFix({
-    sheetRef: containerRef,
-    scrollRef: scrollRef,
-    enabled: isMobile
-  });
 
   const actionTypeConfig = {
     expense: { icon: Receipt, color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', label: 'Expense' },
@@ -220,12 +208,12 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
   }
 
   return (
-    <Card ref={containerRef} className="bg-card border-border">
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-foreground">Activity History</CardTitle>
         
         {/* Filters */}
-        <div ref={scrollRef} className="flex flex-col sm:flex-row gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row gap-4 mt-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -233,14 +221,6 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
-              onFocus={(e) => {
-                // Ensure search input is visible on mobile when keyboard appears
-                if (isMobile) {
-                  setTimeout(() => {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }, 150);
-                }
-              }}
             />
           </div>
           

@@ -11,9 +11,8 @@ import { CATEGORY_COLORS } from "@/utils/chartUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Filter } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
-import { useKeyboardViewportFix } from "@/hooks/useKeyboardViewportFix";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRangePicker } from "@/components/expenses/DateRangePicker";
 
@@ -45,15 +44,6 @@ export function ExpenseFilters({
 }: ExpenseFiltersProps) {
   const isMobile = useIsMobile();
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Enable keyboard viewport fix for mobile
-  useKeyboardViewportFix({
-    sheetRef: containerRef,
-    scrollRef: scrollRef,
-    enabled: isMobile
-  });
   
   const clearDateRange = () => {
     setDateRange({
@@ -63,24 +53,15 @@ export function ExpenseFilters({
   };
 
   return (
-    <div ref={containerRef} className={cn("space-y-3", className)}>
-      <div ref={scrollRef} className="space-y-3">
-        {/* Search input always visible */}
-        <div className="relative">
-          <Input
-            placeholder="Search expenses..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-8 rounded-lg"
-            onFocus={(e) => {
-              // Ensure search input is visible on mobile when keyboard appears
-              if (isMobile) {
-                setTimeout(() => {
-                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 150);
-              }
-            }}
-          />
+    <div className={cn("space-y-3", className)}>
+      {/* Search input always visible */}
+      <div className="relative">
+        <Input
+          placeholder="Search expenses..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pr-8 rounded-lg"
+        />
         {isMobile && (
           <button 
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
@@ -155,7 +136,6 @@ export function ExpenseFilters({
           )}
         </div>
       )}
-      </div>
     </div>
   );
 }
