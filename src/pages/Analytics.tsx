@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { subMonths, format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
@@ -11,9 +11,12 @@ import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
 export default function Analytics() {
-  const { user } = useAuth();
-  const { selectedMonth } = useMonthContext();
-  const queryClient = useQueryClient();
+  const {
+    user
+  } = useAuth();
+  const {
+    selectedMonth
+  } = useMonthContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
@@ -21,44 +24,6 @@ export default function Analytics() {
     end: format(new Date(), 'yyyy-MM-dd')
   });
   const useCustomDateRange = true;
-
-  // Real-time event listeners for data synchronization
-  useEffect(() => {
-    const handleExpenseEvents = async () => {
-      console.log('🔄 Analytics: Expense data changed, refreshing analytics');
-      
-      // Invalidate and refetch analytics queries immediately
-      await queryClient.invalidateQueries({ 
-        queryKey: ['analytics-expenses'], 
-        exact: false 
-      });
-      
-      // Force refetch with current query key
-      queryClient.refetchQueries({ 
-        queryKey: ['analytics-expenses', dateRange.start, dateRange.end, user?.id] 
-      });
-    };
-
-    // Listen to all expense-related events
-    const events = [
-      'expense-added',
-      'expense-updated', 
-      'expense-deleted',
-      'finny-expense-added',
-      'expenses-updated',
-      'expense-refresh'
-    ];
-
-    events.forEach(eventType => {
-      window.addEventListener(eventType, handleExpenseEvents);
-    });
-
-    return () => {
-      events.forEach(eventType => {
-        window.removeEventListener(eventType, handleExpenseEvents);
-      });
-    };
-  }, [queryClient, dateRange.start, dateRange.end, user?.id]);
   const {
     data: expenses,
     isLoading,
@@ -91,9 +56,9 @@ export default function Analytics() {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 0, // Always fresh data for analytics
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60, // 60 seconds 
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: [] // Provides fallback data to prevent UI jumping
   });
   const filteredExpenses = expenses?.filter(expense => {
