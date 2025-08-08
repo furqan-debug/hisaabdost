@@ -7,7 +7,7 @@ export interface ExpenseData {
   confidence: number;
 }
 
-// Predefined expense categories - only these are allowed
+// Predefined expense categories - only these are allowed (official app list)
 const PREDEFINED_CATEGORIES = [
   "Food",
   "Rent",

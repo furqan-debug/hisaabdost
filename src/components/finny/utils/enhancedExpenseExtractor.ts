@@ -173,13 +173,13 @@ export class EnhancedExtractor {
   private static determineCategory(text: string, fullMessage: string): string {
     const lowerText = (text + ' ' + fullMessage).toLowerCase();
     
-    // Category mapping with enhanced keywords
+    // Category mapping with enhanced keywords (using official app categories)
     const categoryMap: Record<string, string[]> = {
-      'Food': ['food', 'lunch', 'dinner', 'breakfast', 'coffee', 'restaurant', 'eat', 'meal', 'snack', 'grocery', 'groceries', 'pizza', 'burger', 'chicken', 'rice', 'bread'],
-      'Transportation': ['gas', 'fuel', 'petrol', 'transport', 'uber', 'taxi', 'bus', 'train', 'car', 'parking', 'toll', 'metro', 'subway'],
-      'Entertainment': ['movie', 'cinema', 'game', 'concert', 'show', 'entertainment', 'netflix', 'spotify', 'gaming', 'party', 'club'],
-      'Shopping': ['shopping', 'clothes', 'shoes', 'shirt', 'dress', 'purchase', 'buy', 'bought', 'store', 'mall', 'amazon'],
-      'Utilities': ['electricity', 'water', 'internet', 'phone', 'bill', 'utility', 'wifi', 'mobile', 'cable'],
+      'Food': ['food', 'lunch', 'dinner', 'breakfast', 'coffee', 'restaurant', 'eat', 'meal', 'snack', 'grocery', 'groceries', 'pizza', 'burger', 'chicken', 'rice', 'bread', 'khana', 'khaya', 'nashta', 'biryani', 'chai'],
+      'Transportation': ['gas', 'fuel', 'petrol', 'transport', 'uber', 'taxi', 'bus', 'train', 'car', 'parking', 'toll', 'metro', 'subway', 'rickshaw'],
+      'Entertainment': ['movie', 'cinema', 'game', 'concert', 'show', 'entertainment', 'netflix', 'spotify', 'gaming', 'party', 'club', 'film'],
+      'Shopping': ['shopping', 'clothes', 'shoes', 'shirt', 'dress', 'purchase', 'buy', 'bought', 'store', 'mall', 'amazon', 'kapray'],
+      'Utilities': ['electricity', 'water', 'internet', 'phone', 'bill', 'utility', 'wifi', 'mobile', 'cable', 'bijli', 'gas'],
       'Healthcare': ['doctor', 'medicine', 'pharmacy', 'medical', 'health', 'hospital', 'dentist', 'checkup'],
       'Rent': ['rent', 'rental', 'housing', 'apartment', 'house', 'mortgage', 'lease']
     };
