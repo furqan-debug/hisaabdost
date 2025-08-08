@@ -7,6 +7,7 @@ import { ReceiptActions } from "./receipt/ReceiptActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReceiptFileInput } from "./receipt/ReceiptFileInput";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
+import { validateReceiptFile, showReceiptError } from "@/utils/receipt/errorHandling";
 import { toast } from "sonner";
 
 interface ReceiptFieldProps {
@@ -76,16 +77,10 @@ export function ReceiptField({
       return;
     }
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Incorrect file type. Please upload an image (JPG, PNG, etc.)');
-      return;
-    }
-    
-    // Validate file size (2MB limit)
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      toast.error('File size exceeds the 2MB limit. Please upload a smaller file.');
+    // Validate file before processing
+    const validation = validateReceiptFile(file);
+    if (!validation.isValid) {
+      showReceiptError(validation.error!);
       return;
     }
     

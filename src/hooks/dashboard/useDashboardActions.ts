@@ -55,10 +55,8 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
     setCaptureMode('upload');
-    // Dispatch custom event for file upload
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'upload' } 
-    }));
+    // Trigger file upload directly
+    triggerFileUpload();
     return 'upload';
   };
 
@@ -66,10 +64,11 @@ export function useDashboardActions() {
     console.log('Dashboard: handleTakePhoto called - directly opening camera');
     setCaptureMode('camera');
     
-    // Directly capture photo instead of dispatching event
+    // Directly capture photo
     const file = await triggerCameraCapture();
     if (file) {
-      // Dispatch event with the captured file
+      setSelectedFile(file);
+      // Dispatch event to open expense form with camera mode
       window.dispatchEvent(new CustomEvent('open-expense-form', { 
         detail: { mode: 'camera', file: file } 
       }));

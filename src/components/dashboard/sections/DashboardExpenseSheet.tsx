@@ -1,6 +1,8 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
+import { useExpenseFile } from "@/hooks/use-expense-file";
+import { toast } from "sonner";
 
 interface DashboardExpenseSheetProps {
   showAddExpense: boolean;
@@ -25,6 +27,34 @@ export const DashboardExpenseSheet = ({
   setSelectedFile,
   onExpenseAdded
 }: DashboardExpenseSheetProps) => {
+  const { handleFileChange, fileInputRef } = useExpenseFile();
+
+  useEffect(() => {
+    const handleExpenseFormEvent = async (event: any) => {
+      const { mode, file } = event.detail;
+      console.log('Dashboard: Received open-expense-form event:', mode, file?.name);
+      
+      setCaptureMode(mode);
+      if (file) {
+        // Validate file before processing
+        const { validateReceiptFile, showReceiptError } = await import('@/utils/receipt/errorHandling');
+        const validation = validateReceiptFile(file);
+        if (!validation.isValid) {
+          showReceiptError(validation.error!);
+          return;
+        }
+        
+        setSelectedFile(file);
+      }
+      setShowAddExpense(true);
+    };
+
+    window.addEventListener('open-expense-form', handleExpenseFormEvent);
+    return () => {
+      window.removeEventListener('open-expense-form', handleExpenseFormEvent);
+    };
+  }, [setCaptureMode, setSelectedFile, setShowAddExpense]);
+
   const handleSheetClose = () => {
     setShowAddExpense(false);
     setSelectedFile(null);

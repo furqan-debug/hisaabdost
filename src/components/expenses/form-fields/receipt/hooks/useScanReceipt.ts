@@ -137,7 +137,7 @@ export function useScanReceipt({
             // Dispatch multiple events to ensure all components refresh
             console.log("📡 useScanReceipt: Dispatching refresh events...");
             setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('expenses-updated', { 
+              window.dispatchEvent(new CustomEvent('expenses-updated', {
                 detail: { timestamp: Date.now(), action: 'receipt-scan' }
               }));
               window.dispatchEvent(new CustomEvent('receipt-scanned', { 
@@ -149,6 +149,7 @@ export function useScanReceipt({
               console.log("📡 useScanReceipt: All refresh events dispatched");
             }, 100);
             
+            // Call onSuccess callback if provided
             if (onSuccess) {
               console.log("🎉 useScanReceipt: Calling onSuccess callback");
               onSuccess();

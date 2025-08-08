@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 import { ExportActions } from "@/components/expenses/header/ExportActions";
+import { validateReceiptFile, showReceiptError } from "@/utils/receipt/errorHandling";
 import { toast } from "sonner";
 
 interface ExpenseHeaderProps {
@@ -46,6 +47,19 @@ export function ExpenseHeader({
     triggerCameraCapture
   } = useExpenseFile();
 
+  const handleCameraCapture = async () => {
+    try {
+      const file = await triggerCameraCapture();
+      if (file) {
+        setCaptureMode('camera');
+        setShowAddExpense(true);
+      }
+    } catch (error) {
+      console.error('Camera capture failed:', error);
+      toast.error('Camera capture failed. Please try again.');
+    }
+  };
+
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -53,16 +67,10 @@ export function ExpenseHeader({
       return;
     }
     
-    // Validate file type first
-    if (!file.type.startsWith('image/')) {
-      toast.error('Incorrect file type. Please upload an image (JPG, PNG, etc.)');
-      return;
-    }
-    
-    // Validate file size (2MB limit)
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      toast.error('File size exceeds the 2MB limit. Please upload a smaller file.');
+    // Validate file before processing
+    const validation = validateReceiptFile(file);
+    if (!validation.isValid) {
+      showReceiptError(validation.error!);
       return;
     }
     
@@ -86,9 +94,9 @@ export function ExpenseHeader({
         setShowAddExpense(true);
       } else if (mode === 'upload') {
         triggerFileUpload();
-      } else if (mode === 'camera') {
-        triggerCameraCapture();
-      }
+        } else if (mode === 'camera') {
+          handleCameraCapture();
+        }
     }, 300);
   };
 
