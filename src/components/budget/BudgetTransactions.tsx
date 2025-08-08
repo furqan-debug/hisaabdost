@@ -1,13 +1,14 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Budget } from "@/pages/Budget";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
+import { useEffect } from "react";
 
 interface BudgetTransactionsProps {
   budgets?: Budget[];
@@ -17,6 +18,7 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
+  const queryClient = useQueryClient();
   
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ['expenses'],
@@ -37,7 +39,35 @@ export function BudgetTransactions({ budgets = [] }: BudgetTransactionsProps) {
       return data;
     },
     enabled: !!user,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true
   });
+
+  // Listen for expense changes and refresh data
+  useEffect(() => {
+    const handleExpenseUpdate = () => {
+      console.log('BudgetTransactions: Refreshing expenses due to expense change');
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    };
+
+    const events = [
+      'expense-added',
+      'expense-updated', 
+      'expense-deleted',
+      'expenses-updated',
+      'budget-refresh'
+    ];
+
+    events.forEach(event => {
+      window.addEventListener(event, handleExpenseUpdate);
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, handleExpenseUpdate);
+      });
+    };
+  }, [queryClient]);
 
   const hasBudgets = budgets.length > 0 && budgets.some(budget => Number(budget.amount) > 0);
 

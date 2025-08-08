@@ -102,6 +102,17 @@ export function useExpenseSubmit({
           predicate: (query) => query.queryKey.includes(user.id)
         });
 
+        // Dispatch events for budget page synchronization
+        window.dispatchEvent(new CustomEvent('expense-updated', { 
+          detail: { expense: updatedExpense, action: 'updated' } 
+        }));
+        window.dispatchEvent(new CustomEvent('budget-refresh', { 
+          detail: { expense: updatedExpense, action: 'updated' } 
+        }));
+        window.dispatchEvent(new CustomEvent('expenses-updated', { 
+          detail: { expense: updatedExpense, action: 'updated' } 
+        }));
+
         if (onAddExpense) {
           onAddExpense(updatedExpense);
         }
@@ -159,6 +170,17 @@ export function useExpenseSubmit({
             queryKey: ['expenses'], 
             predicate: (query) => query.queryKey.includes(user.id)
           });
+
+          // Dispatch events for budget page synchronization
+          window.dispatchEvent(new CustomEvent('expense-added', { 
+            detail: { expense: newExpense, action: 'added' } 
+          }));
+          window.dispatchEvent(new CustomEvent('budget-refresh', { 
+            detail: { expense: newExpense, action: 'added' } 
+          }));
+          window.dispatchEvent(new CustomEvent('expenses-updated', { 
+            detail: { expense: newExpense, action: 'added' } 
+          }));
 
           if (onAddExpense) {
             onAddExpense(newExpense);
