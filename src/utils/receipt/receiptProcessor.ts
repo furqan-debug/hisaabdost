@@ -61,7 +61,7 @@ export async function processReceiptFile(
           return supabaseUrl;
         } else {
           console.error("Invalid URL returned from upload:", supabaseUrl);
-          toast.error("Upload failed - invalid URL returned");
+          toast.error("Upload failed - invalid response from server");
           updateField('receiptUrl', '');
           markFileComplete(fileFingerprint);
           return null;

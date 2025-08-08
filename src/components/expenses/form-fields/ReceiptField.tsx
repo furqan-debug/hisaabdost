@@ -78,7 +78,7 @@ export function ReceiptField({
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Failed to upload receipt: Please select an image file (JPG, PNG, etc.)');
+      toast.error('Incorrect file type. Please upload an image (JPG, PNG, etc.)');
       return;
     }
     
@@ -142,6 +142,10 @@ export function ReceiptField({
     // Remove from processing cache
     if (currentFileFingerprint.current) {
       processingCache.delete(currentFileFingerprint.current);
+      // Also clear the global processing cache
+      import('@/utils/receipt/processingCache').then(({ markFileComplete }) => {
+        markFileComplete(currentFileFingerprint.current!);
+      });
       currentFileFingerprint.current = null;
     }
     

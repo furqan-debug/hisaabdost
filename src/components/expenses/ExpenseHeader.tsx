@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { useExpenseFile } from "@/hooks/use-expense-file";
 import { ExportActions } from "@/components/expenses/header/ExportActions";
+import { toast } from "sonner";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -46,15 +47,30 @@ export function ExpenseHeader({
   } = useExpenseFile();
 
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = handleFileChange(e);
-    if (file) {
-      // For non-manual modes (upload/camera), only show scan dialog - no manual expense sheet
-      if (captureMode === 'manual') {
-        setShowAddExpense(true);
-      } else {
-        // For auto-processing modes, the AddExpenseSheet will handle opening the scan dialog
-        setShowAddExpense(true);
-      }
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+    
+    // Validate file type first
+    if (!file.type.startsWith('image/')) {
+      toast.error('Incorrect file type. Please upload an image (JPG, PNG, etc.)');
+      return;
+    }
+    
+    // Validate file size (2MB limit)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      toast.error('File size exceeds the 2MB limit. Please upload a smaller file.');
+      return;
+    }
+    
+    // Process the file through the hook
+    const processedFile = handleFileChange(e);
+    if (processedFile) {
+      // Always show the AddExpenseSheet which will handle the appropriate mode
+      setShowAddExpense(true);
     }
   };
 

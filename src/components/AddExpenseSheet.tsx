@@ -170,9 +170,13 @@ const AddExpenseSheet = ({
     setShowScanDialog(false);
     setProcessingError(null);
     
-    // Remove from processing tracking
+    // Remove from processing tracking and clear cache
     if (initialFileFingerprint.current) {
       processingFiles.delete(initialFileFingerprint.current);
+      // Also clear the processing cache to allow reprocessing
+      import('@/utils/receipt/processingCache').then(({ markFileComplete }) => {
+        markFileComplete(initialFileFingerprint.current!);
+      });
       initialFileFingerprint.current = null;
     }
     
@@ -203,8 +207,8 @@ const AddExpenseSheet = ({
 
   return (
     <>
-      {/* Only show the expense form sheet for manual entry or editing */}
-      {isManualEntry && (
+      {/* Show the expense form sheet for manual entry or editing */}
+      {(isManualEntry || (!initialFile && open)) && (
         <Drawer open={open} onOpenChange={handleSheetClose}>
           <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
             <DrawerHeader className="text-center pb-2">
@@ -236,7 +240,7 @@ const AddExpenseSheet = ({
         </Drawer>
       )}
 
-      {/* Receipt scanning dialog - only shown for auto-process modes */}
+      {/* Receipt scanning dialog - only shown for auto-process modes with file */}
       {!isManualEntry && initialFile && filePreviewUrl && (
         <ReceiptScanDialog
           file={initialFile}
