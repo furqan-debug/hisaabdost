@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Search, Filter, X, Calendar, DollarSign, Store } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-picker-with-range';
 import { DateRange } from 'react-day-picker';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useKeyboardViewportFix } from '@/hooks/useKeyboardViewportFix';
 
 interface ReceiptSearchProps {
   onSearch: (filters: SearchFilters) => void;
@@ -35,6 +37,7 @@ const categories = [
 ];
 
 export function ReceiptSearch({ onSearch, onClear }: ReceiptSearchProps) {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -42,6 +45,15 @@ export function ReceiptSearch({ onSearch, onClear }: ReceiptSearchProps) {
   const [maxAmount, setMaxAmount] = useState<string>('');
   const [merchant, setMerchant] = useState('');
   const [category, setCategory] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Enable keyboard viewport fix for mobile
+  useKeyboardViewportFix({
+    sheetRef: containerRef,
+    scrollRef: scrollRef,
+    enabled: isMobile
+  });
 
   const hasActiveFilters = () => {
     return searchTerm || dateRange || minAmount || maxAmount || merchant || category;
@@ -80,19 +92,28 @@ export function ReceiptSearch({ onSearch, onClear }: ReceiptSearchProps) {
   };
 
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardContent className="p-4 space-y-4">
-        {/* Main Search Bar */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search receipts by merchant, description, or amount..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
+        <div ref={scrollRef} className="space-y-4">
+          {/* Main Search Bar */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search receipts by merchant, description, or amount..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onFocus={(e) => {
+                  // Ensure search input is visible on mobile when keyboard appears
+                  if (isMobile) {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 150);
+                  }
+                }}
+              />
           </div>
           <Button
             variant="outline"
@@ -257,6 +278,7 @@ export function ReceiptSearch({ onSearch, onClear }: ReceiptSearchProps) {
             )}
           </div>
         )}
+        </div>
       </CardContent>
     </Card>
   );
