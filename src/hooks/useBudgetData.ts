@@ -8,6 +8,7 @@ import { useBudgetQueries } from "./useBudgetQueries";
 import { useBudgetCalculations } from "./useBudgetCalculations";
 import { exportBudgetData } from "@/services/budgetExportService";
 import { useOptimizedDataSync } from "./useOptimizedDataSync";
+import { useFinnyDataSync } from "./useFinnyDataSync";
 
 export function useBudgetData() {
   const { selectedMonth } = useMonthContext();
@@ -19,6 +20,9 @@ export function useBudgetData() {
   
   // Initialize optimized data sync
   const { syncInProgress } = useOptimizedDataSync();
+  
+  // Initialize Finny data sync for real-time updates
+  useFinnyDataSync();
   
   // Remove excessive event handling - now handled by useOptimizedDataSync
   

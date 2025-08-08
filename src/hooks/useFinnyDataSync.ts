@@ -35,7 +35,11 @@ export function useFinnyDataSync() {
         case 'finny-expense-added':
           console.log('🔄 Processing expense event');
           await queryClient.invalidateQueries({ queryKey: ['expenses', user.id] });
+          await queryClient.invalidateQueries({ queryKey: ['expenses'] });
+          await queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user.id] });
           queryClient.refetchQueries({ queryKey: ['expenses', user.id] });
+          queryClient.refetchQueries({ queryKey: ['expenses'] });
+          queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user.id] });
           break;
 
         case 'budget-added':
@@ -45,7 +49,9 @@ export function useFinnyDataSync() {
         case 'update_budget':
           console.log('🔄 Processing budget event');
           await queryClient.invalidateQueries({ queryKey: ['budgets', user.id] });
+          await queryClient.invalidateQueries({ queryKey: ['budgets'] });
           queryClient.refetchQueries({ queryKey: ['budgets', user.id] });
+          queryClient.refetchQueries({ queryKey: ['budgets'] });
           break;
 
         case 'income-updated':
@@ -109,6 +115,8 @@ export function useFinnyDataSync() {
       'budget-added',
       'budget-updated',
       'budget-deleted',
+      'set_budget',
+      'update_budget',
       'income-updated',
       'goal-added',
       'goal-updated',
