@@ -23,7 +23,7 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
   
   // Refs for drag handling
   const buttonRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ y: 0, startY: 0, hasMoved: false });
+  const dragStartRef = useRef({ y: 0, startY: 0, hasMoved: false, startTime: 0 });
 
   // Calculate safe boundaries
   const getBoundaries = useCallback(() => {
@@ -58,16 +58,16 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
   // Pointer event handlers for drag
   const handlePointerDown = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
-    setIsDragging(true);
     
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    // Store initial drag data
+    // Store initial drag data with more precise tracking
     dragStartRef.current = {
       y: event.clientY,
       startY: window.innerHeight - rect.bottom,
-      hasMoved: false
+      hasMoved: false,
+      startTime: Date.now()
     };
     
     // Capture pointer
@@ -75,39 +75,46 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
   }, []);
 
   const handlePointerMove = useCallback((event: React.PointerEvent) => {
-    if (!isDragging) return;
+    if (!dragStartRef.current.startTime) return;
     
     const deltaY = dragStartRef.current.y - event.clientY;
-    const newBottomPosition = dragStartRef.current.startY + deltaY;
+    const deltaX = 0; // We only care about Y movement for this button
+    const distance = Math.sqrt(deltaY * deltaY + deltaX * deltaX);
     
-    // Apply boundaries
-    const boundaries = getBoundaries();
-    const clampedPosition = Math.max(boundaries.min, Math.min(newBottomPosition, boundaries.max));
-    
-    setPosition({ y: clampedPosition });
-    
-    // Mark as moved if significant movement
-    if (Math.abs(deltaY) > 5) {
+    // More generous threshold for mobile - 15px movement to be considered a drag
+    if (distance > 15) {
+      if (!isDragging) {
+        setIsDragging(true);
+      }
+      
+      const newBottomPosition = dragStartRef.current.startY + deltaY;
+      
+      // Apply boundaries
+      const boundaries = getBoundaries();
+      const clampedPosition = Math.max(boundaries.min, Math.min(newBottomPosition, boundaries.max));
+      
+      setPosition({ y: clampedPosition });
       dragStartRef.current.hasMoved = true;
     }
   }, [isDragging, getBoundaries]);
 
   const handlePointerUp = useCallback((event: React.PointerEvent) => {
-    if (!isDragging) return;
+    if (!dragStartRef.current.startTime) return;
+    
+    const timeHeld = Date.now() - dragStartRef.current.startTime;
     
     setIsDragging(false);
     
     // Release pointer capture
     buttonRef.current?.releasePointerCapture(event.pointerId);
     
-    // Handle click vs drag
-    if (!dragStartRef.current.hasMoved) {
-      // This was a tap, trigger onClick
+    // Handle click vs drag - quick taps (under 300ms) without movement should trigger onClick
+    if (!dragStartRef.current.hasMoved && timeHeld < 300) {
       onClick();
     }
     
     // Reset drag data
-    dragStartRef.current = { y: 0, startY: 0, hasMoved: false };
+    dragStartRef.current = { y: 0, startY: 0, hasMoved: false, startTime: 0 };
   }, [isDragging, onClick]);
 
   // Handle window resize
