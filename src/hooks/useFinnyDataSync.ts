@@ -37,6 +37,7 @@ export function useFinnyDataSync() {
           await queryClient.invalidateQueries({ queryKey: ['expenses', user.id] });
           await queryClient.invalidateQueries({ queryKey: ['expenses'] });
           await queryClient.invalidateQueries({ queryKey: ['expenses', monthKey, user.id] });
+          await queryClient.invalidateQueries({ queryKey: ['analytics-expenses'], exact: false });
           queryClient.refetchQueries({ queryKey: ['expenses', user.id] });
           queryClient.refetchQueries({ queryKey: ['expenses'] });
           queryClient.refetchQueries({ queryKey: ['expenses', monthKey, user.id] });
