@@ -66,6 +66,9 @@ const AddExpenseSheet = ({
   
   // For upload/camera modes, we should show scan dialog when file is available
   const shouldShowScanDialog = !isManualEntry && initialFile && filePreviewUrl && !processingComplete;
+  
+  // Only show the manual form for true manual entry, or when processing is complete and we need to show results
+  const shouldShowManualForm = isManualEntry && !shouldShowScanDialog;
 
   // Ensure the sheet restores correctly when the keyboard hides
   useKeyboardViewportFix({ sheetRef, scrollRef, enabled: !!open });
@@ -235,7 +238,7 @@ const AddExpenseSheet = ({
   return (
     <>
       {/* Show the expense form sheet for manual entry or editing */}
-      {(isManualEntry) && (
+      {shouldShowManualForm && (
         <Drawer open={open} onOpenChange={handleSheetClose}>
           <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
             <DrawerHeader className="text-center pb-2">

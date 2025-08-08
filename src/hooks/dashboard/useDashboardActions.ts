@@ -48,10 +48,13 @@ export function useDashboardActions() {
     setCaptureMode('camera');
     const file = await handleCameraAction();
     if (file) {
+      console.log('Dashboard: Camera file captured successfully, dispatching event:', file.name);
       // Dispatch event to open expense form with camera mode
       window.dispatchEvent(new CustomEvent('open-expense-form', { 
         detail: { mode: 'camera', file: file } 
       }));
+    } else {
+      console.log('Dashboard: Camera capture failed or cancelled');
     }
     return 'camera';
   };
