@@ -205,7 +205,10 @@ export function ReceiptScanDialog({
           scanTimedOut={scanTimedOut}
           scanError={!!scanError}
           handleScanReceipt={handleScanReceipt}
-          onCleanup={() => handleClose(isScanning, isAutoProcessing)}
+          onCleanup={() => {
+            handleClose(isScanning, isAutoProcessing);
+            setOpen(false);
+          }}
           fileExists={!!file}
           processingComplete={processingComplete}
           autoProcess={autoProcess}
