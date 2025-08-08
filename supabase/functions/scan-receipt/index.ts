@@ -1,223 +1,190 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-console.log("=== scan-receipt function loaded ===");
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Get environment variables
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+import { processReceiptWithOpenAI } from "./services/openaiService.ts";
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
   console.log("=== Receipt scanning function called ===");
   console.log("Request method:", req.method);
   console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      },
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
   try {
-    // Validate request method
-    if (req.method !== 'POST') {
-      throw new Error('Only POST method is allowed');
+    const requestBody = await req.text();
+    console.log("Request body length:", requestBody.length);
+
+    if (!requestBody) {
+      console.error("No request body received");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "No request body provided" 
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
 
-    // Validate content type
-    const contentType = req.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error("Invalid content type:", contentType);
-      throw new Error('Content-Type must be application/json');
-    }
-
-    // Get request body text first to check if it's empty
-    const bodyText = await req.text();
-    console.log("Request body length:", bodyText.length);
-    
-    if (!bodyText || bodyText.trim().length === 0) {
-      console.error("Empty request body received");
-      throw new Error('Request body is empty. Please provide file data.');
-    }
-
-    // Parse JSON safely
-    let requestData;
+    let parsedBody;
     try {
-      requestData = JSON.parse(bodyText);
+      parsedBody = JSON.parse(requestBody);
     } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      console.error("Body content (first 200 chars):", bodyText.substring(0, 200));
-      throw new Error('Invalid JSON in request body: ' + parseError.message);
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Invalid JSON in request body" 
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
 
-    const { file, fileName, fileType, fileSize } = requestData;
+    const { file, fileName, fileType, fileSize } = parsedBody;
 
-    console.log(`📥 Request received:`, {
-      fileName: fileName || 'unknown',
+    console.log("📥 Request received:", {
+      fileName,
       fileSize: fileSize ? `${(fileSize / 1024).toFixed(1)}KB` : 'unknown',
       hasFile: !!file,
-      fileType: fileType || 'unknown',
-      fileLength: file ? file.length : 0
+      fileType,
+      fileLength: file?.length || 0
     });
 
     if (!file) {
-      throw new Error('No file provided in request');
+      console.error("No file data provided");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "No file data provided" 
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
 
-    if (typeof file !== 'string') {
-      throw new Error('File must be provided as base64 string');
-    }
-
-    // Validate file size (20MB limit for processing)
-    if (fileSize && fileSize > 20 * 1024 * 1024) {
-      throw new Error('File too large. Please use an image smaller than 20MB.');
-    }
-
-    // Check if OpenAI API key is available
+    // Get OpenAI API key
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
-      console.error("❌ OpenAI API key not configured");
-      throw new Error('Receipt processing service is not configured. Please contact support.');
+      console.error("OpenAI API key not configured");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "OCR service not configured" 
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
 
     console.log("🤖 Using OpenAI Vision API for OCR processing");
-    
-    const prompt = `Analyze this receipt image and extract the following information in JSON format:
-    {
-      "success": true,
-      "date": "YYYY-MM-DD format",
-      "merchant": "store name",
-      "items": [
-        {
-          "description": "item name (keep concise)",
-          "amount": "0.00",
-          "category": "Food|Transportation|Shopping|Entertainment|Healthcare|Utilities|Other",
-          "paymentMethod": "Card"
-        }
-      ],
-      "total": "total amount"
-    }
-    
-    Important guidelines:
-    - Keep item descriptions concise and clear
-    - Use standard categories: Food, Transportation, Shopping, Entertainment, Healthcare, Utilities, Other
-    - Format amounts as strings with 2 decimal places
-    - If date is unclear, use today's date
-    - Extract ALL line items as separate entries
-    - Default payment method to "Card"
-    - Ensure every item has a valid amount greater than 0
-    - Do not create fake or placeholder items
-    - If you cannot read the receipt clearly, return success: false`;
+
+    // Convert base64 string to File-like object for processing
+    const fileBuffer = Uint8Array.from(atob(file), c => c.charCodeAt(0));
+    const fileBlob = new File([fileBuffer], fileName || 'receipt.png', {
+      type: fileType || 'image/png'
+    });
 
     console.log("Making OpenAI API request...");
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${fileType || 'image/jpeg'};base64,${file}`,
-                  detail: 'low'
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 1500,
-        temperature: 0.1,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ OpenAI API error: ${response.status} - ${errorText}`);
-      
-      if (response.status === 429) {
-        throw new Error('OpenAI API quota exceeded. Please try again later.');
-      } else if (response.status === 401) {
-        throw new Error('OpenAI API authentication failed. Please check API key.');
-      } else if (response.status === 413) {
-        throw new Error('Image file too large. Please use a smaller image.');
-      } else {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('No content returned from OpenAI');
-    }
-
+    const ocrResults = await processReceiptWithOpenAI(fileBlob, OPENAI_API_KEY);
+    
     console.log("OpenAI response received, parsing...");
 
-    try {
-      // Extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error("No JSON found in response:", content);
-        throw new Error('No JSON found in OpenAI response');
-      }
-      
-      const parsedData = JSON.parse(jsonMatch[0]);
-      
-      // Validate the parsed data
-      if (!parsedData.success) {
-        throw new Error('OpenAI could not process the receipt clearly');
-      }
-      
-      if (!parsedData.items || parsedData.items.length === 0) {
-        throw new Error('No items found in receipt');
-      }
-      
-      // Validate each item
-      const validItems = parsedData.items.filter(item => {
-        return item.description && 
-               item.amount && 
-               !isNaN(parseFloat(item.amount)) && 
-               parseFloat(item.amount) > 0;
-      });
-      
-      if (validItems.length === 0) {
-        throw new Error('No valid items with amounts found in receipt');
-      }
-      
-      // Update the parsed data with only valid items
-      parsedData.items = validItems;
-      
-      console.log(`✅ OpenAI processing successful: ${validItems.length} valid items found`);
-      return new Response(JSON.stringify(parsedData), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } catch (parseError) {
-      console.error("❌ Error parsing OpenAI response:", parseError);
-      console.error("Raw response:", content);
-      throw new Error('Failed to parse OCR results');
+    if (!ocrResults.success) {
+      console.error("❌ Error parsing OpenAI response:", ocrResults.error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: ocrResults.error || "Failed to process receipt" 
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
+
+    // Ensure we have valid items
+    if (!ocrResults.items || ocrResults.items.length === 0) {
+      console.log("No items extracted, creating fallback");
+      ocrResults.items = [{
+        description: ocrResults.merchant || "Store Purchase",
+        amount: ocrResults.total || "0.00",
+        category: "Other",
+        date: ocrResults.date || new Date().toISOString().split('T')[0],
+        paymentMethod: "Card"
+      }];
+    }
+
+    console.log(`✅ Successfully processed receipt with ${ocrResults.items.length} items`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        items: ocrResults.items,
+        date: ocrResults.date,
+        merchant: ocrResults.merchant,
+        total: ocrResults.total
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+
   } catch (error) {
-    console.error('💥 Error in scan-receipt function:', error);
+    console.error("💥 Error in scan-receipt function:", error);
     
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message || 'Receipt processing failed',
-      items: []
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || "Internal server error" 
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
   }
 });

@@ -69,14 +69,24 @@ function normalizeCategory(raw: string): string {
 
 export async function processReceiptWithOpenAI(file: File, apiKey: string): Promise<any> {
   try {
-    if (!file || file.size === 0) throw new Error("Invalid file");
+    if (!file || file.size === 0) {
+      throw new Error("Invalid file: File is empty or undefined");
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     const base64Image = bufferToBase64(arrayBuffer);
 
     console.log(`Processing receipt image with OpenAI: ${file.name} (${file.size} bytes)`);
 
-    const prompt = `Extract receipt information as JSON in this format:
+    const prompt = `You are an expert receipt analyzer. Extract the following information from this receipt image and return it in the exact JSON format shown below.
+
+Extract:
+1. Store/merchant name
+2. Purchase date (format: YYYY-MM-DD)
+3. Individual items with their prices
+4. Total amount
+
+Return ONLY valid JSON in this exact format:
 {
   "date": "YYYY-MM-DD",
   "merchant": "Store Name",
@@ -84,14 +94,22 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     {
       "description": "item name",
       "amount": "0.00",
-      "category": "category"
+      "category": "Food"
     }
   ],
   "total": "0.00"
+}
+
+Categories must be one of: Food, Rent, Utilities, Transportation, Entertainment, Shopping, Other
+
+If you cannot read the receipt clearly, return:
+{
+  "success": false,
+  "error": "Could not process receipt image"
 }`;
 
     const requestBody = {
-      model: "gpt-4o", // Using gpt-4o for vision capabilities
+      model: "gpt-4o",
       messages: [
         {
           role: "user",
@@ -104,7 +122,8 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
           ]
         }
       ],
-      max_tokens: 1500
+      max_tokens: 1500,
+      temperature: 0.1
     };
 
     const response = await fetchWithRetry(() =>
@@ -121,25 +140,51 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     if (!response.ok) {
       const errorText = await response.text();
       console.error("OpenAI API failed:", response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content || "";
-    console.log("OpenAI raw response:", content.substring(0, 200) + "...");
+    
+    if (!content) {
+      throw new Error("No content received from OpenAI API");
+    }
 
-    const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
+    console.log("OpenAI raw response:", content.substring(0, 500) + "...");
+
+    // Try to extract JSON from the response
+    let jsonString = content.trim();
+    
+    // Remove markdown code blocks if present
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ||
                       content.match(/```\s*([\s\S]*?)\s*```/) ||
-                      content.match(/{[\s\S]*}/);
+                      content.match(/\{[\s\S]*\}/);
 
-    const jsonString = jsonMatch?.[1] || jsonMatch?.[0];
-    if (!jsonString) throw new Error("No JSON found in response");
+    if (jsonMatch) {
+      jsonString = jsonMatch[1] || jsonMatch[0];
+    }
 
-    const parsed = JSON.parse(jsonString);
-    console.log("Parsed receipt data:", JSON.stringify(parsed).substring(0, 200) + "...");
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error("Failed to parse OpenAI response as JSON:", parseError);
+      console.error("Raw content:", content);
+      throw new Error("OpenAI returned invalid JSON format");
+    }
 
-    // Ensure items array exists
+    // Check if OpenAI indicated it couldn't process the image
+    if (parsed.success === false) {
+      throw new Error(parsed.error || "OpenAI could not process the receipt clearly");
+    }
+
+    // Validate and normalize the response
     if (!parsed.items || !Array.isArray(parsed.items)) {
+      parsed.items = [];
+    }
+
+    // If no items were found, create a fallback item
+    if (parsed.items.length === 0) {
       parsed.items = [{
         description: parsed.merchant || "Store Purchase",
         amount: parsed.total || "0.00",
@@ -147,19 +192,18 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
         date: parsed.date || new Date().toISOString().split('T')[0],
         paymentMethod: "Card"
       }];
+    } else {
+      // Normalize existing items
+      parsed.items = parsed.items.map((item: any) => ({
+        ...item,
+        category: normalizeCategory(item.category || "Other"),
+        amount: parseFloat(item.amount || "0").toFixed(2),
+        date: parsed.date || new Date().toISOString().split('T')[0],
+        paymentMethod: "Card"
+      }));
     }
 
-    // Normalize categories to ensure they're valid in your app
-    parsed.items = parsed.items.map((item: any) => ({
-      ...item,
-      category: normalizeCategory(item.category),
-      amount: parseFloat(item.amount || "0").toFixed(2),
-      date: parsed.date || new Date().toISOString().split('T')[0],
-      paymentMethod: "Card"
-    }));
-
-    // Add receipt URL placeholder (will be replaced later)
-    parsed.receiptUrl = "pending_upload";
+    console.log(`✅ Successfully processed receipt with ${parsed.items.length} items`);
     
     return {
       ...parsed,
@@ -167,21 +211,16 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
     };
 
   } catch (error) {
-    console.error("OpenAI processing failed - returning default receipt structure:", error);
-    const currentDate = new Date().toISOString().split('T')[0];
+    console.error("OpenAI processing failed:", error);
+    
+    // Return a structured error response instead of throwing
     return {
-      date: currentDate,
-      merchant: "Store",
-      items: [{
-        description: "Store Purchase",
-        amount: "0.00",
-        category: "Other",
-        date: currentDate,
-        paymentMethod: "Card"
-      }],
-      total: "0.00",
       success: false,
-      error: error.message || "Unknown error in receipt processing"
+      error: error.message || "Failed to process receipt image",
+      items: [],
+      date: new Date().toISOString().split('T')[0],
+      merchant: "Store",
+      total: "0.00"
     };
   }
 }

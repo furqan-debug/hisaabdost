@@ -15,7 +15,6 @@ interface ReceiptSectionProps {
     category: string;
     paymentMethod: string;
   }) => void;
-  // Add new prop to indicate if this is from the manual form or auto-process mode
   isManualForm?: boolean;
 }
 
@@ -26,7 +25,7 @@ export function ReceiptSection({
   setFileInputRef,
   setCameraInputRef,
   onCapture,
-  isManualForm = false // Default to auto-processing mode
+  isManualForm = false
 }: ReceiptSectionProps) {
   const [hasReceipt, setHasReceipt] = useState(!!receiptUrl);
   
@@ -34,6 +33,15 @@ export function ReceiptSection({
   useEffect(() => {
     setHasReceipt(!!receiptUrl);
   }, [receiptUrl]);
+  
+  // Modified onFileChange handler to prevent manual form interference
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only call the parent onFileChange if we're in manual form mode
+    // For auto-processing mode, the ReceiptField handles everything internally
+    if (isManualForm) {
+      onFileChange(e);
+    }
+  };
   
   return (
     <div>
@@ -45,11 +53,11 @@ export function ReceiptSection({
       </p>
       <ReceiptField 
         receiptUrl={receiptUrl} 
-        onFileChange={onFileChange}
+        onFileChange={handleFileChange}
         setFileInputRef={setFileInputRef}
         setCameraInputRef={setCameraInputRef}
         onCapture={onCapture}
-        autoProcess={!isManualForm} // Always auto-process when not in manual form
+        autoProcess={!isManualForm}
       />
       {isUploading && (
         <p className="text-xs text-muted-foreground mt-2">
