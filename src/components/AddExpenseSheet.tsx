@@ -7,6 +7,7 @@ import { ReceiptScanDialog } from "./expenses/form-fields/receipt/ReceiptScanDia
 import { toast } from "sonner";
 import { generateFileFingerprint } from "@/utils/receiptFileProcessor";
 import { useModalState } from "@/hooks/useModalState";
+import { useKeyboardViewportFix } from "@/hooks/useKeyboardViewportFix";
 
 interface AddExpenseSheetProps {
   onAddExpense: (expense?: Expense) => void;
@@ -37,6 +38,8 @@ const AddExpenseSheet = ({
   const initialFileFingerprint = useRef<string | null>(null);
   const [processingComplete, setProcessingComplete] = useState(false);
   const { setModalOpen } = useModalState();
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const {
     formData,
@@ -59,6 +62,9 @@ const AddExpenseSheet = ({
 
   // Determine if this is a manual entry or auto-process mode
   const isManualEntry = initialCaptureMode === 'manual' || !!expenseToEdit;
+
+  // Ensure the sheet restores correctly when the keyboard hides
+  useKeyboardViewportFix({ sheetRef, scrollRef, enabled: !!open });
 
   // Handle initial capture mode and file
   useEffect(() => {
@@ -194,7 +200,7 @@ const AddExpenseSheet = ({
   return (
     <>
       <Drawer open={open} onOpenChange={handleSheetClose}>
-        <DrawerContent className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
+        <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
           <DrawerHeader className="text-center pb-2">
             <DrawerTitle>{expenseToEdit ? "Edit Expense" : "Add New Expense"}</DrawerTitle>
             <DrawerDescription>
@@ -205,7 +211,7 @@ const AddExpenseSheet = ({
             </DrawerDescription>
           </DrawerHeader>
           
-          <div className="px-4 pb-6 flex-1 overflow-y-auto min-h-0 form-container">
+          <div ref={scrollRef} className="px-4 pb-6 flex-1 overflow-y-auto min-h-0 form-container">
             <ExpenseForm
               formData={formData}
               isSubmitting={isSubmitting}

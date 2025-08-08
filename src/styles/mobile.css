@@ -149,3 +149,16 @@
     }
   }
 }
+
+/* Keyboard-safe drawer content transitions and fixes */
+.keyboard-safe {
+  transition: transform 0.25s ease, padding-bottom 0.25s ease;
+  will-change: transform, padding-bottom;
+}
+
+/* Smooth scrolling inside form container and better touch behavior */
+.form-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
