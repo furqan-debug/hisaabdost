@@ -113,16 +113,61 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
       if (data.action) {
         console.log('Advanced action performed:', data.action.type);
         
-        // Trigger comprehensive refresh events
+        // Trigger comprehensive refresh events based on action type
         const triggerAdvancedRefreshEvents = () => {
-          const events = [
-            'expense-added',
-            'finny-expense-added',
-            'expenses-updated',
-            'expense-refresh',
-            'dashboard-refresh',
-            'finny-advanced-action'
-          ];
+          let events = [];
+          
+          // Determine events based on action type
+          switch (data.action.type) {
+            case 'add_expense':
+            case 'update_expense':
+            case 'delete_expense':
+              events = [
+                'expense-added',
+                'finny-expense-added',
+                'expenses-updated',
+                'expense-refresh',
+                'dashboard-refresh',
+                'finny-advanced-action'
+              ];
+              break;
+              
+            case 'set_budget':
+            case 'update_budget':
+              events = [
+                'budget-added',
+                'budget-updated',
+                'budget-refresh',
+                'expenses-updated',
+                'dashboard-refresh',
+                'finny-advanced-action'
+              ];
+              break;
+              
+            case 'delete_budget':
+              events = [
+                'budget-deleted',
+                'budget-refresh',
+                'expenses-updated',
+                'dashboard-refresh',
+                'finny-advanced-action'
+              ];
+              break;
+              
+            default:
+              // For unknown actions, dispatch all events
+              events = [
+                'expense-added',
+                'finny-expense-added',
+                'expenses-updated',
+                'expense-refresh',
+                'budget-added',
+                'budget-updated',
+                'budget-refresh',
+                'dashboard-refresh',
+                'finny-advanced-action'
+              ];
+          }
           
           events.forEach(eventName => {
             window.dispatchEvent(new CustomEvent(eventName, { 
@@ -130,11 +175,12 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
                 source: 'finny-advanced-chat', 
                 userId: user.id,
                 action: data.action.type,
+                actionData: data.action,
                 timestamp: Date.now(),
                 insights: data.insights
               } 
             }));
-            console.log(`Dispatched ${eventName} event from Advanced Finny`);
+            console.log(`Dispatched ${eventName} event from Advanced Finny for action: ${data.action.type}`);
           });
         };
 
