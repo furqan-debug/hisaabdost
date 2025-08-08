@@ -1,4 +1,3 @@
-
 import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
 
 export interface EnhancedExpenseData {
@@ -173,15 +172,15 @@ export class EnhancedExtractor {
   private static determineCategory(text: string, fullMessage: string): string {
     const lowerText = (text + ' ' + fullMessage).toLowerCase();
     
-    // Category mapping with enhanced keywords
+    // Category mapping with enhanced keywords - using official categories
     const categoryMap: Record<string, string[]> = {
-      'Food': ['food', 'lunch', 'dinner', 'breakfast', 'coffee', 'restaurant', 'eat', 'meal', 'snack', 'grocery', 'groceries', 'pizza', 'burger', 'chicken', 'rice', 'bread'],
-      'Transportation': ['gas', 'fuel', 'petrol', 'transport', 'uber', 'taxi', 'bus', 'train', 'car', 'parking', 'toll', 'metro', 'subway'],
-      'Entertainment': ['movie', 'cinema', 'game', 'concert', 'show', 'entertainment', 'netflix', 'spotify', 'gaming', 'party', 'club'],
-      'Shopping': ['shopping', 'clothes', 'shoes', 'shirt', 'dress', 'purchase', 'buy', 'bought', 'store', 'mall', 'amazon'],
-      'Utilities': ['electricity', 'water', 'internet', 'phone', 'bill', 'utility', 'wifi', 'mobile', 'cable'],
-      'Healthcare': ['doctor', 'medicine', 'pharmacy', 'medical', 'health', 'hospital', 'dentist', 'checkup'],
-      'Rent': ['rent', 'rental', 'housing', 'apartment', 'house', 'mortgage', 'lease']
+      'Food': ['food', 'lunch', 'dinner', 'breakfast', 'coffee', 'restaurant', 'eat', 'meal', 'snack', 'grocery', 'groceries', 'pizza', 'burger', 'chicken', 'rice', 'bread', 'dining', 'cafe'],
+      'Transportation': ['gas', 'fuel', 'petrol', 'transport', 'uber', 'taxi', 'bus', 'train', 'car', 'parking', 'toll', 'metro', 'subway', 'vehicle', 'ride'],
+      'Entertainment': ['movie', 'cinema', 'game', 'concert', 'show', 'entertainment', 'netflix', 'spotify', 'gaming', 'party', 'club', 'music', 'theater'],
+      'Shopping': ['shopping', 'clothes', 'shoes', 'shirt', 'dress', 'purchase', 'buy', 'bought', 'store', 'mall', 'amazon', 'pants', 'jacket'],
+      'Utilities': ['electricity', 'water', 'internet', 'phone', 'bill', 'utility', 'wifi', 'mobile', 'cable', 'power', 'electric', 'telephone'],
+      'Healthcare': ['doctor', 'medicine', 'pharmacy', 'medical', 'health', 'hospital', 'dentist', 'checkup', 'clinic', 'fitness', 'gym'],
+      'Rent': ['rent', 'rental', 'housing', 'apartment', 'house', 'mortgage', 'lease', 'home', 'property']
     };
     
     for (const [category, keywords] of Object.entries(categoryMap)) {
