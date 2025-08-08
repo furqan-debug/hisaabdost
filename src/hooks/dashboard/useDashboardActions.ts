@@ -38,25 +38,13 @@ export function useDashboardActions() {
   };
 
   const handleUploadReceipt = () => {
-    console.log('Dashboard: handleUploadReceipt called - behaving exactly like expenses page upload button');
-    setCaptureMode('upload');
-    handleUploadAction();
+    console.log('Dashboard: handleUploadReceipt called - navigating to expenses page with auto-expand');
+    navigate('/app/expenses?expand=upload');
   };
 
   const handleTakePhoto = async () => {
-    console.log('Dashboard: handleTakePhoto called - behaving exactly like expenses page camera button');
-    setCaptureMode('camera');
-    const file = await handleCameraAction();
-    if (file) {
-      console.log('Dashboard: Camera file captured successfully, dispatching event:', file.name);
-      // Dispatch event to open expense form with camera mode
-      window.dispatchEvent(new CustomEvent('open-expense-form', { 
-        detail: { mode: 'camera', file: file } 
-      }));
-    } else {
-      console.log('Dashboard: Camera capture failed or cancelled');
-    }
-    return 'camera';
+    console.log('Dashboard: handleTakePhoto called - navigating to expenses page with auto-expand');
+    navigate('/app/expenses?expand=camera');
   };
 
   const handleAddBudget = () => {

@@ -4,11 +4,12 @@ import { Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { ExportActions } from "@/components/expenses/header/ExportActions";
 import { useReceiptCapture } from "@/hooks/useReceiptCapture";
+import { useSearchParams } from "react-router-dom";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -30,6 +31,7 @@ export function ExpenseHeader({
   exportToPDF
 }: ExpenseHeaderProps) {
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [expandAddOptions, setExpandAddOptions] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<string | null>(null);
@@ -46,15 +48,7 @@ export function ExpenseHeader({
     handleCameraAction
   } = useReceiptCapture();
 
-  const handleFileSelectionWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = handleFileSelection(e);
-    if (file) {
-      // Always show the AddExpenseSheet which will handle the appropriate mode
-      setShowAddExpense(true);
-    }
-  };
-
-  const handleOpenSheet = async (mode: 'manual' | 'upload' | 'camera') => {
+  const handleOpenSheet = useCallback(async (mode: 'manual' | 'upload' | 'camera') => {
     setActiveButton(mode);
     setCaptureMode(mode);
     
@@ -73,6 +67,35 @@ export function ExpenseHeader({
         }
       }
     }, 300);
+  }, [setCaptureMode, setShowAddExpense, handleUploadAction, handleCameraAction]);
+
+  // Handle URL parameters for auto-expanding options
+  useEffect(() => {
+    const expandParam = searchParams.get('expand');
+    if (expandParam) {
+      console.log('Auto-expanding expense options for:', expandParam);
+      setExpandAddOptions(true);
+      
+      // Auto-trigger the appropriate action after expanding
+      setTimeout(() => {
+        if (expandParam === 'upload') {
+          handleOpenSheet('upload');
+        } else if (expandParam === 'camera') {
+          handleOpenSheet('camera');
+        }
+        
+        // Clean up URL parameter
+        setSearchParams(new URLSearchParams());
+      }, 500);
+    }
+  }, [searchParams, setSearchParams, handleOpenSheet]);
+
+  const handleFileSelectionWrapper = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = handleFileSelection(e);
+    if (file) {
+      // Always show the AddExpenseSheet which will handle the appropriate mode
+      setShowAddExpense(true);
+    }
   };
 
   const handleExport = async (type: 'csv' | 'pdf') => {
