@@ -232,7 +232,7 @@ const AddExpenseSheet = ({
   return (
     <>
       {/* Show the expense form sheet for manual entry or editing */}
-      {(isManualEntry || (!initialFile && open)) && (
+      {(isManualEntry && (initialCaptureMode === 'manual' || !!expenseToEdit)) && (
         <Drawer open={open} onOpenChange={handleSheetClose}>
           <DrawerContent ref={sheetRef} className="max-h-[95dvh] md:max-h-[90vh] keyboard-safe">
             <DrawerHeader className="text-center pb-2">
@@ -264,19 +264,44 @@ const AddExpenseSheet = ({
         </Drawer>
       )}
 
-      {/* Receipt scanning dialog - only shown for auto-process modes with file */}
-      {!isManualEntry && initialFile && filePreviewUrl && (
-        <ReceiptScanDialog
-          file={initialFile}
-          previewUrl={filePreviewUrl}
-          open={showScanDialog}
-          setOpen={setShowScanDialog}
-          onCleanup={handleScanDialogCleanup}
-          onCapture={handleScanComplete}
-          autoSave={true}
-          autoProcess={true}
-          onSuccess={handleScanSuccess}
-        />
+      {/* Receipt scanning dialog - only shown for upload mode waiting for file or auto-process modes with file */}
+      {(initialCaptureMode === 'upload' && open && !initialFile) ? (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-background rounded-lg p-6 m-4 max-w-sm w-full text-center">
+            <h3 className="text-lg font-semibold mb-2">Upload Receipt</h3>
+            <p className="text-muted-foreground mb-4">Tap the button below to select a receipt from your gallery</p>
+            <div className="flex gap-2 justify-center">
+              <button 
+                onClick={() => {
+                  triggerFileUpload();
+                }}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              >
+                Choose File
+              </button>
+              <button 
+                onClick={handleScanDialogCleanup}
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        (!isManualEntry && initialFile && filePreviewUrl) && (
+          <ReceiptScanDialog
+            file={initialFile}
+            previewUrl={filePreviewUrl}
+            open={showScanDialog}
+            setOpen={setShowScanDialog}
+            onCleanup={handleScanDialogCleanup}
+            onCapture={handleScanComplete}
+            autoSave={true}
+            autoProcess={true}
+            onSuccess={handleScanSuccess}
+          />
+        )
       )}
     </>
   );
