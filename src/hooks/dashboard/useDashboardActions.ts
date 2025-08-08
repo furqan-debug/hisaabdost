@@ -55,8 +55,10 @@ export function useDashboardActions() {
   const handleUploadReceipt = () => {
     console.log('Dashboard: handleUploadReceipt called');
     setCaptureMode('upload');
-    // Trigger file upload directly
-    triggerFileUpload();
+    // Open expense form in upload mode; the sheet will trigger the gallery picker
+    window.dispatchEvent(new CustomEvent('open-expense-form', { 
+      detail: { mode: 'upload' }
+    }));
     return 'upload';
   };
 

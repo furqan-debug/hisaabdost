@@ -40,6 +40,7 @@ const AddExpenseSheet = ({
   const { setModalOpen } = useModalState();
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const hasTriggeredUploadRef = useRef(false);
 
   const {
     formData,
@@ -114,10 +115,25 @@ const AddExpenseSheet = ({
     }
   }, [open, expenseToEdit, initialFile, initialCaptureMode, processReceiptFile]);
 
+  // Auto-trigger file upload when opening in 'upload' mode without an initial file
+  useEffect(() => {
+    if (open && !expenseToEdit && initialCaptureMode === 'upload' && !initialFile && !hasTriggeredUploadRef.current) {
+      hasTriggeredUploadRef.current = true;
+      setTimeout(() => {
+        try {
+          triggerFileUpload();
+        } catch (e) {
+          console.error("Failed to trigger file upload:", e);
+        }
+      }, 150);
+    }
+  }, [open, expenseToEdit, initialCaptureMode, initialFile, triggerFileUpload]);
+
   // Reset state when sheet is closed
   useEffect(() => {
     if (!open) {
       initialFileProcessed.current = false;
+      hasTriggeredUploadRef.current = false;
       if (initialFileFingerprint.current) {
         processingFiles.delete(initialFileFingerprint.current);
         initialFileFingerprint.current = null;
