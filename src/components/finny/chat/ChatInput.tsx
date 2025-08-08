@@ -4,9 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import './styles/keyboard.css';
-import CustomKeyboard from './CustomKeyboard';
-import { useCustomKeyboard } from './hooks/useCustomKeyboard';
 
 interface ChatInputProps {
   value: string;
@@ -30,63 +27,82 @@ const ChatInput: React.FC<ChatInputProps> = ({
   placeholder = "Type your message...",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  // Load custom keyboard preference from localStorage
-  const [useCustomKeyboardMode, setUseCustomKeyboardMode] = useState(() => {
-    const saved = localStorage.getItem('finny-use-custom-keyboard');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Custom keyboard hook
-  const {
-    isKeyboardVisible,
-    inputValue,
-    inputRef,
-    showKeyboard,
-    hideKeyboard,
-    handleKeyPress,
-    handleBackspace,
-    handleEnter,
-    updateInputValue
-  } = useCustomKeyboard();
 
-  // Sync custom keyboard input with parent component
+  // Enhanced keyboard visibility handling
   useEffect(() => {
-    updateInputValue(value);
-  }, [value, updateInputValue]);
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        // Get viewport dimensions
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const windowHeight = window.innerHeight;
+        const heightDiff = windowHeight - viewportHeight;
+        
+        // Detect keyboard open (more sensitive detection)
+        if (heightDiff > 100) {
+          setKeyboardHeight(heightDiff);
+          document.body.classList.add('keyboard-open');
+          
+          // Scroll input into view with proper timing
+          setTimeout(() => {
+            if (containerRef.current && isFocused) {
+              containerRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'end',
+                inline: 'nearest'
+              });
+            }
+          }, 150);
+        } else {
+          setKeyboardHeight(0);
+          document.body.classList.remove('keyboard-open');
+        }
+      }
+    };
 
-  // Handle input change - update both custom keyboard and parent
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    updateInputValue(newValue);
-    onChange(e);
-  };
+    // Listen to both resize and visualViewport events
+    const setupListeners = () => {
+      if (typeof window !== 'undefined') {
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', handleResize);
+        }
+        window.addEventListener('resize', handleResize);
+        
+        return () => {
+          if (window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', handleResize);
+          }
+          window.removeEventListener('resize', handleResize);
+          document.body.classList.remove('keyboard-open');
+        };
+      }
+    };
+
+    return setupListeners();
+  }, [isFocused]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const valueToSubmit = useCustomKeyboardMode ? inputValue : value;
-    if (!valueToSubmit.trim() || disabled || isLoading || !isAuthenticated) return;
+    if (!value.trim() || disabled || isLoading || !isAuthenticated) return;
     onSubmit(e);
-    if (useCustomKeyboardMode) {
-      updateInputValue(''); // Clear custom keyboard input
-    }
   };
 
   const handleFocus = () => {
     setIsFocused(true);
     document.body.classList.add('finny-input-focused');
     
-    if (useCustomKeyboardMode) {
-      // Show custom keyboard instead of native
-      showKeyboard();
-      // Prevent native keyboard
-      if (inputRef.current) {
-        inputRef.current.setAttribute('readonly', 'true');
-        setTimeout(() => {
-          inputRef.current?.removeAttribute('readonly');
-        }, 100);
+    // Ensure input is visible after keyboard appears
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',
+          inline: 'nearest'
+        });
       }
-    }
+    }, 300);
   };
 
   const handleBlur = () => {
@@ -94,103 +110,64 @@ const ChatInput: React.FC<ChatInputProps> = ({
     document.body.classList.remove('finny-input-focused');
   };
 
-  // Handle custom keyboard actions
-  const handleCustomKeyboardEnter = () => {
-    // Create a synthetic form event
-    const form = inputRef.current?.closest('form');
-    if (form) {
-      const event = new Event('submit', { bubbles: true, cancelable: true });
-      Object.defineProperty(event, 'target', { value: form, enumerable: true });
-      handleSubmit(event as any);
-    }
-  };
+  const canSend = value.trim() && !disabled && !isLoading && isAuthenticated;
 
-  const canSend = (useCustomKeyboardMode ? inputValue.trim() : value.trim()) && !disabled && !isLoading && isAuthenticated;
-
-   return (
-     <>
-       <div 
-         ref={containerRef}
-         className={`
-           finny-chat-input-container w-full p-4
-           ${isKeyboardVisible && useCustomKeyboardMode ? 'custom-keyboard-active' : ''}
-           ${isFocused ? 'input-focused' : ''}
-         `}
-       >
-       <form onSubmit={handleSubmit} className="w-full">
-         <div className={`
-           flex items-center gap-2 p-3 rounded-xl border transition-all duration-200
-           ${isFocused 
-             ? 'border-primary bg-background shadow-lg' 
-             : 'border-border bg-muted/50'
-           }
-         `}>
-           <Input
-             ref={inputRef}
-             value={useCustomKeyboardMode ? inputValue : value}
-             onChange={handleInputChange}
-             onFocus={handleFocus}
-             onBlur={handleBlur}
-             disabled={disabled || !isAuthenticated}
-             placeholder={placeholder}
-             className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-muted-foreground"
-             autoComplete="off"
-             autoCorrect="off"
-             autoCapitalize="sentences"
-             inputMode={useCustomKeyboardMode ? "none" : "text"}
-             readOnly={useCustomKeyboardMode && isKeyboardVisible}
-           />
-           
-           <Button
-             type="submit"
-             size="sm"
-             disabled={!canSend}
-             className={`
-               w-9 h-9 p-0 rounded-lg flex-shrink-0
-               ${canSend 
-                 ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm' 
-                 : 'bg-muted text-muted-foreground cursor-not-allowed'
-               }
-             `}
-           >
-             {isLoading || isConnecting ? (
-               <Loader2 className="w-4 h-4 animate-spin" />
-             ) : (
-               <Send className="w-4 h-4" />
-             )}
-           </Button>
-         </div>
-         
-         {/* Toggle between custom and native keyboard */}
-         <div className="flex justify-center mt-2">
-           <button
-             type="button"
-             onClick={() => {
-               const newMode = !useCustomKeyboardMode;
-               setUseCustomKeyboardMode(newMode);
-               localStorage.setItem('finny-use-custom-keyboard', JSON.stringify(newMode));
-               if (isKeyboardVisible) hideKeyboard();
-             }}
-             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-           >
-             {useCustomKeyboardMode ? 'Use system keyboard' : 'Use custom keyboard'}
-           </button>
-         </div>
-       </form>
-       </div>
-       
-       {/* Custom Keyboard - positioned as portal */}
-       {isKeyboardVisible && useCustomKeyboardMode && (
-         <CustomKeyboard
-           isVisible={true}
-           onKeyPress={handleKeyPress}
-           onBackspace={handleBackspace}
-           onEnter={handleCustomKeyboardEnter}
-           onClose={hideKeyboard}
-         />
-       )}
-     </>
-   );
+  return (
+    <div 
+      ref={containerRef}
+      className={`
+        finny-chat-input-container
+        ${keyboardHeight > 0 ? 'keyboard-active' : ''}
+        ${isFocused ? 'input-focused' : ''}
+      `}
+      style={{
+        '--keyboard-height': `${keyboardHeight}px`
+      } as React.CSSProperties}
+    >
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className={`
+          flex items-center gap-2 p-3 rounded-xl border transition-all duration-200
+          ${isFocused 
+            ? 'border-blue-500 bg-white dark:bg-gray-800 shadow-lg' 
+            : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'
+          }
+        `}>
+          <Input
+            ref={inputRef}
+            value={value}
+            onChange={onChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            disabled={disabled || !isAuthenticated}
+            placeholder={placeholder}
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-gray-500 dark:placeholder:text-gray-400"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+          />
+          
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!canSend}
+            className={`
+              w-9 h-9 p-0 rounded-lg flex-shrink-0
+              ${canSend 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+              }
+            `}
+          >
+            {isLoading || isConnecting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default ChatInput;
