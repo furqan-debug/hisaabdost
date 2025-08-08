@@ -7,20 +7,15 @@ export async function fetchUserCategories(
   console.log("Fetching user categories for user:", userId);
   
   try {
-    // Get all default categories
+    // Get all default categories (official app list)
     const defaultCategories = [
-      'Food & Dining',
-      'Shopping',
+      'Food',
+      'Rent',
+      'Utilities',
       'Transportation',
       'Entertainment',
-      'Bills & Utilities',
+      'Shopping',
       'Healthcare',
-      'Travel',
-      'Education',
-      'Gifts & Donations',
-      'Personal Care',
-      'Home & Garden',
-      'Business',
       'Other'
     ];
 
@@ -35,9 +30,9 @@ export async function fetchUserCategories(
       return defaultCategories; // Return defaults if there's an error
     }
 
-    // Combine default and custom categories
-    const customCategoryNames = customCategories?.map(cat => cat.name) || [];
-    const allCategories = [...defaultCategories, ...customCategoryNames];
+    // Combine default and custom categories (deduped, trimmed)
+    const customCategoryNames = customCategories?.map(cat => cat.name?.trim()) || [];
+    const allCategories = Array.from(new Set([...defaultCategories, ...customCategoryNames]));
     
     console.log("Available categories for user:", allCategories);
     return allCategories;
@@ -45,18 +40,13 @@ export async function fetchUserCategories(
   } catch (error) {
     console.error('Error in fetchUserCategories:', error);
     return [
-      'Food & Dining',
-      'Shopping',
+      'Food',
+      'Rent',
+      'Utilities',
       'Transportation',
       'Entertainment',
-      'Bills & Utilities',
+      'Shopping',
       'Healthcare',
-      'Travel',
-      'Education',
-      'Gifts & Donations',
-      'Personal Care',
-      'Home & Garden',
-      'Business',
       'Other'
     ];
   }
