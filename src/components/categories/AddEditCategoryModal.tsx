@@ -145,7 +145,7 @@ export function AddEditCategoryModal({
           </DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? '⚠️ Editing the category name will change the entire category.'
+              ? 'Update the category name and color.'
               : 'Create a new expense category with a custom name and color.'
             }
           </DialogDescription>
