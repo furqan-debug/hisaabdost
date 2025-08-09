@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -27,7 +27,6 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // THIS IS THE FINAL, CORRECTED SCROLL LOGIC
   useLayoutEffect(() => {
     if (layoutContainerRef.current) {
       layoutContainerRef.current.scrollTop = 0;
