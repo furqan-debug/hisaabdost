@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,8 +18,7 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
   
-  const layoutContainerRef = useRef<HTMLDivElement>(null);
-  
+  // Check if current route is a main tab that shows ads
   const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
   
   useEffect(() => {
@@ -27,19 +27,18 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  useLayoutEffect(() => {
-    if (layoutContainerRef.current) {
-      layoutContainerRef.current.scrollTop = 0;
-    }
-  }, [location.pathname]);
+  console.log('Layout: loading =', loading, 'user =', !!user);
 
   if (loading) {
     return <OptimizedLoadingScreen message="Loading app..." />;
   }
 
   if (!user) {
+    console.log('Layout: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
+
+  console.log('Layout: User authenticated, rendering app');
 
   return (
     <LayoutWrapper>
@@ -51,7 +50,6 @@ const Layout = () => {
         />
       )}
       <LayoutContainer 
-        ref={layoutContainerRef}
         isMobile={isMobile} 
         pageTransition={pageTransition}
       >
