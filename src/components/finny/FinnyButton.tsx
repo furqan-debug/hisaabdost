@@ -40,7 +40,7 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 
   return (
     <motion.div
-      className="fixed z-40 right-4 bottom-20 md:bottom-8"
+      className="fixed z-40 right-6 bottom-24 md:right-8 md:bottom-10"
       style={{
         touchAction: 'manipulation'
       }}
