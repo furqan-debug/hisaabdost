@@ -40,7 +40,7 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 
   return (
     <motion.div
-      className="fixed z-40 right-6 bottom-24 md:right-8 md:bottom-10 w-24 h-24 flex items-center justify-center"
+      className="fixed z-40 right-4 bottom-24 md:bottom-8"
       style={{
         touchAction: 'manipulation'
       }}
@@ -118,20 +118,21 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
         <motion.div
           className="relative z-10"
           animate={{
-            scale: isHovering ? 1.1 : [1, 1.05, 1],
-            rotate: isHovering ? [0, -5, 5, -3, 0] : 0,
+            // This creates the continuous pulse: normal -> bigger -> normal
+            scale: [1, 1.05, 1],
           }}
           transition={{
+            // This makes the scale animation loop forever on all devices
             scale: {
-              duration: isHovering ? 0.3 : 2,
-              repeat: isHovering ? 0 : Infinity,
-              repeatType: "mirror",
-              ease: "easeInOut"
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
             },
-            rotate: { 
-              duration: 0.6, 
-              ease: "easeInOut"
-            }
+          }}
+          whileHover={{
+            // This is the enhanced animation for desktop hover
+            scale: 1.15,
+            rotate: [0, -5, 5, -3, 0],
           }}
         >
           <Bot className="w-8 h-8 text-white drop-shadow-lg" />
