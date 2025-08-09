@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,19 +26,17 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // Ensure each navigation starts at the top of the page
+  // --- THIS IS THE CORRECTED SCROLL-TO-TOP LOGIC ---
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    // Scroll to top after route renders
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      // Additional fallbacks for some browsers
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
-  }, [location.pathname, location.search]);
+    // Using a timeout with a very short delay ensures the scroll happens
+    // after the new page has had a chance to render.
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100); // A small 100ms delay is imperceptible but very reliable.
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]); // This effect runs every time the page route changes.
+  // --- END OF CORRECTED LOGIC ---
 
   console.log('Layout: loading =', loading, 'user =', !!user);
 
