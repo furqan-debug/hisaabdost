@@ -1,4 +1,4 @@
-import React, 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
@@ -46,7 +46,7 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           shadow-purple-500/25 hover:shadow-purple-400/40
         `}
       >
-        {/* All your original animations for pulses, icon, and dot are preserved below */}
+        {/* Your original animations are preserved below */}
         <motion.div 
           className="absolute inset-0 rounded-full bg-purple-400 pointer-events-none"
           animate={{ 
