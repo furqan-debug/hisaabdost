@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, RotateCcw, Sparkles } from 'lucide-react';
@@ -36,37 +37,58 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   isOpen,
   onClose,
   user,
-  // ... other props
-  ...props 
+  oldestMessageTime,
+  isConnectingToData,
+  filteredMessages,
+  isTyping,
+  isLoading,
+  quickReplies,
+  messagesEndRef,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  handleQuickReply,
+  resetChat,
+  isAuthPromptOnly,
+  insights
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [dynamicHeight, setDynamicHeight] = useState<number | string>('100%');
 
-  // --- NEW, ROBUST KEYBOARD HANDLING LOGIC ---
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen && chatRef.current) {
+      chatRef.current.focus();
+    }
+  }, [isOpen]);
 
-    const handleResize = () => {
-      if (window.visualViewport) {
-        // Set the height of the container to the exact visible height
-        setDynamicHeight(window.visualViewport.height);
+  // Enhanced mobile keyboard and layout handling
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('finny-chat-open');
+      // Prevent body scroll when chat is open on mobile
+      document.body.style.overflow = 'hidden';
+      
+      // Add viewport meta tag handling for mobile
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
       }
-    };
+    } else {
+      document.body.classList.remove('finny-chat-open', 'keyboard-open');
+      document.body.style.overflow = '';
+      
+      // Reset viewport
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      }
+    }
 
-    // Set initial height
-    handleResize();
-
-    // Add listener for when keyboard opens/closes or other resize events
-    const visualViewport = window.visualViewport;
-    visualViewport?.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the listener
     return () => {
-      visualViewport?.removeEventListener('resize', handleResize);
+      document.body.classList.remove('finny-chat-open', 'keyboard-open');
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
-  // --- END OF NEW LOGIC ---
 
   if (!isOpen) return null;
 
@@ -76,23 +98,21 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end justify-center"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end justify-center p-0 md:p-4 md:items-center"
         onClick={onClose}
       >
         <motion.div
           ref={chatRef}
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "100%", opacity: 0 }}
-          transition={{ type: "spring", damping: 30, stiffness: 250 }}
-          className="w-full max-w-md flex flex-col bg-white dark:bg-gray-900 md:rounded-lg md:max-h-[85vh] md:mb-4"
-          // The height is now controlled by our new logic
-          style={{ height: typeof dynamicHeight === 'number' ? `${dynamicHeight}px` : dynamicHeight }}
+          initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="w-full max-w-md h-full md:h-auto md:max-h-[85vh] flex flex-col finny-chat-mobile-fix"
           onClick={(e) => e.stopPropagation()}
         >
-          <Card className="flex flex-col flex-1 h-full border-0 shadow-none bg-transparent overflow-hidden">
-            {/* Header */}
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+          <Card className="flex flex-col h-full border shadow-2xl bg-white dark:bg-gray-900 overflow-hidden rounded-none md:rounded-lg">
+            {/* Header with enhanced mobile support */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-800 safe-area-top flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -108,7 +128,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={props.resetChat}
+                      onClick={resetChat}
                       className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <RotateCcw className="h-4 w-4" />
@@ -126,33 +146,33 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               </div>
             </div>
 
-            {/* Messages Area */}
-            <div className="flex-1 relative overflow-hidden">
+            {/* Messages Area - enhanced for keyboard handling */}
+            <div className="flex-1 relative finny-messages-mobile overflow-hidden">
               <MessagesArea
                 user={user}
-                oldestMessageTime={props.oldestMessageTime}
-                isConnectingToData={props.isConnectingToData}
-                filteredMessages={props.filteredMessages}
-                isTyping={props.isTyping}
-                isLoading={props.isLoading}
-                quickReplies={props.quickReplies}
-                messagesEndRef={props.messagesEndRef}
+                oldestMessageTime={oldestMessageTime}
+                isConnectingToData={isConnectingToData}
+                filteredMessages={filteredMessages}
+                isTyping={isTyping}
+                isLoading={isLoading}
+                quickReplies={quickReplies}
+                messagesEndRef={messagesEndRef}
                 scrollAreaRef={scrollAreaRef}
-                isAuthPromptOnly={props.isAuthPromptOnly}
-                handleQuickReply={props.handleQuickReply}
+                isAuthPromptOnly={isAuthPromptOnly}
+                handleQuickReply={handleQuickReply}
               />
             </div>
 
-            {/* Input Area */}
-            <div className="flex-shrink-0">
+            {/* Input Area - enhanced keyboard support */}
+            <div className="finny-input-mobile flex-shrink-0">
               <ChatInput
-                value={props.newMessage}
-                onChange={(e) => props.setNewMessage(e.target.value)}
-                onSubmit={props.handleSendMessage}
-                disabled={props.isLoading}
-                isLoading={props.isLoading}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onSubmit={handleSendMessage}
+                disabled={isLoading}
+                isLoading={isLoading}
                 isAuthenticated={!!user}
-                isConnecting={props.isConnectingToData}
+                isConnecting={isConnectingToData}
                 placeholder={user ? "Ask me anything..." : "Please log in to chat"}
               />
             </div>
