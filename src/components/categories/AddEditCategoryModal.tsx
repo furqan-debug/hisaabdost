@@ -126,7 +126,7 @@ export function AddEditCategoryModal({
     }
   }, [category, open]);
   const handleSave = async () => {
-    if (!name.trim()) return;
+    if (!isEditing && !name.trim()) return;
 
     // Check if color is already in use
     const isColorTaken = usedColors.includes(color.toLowerCase());
@@ -155,14 +155,23 @@ export function AddEditCategoryModal({
             {isEditing ? 'Edit Category' : 'Add New Category'}
           </DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update the category name and color.' : 'Create a new expense category with a custom name and color.'}
+            {isEditing ? 'Update the category color.' : 'Create a new expense category with a custom name and color.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="category-name">Category Name</Label>
-            <Input id="category-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Hobbies, Car Maintenance" className="w-full" maxLength={50} />
+            <Input
+              id="category-name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g., Hobbies, Car Maintenance"
+              className="w-full"
+              maxLength={50}
+              disabled={isEditing}
+              readOnly={isEditing}
+            />
           </div>
 
           <div className="space-y-3">
@@ -194,7 +203,7 @@ export function AddEditCategoryModal({
           <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting} className="py-0 my-[12px] mx-0">
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={!name.trim() || isSubmitting}>
+          <Button type="button" onClick={handleSave} disabled={isSubmitting || (!isEditing && !name.trim())}>
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </DialogFooter>
