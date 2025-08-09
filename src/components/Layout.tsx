@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react'; // <-- Added useRef
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,8 +17,17 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
   
-  // Check if current route is a main tab that shows ads
-  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
+  // --- THIS IS THE NEW, MORE RELIABLE SCROLL-TO-TOP LOGIC ---
+  // 1. Create a reference to the main content container
+  const layoutContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 2. When the page route changes, scroll our specific container to the top
+    if (layoutContainerRef.current) {
+      layoutContainerRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]); // This runs on every navigation
+  // --- END OF NEW LOGIC ---
   
   useEffect(() => {
     setPageTransition(true);
@@ -26,17 +35,7 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // --- THIS IS THE CORRECTED SCROLL-TO-TOP LOGIC ---
-  useEffect(() => {
-    // Using a timeout with a very short delay ensures the scroll happens
-    // after the new page has had a chance to render.
-    const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 100); // A small 100ms delay is imperceptible but very reliable.
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]); // This effect runs every time the page route changes.
-  // --- END OF CORRECTED LOGIC ---
+  // The old, unreliable scroll effect has been removed.
 
   console.log('Layout: loading =', loading, 'user =', !!user);
 
@@ -61,6 +60,8 @@ const Layout = () => {
         />
       )}
       <LayoutContainer 
+        // 3. Attach the reference to the container
+        ref={layoutContainerRef}
         isMobile={isMobile} 
         pageTransition={pageTransition}
       >
