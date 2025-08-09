@@ -118,13 +118,16 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
         <motion.div
           className="relative z-10"
           animate={{
-            scale: isHovering ? 1.1 : [1, 1.05, 1],
+            // On hover (desktop), make the icon slightly larger and rotate it
+            scale: isHovering ? 1.15 : 1,
             rotate: isHovering ? [0, -5, 5, -3, 0] : 0,
           }}
           transition={{
+            // This creates a continuous, gentle "breathing" pulse for the scale effect
+            // that works on ALL devices, not just on hover.
             scale: {
-              duration: isHovering ? 0.3 : 2,
-              repeat: isHovering ? 0 : Infinity,
+              duration: 2.5,
+              repeat: Infinity,
               repeatType: "mirror",
               ease: "easeInOut"
             },
