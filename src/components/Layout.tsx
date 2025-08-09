@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'; // <-- Added useRef
+
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,25 +18,14 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
   
-  // --- THIS IS THE NEW, MORE RELIABLE SCROLL-TO-TOP LOGIC ---
-  // 1. Create a reference to the main content container
-  const layoutContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // 2. When the page route changes, scroll our specific container to the top
-    if (layoutContainerRef.current) {
-      layoutContainerRef.current.scrollTop = 0;
-    }
-  }, [location.pathname]); // This runs on every navigation
-  // --- END OF NEW LOGIC ---
+  // Check if current route is a main tab that shows ads
+  const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
   
   useEffect(() => {
     setPageTransition(true);
     const timer = setTimeout(() => setPageTransition(false), 300);
     return () => clearTimeout(timer);
   }, [location.pathname]);
-
-  // The old, unreliable scroll effect has been removed.
 
   console.log('Layout: loading =', loading, 'user =', !!user);
 
@@ -60,8 +50,6 @@ const Layout = () => {
         />
       )}
       <LayoutContainer 
-        // 3. Attach the reference to the container
-        ref={layoutContainerRef}
         isMobile={isMobile} 
         pageTransition={pageTransition}
       >
