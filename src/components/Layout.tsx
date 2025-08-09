@@ -10,7 +10,6 @@ import { LayoutWrapper } from './layout/LayoutWrapper';
 import { LayoutContainer } from './layout/LayoutContainer';
 import { BannerAd } from './ads/BannerAd';
 import { useModalState } from '@/hooks/useModalState';
-import { ScrollToTop } from './routing/ScrollToTop';
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -43,7 +42,6 @@ const Layout = () => {
 
   return (
     <LayoutWrapper>
-      <ScrollToTop />
       <Navbar />
       {isMainTabRoute && (
         <BannerAd 
