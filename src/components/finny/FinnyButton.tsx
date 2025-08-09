@@ -177,7 +177,6 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           before:absolute before:inset-0 before:rounded-full 
           before:bg-gradient-to-br before:from-white/20 before:to-transparent
           before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
-          pointer-events-none
         "
       >
         {/* Animated pulse rings */}
