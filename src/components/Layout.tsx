@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'; // 1. useRef is added
+import React, { useEffect, useState, useRef } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,10 +17,9 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
   
-  // 2. A reference is created to hold the scrollable container element
+  // A reference is created to hold the scrollable container element
   const layoutContainerRef = useRef<HTMLDivElement>(null);
   
-  // Check if current route is a main tab that shows ads
   const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
   
   useEffect(() => {
@@ -29,9 +28,8 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // 3. The old, non-working scroll effect has been replaced with this new, reliable one.
+  // This new, reliable effect targets the specific container and scrolls it to the top.
   useEffect(() => {
-    // This now targets the specific container and scrolls it to the top on every navigation.
     if (layoutContainerRef.current) {
       layoutContainerRef.current.scrollTop = 0;
     }
@@ -60,7 +58,7 @@ const Layout = () => {
         />
       )}
       <LayoutContainer 
-        // 4. The reference is attached to the LayoutContainer component
+        // The reference is now correctly attached to the LayoutContainer
         ref={layoutContainerRef}
         isMobile={isMobile} 
         pageTransition={pageTransition}

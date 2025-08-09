@@ -14,18 +14,14 @@ export const LayoutContainer = React.forwardRef<HTMLDivElement, LayoutContainerP
     const location = useLocation();
     const isBudgetRoute = location.pathname.includes('/budget');
     
-    // Check if current route is a main tab that shows ads
     const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
 
     return (
       <main 
-        ref={ref} // The ref is attached to the main scrollable element
+        ref={ref} // The ref is now attached to the main scrollable element
         className={cn(
           "flex-1 overflow-y-auto overflow-x-hidden", // Added overflow-y-auto to ensure it's the scroll container
-          // Safe area aware padding for mobile devices  
-          // Header height (3.5rem) + banner ad height (3rem) + safe area (mobile only)
           isMobile && isMainTabRoute ? "pt-[calc(6.5rem+env(safe-area-inset-top)+1rem)]" : "pt-[calc(6.5rem+env(safe-area-inset-top))]",
-          // Proper spacing for mobile with navigation and safe areas
           isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
           isBudgetRoute ? "px-0" : "px-2 md:px-6",
           pageTransition ? "opacity-95 translate-y-1" : "opacity-100 translate-y-0",
