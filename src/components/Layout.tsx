@@ -27,6 +27,20 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Ensure each navigation starts at the top of the page
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    // Scroll to top after route renders
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      // Additional fallbacks for some browsers
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }, [location.pathname, location.search]);
+
   console.log('Layout: loading =', loading, 'user =', !!user);
 
   if (loading) {
