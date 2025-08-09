@@ -1,9 +1,9 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+
 import { useAuth } from '@/lib/auth';
 
 interface FinnyButtonProps {
@@ -12,36 +12,14 @@ interface FinnyButtonProps {
 }
 
 const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
-  const isMobile = useIsMobile();
+  
   const { user } = useAuth();
   
   // State management
   const [isReady, setIsReady] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ y: 100 }); // Initial position from bottom
   
-  // Refs for drag handling
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef({ y: 0, startY: 0, hasMoved: false });
 
-  // Calculate safe boundaries
-  const getBoundaries = useCallback(() => {
-    const screenHeight = window.innerHeight;
-    const headerHeight = 64;
-    const navHeight = isMobile ? 80 : 0;
-    const buttonSize = 64;
-    const safeMargin = 16;
-    
-    const topLimit = headerHeight + safeMargin; // Distance from top
-    const bottomLimit = navHeight + safeMargin; // Distance from bottom
-    
-    // Convert to bottom positions
-    const maxBottomPosition = screenHeight - topLimit - buttonSize;
-    const minBottomPosition = bottomLimit;
-    
-    return { min: minBottomPosition, max: maxBottomPosition };
-  }, [isMobile]);
 
   // Initialize position and ready state
   useEffect(() => {
@@ -55,87 +33,16 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
     }
   }, [user]);
 
-  // Pointer event handlers for drag
-  const handlePointerDown = useCallback((event: React.PointerEvent) => {
-    event.preventDefault();
-    setIsDragging(true);
-    
-    const rect = buttonRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    // Store initial drag data
-    dragStartRef.current = {
-      y: event.clientY,
-      startY: window.innerHeight - rect.bottom,
-      hasMoved: false
-    };
-    
-    // Capture pointer
-    buttonRef.current?.setPointerCapture(event.pointerId);
-  }, []);
 
-  const handlePointerMove = useCallback((event: React.PointerEvent) => {
-    if (!isDragging) return;
-    
-    const deltaY = dragStartRef.current.y - event.clientY;
-    const newBottomPosition = dragStartRef.current.startY + deltaY;
-    
-    // Apply boundaries
-    const boundaries = getBoundaries();
-    const clampedPosition = Math.max(boundaries.min, Math.min(newBottomPosition, boundaries.max));
-    
-    setPosition({ y: clampedPosition });
-    
-    // Mark as moved if significant movement
-    if (Math.abs(deltaY) > 5) {
-      dragStartRef.current.hasMoved = true;
-    }
-  }, [isDragging, getBoundaries]);
-
-  const handlePointerUp = useCallback((event: React.PointerEvent) => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    // Release pointer capture
-    buttonRef.current?.releasePointerCapture(event.pointerId);
-    
-    // Handle click vs drag
-    if (!dragStartRef.current.hasMoved) {
-      // This was a tap, trigger onClick
-      onClick();
-    }
-    
-    // Reset drag data
-    dragStartRef.current = { y: 0, startY: 0, hasMoved: false };
-  }, [isDragging, onClick]);
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      const boundaries = getBoundaries();
-      setPosition(prev => ({
-        y: Math.max(boundaries.min, Math.min(prev.y, boundaries.max))
-      }));
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [getBoundaries]);
 
   // Don't show the button when chat is open, user is not authenticated, or not ready
   if (isOpen || !user || !isReady) return null;
 
   return (
     <motion.div
-      ref={buttonRef}
-      className="fixed z-40 right-2"
+      className="fixed z-40 right-4 bottom-20 md:bottom-8"
       style={{
-        bottom: `${position.y}px`,
-        touchAction: 'none',
-        padding: '16px',
-        margin: '-16px',
-        cursor: isDragging ? 'grabbing' : 'grab'
+        touchAction: 'manipulation'
       }}
       initial={{ scale: 0, opacity: 0, y: 20 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -145,13 +52,9 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
         damping: 25,
         delay: 0.2
       }}
-      whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.05, y: -2 }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
     >
       {/* Outer glow effect */}
       <motion.div
@@ -164,8 +67,10 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
         transition={{ duration: 0.3 }}
       />
 
-      <Button 
-        aria-label="Open Finny AI Assistant" 
+      <Button
+        type="button"
+        aria-label="Open Finny AI Assistant"
+        onClick={onClick}
         className="
           relative w-16 h-16 rounded-full shadow-lg
           bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600
@@ -177,7 +82,6 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
           before:absolute before:inset-0 before:rounded-full 
           before:bg-gradient-to-br before:from-white/20 before:to-transparent
           before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
-          pointer-events-none
         "
       >
         {/* Animated pulse rings */}
