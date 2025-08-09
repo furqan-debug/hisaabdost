@@ -8,7 +8,6 @@ interface LayoutContainerProps {
   pageTransition: boolean;
 }
 
-// FIX: The component is now wrapped in React.forwardRef to accept a 'ref'
 export const LayoutContainer = React.forwardRef<HTMLDivElement, LayoutContainerProps>(
   ({ children, isMobile, pageTransition }, ref) => {
     const location = useLocation();
@@ -18,9 +17,9 @@ export const LayoutContainer = React.forwardRef<HTMLDivElement, LayoutContainerP
 
     return (
       <main 
-        ref={ref} // The ref is now attached to the main scrollable element
+        ref={ref} 
         className={cn(
-          "flex-1 overflow-y-auto overflow-x-hidden", // Added overflow-y-auto to ensure it's the scroll container
+          "flex-1 overflow-y-auto overflow-x-hidden", 
           isMobile && isMainTabRoute ? "pt-[calc(6.5rem+env(safe-area-inset-top)+1rem)]" : "pt-[calc(6.5rem+env(safe-area-inset-top))]",
           isMobile && isMainTabRoute ? "pb-20" : isMobile ? "pb-20" : "pb-8",
           isBudgetRoute ? "px-0" : "px-2 md:px-6",

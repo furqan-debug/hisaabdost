@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useLayoutEffect, useState, useRef } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/lib/auth';
@@ -17,7 +17,6 @@ const Layout = () => {
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
   
-  // A reference is created to hold the scrollable container element
   const layoutContainerRef = useRef<HTMLDivElement>(null);
   
   const isMainTabRoute = ['/app/dashboard', '/app/expenses', '/app/budget', '/app/analytics', '/app/goals'].includes(location.pathname);
@@ -28,25 +27,20 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // This new, reliable effect targets the specific container and scrolls it to the top.
-  useEffect(() => {
+  // THIS IS THE FINAL, CORRECTED SCROLL LOGIC
+  useLayoutEffect(() => {
     if (layoutContainerRef.current) {
       layoutContainerRef.current.scrollTop = 0;
     }
   }, [location.pathname]);
-
-  console.log('Layout: loading =', loading, 'user =', !!user);
 
   if (loading) {
     return <OptimizedLoadingScreen message="Loading app..." />;
   }
 
   if (!user) {
-    console.log('Layout: No user found, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
-
-  console.log('Layout: User authenticated, rendering app');
 
   return (
     <LayoutWrapper>
@@ -58,7 +52,6 @@ const Layout = () => {
         />
       )}
       <LayoutContainer 
-        // The reference is now correctly attached to the LayoutContainer
         ref={layoutContainerRef}
         isMobile={isMobile} 
         pageTransition={pageTransition}
