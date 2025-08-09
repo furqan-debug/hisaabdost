@@ -323,7 +323,7 @@ const SettingsSidebar = ({
           </div>
 
           {/* Account */}
-          <div className="p-6 safe-area-bottom my-0 py-[15px]">
+          <div className="p-6 safe-area-bottom my-0 py-[10px]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900/20 flex items-center justify-center">
                 <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
