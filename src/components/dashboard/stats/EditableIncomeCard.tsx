@@ -104,11 +104,11 @@ export const EditableIncomeCard = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full text-green-600 border-green-200 hover:bg-green-50 flex items-center justify-center gap-1"
+          className="w-full h-7 text-green-600 border-green-200 hover:bg-green-50 flex items-center justify-center gap-1 text-[10px] px-2"
           onClick={() => setInputValue(monthlyIncome.toString())}
         >
           <Edit className="h-3 w-3" />
-          <span className="text-xs">Edit Income</span>
+          <span>Edit Income</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

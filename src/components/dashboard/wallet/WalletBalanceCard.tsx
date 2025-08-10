@@ -43,12 +43,12 @@ export function WalletBalanceCard({
             variant="outline" 
             size="sm" 
             onClick={handleOpenAddFunds} 
-            className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 flex items-center justify-center gap-1"
+            className="w-full h-7 text-blue-600 border-blue-200 hover:bg-blue-50 flex items-center justify-center gap-1 text-[10px] px-2"
           >
             <PlusCircle className="h-3 w-3" />
-            <span className="text-xs">Add Funds</span>
+            <span>Add Funds</span>
           </Button>
-        } 
+        }
       />
       
       <AddFundsDialog isOpen={isAddFundsOpen} onClose={handleCloseAddFunds} onAddFunds={handleAddFunds} isAdding={isAdding} />

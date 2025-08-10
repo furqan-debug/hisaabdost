@@ -84,40 +84,40 @@ export const StatCard = ({
   
   return (
     <Card className={`transition-all duration-300 hover:shadow-lg aspect-square ${styles.gradient} ${styles.border} backdrop-blur-sm ${className}`}>
-      <CardContent className="p-4 flex flex-col h-full relative">
+      <CardContent className="p-3 flex flex-col h-full relative">
         {/* Info button - positioned absolutely in top right */}
         {infoTooltip && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-2 right-2 z-10">
             <InfoPopover
               title={title}
               content={infoTooltip}
               cardType={cardType}
             >
-              <Info className="h-4 w-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+              <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
             </InfoPopover>
           </div>
         )}
         
-        {/* Main content - centered */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
+        {/* Main content - centered and properly spaced */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-1">
           {/* Large centered icon */}
-          <div className="mb-3">
-            <CardIcon className={`h-12 w-12 ${styles.iconColor}`} />
+          <div className="mb-2">
+            <CardIcon className={`h-8 w-8 ${styles.iconColor}`} />
           </div>
           
           {/* Title */}
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          <h3 className="text-xs font-medium text-muted-foreground mb-1 leading-tight">
             {title}
           </h3>
           
           {/* Value */}
-          <div className="text-xl font-bold mb-2 leading-tight">
+          <div className="text-lg font-bold mb-1 leading-tight px-1">
             {value}
           </div>
           
           {/* Subtext */}
           {subtext && (
-            <div className="text-xs text-muted-foreground mb-2">
+            <div className="text-[10px] text-muted-foreground mb-1 leading-tight">
               {subtext}
             </div>
           )}
@@ -125,9 +125,9 @@ export const StatCard = ({
           {children}
         </div>
         
-        {/* Action element - at bottom */}
+        {/* Action element - at bottom with proper spacing */}
         {actionElement && (
-          <div className="mt-auto">
+          <div className="mt-1">
             {actionElement}
           </div>
         )}
