@@ -1,6 +1,6 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon, Info } from "lucide-react";
+import { LucideIcon, Info, Wallet, Receipt, Coins, Percent } from "lucide-react";
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InfoPopover } from "./InfoPopover";
@@ -17,6 +17,56 @@ interface StatCardProps {
   cardType?: 'wallet' | 'expenses' | 'income' | 'savings';
 }
 
+const getCardIcon = (cardType: string) => {
+  switch (cardType) {
+    case 'wallet':
+      return Wallet;
+    case 'expenses':
+      return Receipt;
+    case 'income':
+      return Coins;
+    case 'savings':
+      return Percent;
+    default:
+      return Wallet;
+  }
+};
+
+const getCardStyles = (cardType: string) => {
+  switch (cardType) {
+    case 'wallet':
+      return {
+        gradient: "bg-gradient-to-br from-blue-500/20 to-blue-600/30",
+        iconColor: "text-blue-600",
+        border: "border-blue-200/50"
+      };
+    case 'expenses':
+      return {
+        gradient: "bg-gradient-to-br from-orange-500/20 to-orange-600/30",
+        iconColor: "text-orange-600",
+        border: "border-orange-200/50"
+      };
+    case 'income':
+      return {
+        gradient: "bg-gradient-to-br from-green-500/20 to-green-600/30",
+        iconColor: "text-green-600",
+        border: "border-green-200/50"
+      };
+    case 'savings':
+      return {
+        gradient: "bg-gradient-to-br from-purple-500/20 to-purple-600/30",
+        iconColor: "text-purple-600",
+        border: "border-purple-200/50"
+      };
+    default:
+      return {
+        gradient: "bg-gradient-to-br from-blue-500/20 to-blue-600/30",
+        iconColor: "text-blue-600",
+        border: "border-blue-200/50"
+      };
+  }
+};
+
 export const StatCard = ({
   title,
   value,
@@ -29,31 +79,58 @@ export const StatCard = ({
   cardType = 'wallet'
 }: StatCardProps) => {
   const isMobile = useIsMobile();
+  const CardIcon = Icon || getCardIcon(cardType);
+  const styles = getCardStyles(cardType);
   
   return (
-    <Card className={`transition-all duration-300 hover:shadow-md h-full ${className}`}>
-      <CardContent className="pt-4 pb-3 px-3 flex flex-col h-full">
-        <div className="flex items-center justify-between mb-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-          {infoTooltip && (
+    <Card className={`transition-all duration-300 hover:shadow-lg aspect-square ${styles.gradient} ${styles.border} backdrop-blur-sm ${className}`}>
+      <CardContent className="p-4 flex flex-col h-full relative">
+        {/* Info button - positioned absolutely in top right */}
+        {infoTooltip && (
+          <div className="absolute top-3 right-3">
             <InfoPopover
               title={title}
               content={infoTooltip}
               cardType={cardType}
             >
-              <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+              <Info className="h-4 w-4 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
             </InfoPopover>
-          )}
-        </div>
-        <div className="text-2xl font-bold mb-1.5">
-          {value}
-        </div>
-        {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
-        {children}
+          </div>
+        )}
         
-        <div className="mt-auto pt-1.5">
-          {actionElement}
+        {/* Main content - centered */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          {/* Large centered icon */}
+          <div className="mb-3">
+            <CardIcon className={`h-12 w-12 ${styles.iconColor}`} />
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            {title}
+          </h3>
+          
+          {/* Value */}
+          <div className="text-xl font-bold mb-2 leading-tight">
+            {value}
+          </div>
+          
+          {/* Subtext */}
+          {subtext && (
+            <div className="text-xs text-muted-foreground mb-2">
+              {subtext}
+            </div>
+          )}
+          
+          {children}
         </div>
+        
+        {/* Action element - at bottom */}
+        {actionElement && (
+          <div className="mt-auto">
+            {actionElement}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

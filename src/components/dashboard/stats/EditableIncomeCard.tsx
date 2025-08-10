@@ -102,13 +102,13 @@ export const EditableIncomeCard = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="sm" 
-          className="h-7 px-2 text-xs hover:bg-muted/50 transition-colors"
+          className="w-full text-green-600 border-green-200 hover:bg-green-50 flex items-center justify-center gap-1"
           onClick={() => setInputValue(monthlyIncome.toString())}
         >
-          <Edit className="h-3 w-3 mr-1" />
-          Edit Income
+          <Edit className="h-3 w-3" />
+          <span className="text-xs">Edit Income</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
