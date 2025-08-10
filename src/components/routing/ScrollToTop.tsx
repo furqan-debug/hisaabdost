@@ -11,10 +11,9 @@ export function ScrollToTop() {
       window.history.scrollRestoration = 'manual';
     }
 
-    // Force scroll to top on route change
     const scrollToTop = () => {
-      // Multiple methods to ensure compatibility across all platforms
-      window.scrollTo(0, 0);
+      // Force immediate scroll to top with multiple fallbacks
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       
@@ -23,21 +22,41 @@ export function ScrollToTop() {
         document.scrollingElement.scrollTop = 0;
       }
       
-      // Additional reset for any potential overflow containers
-      const mainElement = document.querySelector('main');
-      if (mainElement) {
-        mainElement.scrollTop = 0;
+      // Reset any overflow containers
+      const containers = document.querySelectorAll('[data-scroll-container], main, .overflow-auto, .overflow-y-auto');
+      containers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.scrollTop = 0;
+        }
+      });
+
+      // Additional mobile-specific resets
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        // Force repaint on mobile
+        document.body.style.transform = 'translateZ(0)';
+        requestAnimationFrame(() => {
+          document.body.style.transform = '';
+        });
       }
     };
 
-    // Use setTimeout to ensure DOM is ready and all animations are complete
-    const timeoutId = setTimeout(scrollToTop, 0);
-    
-    // Also try immediately for faster response
+    // Execute immediately
     scrollToTop();
+    
+    // Also execute after a short delay to catch any async renders
+    const timeoutId = setTimeout(scrollToTop, 100);
+    
+    // Execute in next animation frame for smooth handling
+    const rafId = requestAnimationFrame(() => {
+      scrollToTop();
+    });
 
-    return () => clearTimeout(timeoutId);
-  }, [location.pathname, location.search]);
+    return () => {
+      clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId);
+    };
+  }, [location.pathname, location.search, location.hash]);
 
   return null;
 }

@@ -28,6 +28,22 @@ const Layout = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Additional scroll reset on route change
+  useEffect(() => {
+    // Force scroll reset on every route change
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    
+    resetScroll();
+    
+    // Double-check after a brief delay
+    const timeoutId = setTimeout(resetScroll, 50);
+    return () => clearTimeout(timeoutId);
+  }, [location.pathname]);
+
   console.log('Layout: loading =', loading, 'user =', !!user);
 
   if (loading) {
