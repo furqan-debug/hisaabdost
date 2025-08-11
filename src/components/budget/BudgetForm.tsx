@@ -31,7 +31,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { useBudgetValidation } from "@/hooks/useBudgetValidation";
 import { useBudgetQueries } from "@/hooks/useBudgetQueries";
-import { useQueryClient } from "@tanstack/react-query";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -61,7 +60,6 @@ export function BudgetForm({
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const { categories, loading } = useAllCategories();
-  const queryClient = useQueryClient();
   
   // Get all budgets for validation
   const { budgets = [] } = useBudgetQueries(new Date());
@@ -128,16 +126,6 @@ export function BudgetForm({
           .insert(budgetData);
         if (error) throw error;
       }
-      
-      // Immediately invalidate budget queries to ensure fresh data
-      await queryClient.invalidateQueries({ 
-        queryKey: ['budgets', user.id],
-        exact: true 
-      });
-      
-      // Trigger the budget-updated event for other components
-      window.dispatchEvent(new CustomEvent('budget-updated'));
-      
       reset();
       onSuccess();
     } catch (error) {
