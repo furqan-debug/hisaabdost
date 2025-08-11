@@ -13,7 +13,7 @@ export function useWalletQueries() {
   const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
   const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month with immediate updates
+  // Query wallet additions for current month with optimized polling
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
@@ -38,14 +38,15 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale for immediate updates
+    staleTime: 1000 * 30, // 30 seconds - reduce excessive polling
+    gcTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 2000, // Reduced to 2 seconds for near real-time updates
+    refetchInterval: 5000, // Increased to 5 seconds to reduce load
   });
 
-  // Query all wallet additions with immediate updates
+  // Query all wallet additions with optimized polling
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
     queryKey: ['wallet-additions-all', user?.id],
     queryFn: async () => {
@@ -68,11 +69,12 @@ export function useWalletQueries() {
       return data as WalletAddition[];
     },
     enabled: !!user,
-    staleTime: 0, // Always consider data stale for immediate updates
+    staleTime: 1000 * 60, // 1 minute - all additions change less frequently
+    gcTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnMount: false, // Only fetch if stale
     refetchOnReconnect: true,
-    refetchInterval: 3000, // Reduced to 3 seconds for near real-time updates
+    refetchInterval: 10000, // Increased to 10 seconds to reduce load
   });
 
   // Calculate total additions

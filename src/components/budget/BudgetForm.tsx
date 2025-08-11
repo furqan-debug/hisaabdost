@@ -31,6 +31,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { useCurrency } from "@/hooks/use-currency";
 import { useBudgetValidation } from "@/hooks/useBudgetValidation";
 import { useBudgetQueries } from "@/hooks/useBudgetQueries";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -60,6 +62,7 @@ export function BudgetForm({
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const { categories, loading } = useAllCategories();
+  const queryClient = useQueryClient();
   
   // Get all budgets for validation
   const { budgets = [] } = useBudgetQueries(new Date());
@@ -103,8 +106,6 @@ export function BudgetForm({
   const onSubmit = async (formData: BudgetFormData) => {
     if (!user) return;
     
-    // No validation blocking - always allow budget creation
-    
     try {
       const budgetData = {
         amount: formData.amount,
@@ -120,16 +121,34 @@ export function BudgetForm({
           .update(budgetData)
           .eq("id", budget.id);
         if (error) throw error;
+        toast.success("Budget updated successfully");
       } else {
         const { error } = await supabase
           .from("budgets")
           .insert(budgetData);
         if (error) throw error;
+        toast.success("Budget created successfully");
       }
+
+      // Immediately invalidate and refresh budget queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['budgets', user.id] }),
+        queryClient.refetchQueries({ queryKey: ['budgets', user.id] })
+      ]);
+
+      // Dispatch budget update event for other components
+      window.dispatchEvent(new CustomEvent('budget-updated', { 
+        detail: { 
+          action: budget ? 'updated' : 'created',
+          budget: { ...budgetData, id: budget?.id }
+        }
+      }));
+
       reset();
       onSuccess();
     } catch (error) {
       console.error("Error saving budget:", error);
+      toast.error("Failed to save budget. Please try again.");
     }
   };
 

@@ -12,7 +12,7 @@ export function useBudgetQueries(selectedMonth: Date) {
   
   console.log("useBudgetQueries: Starting queries for user:", user?.id, "month:", monthKey);
   
-  // Query budgets
+  // Query budgets with optimized settings
   const { data: budgets = [], isLoading: budgetsLoading, error: budgetsError } = useQuery({
     queryKey: ['budgets', user?.id],
     queryFn: async () => {
@@ -37,12 +37,14 @@ export function useBudgetQueries(selectedMonth: Date) {
       return data as Budget[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
-    refetchOnMount: false, // Only fetch if data is stale
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 30, // 30 seconds - more responsive for budget updates
+    gcTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: 'always', // Always refetch on mount for latest data
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
   
-  // Query monthly income
+  // Query monthly income with optimized settings
   const { data: incomeData = { monthlyIncome: 0 }, isLoading: incomeLoading, error: incomeError } = useQuery({
     queryKey: ['monthly_income', user?.id, monthKey],
     queryFn: async () => {
@@ -64,12 +66,13 @@ export function useBudgetQueries(selectedMonth: Date) {
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
-    refetchOnMount: false, // Only fetch if data is stale
+    staleTime: 1000 * 60 * 5, // 5 minutes - income changes less frequently
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 
-  // Query expenses
+  // Query expenses with optimized settings
   const { data: expenses = [], isLoading: expensesLoading, error: expensesError } = useQuery({
     queryKey: ['expenses', monthKey, user?.id],
     queryFn: async () => {
@@ -99,8 +102,9 @@ export function useBudgetQueries(selectedMonth: Date) {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes for mobile optimization
-    refetchOnMount: false, // Only fetch if data is stale
+    staleTime: 1000 * 60 * 2, // 2 minutes - keep responsive for expense tracking
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 
