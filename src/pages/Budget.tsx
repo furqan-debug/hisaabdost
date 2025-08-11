@@ -6,6 +6,7 @@ import { BudgetSummaryCards } from "@/components/budget/BudgetSummaryCards";
 import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { LoadingSkeleton, BudgetCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-skeleton";
 
 export interface Budget {
   id: string;
@@ -88,17 +89,35 @@ const Budget = () => {
     );
   }
 
+  // App shell loads instantly, show skeleton only for data areas
   if (isLoading) {
-    console.log("Showing loading state");
+    console.log("Showing enhanced loading state with app shell");
     return (
-      <div className="min-h-screen bg-background p-4 space-y-6">
-        <div className="h-24 bg-muted/20 rounded-lg animate-pulse" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-muted/20 rounded-xl animate-pulse" />
-          ))}
+      <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+        <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
+          {/* Header skeleton */}
+          <div className="flex justify-between items-center">
+            <div className="h-8 bg-muted/20 rounded w-32 animate-pulse" />
+            <div className="h-10 bg-muted/20 rounded w-24 animate-pulse" />
+          </div>
+          
+          {/* Summary cards skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <StatCardSkeleton key={i} />
+            ))}
+          </div>
+          
+          {/* Budget tabs and content skeleton */}
+          <div className="space-y-4">
+            <div className="h-10 bg-muted/20 rounded w-48 animate-pulse" />
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <BudgetCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="h-96 bg-muted/20 rounded-lg animate-pulse" />
       </div>
     );
   }

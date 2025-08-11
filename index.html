@@ -4,11 +4,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Hisaab Dost</title>
-    <meta name="description" content="Hisaab Dost – Your friendly expense tracker" />
+    <title>HisaabDost - Personal Finance Manager</title>
+    <meta name="description" content="Your intelligent finance companion for budgeting, expense tracking, and financial insights" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HisaabDost" />
+    
+    <!-- Manifest and Icons -->
+    <link rel="manifest" href="/manifest.json" />
     <link rel="icon" href="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" type="image/png">
+    <link rel="apple-touch-icon" href="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="dns-prefetch" href="https://bklfolfivjonzpprytkz.supabase.co" />
   </head>
 
   <body>

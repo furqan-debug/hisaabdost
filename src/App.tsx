@@ -9,6 +9,8 @@ import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { MonthProvider } from "@/hooks/use-month-context";
 import { FinnyProvider } from "@/components/finny";
+import { OfflineIndicator } from "@/components/layout/OfflineIndicator";
+import { InstallBanner } from "@/components/layout/InstallBanner";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
@@ -23,17 +25,37 @@ import History from "@/pages/History";
 import ManageFunds from "@/pages/ManageFunds";
 import ManageCategories from "@/pages/ManageCategories";
 import AppGuide from "@/pages/AppGuide";
+import { useServiceWorker } from "@/hooks/useServiceWorker";
+import { useEffect } from "react";
 
+// Enhanced QueryClient with offline-first optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      gcTime: 1000 * 60 * 30, // 30 minutes for offline persistence
+      retry: (failureCount, error) => {
+        // Don't retry if offline
+        if (!navigator.onLine) return false;
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      networkMode: 'offlineFirst', // Try cache first, then network
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        if (!navigator.onLine) return false;
+        return failureCount < 1;
+      },
+      networkMode: 'offlineFirst',
     },
   },
 });
 
 function App() {
+  // Initialize service worker and offline capabilities
+  useServiceWorker();
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -46,6 +68,8 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <OfflineIndicator />
+          <InstallBanner />
           <BrowserRouter>
             <AuthProvider>
               <CurrencyProvider>
