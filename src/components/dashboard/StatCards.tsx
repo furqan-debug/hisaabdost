@@ -48,7 +48,7 @@ export const StatCards = ({
         {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[120px]" />)}
       </div>;
   }
-  return <div key={`stat-cards-${version}`} className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5 px-0 mx-[4px]">
+  return <div key={`stat-cards-${version}`} className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-5 px-0 mx-[3px] my-0 py-0">
       <OnboardingTooltip content="Track your wallet balance including income and added funds" defaultOpen={isNewUser}>
         <WalletBalanceCard walletBalance={walletBalance} />
       </OnboardingTooltip>
