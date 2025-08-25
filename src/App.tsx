@@ -1,42 +1,69 @@
 
 import React from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/lib/auth";
+import { CurrencyProvider } from "@/hooks/use-currency";
+import { MonthProvider } from "@/hooks/use-month-context";
+import { FinnyProvider } from "@/components/finny/context/FinnyContext";
 
-// Minimal test components without any external dependencies
-const SimpleAuth = () => {
-  console.log('🔑 SimpleAuth component rendering');
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#eff6ff' }}>
-      <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '1rem' }}>Auth Page</h1>
-        <p style={{ color: '#6b7280' }}>Authentication component loaded successfully</p>
-      </div>
-    </div>
-  );
-};
+// Import pages
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-const SimpleDashboard = () => {
-  console.log('📊 SimpleDashboard component rendering');
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0fdf4' }}>
-      <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#16a34a', marginBottom: '1rem' }}>Dashboard Working!</h1>
-        <p style={{ color: '#6b7280' }}>Main application loaded successfully</p>
-      </div>
-    </div>
-  );
-};
+// Create QueryClient with optimized settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    },
+  },
+});
 
 const App = () => {
-  console.log('🚀 App component rendering...');
+  console.log('🚀 App component rendering with full functionality...');
   
-  // Simple routing based on pathname
-  const pathname = window.location.pathname;
-  
-  if (pathname === '/auth') {
-    return <SimpleAuth />;
-  }
-  
-  return <SimpleDashboard />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light">
+        <TooltipProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <MonthProvider>
+                <FinnyProvider>
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/auth" element={<Auth />} />
+                      <Route 
+                        path="/app/dashboard" 
+                        element={
+                          <ProtectedRoute>
+                            <Dashboard />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                    </Routes>
+                  </BrowserRouter>
+                  <Toaster />
+                  <Sonner />
+                </FinnyProvider>
+              </MonthProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default App;

@@ -4,14 +4,13 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-console.log('🚀 Starting application...');
-console.log('React version:', React.version);
+console.log('🚀 Starting React application...');
 
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
   console.error('❌ Root element not found');
-  throw new Error('Root element not found');
+  throw new Error('Failed to find the root element');
 }
 
 console.log('✅ Root element found, creating React root...');
