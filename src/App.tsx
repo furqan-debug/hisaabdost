@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { MonthProvider } from "@/hooks/use-month-context";
-import { FinnyProvider } from "@/components/finny/context/FinnyContext";
+import { FinnyProvider } from "@/components/finny/FinnyProvider";
 
 // Import pages
 import Auth from "@/pages/Auth";
