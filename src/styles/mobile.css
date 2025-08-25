@@ -7,29 +7,52 @@
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  
+  /* Device-specific fallbacks for devices that don't support env() */
+  --status-bar-height: 44px; /* iOS standard */
 }
 
 /* Safe area utilities */
 .safe-top {
-  padding-top: var(--safe-area-inset-top);
+  padding-top: max(var(--safe-area-inset-top), var(--status-bar-height));
 }
 
 .safe-bottom {
-  padding-bottom: var(--safe-area-inset-bottom);
+  padding-bottom: max(var(--safe-area-inset-bottom), 20px);
 }
 
 .safe-left {
-  padding-left: var(--safe-area-inset-left);
+  padding-left: max(var(--safe-area-inset-left), 0px);
 }
 
 .safe-right {
-  padding-right: var(--safe-area-inset-right);
+  padding-right: max(var(--safe-area-inset-right), 0px);
 }
 
 /* Enhanced safe area support for navbar */
 .navbar-safe-area {
-  padding-top: max(var(--safe-area-inset-top), 0px);
+  padding-top: max(var(--safe-area-inset-top), var(--status-bar-height));
   top: 0;
+}
+
+/* Fixed positioning for mobile navbar to avoid status bar overlap */
+.mobile-navbar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-top: max(var(--safe-area-inset-top), var(--status-bar-height));
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-navbar-container {
+    background: rgba(0, 0, 0, 0.95);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -47,12 +70,17 @@
     overflow-x: hidden;
   }
 
-  /* Safe area handling for main content */
+  /* Safe area handling for main content - updated to account for navbar + safe area */
   .main-content-safe {
-    padding-top: max(calc(3.5rem + var(--safe-area-inset-top)), 4rem);
+    padding-top: calc(3.5rem + max(var(--safe-area-inset-top), var(--status-bar-height)) + 0.5rem);
     padding-bottom: max(var(--safe-area-inset-bottom), 5rem);
-    padding-left: var(--safe-area-inset-left);
-    padding-right: var(--safe-area-inset-right);
+    padding-left: max(var(--safe-area-inset-left), 0.5rem);
+    padding-right: max(var(--safe-area-inset-right), 0.5rem);
+  }
+
+  /* Updated main content padding calculation */
+  .mobile-content-spacing {
+    padding-top: calc(3.5rem + max(var(--safe-area-inset-top), var(--status-bar-height)) + 1rem);
   }
 
   /* Adjust padding for main content */
@@ -78,9 +106,10 @@
     touch-action: manipulation;
   }
 
-  /* Safe navbar positioning */
+  /* Safe navbar positioning - enhanced */
   .navbar-safe {
-    top: var(--safe-area-inset-top);
+    top: max(var(--safe-area-inset-top), var(--status-bar-height));
+    padding-top: 0;
   }
 }
 
@@ -100,9 +129,9 @@
 @media (max-width: 640px) {
   /* Ensure floating elements don't interfere with nav and safe areas */
   .floating-element-safe {
-    bottom: calc(5.5rem + var(--safe-area-inset-bottom)) !important;
-    right: calc(1rem + var(--safe-area-inset-right)) !important;
-    left: calc(1rem + var(--safe-area-inset-left)) !important;
+    bottom: calc(5.5rem + max(var(--safe-area-inset-bottom), 20px)) !important;
+    right: calc(1rem + max(var(--safe-area-inset-right), 0px)) !important;
+    left: calc(1rem + max(var(--safe-area-inset-left), 0px)) !important;
   }
 }
 
@@ -115,7 +144,7 @@
 /* Device-specific safe area handling */
 @supports (padding: max(0px)) {
   .safe-area-supported {
-    padding-top: max(var(--safe-area-inset-top), 0px);
+    padding-top: max(var(--safe-area-inset-top), var(--status-bar-height));
     padding-bottom: max(var(--safe-area-inset-bottom), 0px);
     padding-left: max(var(--safe-area-inset-left), 0px);
     padding-right: max(var(--safe-area-inset-right), 0px);
@@ -125,27 +154,38 @@
 /* Specific fixes for notched devices */
 @media screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) {
   /* iPhone 14 Pro */
-  .safe-top {
-    padding-top: max(47px, var(--safe-area-inset-top));
+  :root {
+    --status-bar-height: 47px;
   }
 }
 
 @media screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) {
   /* iPhone 11 */
-  .safe-top {
-    padding-top: max(44px, var(--safe-area-inset-top));
+  :root {
+    --status-bar-height: 44px;
+  }
+}
+
+@media screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+  /* iPhone 14 Pro Max */
+  :root {
+    --status-bar-height: 47px;
   }
 }
 
 /* Fallback for devices that don't support env() */
 @supports not (padding: env(safe-area-inset-top)) {
   .safe-top {
-    padding-top: 44px; /* Standard iOS status bar height */
+    padding-top: var(--status-bar-height);
   }
   
   @media (max-width: 640px) {
     .main-content-safe {
-      padding-top: calc(3.5rem + 44px); /* navbar height + status bar */
+      padding-top: calc(3.5rem + var(--status-bar-height));
+    }
+    
+    .mobile-content-spacing {
+      padding-top: calc(3.5rem + var(--status-bar-height) + 1rem);
     }
   }
 }
@@ -162,3 +202,11 @@
   scroll-behavior: smooth;
 }
 
+/* Additional mobile viewport handling */
+@media (max-width: 640px) {
+  .mobile-safe-viewport {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding-top: max(var(--safe-area-inset-top), var(--status-bar-height));
+  }
+}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import SettingsSidebar from "./SettingsSidebar";
+
 const Navbar = () => {
   const {
     user,
@@ -18,6 +20,7 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -25,16 +28,23 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   const handleLogoClick = () => {
     navigate('/app/dashboard');
   };
-  return <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40" style={{
-    paddingTop: 'env(safe-area-inset-top)',
-    top: 0
-  }}>
+
+  return (
+    <nav 
+      className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40"
+      style={{
+        paddingTop: isMobile ? 'max(env(safe-area-inset-top, 44px), 44px)' : '0',
+        top: 0
+      }}
+    >
       <div className="flex h-12 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[10px] mb-[10px] py-[2px]">
         {/* Left: Menu Button (Mobile only) */}
-        {isMobile && <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        {isMobile && (
+          <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <Menu className="h-6 w-6" />
@@ -44,7 +54,8 @@ const Navbar = () => {
             <SheetContent side="left" className="w-[280px] p-0">
               <SettingsSidebar isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
             </SheetContent>
-          </Sheet>}
+          </Sheet>
+        )}
         
         {/* Center: Logo and Title */}
         <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-center md:justify-start mx-1 my-[3px]">
@@ -95,6 +106,8 @@ const Navbar = () => {
           </DropdownMenu>
         </div>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;
