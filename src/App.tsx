@@ -1,66 +1,42 @@
 
-import * as React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
+import React from 'react';
 
-// Simple test components
-const SimpleAuth: React.FC = () => {
+// Minimal test components without any external dependencies
+const SimpleAuth = () => {
   console.log('🔑 SimpleAuth component rendering');
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50">
-      <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-blue-600 mb-4">Auth Page</h1>
-        <p className="text-gray-600">Authentication component loaded successfully</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#eff6ff' }}>
+      <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '1rem' }}>Auth Page</h1>
+        <p style={{ color: '#6b7280' }}>Authentication component loaded successfully</p>
       </div>
     </div>
   );
 };
 
-const SimpleDashboard: React.FC = () => {
+const SimpleDashboard = () => {
   console.log('📊 SimpleDashboard component rendering');
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50">
-      <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-green-600 mb-4">Dashboard Working!</h1>
-        <p className="text-gray-600">Main application loaded successfully</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0fdf4' }}>
+      <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#16a34a', marginBottom: '1rem' }}>Dashboard Working!</h1>
+        <p style={{ color: '#6b7280' }}>Main application loaded successfully</p>
       </div>
     </div>
   );
 };
 
-// Create QueryClient with minimal config
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const App: React.FC = () => {
+const App = () => {
   console.log('🚀 App component rendering...');
   
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light">
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<SimpleAuth />} />
-              <Route path="*" element={<SimpleDashboard />} />
-            </Routes>
-          </BrowserRouter>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  );
+  // Simple routing based on pathname
+  const pathname = window.location.pathname;
+  
+  if (pathname === '/auth') {
+    return <SimpleAuth />;
+  }
+  
+  return <SimpleDashboard />;
 };
 
 export default App;
