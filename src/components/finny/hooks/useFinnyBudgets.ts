@@ -4,10 +4,11 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/utils/formatters';
 import { validateCategory } from '../utils/categoryUtils';
 import { MAX_DAILY_MESSAGES } from '../context/FinnyContext';
+import { CurrencyCode } from '@/utils/currencyUtils';
 
 interface UseFinnyBudgetsProps {
   user: any;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
   isMessageLimitReached: boolean;
   triggerChat: (message: string) => Promise<void>;
 }
