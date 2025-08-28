@@ -10,6 +10,7 @@ import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { MonthProvider } from "@/hooks/use-month-context";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
+import { AppOpenAd } from "@/components/ads/AppOpenAd";
 
 // Import pages
 import Auth from "@/pages/Auth";
@@ -54,6 +55,11 @@ const App = () => {
                       <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
                     </Routes>
                   </BrowserRouter>
+                  <AppOpenAd 
+                    adUnitId="ca-app-pub-8996865130200922/5906339239" 
+                    showFrequencyHours={4}
+                    enabled={true}
+                  />
                   <Toaster />
                   <Sonner />
                 </FinnyProvider>
