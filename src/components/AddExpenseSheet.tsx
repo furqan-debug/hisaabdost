@@ -162,7 +162,7 @@ const AddExpenseSheet = ({
 
   // Handle sheet close
   const handleSheetClose = (open: boolean) => {
-    setModalOpen(open); // Track modal state for banner ads
+    setModalOpen(open);
     
     if (!open) {
       // Clean up any resources
