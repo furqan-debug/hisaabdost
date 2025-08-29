@@ -33,42 +33,46 @@ const App = () => {
   console.log('🚀 App component rendering with full functionality...');
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light">
-        <TooltipProvider>
-          <AuthProvider>
-            <CurrencyProvider>
-              <MonthProvider>
-                <FinnyProvider>
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/auth" element={<Auth />} />
-                      <Route 
-                        path="/app/dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <Dashboard />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                      <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-                    </Routes>
-                  </BrowserRouter>
-                  <AppOpenAd 
-                    adUnitId="ca-app-pub-8996865130200922/5906339239" 
-                    showFrequencyHours={4}
-                    enabled={true}
-                  />
-                  <Toaster />
-                  <Sonner />
-                </FinnyProvider>
-              </MonthProvider>
-            </CurrencyProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <TooltipProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <MonthProvider>
+                  <FinnyProvider>
+                    <BrowserRouter>
+                      <Routes>
+                        <Route path="/auth" element={<Auth />} />
+                        <Route 
+                          path="/app/dashboard" 
+                          element={
+                            <ProtectedRoute>
+                              <Dashboard />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                        <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                      </Routes>
+                    </BrowserRouter>
+                    <Toaster />
+                    <Sonner />
+                  </FinnyProvider>
+                </MonthProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+      
+      {/* App Open Ad - rendered independently to not block main app */}
+      <AppOpenAd 
+        adUnitId="ca-app-pub-8996865130200922/5906339239" 
+        showFrequencyHours={4}
+        enabled={true}
+      />
+    </>
   );
 };
 
