@@ -34,7 +34,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
     throw new Error("Email service not configured - missing RESEND_API_KEY");
   }
 
-  const resetLink = `https://ccb1b398-4ebf-47e1-ac45-1522f307f140.sandbox.lovable.dev/reset-password.html?token=${resetToken}&email=${encodeURIComponent(email)}`;
+  const resetLink = `https://bklfolfivjonzpprytkz.supabase.co/functions/v1/reset-password-page?token=${resetToken}&email=${encodeURIComponent(email)}`;
   console.log("Reset link generated:", resetLink);
 
   const emailHtml = `
