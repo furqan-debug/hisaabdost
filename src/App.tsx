@@ -15,6 +15,19 @@ import { AppOpenAd } from "@/components/ads/AppOpenAd";
 // Import pages
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
+import Analytics from "@/pages/Analytics";
+import AppGuide from "@/pages/AppGuide";
+import Budget from "@/pages/Budget";
+import Expenses from "@/pages/Expenses";
+import FinnyChat from "@/pages/FinnyChat";
+import Goals from "@/pages/Goals";
+import History from "@/pages/History";
+import ManageCategories from "@/pages/ManageCategories";
+import ManageFunds from "@/pages/ManageFunds";
+import Settings from "@/pages/Settings";
+import ResetPassword from "@/pages/ResetPassword";
+import NotFound from "@/pages/NotFound";
+import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Create QueryClient with optimized settings
@@ -43,17 +56,32 @@ const App = () => {
                   <FinnyProvider>
                     <BrowserRouter>
                       <Routes>
+                        {/* Public routes */}
                         <Route path="/auth" element={<Auth />} />
-                        <Route 
-                          path="/app/dashboard" 
-                          element={
-                            <ProtectedRoute>
-                              <Dashboard />
-                            </ProtectedRoute>
-                          } 
-                        />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        
+                        {/* Protected routes with Layout */}
+                        <Route path="/app" element={
+                          <ProtectedRoute>
+                            <Layout />
+                          </ProtectedRoute>
+                        }>
+                          <Route path="dashboard" element={<Dashboard />} />
+                          <Route path="analytics" element={<Analytics />} />
+                          <Route path="expenses" element={<Expenses />} />
+                          <Route path="budget" element={<Budget />} />
+                          <Route path="goals" element={<Goals />} />
+                          <Route path="history" element={<History />} />
+                          <Route path="settings" element={<Settings />} />
+                          <Route path="finny-chat" element={<FinnyChat />} />
+                          <Route path="guide" element={<AppGuide />} />
+                          <Route path="manage-categories" element={<ManageCategories />} />
+                          <Route path="manage-funds" element={<ManageFunds />} />
+                        </Route>
+                        
+                        {/* Default redirects */}
                         <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-                        <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                        <Route path="*" element={<NotFound />} />
                       </Routes>
                     </BrowserRouter>
                     <Toaster />
