@@ -84,6 +84,14 @@ const App = () => {
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </BrowserRouter>
+                    
+                    {/* App Open Ad - inside providers to access React hooks */}
+                    <AppOpenAd 
+                      adUnitId="ca-app-pub-8996865130200922/5906339239" 
+                      showFrequencyHours={4}
+                      enabled={true}
+                    />
+                    
                     <Toaster />
                     <Sonner />
                   </FinnyProvider>
@@ -93,13 +101,6 @@ const App = () => {
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>
-      
-      {/* App Open Ad - rendered independently to not block main app */}
-      <AppOpenAd 
-        adUnitId="ca-app-pub-8996865130200922/5906339239" 
-        showFrequencyHours={4}
-        enabled={true}
-      />
     </>
   );
 };
