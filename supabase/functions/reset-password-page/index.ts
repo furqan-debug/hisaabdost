@@ -382,10 +382,10 @@ const handler = async (req: Request): Promise<Response> => {
   // Serve the HTML page for any request
   return new Response(resetPasswordHTML, {
     headers: {
-      "Content-Type": "text/html; charset=UTF-8",
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache",
       ...corsHeaders,
     },
-    status: 200,
   });
 };
 
