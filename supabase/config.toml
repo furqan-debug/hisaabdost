@@ -13,5 +13,8 @@ port = 54322
 [functions.finny-chat]
 verify_jwt = true
 
+[functions.reset-password-page]
+verify_jwt = false
+
 [functions.send-push-notification]
 verify_jwt = true
