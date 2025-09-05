@@ -49,6 +49,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Clean up expired tokens first
+    await supabaseAdmin
+      .from("password_reset_codes")
+      .delete()
+      .lt("expires_at", new Date().toISOString());
+
     // Verify the token is valid and not expired
     const { data: resetCode, error: queryError } = await supabaseAdmin
       .from("password_reset_codes")

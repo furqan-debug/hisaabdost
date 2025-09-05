@@ -287,11 +287,11 @@ const resetPasswordHTML = `
         }
         
         async function updatePassword(email, token, newPassword) {
+            console.log('🔐 Calling update password function with email:', email);
             const response = await fetch(\`\${SUPABASE_URL}/functions/v1/update-password-with-code\`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': \`Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrbGZvbGZpdmpvbnpwcHJ5dGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzMjM0NjQsImV4cCI6MjA1NTg5OTQ2NH0.oipdwmQ4lRIyeYX00Irz4q0ZEDlKc9wuQhSPbHRzOKE\`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     email: email,
@@ -380,10 +380,14 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   // Serve the HTML page for any request
+  console.log("📄 Serving HTML page with proper headers");
   return new Response(resetPasswordHTML, {
+    status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
       ...corsHeaders,
     },
   });
