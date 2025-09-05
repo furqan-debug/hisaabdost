@@ -1,12 +1,25 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const handler = async (req: Request): Promise<Response> => {
+  console.log("🌐 Reset password page handler started");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
 
-const resetPasswordHTML = `
-<!DOCTYPE html>
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      }
+    });
+  }
+
+  console.log("📄 Serving HTML page");
+
+  const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -367,28 +380,18 @@ const resetPasswordHTML = `
         });
     </script>
 </body>
-</html>
-`;
+</html>`;
 
-const handler = async (req: Request): Promise<Response> => {
-  console.log("🌐 Reset password page handler started");
-  console.log("Request method:", req.method);
-  console.log("Request URL:", req.url);
-
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // Serve the HTML page for any request
-  console.log("📄 Serving HTML page with proper headers");
-  return new Response(resetPasswordHTML, {
+  // Return HTML response with explicit headers
+  return new Response(htmlContent, {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       "Cache-Control": "no-cache, no-store, must-revalidate",
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      ...corsHeaders,
+      "Pragma": "no-cache",
+      "Expires": "0",
     },
   });
 };
