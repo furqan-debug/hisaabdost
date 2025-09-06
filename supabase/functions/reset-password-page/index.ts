@@ -1,7 +1,27 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-// Move HTML content outside handler for better performance
-const HTML_CONTENT = `<!DOCTYPE html>
+console.log("🚀 Reset password page edge function initialized");
+
+const handler = async (req: Request): Promise<Response> => {
+  console.log("🌐 Reset password page handler started");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
+
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      }
+    });
+  }
+
+  console.log("📄 Serving HTML page");
+
+  const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -445,86 +465,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const handler = async (req: Request): Promise<Response> => {
-  const timestamp = new Date().toISOString();
-  console.log(`🌐 Reset password page handler started at ${timestamp}`);
-  console.log("Request method:", req.method);
-  console.log("Request URL:", req.url);
-  console.log("User-Agent:", req.headers.get("User-Agent"));
-
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    console.log("🔄 Handling CORS preflight request");
-    return new Response(null, {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      }
-    });
-  }
-
-  console.log("📄 Serving HTML page with robust headers");
-
-  // Calculate content length for explicit header
-  const contentLength = new TextEncoder().encode(HTML_CONTENT).length;
-  
-  const headers = {
-    // Primary content type - most important!
-    "Content-Type": "text/html; charset=utf-8",
-    
-    // Explicit content length
-    "Content-Length": contentLength.toString(),
-    
-    // Security headers to prevent browser misinterpretation
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block",
-    
-    // CORS headers
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    
-    // Cache control for debugging
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
-    
-    // Debugging headers
-    "X-Function-Response": "html-page",
-    "X-Timestamp": timestamp,
-    "X-Content-Length": contentLength.toString(),
-    
-    // Vary header for proper caching
-    "Vary": "Accept-Encoding, User-Agent",
-  };
-
-  console.log("📊 Response headers being sent:", JSON.stringify(headers, null, 2));
-  console.log("📏 Content length:", contentLength);
-
-  try {
-    const response = new Response(HTML_CONTENT, {
-      status: 200,
-      headers,
-    });
-    
-    console.log("✅ HTML response created successfully");
-    return response;
-    
-  } catch (error) {
-    console.error("❌ Error creating response:", error);
-    
-    // Fallback response
-    return new Response("Error serving page", {
-      status: 500,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Error": "Response creation failed",
-      },
-    });
-  }
+  // Return HTML response with the most basic headers possible
+  return new Response(htmlContent, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  });
 };
 
-console.log("🚀 Reset password page edge function initialized");
 serve(handler);
