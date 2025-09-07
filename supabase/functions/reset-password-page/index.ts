@@ -1,14 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-console.log("🚀 Reset password page edge function initialized");
+console.log("🚀 Password Reset Page v2.0 - Force Deploy");
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("🌐 Reset password page handler started");
-  console.log("Request method:", req.method);
-  console.log("Request URL:", req.url);
-
-  // Handle CORS preflight requests
+  const timestamp = Date.now();
+  console.log(`🌐 [${timestamp}] Request received:`, req.method, req.url);
+  
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
+    console.log("🔄 Handling CORS preflight");
     return new Response(null, {
       status: 200,
       headers: {
@@ -19,459 +19,49 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  console.log("📄 Serving HTML page");
+  // UTF-8 BOM + Explicit DOCTYPE to force HTML recognition
+  const htmlContent = "\uFEFF<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Reset Password - HisaabDost</title>\n    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            min-height: 100vh;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            padding: 20px;\n        }\n        .container {\n            background: white;\n            border-radius: 12px;\n            box-shadow: 0 20px 40px rgba(0,0,0,0.1);\n            padding: 40px;\n            width: 100%;\n            max-width: 400px;\n            text-align: center;\n        }\n        .logo {\n            color: #667eea;\n            font-size: 32px;\n            font-weight: bold;\n            margin-bottom: 8px;\n        }\n        .subtitle {\n            color: #6b7280;\n            margin-bottom: 32px;\n        }\n        .form-group {\n            margin-bottom: 20px;\n            text-align: left;\n        }\n        label {\n            display: block;\n            margin-bottom: 8px;\n            color: #374151;\n            font-weight: 500;\n        }\n        .input-container {\n            position: relative;\n        }\n        input {\n            width: 100%;\n            padding: 12px 16px;\n            border: 1px solid #d1d5db;\n            border-radius: 8px;\n            font-size: 16px;\n            transition: border-color 0.2s;\n        }\n        input:focus {\n            outline: none;\n            border-color: #667eea;\n            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);\n        }\n        .toggle-password {\n            position: absolute;\n            right: 12px;\n            top: 50%;\n            transform: translateY(-50%);\n            background: none;\n            border: none;\n            color: #6b7280;\n            cursor: pointer;\n            font-size: 14px;\n        }\n        .btn {\n            width: 100%;\n            padding: 12px;\n            background: #667eea;\n            color: white;\n            border: none;\n            border-radius: 8px;\n            font-size: 16px;\n            font-weight: 500;\n            cursor: pointer;\n            transition: background-color 0.2s;\n        }\n        .btn:hover {\n            background: #5a6fd8;\n        }\n        .btn:disabled {\n            background: #9ca3af;\n            cursor: not-allowed;\n        }\n        .error {\n            background: #fee2e2;\n            color: #dc2626;\n            padding: 12px;\n            border-radius: 8px;\n            margin-bottom: 20px;\n            font-size: 14px;\n            display: none;\n        }\n        .success {\n            background: #d1fae5;\n            color: #059669;\n            padding: 24px;\n            border-radius: 8px;\n            margin-bottom: 20px;\n        }\n        .loading {\n            display: none;\n            text-align: center;\n            color: #6b7280;\n        }\n        .spinner {\n            border: 2px solid #f3f4f6;\n            border-top: 2px solid #667eea;\n            border-radius: 50%;\n            width: 20px;\n            height: 20px;\n            animation: spin 1s linear infinite;\n            margin: 0 auto 10px;\n        }\n        @keyframes spin {\n            0% { transform: rotate(0deg); }\n            100% { transform: rotate(360deg); }\n        }\n        .link {\n            color: #667eea;\n            text-decoration: none;\n            font-weight: 500;\n        }\n        .link:hover {\n            text-decoration: underline;\n        }\n        .debug-info {\n            position: fixed;\n            top: 10px;\n            right: 10px;\n            background: rgba(0,0,0,0.8);\n            color: white;\n            padding: 8px;\n            border-radius: 4px;\n            font-size: 12px;\n            z-index: 1000;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"debug-info\" id=\"debugInfo\">Loading...</div>\n    \n    <div class=\"container\">\n        <div class=\"logo\">HisaabDost</div>\n        <div class=\"subtitle\">Reset your password</div>\n        \n        <div id=\"loading\" class=\"loading\">\n            <div class=\"spinner\"></div>\n            <div>Verifying reset link...</div>\n        </div>\n\n        <div id=\"invalidToken\" style=\"display: none;\">\n            <div class=\"error\" style=\"display: block;\">\n                <strong>Invalid or expired reset link</strong><br>\n                This password reset link is no longer valid.\n            </div>\n            <a href=\"/auth\" class=\"btn\" style=\"display: inline-block; text-decoration: none;\">Back to Sign In</a>\n        </div>\n\n        <div id=\"resetForm\" style=\"display: none;\">\n            <form id=\"passwordForm\">\n                <div class=\"form-group\">\n                    <label for=\"newPassword\">New Password</label>\n                    <div class=\"input-container\">\n                        <input type=\"password\" id=\"newPassword\" required minlength=\"6\">\n                        <button type=\"button\" class=\"toggle-password\" onclick=\"togglePassword('newPassword')\">Show</button>\n                    </div>\n                    <div id=\"newPasswordError\" class=\"error\"></div>\n                </div>\n\n                <div class=\"form-group\">\n                    <label for=\"confirmPassword\">Confirm Password</label>\n                    <div class=\"input-container\">\n                        <input type=\"password\" id=\"confirmPassword\" required minlength=\"6\">\n                        <button type=\"button\" class=\"toggle-password\" onclick=\"togglePassword('confirmPassword')\">Show</button>\n                    </div>\n                    <div id=\"confirmPasswordError\" class=\"error\"></div>\n                </div>\n\n                <button type=\"submit\" class=\"btn\" id=\"submitBtn\">Reset Password</button>\n            </form>\n        </div>\n\n        <div id=\"successMessage\" style=\"display: none;\">\n            <div class=\"success\">\n                <strong>Password Reset Successful!</strong><br>\n                Your password has been updated successfully.\n            </div>\n            <a href=\"/auth\" class=\"btn\" style=\"display: inline-block; text-decoration: none;\">Sign In Now</a>\n        </div>\n    </div>\n\n    <script>\n        console.log('🔐 Password reset page v2.0 loaded successfully');\n        \n        // Update debug info\n        document.getElementById('debugInfo').textContent = 'Page Loaded: ' + new Date().toLocaleTimeString();\n        \n        function getUrlParams() {\n            const params = new URLSearchParams(window.location.search);\n            return {\n                token: params.get('token'),\n                email: params.get('email')\n            };\n        }\n\n        function togglePassword(inputId) {\n            const input = document.getElementById(inputId);\n            const button = input.nextElementSibling;\n            \n            if (input.type === 'password') {\n                input.type = 'text';\n                button.textContent = 'Hide';\n            } else {\n                input.type = 'password';\n                button.textContent = 'Show';\n            }\n        }\n\n        function showError(elementId, message) {\n            const errorEl = document.getElementById(elementId);\n            errorEl.textContent = message;\n            errorEl.style.display = 'block';\n        }\n\n        function hideError(elementId) {\n            const errorEl = document.getElementById(elementId);\n            errorEl.style.display = 'none';\n        }\n\n        function validateForm() {\n            const newPassword = document.getElementById('newPassword').value;\n            const confirmPassword = document.getElementById('confirmPassword').value;\n            let isValid = true;\n\n            hideError('newPasswordError');\n            hideError('confirmPasswordError');\n\n            if (newPassword.length < 6) {\n                showError('newPasswordError', 'Password must be at least 6 characters long.');\n                isValid = false;\n            }\n\n            if (newPassword !== confirmPassword) {\n                showError('confirmPasswordError', 'Passwords do not match.');\n                isValid = false;\n            }\n\n            return isValid;\n        }\n\n        async function updatePassword(email, token, newPassword) {\n            try {\n                const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/update-password-with-code?v=' + Date.now(), {\n                    method: 'POST',\n                    headers: {\n                        'Content-Type': 'application/json',\n                    },\n                    body: JSON.stringify({ email, token, newPassword })\n                });\n\n                const data = await response.json();\n                \n                if (!response.ok) {\n                    throw new Error(data.error || 'Failed to update password');\n                }\n                \n                return data;\n            } catch (error) {\n                console.error('Password update error:', error);\n                throw error;\n            }\n        }\n\n        // Page initialization\n        document.addEventListener('DOMContentLoaded', async function() {\n            console.log('🚀 Initializing password reset page v2.0');\n            \n            const { token, email } = getUrlParams();\n            document.getElementById('debugInfo').textContent += ' | Token: ' + (token ? 'Found' : 'Missing');\n            \n            if (!token || !email) {\n                console.error('Missing token or email parameters');\n                document.getElementById('loading').style.display = 'none';\n                document.getElementById('invalidToken').style.display = 'block';\n                return;\n            }\n\n            // Show loading state\n            document.getElementById('loading').style.display = 'block';\n\n            // Verify the reset token\n            try {\n                const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/verify-reset-code?v=' + Date.now(), {\n                    method: 'POST',\n                    headers: {\n                        'Content-Type': 'application/json',\n                    },\n                    body: JSON.stringify({ token, email })\n                });\n\n                const data = await response.json();\n                \n                document.getElementById('loading').style.display = 'none';\n                \n                if (data.valid) {\n                    document.getElementById('resetForm').style.display = 'block';\n                    document.getElementById('debugInfo').textContent += ' | Status: Valid';\n                    console.log('✅ Reset token verified successfully');\n                } else {\n                    document.getElementById('invalidToken').style.display = 'block';\n                    document.getElementById('debugInfo').textContent += ' | Status: Invalid';\n                    console.log('❌ Invalid reset token');\n                }\n            } catch (error) {\n                console.error('Token verification error:', error);\n                document.getElementById('loading').style.display = 'none';\n                document.getElementById('invalidToken').style.display = 'block';\n                document.getElementById('debugInfo').textContent += ' | Status: Error';\n            }\n        });\n\n        // Form submission handler\n        document.addEventListener('DOMContentLoaded', function() {\n            const form = document.getElementById('passwordForm');\n            if (form) {\n                form.addEventListener('submit', async function(e) {\n                    e.preventDefault();\n                    \n                    if (!validateForm()) {\n                        return;\n                    }\n\n                    const submitBtn = document.getElementById('submitBtn');\n                    const newPassword = document.getElementById('newPassword').value;\n                    const { token, email } = getUrlParams();\n\n                    submitBtn.disabled = true;\n                    submitBtn.textContent = 'Resetting Password...';\n\n                    try {\n                        await updatePassword(email, token, newPassword);\n                        \n                        document.getElementById('resetForm').style.display = 'none';\n                        document.getElementById('successMessage').style.display = 'block';\n                        document.getElementById('debugInfo').textContent += ' | Reset: Success';\n                        console.log('✅ Password reset successful');\n                    } catch (error) {\n                        showError('confirmPasswordError', error.message);\n                        document.getElementById('debugInfo').textContent += ' | Reset: Failed';\n                        console.error('❌ Password reset failed:', error);\n                    } finally {\n                        submitBtn.disabled = false;\n                        submitBtn.textContent = 'Reset Password';\n                    }\n                });\n            }\n        });\n\n        // Real-time password validation\n        document.addEventListener('DOMContentLoaded', function() {\n            const newPasswordInput = document.getElementById('newPassword');\n            const confirmPasswordInput = document.getElementById('confirmPassword');\n            \n            if (newPasswordInput) {\n                newPasswordInput.addEventListener('input', function() {\n                    hideError('newPasswordError');\n                    if (this.value.length > 0 && this.value.length < 6) {\n                        showError('newPasswordError', 'Password must be at least 6 characters long.');\n                    }\n                });\n            }\n            \n            if (confirmPasswordInput) {\n                confirmPasswordInput.addEventListener('input', function() {\n                    hideError('confirmPasswordError');\n                    const newPassword = document.getElementById('newPassword').value;\n                    if (this.value.length > 0 && this.value !== newPassword) {\n                        showError('confirmPasswordError', 'Passwords do not match.');\n                    }\n                });\n            }\n        });\n        \n        // Remove debug info after 10 seconds\n        setTimeout(() => {\n            const debug = document.getElementById('debugInfo');\n            if (debug) debug.style.display = 'none';\n        }, 10000);\n    </script>\n</body>\n</html>";
 
-  const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - HisaabDost</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  console.log(`📄 [${timestamp}] Serving HTML page (length: ${htmlContent.length})`);
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.6;
-        }
-
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 0.5rem;
-            font-size: 1.5rem;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .password-container {
-            position: relative;
-        }
-
-        input[type="password"], input[type="text"] {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-            outline: none;
-            padding-right: 3rem;
-        }
-
-        input:focus {
-            border-color: #667eea;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #666;
-            font-size: 1.2rem;
-        }
-
-        .error-message {
-            color: #e74c3c;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        .success-message {
-            color: #27ae60;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: #d5f4e6;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .reset-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin-bottom: 1rem;
-        }
-
-        .reset-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-        }
-
-        .reset-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .loading {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            color: #666;
-            margin-top: 1rem;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .back-link {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-        }
-
-        .back-link:hover {
-            color: #764ba2;
-        }
-
-        .success-content {
-            display: none;
-        }
-
-        .success-content.show {
-            display: block;
-        }
-
-        .checkmark {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #27ae60;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.5rem;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-        }
-
-        .invalid-token {
-            color: #e74c3c;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .invalid-token h2 {
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">HisaabDost</div>
+  try {
+    const response = new Response(htmlContent, {
+      status: 200,
+      headers: {
+        // Most explicit HTML headers possible
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Length": htmlContent.length.toString(),
         
-        <div id="loadingState">
-            <div class="loading" style="display: flex;">
-                <div class="spinner"></div>
-                <span>Verifying reset link...</span>
-            </div>
-        </div>
+        // Force no caching for testing
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        
+        // Security headers
+        "X-Content-Type-Options": "nosniff",
+        
+        // Debugging headers
+        "X-Function-Version": "2.0",
+        "X-Response-Time": timestamp.toString(),
+        
+        // CORS headers  
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+      }
+    });
 
-        <div id="invalidToken" class="invalid-token" style="display: none;">
-            <h2>Invalid or Expired Link</h2>
-            <p>This password reset link is invalid or has expired. Please request a new password reset.</p>
-            <a href="#" class="back-link" onclick="window.close();">Close this window</a>
-        </div>
+    console.log(`✅ [${timestamp}] Response created successfully`);
+    return response;
 
-        <div id="resetForm" style="display: none;">
-            <h1>Reset Your Password</h1>
-            <p class="subtitle">Enter your new password below</p>
-            
-            <form id="passwordResetForm">
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <div class="password-container">
-                        <input type="password" id="newPassword" placeholder="Enter new password" required minlength="6">
-                        <button type="button" class="toggle-password" onclick="togglePassword('newPassword')">👁️</button>
-                    </div>
-                    <div id="newPasswordError" class="error-message"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <div class="password-container">
-                        <input type="password" id="confirmPassword" placeholder="Confirm new password" required minlength="6">
-                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
-                    </div>
-                    <div id="confirmPasswordError" class="error-message"></div>
-                </div>
-
-                <button type="submit" class="reset-btn" id="resetButton">
-                    Reset Password
-                </button>
-            </form>
-
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <span>Updating your password...</span>
-            </div>
-        </div>
-
-        <div id="successMessage" class="success-content">
-            <div class="checkmark">✓</div>
-            <h1>Password Updated!</h1>
-            <div class="success-message" style="display: block;">
-                Your password has been successfully updated. You can now sign in with your new password.
-            </div>
-            <a href="#" class="back-link" onclick="window.close();">Close this window</a>
-        </div>
-    </div>
-
-    <script>
-        // Get URL parameters
-        function getUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return {
-                token: urlParams.get('token'),
-                email: urlParams.get('email')
-            };
-        }
-
-        // Toggle password visibility
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const button = input.nextElementSibling;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                button.textContent = '👁️';
-            }
-        }
-
-        // Show/hide error messages
-        function showError(elementId, message) {
-            const errorElement = document.getElementById(elementId);
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-
-        function hideError(elementId) {
-            const errorElement = document.getElementById(elementId);
-            errorElement.style.display = 'none';
-        }
-
-        // Validate form
-        function validateForm() {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            let isValid = true;
-
-            hideError('newPasswordError');
-            hideError('confirmPasswordError');
-
-            if (newPassword.length < 6) {
-                showError('newPasswordError', 'Password must be at least 6 characters long');
-                isValid = false;
-            }
-
-            if (newPassword !== confirmPassword) {
-                showError('confirmPasswordError', 'Passwords do not match');
-                isValid = false;
-            }
-
-            return isValid;
-        }
-
-        // Update password
-        async function updatePassword(email, token, newPassword) {
-            const response = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/update-password-with-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    token: token,
-                    newPassword: newPassword
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update password');
-            }
-
-            return await response.json();
-        }
-
-        // Handle form submission
-        document.addEventListener('DOMContentLoaded', async function() {
-            const params = getUrlParams();
-            const { token, email } = params;
-
-            if (!token || !email) {
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('invalidToken').style.display = 'block';
-                return;
-            }
-
-            // Verify the reset token
-            try {
-                const verifyResponse = await fetch('https://bklfolfivjonzpprytkz.supabase.co/functions/v1/verify-reset-code', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        token: token
-                    })
-                });
-
-                const verifyData = await verifyResponse.json();
-
-                if (!verifyData.valid) {
-                    document.getElementById('loadingState').style.display = 'none';
-                    document.getElementById('invalidToken').style.display = 'block';
-                    return;
-                }
-
-                // Token is valid, show the reset form
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('resetForm').style.display = 'block';
-
-            } catch (error) {
-                console.error('Error verifying token:', error);
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('invalidToken').style.display = 'block';
-                return;
-            }
-
-            // Handle form submission
-            const form = document.getElementById('passwordResetForm');
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                if (!validateForm()) {
-                    return;
-                }
-
-                const newPassword = document.getElementById('newPassword').value;
-                const resetButton = document.getElementById('resetButton');
-                const loadingIndicator = document.getElementById('loadingIndicator');
-
-                try {
-                    resetButton.disabled = true;
-                    loadingIndicator.style.display = 'flex';
-
-                    await updatePassword(email, token, newPassword);
-
-                    // Show success message
-                    document.getElementById('resetForm').style.display = 'none';
-                    document.getElementById('successMessage').classList.add('show');
-
-                } catch (error) {
-                    console.error('Error updating password:', error);
-                    showError('confirmPasswordError', error.message || 'Failed to update password. Please try again.');
-                } finally {
-                    resetButton.disabled = false;
-                    loadingIndicator.style.display = 'none';
-                }
-            });
-
-            // Real-time validation
-            document.getElementById('newPassword').addEventListener('input', function() {
-                if (this.value.length >= 6) {
-                    hideError('newPasswordError');
-                }
-            });
-
-            document.getElementById('confirmPassword').addEventListener('input', function() {
-                const newPassword = document.getElementById('newPassword').value;
-                if (this.value === newPassword && newPassword.length > 0) {
-                    hideError('confirmPasswordError');
-                }
-            });
-        });
-    </script>
-</body>
-</html>`;
-
-  // Return HTML response with the most basic headers possible
-  return new Response(htmlContent, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-    },
-  });
+  } catch (error) {
+    console.error(`❌ [${timestamp}] Error creating response:`, error);
+    return new Response("<!DOCTYPE html><html><body><h1>Error</h1><p>Failed to load page</p></body></html>", {
+      status: 500,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8"
+      }
+    });
+  }
 };
 
 serve(handler);
