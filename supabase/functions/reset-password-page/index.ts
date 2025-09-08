@@ -1,31 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-console.log("🚀 Password Reset Page v3.0 - EMERGENCY FIX");
+console.log("🚀 New Password Reset Page v1.0");
 
-const handler = async (req: Request): Promise<Response> => {
-  console.log(`🌐 Request: ${req.method} ${req.url}`);
-  
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      }
-    });
-  }
-
-  // Create HTML content without BOM or extra formatting
-  const htmlContent = `<!DOCTYPE html>
+const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - HisaabDost</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -206,7 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
     </div>
 
     <script>
-        console.log('Password reset page v3.0 loaded');
+        console.log('New password reset page loaded successfully');
         
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
@@ -281,7 +269,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Initializing password reset page');
+            console.log('Initializing new password reset page');
             
             const { token, email } = getUrlParams();
             
@@ -384,13 +372,30 @@ const handler = async (req: Request): Promise<Response> => {
 </body>
 </html>`;
 
-  console.log(`Serving HTML page (length: ${htmlContent.length})`);
+const handler = async (req: Request): Promise<Response> => {
+  console.log(`🌐 ${req.method} ${req.url}`);
+  
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      }
+    });
+  }
 
-  // Return simple response with only essential headers
-  return new Response(htmlContent, {
+  console.log(`📄 Serving HTML content (${HTML_CONTENT.length} chars)`);
+
+  return new Response(HTML_CONTENT, {
     status: 200,
     headers: {
-      "Content-Type": "text/html; charset=utf-8"
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
     }
   });
 };
