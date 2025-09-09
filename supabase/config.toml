@@ -16,6 +16,9 @@ verify_jwt = true
 [functions.finny-chat]
 verify_jwt = true
 
+[functions.reset-password-page]
+verify_jwt = false
+
 [functions.send-password-reset-code]
 verify_jwt = true
 

@@ -34,8 +34,8 @@ const sendResetEmail = async (email: string, resetToken: string) => {
     throw new Error("Email service not configured - missing RESEND_API_KEY");
   }
 
-  // Link to React app instead of edge function
-  const resetLink = `https://bklfolfivjonzpprytkz--lovable.lovableproject.com/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+  // Link to standalone password reset page
+  const resetLink = `https://bklfolfivjonzpprytkz.supabase.co/functions/v1/reset-password-page?token=${resetToken}&email=${encodeURIComponent(email)}`;
   console.log("Reset link generated:", resetLink);
 
   const emailHtml = `
