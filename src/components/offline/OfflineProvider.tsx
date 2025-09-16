@@ -5,7 +5,7 @@ import { syncService } from '@/services/syncService';
 import { mobileSyncService } from '@/services/mobileSyncService';
 import { offlineStorage } from '@/services/offlineStorageService';
 import { toast } from 'sonner';
-import { useAuth } from '@/lib/auth';
+import { useAuthOptional } from '@/lib/auth';
 
 interface OfflineContextType {
   isOnline: boolean;
@@ -18,7 +18,8 @@ const OfflineContext = createContext<OfflineContextType | undefined>(undefined);
 
 export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const { isOnline, wasOffline } = useNetworkStatus();
-  const { user } = useAuth();
+  const auth = useAuthOptional();
+  const user = auth?.user ?? null;
   const [hasPendingSync, setHasPendingSync] = useState(false);
   const [syncInProgress, setSyncInProgress] = useState(false);
 

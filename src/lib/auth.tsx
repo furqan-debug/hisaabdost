@@ -26,6 +26,9 @@ export const useAuth = () => {
   return context;
 };
 
+// Optional variant for components that can render outside AuthProvider during boot
+export const useAuthOptional = () => useContext(AuthContext);
+
 interface AuthProviderProps {
   children: React.ReactNode;
 }
