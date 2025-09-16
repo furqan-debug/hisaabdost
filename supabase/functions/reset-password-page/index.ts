@@ -181,13 +181,24 @@ const HTML_CONTENT = `<!DOCTYPE html>
             <h2 class="title">Password Reset Successful!</h2>
             <p class="success">Your password has been successfully updated.</p>
             
-            <div class="app-instruction">
+            <div className="app-instruction">
                 <h4>Next Steps:</h4>
                 <p>
                     <strong>1.</strong> Close this browser tab<br>
                     <strong>2.</strong> Open your HisaabDost mobile app<br>
-                    <strong>3.</strong> Login with your new password
+                    <strong>3.</strong> Sign in with your new password
                 </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button 
+                    onclick="window.close(); setTimeout(() => window.location.href = 'about:blank', 100);" 
+                    style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.3s;"
+                    onmouseover="this.style.background='#5a6fd8'"
+                    onmouseout="this.style.background='#667eea'"
+                >
+                    Return to App
+                </button>
             </div>
         </div>
     </div>

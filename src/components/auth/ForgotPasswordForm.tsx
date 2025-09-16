@@ -65,8 +65,8 @@ export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPassword
           <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <div className="text-sm space-y-2">
             <p className="font-medium">Reset link sent!</p>
-            <p>Please check your email and click the reset link. The link will open directly in this app to reset your password.</p>
-            <p className="text-xs opacity-75">The reset link will expire in 15 minutes for security.</p>
+            <p>Please check your email and click the reset link. The link will open in your mobile browser where you can safely reset your password.</p>
+            <p className="text-xs opacity-75">After resetting your password, return to this app to sign in with your new password. The reset link expires in 15 minutes.</p>
           </div>
         </motion.div>
       )}

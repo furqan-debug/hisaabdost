@@ -29,4 +29,4 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.verify-reset-code]
-verify_jwt = true
+verify_jwt = false
