@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceiptHistory } from "./ReceiptHistory";
 import { useAuth } from "@/lib/auth";
+import { Link } from "react-router-dom";
 
 export function ReceiptParserDemo() {
   const { user } = useAuth();
@@ -156,7 +157,7 @@ export function ReceiptParserDemo() {
                 <div className="text-center">
                   <p className="mb-4 text-muted-foreground">Please log in to view your receipt history.</p>
                   <Button variant="secondary" asChild>
-                    <a href="/auth">Log In</a>
+                    <Link to="/auth">Log In</Link>
                   </Button>
                 </div>
               </CardContent>
