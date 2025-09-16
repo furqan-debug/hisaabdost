@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/lib/auth";
+import { useAuthOptional } from "@/lib/auth";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
@@ -8,7 +8,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const auth = useAuthOptional();
+  const user = auth?.user ?? null;
+  const loading = auth?.loading ?? true;
 
   console.log('🔐 ProtectedRoute check:', { hasUser: !!user, loading });
 

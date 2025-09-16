@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
+import { useAuthOptional } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User } from "lucide-react";
@@ -10,12 +10,11 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 const Auth = () => {
-  const {
-    user,
-    verifyOtp,
-    resendOtp,
-    sendPasswordResetCode
-  } = useAuth();
+  const auth = useAuthOptional();
+  const user = auth?.user ?? null;
+  const verifyOtp = auth?.verifyOtp ?? (async () => {});
+  const resendOtp = auth?.resendOtp ?? (async () => {});
+  const sendPasswordResetCode = auth?.sendPasswordResetCode ?? (async () => {});
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { useEmailAuth } from "@/hooks/auth/useEmailAuth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ type SignUpFormProps = {
 };
 
 export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) => {
-  const { signUp } = useAuth();
+  const { signUp } = useEmailAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
