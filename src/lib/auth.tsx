@@ -21,7 +21,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    if (import.meta.env.DEV) {
+      console.warn('useAuth called outside AuthProvider - returning fallback context');
+    }
+    const fallback: AuthContextType = {
+      user: null,
+      session: null,
+      loading: true,
+      signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
+      signUp: async () => { throw new Error('AuthProvider not mounted'); },
+      signOut: async () => { throw new Error('AuthProvider not mounted'); },
+      verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
+      resendOtp: async () => { throw new Error('AuthProvider not mounted'); },
+      sendPasswordResetCode: async () => { throw new Error('AuthProvider not mounted'); },
+    };
+    return fallback;
   }
   return context;
 };
