@@ -12,6 +12,7 @@ import { MonthProvider } from "@/hooks/use-month-context";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { OfflineProvider } from "@/components/offline/OfflineProvider";
 import { AppOpenAd } from "@/components/ads/AppOpenAd";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Import pages
 import Auth from "@/pages/Auth";
@@ -52,11 +53,12 @@ const App = () => {
         <ThemeProvider attribute="class" defaultTheme="light">
           <TooltipProvider>
             <AuthProvider>
-              <OfflineProvider>
-                <CurrencyProvider>
-                  <MonthProvider>
-                    <FinnyProvider>
-                    <BrowserRouter>
+              <ErrorBoundary>
+                <OfflineProvider>
+                  <CurrencyProvider>
+                    <MonthProvider>
+                      <FinnyProvider>
+                      <BrowserRouter>
                       <Routes>
                         {/* Public routes */}
                         <Route path="/auth" element={<Auth />} />
@@ -100,6 +102,7 @@ const App = () => {
                   </MonthProvider>
                 </CurrencyProvider>
               </OfflineProvider>
+              </ErrorBoundary>
             </AuthProvider>
           </TooltipProvider>
         </ThemeProvider>
