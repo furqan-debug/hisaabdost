@@ -34,7 +34,7 @@ const Navbar = () => {
     navigate('/app/dashboard');
   };
   return <nav style={{
-    paddingTop: isMobile ? 'max(env(safe-area-inset-top, 44px), 44px)' : '0',
+    paddingTop: isMobile ? 'env(safe-area-inset-top, 0px)' : '0',
     top: 0
   }} className="fixed -top-0.5 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40 py-0">
       <div className="flex h-12 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[10px] mb-[10px] py-[2px]">
