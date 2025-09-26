@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface UserSectionProps {
   onSignOut: () => void;
@@ -15,6 +16,10 @@ export function UserSection({
   const {
     user
   } = useAuth();
+  const {
+    getDisplayName,
+    getUsername
+  } = useUserProfile(user);
   
   return (
     <div className="bg-background border-t p-4 py-[11px]">
@@ -29,9 +34,9 @@ export function UserSection({
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{user?.email}</p>
+          <p className="text-sm font-medium truncate">{getDisplayName()}</p>
           <p className="text-xs text-muted-foreground truncate">
-            {user?.email?.split("@")[0]}
+            @{getUsername()}
           </p>
         </div>
       </div>
