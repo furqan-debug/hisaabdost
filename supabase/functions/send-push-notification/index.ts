@@ -273,10 +273,10 @@ serve(async (req) => {
       );
     }
 
-    const results = [];
+    const results: any[] = [];
     let processedCount = 0;
-    const errors = [];
-    const tokensToCleanup = [];
+    const errors: any[] = [];
+    const tokensToCleanup: any[] = [];
 
     // Process tokens in batches for better performance
     for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
@@ -498,7 +498,7 @@ serve(async (req) => {
     console.error('❌ Error in send-push-notification function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         details: 'Check function logs for more information'
       }),
       { 
