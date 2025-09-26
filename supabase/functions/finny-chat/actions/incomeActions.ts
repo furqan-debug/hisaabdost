@@ -41,6 +41,6 @@ export async function setIncome(
     return `I've set your monthly income to ${action.amount} for ${currentMonth}.`;
   } catch (error) {
     console.error("Error setting income:", error);
-    return `I couldn't set your income: ${error.message}`;
+    return `I couldn't set your income: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 }

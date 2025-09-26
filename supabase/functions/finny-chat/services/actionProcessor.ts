@@ -60,7 +60,7 @@ export async function processAction(
     }
   } catch (error) {
     console.error('Error processing action:', error);
-    return `Something went wrong while processing that action: ${error.message}`;
+    return `Something went wrong while processing that action: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 }
 

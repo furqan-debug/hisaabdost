@@ -88,7 +88,7 @@ export async function addExpense(
       
       if (retryCount >= maxRetries) {
         console.error("Final expense creation error after retries:", error);
-        throw new Error(`Failed to save expense: ${error.message}`);
+        throw new Error(`Failed to save expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       
       // Wait before retry

@@ -181,7 +181,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             <h2 class="title">Password Reset Successful!</h2>
             <p class="success">Your password has been successfully updated.</p>
             
-            <div className="app-instruction">
+            <div class="app-instruction">
                 <h4>Next Steps:</h4>
                 <p>
                     <strong>1.</strong> Close this browser tab<br>
@@ -394,9 +394,12 @@ const handler = async (req: Request): Promise<Response> => {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "Pragma": "no-cache",
-      "Expires": "0"
+      "Expires": "0",
+      "X-Content-Type-Options": "nosniff"
     }
   });
 };
