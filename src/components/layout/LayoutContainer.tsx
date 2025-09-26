@@ -13,12 +13,14 @@ export function LayoutContainer({ children, isMobile, pageTransition }: LayoutCo
   const location = useLocation();
   const isBudgetRoute = location.pathname.includes('/budget');
 
-  // Calculate proper top spacing accounting for safe areas and navbar
+  // Calculate proper top spacing accounting for navbar height only
+  // Navbar already handles safe area internally, so we don't need to add it again
   const getMobileTopSpacing = () => {
     if (isMobile) {
-      // Just navbar + safe area + extra spacing  
-      return "calc(3.5rem + max(env(safe-area-inset-top, 44px), 44px) + 1rem)";
+      // Navbar height: h-12 (48px) + mt-[10px] mb-[10px] (20px) + safe area handled by navbar
+      return "68px";
     }
+    // Desktop: just navbar base height + any safe area
     return "calc(3.5rem + env(safe-area-inset-top, 0px))";
   };
 
