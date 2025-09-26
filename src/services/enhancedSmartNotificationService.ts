@@ -6,7 +6,7 @@ interface NotificationAnalytics {
   notification_type: string;
   priority_score: number;
   sent_at: string;
-  financial_context: Record<string, any>;
+  financial_context: any;
   ai_reasoning: string;
 }
 
