@@ -1,7 +1,6 @@
 
 /* Mobile Card Styles */
-@layer components {
-  @media (max-width: 640px) {
+@media (max-width: 640px) {
     /* Card header and content padding */
     .card-header {
       @apply p-3;
@@ -34,21 +33,20 @@
     .card-description {
       @apply text-sm text-muted-foreground;
     }
-  }
+}
 
-  /* Card hover feedback */
-  .hover-feedback {
-    @apply hover:bg-muted/50 transition-colors duration-200;
-  }
+/* Card hover feedback */
+.hover-feedback {
+  @apply hover:bg-muted/50 transition-colors duration-200;
+}
 
-  /* Glass card effect */
-  .glass-card {
-    @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
-  }
-  
-  /* Add hover effect with a standard opacity value */
-  .glass-card:hover {
-    @apply bg-card/90 shadow-md;
-    transition: all 0.2s ease-in-out;
-  }
+/* Glass card effect */
+.glass-card {
+  @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
+}
+
+/* Add hover effect with a standard opacity value */
+.glass-card:hover {
+  @apply bg-card/90 shadow-md;
+  transition: all 0.2s ease-in-out;
 }

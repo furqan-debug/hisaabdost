@@ -172,9 +172,25 @@ html, body {
   will-change: auto;
 }
 
-/* Hardware Acceleration */
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+/* Define missing utility classes */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.touch-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.touch-feedback {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.touch-feedback:active {
+  background-color: hsl(var(--muted) / 0.1);
 }
