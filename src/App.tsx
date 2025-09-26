@@ -15,7 +15,6 @@ import { AppOpenAd } from "@/components/ads/AppOpenAd";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Import pages
-import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Analytics from "@/pages/Analytics";
@@ -62,8 +61,8 @@ const App = () => {
                       <BrowserRouter>
                       <Routes>
                         {/* Public routes */}
-                        <Route path="/landing" element={<Landing />} />
                         <Route path="/auth" element={<Auth />} />
+                        
                         
                         {/* Protected routes with Layout */}
                         <Route path="/app" element={
@@ -85,7 +84,7 @@ const App = () => {
                         </Route>
                         
                         {/* Default redirects */}
-                        <Route path="/" element={<Navigate to="/landing" replace />} />
+                        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </BrowserRouter>

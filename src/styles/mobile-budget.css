@@ -8,9 +8,7 @@
   
   /* Budget tab tab list scrolling - fix horizontal stretching */
   .tabs-list-scroll {
-    @apply flex overflow-x-auto space-x-1 pb-1;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    @apply flex overflow-x-auto space-x-1 pb-1 no-scrollbar;
     max-width: 100%;
     width: 100%;
     scroll-snap-type: x mandatory;
@@ -30,9 +28,7 @@
   
   /* Container for scrollable tabs */
   .scrollable-tabs-container {
-    @apply w-full overflow-x-auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    @apply w-full overflow-x-auto no-scrollbar;
     -webkit-overflow-scrolling: touch;
     position: relative;
     padding-bottom: 2px; /* Prevents content jump */

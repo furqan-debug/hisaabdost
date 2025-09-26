@@ -131,9 +131,7 @@
 
 /* Mobile tabs design */
 .mobile-tabs {
-  @apply flex w-full overflow-x-auto gap-1 p-1 bg-muted/50 rounded-lg;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  @apply flex w-full overflow-x-auto gap-1 no-scrollbar p-1 bg-muted/50 rounded-lg;
 }
 
 .mobile-tab {
