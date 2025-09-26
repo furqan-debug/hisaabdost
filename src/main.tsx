@@ -6,6 +6,34 @@ import './index.css';
 
 console.log('🚀 Starting React application...');
 
+// Register Service Worker for offline functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      console.log('🔧 Registering Service Worker...');
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('✅ Service Worker registered successfully:', registration);
+      
+      // Listen for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          console.log('🔄 New Service Worker version found');
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('⭐ New Service Worker installed and ready');
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('❌ Service Worker registration failed:', error);
+    }
+  });
+} else {
+  console.warn('⚠️ Service Worker not supported in this browser');
+}
+
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {

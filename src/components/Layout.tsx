@@ -11,6 +11,7 @@ import { LayoutContainer } from './layout/LayoutContainer';
 import { useModalState } from '@/hooks/useModalState';
 import { useOnboarding } from '@/hooks/auth/useOnboarding';
 import { OnboardingDialog } from '@/components/onboarding/OnboardingDialog';
+import { OfflineIndicator } from '@/components/layout/OfflineIndicator';
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -41,6 +42,7 @@ const Layout = () => {
 
   return (
     <LayoutWrapper>
+      <OfflineIndicator />
       <Navbar />
       <LayoutContainer 
         isMobile={isMobile} 
