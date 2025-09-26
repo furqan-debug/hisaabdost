@@ -30,6 +30,10 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
           <Input
             id="name"
             placeholder="Enter your name"
+            autoComplete="name"
+            autoCorrect="on"
+            autoCapitalize="words"
+            spellCheck={true}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />

@@ -137,6 +137,9 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
               id="title"
               {...register("title")}
               placeholder="Enter goal title"
+              autoCorrect="on"
+              autoCapitalize="words"
+              spellCheck={true}
             />
             {errors.title && (
               <p className="text-sm text-destructive">{errors.title.message}</p>
@@ -150,6 +153,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
               type="number"
               step="0.01"
               min="0"
+              autoComplete="off"
               {...register("target_amount", { valueAsNumber: true })}
             />
             {errors.target_amount && (

@@ -167,6 +167,9 @@ export function AddEditCategoryModal({
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g., Hobbies, Car Maintenance"
+              autoCorrect="on"
+              autoCapitalize="words"
+              spellCheck={true}
               className="w-full"
               maxLength={50}
               disabled={isEditing}

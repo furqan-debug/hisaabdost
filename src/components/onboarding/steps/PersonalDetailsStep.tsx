@@ -42,6 +42,7 @@ export function PersonalDetailsStep({ onComplete, initialData }: PersonalDetails
             min="13"
             max="120"
             placeholder="Enter your age"
+            autoComplete="off"
             value={age}
             onChange={(e) => setAge(e.target.value)}
           />

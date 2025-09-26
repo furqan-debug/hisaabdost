@@ -40,6 +40,7 @@ export function IncomeStep({ onComplete, initialData }: IncomeStepProps) {
             type="number"
             min="0"
             placeholder="Enter your monthly income"
+            autoComplete="off"
             value={income}
             onChange={(e) => setIncome(e.target.value)}
           />

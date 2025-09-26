@@ -230,6 +230,7 @@ export function BudgetForm({
               min="0"
               step="0.01"
               placeholder="0.00"
+              autoComplete="off"
               {...register("amount", { valueAsNumber: true })}
               className="text-base"
             />

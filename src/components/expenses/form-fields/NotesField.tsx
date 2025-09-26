@@ -17,6 +17,9 @@ export function NotesField({ value, onChange }: NotesFieldProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Add any additional details about the expense..."
+        autoCorrect="on"
+        autoCapitalize="sentences"
+        spellCheck={true}
         className="min-h-[100px]"
       />
     </div>

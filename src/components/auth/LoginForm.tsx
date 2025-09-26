@@ -73,6 +73,7 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
                       <Input
                         type="email"
                         placeholder="you@example.com"
+                        autoComplete="email"
                         className="pl-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />
@@ -97,6 +98,7 @@ export const LoginForm = ({ onForgotPassword, onSignUpClick }: LoginFormProps) =
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
+                        autoComplete="current-password"
                         className="pl-12 pr-12 h-12 border-border/50 bg-background/50 focus:bg-background transition-colors"
                         {...field}
                       />

@@ -19,6 +19,10 @@ export function DescriptionField({ value, onChange, label = "Description" }: Des
         onChange={(e) => onChange(e.target.value)}
         placeholder="What did you spend on?"
         required
+        autoComplete="off"
+        autoCorrect="on"
+        autoCapitalize="words"
+        spellCheck={true}
         className="focus:ring-2 focus:ring-primary"
         onFocus={(e) => {
           // Ensure input is visible on mobile when keyboard appears
