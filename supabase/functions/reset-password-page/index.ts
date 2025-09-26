@@ -369,7 +369,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 hideError();
             }
         });
-    });
     </script>
 </body>
 </html>`;
