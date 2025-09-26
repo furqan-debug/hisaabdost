@@ -1,18 +1,22 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { EnhancedLoading } from '@/components/ui/enhanced-loading';
 
 interface LoadingScreenProps {
   message?: string;
+  showRetry?: boolean;
+  onRetry?: () => void;
 }
 
-export function LoadingScreen({ message = "Loading..." }: LoadingScreenProps) {
+export function LoadingScreen({ message = "Loading...", showRetry, onRetry }: LoadingScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-        <p className="text-muted-foreground">{message}</p>
-      </div>
+      <EnhancedLoading 
+        message={message} 
+        showRetry={showRetry}
+        onRetry={onRetry}
+        timeout={8000}
+      />
     </div>
   );
 }
