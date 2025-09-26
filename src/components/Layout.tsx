@@ -9,6 +9,8 @@ import { BottomNavigation } from './BottomNavigation';
 import { LayoutWrapper } from './layout/LayoutWrapper';
 import { LayoutContainer } from './layout/LayoutContainer';
 import { useModalState } from '@/hooks/useModalState';
+import { useOnboarding } from '@/hooks/auth/useOnboarding';
+import { OnboardingDialog } from '@/components/onboarding/OnboardingDialog';
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -16,6 +18,7 @@ const Layout = () => {
   const [pageTransition, setPageTransition] = useState(false);
   const { user, loading } = useAuth();
   const { isModalOpen } = useModalState();
+  const { showOnboarding } = useOnboarding(user);
   
   useEffect(() => {
     setPageTransition(true);
@@ -46,6 +49,7 @@ const Layout = () => {
         <Outlet />
       </LayoutContainer>
       {isMobile && <BottomNavigation />}
+      <OnboardingDialog open={showOnboarding} />
     </LayoutWrapper>
   );
 };
