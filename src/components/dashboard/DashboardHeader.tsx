@@ -31,9 +31,9 @@ export function DashboardHeader({
             <div className="absolute bottom-4 left-4 w-24 h-24 bg-accent rounded-full blur-2xl"></div>
           </div>
           
-          <div className="relative z-10 py-[8px] px-0 mx-0 my-0">
+          <div className="relative z-10 px-0 mx-0 my-[2px] py-0">
             {/* Main Header Section */}
-            <div className="flex items-start justify-between mb-2 md:mb-3">
+            <div className="flex items-start justify-between mb-2 md:mb-3 py-0">
               <div className="space-y-1 md:space-y-2 flex-1 min-w-0">
                 {/* Welcome Message */}
                 <motion.div className="flex items-center gap-1.5 md:gap-2" initial={{
