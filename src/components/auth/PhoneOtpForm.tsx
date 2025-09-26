@@ -113,20 +113,20 @@ export const PhoneOtpForm = ({ phone, onBack, onSuccess }: PhoneOtpFormProps) =>
             <FormItem>
               <FormLabel className="text-foreground">Enter verification code</FormLabel>
               <FormControl>
-                <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.2 }}>
-                  <div className="flex justify-center">
-                    <InputOTP maxLength={6} {...field}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                        <InputOTPSlot index={1} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                        <InputOTPSlot index={2} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                        <InputOTPSlot index={3} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                        <InputOTPSlot index={4} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                        <InputOTPSlot index={5} className="bg-background/50 border-border/50 focus:border-primary/50" />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                </motion.div>
+        <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.2 }}>
+          <div className="flex justify-center">
+            <InputOTP maxLength={6} {...field}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+                <InputOTPSlot index={1} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+                <InputOTPSlot index={2} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+                <InputOTPSlot index={3} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+                <InputOTPSlot index={4} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+                <InputOTPSlot index={5} className="bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200" />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+        </motion.div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,7 +167,7 @@ export const PhoneOtpForm = ({ phone, onBack, onSuccess }: PhoneOtpFormProps) =>
         <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.4 }}>
           <Button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground font-medium py-3 shadow-lg hover:shadow-xl transition-all duration-200"
             disabled={loading || form.watch("otp").length !== 6}
           >
             {loading ? (
@@ -176,7 +176,7 @@ export const PhoneOtpForm = ({ phone, onBack, onSuccess }: PhoneOtpFormProps) =>
                 Verifying...
               </>
             ) : (
-              "Verify OTP"
+              "Verify Phone Number"
             )}
           </Button>
         </motion.div>

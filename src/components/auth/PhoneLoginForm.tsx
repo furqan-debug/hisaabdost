@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Phone, Loader2 } from "lucide-react";
-import { CountryCodeSelector } from "./CountryCodeSelector";
+import { EnhancedCountrySelector } from "./EnhancedCountrySelector";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { formatPhoneNumber, validatePhoneNumber, getPhoneNumberPlaceholder } from "@/utils/phoneFormatter";
+import { Country } from "@/data/countries";
 
 const phoneSchema = z.object({
   countryCode: z.string().min(1, "Country code is required"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number must be less than 15 digits"),
+  phoneNumber: z.string().min(7, "Phone number must be at least 7 digits").max(15, "Phone number must be less than 15 digits"),
 });
 
 interface PhoneLoginFormProps {
@@ -28,6 +30,7 @@ const inputVariants = {
 
 export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const { signInWithPhone } = useAuth();
 
   const form = useForm<z.infer<typeof phoneSchema>>({
@@ -41,7 +44,15 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
   const handleSubmit = async (values: z.infer<typeof phoneSchema>) => {
     try {
       setLoading(true);
-      const fullPhoneNumber = values.countryCode + values.phoneNumber.replace(/\D/g, '');
+      const cleanedNumber = values.phoneNumber.replace(/\D/g, '');
+      
+      // Validate phone number format
+      if (selectedCountry && !validatePhoneNumber(cleanedNumber, selectedCountry)) {
+        toast.error("Please enter a valid phone number for the selected country");
+        return;
+      }
+      
+      const fullPhoneNumber = values.countryCode + cleanedNumber;
       await signInWithPhone(fullPhoneNumber);
       onOtpSent(fullPhoneNumber);
       toast.success("OTP sent to your phone!");
@@ -53,27 +64,30 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
     }
   };
 
-  const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `${match[1]}-${match[2]}-${match[3]}`;
-    }
-    return cleaned;
+  const handleCountryChange = (dialCode: string, country: Country) => {
+    setSelectedCountry(country);
+    form.setValue('countryCode', dialCode);
+    // Clear phone number when country changes to avoid format conflicts
+    form.setValue('phoneNumber', '');
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="flex space-x-2">
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="countryCode"
             render={({ field }) => (
-              <FormItem className="w-24">
-                <FormLabel className="text-foreground">Code</FormLabel>
+              <FormItem>
+                <FormLabel className="text-foreground font-medium">Country</FormLabel>
                 <FormControl>
-                  <CountryCodeSelector value={field.value} onChange={field.onChange} />
+                  <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.1 }}>
+                    <EnhancedCountrySelector 
+                      value={field.value} 
+                      onChange={handleCountryChange} 
+                    />
+                  </motion.div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -84,22 +98,27 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
             control={form.control}
             name="phoneNumber"
             render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel className="text-foreground">Phone Number</FormLabel>
+              <FormItem>
+                <FormLabel className="text-foreground font-medium">Phone Number</FormLabel>
                 <FormControl>
-                  <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.1 }}>
+                  <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.2 }}>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         {...field}
                         type="tel"
-                        placeholder="123-456-7890"
-                        className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                        placeholder={getPhoneNumberPlaceholder(selectedCountry)}
+                        className="pl-10 bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200"
                         onChange={(e) => {
-                          const formatted = formatPhoneNumber(e.target.value);
+                          const formatted = formatPhoneNumber(e.target.value, selectedCountry);
                           field.onChange(formatted);
                         }}
                       />
+                      {selectedCountry && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
+                          {selectedCountry.dialCode}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 </FormControl>
@@ -112,7 +131,7 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
         <motion.div variants={inputVariants} initial="hidden" animate="visible" transition={{ delay: 0.3 }}>
           <Button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground font-medium py-3 shadow-lg hover:shadow-xl transition-all duration-200"
             disabled={loading}
           >
             {loading ? (
@@ -121,7 +140,10 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
                 Sending OTP...
               </>
             ) : (
-              "Send OTP"
+              <>
+                <Phone className="mr-2 h-4 w-4" />
+                Send OTP
+              </>
             )}
           </Button>
         </motion.div>
@@ -139,7 +161,7 @@ export const PhoneLoginForm = ({ onOtpSent, onEmailClick }: PhoneLoginFormProps)
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full bg-background/50 border-border/50 hover:bg-background/70 hover:border-border/70 text-foreground"
             onClick={onEmailClick}
           >
             Sign in with Email
