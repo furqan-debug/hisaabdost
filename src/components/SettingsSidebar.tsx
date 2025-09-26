@@ -12,6 +12,7 @@ import { useSignOut } from '@/hooks/auth/useSignOut';
 import { CURRENCY_OPTIONS, CurrencyCode } from '@/utils/currencyUtils';
 import { toast } from '@/components/ui/use-toast';
 import { useIncomeDate } from '@/hooks/useIncomeDate';
+import { useUserProfile } from '@/hooks/useUserProfile';
 interface SettingsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -46,6 +47,10 @@ const SettingsSidebar = ({
   const {
     signOut
   } = useSignOut();
+  const {
+    getDisplayName,
+    getUsername
+  } = useUserProfile(user);
   const navigate = useNavigate();
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
@@ -335,10 +340,10 @@ const SettingsSidebar = ({
             <div className="ml-11 mb-4">
               <div className="p-3 rounded-lg bg-muted/50 border">
                 <p className="text-sm font-medium truncate">
-                  {user?.email}
+                  {getDisplayName()}
                 </p>
                 <p className="text-xs text-muted-foreground truncate mt-1">
-                  {user?.email?.split('@')[0]}
+                  @{getUsername()}
                 </p>
               </div>
             </div>
