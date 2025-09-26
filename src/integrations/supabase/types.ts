@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -193,27 +193,6 @@ export type Database = {
         }
         Relationships: []
       }
-      financial_tips: {
-        Row: {
-          category: string
-          created_at: string | null
-          id: string
-          tip_text: string
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          id?: string
-          tip_text: string
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          id?: string
-          tip_text?: string
-        }
-        Relationships: []
-      }
       goals: {
         Row: {
           category: string
@@ -343,15 +322,7 @@ export type Database = {
           tip_id?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notification_history_tip_id_fkey"
-            columns: ["tip_id"]
-            isOneToOne: false
-            referencedRelation: "financial_tips"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       notification_logs: {
         Row: {
