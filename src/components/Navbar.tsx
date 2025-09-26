@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import SettingsSidebar from "./SettingsSidebar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const Navbar = () => {
   const {
@@ -20,6 +21,7 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const [scrolled, setScrolled] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { getDisplayName, getUsername } = useUserProfile(user);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,10 +92,10 @@ const Navbar = () => {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user?.email}
+                    {getDisplayName()}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    @{user?.email?.split('@')[0]}
+                    @{getUsername()}
                   </p>
                 </div>
               </DropdownMenuLabel>
