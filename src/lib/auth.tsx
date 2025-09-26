@@ -9,10 +9,13 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  verifyPhoneOtp: (phone: string, otp: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
+  resendPhoneOtp: (phone: string) => Promise<void>;
   sendPasswordResetCode: (email: string) => Promise<void>;
 }
 
@@ -21,10 +24,13 @@ const AUTH_FALLBACK: AuthContextType = {
   session: null,
   loading: true,
   signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
+  signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
   signUp: async () => { throw new Error('AuthProvider not mounted'); },
   signOut: async () => { throw new Error('AuthProvider not mounted'); },
   verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
+  verifyPhoneOtp: async () => { throw new Error('AuthProvider not mounted'); },
   resendOtp: async () => { throw new Error('AuthProvider not mounted'); },
+  resendPhoneOtp: async () => { throw new Error('AuthProvider not mounted'); },
   sendPasswordResetCode: async () => { throw new Error('AuthProvider not mounted'); },
 };
 
@@ -41,10 +47,13 @@ export const useAuth = () => {
       session: null,
       loading: true,
       signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
+      signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
       signUp: async () => { throw new Error('AuthProvider not mounted'); },
       signOut: async () => { throw new Error('AuthProvider not mounted'); },
       verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
+      verifyPhoneOtp: async () => { throw new Error('AuthProvider not mounted'); },
       resendOtp: async () => { throw new Error('AuthProvider not mounted'); },
+      resendPhoneOtp: async () => { throw new Error('AuthProvider not mounted'); },
       sendPasswordResetCode: async () => { throw new Error('AuthProvider not mounted'); },
     };
     return fallback;
@@ -85,6 +94,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (error.message) {
         errorMessage = error.message;
       }
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  const signInWithPhone = async (phone: string) => {
+    try {
+      console.log("Attempting phone sign in for:", phone);
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      
+      if (error) {
+        console.error("Phone sign in error:", error);
+        throw error;
+      }
+      
+      console.log("OTP sent successfully to:", phone);
+    } catch (error: any) {
+      console.error("Phone sign in error:", error);
+      
+      let errorMessage = "Error sending OTP";
+      if (error.message.includes('Invalid phone number')) {
+        errorMessage = "Invalid phone number format";
+      } else if (error.message.includes('Unable to send SMS')) {
+        errorMessage = "Unable to send SMS. Please try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
       throw error;
     }
@@ -150,6 +190,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const verifyPhoneOtp = async (phone: string, otp: string) => {
+    try {
+      console.log("Verifying phone OTP for:", phone);
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: 'sms',
+      });
+      
+      if (error) {
+        console.error("Phone OTP verification error:", error);
+        throw error;
+      }
+      
+      if (data.user) {
+        console.log("Phone OTP verification successful for user:", data.user.id);
+        toast.success("Phone verified successfully!");
+      }
+    } catch (error: any) {
+      console.error("Phone OTP verification error:", error);
+      
+      let errorMessage = "Invalid verification code";
+      if (error.message.includes('expired')) {
+        errorMessage = "Verification code has expired";
+      } else if (error.message.includes('invalid')) {
+        errorMessage = "Invalid verification code";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
   const resendOtp = async (email: string) => {
     try {
       const { error } = await supabase.auth.resend({
@@ -170,6 +246,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         toast.success("New verification code sent! Please check your email.");
       }
     } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification code");
+      throw error;
+    }
+  };
+
+  const resendPhoneOtp = async (phone: string) => {
+    try {
+      console.log("Resending phone OTP to:", phone);
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      
+      if (error) {
+        console.error("Resend phone OTP error:", error);
+        throw error;
+      }
+      
+      console.log("Phone OTP resent successfully");
+    } catch (error: any) {
+      console.error("Resend phone OTP error:", error);
       toast.error(error.message || "Failed to resend verification code");
       throw error;
     }
@@ -258,10 +355,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     session,
     loading,
     signInWithEmail,
+    signInWithPhone,
     signUp,
     signOut,
     verifyOtp,
+    verifyPhoneOtp,
     resendOtp,
+    resendPhoneOtp,
     sendPasswordResetCode,
   };
 

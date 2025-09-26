@@ -7,19 +7,26 @@ import { ArrowLeft, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { PhoneLoginForm } from "@/components/auth/PhoneLoginForm";
+import { PhoneOtpForm } from "@/components/auth/PhoneOtpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
 import { PasswordResetCodeForm } from "@/components/auth/PasswordResetCodeForm";
 import { SetNewPasswordForm } from "@/components/auth/SetNewPasswordForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+
 const Auth = () => {
   const auth = useAuthOptional();
   const user = auth?.user ?? null;
   const verifyOtp = auth?.verifyOtp ?? (async () => {});
   const resendOtp = auth?.resendOtp ?? (async () => {});
   const sendPasswordResetCode = auth?.sendPasswordResetCode ?? (async () => {});
+  
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [isSignUp, setIsSignUp] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [showPhoneOtp, setShowPhoneOtp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [userPhone, setUserPhone] = useState("");
   
   // Password reset states
   const [passwordResetStep, setPasswordResetStep] = useState<"email" | "code" | "newPassword" | "success" | null>(null);
@@ -27,15 +34,19 @@ const Auth = () => {
   const [passwordResetCode, setPasswordResetCode] = useState("");
   
   const navigate = useNavigate();
+  
   if (user) {
     return <Navigate to="/app/dashboard" replace />;
   }
+
   const handleVerification = async (code: string) => {
     await verifyOtp(verificationEmail, code);
   };
+
   const handleResendVerification = async () => {
     await resendOtp(verificationEmail);
   };
+
   const handlePasswordResetCodeSent = (email: string) => {
     setPasswordResetEmail(email);
     setPasswordResetStep("code");
@@ -58,14 +69,19 @@ const Auth = () => {
   const handleResendPasswordResetCode = async () => {
     await sendPasswordResetCode(passwordResetEmail);
   };
+
   const resetToLogin = () => {
+    setAuthMethod("email");
     setIsSignUp(false);
     setShowVerification(false);
+    setShowPhoneOtp(false);
     setVerificationEmail("");
+    setUserPhone("");
     setPasswordResetStep(null);
     setPasswordResetEmail("");
     setPasswordResetCode("");
   };
+
   const cardVariants = {
     hidden: {
       opacity: 0,
@@ -88,26 +104,37 @@ const Auth = () => {
       }
     }
   };
+
   const getCardTitle = () => {
     if (showVerification) return "Verify your email";
+    if (showPhoneOtp) return "Verify your phone";
     if (passwordResetStep === "email") return "Reset Password";
     if (passwordResetStep === "code") return "Enter Code";
     if (passwordResetStep === "newPassword") return "New Password";
     if (passwordResetStep === "success") return "Password Updated!";
+    if (authMethod === "phone") return isSignUp ? "Create Account" : "Sign In with Phone";
     if (isSignUp) return "Create an account";
     return "Welcome back";
   };
 
   const getCardDescription = () => {
     if (showVerification) return `Enter the 6-digit verification code sent to ${verificationEmail}`;
+    if (showPhoneOtp) return `Enter the 6-digit verification code sent to your phone`;
     if (passwordResetStep === "email") return "Enter your email and we'll send you a verification code";
     if (passwordResetStep === "code") return "Check your email for the 6-digit verification code";
     if (passwordResetStep === "newPassword") return "Choose a new secure password for your account";
     if (passwordResetStep === "success") return "Your password has been updated successfully!";
+    if (authMethod === "phone") {
+      return isSignUp 
+        ? "Create your account with phone number" 
+        : "Sign in with your phone number";
+    }
     if (isSignUp) return "Sign up to start managing your expenses";
     return "Sign in to your account";
   };
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl"></div>
@@ -117,7 +144,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <AnimatePresence mode="wait">
           <motion.div 
-            key={showVerification ? "verification" : passwordResetStep ? `reset-${passwordResetStep}` : isSignUp ? "signup" : "login"} 
+            key={showVerification ? "verification" : showPhoneOtp ? "phone-otp" : passwordResetStep ? `reset-${passwordResetStep}` : `${authMethod}-${isSignUp ? "signup" : "login"}`} 
             initial="hidden" 
             animate="visible" 
             exit="exit" 
@@ -127,15 +154,12 @@ const Auth = () => {
             <Card className="border-0 shadow-2xl backdrop-blur-sm bg-card/95 overflow-hidden">
               {/* Card Header */}
               <CardHeader className="space-y-4 text-center pb-6 pt-8 px-8">
-                <motion.div initial={{
-                opacity: 0,
-                scale: 0.9
-              }} animate={{
-                opacity: 1,
-                scale: 1
-              }} transition={{
-                duration: 0.5
-              }} className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4 ring-8 ring-primary/5">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ duration: 0.5 }} 
+                  className="mx-auto h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4 ring-8 ring-primary/5"
+                >
                   <User className="h-8 w-8 text-primary" />
                 </motion.div>
 
@@ -151,6 +175,30 @@ const Auth = () => {
 
               {/* Card Content */}
               <CardContent className="px-8 pb-8">
+                {/* Auth Method Toggle */}
+                {!showVerification && !showPhoneOtp && !passwordResetStep && (
+                  <div className="flex rounded-lg bg-muted p-1 mb-6">
+                    <Button
+                      type="button"
+                      variant={authMethod === "email" ? "default" : "ghost"}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setAuthMethod("email")}
+                    >
+                      Email
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={authMethod === "phone" ? "default" : "ghost"}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setAuthMethod("phone")}
+                    >
+                      Phone
+                    </Button>
+                  </div>
+                )}
+
                 {showVerification ? (
                   <VerificationForm 
                     email={verificationEmail} 
@@ -160,6 +208,12 @@ const Auth = () => {
                       setShowVerification(false);
                       setVerificationEmail("");
                     }} 
+                  />
+                ) : showPhoneOtp ? (
+                  <PhoneOtpForm 
+                    phone={userPhone}
+                    onBack={() => setShowPhoneOtp(false)}
+                    onSuccess={resetToLogin}
                   />
                 ) : passwordResetStep === "email" ? (
                   <ForgotPasswordForm 
@@ -187,7 +241,7 @@ const Auth = () => {
                       Redirecting you to login...
                     </p>
                   </div>
-                ) : isSignUp ? (
+                ) : authMethod === "email" && isSignUp ? (
                   <SignUpForm 
                     onLoginClick={() => setIsSignUp(false)} 
                     onSignUpSuccess={email => {
@@ -195,28 +249,37 @@ const Auth = () => {
                       setShowVerification(true);
                     }} 
                   />
-                ) : (
+                ) : authMethod === "email" && !isSignUp ? (
                   <LoginForm 
                     onForgotPassword={() => setPasswordResetStep("email")} 
                     onSignUpClick={() => setIsSignUp(true)} 
                   />
-                )}
+                ) : authMethod === "phone" ? (
+                  <PhoneLoginForm 
+                    onOtpSent={(phone) => {
+                      setUserPhone(phone);
+                      setShowPhoneOtp(true);
+                    }}
+                    onEmailClick={() => setAuthMethod("email")}
+                  />
+                ) : null}
               </CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
 
         {/* Footer text */}
-        <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} transition={{
-        delay: 0.5
-      }} className="text-center mt-8">
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ delay: 0.5 }} 
+          className="text-center mt-8"
+        >
           <p className="text-sm text-muted-foreground">Secure authentication powered by Quintessentia</p>
         </motion.div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Auth;
