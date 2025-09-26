@@ -22,7 +22,7 @@ const Auth = () => {
   const [verificationEmail, setVerificationEmail] = useState("");
   
   // Password reset states
-  const [passwordResetStep, setPasswordResetStep] = useState<"email" | "code" | "newPassword" | "success">("email");
+  const [passwordResetStep, setPasswordResetStep] = useState<"email" | "code" | "newPassword" | "success" | null>(null);
   const [passwordResetEmail, setPasswordResetEmail] = useState("");
   const [passwordResetCode, setPasswordResetCode] = useState("");
   
@@ -62,7 +62,7 @@ const Auth = () => {
     setIsSignUp(false);
     setShowVerification(false);
     setVerificationEmail("");
-    setPasswordResetStep("email");
+    setPasswordResetStep(null);
     setPasswordResetEmail("");
     setPasswordResetCode("");
   };
@@ -117,7 +117,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <AnimatePresence mode="wait">
           <motion.div 
-            key={showVerification ? "verification" : passwordResetStep !== "email" ? `reset-${passwordResetStep}` : isSignUp ? "signup" : "login"} 
+            key={showVerification ? "verification" : passwordResetStep ? `reset-${passwordResetStep}` : isSignUp ? "signup" : "login"} 
             initial="hidden" 
             animate="visible" 
             exit="exit" 
