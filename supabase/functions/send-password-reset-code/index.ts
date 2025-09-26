@@ -139,8 +139,8 @@ const sendResetEmail = async (email: string, resetToken: string) => {
     return JSON.parse(responseText);
   } catch (error) {
     console.error("💥 Failed to send password reset email:", error);
-    console.error("Error details:", error.message);
-    console.error("Error stack:", error.stack);
+    console.error("Error details:", error instanceof Error ? error.message : 'Unknown error');
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack available');
     throw error;
   }
 };
@@ -310,21 +310,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     } catch (emailError) {
       console.error("💥 Email sending failed:", emailError);
-      console.error("Email error message:", emailError.message);
+      console.error("Email error message:", emailError instanceof Error ? emailError.message : 'Unknown email error');
       
       return new Response(
-        JSON.stringify({ error: `Failed to send reset email: ${emailError.message}` }),
+        JSON.stringify({ error: `Failed to send reset email: ${emailError instanceof Error ? emailError.message : 'Unknown error'}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
   } catch (error) {
     console.error("💥 Error in send-password-reset-code handler:", error);
-    console.error("Handler error message:", error.message);
-    console.error("Handler error stack:", error.stack);
+    console.error("Handler error message:", error instanceof Error ? error.message : 'Unknown error');
+    console.error("Handler error stack:", error instanceof Error ? error.stack : 'No stack available');
     
     return new Response(
-      JSON.stringify({ error: `Internal server error: ${error.message}` }),
+      JSON.stringify({ error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

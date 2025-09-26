@@ -264,7 +264,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to generate FCM access token',
-          message: error.message
+          message: error instanceof Error ? error.message : 'Unknown error'
         }),
         { 
           status: 500, 
@@ -395,13 +395,13 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error(`❌ Error sending to token ${token.device_token} for user ${token.user_id}:`, error);
-          errors.push({ user_id: token.user_id, token: token.device_token, error: error.message });
+          errors.push({ user_id: token.user_id, token: token.device_token, error: error instanceof Error ? error.message : 'Unknown error' });
           return {
             token: token.device_token,
             platform: token.platform,
             user_id: token.user_id,
             success: false,
-            error: error.message,
+            error: error instanceof Error ? error.message : 'Unknown error',
           };
         }
       });

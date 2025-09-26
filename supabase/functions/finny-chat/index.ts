@@ -325,7 +325,7 @@ Current Budgets: ${JSON.stringify(budgets)}`;
         console.error("Error processing action:", error);
         processedActions.push({ 
           action: actionMatch[1], 
-          result: `Action failed: ${error.message}` 
+          result: `Action failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
         });
       }
     }
@@ -358,7 +358,7 @@ Current Budgets: ${JSON.stringify(budgets)}`;
       rawResponse: null,
       visualData: null,
       action: null,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -1,6 +1,6 @@
 
 import { preprocessImage } from "../utils/imageProcessor.ts";
-import { processReceiptWithOCR, processReceiptWithOpenRouter, processReceiptWithTesseract } from "./ocrProcessor.ts";
+import { processReceiptWithOCR } from "./ocrProcessor.ts";
 import { generateFallbackData } from "../data/fallbackData.ts";
 import { extractDate } from "../utils/dateExtractor.ts";
 import { cleanItemText, isLikelyItemLine, itemExtractionPatterns } from "../utils/items/itemPatterns.ts";
@@ -36,13 +36,13 @@ export async function processReceipt(file: File, apiKey: string): Promise<any> {
         storeName = ocrResult.merchant || storeName;
       } else if (OPENROUTER_API_KEY) {
         console.log("Google Vision API key not found, using OpenRouter for OCR");
-        const openRouterResult = await processReceiptWithOpenRouter(preprocessedImage);
+        const openRouterResult = await processReceiptWithOCR(preprocessedImage, OPENROUTER_API_KEY);
         extractedText = openRouterResult.text;
         receiptDate = openRouterResult.date || receiptDate;
         storeName = openRouterResult.merchant || storeName;
       } else {
         console.log("No OCR API keys configured, using simplified OCR");
-        const tesseractResult = await processReceiptWithTesseract(preprocessedImage);
+        const tesseractResult = await processReceiptWithOCR(preprocessedImage, '');
         extractedText = tesseractResult.text;
         receiptDate = tesseractResult.date || receiptDate;
         storeName = tesseractResult.merchant || storeName;
@@ -83,7 +83,7 @@ export async function processReceipt(file: File, apiKey: string): Promise<any> {
       items: generateFallbackData(),
       storeName: "Store",
       date: new Date().toISOString().split('T')[0],
-      error: "Processing error: " + (processingError.message || "Unknown error")
+      error: "Processing error: " + (processingError instanceof Error ? processingError.message : "Unknown error")
     };
   }
 }

@@ -190,7 +190,7 @@ export async function processReceiptWithOpenAI(file: File, apiKey: string): Prom
       }],
       total: "0.00",
       success: false,
-      error: error.message || "Unknown error in receipt processing"
+      error: error instanceof Error ? error.message : "Unknown error in receipt processing"
     };
   }
 }

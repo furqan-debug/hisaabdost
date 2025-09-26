@@ -50,7 +50,7 @@ serve(async (req) => {
     } catch (parseError) {
       console.error("JSON parse error:", parseError);
       console.error("Body content (first 200 chars):", bodyText.substring(0, 200));
-      throw new Error('Invalid JSON in request body: ' + parseError.message);
+      throw new Error('Invalid JSON in request body: ' + (parseError instanceof Error ? parseError.message : 'Unknown parse error'));
     }
 
     const { file, fileName, fileType, fileSize } = requestData;
@@ -196,7 +196,7 @@ serve(async (req) => {
       }
       
       // Validate each item
-      const validItems = parsedData.items.filter(item => {
+      const validItems = parsedData.items.filter((item: any) => {
         return item.description && 
                item.amount && 
                !isNaN(parseFloat(item.amount)) && 
@@ -224,7 +224,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Receipt processing failed',
+      error: error instanceof Error ? error.message : 'Receipt processing failed',
       items: []
     }), {
       status: 500,

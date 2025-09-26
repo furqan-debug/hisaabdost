@@ -84,7 +84,7 @@ Ensure the output is **valid JSON**.
     }
 
     // Improved JSON parsing with error handling
-    let extractedData;
+    let extractedData: any;
     try {
       // Check if response is wrapped in code blocks and extract just the JSON
       let jsonText = extractedText;
@@ -103,7 +103,7 @@ Ensure the output is **valid JSON**.
       }
       
       // Normalize items format
-      extractedData.items = extractedData.items.map(item => ({
+      extractedData.items = extractedData.items.map((item: any) => ({
         description: item.name,
         amount: typeof item.amount === 'number' ? item.amount.toFixed(2) : item.amount.toString(),
         category: item.category || "Other",
