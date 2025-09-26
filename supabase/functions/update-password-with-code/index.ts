@@ -7,7 +7,8 @@ const corsHeaders = {
 };
 
 interface UpdatePasswordRequest {
-  token: string;
+  token?: string;
+  code?: string;
   email: string;
   newPassword: string;
 }
@@ -30,13 +31,14 @@ const handler = async (req: Request): Promise<Response> => {
     const requestBody = await req.text();
     console.log("📥 Raw request body:", requestBody);
     
-    const { token, email, newPassword }: UpdatePasswordRequest = JSON.parse(requestBody);
-    console.log("🔐 Updating password for email:", email, "token:", token);
+    const { token, code, email, newPassword }: UpdatePasswordRequest = JSON.parse(requestBody);
+    const codeOrToken = code || token; // Prefer code over token
+    console.log("🔐 Updating password for email:", email, "code/token:", codeOrToken);
 
-    if (!token || !email || !newPassword) {
+    if (!codeOrToken || !email || !newPassword) {
       console.error("❌ Missing required fields");
       return new Response(
-        JSON.stringify({ error: "Token, email, and new password are required" }),
+        JSON.stringify({ error: "Code/token, email, and new password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -55,14 +57,14 @@ const handler = async (req: Request): Promise<Response> => {
       .delete()
       .lt("expires_at", new Date().toISOString());
 
-    // Verify the token is valid and not expired
+    // Verify the code/token is valid and not expired
     const { data: resetCode, error: queryError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
-      .eq("token", token)
       .eq("email", email)
       .eq("used", false)
       .gte("expires_at", new Date().toISOString())
+      .or(`code.eq.${codeOrToken},token.eq.${codeOrToken}`)
       .single();
 
     if (queryError || !resetCode) {
@@ -141,8 +143,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: markUsedError } = await supabaseAdmin
       .from("password_reset_codes")
       .update({ used: true })
-      .eq("token", token)
-      .eq("email", email);
+      .eq("email", email)
+      .or(`code.eq.${codeOrToken},token.eq.${codeOrToken}`);
 
     if (markUsedError) {
       console.error("❌ Error marking reset code as used:", markUsedError);

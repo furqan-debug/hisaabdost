@@ -16,16 +16,16 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
-const generateResetToken = (): string => {
-  return crypto.randomUUID();
+const generateResetCode = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 };
 
-const sendResetEmail = async (email: string, resetToken: string) => {
+const sendResetEmail = async (email: string, resetCode: string) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   
   console.log("=== EMAIL SENDING DEBUG ===");
   console.log("Email to send to:", email);
-  console.log("Reset token:", resetToken);
+  console.log("Reset code:", resetCode);
   console.log("Resend API key exists:", resendApiKey ? "YES" : "NO");
   console.log("Resend API key length:", resendApiKey ? resendApiKey.length : 0);
   
@@ -33,10 +33,6 @@ const sendResetEmail = async (email: string, resetToken: string) => {
     console.error("❌ RESEND_API_KEY is not configured");
     throw new Error("Email service not configured - missing RESEND_API_KEY");
   }
-
-  // Link to standalone password reset page
-  const resetLink = `https://bklfolfivjonzpprytkz.supabase.co/functions/v1/reset-password-page?token=${resetToken}&email=${encodeURIComponent(email)}`;
-  console.log("Reset link generated:", resetLink);
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -56,30 +52,21 @@ const sendResetEmail = async (email: string, resetToken: string) => {
         
         <p style="font-size: 16px; margin-bottom: 25px;">
           We received a request to reset your password for your HisaabDost account. 
-          Click the button below to reset your password:
+          Use the verification code below in the app to reset your password:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetLink}" 
-             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                    color: white; 
-                    padding: 15px 30px; 
-                    text-decoration: none; 
-                    border-radius: 8px; 
-                    font-weight: bold;
-                    font-size: 16px;
-                    display: inline-block;
-                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-            Reset Password
-          </a>
-        </div>
-        
-        <p style="font-size: 14px; color: #666; margin: 25px 0;">
-          If the button doesn't work, copy and paste this link into your browser:
-        </p>
-        
-        <div style="background: #fff; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; word-break: break-all; font-family: monospace; font-size: 12px;">
-          ${resetLink}
+          <div style="background: #fff; 
+                      border: 2px solid #667eea; 
+                      padding: 20px; 
+                      border-radius: 8px; 
+                      font-size: 32px; 
+                      font-weight: bold; 
+                      color: #667eea;
+                      letter-spacing: 8px;
+                      display: inline-block;">
+            ${resetCode}
+          </div>
         </div>
         
         <div style="border-top: 1px solid #ddd; margin-top: 30px; padding-top: 20px;">
@@ -87,9 +74,10 @@ const sendResetEmail = async (email: string, resetToken: string) => {
             <strong>Security Notes:</strong>
           </p>
           <ul style="font-size: 14px; color: #666; padding-left: 20px;">
-            <li>This link will expire in 15 minutes for security</li>
+            <li>This code will expire in 10 minutes for security</li>
+            <li>Enter this code in the HisaabDost app to reset your password</li>
             <li>If you didn't request this reset, please ignore this email</li>
-            <li>Never share this link with anyone</li>
+            <li>Never share this code with anyone</li>
           </ul>
         </div>
         
@@ -105,7 +93,7 @@ const sendResetEmail = async (email: string, resetToken: string) => {
   const emailPayload = {
     from: "HisaabDost <noreply@hisaabdost.com>",
     to: [email],
-    subject: "Reset Your HisaabDost Password",
+    subject: "Your HisaabDost Password Reset Code",
     html: emailHtml,
   };
 
@@ -268,43 +256,44 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("❌ Error invalidating old codes:", updateError);
     }
 
-    // Generate new token
-    const token = generateResetToken();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    // Generate new code
+    const code = generateResetCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    console.log("🎫 Generated reset token:", token);
-    console.log("⏰ Token expires at:", expiresAt);
+    console.log("🎫 Generated reset code:", code);
+    console.log("⏰ Code expires at:", expiresAt);
 
-    // Store the token
-    console.log("💾 Storing reset token in database...");
+    // Store the code
+    console.log("💾 Storing reset code in database...");
     const { error: insertError } = await supabaseAdmin
       .from("password_reset_codes")
       .insert({
         email,
-        token,
+        code, // Store in code field
+        token: code, // Also store in token field for compatibility
         expires_at: expiresAt.toISOString(),
       });
 
     if (insertError) {
-      console.error("❌ Error storing reset token:", insertError);
+      console.error("❌ Error storing reset code:", insertError);
       return new Response(
-        JSON.stringify({ error: "Failed to generate reset link" }),
+        JSON.stringify({ error: "Failed to generate reset code" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("✅ Reset token stored successfully");
+    console.log("✅ Reset code stored successfully");
 
     // Send reset email
     console.log("📧 Attempting to send reset email...");
     try {
-      await sendResetEmail(email, token);
+      await sendResetEmail(email, code);
       console.log("🎉 Password reset process completed successfully for:", email);
       
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Password reset link has been sent to your email"
+          message: "Password reset code has been sent to your email"
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

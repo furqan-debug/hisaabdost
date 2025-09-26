@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerificationForm } from "@/components/auth/VerificationForm";
+import { PasswordResetCodeForm } from "@/components/auth/PasswordResetCodeForm";
+import { SetNewPasswordForm } from "@/components/auth/SetNewPasswordForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 const Auth = () => {
   const auth = useAuthOptional();
@@ -16,9 +18,14 @@ const Auth = () => {
   const resendOtp = auth?.resendOtp ?? (async () => {});
   const sendPasswordResetCode = auth?.sendPasswordResetCode ?? (async () => {});
   const [isSignUp, setIsSignUp] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  
+  // Password reset states
+  const [passwordResetStep, setPasswordResetStep] = useState<"email" | "code" | "newPassword" | "success">("email");
+  const [passwordResetEmail, setPasswordResetEmail] = useState("");
+  const [passwordResetCode, setPasswordResetCode] = useState("");
+  
   const navigate = useNavigate();
   if (user) {
     return <Navigate to="/app/dashboard" replace />;
@@ -30,13 +37,34 @@ const Auth = () => {
     await resendOtp(verificationEmail);
   };
   const handlePasswordResetCodeSent = (email: string) => {
-    // Just show success message, user will get email with web link
+    setPasswordResetEmail(email);
+    setPasswordResetStep("code");
+  };
+
+  const handleCodeVerified = (email: string, code: string) => {
+    setPasswordResetEmail(email);
+    setPasswordResetCode(code);
+    setPasswordResetStep("newPassword");
+  };
+
+  const handlePasswordUpdated = () => {
+    setPasswordResetStep("success");
+    // Auto redirect to login after 3 seconds
+    setTimeout(() => {
+      resetToLogin();
+    }, 3000);
+  };
+
+  const handleResendPasswordResetCode = async () => {
+    await sendPasswordResetCode(passwordResetEmail);
   };
   const resetToLogin = () => {
     setIsSignUp(false);
-    setShowForgotPassword(false);
     setShowVerification(false);
     setVerificationEmail("");
+    setPasswordResetStep("email");
+    setPasswordResetEmail("");
+    setPasswordResetCode("");
   };
   const cardVariants = {
     hidden: {
@@ -62,13 +90,20 @@ const Auth = () => {
   };
   const getCardTitle = () => {
     if (showVerification) return "Verify your email";
-    if (showForgotPassword) return "Reset Password";
+    if (passwordResetStep === "email") return "Reset Password";
+    if (passwordResetStep === "code") return "Enter Code";
+    if (passwordResetStep === "newPassword") return "New Password";
+    if (passwordResetStep === "success") return "Password Updated!";
     if (isSignUp) return "Create an account";
     return "Welcome back";
   };
+
   const getCardDescription = () => {
     if (showVerification) return `Enter the 6-digit verification code sent to ${verificationEmail}`;
-    if (showForgotPassword) return "Enter your email and we'll send you a reset link";
+    if (passwordResetStep === "email") return "Enter your email and we'll send you a verification code";
+    if (passwordResetStep === "code") return "Check your email for the 6-digit verification code";
+    if (passwordResetStep === "newPassword") return "Choose a new secure password for your account";
+    if (passwordResetStep === "success") return "Your password has been updated successfully!";
     if (isSignUp) return "Sign up to start managing your expenses";
     return "Sign in to your account";
   };
@@ -81,7 +116,14 @@ const Auth = () => {
 
       <div className="relative z-10 w-full max-w-md">
         <AnimatePresence mode="wait">
-          <motion.div key={showVerification ? "verification" : showForgotPassword ? "forgot" : isSignUp ? "signup" : "login"} initial="hidden" animate="visible" exit="exit" variants={cardVariants} className="w-full">
+          <motion.div 
+            key={showVerification ? "verification" : passwordResetStep !== "email" ? `reset-${passwordResetStep}` : isSignUp ? "signup" : "login"} 
+            initial="hidden" 
+            animate="visible" 
+            exit="exit" 
+            variants={cardVariants} 
+            className="w-full"
+          >
             <Card className="border-0 shadow-2xl backdrop-blur-sm bg-card/95 overflow-hidden">
               {/* Card Header */}
               <CardHeader className="space-y-4 text-center pb-6 pt-8 px-8">
@@ -109,13 +151,56 @@ const Auth = () => {
 
               {/* Card Content */}
               <CardContent className="px-8 pb-8">
-                {showVerification ? <VerificationForm email={verificationEmail} onVerify={handleVerification} onResend={handleResendVerification} onBackToLogin={() => {
-                setShowVerification(false);
-                setVerificationEmail("");
-              }} /> : showForgotPassword ? <ForgotPasswordForm onBackToLogin={() => setShowForgotPassword(false)} onCodeSent={handlePasswordResetCodeSent} /> : isSignUp ? <SignUpForm onLoginClick={() => setIsSignUp(false)} onSignUpSuccess={email => {
-                setVerificationEmail(email);
-                setShowVerification(true);
-              }} /> : <LoginForm onForgotPassword={() => setShowForgotPassword(true)} onSignUpClick={() => setIsSignUp(true)} />}
+                {showVerification ? (
+                  <VerificationForm 
+                    email={verificationEmail} 
+                    onVerify={handleVerification} 
+                    onResend={handleResendVerification} 
+                    onBackToLogin={() => {
+                      setShowVerification(false);
+                      setVerificationEmail("");
+                    }} 
+                  />
+                ) : passwordResetStep === "email" ? (
+                  <ForgotPasswordForm 
+                    onBackToLogin={resetToLogin} 
+                    onCodeSent={handlePasswordResetCodeSent} 
+                  />
+                ) : passwordResetStep === "code" ? (
+                  <PasswordResetCodeForm
+                    email={passwordResetEmail}
+                    onCodeVerified={handleCodeVerified}
+                    onBackToEmail={() => setPasswordResetStep("email")}
+                    onResendCode={handleResendPasswordResetCode}
+                  />
+                ) : passwordResetStep === "newPassword" ? (
+                  <SetNewPasswordForm
+                    email={passwordResetEmail}
+                    code={passwordResetCode}
+                    onPasswordUpdated={handlePasswordUpdated}
+                    onBack={() => setPasswordResetStep("code")}
+                  />
+                ) : passwordResetStep === "success" ? (
+                  <div className="text-center space-y-4">
+                    <div className="text-primary text-6xl">✓</div>
+                    <p className="text-muted-foreground">
+                      Redirecting you to login...
+                    </p>
+                  </div>
+                ) : isSignUp ? (
+                  <SignUpForm 
+                    onLoginClick={() => setIsSignUp(false)} 
+                    onSignUpSuccess={email => {
+                      setVerificationEmail(email);
+                      setShowVerification(true);
+                    }} 
+                  />
+                ) : (
+                  <LoginForm 
+                    onForgotPassword={() => setPasswordResetStep("email")} 
+                    onSignUpClick={() => setIsSignUp(true)} 
+                  />
+                )}
               </CardContent>
             </Card>
           </motion.div>

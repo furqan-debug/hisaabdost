@@ -49,37 +49,37 @@ export const usePasswordReset = () => {
     }
   };
 
-  const verifyPasswordResetToken = async (email: string, token: string) => {
+  const verifyPasswordResetToken = async (email: string, codeOrToken: string) => {
     try {
-      console.log("Verifying password reset token:", email, token);
+      console.log("Verifying password reset code:", email, codeOrToken);
       const { data, error } = await supabase.functions.invoke('verify-reset-code', {
-        body: { email, token }
+        body: { email, token: codeOrToken, code: codeOrToken } // Send both for compatibility
       });
       
       if (error) {
-        console.error("Password reset token verification error:", error);
+        console.error("Password reset code verification error:", error);
         throw error;
       }
 
       if (data?.error) {
-        console.error("Password reset token verification error:", data.error);
+        console.error("Password reset code verification error:", data.error);
         throw new Error(data.error);
       }
       
-      console.log("Password reset token verified successfully");
+      console.log("Password reset code verified successfully");
       return data;
     } catch (error: any) {
-      console.error("Password reset token verification error:", error);
-      toast.error(error.message || "Invalid or expired reset link");
+      console.error("Password reset code verification error:", error);
+      toast.error(error.message || "Invalid or expired code");
       throw error;
     }
   };
 
-  const updatePassword = async (email: string, token: string, newPassword: string) => {
+  const updatePassword = async (email: string, codeOrToken: string, newPassword: string) => {
     try {
       console.log("Updating password for:", email);
       const { data, error } = await supabase.functions.invoke('update-password-with-code', {
-        body: { email, token, newPassword }
+        body: { email, token: codeOrToken, newPassword }
       });
       
       if (error) {

@@ -15,7 +15,7 @@ type ForgotPasswordFormProps = {
 export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPasswordFormProps) => {
   const [loading, setLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  const [linkSent, setLinkSent] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
   const { sendPasswordResetCode } = usePasswordReset();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,10 +27,8 @@ export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPassword
     setLoading(true);
     try {
       await sendPasswordResetCode(resetEmail);
-      setLinkSent(true);
-      
-      // Note: We don't automatically transition since user needs to check email and click link
-      // The deep link will handle the transition
+      setCodeSent(true);
+      onCodeSent(resetEmail);
     } catch (error) {
       // Error is handled in the hook
     } finally {
@@ -56,7 +54,7 @@ export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPassword
         </div>
       </div>
       
-      {linkSent && (
+      {codeSent && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,22 +62,22 @@ export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPassword
         >
           <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <div className="text-sm space-y-2">
-            <p className="font-medium">Reset link sent!</p>
-            <p>Please check your email and click the reset link. The link will open in your mobile browser where you can safely reset your password.</p>
-            <p className="text-xs opacity-75">After resetting your password, return to this app to sign in with your new password. The reset link expires in 15 minutes.</p>
+            <p className="font-medium">Code sent!</p>
+            <p>Please check your email for a 6-digit verification code. Enter the code on the next screen to reset your password.</p>
+            <p className="text-xs opacity-75">The code expires in 10 minutes for security.</p>
           </div>
         </motion.div>
       )}
 
       <div className="flex flex-col space-y-4">
-        <Button type="submit" className="w-full" disabled={loading || linkSent}>
+        <Button type="submit" className="w-full" disabled={loading || codeSent}>
           {loading ? (
             <div className="flex items-center gap-2">
               <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <span>Sending Reset Link...</span>
+              <span>Sending Code...</span>
             </div>
           ) : (
-            "Send Reset Link"
+            "Send Verification Code"
           )}
         </Button>
         

@@ -27,7 +27,7 @@ import History from "@/pages/History";
 import ManageCategories from "@/pages/ManageCategories";
 import ManageFunds from "@/pages/ManageFunds";
 import Settings from "@/pages/Settings";
-import ResetPassword from "@/pages/ResetPassword";
+
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -62,7 +62,7 @@ const App = () => {
                       <Routes>
                         {/* Public routes */}
                         <Route path="/auth" element={<Auth />} />
-                        <Route path="/reset-password" element={<ResetPassword />} />
+                        
                         
                         {/* Protected routes with Layout */}
                         <Route path="/app" element={

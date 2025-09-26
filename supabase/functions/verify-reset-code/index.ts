@@ -7,7 +7,8 @@ const corsHeaders = {
 };
 
 interface VerifyResetCodeRequest {
-  token: string;
+  token?: string;
+  code?: string;
   email: string;
 }
 
@@ -29,31 +30,33 @@ const handler = async (req: Request): Promise<Response> => {
     const requestBody = await req.text();
     console.log("📥 Raw request body:", requestBody);
     
-    const { token, email }: VerifyResetCodeRequest = JSON.parse(requestBody);
-    console.log("🔍 Verifying reset code for email:", email, "token:", token);
+    const { token, code, email }: VerifyResetCodeRequest = JSON.parse(requestBody);
+    const codeOrToken = code || token; // Prefer code over token
+    console.log("🔍 Verifying reset code for email:", email, "code/token:", codeOrToken);
 
-    if (!token || !email) {
-      console.error("❌ Missing token or email");
+    if (!codeOrToken || !email) {
+      console.error("❌ Missing code/token or email");
       return new Response(
-        JSON.stringify({ error: "Token and email are required" }),
+        JSON.stringify({ error: "Code/token and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Check if the token exists and is not expired
+    // Check if the code/token exists and is not expired
+    // Try both code and token fields for compatibility
     const { data: resetCode, error: queryError } = await supabaseAdmin
       .from("password_reset_codes")
       .select("*")
-      .eq("token", token)
       .eq("email", email)
       .eq("used", false)
       .gte("expires_at", new Date().toISOString())
+      .or(`code.eq.${codeOrToken},token.eq.${codeOrToken}`)
       .single();
 
     if (queryError) {
       console.error("❌ Query error:", queryError);
       return new Response(
-        JSON.stringify({ valid: false, error: "Invalid or expired token" }),
+        JSON.stringify({ valid: false, error: "Invalid or expired code" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -61,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!resetCode) {
       console.log("🔒 Reset code not found or expired");
       return new Response(
-        JSON.stringify({ valid: false, error: "Invalid or expired token" }),
+        JSON.stringify({ valid: false, error: "Invalid or expired code" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
