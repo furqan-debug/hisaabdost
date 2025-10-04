@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
@@ -25,6 +26,7 @@ const AUTH_FALLBACK: AuthContextType = {
   loading: true,
   signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
   signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
+  signInWithGoogle: async () => { throw new Error('AuthProvider not mounted'); },
   signUp: async () => { throw new Error('AuthProvider not mounted'); },
   signOut: async () => { throw new Error('AuthProvider not mounted'); },
   verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
@@ -48,6 +50,7 @@ export const useAuth = () => {
       loading: true,
       signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
       signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
+      signInWithGoogle: async () => { throw new Error('AuthProvider not mounted'); },
       signUp: async () => { throw new Error('AuthProvider not mounted'); },
       signOut: async () => { throw new Error('AuthProvider not mounted'); },
       verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
@@ -121,6 +124,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = "Invalid phone number format";
       } else if (error.message.includes('Unable to send SMS')) {
         errorMessage = "Unable to send SMS. Please try again.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+      
+      console.log("Starting native Google Sign-In...");
+      
+      // Initialize Google Auth (safe to call multiple times)
+      await GoogleAuth.initialize({
+        clientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+
+      // Trigger native Google Sign-In
+      const googleUser = await GoogleAuth.signIn();
+      
+      console.log("Google Sign-In successful, exchanging token with Supabase...");
+
+      // Exchange Google ID token with Supabase
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: googleUser.authentication.idToken,
+      });
+
+      if (error) {
+        console.error("Supabase token exchange error:", error);
+        throw error;
+      }
+
+      if (data.user) {
+        console.log("Successfully authenticated with Supabase:", data.user.id);
+        toast.success("Successfully signed in with Google!");
+      }
+    } catch (error: any) {
+      console.error("Google Sign-In error:", error);
+      
+      let errorMessage = "Failed to sign in with Google";
+      
+      if (error.message?.includes('popup_closed_by_user') || error.message?.includes('canceled')) {
+        errorMessage = "Sign in cancelled";
+      } else if (error.message?.includes('network')) {
+        errorMessage = "Network error. Please check your connection.";
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -356,6 +410,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     signInWithEmail,
     signInWithPhone,
+    signInWithGoogle,
     signUp,
     signOut,
     verifyOtp,
