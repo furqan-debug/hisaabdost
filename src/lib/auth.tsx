@@ -141,7 +141,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Initialize Google Auth (safe to call multiple times)
       await GoogleAuth.initialize({
-        clientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+        clientId: '598613920296-nmbbtfptlicljgkgtmaq9t6akhqasf7d.apps.googleusercontent.com',
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
