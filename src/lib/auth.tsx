@@ -167,7 +167,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         toast.success("Successfully signed in with Google!");
       }
     } catch (error: any) {
-      console.error("Google Sign-In error:", error);
+      console.error("🔴 Google Sign-In error:", error);
+      console.error("🔴 Error code:", error.code);
+      console.error("🔴 Error message:", error.message);
+      console.error("🔴 Error details:", JSON.stringify(error, null, 2));
       
       let errorMessage = "Failed to sign in with Google";
       
@@ -175,8 +178,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = "Sign in cancelled";
       } else if (error.message?.includes('network')) {
         errorMessage = "Network error. Please check your connection.";
+      } else if (error.code === '10' || error.message?.includes('10:')) {
+        errorMessage = "Google Sign-In not configured. Please check SHA-1 certificate and Android OAuth client in Google Cloud Console.";
+      } else if (error.code === '12500' || error.message?.includes('12500')) {
+        errorMessage = "Configuration error. Please verify package name and SHA-1 certificate match in Google Cloud Console.";
       } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = `${error.message} (Code: ${error.code || 'unknown'})`;
       }
       
       toast.error(errorMessage);
