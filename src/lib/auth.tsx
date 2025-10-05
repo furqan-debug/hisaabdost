@@ -133,37 +133,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Helper function to generate a cryptographic nonce
+  const generateNonce = (): string => {
+    const randomValues = new Uint8Array(32);
+    crypto.getRandomValues(randomValues);
+    return Array.from(randomValues, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Helper function to hash the nonce with SHA-256
+  const hashNonce = async (nonce: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(nonce);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
   const signInWithGoogle = async () => {
-    console.log("🟢 =============== GOOGLE SIGN-IN START (New Plugin) ===============");
+    console.log("🟢 =============== GOOGLE SIGN-IN START (WITH NONCE) ===============");
     console.log("🟢 Timestamp:", new Date().toISOString());
     
     try {
-      console.log("🟢 Step 1: Importing SocialLogin module...");
-      const { SocialLogin } = await import('@capgo/capacitor-social-login');
-      console.log("🟢 Step 1: SUCCESS - SocialLogin module imported");
+      // STEP 1: Generate nonce for security
+      console.log("🟢 Step 1: Generating cryptographic nonce...");
+      const rawNonce = generateNonce();
+      const hashedNonce = await hashNonce(rawNonce);
+      console.log("🟢 Step 1: SUCCESS - Nonce generated");
+      console.log("🟢 Raw nonce preview:", rawNonce.substring(0, 16) + "...");
+      console.log("🟢 Hashed nonce preview:", hashedNonce.substring(0, 16) + "...");
       
-      console.log("🟢 Step 2: Initializing and signing in with Google...");
+      // STEP 2: Import SocialLogin module
+      console.log("🟢 Step 2: Importing SocialLogin module...");
+      const { SocialLogin } = await import('@capgo/capacitor-social-login');
+      console.log("🟢 Step 2: SUCCESS - SocialLogin module imported");
+      
+      // STEP 3: Sign in with Google using hashed nonce
+      console.log("🟢 Step 3: Signing in with Google (including hashed nonce)...");
       const result = await SocialLogin.login({
         provider: 'google',
         options: {
           scopes: ['email', 'profile'],
+          nonce: hashedNonce, // Pass the HASHED nonce to Google
         }
       });
       
-      console.log("🟢 Step 2: SUCCESS - Got Google response");
+      console.log("🟢 Step 3: SUCCESS - Got Google response");
       console.log("🟢 Full Google response:", JSON.stringify(result, null, 2));
 
-      // The response structure varies, so we need to check what we got
+      // Extract ID token and user info from response
       const response = result.result as any;
       let idToken: string | undefined;
       let userEmail: string | undefined;
       let userName: string | undefined;
 
-      console.log("🟢 Full response keys:", Object.keys(response || {}));
-      console.log("🟢 Response structure:", JSON.stringify(response, null, 2));
+      console.log("🟢 Response keys:", Object.keys(response || {}));
 
       // Look for ID token - this is what Supabase needs (NOT the access token)
-      // The plugin may return it in different locations
       if (response?.idToken) {
         idToken = response.idToken;
       } else if (response?.authentication?.idToken) {
@@ -187,31 +212,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       if (!idToken) {
-        console.error("🔴 Step 2: FAILED - No ID token received from Google");
+        console.error("🔴 Step 3: FAILED - No ID token received from Google");
         console.error("🔴 Response structure:", response);
-        console.error("🔴 Available keys:", Object.keys(response || {}));
-        throw new Error('No ID token received from Google. Check console for response structure.');
+        throw new Error('No ID token received from Google');
       }
       
       console.log("🟢 ID token preview:", idToken.substring(0, 50) + "...");
       
-      console.log("🟢 Step 3: Exchanging Google ID token with Supabase (direct client call)...");
+      // STEP 4: Exchange Google ID token with Supabase using RAW nonce
+      console.log("🟢 Step 4: Exchanging Google ID token with Supabase...");
+      console.log("🟢 Using RAW nonce for verification (not hashed)");
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
+        nonce: rawNonce, // Pass the RAW nonce to Supabase (NOT the hashed one!)
       });
 
       if (error) {
-        console.error("🔴 Step 3: FAILED - Supabase auth error");
+        console.error("🔴 Step 4: FAILED - Supabase auth error");
         console.error("🔴 Supabase error:", error);
         console.error("🔴 Error details:", JSON.stringify(error, null, 2));
         throw error;
       }
       
-      console.log("🟢 Step 3: SUCCESS - Auth exchange complete");
+      console.log("🟢 Step 4: SUCCESS - Auth exchange complete");
 
       if (data.user) {
-        console.log("🟢 Step 4: SUCCESS - User authenticated!");
+        console.log("🟢 Step 5: SUCCESS - User authenticated!");
         console.log("🟢 User ID:", data.user.id);
         console.log("🟢 User email:", data.user.email);
         console.log("🟢 =============== GOOGLE SIGN-IN COMPLETE ===============");
