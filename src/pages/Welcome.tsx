@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useFirstTimeVisit } from "@/hooks/useFirstTimeVisit";
+import { useWelcomeMusic } from "@/hooks/useWelcomeMusic";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 export default function Welcome() {
   const navigate = useNavigate();
   const { markVisitComplete } = useFirstTimeVisit();
+  useWelcomeMusic(); // Play intro music
 
   const handleGetStarted = () => {
     markVisitComplete();
