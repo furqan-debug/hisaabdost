@@ -5,20 +5,20 @@
 
 @layer base {
   :root {
-    /* Teal theme inspired by Hysab Kytab */
+    /* Purple theme matching brand identity */
     --background: 180 20% 98%;
     --foreground: 200 20% 15%;
     --card: 0 0% 100%;
     --card-foreground: 200 20% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 200 20% 15%;
-    --primary: 174 62% 47%;
+    --primary: 265 73% 69%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 174 30% 95%;
+    --secondary: 265 30% 95%;
     --secondary-foreground: 200 20% 15%;
     --muted: 210 20% 96%;
     --muted-foreground: 220 10% 46%;
-    --accent: 174 30% 95%;
+    --accent: 265 30% 95%;
     --accent-foreground: 200 20% 15%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
@@ -26,7 +26,7 @@
     --success-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 174 62% 47%;
+    --ring: 265 73% 69%;
     --radius: 1rem;
     --expense-low: 199, 89%, 60%;
     --expense-medium: 38, 92%, 60%;
@@ -34,14 +34,14 @@
   }
  
   .dark {
-    /* Improved dark teal theme with better contrast */
+    /* Improved dark purple theme with better contrast */
     --background: 200 30% 10%;
     --foreground: 0 0% 96%;
     --card: 200 25% 14%;
     --card-foreground: 0 0% 96%;
     --popover: 200 25% 14%;
     --popover-foreground: 0 0% 96%;
-    --primary: 174 62% 55%;
+    --primary: 265 73% 75%;
     --primary-foreground: 200 30% 10%;
     --secondary: 200 30% 20%;
     --secondary-foreground: 0 0% 90%;
@@ -55,10 +55,10 @@
     --success-foreground: 0 0% 96%;
     --border: 200 25% 24%;
     --input: 200 25% 24%;
-    --ring: 174 62% 55%;
+    --ring: 265 73% 75%;
   }
 
-  /* Ensure teal theme is always applied */
+  /* Ensure purple theme is always applied */
   .purple,
   .pink,
   .blue,
@@ -69,13 +69,13 @@
     --card-foreground: 200 20% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 200 20% 15%;
-    --primary: 174 62% 47%;
+    --primary: 265 73% 69%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 174 30% 95%;
+    --secondary: 265 30% 95%;
     --secondary-foreground: 200 20% 15%;
     --muted: 210 20% 96%;
     --muted-foreground: 220 10% 46%;
-    --accent: 174 30% 95%;
+    --accent: 265 30% 95%;
     --accent-foreground: 200 20% 15%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
@@ -83,13 +83,13 @@
     --success-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 174 62% 47%;
+    --ring: 265 73% 69%;
     --expense-low: 199, 89%, 60%;
     --expense-medium: 38, 92%, 60%;
     --expense-high: 0, 72%, 62%;
   }
 
-  /* Improved dark mode for all themes (teal) */
+  /* Improved dark mode for all themes (purple) */
   .purple.dark,
   .pink.dark,
   .blue.dark,
@@ -100,7 +100,7 @@
     --card-foreground: 0 0% 96%;
     --popover: 200 25% 14%;
     --popover-foreground: 0 0% 96%;
-    --primary: 174 62% 55%;
+    --primary: 265 73% 75%;
     --primary-foreground: 200 30% 10%;
     --secondary: 200 30% 20%;
     --secondary-foreground: 0 0% 90%;
@@ -114,7 +114,7 @@
     --success-foreground: 0 0% 96%;
     --border: 200 25% 24%;
     --input: 200 25% 24%;
-    --ring: 174 62% 55%;
+    --ring: 265 73% 75%;
   }
 }
 
