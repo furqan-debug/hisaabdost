@@ -1,8 +1,12 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Wallet, TrendingUp, PieChart, Sparkles } from "lucide-react";
 import { useFirstTimeVisit } from "@/hooks/useFirstTimeVisit";
+import { FloatingElements } from "@/components/welcome/FloatingElements";
+import { AnimatedQuote } from "@/components/welcome/AnimatedQuote";
+import { StatsCounter } from "@/components/welcome/StatsCounter";
+import { FeatureCard } from "@/components/welcome/FeatureCard";
+import { MagneticButton } from "@/components/welcome/MagneticButton";
+import { Wallet, TrendingUp, Target, Shield } from "lucide-react";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -13,173 +17,167 @@ export default function Welcome() {
     navigate("/auth");
   };
 
+  const features = [
+    {
+      icon: Wallet,
+      title: "Track Every Expense",
+      description: "Monitor your spending with intelligent categorization and detailed insights",
+      gradient: "from-blue-500 to-cyan-500",
+    },
+    {
+      icon: TrendingUp,
+      title: "Build Real Wealth",
+      description: "Smart investment tracking and portfolio management to grow your money",
+      gradient: "from-purple-500 to-pink-500",
+    },
+    {
+      icon: Target,
+      title: "Achieve Your Goals",
+      description: "Set financial targets and watch your progress with AI-powered recommendations",
+      gradient: "from-orange-500 to-red-500",
+    },
+    {
+      icon: Shield,
+      title: "Bank-Level Security",
+      description: "Your financial data is encrypted and protected with industry-leading security",
+      gradient: "from-green-500 to-emerald-500",
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-br from-[#F2FCE2] via-[#E5DEFF] to-[#D3E4FD] overflow-hidden relative">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Animated background mesh */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
         <motion.div
-          className="absolute top-20 left-10 w-20 h-20 rounded-full bg-primary/10"
           animate={{
-            y: [0, -20, 0],
-            scale: [1, 1.1, 1],
+            backgroundPosition: ["0% 0%", "100% 100%"],
           }}
           transition={{
-            duration: 4,
+            duration: 20,
             repeat: Infinity,
-            ease: "easeInOut",
+            repeatType: "reverse",
           }}
-        />
-        <motion.div
-          className="absolute bottom-32 right-16 w-32 h-32 rounded-full bg-success/10"
-          animate={{
-            y: [0, 20, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-        <motion.div
-          className="absolute top-1/3 right-20 w-16 h-16 rounded-full bg-[#9b87f5]/10"
-          animate={{
-            y: [0, -15, 0],
-            x: [0, 10, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5,
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: "radial-gradient(circle at 20% 50%, rgba(var(--primary), 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(var(--primary), 0.1) 0%, transparent 50%)",
+            backgroundSize: "100% 100%",
           }}
         />
       </div>
 
+      {/* Floating money elements */}
+      <FloatingElements />
+
       {/* Main content */}
-      <motion.div
-        className="max-w-2xl w-full text-center space-y-8 relative z-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        {/* Logo and Icons */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12 space-y-16">
+        {/* Hero Section */}
         <motion.div
-          className="flex items-center justify-center gap-4 mb-8"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <motion.div
-            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg"
-            animate={{ rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Wallet className="w-8 h-8 text-white" />
-          </motion.div>
-          <motion.div
-            className="w-12 h-12 rounded-xl bg-gradient-to-br from-success to-success/60 flex items-center justify-center shadow-lg"
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-          >
-            <TrendingUp className="w-6 h-6 text-white" />
-          </motion.div>
-          <motion.div
-            className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] flex items-center justify-center shadow-lg"
-            animate={{ rotate: [0, -5, 5, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          >
-            <PieChart className="w-7 h-7 text-white" />
-          </motion.div>
-        </motion.div>
-
-        {/* App Name */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <h1 className="text-5xl md:text-6xl font-bold text-[#6E59A5] mb-2 flex items-center justify-center gap-2">
-            Hisaab Dost
-            <Sparkles className="w-8 h-8 text-[#9b87f5]" />
-          </h1>
-          <p className="text-xl text-[#7E69AB] font-medium">
-            Master your home budget with ease
-          </p>
-        </motion.div>
-
-        {/* Motivational Quote */}
-        <motion.div
-          className="relative"
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={{ duration: 0.8 }}
+          className="text-center space-y-6 max-w-4xl"
         >
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-md rounded-3xl" />
-          <div className="relative px-8 py-10 rounded-3xl border border-white/50 shadow-xl">
-            <div className="text-6xl text-primary/30 mb-2">"</div>
-            <p className="text-2xl md:text-3xl font-semibold text-[#6E59A5] leading-relaxed mb-4">
-              Every rupee saved is a step towards your dreams
-            </p>
-            <p className="text-lg text-[#7E69AB] font-medium">
-              Take control of your money, take control of your life
-            </p>
-            <div className="text-6xl text-primary/30 text-right -mt-6">"</div>
+          {/* App logo/title with staggered animation */}
+          <div className="space-y-4">
+            <motion.h1 className="text-6xl md:text-8xl font-black tracking-tight">
+              {["Hisaab", "Dost"].map((word, index) => (
+                <motion.span
+                  key={word}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.2, duration: 0.8, type: "spring" }}
+                  className="inline-block mr-6 bg-gradient-to-br from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"
+                  style={{
+                    textShadow: "0 0 80px rgba(var(--primary), 0.3)",
+                  }}
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </motion.h1>
+
+            {/* Typewriter subtitle */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className="text-2xl md:text-3xl font-semibold text-muted-foreground"
+            >
+              Your Smart Money Manager
+            </motion.p>
           </div>
+
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto leading-relaxed"
+          >
+            Transform your financial future with intelligent tracking, smart insights, and personalized goals
+          </motion.p>
         </motion.div>
 
-        {/* Features highlight */}
-        <motion.div
-          className="grid grid-cols-3 gap-4 py-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-        >
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/20 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-sm font-medium text-[#6E59A5]">Track Expenses</p>
+        {/* Animated Quote Card */}
+        <AnimatedQuote />
+
+        {/* Statistics Counter */}
+        <StatsCounter />
+
+        {/* Feature Cards */}
+        <div className="w-full max-w-6xl">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 0.6 }}
+            className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent"
+          >
+            Everything You Need to Succeed
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={feature.title}
+                {...feature}
+                delay={1.8 + index * 0.1}
+              />
+            ))}
           </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-success/20 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-success" />
-            </div>
-            <p className="text-sm font-medium text-[#6E59A5]">Build Wealth</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#9b87f5]/20 flex items-center justify-center">
-              <PieChart className="w-6 h-6 text-[#9b87f5]" />
-            </div>
-            <p className="text-sm font-medium text-[#6E59A5]">Achieve Goals</p>
-          </div>
-        </motion.div>
+        </div>
 
         {/* CTA Button */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.5 }}
+          transition={{ delay: 2.4, duration: 0.8 }}
+          className="flex flex-col items-center space-y-4"
         >
-          <Button
-            onClick={handleGetStarted}
-            size="lg"
-            className="text-lg px-12 py-6 h-auto rounded-full shadow-2xl bg-gradient-to-r from-primary to-[#9b87f5] hover:from-primary/90 hover:to-[#9b87f5]/90 transform hover:scale-105 transition-all duration-300"
+          <MagneticButton onClick={handleGetStarted}>
+            Get Started Free
+          </MagneticButton>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.6 }}
+            className="text-sm text-muted-foreground"
           >
-            Get Started
-          </Button>
+            No credit card required • Free forever
+          </motion.p>
         </motion.div>
 
+        {/* Bottom tagline */}
         <motion.p
-          className="text-sm text-[#7E69AB]/80"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.5 }}
+          transition={{ delay: 2.8, duration: 0.8 }}
+          className="text-center text-base md:text-lg font-medium text-foreground/60 max-w-2xl"
         >
-          Your journey to financial wellness starts here
+          Join thousands of users who have transformed their financial lives with Hisaab Dost
         </motion.p>
-      </motion.div>
+      </div>
     </div>
   );
 }
