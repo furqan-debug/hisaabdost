@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, Wallet, BarChart2, Target } from "lucide-react";
+import { Home, Receipt, Wallet, BarChart2, Target, HandCoins } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,10 @@ const navItems = [{
   icon: Target,
   label: "Goals",
   path: "/app/goals"
+}, {
+  icon: HandCoins,
+  label: "Loans",
+  path: "/app/loans"
 }];
 
 export function BottomNavigation() {
