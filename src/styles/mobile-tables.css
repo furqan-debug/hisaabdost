@@ -13,12 +13,18 @@
   
   /* Ensure smooth scrolling in mobile tables */
   .table-container, .table-responsive {
-    @apply no-scrollbar touch-scroll-container;
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .table-container::-webkit-scrollbar,
+  .table-responsive::-webkit-scrollbar {
+    display: none;
   }
   
   /* Prevent horizontal scrolling in tables */
@@ -29,6 +35,10 @@
   
   /* Table row touch feedback */
   tr {
-    @apply touch-feedback active:bg-muted/10;
+    transition: background-color 0.2s;
+  }
+  
+  tr:active {
+    background-color: hsl(var(--muted) / 0.1);
   }
 }

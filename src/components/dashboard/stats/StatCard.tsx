@@ -36,33 +36,33 @@ const getCardStyles = (cardType: string) => {
   switch (cardType) {
     case 'wallet':
       return {
-        gradient: "bg-gradient-to-br from-blue-500/20 to-blue-600/30",
-        iconColor: "text-blue-600",
-        border: "border-blue-200/50"
+        gradient: "bg-white dark:bg-card",
+        iconColor: "text-primary",
+        border: "border-border"
       };
     case 'expenses':
       return {
-        gradient: "bg-gradient-to-br from-orange-500/20 to-orange-600/30",
-        iconColor: "text-orange-600",
-        border: "border-orange-200/50"
+        gradient: "bg-white dark:bg-card",
+        iconColor: "text-destructive",
+        border: "border-border"
       };
     case 'income':
       return {
-        gradient: "bg-gradient-to-br from-green-500/20 to-green-600/30",
-        iconColor: "text-green-600",
-        border: "border-green-200/50"
+        gradient: "bg-white dark:bg-card",
+        iconColor: "text-success dark:text-success",
+        border: "border-border"
       };
     case 'savings':
       return {
-        gradient: "bg-gradient-to-br from-purple-500/20 to-purple-600/30",
-        iconColor: "text-purple-600",
-        border: "border-purple-200/50"
+        gradient: "bg-white dark:bg-card",
+        iconColor: "text-primary",
+        border: "border-border"
       };
     default:
       return {
-        gradient: "bg-gradient-to-br from-blue-500/20 to-blue-600/30",
-        iconColor: "text-blue-600",
-        border: "border-blue-200/50"
+        gradient: "bg-white dark:bg-card",
+        iconColor: "text-primary",
+        border: "border-border"
       };
   }
 };
@@ -83,7 +83,7 @@ export const StatCard = ({
   const styles = getCardStyles(cardType);
   
   return (
-    <Card className={`transition-all duration-300 hover:shadow-lg aspect-square ${styles.gradient} ${styles.border} backdrop-blur-sm ${className}`}>
+    <Card className={`transition-all duration-300 hover:shadow-xl aspect-square ${styles.gradient} ${styles.border} shadow-sm ${className}`}>
       <CardContent className="p-3 flex flex-col h-full relative">
         {/* Info button - positioned absolutely in top right */}
         {infoTooltip && (

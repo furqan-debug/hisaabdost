@@ -119,16 +119,16 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Preferred Currency</label>
+          <label className="text-sm font-semibold text-foreground">Preferred Currency</label>
           <Select value={currency} onValueChange={(value: CurrencyCode) => setCurrency(value)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11">
               <SelectValue placeholder="Select your currency" />
             </SelectTrigger>
             <SelectContent className="touch-scroll">
               {CURRENCY_OPTIONS.map((currencyOption: CurrencyOption) => (
                 <SelectItem key={currencyOption.code} value={currencyOption.code}>
-                  <div className="flex items-center">
-                    <span className="mr-2">{currencyOption.symbol}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{currencyOption.symbol}</span>
                     <span>{currencyOption.label}</span>
                   </div>
                 </SelectItem>
@@ -138,13 +138,14 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button 
           onClick={handleComplete}
           disabled={isSubmitting}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto min-w-[140px]"
+          size="lg"
         >
-          {isSubmitting ? "Setting up..." : "Get Started"}
+          {isSubmitting ? "Setting up..." : "Continue"}
         </Button>
       </div>
     </div>

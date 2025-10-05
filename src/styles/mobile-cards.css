@@ -1,54 +1,53 @@
 
+
 /* Mobile Card Styles */
-@layer components {
-  @media (max-width: 640px) {
-    /* Card header and content padding */
-    .card-header {
-      @apply p-3;
-    }
-    .card-content {
-      @apply p-3 pt-1;
-    }
-    
-    /* Glass effect cards */
-    .glass-card {
-      @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
-    }
-    
-    /* Better mobile alignment */
-    .modern-card {
-      @apply mx-0 my-2 rounded-xl;
-    }
-    
-    /* Improved card spacing and touch targets */
-    .card {
-      @apply rounded-xl mx-0 my-2 shadow-sm;
-    }
-    
-    /* Mobile-optimized card titles */
-    .card-title {
-      @apply text-base font-semibold;
-    }
-    
-    /* Mobile-optimized card descriptions */
-    .card-description {
-      @apply text-sm text-muted-foreground;
-    }
+@media (max-width: 640px) {
+  /* Card header and content padding */
+  .card-header {
+    @apply p-3;
   }
-
-  /* Card hover feedback */
-  .hover-feedback {
-    @apply hover:bg-muted/50 transition-colors duration-200;
+  .card-content {
+    @apply p-3 pt-1;
   }
-
-  /* Glass card effect */
+  
+  /* Glass effect cards */
   .glass-card {
     @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
   }
   
-  /* Add hover effect with a standard opacity value */
-  .glass-card:hover {
-    @apply bg-card/90 shadow-md;
-    transition: all 0.2s ease-in-out;
+  /* Better mobile alignment */
+  .modern-card {
+    @apply mx-0 my-2 rounded-xl;
   }
+  
+  /* Improved card spacing and touch targets */
+  .card {
+    @apply rounded-xl mx-0 my-2 shadow-sm;
+  }
+  
+  /* Mobile-optimized card titles */
+  .card-title {
+    @apply text-base font-semibold;
+  }
+  
+  /* Mobile-optimized card descriptions */
+  .card-description {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* Card hover feedback */
+.hover-feedback {
+  @apply hover:bg-muted/50 transition-colors duration-200;
+}
+
+/* Glass card effect */
+.glass-card {
+  @apply bg-card/95 backdrop-blur-md border-border/30 shadow-sm;
+}
+  
+/* Add hover effect with a standard opacity value */
+.glass-card:hover {
+  @apply bg-card/90 shadow-md;
+  transition: all 0.2s ease-in-out;
 }

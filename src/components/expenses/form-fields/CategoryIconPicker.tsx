@@ -50,7 +50,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
               const isSelected = value === cat.value;
               
               return (
-                <button
+                 <button
                   key={`${cat.value}-${cat.isCustom}`}
                   type="button"
                   onClick={() => onChange(cat.value)}
@@ -58,18 +58,18 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                     "relative snap-start flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
                     "active:scale-90 w-[100px] h-[100px]",
                     isSelected 
-                      ? "bg-primary/5 scale-105 shadow-md" 
-                      : "bg-muted/50 hover:bg-muted hover:scale-102"
+                      ? "bg-primary/5 scale-105 shadow-lg" 
+                      : "bg-card/50 hover:bg-card hover:scale-102"
                   )}
                 >
                   <div 
                     className={cn(
                       "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300",
-                      isSelected ? "" : ""
+                      isSelected ? "shadow-md" : ""
                     )}
                     style={{ 
-                      backgroundColor: cat.color,
-                      opacity: isSelected ? 1 : 0.2,
+                      backgroundColor: isSelected ? cat.color : `${cat.color}20`,
+                      opacity: isSelected ? 1 : 0.6,
                     }}
                   >
                     {Icon ? (
@@ -88,7 +88,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                   </div>
                   <span className={cn(
                     "text-[11px] text-center leading-tight line-clamp-2 w-full px-1 transition-all duration-300",
-                    isSelected ? "font-bold" : "font-medium text-muted-foreground"
+                    isSelected ? "font-bold" : "font-medium text-muted-foreground/70"
                   )}
                   style={{
                     color: isSelected ? cat.color : undefined

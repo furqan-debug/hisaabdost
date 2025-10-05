@@ -4,6 +4,7 @@ import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/di
 import { Input } from "@/components/ui/input";
 import { OnboardingFormData } from "../types";
 import { useState } from "react";
+import { WelcomeHero } from "../WelcomeHero";
 
 interface WelcomeStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -15,16 +16,18 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
 
   return (
     <div className="space-y-6">
+      <WelcomeHero />
+      
       <DialogHeader>
-        <DialogTitle>Welcome to Hisaab Dost! 👋</DialogTitle>
-        <DialogDescription>
+        <DialogTitle className="text-2xl">Welcome! 👋</DialogTitle>
+        <DialogDescription className="text-base">
           Let's personalize your experience. First, tell us what we should call you.
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-medium">
+          <label htmlFor="name" className="text-sm font-semibold text-foreground">
             Your Name
           </label>
           <Input
@@ -36,12 +39,13 @@ export function WelcomeStep({ onComplete, initialData }: WelcomeStepProps) {
             spellCheck={true}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            className="h-11"
           />
         </div>
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => onComplete({ fullName })} disabled={!fullName.trim()}>
+        <Button onClick={() => onComplete({ fullName })} disabled={!fullName.trim()} size="lg" className="min-w-[120px]">
           Continue
         </Button>
       </div>

@@ -31,45 +31,33 @@ export function BottomNavigation() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   
   useEffect(() => {
     setMounted(true);
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
   if (!isMobile || !mounted) return null;
   
   return (
-    <div className={cn(
-      "fixed left-0 right-0 bottom-0 z-50 border-t transition-all duration-300 w-full bg-background",
-      isScrolled ? "border-border/40 shadow-lg" : "border-border/20"
-    )}>
-      <div className="flex h-16 items-center justify-around max-w-[480px] py-2 mx-auto">
+    <div className="fixed left-0 right-0 bottom-0 z-50 bg-white dark:bg-card border-t border-border/20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)] w-full">
+      <div className="flex h-16 items-center justify-around max-w-[480px] py-1 mx-auto px-2">
         {navItems.map(item => {
           const isActive = location.pathname === item.path;
           return (
-            <Link key={item.path} to={item.path} className="w-1/5">
+            <Link key={item.path} to={item.path} className="flex-1 max-w-[80px]">
               <div className={cn(
-                "menu-item flex flex-col items-center justify-center h-12 transition-colors duration-300 rounded-lg",
-                isActive ? "text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                "flex flex-col items-center justify-center h-14 transition-all duration-200 rounded-xl",
+                isActive ? "text-primary scale-105" : "text-muted-foreground/70 hover:text-foreground"
               )}>
-                <div className="relative">
-                  <item.icon size={22} className={cn(
-                    "transition-all duration-300",
-                    isActive ? "text-primary scale-110" : "text-muted-foreground/70"
-                  )} />
-                  {isActive && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
-                  )}
+                <div className="relative mb-0.5">
+                  <item.icon size={24} className={cn(
+                    "transition-all duration-200",
+                    isActive ? "text-primary" : ""
+                  )} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium mt-1 transition-colors duration-300",
-                  isActive ? "text-primary" : ""
+                  "text-[11px] font-medium transition-all duration-200",
+                  isActive ? "text-primary" : "text-muted-foreground/70"
                 )}>
                   {item.label}
                 </span>

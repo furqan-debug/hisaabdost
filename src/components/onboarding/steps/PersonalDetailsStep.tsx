@@ -25,15 +25,15 @@ export function PersonalDetailsStep({ onComplete, initialData }: PersonalDetails
   return (
     <div className="space-y-6">
       <DialogHeader>
-        <DialogTitle>Tell us about yourself</DialogTitle>
-        <DialogDescription>
-          This information helps us personalize your experience
+        <DialogTitle className="text-2xl">Tell us about yourself</DialogTitle>
+        <DialogDescription className="text-base">
+          This helps us personalize your financial journey
         </DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="age" className="text-sm font-medium">
+          <label htmlFor="age" className="text-sm font-semibold text-foreground">
             Age
           </label>
           <Input
@@ -45,13 +45,14 @@ export function PersonalDetailsStep({ onComplete, initialData }: PersonalDetails
             autoComplete="off"
             value={age}
             onChange={(e) => setAge(e.target.value)}
+            className="h-11"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Gender</label>
+          <label className="text-sm font-semibold text-foreground">Gender</label>
           <Select value={gender} onValueChange={(value) => setGender(value as OnboardingFormData['gender'])}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11">
               <SelectValue placeholder="Select your gender" />
             </SelectTrigger>
             <SelectContent>
@@ -64,8 +65,8 @@ export function PersonalDetailsStep({ onComplete, initialData }: PersonalDetails
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSubmit}>
+      <div className="flex justify-end pt-2">
+        <Button onClick={handleSubmit} size="lg" className="min-w-[120px]">
           Continue
         </Button>
       </div>

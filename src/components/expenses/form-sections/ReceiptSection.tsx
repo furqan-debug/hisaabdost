@@ -31,5 +31,15 @@ export function ReceiptSection({
   useEffect(() => {
     setHasReceipt(!!receiptUrl);
   }, [receiptUrl]);
-  return;
+  
+  return (
+    <ReceiptField
+      receiptUrl={receiptUrl}
+      onFileChange={onFileChange}
+      setFileInputRef={setFileInputRef}
+      setCameraInputRef={setCameraInputRef}
+      onCapture={onCapture}
+      autoProcess={!isManualForm}
+    />
+  );
 }

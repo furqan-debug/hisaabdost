@@ -5,108 +5,116 @@
 
 @layer base {
   :root {
-    /* Purple theme as default for all users */
-    --background: 190 20% 98%;
-    --foreground: 200 20% 20%;
+    /* Teal theme inspired by Hysab Kytab */
+    --background: 180 20% 98%;
+    --foreground: 200 20% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 200 20% 20%;
+    --card-foreground: 200 20% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 20% 20%;
-    --primary: 265 73% 69%;
+    --popover-foreground: 200 20% 15%;
+    --primary: 174 62% 47%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 265 40% 96%;
-    --secondary-foreground: 200 20% 20%;
-    --muted: 265 20% 94%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 265 40% 94%;
-    --accent-foreground: 200 20% 20%;
+    --secondary: 174 30% 95%;
+    --secondary-foreground: 200 20% 15%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 174 30% 95%;
+    --accent-foreground: 200 20% 15%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 265 20% 88%;
-    --input: 265 20% 88%;
-    --ring: 265 73% 69%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 174 62% 47%;
     --radius: 1rem;
     --expense-low: 199, 89%, 60%;
-    --expense-medium: 251, 146, 60;
-    --expense-high: 239, 68, 68;
+    --expense-medium: 38, 92%, 60%;
+    --expense-high: 0, 72%, 62%;
   }
  
   .dark {
-    /* Improved dark purple theme with better contrast */
-    --background: 265 30% 8%;
+    /* Improved dark teal theme with better contrast */
+    --background: 200 30% 10%;
     --foreground: 0 0% 96%;
-    --card: 265 25% 12%;
+    --card: 200 25% 14%;
     --card-foreground: 0 0% 96%;
-    --popover: 265 25% 12%;
+    --popover: 200 25% 14%;
     --popover-foreground: 0 0% 96%;
-    --primary: 265 85% 75%;
-    --primary-foreground: 265 30% 8%;
-    --secondary: 265 30% 18%;
+    --primary: 174 62% 55%;
+    --primary-foreground: 200 30% 10%;
+    --secondary: 200 30% 20%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 265 25% 16%;
-    --muted-foreground: 265 8% 72%;
-    --accent: 265 30% 18%;
+    --muted: 200 25% 18%;
+    --muted-foreground: 200 10% 70%;
+    --accent: 200 30% 20%;
     --accent-foreground: 0 0% 90%;
     --destructive: 0 85% 65%;
     --destructive-foreground: 0 0% 96%;
-    --border: 265 25% 22%;
-    --input: 265 25% 22%;
-    --ring: 265 85% 75%;
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 96%;
+    --border: 200 25% 24%;
+    --input: 200 25% 24%;
+    --ring: 174 62% 55%;
   }
 
-  /* Ensure purple theme is always applied - override any other themes */
+  /* Ensure teal theme is always applied */
   .purple,
   .pink,
   .blue,
   html {
-    --background: 190 20% 98%;
-    --foreground: 200 20% 20%;
+    --background: 180 20% 98%;
+    --foreground: 200 20% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 200 20% 20%;
+    --card-foreground: 200 20% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 20% 20%;
-    --primary: 265 73% 69%;
+    --popover-foreground: 200 20% 15%;
+    --primary: 174 62% 47%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 265 40% 96%;
-    --secondary-foreground: 200 20% 20%;
-    --muted: 265 20% 94%;
-    --muted-foreground: 220 10% 45%;
-    --accent: 265 40% 94%;
-    --accent-foreground: 200 20% 20%;
+    --secondary: 174 30% 95%;
+    --secondary-foreground: 200 20% 15%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 174 30% 95%;
+    --accent-foreground: 200 20% 15%;
     --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 265 20% 88%;
-    --input: 265 20% 88%;
-    --ring: 265 73% 69%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 174 62% 47%;
     --expense-low: 199, 89%, 60%;
-    --expense-medium: 251, 146, 60;
-    --expense-high: 239, 68, 68;
+    --expense-medium: 38, 92%, 60%;
+    --expense-high: 0, 72%, 62%;
   }
 
-  /* Improved dark mode for all themes (purple) */
+  /* Improved dark mode for all themes (teal) */
   .purple.dark,
   .pink.dark,
   .blue.dark,
   html.dark {
-    --background: 265 30% 8%;
+    --background: 200 30% 10%;
     --foreground: 0 0% 96%;
-    --card: 265 25% 12%;
+    --card: 200 25% 14%;
     --card-foreground: 0 0% 96%;
-    --popover: 265 25% 12%;
+    --popover: 200 25% 14%;
     --popover-foreground: 0 0% 96%;
-    --primary: 265 85% 75%;
-    --primary-foreground: 265 30% 8%;
-    --secondary: 265 30% 18%;
+    --primary: 174 62% 55%;
+    --primary-foreground: 200 30% 10%;
+    --secondary: 200 30% 20%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 265 25% 16%;
-    --muted-foreground: 265 8% 72%;
-    --accent: 265 30% 18%;
+    --muted: 200 25% 18%;
+    --muted-foreground: 200 10% 70%;
+    --accent: 200 30% 20%;
     --accent-foreground: 0 0% 90%;
     --destructive: 0 85% 65%;
     --destructive-foreground: 0 0% 96%;
-    --border: 265 25% 22%;
-    --input: 265 25% 22%;
-    --ring: 265 85% 75%;
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 96%;
+    --border: 200 25% 24%;
+    --input: 200 25% 24%;
+    --ring: 174 62% 55%;
   }
 }
 
