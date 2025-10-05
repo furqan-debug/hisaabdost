@@ -219,9 +219,9 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
                             passwordStrength.strength <= 2 ? 'bg-destructive' :
                             passwordStrength.strength === 3 ? 'bg-orange-500' :
                             passwordStrength.strength === 4 ? 'bg-yellow-500' :
-                            'bg-success'
+                            'bg-green-500'
                           }`}
-                          style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                          style={{ width: `${Math.max(20, (passwordStrength.strength / 5) * 100)}%` }}
                         />
                       </div>
                       <span className={`text-xs font-medium ${passwordStrength.color}`}>
