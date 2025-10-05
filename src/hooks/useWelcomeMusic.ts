@@ -19,7 +19,7 @@ export function useWelcomeMusic() {
 
     // Create audio element
     const audio = new Audio('/welcome-intro.mp3');
-    audio.volume = 0.3; // Keep it subtle
+    audio.volume = 0.7; // Clear and audible
     audioRef.current = audio;
 
     // Play after a short delay
