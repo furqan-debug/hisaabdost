@@ -6,7 +6,7 @@ export function useNativeCamera() {
       console.log('Starting camera capture...');
       
       const photo = await Camera.getPhoto({
-        quality: 85,
+        quality: 100,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Camera,

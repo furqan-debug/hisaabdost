@@ -23,6 +23,7 @@ interface ServerScanResult {
   receiptUrl?: string;
   error?: string;
   isTimeout?: boolean;
+  confidence?: number;
 }
 
 /**
@@ -106,7 +107,8 @@ export async function processReceiptWithServer({
       success: true,
       items: Array.isArray(data.items) ? data.items : [],
       date: data.date || new Date().toISOString().split('T')[0],
-      total: data.total || "0.00"
+      total: data.total || "0.00",
+      confidence: data.confidence
     };
     
     // Display warnings but continue with processing

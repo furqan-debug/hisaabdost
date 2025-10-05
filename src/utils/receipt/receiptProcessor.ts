@@ -21,6 +21,24 @@ export async function processReceiptFile(
     
     console.log(`processReceiptFile: Starting to process ${file.name} (${file.size} bytes)`);
     
+    // Analyze image quality before processing
+    try {
+      const { analyzeImageQuality } = await import('./qualityDetection');
+      const qualityAnalysis = await analyzeImageQuality(file);
+      
+      console.log(`📊 Image quality analysis:`, qualityAnalysis);
+      
+      // Log warnings for poor quality but don't block
+      if (!qualityAnalysis.isAcceptable) {
+        console.warn(`⚠️ Image quality is below optimal (score: ${qualityAnalysis.score})`);
+        qualityAnalysis.issues.forEach(issue => {
+          console.warn(`  - ${issue.message}: ${issue.suggestion}`);
+        });
+      }
+    } catch (error) {
+      console.warn('Quality analysis failed, continuing anyway:', error);
+    }
+    
     // Generate file fingerprint
     const fileFingerprint = generateFileFingerprint(file);
     

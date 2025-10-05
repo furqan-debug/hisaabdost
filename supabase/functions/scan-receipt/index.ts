@@ -84,33 +84,55 @@ serve(async (req) => {
 
     console.log("🤖 Using OpenAI Vision API for OCR processing");
     
-    const prompt = `Analyze this receipt image and extract the following information in JSON format:
-    {
-      "success": true,
-      "date": "YYYY-MM-DD format",
-      "merchant": "store name",
-      "items": [
-        {
-          "description": "item name (keep concise)",
-          "amount": "0.00",
-          "category": "Food|Transportation|Shopping|Entertainment|Healthcare|Utilities|Other",
-          "paymentMethod": "Card"
-        }
-      ],
-      "total": "total amount"
-    }
-    
-    Important guidelines:
-    - Keep item descriptions concise and clear
-    - Use standard categories: Food, Transportation, Shopping, Entertainment, Healthcare, Utilities, Other
-    - Format amounts as strings with 2 decimal places
-    - If date is unclear, use today's date
-    - Extract ALL line items as separate entries
-    - Default payment method to "Card"
-    - Ensure every item has a valid amount greater than 0
-    - Do not create fake or placeholder items
-    - If you cannot read the receipt clearly, return success: false
-    - Return ONLY valid JSON, no additional text or formatting`;
+    const prompt = `You are an advanced financial document OCR system specialized in extracting data from receipts in ANY condition - including damaged, faded, crumpled, blurry, or poorly photographed receipts.
+
+  CRITICAL INSTRUCTIONS FOR CHALLENGING IMAGES:
+  - For FADED TEXT: Analyze pixel patterns and context to infer likely characters
+  - For DAMAGED/CRUMPLED receipts: Piece together visible fragments and use context to complete information
+  - For BLURRY images: Use surrounding context and common receipt patterns to make educated interpretations
+  - For POOR LIGHTING: Enhance contrast mentally and focus on detectable edges of characters
+  - Extract EVERY item/product/service listed, no matter how challenging to read
+  - If text is partially visible, provide your best interpretation based on visible portions and context
+  - Use common receipt patterns (e.g., typical item names, price formats) to fill gaps
+  - Indicate uncertainty in confidence score but ALWAYS provide an interpretation
+  
+  EXTRACTION REQUIREMENTS:
+  - Extract ALL items with individual prices, quantities, and descriptions
+  - Extract merchant/store name (or indicate "Unknown Store" if illegible)
+  - Extract date and time (or indicate "Date unclear" if illegible)
+  - Extract subtotal, tax, fees, tips, and final total
+  - Extract payment method if visible
+  - Format all amounts as numbers (e.g., "12.99" not "$12.99")
+  - Assign appropriate categories to items based on description
+  
+  CONFIDENCE SCORING:
+  - Set confidence to 0.9+ for clear, readable receipts
+  - Set confidence to 0.6-0.8 for partially damaged/faded receipts where most info is extractable
+  - Set confidence to 0.3-0.5 for heavily damaged receipts where significant interpretation is needed
+  - NEVER return confidence below 0.3 - always provide your best attempt
+  
+  Return a JSON object with this EXACT structure:
+  {
+    "success": true,
+    "merchant": "store name or 'Unknown Store'",
+    "date": "YYYY-MM-DD or 'Date unclear'",
+    "time": "HH:MM or 'Time unclear'",
+    "items": [
+      {
+        "name": "item description (partial if necessary)",
+        "quantity": 1,
+        "price": "0.00",
+        "category": "appropriate category"
+      }
+    ],
+    "subtotal": "0.00",
+    "tax": "0.00",
+    "tip": "0.00",
+    "total": "0.00",
+    "paymentMethod": "Cash|Card|Other|Unknown",
+    "confidence": 0.65,
+    "notes": "Optional: mention any significant interpretation or unclear areas"
+  }`;
 
     console.log("Making OpenAI API request...");
 
@@ -131,14 +153,14 @@ serve(async (req) => {
                 type: 'image_url',
                 image_url: {
                   url: `data:${fileType || 'image/jpeg'};base64,${file}`,
-                  detail: 'low'
+                  detail: 'high'
                 }
               }
             ]
           }
         ],
         max_tokens: 1500,
-        temperature: 0.1,
+        temperature: 0,
       }),
     });
 

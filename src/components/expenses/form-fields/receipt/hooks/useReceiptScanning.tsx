@@ -98,7 +98,7 @@ export function useReceiptScanning({
     return false;
   }, [updateProgress, endScan, onCapture, onSuccess, addExpensesToDatabase, setOpen, onCleanup]);
   
-  // Handle scan request
+  // Handle scan request with retry and enhancement logic
   const handleScanReceipt = useCallback(async () => {
     if (!file) {
       toast.error("No file selected for scanning");
@@ -107,83 +107,121 @@ export function useReceiptScanning({
     
     console.log(`Starting scan of receipt: ${file.name}`);
     
+    let currentFile = file;
+    let attemptNumber = 1;
+    const maxAttempts = 2;
+    
     try {
       startScan();
       updateProgress(5, "Preparing receipt...");
       
-      // First try server-side processing
-      try {
-        updateProgress(20, "Uploading receipt for analysis...");
-        
-        const serverResults = await processReceiptWithServer({
-          file,
-          onProgress: updateProgress,
-          onTimeout: timeoutScan,
-          onError: message => {
-            console.warn("Server processing failed:", message);
-            updateProgress(50, "Server processing failed, trying local...");
-          }
-        });
-        
-        if (serverResults.success && serverResults.items && serverResults.items.length > 0) {
-          console.log("Server scan successful:", serverResults);
+      while (attemptNumber <= maxAttempts) {
+        try {
+          const attemptLabel = attemptNumber === 1 ? "original" : "enhanced";
+          console.log(`📡 Attempt ${attemptNumber}/${maxAttempts}: Processing with ${attemptLabel} image`);
           
-          // Process successful scan results
-          const success = await handleSuccessfulScan(serverResults);
-          return success;
+          updateProgress(attemptNumber === 1 ? 20 : 30, `Analyzing receipt (${attemptLabel})...`);
+          
+          const serverResults = await processReceiptWithServer({
+            file: currentFile,
+            onProgress: updateProgress,
+            onTimeout: timeoutScan,
+            onError: message => {
+              console.warn(`Attempt ${attemptNumber} server error:`, message);
+            }
+          });
+          
+          // Check if we got good results
+          const hasValidData = serverResults.success && 
+                             serverResults.items && 
+                             serverResults.items.length > 0;
+          const confidence = serverResults.confidence || 0;
+          const hasGoodConfidence = confidence >= 0.5;
+          
+          if (hasValidData && (hasGoodConfidence || attemptNumber === maxAttempts)) {
+            console.log(`✅ Server processing successful (attempt ${attemptNumber}, confidence: ${confidence})`);
+            const success = await handleSuccessfulScan(serverResults);
+            return success;
+          }
+          
+          // If first attempt had low confidence, try with enhanced image
+          if (attemptNumber === 1 && !hasGoodConfidence && hasValidData) {
+            console.log(`⚠️ Low confidence (${confidence}), retrying with enhanced image`);
+            updateProgress(50, "Enhancing image for better accuracy...");
+            
+            // Dynamically import enhancement function
+            const { enhanceReceiptImage } = await import('@/utils/receipt/imageEnhancement');
+            currentFile = await enhanceReceiptImage(file, {
+              enhanceContrast: true,
+              sharpen: true,
+              denoise: true
+            });
+            
+            attemptNumber++;
+            continue;
+          }
+          
+          // Move to next attempt or fallback
+          if (attemptNumber < maxAttempts) {
+            attemptNumber++;
+          } else {
+            break; // Exit to try local processing
+          }
+          
+        } catch (serverError) {
+          console.error(`Attempt ${attemptNumber} failed:`, serverError);
+          
+          if (attemptNumber < maxAttempts) {
+            updateProgress(50, "Enhancing image...");
+            const { enhanceReceiptImage } = await import('@/utils/receipt/imageEnhancement');
+            currentFile = await enhanceReceiptImage(file, {
+              enhanceContrast: true,
+              sharpen: true,
+              denoise: true
+            });
+            attemptNumber++;
+          } else {
+            break; // Exit to try local processing
+          }
         }
-        
-        // Handle timeout or error from server
-        if (serverResults.isTimeout) {
-          console.log("Server scan timed out, trying local processing");
-          // Continue to local processing
-        } else if (serverResults.error) {
-          console.warn("Server returned error:", serverResults.error);
-          // Continue to local processing
-        }
-      } catch (serverError) {
-        console.error("Server scan process failed:", serverError);
-        // Continue to local processing
       }
       
-      // Try local processing as fallback
-      updateProgress(60, "Using local recognition instead...");
+      // Try local processing as final fallback
+      console.log("Attempting local processing as fallback...");
+      updateProgress(60, "Using local recognition...");
       
       try {
         const localResults = await processReceiptLocally({
-          file,
+          file: currentFile,
           onProgress: updateProgress,
           onError: errorScan
         });
         
         if (localResults.success && localResults.items && localResults.items.length > 0) {
           console.log("Local processing successful:", localResults);
-          
-          // Process successful scan results
           const success = await handleSuccessfulScan(localResults);
           return success;
-        } else {
-          // Handle error with fallback
-          console.error("Both server and local processing failed");
-          
-          // Use fallback items
-          const fallbackData = {
-            success: true,
-            items: createFallbackItems({ date: localResults.date }),
-            date: localResults.date || new Date().toISOString().split('T')[0]
-          };
-          
-          const success = await handleSuccessfulScan(fallbackData);
-          if (!success) {
-            errorScan("Failed to add items to your expenses");
-          }
-          return success;
         }
+        
+        // Use fallback items as last resort
+        const fallbackData = {
+          success: true,
+          items: createFallbackItems({ date: localResults.date }),
+          date: localResults.date || new Date().toISOString().split('T')[0]
+        };
+        
+        const success = await handleSuccessfulScan(fallbackData);
+        if (!success) {
+          errorScan("Failed to add items to your expenses");
+        }
+        return success;
+        
       } catch (localError) {
-        console.error("Local processing also failed:", localError);
-        errorScan("Both server and local processing failed. Please try again.");
+        console.error("Local processing failed:", localError);
+        errorScan("Unable to process receipt. Please try a clearer photo.");
         return false;
       }
+      
     } catch (error) {
       console.error("Receipt scanning error:", error);
       errorScan("An unexpected error occurred while scanning");
