@@ -123,10 +123,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update the user's password
+    // Update the user's password and confirm their email
+    // Since they've proven they have access to their email by entering the reset code
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
-      { password: newPassword }
+      { 
+        password: newPassword,
+        email_confirm: true // Confirm email since they verified the reset code
+      }
     );
 
     if (updateError) {
@@ -137,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("✅ Password updated successfully");
+    console.log("✅ Password updated and email confirmed successfully");
 
     // Mark the reset code as used
     const { error: markUsedError } = await supabaseAdmin
