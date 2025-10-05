@@ -1,11 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { RefreshCw, CheckCircle, XCircle } from "lucide-react";
-import { motion } from "framer-motion";
 
 type VerificationFormProps = {
   email: string;
@@ -22,28 +17,24 @@ export const VerificationForm = ({
 }: VerificationFormProps) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [verificationError, setVerificationError] = useState("");
-  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!verificationCode || verificationCode.length !== 6) {
-      setVerificationError("Please enter a valid 6-digit verification code");
+      setError("Please enter a valid 6-digit code");
       return;
     }
 
     setLoading(true);
-    setVerificationError("");
+    setError("");
 
     try {
       await onVerify(verificationCode);
-      setVerificationSuccess(true);
     } catch (error: any) {
-      setVerificationError(error.message || "Verification failed. Please try again.");
-      setVerificationSuccess(false);
+      setError(error.message || "Verification failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,10 +43,8 @@ export const VerificationForm = ({
   const handleResendCode = async () => {
     if (resendCooldown > 0) return;
 
-    setResendLoading(true);
     try {
       await onResend();
-
       setResendCooldown(60);
       const interval = setInterval(() => {
         setResendCooldown((prev) => {
@@ -68,23 +57,24 @@ export const VerificationForm = ({
       }, 1000);
     } catch (error) {
       // Error is handled elsewhere
-    } finally {
-      setResendLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="otp" className="text-center block">
-          Enter the 6-digit verification code sent to {email}
-        </Label>
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground text-center">
+          Enter the 6-digit code sent to {email}
+        </p>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center">
           <InputOTP
             maxLength={6}
             value={verificationCode}
-            onChange={(val) => setVerificationCode(val)}
+            onChange={(val) => {
+              setVerificationCode(val);
+              setError("");
+            }}
             inputMode="numeric"
             pattern="\d*"
           >
@@ -96,78 +86,46 @@ export const VerificationForm = ({
           </InputOTP>
         </div>
 
-        {verificationError && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex p-3 mt-2 rounded-md bg-destructive/10 text-destructive items-start gap-3"
-          >
-            <XCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-            <p className="text-sm">{verificationError}</p>
-          </motion.div>
+        {error && (
+          <p className="text-sm text-destructive text-center">{error}</p>
         )}
 
-        {verificationSuccess && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex p-3 mt-2 rounded-md bg-primary/10 text-primary items-start gap-3"
-          >
-            <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-            <p className="text-sm">Verification successful! Redirecting you to dashboard...</p>
-          </motion.div>
+        {resendCooldown === 0 ? (
+          <p className="text-sm text-muted-foreground text-center">
+            Didn't receive code?{" "}
+            <button
+              type="button"
+              onClick={handleResendCode}
+              className="text-primary hover:underline font-medium"
+            >
+              Resend
+            </button>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center">
+            Resend code in {resendCooldown}s
+          </p>
         )}
       </div>
 
-      <div className="flex flex-col space-y-4">
+      <div className="space-y-3">
         <Button
           type="submit"
           className="w-full"
-          disabled={loading || verificationSuccess || verificationCode.length !== 6}
+          disabled={loading || verificationCode.length !== 6}
         >
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <span>Verifying...</span>
-            </div>
-          ) : (
-            "Verify Email"
-          )}
+          {loading ? "Verifying..." : "Verify"}
         </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center gap-2"
-          onClick={handleResendCode}
-          disabled={resendLoading || resendCooldown > 0}
-        >
-          {resendLoading ? (
-            <>
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-primary animate-spin"></div>
-              <span>Sending...</span>
-            </>
-          ) : resendCooldown > 0 ? (
-            <>
-              <RefreshCw className="h-4 w-4" />
-              <span>Resend code ({resendCooldown}s)</span>
-            </>
-          ) : (
-            <>
-              <RefreshCw className="h-4 w-4" />
-              <span>Resend code</span>
-            </>
-          )}
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full"
-          onClick={onBackToLogin}
-        >
-          Back to login
-        </Button>
+        <p className="text-sm text-center">
+          <button
+            type="button"
+            onClick={onBackToLogin}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Back to login
+          </button>
+        </p>
       </div>
     </form>
   );
