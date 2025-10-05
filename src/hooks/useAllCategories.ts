@@ -1,24 +1,26 @@
 import { useMemo } from 'react';
+import { LucideIcon } from 'lucide-react';
 import { useCustomCategories } from './useCustomCategories';
-import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
-import { getCategoryColor } from '@/utils/chartUtils';
+import { DEFAULT_CATEGORIES, getCategoryColor } from '@/config/categories';
 
 export interface CategoryOption {
   value: string;
   label: string;
   color: string;
   isCustom: boolean;
+  icon?: LucideIcon;
 }
 
 export function useAllCategories() {
   const { categories: customCategories, loading } = useCustomCategories();
 
   const allCategories = useMemo(() => {
-    const defaultCategories: CategoryOption[] = EXPENSE_CATEGORIES.map(cat => ({
-      value: cat,
-      label: cat,
-      color: getCategoryColor(cat),
-      isCustom: false
+    const defaultCategories: CategoryOption[] = DEFAULT_CATEGORIES.map(cat => ({
+      value: cat.name,
+      label: cat.name,
+      color: cat.color,
+      isCustom: false,
+      icon: cat.icon
     }));
 
     const customCategoriesFormatted: CategoryOption[] = customCategories.map(cat => ({

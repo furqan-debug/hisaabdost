@@ -113,7 +113,7 @@ export const formatReceiptItem = (item: {
     description: formatSafeDescription(item.description),
     amount: formatSafeAmount(item.amount),
     date: formatSafeDate(item.date || defaultDate || ''),
-    category: item.category || "Other",
+    category: item.category || "Miscellaneous",
     paymentMethod: item.paymentMethod || "Card"
   };
 };
@@ -122,9 +122,8 @@ export const formatReceiptItem = (item: {
 export const guessCategoryFromDescription = (description: string): string => {
   const lowerDesc = description.toLowerCase();
   
-  // Food and groceries
+  // Groceries (supermarkets)
   if (lowerDesc.includes('grocer') || 
-      lowerDesc.includes('food') || 
       lowerDesc.includes('supermarket') ||
       lowerDesc.includes('market') ||
       lowerDesc.includes('mart') ||
@@ -135,19 +134,42 @@ export const guessCategoryFromDescription = (description: string): string => {
       lowerDesc.includes('carrefour') ||
       lowerDesc.includes('edeka') ||
       lowerDesc.includes('kaufland') ||
-      lowerDesc.includes('rewe')) {
+      lowerDesc.includes('rewe') ||
+      lowerDesc.includes('walmart') ||
+      lowerDesc.includes('target')) {
     return "Groceries";
   }
   
-  // Restaurants and dining
+  // Food & Dining (restaurants, cafes)
   if (lowerDesc.includes('restaurant') || 
       lowerDesc.includes('cafe') || 
       lowerDesc.includes('bar') ||
-      lowerDesc.includes('food') ||
       lowerDesc.includes('burger') ||
       lowerDesc.includes('pizza') ||
-      lowerDesc.includes('coffee')) {
-    return "Dining";
+      lowerDesc.includes('coffee') ||
+      lowerDesc.includes('starbucks') ||
+      lowerDesc.includes('mcdonald') ||
+      lowerDesc.includes('dining') ||
+      lowerDesc.includes('takeout') ||
+      lowerDesc.includes('takeaway')) {
+    return "Food & Dining";
+  }
+  
+  // Housing
+  if (lowerDesc.includes('rent') ||
+      lowerDesc.includes('mortgage') ||
+      lowerDesc.includes('property') ||
+      lowerDesc.includes('landlord')) {
+    return "Housing";
+  }
+  
+  // Utilities & Bills
+  if (lowerDesc.includes('electric') ||
+      lowerDesc.includes('water') ||
+      lowerDesc.includes('internet') ||
+      lowerDesc.includes('utility') ||
+      lowerDesc.includes('bill')) {
+    return "Utilities & Bills";
   }
   
   // Transportation
@@ -156,9 +178,67 @@ export const guessCategoryFromDescription = (description: string): string => {
       lowerDesc.includes('petrol') ||
       lowerDesc.includes('taxi') ||
       lowerDesc.includes('uber') ||
+      lowerDesc.includes('lyft') ||
       lowerDesc.includes('train') ||
-      lowerDesc.includes('transport')) {
+      lowerDesc.includes('bus') ||
+      lowerDesc.includes('transport') ||
+      lowerDesc.includes('parking')) {
     return "Transportation";
+  }
+  
+  // Health & Fitness
+  if (lowerDesc.includes('pharmacy') ||
+      lowerDesc.includes('doctor') ||
+      lowerDesc.includes('hospital') ||
+      lowerDesc.includes('gym') ||
+      lowerDesc.includes('fitness') ||
+      lowerDesc.includes('medical')) {
+    return "Health & Fitness";
+  }
+  
+  // Education
+  if (lowerDesc.includes('school') ||
+      lowerDesc.includes('university') ||
+      lowerDesc.includes('tuition') ||
+      lowerDesc.includes('course') ||
+      lowerDesc.includes('book store')) {
+    return "Education";
+  }
+  
+  // Subscriptions
+  if (lowerDesc.includes('subscription') ||
+      lowerDesc.includes('netflix') ||
+      lowerDesc.includes('spotify') ||
+      lowerDesc.includes('streaming') ||
+      lowerDesc.includes('membership')) {
+    return "Subscriptions";
+  }
+  
+  // Entertainment
+  if (lowerDesc.includes('cinema') ||
+      lowerDesc.includes('movie') ||
+      lowerDesc.includes('theater') ||
+      lowerDesc.includes('game') ||
+      lowerDesc.includes('concert') ||
+      lowerDesc.includes('event')) {
+    return "Entertainment";
+  }
+  
+  // Travel
+  if (lowerDesc.includes('flight') ||
+      lowerDesc.includes('hotel') ||
+      lowerDesc.includes('airbnb') ||
+      lowerDesc.includes('travel') ||
+      lowerDesc.includes('vacation')) {
+    return "Travel";
+  }
+  
+  // Personal Care
+  if (lowerDesc.includes('salon') ||
+      lowerDesc.includes('spa') ||
+      lowerDesc.includes('barber') ||
+      lowerDesc.includes('beauty')) {
+    return "Personal Care";
   }
   
   // Shopping
@@ -166,10 +246,11 @@ export const guessCategoryFromDescription = (description: string): string => {
       lowerDesc.includes('shop') || 
       lowerDesc.includes('mall') ||
       lowerDesc.includes('retail') ||
-      lowerDesc.includes('purchase')) {
+      lowerDesc.includes('amazon') ||
+      lowerDesc.includes('ebay')) {
     return "Shopping";
   }
   
   // Default category
-  return "Other";
+  return "Miscellaneous";
 };

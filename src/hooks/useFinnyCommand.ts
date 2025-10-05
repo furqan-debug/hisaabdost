@@ -3,8 +3,9 @@ import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 import { formatCurrency } from '@/utils/formatters';
-import { EXPENSE_CATEGORIES } from '@/components/expenses/form-fields/CategoryField';
+import { getCategoryNames } from '@/config/categories';
 import { CurrencyCode } from '@/utils/currencyUtils';
+import { validateCategory as validateCategoryUtil } from '@/components/finny/utils/categoryUtils';
 
 /**
  * Hook to send commands to Finny programmatically
@@ -33,29 +34,7 @@ export function useFinnyCommand() {
   /**
    * Validate a category against allowed expense categories
    */
-  const validateCategory = (category: string): string => {
-    if (!category) return 'Miscellaneous';
-    
-    // Check for exact match
-    const exactMatch = EXPENSE_CATEGORIES.find(
-      c => c.toLowerCase() === category.toLowerCase()
-    );
-    
-    if (exactMatch) return exactMatch;
-    
-    // Look for partial matches
-    const partialMatches = EXPENSE_CATEGORIES.filter(
-      c => c.toLowerCase().includes(category.toLowerCase()) || 
-           category.toLowerCase().includes(c.toLowerCase())
-    );
-    
-    if (partialMatches.length > 0) {
-      return partialMatches[0]; // Return the first partial match
-    }
-    
-    // No match found, use miscellaneous as fallback
-    return 'Other';
-  };
+  const validateCategory = validateCategoryUtil;
 
   /**
    * Get today's date in YYYY-MM-DD format

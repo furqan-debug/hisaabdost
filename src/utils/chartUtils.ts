@@ -1,19 +1,13 @@
+import { CATEGORY_COLORS as CONFIG_COLORS, getCategoryColor as getConfigColor, LEGACY_CATEGORY_MAP } from '@/config/categories';
 
-export const CATEGORY_COLORS = {
-  "Food": "#FF6B6B",
-  "Rent": "#4ECDC4", 
-  "Utilities": "#45B7D1",
-  "Transportation": "#96CEB4",
-  "Entertainment": "#FFEAA7",
-  "Shopping": "#DDA0DD",
-  "Healthcare": "#98D8C8",
-  "Other": "#F7DC6F"
-} as const;
+export const CATEGORY_COLORS = CONFIG_COLORS;
 
 export type CategoryType = keyof typeof CATEGORY_COLORS;
 
 export const getCategoryColor = (category: string): string => {
-  return CATEGORY_COLORS[category as CategoryType] || CATEGORY_COLORS["Other"];
+  // Check legacy mapping first
+  const mappedCategory = LEGACY_CATEGORY_MAP[category] || category;
+  return getConfigColor(mappedCategory);
 };
 
 // Process expenses data for monthly charts (bar and line charts)
