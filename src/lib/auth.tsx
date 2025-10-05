@@ -134,53 +134,93 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const signInWithGoogle = async () => {
+    console.log("🟢 =============== GOOGLE SIGN-IN START ===============");
+    console.log("🟢 Timestamp:", new Date().toISOString());
+    
     try {
+      console.log("🟢 Step 1: Importing GoogleAuth module...");
       const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+      console.log("🟢 Step 1: SUCCESS - GoogleAuth module imported");
       
-      console.log("🟢 Starting native Google Sign-In...");
-      console.log("🟢 Using Web Client ID: 598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p");
+      console.log("🟢 Step 2: Initializing Google Auth...");
+      console.log("🟢 Web Client ID: 598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p");
       
-      // Initialize Google Auth (safe to call multiple times)
-      await GoogleAuth.initialize({
-        clientId: '598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      });
-      
-      console.log("🟢 Google Auth initialized successfully");
+      try {
+        await GoogleAuth.initialize({
+          clientId: '598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        });
+        console.log("🟢 Step 2: SUCCESS - Google Auth initialized");
+      } catch (initError: any) {
+        console.error("🔴 Step 2: FAILED - Initialization error");
+        console.error("🔴 Init error:", initError);
+        throw initError;
+      }
 
-      // Trigger native Google Sign-In
-      const googleUser = await GoogleAuth.signIn();
+      console.log("🟢 Step 3: Triggering native Google Sign-In dialog...");
+      let googleUser;
+      try {
+        googleUser = await GoogleAuth.signIn();
+        console.log("🟢 Step 3: SUCCESS - User signed in with Google");
+        console.log("🟢 User email:", googleUser.email);
+        console.log("🟢 User name:", googleUser.name);
+        console.log("🟢 Has ID token:", !!googleUser.authentication?.idToken);
+        console.log("🟢 ID token preview:", googleUser.authentication?.idToken?.substring(0, 50) + "...");
+      } catch (signInError: any) {
+        console.error("🔴 Step 3: FAILED - Sign-in dialog error");
+        console.error("🔴 Sign-in error:", signInError);
+        throw signInError;
+      }
       
-      console.log("🟢 Google Sign-In successful!");
-      console.log("🟢 User email:", googleUser.email);
-      console.log("🟢 Has ID token:", !!googleUser.authentication.idToken);
-      console.log("🟢 Exchanging token with Supabase...");
+      console.log("🟢 Step 4: Exchanging Google token with Supabase...");
 
       // Exchange Google ID token with Supabase
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: googleUser.authentication.idToken,
-      });
-
-      if (error) {
-        console.error("Supabase token exchange error:", error);
-        throw error;
+      let data, error;
+      try {
+        const response = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: googleUser.authentication.idToken,
+        });
+        data = response.data;
+        error = response.error;
+        
+        if (error) {
+          console.error("🔴 Step 4: FAILED - Supabase token exchange error");
+          console.error("🔴 Supabase error:", error);
+          throw error;
+        }
+        console.log("🟢 Step 4: SUCCESS - Token exchanged with Supabase");
+      } catch (exchangeError: any) {
+        console.error("🔴 Step 4: FAILED - Exception during token exchange");
+        console.error("🔴 Exchange error:", exchangeError);
+        throw exchangeError;
       }
 
       if (data.user) {
-        console.log("🟢 Successfully authenticated with Supabase!");
+        console.log("🟢 Step 5: SUCCESS - User authenticated!");
         console.log("🟢 User ID:", data.user.id);
         console.log("🟢 User email:", data.user.email);
+        console.log("🟢 =============== GOOGLE SIGN-IN COMPLETE ===============");
         toast.success("Successfully signed in with Google!");
       }
     } catch (error: any) {
-      console.error("🔴 ==================== Google Sign-In Error ====================");
-      console.error("🔴 Error object:", error);
-      console.error("🔴 Error code:", error.code);
-      console.error("🔴 Error message:", error.message);
-      console.error("🔴 Full error details:", JSON.stringify(error, null, 2));
-      console.error("🔴 ==============================================================");
+      console.error("🔴 ==================== GOOGLE SIGN-IN ERROR ====================");
+      console.error("🔴 Timestamp:", new Date().toISOString());
+      console.error("🔴 Error type:", typeof error);
+      console.error("🔴 Error constructor:", error?.constructor?.name);
+      console.error("🔴 Error code:", error?.code);
+      console.error("🔴 Error message:", error?.message);
+      console.error("🔴 Error stack:", error?.stack);
+      
+      // Try to stringify the full error object
+      try {
+        console.error("🔴 Full error (stringified):", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      } catch (stringifyError) {
+        console.error("🔴 Could not stringify error:", stringifyError);
+      }
+      
+      console.error("🔴 ===============================================================");
       
       let errorMessage = "Failed to sign in with Google";
       
