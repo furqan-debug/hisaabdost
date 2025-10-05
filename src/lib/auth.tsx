@@ -10,7 +10,6 @@ interface AuthContextType {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ email: string } | undefined>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
@@ -26,7 +25,6 @@ const AUTH_FALLBACK: AuthContextType = {
   loading: true,
   signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
   signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
-  signInWithGoogle: async () => { throw new Error('AuthProvider not mounted'); },
   signUp: async () => { throw new Error('AuthProvider not mounted'); },
   signOut: async () => { throw new Error('AuthProvider not mounted'); },
   verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
@@ -50,7 +48,6 @@ export const useAuth = () => {
       loading: true,
       signInWithEmail: async () => { throw new Error('AuthProvider not mounted'); },
       signInWithPhone: async () => { throw new Error('AuthProvider not mounted'); },
-      signInWithGoogle: async () => { throw new Error('AuthProvider not mounted'); },
       signUp: async () => { throw new Error('AuthProvider not mounted'); },
       signOut: async () => { throw new Error('AuthProvider not mounted'); },
       verifyOtp: async () => { throw new Error('AuthProvider not mounted'); },
@@ -134,57 +131,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
 
-  const signInWithGoogle = async () => {
-    try {
-      console.log("🔐 Starting Google OAuth sign in");
-
-      // Check if we're on a native platform
-      const { Capacitor } = await import('@capacitor/core');
-      const platform = Capacitor.getPlatform();
-      console.log("🔐 Platform detected:", platform);
-
-      // Use OAuth flow for both web and native
-      const { Browser } = await import('@capacitor/browser');
-      
-      const redirectUrl = platform === 'web' 
-        ? `${window.location.origin}/auth`
-        : 'com.hisaabdost.app://login-callback';
-
-      console.log("🔐 Using OAuth flow with redirect:", redirectUrl);
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-
-      if (error) {
-        console.error("🔐 OAuth error:", error);
-        throw error;
-      }
-
-      if (data?.url && platform !== 'web') {
-        // Open browser for native platforms
-        console.log("🔐 Opening browser for OAuth on native platform");
-        await Browser.open({ 
-          url: data.url,
-          windowName: '_self'
-        });
-      }
-
-      console.log("🔐 OAuth initiated successfully");
-      toast.success("Opening Google sign in...");
-    } catch (error: any) {
-      console.error("🔐 Google sign in error:", error);
-      toast.error(error.message || "Failed to sign in with Google");
-      throw error;
-    }
-  };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
@@ -412,7 +358,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     signInWithEmail,
     signInWithPhone,
-    signInWithGoogle,
     signUp,
     signOut,
     verifyOtp,
