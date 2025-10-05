@@ -135,9 +135,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) {
       console.error("❌ Error updating password:", updateError);
+      
+      // Check if it's a weak password error
+      if (updateError.message?.includes('weak') || updateError.message?.includes('pwned')) {
+        return new Response(
+          JSON.stringify({ 
+            error: "This password is too weak or has been exposed in data breaches. Please choose a stronger, unique password." 
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Pass through the actual error message from Supabase
       return new Response(
-        JSON.stringify({ error: "Failed to update password" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: updateError.message || "Failed to update password" }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
