@@ -10,11 +10,78 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 
+// Common weak passwords to check against
+const commonWeakPasswords = [
+  'password', '123456', '12345678', 'qwerty', 'abc123', 
+  'monkey', '1234567', 'letmein', 'trustno1', 'dragon',
+  'baseball', 'iloveyou', 'master', 'sunshine', 'ashley',
+  'bailey', 'shadow', '123123', '654321', 'superman'
+];
+
 const signUpSchema = z.object({
   fullName: z.string().min(2, "Please enter your full name"),
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .refine((password) => {
+      // Check if password is in common weak passwords list
+      return !commonWeakPasswords.includes(password.toLowerCase());
+    }, "Password is known to be weak and easy to guess, please choose a different one"),
 });
+
+// Password strength checker
+const checkPasswordStrength = (password: string) => {
+  if (!password) return { strength: 0, feedback: [], color: 'text-muted-foreground', label: '' };
+  
+  let strength = 0;
+  const feedback: string[] = [];
+  
+  // Length check
+  if (password.length >= 8) strength += 1;
+  else feedback.push("Use at least 8 characters");
+  
+  // Uppercase check
+  if (/[A-Z]/.test(password)) strength += 1;
+  else feedback.push("Add uppercase letters (A-Z)");
+  
+  // Lowercase check
+  if (/[a-z]/.test(password)) strength += 1;
+  else feedback.push("Add lowercase letters (a-z)");
+  
+  // Number check
+  if (/[0-9]/.test(password)) strength += 1;
+  else feedback.push("Add numbers (0-9)");
+  
+  // Special character check
+  if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+  else feedback.push("Add special characters (!@#$%^&*)");
+  
+  // Check for common weak passwords
+  if (commonWeakPasswords.includes(password.toLowerCase())) {
+    strength = 0;
+    feedback.push("This is a commonly used password. Please choose something more unique.");
+  }
+  
+  // Determine color and label
+  let color = 'text-muted-foreground';
+  let label = '';
+  
+  if (strength <= 2) {
+    color = 'text-destructive';
+    label = 'Weak';
+  } else if (strength === 3) {
+    color = 'text-orange-500';
+    label = 'Fair';
+  } else if (strength === 4) {
+    color = 'text-yellow-500';
+    label = 'Good';
+  } else {
+    color = 'text-success';
+    label = 'Strong';
+  }
+  
+  return { strength, feedback, color, label };
+};
 
 type SignUpFormProps = {
   onLoginClick: () => void;
@@ -26,6 +93,12 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ 
+    strength: 0, 
+    feedback: [] as string[], 
+    color: 'text-muted-foreground',
+    label: ''
+  });
 
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
@@ -115,6 +188,10 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
                       autoComplete="new-password"
                       className="pr-10"
                       {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setPasswordStrength(checkPasswordStrength(e.target.value));
+                      }}
                     />
                   </FormControl>
                   <Button
@@ -131,6 +208,41 @@ export const SignUpForm = ({ onLoginClick, onSignUpSuccess }: SignUpFormProps) =
                     )}
                   </Button>
                 </div>
+                
+                {/* Password strength indicator */}
+                {field.value && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-300 ${
+                            passwordStrength.strength <= 2 ? 'bg-destructive' :
+                            passwordStrength.strength === 3 ? 'bg-orange-500' :
+                            passwordStrength.strength === 4 ? 'bg-yellow-500' :
+                            'bg-success'
+                          }`}
+                          style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs font-medium ${passwordStrength.color}`}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+                    
+                    {/* Password suggestions */}
+                    {passwordStrength.feedback.length > 0 && (
+                      <div className="text-xs text-destructive space-y-1">
+                        <p className="font-medium">To make your password stronger:</p>
+                        <ul className="list-disc list-inside space-y-0.5 ml-1">
+                          {passwordStrength.feedback.map((tip, index) => (
+                            <li key={index}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 <FormMessage />
               </FormItem>
             )}
