@@ -38,13 +38,25 @@ export function useDashboardActions() {
   };
 
   const handleUploadReceipt = () => {
-    console.log('Dashboard: handleUploadReceipt called - navigating to expenses page with auto-expand');
-    navigate('/app/expenses?expand=upload');
+    console.log('Dashboard: handleUploadReceipt called - opening file picker');
+    setCaptureMode('upload');
+    // Trigger file input click to open file picker
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleTakePhoto = async () => {
-    console.log('Dashboard: handleTakePhoto called - navigating to expenses page with auto-expand');
-    navigate('/app/expenses?expand=camera');
+    console.log('Dashboard: handleTakePhoto called - opening camera');
+    setCaptureMode('camera');
+    // Trigger camera input or use native camera
+    const file = await handleCameraAction();
+    if (file) {
+      // File captured successfully, dispatch event to open expense form
+      window.dispatchEvent(new CustomEvent('open-expense-form', { 
+        detail: { mode: 'camera', file: file } 
+      }));
+    }
   };
 
   const handleAddBudget = () => {
