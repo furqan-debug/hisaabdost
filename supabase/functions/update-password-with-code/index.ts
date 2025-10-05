@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
       userId,
       { 
         password: newPassword,
-        email_confirmed: true // Confirm email since they verified the reset code
+        email_confirm: true // Confirm email since they verified the reset code
       }
     );
 
