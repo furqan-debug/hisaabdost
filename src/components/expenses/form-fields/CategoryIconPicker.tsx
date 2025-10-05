@@ -26,7 +26,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
       <Label>Select Category</Label>
       <div className="relative -mx-4 px-4">
         <div 
-          className="overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory"
+          className="overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory py-2"
           style={{ 
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -39,7 +39,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
             }
           `}</style>
           <div 
-            className="category-scroll grid auto-cols-[100px] gap-4 pb-1"
+            className="category-scroll grid auto-cols-[100px] gap-4 px-1 pb-1"
             style={{ 
               gridTemplateRows: 'repeat(2, minmax(0, 1fr))',
               gridAutoFlow: 'column',
@@ -55,16 +55,21 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                   type="button"
                   onClick={() => onChange(cat.value)}
                   className={cn(
-                    "snap-start flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-200",
+                    "relative snap-start flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
                     "hover:scale-105 active:scale-95 w-[100px] h-[100px]",
                     isSelected 
-                      ? "bg-primary/5 ring-2 ring-primary shadow-sm" 
+                      ? "bg-primary/5 shadow-lg" 
                       : "bg-muted/50 hover:bg-muted"
                   )}
+                  style={{
+                    boxShadow: isSelected 
+                      ? `0 0 0 2px ${cat.color}` 
+                      : 'none'
+                  }}
                 >
                   <div 
                     className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200",
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300",
                       isSelected ? "scale-110" : ""
                     )}
                     style={{ 
@@ -73,7 +78,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                   >
                     {Icon ? (
                       <Icon 
-                        className="w-6 h-6" 
+                        className="w-6 h-6 transition-all duration-300" 
                         style={{ color: isSelected ? "#fff" : cat.color }} 
                       />
                     ) : (
@@ -84,9 +89,12 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                     )}
                   </div>
                   <span className={cn(
-                    "text-[10px] font-medium text-center leading-tight line-clamp-2 w-full px-1",
-                    isSelected ? "text-primary font-semibold" : "text-muted-foreground"
-                  )}>
+                    "text-[10px] font-medium text-center leading-tight line-clamp-2 w-full px-1 transition-all duration-300",
+                    isSelected ? "font-semibold" : "text-muted-foreground"
+                  )}
+                  style={{
+                    color: isSelected ? cat.color : undefined
+                  }}>
                     {cat.label}
                   </span>
                   {cat.isCustom && (
@@ -100,8 +108,8 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
           </div>
         </div>
         {/* Fade indicators */}
-        <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-background via-background to-transparent pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-background via-background to-transparent pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background to-transparent pointer-events-none" />
       </div>
     </div>
   );
