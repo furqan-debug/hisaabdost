@@ -24,6 +24,7 @@ import Expenses from "@/pages/Expenses";
 import FinnyChat from "@/pages/FinnyChat";
 import Goals from "@/pages/Goals";
 import History from "@/pages/History";
+import Loans from "@/pages/Loans";
 import ManageCategories from "@/pages/ManageCategories";
 import ManageFunds from "@/pages/ManageFunds";
 import Settings from "@/pages/Settings";
@@ -70,17 +71,18 @@ const App = () => {
                             <Layout />
                           </ProtectedRoute>
                         }>
-                          <Route path="dashboard" element={<Dashboard />} />
-                          <Route path="analytics" element={<Analytics />} />
-                          <Route path="expenses" element={<Expenses />} />
-                          <Route path="budget" element={<Budget />} />
-                          <Route path="goals" element={<Goals />} />
-                          <Route path="history" element={<History />} />
-                          <Route path="settings" element={<Settings />} />
-                          <Route path="finny-chat" element={<FinnyChat />} />
-                          <Route path="guide" element={<AppGuide />} />
-                          <Route path="manage-categories" element={<ManageCategories />} />
-                          <Route path="manage-funds" element={<ManageFunds />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="expenses" element={<Expenses />} />
+          <Route path="budget" element={<Budget />} />
+          <Route path="goals" element={<Goals />} />
+          <Route path="loans" element={<Loans />} />
+          <Route path="history" element={<History />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="finny-chat" element={<FinnyChat />} />
+          <Route path="guide" element={<AppGuide />} />
+          <Route path="manage-categories" element={<ManageCategories />} />
+          <Route path="manage-funds" element={<ManageFunds />} />
                         </Route>
                         
                         {/* Default redirects */}
