@@ -39,8 +39,8 @@ export default function Welcome() {
         duration: 0.6
       }} className="flex justify-center">
           <div className="relative">
-            <div className="absolute inset-0 bg-white/30 rounded-full blur-2xl scale-150" />
-            <div className="relative bg-white rounded-2xl p-8 shadow-xl py-[14px] px-[17px]">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl scale-150" />
+            <div className="relative bg-white rounded-[2rem] p-8 shadow-xl py-[14px] px-[17px]">
               <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost" className="w-28 h-28 md:w-36 md:h-36 object-contain" />
             </div>
           </div>
