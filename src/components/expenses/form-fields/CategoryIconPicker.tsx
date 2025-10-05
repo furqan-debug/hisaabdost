@@ -56,41 +56,39 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                   onClick={() => onChange(cat.value)}
                   className={cn(
                     "relative snap-start flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
-                    "hover:scale-105 active:scale-95 w-[100px] h-[100px]",
+                    "active:scale-90 w-[100px] h-[100px]",
                     isSelected 
-                      ? "bg-primary/5 shadow-lg" 
-                      : "bg-muted/50 hover:bg-muted"
+                      ? "bg-primary/5 scale-105 shadow-md" 
+                      : "bg-muted/50 hover:bg-muted hover:scale-102"
                   )}
-                  style={{
-                    boxShadow: isSelected 
-                      ? `0 0 0 2px ${cat.color}` 
-                      : 'none'
-                  }}
                 >
                   <div 
                     className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300",
-                      isSelected ? "scale-110" : ""
+                      "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300",
+                      isSelected ? "" : ""
                     )}
                     style={{ 
-                      backgroundColor: isSelected ? cat.color : `${cat.color}15`,
+                      backgroundColor: cat.color,
+                      opacity: isSelected ? 1 : 0.2,
                     }}
                   >
                     {Icon ? (
                       <Icon 
-                        className="w-6 h-6 transition-all duration-300" 
-                        style={{ color: isSelected ? "#fff" : cat.color }} 
+                        className="w-7 h-7 transition-all duration-300" 
+                        style={{ 
+                          color: "#fff",
+                          strokeWidth: isSelected ? 2.5 : 2
+                        }} 
                       />
                     ) : (
                       <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: cat.color }}
+                        className="w-5 h-5 rounded-full bg-white"
                       />
                     )}
                   </div>
                   <span className={cn(
-                    "text-[10px] font-medium text-center leading-tight line-clamp-2 w-full px-1 transition-all duration-300",
-                    isSelected ? "font-semibold" : "text-muted-foreground"
+                    "text-[11px] text-center leading-tight line-clamp-2 w-full px-1 transition-all duration-300",
+                    isSelected ? "font-bold" : "font-medium text-muted-foreground"
                   )}
                   style={{
                     color: isSelected ? cat.color : undefined
