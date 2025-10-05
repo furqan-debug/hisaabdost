@@ -38,7 +38,7 @@ export default function Welcome() {
               <img
                 src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
                 alt="Hisaab Dost"
-                className="w-20 h-20 md:w-24 md:h-24 object-contain"
+                className="w-28 h-28 md:w-36 md:h-36 object-contain"
               />
             </div>
           </div>
