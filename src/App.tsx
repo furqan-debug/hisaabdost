@@ -16,6 +16,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Import pages
 import Auth from "@/pages/Auth";
+import Welcome from "@/pages/Welcome";
 import Dashboard from "@/pages/Dashboard";
 import Analytics from "@/pages/Analytics";
 import AppGuide from "@/pages/AppGuide";
@@ -32,6 +33,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useFirstTimeVisit } from "@/hooks/useFirstTimeVisit";
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -44,6 +46,24 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const RootRedirect = () => {
+  const { isFirstVisit, isLoading } = useFirstTimeVisit();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (isFirstVisit) {
+    return <Navigate to="/welcome" replace />;
+  }
+
+  return (
+    <ProtectedRoute>
+      <Navigate to="/app/dashboard" replace />
+    </ProtectedRoute>
+  );
+};
 
 const App = () => {
   console.log('🚀 App component rendering with full functionality...');
@@ -61,6 +81,9 @@ const App = () => {
                       <FinnyProvider>
                       <BrowserRouter>
                       <Routes>
+                        {/* Welcome route for first-time visitors */}
+                        <Route path="/welcome" element={<Welcome />} />
+                        
                         {/* Public routes */}
                         <Route path="/auth" element={<Auth />} />
                         
@@ -86,7 +109,7 @@ const App = () => {
                         </Route>
                         
                         {/* Default redirects */}
-                        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+                        <Route path="/" element={<RootRedirect />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </BrowserRouter>
