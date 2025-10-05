@@ -217,19 +217,32 @@ serve(async (req) => {
         throw new Error('No items found in receipt');
       }
       
-      // Validate each item
+      // Validate and normalize each item (support both old and new field names)
       const validItems = parsedData.items.filter((item: any) => {
-        return item.description && 
-               item.amount && 
-               !isNaN(parseFloat(item.amount)) && 
-               parseFloat(item.amount) > 0;
+        // Support both 'name'/'description' and 'price'/'amount' field names
+        const description = item.name || item.description;
+        const amount = item.price || item.amount;
+        
+        return description && 
+               amount && 
+               !isNaN(parseFloat(amount)) && 
+               parseFloat(amount) > 0;
+      }).map((item: any) => {
+        // Normalize to standard field names
+        return {
+          description: item.name || item.description,
+          amount: item.price || item.amount,
+          date: item.date || parsedData.date || new Date().toISOString().split('T')[0],
+          category: item.category || 'Other',
+          paymentMethod: item.paymentMethod || parsedData.paymentMethod || 'Card'
+        };
       });
       
       if (validItems.length === 0) {
         throw new Error('No valid items with amounts found in receipt');
       }
       
-      // Update the parsed data with only valid items
+      // Update the parsed data with normalized items
       parsedData.items = validItems;
       
       console.log(`✅ OpenAI processing successful: ${validItems.length} valid items found`);
