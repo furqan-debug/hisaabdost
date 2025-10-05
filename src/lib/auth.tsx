@@ -174,10 +174,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       console.log("🟢 Step 4: Exchanging Google token with Supabase...");
+      console.log("🟢 Using DEBUG function for detailed logging");
 
-      // Exchange Google ID token with Supabase
+      // Use debug function for detailed server-side logging
       let data, error;
       try {
+        const debugResponse = await supabase.functions.invoke('debug-google-auth', {
+          body: {
+            idToken: googleUser.authentication.idToken,
+            email: googleUser.email,
+            name: googleUser.name,
+          }
+        });
+
+        console.log("🟢 Debug function response:", debugResponse);
+
+        if (debugResponse.error) {
+          console.error("🔴 Debug function error:", debugResponse.error);
+          throw debugResponse.error;
+        }
+
+        if (!debugResponse.data?.success) {
+          console.error("🔴 Debug function returned failure:", debugResponse.data);
+          throw new Error(debugResponse.data?.error || 'Authentication failed');
+        }
+
+        console.log("🟢 Step 4: SUCCESS - Token exchanged via debug function");
+        
+        // Now do the actual auth exchange
         const response = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: googleUser.authentication.idToken,
@@ -190,7 +214,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error("🔴 Supabase error:", error);
           throw error;
         }
-        console.log("🟢 Step 4: SUCCESS - Token exchanged with Supabase");
+        console.log("🟢 Step 4: SUCCESS - Final auth exchange complete");
       } catch (exchangeError: any) {
         console.error("🔴 Step 4: FAILED - Exception during token exchange");
         console.error("🔴 Exchange error:", exchangeError);
