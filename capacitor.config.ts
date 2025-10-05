@@ -38,10 +38,10 @@ const config: CapacitorConfig = {
   
   // Enhanced plugin configuration for production
   plugins: {
-    GoogleAuth: {
-      scopes: ['profile', 'email'],
-      serverClientId: '710406899937-17i02ugt257097607tns748cvj1o64g7.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true,
+    CapacitorSocialLogin: {
+      google: {
+        webClientId: '710406899937-17i02ugt257097607tns748cvj1o64g7.apps.googleusercontent.com',
+      }
     },
     CapacitorHttp: {
       enabled: true

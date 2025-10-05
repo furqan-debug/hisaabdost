@@ -134,56 +134,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const signInWithGoogle = async () => {
-    console.log("🟢 =============== GOOGLE SIGN-IN START ===============");
+    console.log("🟢 =============== GOOGLE SIGN-IN START (New Plugin) ===============");
     console.log("🟢 Timestamp:", new Date().toISOString());
     
     try {
-      console.log("🟢 Step 1: Importing GoogleAuth module...");
-      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-      console.log("🟢 Step 1: SUCCESS - GoogleAuth module imported");
+      console.log("🟢 Step 1: Importing SocialLogin module...");
+      const { SocialLogin } = await import('@capgo/capacitor-social-login');
+      console.log("🟢 Step 1: SUCCESS - SocialLogin module imported");
       
-      console.log("🟢 Step 2: Initializing Google Auth...");
-      console.log("🟢 Web Client ID: 598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p");
+      console.log("🟢 Step 2: Initializing and signing in with Google...");
+      const result = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          scopes: ['email', 'profile'],
+        }
+      });
       
-      try {
-        await GoogleAuth.initialize({
-          clientId: '710406899937-17i02ugt257097607tns748cvj1o64g7.apps.googleusercontent.com',
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: true,
-        });
-        console.log("🟢 Step 2: SUCCESS - Google Auth initialized");
-      } catch (initError: any) {
-        console.error("🔴 Step 2: FAILED - Initialization error");
-        console.error("🔴 Init error:", initError);
-        throw initError;
+      console.log("🟢 Step 2: SUCCESS - Got Google response");
+      console.log("🟢 Full Google response:", JSON.stringify(result, null, 2));
+
+      // The response structure varies, so we need to check what we got
+      const response = result.result;
+      let idToken: string | undefined;
+      let userEmail: string | undefined;
+      let userName: string | undefined;
+
+      // Check for different response structures
+      if ('accessToken' in response && response.accessToken) {
+        idToken = response.accessToken.token;
+        userEmail = 'profile' in response ? response.profile?.email : undefined;
+        userName = 'profile' in response ? response.profile?.name : undefined;
       }
 
-      console.log("🟢 Step 3: Triggering native Google Sign-In dialog...");
-      let googleUser;
-      try {
-        googleUser = await GoogleAuth.signIn();
-        console.log("🟢 Step 3: SUCCESS - User signed in with Google");
-        console.log("🟢 User email:", googleUser.email);
-        console.log("🟢 User name:", googleUser.name);
-        console.log("🟢 Has ID token:", !!googleUser.authentication?.idToken);
-        console.log("🟢 ID token preview:", googleUser.authentication?.idToken?.substring(0, 50) + "...");
-      } catch (signInError: any) {
-        console.error("🔴 Step 3: FAILED - Sign-in dialog error");
-        console.error("🔴 Sign-in error:", signInError);
-        throw signInError;
+      console.log("🟢 Extracted data:", {
+        hasIdToken: !!idToken,
+        email: userEmail,
+        name: userName,
+      });
+
+      if (!idToken) {
+        console.error("🔴 Step 2: FAILED - No access token received from Google");
+        console.error("🔴 Response structure:", response);
+        throw new Error('No access token received from Google');
       }
       
-      console.log("🟢 Step 4: Exchanging Google token with Supabase...");
+      console.log("🟢 ID token preview:", idToken.substring(0, 50) + "...");
+      
+      console.log("🟢 Step 3: Exchanging Google token with Supabase...");
       console.log("🟢 Using DEBUG function for detailed logging");
 
       // Use debug function for detailed server-side logging
-      let data, error;
       try {
         const debugResponse = await supabase.functions.invoke('debug-google-auth', {
           body: {
-            idToken: googleUser.authentication.idToken,
-            email: googleUser.email,
-            name: googleUser.name,
+            idToken: idToken,
+            email: userEmail,
+            name: userName,
           }
         });
 
@@ -199,27 +205,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error(debugResponse.data?.error || 'Authentication failed');
         }
 
-        console.log("🟢 Step 4: SUCCESS - Token exchanged via debug function");
-        
-        // Now do the actual auth exchange
-        const response = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: googleUser.authentication.idToken,
-        });
-        data = response.data;
-        error = response.error;
-        
-        if (error) {
-          console.error("🔴 Step 4: FAILED - Supabase token exchange error");
-          console.error("🔴 Supabase error:", error);
-          throw error;
-        }
-        console.log("🟢 Step 4: SUCCESS - Final auth exchange complete");
-      } catch (exchangeError: any) {
-        console.error("🔴 Step 4: FAILED - Exception during token exchange");
-        console.error("🔴 Exchange error:", exchangeError);
-        throw exchangeError;
+        console.log("🟢 Step 3: SUCCESS - Token exchanged via debug function");
+      } catch (debugError: any) {
+        console.error("🔴 Debug function failed, but continuing with auth...", debugError);
       }
+      
+      // Now do the actual auth exchange
+      console.log("🟢 Step 4: Performing Supabase auth exchange...");
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+
+      if (error) {
+        console.error("🔴 Step 4: FAILED - Supabase auth error");
+        console.error("🔴 Supabase error:", error);
+        throw error;
+      }
+      
+      console.log("🟢 Step 4: SUCCESS - Auth exchange complete");
 
       if (data.user) {
         console.log("🟢 Step 5: SUCCESS - User authenticated!");
