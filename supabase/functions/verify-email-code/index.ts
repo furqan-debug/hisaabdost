@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Confirm the user's email
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
-      { email_confirm: true }
+      { email_confirmed: true }
     );
 
     if (updateError) {
