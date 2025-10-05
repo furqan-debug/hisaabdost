@@ -38,11 +38,6 @@ const config: CapacitorConfig = {
   
   // Enhanced plugin configuration for production
   plugins: {
-    CapacitorSocialLogin: {
-      google: {
-        webClientId: '710406899937-urs5ggj98glflhu31mfao3e26sgola5g.apps.googleusercontent.com',
-      }
-    },
     CapacitorHttp: {
       enabled: true
     },

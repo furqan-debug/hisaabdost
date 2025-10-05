@@ -133,151 +133,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Helper function to generate a cryptographic nonce
-  const generateNonce = (): string => {
-    const randomValues = new Uint8Array(32);
-    crypto.getRandomValues(randomValues);
-    return Array.from(randomValues, byte => byte.toString(16).padStart(2, '0')).join('');
-  };
-
-  // Helper function to hash the nonce with SHA-256
-  const hashNonce = async (nonce: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(nonce);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-  };
 
   const signInWithGoogle = async () => {
-    console.log("🟢 =============== GOOGLE SIGN-IN START ===============");
-    console.log("🟢 Timestamp:", new Date().toISOString());
-    
     try {
-      // Check if we're on a native platform (Capacitor) or web
+      console.log("🔐 Starting Google OAuth sign in");
+
+      // Check if we're on a native platform
       const { Capacitor } = await import('@capacitor/core');
-      const isNative = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      console.log("🔐 Platform detected:", platform);
+
+      // Use OAuth flow for both web and native
+      const { Browser } = await import('@capacitor/browser');
       
-      console.log("🟢 Platform detected:", isNative ? "Native (iOS/Android)" : "Web");
-      
-      if (isNative) {
-        // NATIVE FLOW: Use Capacitor Social Login
-        console.log("🟢 Using NATIVE Google Sign-In flow");
-        
-        // STEP 1: Generate nonce for security
-        console.log("🟢 Step 1: Generating cryptographic nonce...");
-        const rawNonce = generateNonce();
-        const hashedNonce = await hashNonce(rawNonce);
-        console.log("🟢 Step 1: SUCCESS - Nonce generated");
-        
-        // STEP 2: Import SocialLogin module
-        console.log("🟢 Step 2: Importing SocialLogin module...");
-        const { SocialLogin } = await import('@capgo/capacitor-social-login');
-        console.log("🟢 Step 2: SUCCESS - SocialLogin module imported");
-        
-        // STEP 3: Sign in with Google using hashed nonce
-        console.log("🟢 Step 3: Signing in with Google (including hashed nonce)...");
-        const result = await SocialLogin.login({
-          provider: 'google',
-          options: {
-            scopes: ['email', 'profile'],
-            nonce: hashedNonce,
-          }
-        });
-      
-        console.log("🟢 Step 3: SUCCESS - Got Google response");
-        console.log("🟢 Full Google response:", JSON.stringify(result, null, 2));
+      const redirectUrl = platform === 'web' 
+        ? `${window.location.origin}/auth`
+        : 'com.hisaabdost.app://login-callback';
 
-        // Extract ID token and user info from response
-        const response = result.result as any;
-        let idToken: string | undefined;
+      console.log("🔐 Using OAuth flow with redirect:", redirectUrl);
 
-        // Look for ID token
-        if (response?.idToken) {
-          idToken = response.idToken;
-        } else if (response?.authentication?.idToken) {
-          idToken = response.authentication.idToken;
-        } else if (response?.accessToken?.token) {
-          idToken = response.accessToken.token;
-        }
-
-        if (!idToken) {
-          console.error("🔴 No ID token received from Google");
-          throw new Error('No ID token received from Google');
-        }
-        
-        // STEP 4: Exchange Google ID token with Supabase
-        console.log("🟢 Step 4: Exchanging Google ID token with Supabase...");
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: idToken,
-          nonce: rawNonce,
-        });
-
-        if (error) {
-          console.error("🔴 Supabase auth error:", error);
-          throw error;
-        }
-        
-        if (data.user) {
-          console.log("🟢 SUCCESS - User authenticated!");
-          toast.success("Successfully signed in with Google!");
-        }
-      } else {
-        // WEB FLOW: Use standard Supabase OAuth
-        console.log("🟢 Using WEB Google Sign-In flow");
-        
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            },
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
           },
-        });
+        },
+      });
 
-        if (error) {
-          console.error("🔴 Web OAuth error:", error);
-          throw error;
-        }
-        
-        console.log("🟢 Redirecting to Google OAuth...");
+      if (error) {
+        console.error("🔐 OAuth error:", error);
+        throw error;
       }
+
+      if (data?.url && platform !== 'web') {
+        // Open browser for native platforms
+        console.log("🔐 Opening browser for OAuth on native platform");
+        await Browser.open({ 
+          url: data.url,
+          windowName: '_self'
+        });
+      }
+
+      console.log("🔐 OAuth initiated successfully");
+      toast.success("Opening Google sign in...");
     } catch (error: any) {
-      console.error("🔴 ==================== GOOGLE SIGN-IN ERROR ====================");
-      console.error("🔴 Timestamp:", new Date().toISOString());
-      console.error("🔴 Error type:", typeof error);
-      console.error("🔴 Error constructor:", error?.constructor?.name);
-      console.error("🔴 Error code:", error?.code);
-      console.error("🔴 Error message:", error?.message);
-      console.error("🔴 Error stack:", error?.stack);
-      
-      // Try to stringify the full error object
-      try {
-        console.error("🔴 Full error (stringified):", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-      } catch (stringifyError) {
-        console.error("🔴 Could not stringify error:", stringifyError);
-      }
-      
-      console.error("🔴 ===============================================================");
-      
-      let errorMessage = "Failed to sign in with Google";
-      
-      if (error.message?.includes('popup_closed_by_user') || error.message?.includes('canceled')) {
-        errorMessage = "Sign in cancelled";
-      } else if (error.message?.includes('network')) {
-        errorMessage = "Network error. Please check your connection.";
-      } else if (error.code === '10' || error.message?.includes('10:')) {
-        errorMessage = "Google Sign-In not configured. Please check SHA-1 certificate and Android OAuth client in Google Cloud Console.";
-      } else if (error.code === '12500' || error.message?.includes('12500')) {
-        errorMessage = "Configuration error. Please verify package name and SHA-1 certificate match in Google Cloud Console.";
-      } else if (error.message) {
-        errorMessage = `${error.message} (Code: ${error.code || 'unknown'})`;
-      }
-      
-      toast.error(errorMessage);
+      console.error("🔐 Google sign in error:", error);
+      toast.error(error.message || "Failed to sign in with Google");
       throw error;
     }
   };
