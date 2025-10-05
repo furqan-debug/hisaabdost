@@ -176,18 +176,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const verifyOtp = async (email: string, token: string) => {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "signup"
+      console.log("Verifying custom verification code for email:", email, "code:", token);
+      
+      // Use custom verification code system
+      const { data, error } = await supabase.functions.invoke('verify-email-code', {
+        body: { email, code: token }
       });
       
-      if (error) throw error;
-      if (data.user) {
+      if (error) {
+        console.error("Custom verification failed:", error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error("Verification error:", data.error);
+        throw new Error(data.error);
+      }
+      
+      if (data?.valid) {
+        console.log("Email verification successful");
         toast.success("Email verified successfully!");
+        
+        // Refresh the session to get the updated user
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        }
       }
     } catch (error: any) {
-      toast.error(error.message || "Verification failed");
+      console.error("Verification error:", error);
+      toast.error(error.message || "Verification failed. Please check your code and try again.");
       throw error;
     }
   };
@@ -230,24 +249,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resendOtp = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-        }
+      console.log("Resending verification code to:", email);
+      
+      const { data, error } = await supabase.functions.invoke('send-verification-email', {
+        body: { email }
       });
       
       if (error) {
-        if (error.message.includes('rate limit')) {
+        console.error("Custom email error:", error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error("Verification email error:", data.error);
+        if (data.error.includes('rate limit') || data.error.includes('wait a minute')) {
           toast.warning("Please wait a moment before requesting another code.");
         } else {
-          throw error;
+          throw new Error(data.error);
         }
-      } else {
+      } else if (data?.success) {
         toast.success("New verification code sent! Please check your email.");
       }
     } catch (error: any) {
+      console.error("Resend OTP error:", error);
       toast.error(error.message || "Failed to resend verification code");
       throw error;
     }
