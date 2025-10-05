@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
 
 interface CurrencyStepProps {
   onComplete: (data: Partial<OnboardingFormData>) => void;
@@ -62,6 +63,16 @@ export function CurrencyStep({ onComplete, initialData }: CurrencyStepProps) {
       }
 
       console.log("Onboarding data saved successfully");
+      
+      // Also save monthly income to monthly_incomes table for the current month
+      if (finalFormData.monthlyIncome) {
+        console.log("Saving monthly income to monthly_incomes table:", finalFormData.monthlyIncome);
+        await MonthlyIncomeService.setMonthlyIncome(
+          user.id,
+          new Date(),
+          finalFormData.monthlyIncome
+        );
+      }
       
       // Call the parent completion handler first to close the dialog
       onComplete({ preferredCurrency: currency });
