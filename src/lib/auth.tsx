@@ -154,28 +154,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("🟢 Full Google response:", JSON.stringify(result, null, 2));
 
       // The response structure varies, so we need to check what we got
-      const response = result.result;
+      const response = result.result as any;
       let idToken: string | undefined;
       let userEmail: string | undefined;
       let userName: string | undefined;
 
-      // Check for different response structures
-      if ('accessToken' in response && response.accessToken) {
+      console.log("🟢 Full response keys:", Object.keys(response || {}));
+      console.log("🟢 Response structure:", JSON.stringify(response, null, 2));
+
+      // Look for ID token - this is what Supabase needs (NOT the access token)
+      // The plugin may return it in different locations
+      if (response?.idToken) {
+        idToken = response.idToken;
+      } else if (response?.authentication?.idToken) {
+        idToken = response.authentication.idToken;
+      } else if (response?.accessToken?.token) {
+        // Fallback to access token if no ID token found
         idToken = response.accessToken.token;
-        userEmail = 'profile' in response ? response.profile?.email : undefined;
-        userName = 'profile' in response ? response.profile?.name : undefined;
+      }
+
+      // Extract user profile info
+      if (response?.profile) {
+        userEmail = response.profile.email;
+        userName = response.profile.name || response.profile.givenName;
       }
 
       console.log("🟢 Extracted data:", {
         hasIdToken: !!idToken,
+        idTokenPreview: idToken ? idToken.substring(0, 50) + '...' : 'NONE',
         email: userEmail,
         name: userName,
       });
 
       if (!idToken) {
-        console.error("🔴 Step 2: FAILED - No access token received from Google");
+        console.error("🔴 Step 2: FAILED - No ID token received from Google");
         console.error("🔴 Response structure:", response);
-        throw new Error('No access token received from Google');
+        console.error("🔴 Available keys:", Object.keys(response || {}));
+        throw new Error('No ID token received from Google. Check console for response structure.');
       }
       
       console.log("🟢 ID token preview:", idToken.substring(0, 50) + "...");
