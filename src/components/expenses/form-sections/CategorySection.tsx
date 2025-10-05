@@ -11,6 +11,8 @@ export function CategorySection({
   formData,
   onFieldChange
 }: CategorySectionProps) {
+  console.log('CategorySection rendering with CategoryIconPicker');
+  
   return (
     <div className="space-y-4 px-[2px]">
       <DateField value={formData.date} onChange={value => onFieldChange('date', value)} />
