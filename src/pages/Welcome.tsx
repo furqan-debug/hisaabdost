@@ -1,23 +1,11 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useFirstTimeVisit } from "@/hooks/useFirstTimeVisit";
-import { useWelcomeVoice } from "@/hooks/useWelcomeVoice";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useEffect } from "react";
 export default function Welcome() {
   const navigate = useNavigate();
   const { markVisitComplete } = useFirstTimeVisit();
-  const { speak } = useWelcomeVoice();
-
-  useEffect(() => {
-    // Start voice narration after a short delay for smooth experience
-    const timer = setTimeout(() => {
-      speak();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array - only run once on mount
 
   const handleGetStarted = () => {
     markVisitComplete();
