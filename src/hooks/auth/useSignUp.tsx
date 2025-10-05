@@ -21,6 +21,15 @@ export const useSignUp = () => {
       
       if (signUpError) {
         console.error("Signup error:", signUpError);
+        
+        // Handle specific error cases with user-friendly messages
+        if (signUpError.message?.toLowerCase().includes('already registered') || 
+            signUpError.message?.toLowerCase().includes('user already exists')) {
+          const friendlyError = new Error(`This email address (${email}) is already registered. Please try signing in instead or use a different email.`);
+          toast.error(friendlyError.message);
+          throw friendlyError;
+        }
+        
         throw signUpError;
       }
 
@@ -68,7 +77,15 @@ export const useSignUp = () => {
       return { email };
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error(error.message || "Error creating account");
+      
+      // Provide user-friendly error messages
+      let errorMessage = error.message || "Error creating account";
+      
+      // Don't show toast again if we already showed it for duplicate email
+      if (!error.message?.includes('already registered')) {
+        toast.error(errorMessage);
+      }
+      
       throw error;
     }
   };
