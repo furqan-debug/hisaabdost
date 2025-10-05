@@ -3,54 +3,60 @@ import { useNavigate } from "react-router-dom";
 import { useFirstTimeVisit } from "@/hooks/useFirstTimeVisit";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-
 export default function Welcome() {
   const navigate = useNavigate();
-  const { markVisitComplete } = useFirstTimeVisit();
-
+  const {
+    markVisitComplete
+  } = useFirstTimeVisit();
   const handleGetStarted = () => {
     markVisitComplete();
     navigate("/auth");
   };
-
-  return (
-    <div className="relative min-h-screen flex items-center justify-center bg-background px-6">
+  return <div className="relative min-h-screen flex items-center justify-center bg-background px-6">
       {/* Subtle gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
       
       {/* Main content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 max-w-3xl mx-auto text-center space-y-12"
-      >
+      <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      duration: 0.8,
+      ease: "easeOut"
+    }} className="relative z-10 max-w-3xl mx-auto text-center space-y-12">
         {/* Logo with elegant glow */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="flex justify-center"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        scale: 0.9
+      }} animate={{
+        opacity: 1,
+        scale: 1
+      }} transition={{
+        delay: 0.2,
+        duration: 0.6
+      }} className="flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 bg-white/30 rounded-full blur-2xl scale-150" />
-            <div className="relative bg-white rounded-2xl p-8 shadow-xl">
-              <img
-                src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
-                alt="Hisaab Dost"
-                className="w-28 h-28 md:w-36 md:h-36 object-contain"
-              />
+            <div className="relative bg-white rounded-2xl p-8 shadow-xl py-[14px] px-[17px]">
+              <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost" className="w-28 h-28 md:w-36 md:h-36 object-contain" />
             </div>
           </div>
         </motion.div>
 
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="space-y-6"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.4,
+        duration: 0.6
+      }} className="space-y-6">
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
             Hisaab Dost
           </h1>
@@ -60,43 +66,48 @@ export default function Welcome() {
         </motion.div>
 
         {/* Value proposition */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="text-base md:text-lg text-foreground/70 leading-relaxed max-w-xl mx-auto"
-        >
+        <motion.p initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6,
+        duration: 0.6
+      }} className="text-base md:text-lg text-foreground/70 leading-relaxed max-w-xl mx-auto">
           Track expenses, build wealth, and achieve your goals with confidence. 
           Your journey to financial freedom starts here.
         </motion.p>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="pt-4"
-        >
-          <Button
-            onClick={handleGetStarted}
-            size="lg"
-            className="group text-base px-8 h-14 rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.8,
+        duration: 0.6
+      }} className="pt-4">
+          <Button onClick={handleGetStarted} size="lg" className="group text-base px-8 h-14 rounded-full shadow-lg hover:shadow-xl transition-all">
             Get Started
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
 
         {/* Trust indicator */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.6 }}
-          className="text-sm text-muted-foreground/60"
-        >
+        <motion.p initial={{
+        opacity: 0
+      }} animate={{
+        opacity: 1
+      }} transition={{
+        delay: 1,
+        duration: 0.6
+      }} className="text-sm text-muted-foreground/60">
           Free forever • No credit card required • Your data is secure
         </motion.p>
       </motion.div>
-    </div>
-  );
+    </div>;
 }
