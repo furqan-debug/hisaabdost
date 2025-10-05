@@ -25,7 +25,11 @@ export const SetNewPasswordForm = ({
   const [loading, setLoading] = useState(false);
   const { updatePassword } = usePasswordReset();
 
-  const isPasswordValid = password.length >= 6;
+const isPasswordValid = password.length >= 8 && 
+    /[A-Z]/.test(password) && 
+    /[a-z]/.test(password) && 
+    /[0-9]/.test(password) && 
+    /[^A-Za-z0-9]/.test(password);
   const doPasswordsMatch = password === confirmPassword;
   const isFormValid = isPasswordValid && doPasswordsMatch && confirmPassword.length > 0;
 
@@ -46,9 +50,46 @@ export const SetNewPasswordForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <p className="text-sm text-muted-foreground text-center">
-        Choose a secure password for your account
-      </p>
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground text-center">
+          Choose a strong, unique password for your account
+        </p>
+        <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+          <p className="text-xs font-medium text-foreground">Password must:</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            <li className="flex items-center gap-2">
+              <span className={password.length >= 8 ? "text-green-500" : ""}>
+                {password.length >= 8 ? "✓" : "○"}
+              </span>
+              Be at least 8 characters long
+            </li>
+            <li className="flex items-center gap-2">
+              <span className={/[A-Z]/.test(password) ? "text-green-500" : ""}>
+                {/[A-Z]/.test(password) ? "✓" : "○"}
+              </span>
+              Include uppercase letters
+            </li>
+            <li className="flex items-center gap-2">
+              <span className={/[a-z]/.test(password) ? "text-green-500" : ""}>
+                {/[a-z]/.test(password) ? "✓" : "○"}
+              </span>
+              Include lowercase letters
+            </li>
+            <li className="flex items-center gap-2">
+              <span className={/[0-9]/.test(password) ? "text-green-500" : ""}>
+                {/[0-9]/.test(password) ? "✓" : "○"}
+              </span>
+              Include numbers
+            </li>
+            <li className="flex items-center gap-2">
+              <span className={/[^A-Za-z0-9]/.test(password) ? "text-green-500" : ""}>
+                {/[^A-Za-z0-9]/.test(password) ? "✓" : "○"}
+              </span>
+              Include special characters (!@#$%^&*)
+            </li>
+          </ul>
+        </div>
+      </div>
       
       <div className="space-y-4">
         <div className="space-y-2">
@@ -77,7 +118,7 @@ export const SetNewPasswordForm = ({
           </div>
           {password.length > 0 && !isPasswordValid && (
             <p className="text-xs text-destructive">
-              Password must be at least 6 characters
+              Please meet all password requirements above
             </p>
           )}
         </div>
