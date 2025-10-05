@@ -8,27 +8,34 @@ export const useVerification = () => {
 
   const verifyOtp = async (email: string, token: string) => {
     try {
-      console.log("Verifying OTP for email:", email, "token:", token);
+      console.log("Verifying custom verification code for email:", email, "code:", token);
       
-      // Try Supabase's built-in OTP verification
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "signup"
+      // Use custom verification code system
+      const { data, error } = await supabase.functions.invoke('verify-email-code', {
+        body: { email, code: token }
       });
       
       if (error) {
-        console.error("Standard OTP verification failed:", error);
+        console.error("Custom verification failed:", error);
         throw error;
       }
+
+      if (data?.error) {
+        console.error("Verification error:", data.error);
+        throw new Error(data.error);
+      }
       
-      if (data.user) {
-        console.log("OTP verification successful");
+      if (data?.valid) {
+        console.log("Email verification successful");
         toast.success("Email verified successfully!");
-        navigate("/app/dashboard");
+        
+        // Now sign in the user with their credentials
+        // We need to get their email to sign in - it's already in the email parameter
+        // But we don't have their password here, so we'll just redirect and let them sign in
+        navigate("/auth");
       }
     } catch (error: any) {
-      console.error("OTP verification error:", error);
+      console.error("Verification error:", error);
       toast.error(error.message || "Verification failed. Please check your code and try again.");
       throw error;
     }
