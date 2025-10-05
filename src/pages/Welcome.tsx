@@ -26,21 +26,14 @@ export default function Welcome() {
           className="flex flex-col items-center space-y-12 max-w-2xl text-center"
         >
           {/* Logo */}
-          <motion.div
+          <motion.img
+            src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
+            alt="Hisaab Dost Logo"
+            className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-white/90 dark:bg-white/95 rounded-3xl blur-xl" />
-            <div className="relative bg-white dark:bg-white rounded-3xl p-6 md:p-8 shadow-lg">
-              <img
-                src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png"
-                alt="Hisaab Dost Logo"
-                className="w-20 h-20 md:w-24 md:h-24 object-contain"
-              />
-            </div>
-          </motion.div>
+          />
 
           {/* App Name */}
           <div className="space-y-4">
