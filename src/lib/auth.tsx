@@ -137,19 +137,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
       
-      console.log("Starting native Google Sign-In...");
+      console.log("🟢 Starting native Google Sign-In...");
+      console.log("🟢 Using Web Client ID: 598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p");
       
       // Initialize Google Auth (safe to call multiple times)
       await GoogleAuth.initialize({
-        clientId: '598613920296-nmbbtfptlicljgkgtmaq9t6akhqasf7d.apps.googleusercontent.com',
+        clientId: '598613920296-nmbbtfptlidjgkg1mq9t6akhqcsf7d4p.apps.googleusercontent.com',
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
+      
+      console.log("🟢 Google Auth initialized successfully");
 
       // Trigger native Google Sign-In
       const googleUser = await GoogleAuth.signIn();
       
-      console.log("Google Sign-In successful, exchanging token with Supabase...");
+      console.log("🟢 Google Sign-In successful!");
+      console.log("🟢 User email:", googleUser.email);
+      console.log("🟢 Has ID token:", !!googleUser.authentication.idToken);
+      console.log("🟢 Exchanging token with Supabase...");
 
       // Exchange Google ID token with Supabase
       const { data, error } = await supabase.auth.signInWithIdToken({
@@ -163,14 +169,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (data.user) {
-        console.log("Successfully authenticated with Supabase:", data.user.id);
+        console.log("🟢 Successfully authenticated with Supabase!");
+        console.log("🟢 User ID:", data.user.id);
+        console.log("🟢 User email:", data.user.email);
         toast.success("Successfully signed in with Google!");
       }
     } catch (error: any) {
-      console.error("🔴 Google Sign-In error:", error);
+      console.error("🔴 ==================== Google Sign-In Error ====================");
+      console.error("🔴 Error object:", error);
       console.error("🔴 Error code:", error.code);
       console.error("🔴 Error message:", error.message);
-      console.error("🔴 Error details:", JSON.stringify(error, null, 2));
+      console.error("🔴 Full error details:", JSON.stringify(error, null, 2));
+      console.error("🔴 ==============================================================");
       
       let errorMessage = "Failed to sign in with Google";
       
