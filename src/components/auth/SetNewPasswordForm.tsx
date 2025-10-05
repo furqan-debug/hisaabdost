@@ -46,11 +46,11 @@ export const SetNewPasswordForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <p className="text-sm text-muted-foreground text-center">
+        Choose a secure password for your account
+      </p>
+      
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground text-center">
-          Choose a new secure password for your account
-        </p>
-
         <div className="space-y-2">
           <Label htmlFor="newPassword">New Password</Label>
           <div className="relative">

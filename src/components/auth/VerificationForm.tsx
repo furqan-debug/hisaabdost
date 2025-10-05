@@ -64,7 +64,7 @@ export const VerificationForm = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground text-center">
-          Enter the 6-digit code sent to {email}
+          We sent a 6-digit code to {email}
         </p>
 
         <div className="flex justify-center">

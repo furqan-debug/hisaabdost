@@ -3,8 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
 import { usePasswordReset } from "@/hooks/auth/usePasswordReset";
 
 type ForgotPasswordFormProps = {
@@ -37,59 +35,38 @@ export const ForgotPasswordForm = ({ onBackToLogin, onCodeSent }: ForgotPassword
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <p className="text-sm text-muted-foreground text-center">
+        Enter your email and we'll send you a verification code
+      </p>
+
       <div className="space-y-2">
         <Label htmlFor="resetEmail">Email</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            id="resetEmail"
-            type="email"
-            placeholder="you@example.com"
-            value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="pl-10"
-          />
-        </div>
+        <Input
+          id="resetEmail"
+          type="email"
+          placeholder="you@example.com"
+          value={resetEmail}
+          onChange={(e) => setResetEmail(e.target.value)}
+          required
+          autoComplete="email"
+        />
       </div>
-      
-      {codeSent && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex p-3 rounded-md bg-primary/10 text-primary items-start gap-3"
-        >
-          <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div className="text-sm space-y-2">
-            <p className="font-medium">Code sent!</p>
-            <p>Please check your email for a 6-digit verification code. Enter the code on the next screen to reset your password.</p>
-            <p className="text-xs opacity-75">The code expires in 10 minutes for security.</p>
-          </div>
-        </motion.div>
-      )}
 
-      <div className="flex flex-col space-y-4">
+      <div className="space-y-3">
         <Button type="submit" className="w-full" disabled={loading || codeSent}>
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <span>Sending Code...</span>
-            </div>
-          ) : (
-            "Send Verification Code"
-          )}
+          {loading ? "Sending code..." : "Send Code"}
         </Button>
         
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full"
-          onClick={onBackToLogin}
-        >
-          Back to login
-        </Button>
+        <p className="text-sm text-center">
+          <button
+            type="button"
+            onClick={onBackToLogin}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Back to login
+          </button>
+        </p>
       </div>
     </form>
   );
