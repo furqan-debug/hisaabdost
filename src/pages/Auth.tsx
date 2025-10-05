@@ -40,7 +40,16 @@ const Auth = () => {
   }
 
   const handleVerification = async (code: string) => {
-    await verifyOtp(verificationEmail, code);
+    try {
+      await verifyOtp(verificationEmail, code);
+      // After successful verification, reset to login
+      setTimeout(() => {
+        resetToLogin();
+      }, 1500);
+    } catch (error) {
+      // Error is already handled and shown by verifyOtp
+      console.error("Verification failed:", error);
+    }
   };
 
   const handleResendVerification = async () => {

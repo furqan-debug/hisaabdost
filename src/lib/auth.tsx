@@ -194,19 +194,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       if (data?.valid) {
-        console.log("Email verification successful");
-        toast.success("Email verified successfully!");
-        
-        // Refresh the session to get the updated user
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setSession(session);
-          setUser(session.user);
-        }
+        console.log("Email verification successful - email confirmed");
+        toast.success("Email verified! Please sign in with your credentials.");
+        // Don't try to refresh session here - user needs to sign in first
       }
     } catch (error: any) {
       console.error("Verification error:", error);
-      toast.error(error.message || "Verification failed. Please check your code and try again.");
+      const message = error.message || "Verification failed. Please check your code and try again.";
+      toast.error(message);
       throw error;
     }
   };
