@@ -43,25 +43,26 @@ export function BottomNavigation() {
   if (!isMobile || !mounted) return null;
   
   return (
-    <div className="fixed left-0 right-0 bottom-0 z-50 bg-white dark:bg-card border-t border-border/20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)] w-full">
-      <div className="flex h-16 items-center justify-around max-w-[480px] py-1 mx-auto px-2">
+    <div className="fixed left-0 right-0 bottom-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="flex h-16 items-center justify-around max-w-[480px] mx-auto px-1">
         {navItems.map(item => {
           const isActive = location.pathname === item.path;
           return (
-            <Link key={item.path} to={item.path} className="flex-1 max-w-[80px]">
+            <Link key={item.path} to={item.path} className="flex-1 flex items-center justify-center">
               <div className={cn(
-                "flex flex-col items-center justify-center h-14 transition-all duration-200 rounded-xl",
-                isActive ? "text-primary scale-105" : "text-muted-foreground/70 hover:text-foreground"
+                "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-colors duration-150",
+                isActive 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground active:bg-muted/50"
               )}>
-                <div className="relative mb-0.5">
-                  <item.icon size={24} className={cn(
-                    "transition-all duration-200",
-                    isActive ? "text-primary" : ""
-                  )} strokeWidth={isActive ? 2.5 : 2} />
-                </div>
+                <item.icon 
+                  size={22} 
+                  strokeWidth={isActive ? 2.5 : 2} 
+                  className="transition-none"
+                />
                 <span className={cn(
-                  "text-[11px] font-medium transition-all duration-200",
-                  isActive ? "text-primary" : "text-muted-foreground/70"
+                  "text-[10px] font-semibold leading-none",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                   {item.label}
                 </span>
