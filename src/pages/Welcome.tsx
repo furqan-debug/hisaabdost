@@ -41,7 +41,7 @@ export default function Welcome() {
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl scale-150" />
             <div className="relative bg-white rounded-[2rem] p-8 shadow-xl py-[14px] px-[17px]">
-              <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost" className="w-28 h-28 md:w-36 md:h-36 object-contain" />
+              <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost" className="w-32 h-32 md:w-40 md:h-40 object-contain" />
             </div>
           </div>
         </motion.div>
