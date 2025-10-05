@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 const WELCOME_TEXT = `Hisaab Dost, Take control of your financial future, Track expenses, build wealth, and achieve your goals with confidence, Your journey to financial freedom starts here`;
+const VOICE_PLAYED_KEY = 'welcome_voice_played';
 
 export function useWelcomeVoice(enabled: boolean = true) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
+  const hasPlayedRef = useRef(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     // Check if Web Speech API is supported
     setIsSupported('speechSynthesis' in window);
+    
+    // Check if voice has already been played this session
+    const hasPlayed = sessionStorage.getItem(VOICE_PLAYED_KEY);
+    if (hasPlayed) {
+      hasPlayedRef.current = true;
+    }
     
     // Load voices
     if ('speechSynthesis' in window) {
@@ -17,8 +25,12 @@ export function useWelcomeVoice(enabled: boolean = true) {
     }
   }, []);
 
-  const speak = () => {
-    if (!isSupported || !enabled) return;
+  const speak = useCallback(() => {
+    if (!isSupported || !enabled || hasPlayedRef.current || isPlaying) return;
+
+    // Mark as played to prevent duplicate attempts
+    hasPlayedRef.current = true;
+    sessionStorage.setItem(VOICE_PLAYED_KEY, 'true');
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
@@ -55,6 +67,8 @@ export function useWelcomeVoice(enabled: boolean = true) {
       utterance.onerror = (e) => {
         console.error('Speech error:', e);
         setIsPlaying(false);
+        hasPlayedRef.current = false; // Allow retry on error
+        sessionStorage.removeItem(VOICE_PLAYED_KEY);
       };
 
       window.speechSynthesis.speak(utterance);
@@ -70,7 +84,7 @@ export function useWelcomeVoice(enabled: boolean = true) {
         loadVoicesAndSpeak();
       };
     }
-  };
+  }, [isSupported, enabled, isPlaying]);
 
   const stop = () => {
     window.speechSynthesis.cancel();

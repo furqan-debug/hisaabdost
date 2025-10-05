@@ -14,10 +14,10 @@ export default function Welcome() {
     // Start voice narration after a short delay for smooth experience
     const timer = setTimeout(() => {
       speak();
-    }, 800);
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, [speak]);
+  }, []); // Empty dependency array - only run once on mount
 
   const handleGetStarted = () => {
     markVisitComplete();
