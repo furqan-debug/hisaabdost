@@ -250,6 +250,124 @@ export type Database = {
         }
         Relationships: []
       }
+      loan_installments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          installment_number: number
+          loan_id: string
+          paid_at: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          loan_id: string
+          paid_at?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          loan_id?: string
+          paid_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_installments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_repayments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          loan_id: string
+          note: string | null
+          payment_date: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          loan_id: string
+          note?: string | null
+          payment_date?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          loan_id?: string
+          note?: string | null
+          payment_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loans: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string | null
+          id: string
+          loan_type: string
+          note: string | null
+          person_name: string
+          remaining_amount: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          loan_type: string
+          note?: string | null
+          person_name: string
+          remaining_amount: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          loan_type?: string
+          note?: string | null
+          person_name?: string
+          remaining_amount?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_incomes: {
         Row: {
           created_at: string
