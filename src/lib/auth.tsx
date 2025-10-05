@@ -195,53 +195,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       console.log("🟢 ID token preview:", idToken.substring(0, 50) + "...");
       
-      console.log("🟢 Step 3: Exchanging Google token with Supabase...");
-      console.log("🟢 Using DEBUG function for detailed logging");
-
-      // Use debug function for detailed server-side logging
-      try {
-        const debugResponse = await supabase.functions.invoke('debug-google-auth', {
-          body: {
-            idToken: idToken,
-            email: userEmail,
-            name: userName,
-          }
-        });
-
-        console.log("🟢 Debug function response:", debugResponse);
-
-        if (debugResponse.error) {
-          console.error("🔴 Debug function error:", debugResponse.error);
-          throw debugResponse.error;
-        }
-
-        if (!debugResponse.data?.success) {
-          console.error("🔴 Debug function returned failure:", debugResponse.data);
-          throw new Error(debugResponse.data?.error || 'Authentication failed');
-        }
-
-        console.log("🟢 Step 3: SUCCESS - Token exchanged via debug function");
-      } catch (debugError: any) {
-        console.error("🔴 Debug function failed, but continuing with auth...", debugError);
-      }
-      
-      // Now do the actual auth exchange
-      console.log("🟢 Step 4: Performing Supabase auth exchange...");
+      console.log("🟢 Step 3: Exchanging Google ID token with Supabase (direct client call)...");
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
 
       if (error) {
-        console.error("🔴 Step 4: FAILED - Supabase auth error");
+        console.error("🔴 Step 3: FAILED - Supabase auth error");
         console.error("🔴 Supabase error:", error);
+        console.error("🔴 Error details:", JSON.stringify(error, null, 2));
         throw error;
       }
       
-      console.log("🟢 Step 4: SUCCESS - Auth exchange complete");
+      console.log("🟢 Step 3: SUCCESS - Auth exchange complete");
 
       if (data.user) {
-        console.log("🟢 Step 5: SUCCESS - User authenticated!");
+        console.log("🟢 Step 4: SUCCESS - User authenticated!");
         console.log("🟢 User ID:", data.user.id);
         console.log("🟢 User email:", data.user.email);
         console.log("🟢 =============== GOOGLE SIGN-IN COMPLETE ===============");
