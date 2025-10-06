@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { BarChart2, Target, HandCoins, Settings, User, Bell } from "lucide-react";
@@ -36,6 +36,9 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
         <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
           <SheetHeader>
             <SheetTitle>More Options</SheetTitle>
+            <SheetDescription>
+              Access additional features and settings
+            </SheetDescription>
           </SheetHeader>
           
           <div className="grid grid-cols-3 gap-4 mt-6">
