@@ -40,7 +40,7 @@ const Navbar = () => {
       <div className="flex h-12 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[10px] mb-[10px] py-[2px]">
         {/* Left: Logo and Title */}
         <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-all duration-200 flex-1 justify-start mx-1 my-[3px] px-2 py-1 rounded-lg hover:bg-accent/10 dark:hover:bg-accent/20">
-          <div className="h-9 w-9 mr-2 rounded-lg bg-primary/10 dark:bg-white/15 p-1.5 ring-2 ring-border/50 dark:ring-white/20 dark:shadow-lg dark:shadow-primary/20">
+          <div className="h-9 w-9 mr-2 rounded-lg bg-primary/10 dark:bg-white p-1.5 ring-2 ring-border/50 dark:ring-white/20 dark:shadow-lg dark:shadow-primary/20">
             <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-full w-full object-contain" />
           </div>
           <div className="flex flex-col">
