@@ -242,11 +242,27 @@ serve(async (req) => {
         throw new Error('No valid items with amounts found in receipt');
       }
       
-      // Update the parsed data with normalized items
-      parsedData.items = validItems;
+      // Build the complete response with all financial fields
+      const responseData = {
+        success: parsedData.success,
+        merchant: parsedData.merchant || 'Unknown',
+        date: parsedData.date || new Date().toISOString().split('T')[0],
+        items: validItems,
+        // Include all financial totals from the receipt
+        subtotal: parsedData.subtotal,
+        tax: parsedData.tax, // This is critical - preserving tax amount
+        tip: parsedData.tip,
+        total: parsedData.total,
+        paymentMethod: parsedData.paymentMethod,
+        confidence: parsedData.confidence,
+        notes: parsedData.notes,
+        warning: parsedData.confidence < 0.7 ? 'Some values may be approximate due to receipt condition' : undefined
+      };
       
       console.log(`✅ OpenAI processing successful: ${validItems.length} valid items found`);
-      return new Response(JSON.stringify(parsedData), {
+      console.log(`📊 Financial totals - Subtotal: ${responseData.subtotal}, Tax: ${responseData.tax}, Total: ${responseData.total}`);
+      
+      return new Response(JSON.stringify(responseData), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
