@@ -4,8 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, Plus, Mail, Trash2, Crown, Shield, User } from 'lucide-react';
+import { Users, Plus, Search } from 'lucide-react';
 import { PendingInvitations } from '@/components/family/PendingInvitations';
+import { SentInvitations } from '@/components/family/SentInvitations';
+import { FamilyCard } from '@/components/family/FamilyCard';
+import { MemberCard } from '@/components/family/MemberCard';
+import { FamilyStats } from '@/components/family/FamilyStats';
+import { FamilySwitcher } from '@/components/family/FamilySwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,36 +33,30 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth';
 
 export default function Family() {
-  const { userFamilies, familyMembers, currentFamily, refetch } = useFamilyContext();
+  const { userFamilies, familyMembers, currentFamily, refetch, switchToFamily } = useFamilyContext();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [newFamilyName, setNewFamilyName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
 
   const createFamilyMutation = useMutation({
     mutationFn: async (name: string) => {
-      // Explicit authentication check
       if (!user?.id) {
-        console.error('User not authenticated:', user);
         throw new Error('You must be logged in to create a family');
       }
 
-      console.log('Creating family with user:', user.id);
-      
-      // Call the edge function to create the family
       const { data, error } = await supabase.functions.invoke('create-family', {
         body: { name },
       });
       
       if (error) {
-        console.error('Edge function error:', error);
         throw new Error(error.message || 'Failed to create family');
       }
 
@@ -65,7 +64,6 @@ export default function Family() {
         throw new Error('No family data returned');
       }
 
-      console.log('Family created successfully:', data.family);
       return data.family;
     },
     onSuccess: () => {
@@ -121,231 +119,257 @@ export default function Family() {
     },
   });
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return <Crown className="h-4 w-4" />;
-      case 'admin':
-        return <Shield className="h-4 w-4" />;
-      default:
-        return <User className="h-4 w-4" />;
+  // Get member count for each family
+  const getFamilyMemberCount = (familyId: string) => {
+    // This would ideally come from a real query, but for now we use current family members
+    if (currentFamily?.id === familyId) {
+      return familyMembers.length;
     }
+    return 0; // Placeholder - in production, fetch this per family
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return 'default';
-      case 'admin':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
+  // Filter members based on search
+  const filteredMembers = familyMembers.filter(member => {
+    const displayName = member.profile?.display_name || member.profile?.full_name || '';
+    return displayName.toLowerCase().includes(memberSearchQuery.toLowerCase());
+  });
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header with Context Switcher */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Users className="h-8 w-8" />
               Family Management
             </h1>
             <p className="text-muted-foreground mt-2">
-              Create and manage your family accounts for shared expense tracking
+              Manage your families and shared expenses
             </p>
           </div>
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Family
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Family</DialogTitle>
-                <DialogDescription>
-                  Create a family account to share expenses with other members
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="family-name">Family Name</Label>
-                  <Input
-                    id="family-name"
-                    placeholder="e.g., Smith Family"
-                    value={newFamilyName}
-                    onChange={(e) => setNewFamilyName(e.target.value)}
-                  />
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => createFamilyMutation.mutate(newFamilyName)}
-                  disabled={!newFamilyName.trim() || createFamilyMutation.isPending}
-                >
+          <div className="flex items-center gap-3">
+            <FamilySwitcher />
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
                   Create Family
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Family</DialogTitle>
+                  <DialogDescription>
+                    Create a family account to share expenses with other members
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="family-name">Family Name</Label>
+                    <Input
+                      id="family-name"
+                      placeholder="e.g., Smith Family"
+                      value={newFamilyName}
+                      onChange={(e) => setNewFamilyName(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => createFamilyMutation.mutate(newFamilyName)}
+                    disabled={!newFamilyName.trim() || createFamilyMutation.isPending}
+                  >
+                    Create Family
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Pending Invitations */}
-        <PendingInvitations />
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="invitations">Invitations</TabsTrigger>
+          </TabsList>
 
-        {/* Your Families */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Families</CardTitle>
-            <CardDescription>
-              {userFamilies.length === 0
-                ? 'You are not part of any family yet'
-                : `You are part of ${userFamilies.length} ${userFamilies.length === 1 ? 'family' : 'families'}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {userFamilies.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Create your first family to get started</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {userFamilies.map((family) => (
-                  <div
-                    key={family.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5" />
-                      <div>
-                        <p className="font-medium">{family.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Created {new Date(family.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    {currentFamily?.id === family.id && (
-                      <Badge variant="secondary">Active</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Family Stats */}
+            {currentFamily && (
+              <FamilyStats
+                memberCount={familyMembers.length}
+                familyName={currentFamily.name}
+                createdAt={currentFamily.created_at}
+              />
             )}
-          </CardContent>
-        </Card>
 
-        {/* Current Family Members */}
-        {currentFamily && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{currentFamily.name} Members</CardTitle>
-                  <CardDescription>
-                    {familyMembers.length} {familyMembers.length === 1 ? 'member' : 'members'}
-                  </CardDescription>
-                </div>
-                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Member
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Family Member</DialogTitle>
-                      <DialogDescription>
-                        Enter the email address of an existing Hisaab Dost user to add them to {currentFamily.name}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="invite-email">Email Address</Label>
-                        <Input
-                          id="invite-email"
-                          type="email"
-                          placeholder="member@example.com"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                        />
-                      </div>
-                      <Button
-                        className="w-full"
-                        onClick={() => inviteMemberMutation.mutate(inviteEmail)}
-                        disabled={!inviteEmail.trim() || inviteMemberMutation.isPending}
-                      >
-                        Add Member
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {familyMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={member.profile?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {(member.profile?.display_name || member.profile?.full_name || 'U')[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {member.profile?.display_name || member.profile?.full_name || 'Unknown User'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Joined {new Date(member.joined_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={getRoleBadgeVariant(member.role)} className="gap-1">
-                        {getRoleIcon(member.role)}
-                        {member.role}
-                      </Badge>
-                      {member.role !== 'owner' && member.user_id !== user?.id && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove Member?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to remove this member from the family?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => removeMemberMutation.mutate(member.id)}
-                              >
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
+            {/* Your Families */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Families</CardTitle>
+                <CardDescription>
+                  {userFamilies.length === 0
+                    ? 'You are not part of any family yet'
+                    : `You are part of ${userFamilies.length} ${userFamilies.length === 1 ? 'family' : 'families'}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userFamilies.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                    <p className="text-lg font-medium mb-2">No families yet</p>
+                    <p className="text-sm">Create your first family to start tracking shared expenses</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {userFamilies.map((family) => (
+                      <FamilyCard
+                        key={family.id}
+                        family={family}
+                        isActive={currentFamily?.id === family.id}
+                        memberCount={getFamilyMemberCount(family.id)}
+                        onSwitch={() => switchToFamily(family.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Members Tab */}
+          <TabsContent value="members" className="space-y-6">
+            {currentFamily ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div>
+                        <CardTitle>{currentFamily.name} Members</CardTitle>
+                        <CardDescription>
+                          {familyMembers.length} {familyMembers.length === 1 ? 'member' : 'members'}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-none">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search members..."
+                            value={memberSearchQuery}
+                            onChange={(e) => setMemberSearchQuery(e.target.value)}
+                            className="pl-9 w-full sm:w-[200px]"
+                          />
+                        </div>
+                        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Member
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Add Family Member</DialogTitle>
+                              <DialogDescription>
+                                Enter the email address of an existing Hisaab Dost user
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="invite-email">Email Address</Label>
+                                <Input
+                                  id="invite-email"
+                                  type="email"
+                                  placeholder="member@example.com"
+                                  value={inviteEmail}
+                                  onChange={(e) => setInviteEmail(e.target.value)}
+                                />
+                              </div>
+                              <Button
+                                className="w-full"
+                                onClick={() => inviteMemberMutation.mutate(inviteEmail)}
+                                disabled={!inviteEmail.trim() || inviteMemberMutation.isPending}
+                              >
+                                Send Invitation
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {filteredMembers.map((member) => {
+                        const canRemove = member.role !== 'owner' && member.user_id !== user?.id;
+                        return (
+                          <div key={member.id}>
+                            {canRemove ? (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <div>
+                                    <MemberCard
+                                      member={member}
+                                      canRemove={canRemove}
+                                      isCurrentUser={member.user_id === user?.id}
+                                      onRemove={() => {}}
+                                    />
+                                  </div>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove Member?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove this member from the family?
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => removeMemberMutation.mutate(member.id)}
+                                    >
+                                      Remove
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            ) : (
+                              <MemberCard
+                                member={member}
+                                canRemove={canRemove}
+                                isCurrentUser={member.user_id === user?.id}
+                                onRemove={() => {}}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Users className="h-16 w-16 mx-auto mb-4 opacity-30 text-muted-foreground" />
+                  <p className="text-lg font-medium mb-2">No Family Selected</p>
+                  <p className="text-sm text-muted-foreground">
+                    Switch to a family context to view and manage members
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Invitations Tab */}
+          <TabsContent value="invitations" className="space-y-6">
+            <PendingInvitations />
+            <SentInvitations />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
