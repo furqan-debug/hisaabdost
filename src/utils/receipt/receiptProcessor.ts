@@ -1,11 +1,12 @@
 
 import { toast } from "sonner";
 import { ExpenseFormData } from "@/hooks/expense-form/types";
-import { uploadToSupabase, generateFileFingerprint } from "./uploadService";
+import { generateFileFingerprint } from "./uploadService";
 import { canProcessFile, markFileInProgress, markFileComplete, getCachedResult } from "./processingCache";
 
 /**
- * Process a receipt file - upload to storage and return permanent URL
+ * Process a receipt file in-memory without uploading to storage
+ * Returns a temporary blob URL for preview only
  */
 export async function processReceiptFile(
   file: File,
@@ -19,7 +20,7 @@ export async function processReceiptFile(
       return null;
     }
     
-    console.log(`processReceiptFile: Starting to process ${file.name} (${file.size} bytes)`);
+    console.log(`processReceiptFile: Processing ${file.name} (${file.size} bytes) in memory`);
     
     // Analyze image quality before processing
     try {
@@ -44,14 +45,14 @@ export async function processReceiptFile(
     
     // Check if we can process this file
     if (!canProcessFile(fileFingerprint)) {
-      toast.info("Please wait before uploading another file");
+      toast.info("Please wait before processing another file");
       return null;
     }
     
     // Check for cached result
     const cachedUrl = getCachedResult(fileFingerprint);
     if (cachedUrl) {
-      console.log(`Using cached URL: ${cachedUrl}`);
+      console.log(`Using cached blob URL: ${cachedUrl}`);
       updateField('receiptUrl', cachedUrl);
       return cachedUrl;
     }
@@ -65,35 +66,15 @@ export async function processReceiptFile(
       // Set form with file first
       updateField('receiptFile', file);
       
-      console.log("Starting Supabase upload...");
-      const supabaseUrl = await uploadToSupabase(file, userId);
+      // Create temporary blob URL for preview (will be cleaned up after scanning)
+      const blobUrl = URL.createObjectURL(file);
+      console.log(`Created temporary blob URL for preview: ${blobUrl}`);
       
-      if (supabaseUrl) {
-        console.log(`Upload successful: ${supabaseUrl}`);
-        
-        // CRITICAL: Only update with permanent Supabase URL, never blob URLs
-        if (supabaseUrl.includes('supabase.co')) {
-          updateField('receiptUrl', supabaseUrl);
-          markFileComplete(fileFingerprint, supabaseUrl);
-          // Don't show success toast for auto-processing - let the scan dialog handle it
-          return supabaseUrl;
-        } else {
-          console.error("Invalid URL returned from upload:", supabaseUrl);
-          toast.error("Upload failed - invalid response from server");
-          updateField('receiptUrl', '');
-          markFileComplete(fileFingerprint);
-          return null;
-        }
-      } else {
-        console.error("Upload failed");
-        toast.error("Failed to upload receipt. Please try again.");
-        
-        // Clear form
-        updateField('receiptUrl', '');
-        markFileComplete(fileFingerprint);
-        
-        return null;
-      }
+      updateField('receiptUrl', blobUrl);
+      markFileComplete(fileFingerprint, blobUrl);
+      
+      // Don't show success toast for auto-processing - let the scan dialog handle it
+      return blobUrl;
     } catch (error) {
       markFileComplete(fileFingerprint);
       throw error;
