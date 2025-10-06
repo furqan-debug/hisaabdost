@@ -36,18 +36,18 @@ const Navbar = () => {
   return <nav style={{
     paddingTop: isMobile ? 'env(safe-area-inset-top, 0px)' : '0',
     top: 0
-  }} className="fixed -top-0.5 left-0 right-0 z-50 bg-gradient-to-b from-background/98 to-background/95 backdrop-blur-md border-b border-border/60 dark:border-border/70 dark:shadow-lg dark:shadow-black/20 py-0">
+  }} className="fixed -top-0.5 left-0 right-0 z-50 bg-background/95 dark:bg-card/95 backdrop-blur-lg border-b-2 border-border/60 dark:border-border dark:shadow-xl dark:shadow-black/40 py-0">
       <div className="flex h-12 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[10px] mb-[10px] py-[2px]">
         {/* Left: Logo and Title */}
         <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-all duration-200 flex-1 justify-start mx-1 my-[3px] px-2 py-1 rounded-lg hover:bg-accent/10 dark:hover:bg-accent/20">
-          <div className="h-9 w-9 mr-2 rounded-lg bg-primary/10 dark:bg-primary/20 p-1.5 ring-1 ring-border/50">
+          <div className="h-9 w-9 mr-2 rounded-lg bg-primary/10 dark:bg-primary/30 p-1.5 ring-2 ring-border/50 dark:ring-border/80">
             <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-full w-full object-contain" />
           </div>
           <div className="flex flex-col">
-            <h2 className="font-bold text-sm text-foreground leading-tight">
+            <h2 className="font-bold text-sm text-foreground dark:text-foreground leading-tight">
               Hisaab Dost
             </h2>
-            <span className="text-xs text-foreground/70 dark:text-foreground/80 font-medium leading-none">
+            <span className="text-xs text-foreground/70 dark:text-foreground/90 font-semibold leading-none">
               Personal Finance
             </span>
           </div>
