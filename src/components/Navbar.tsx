@@ -38,21 +38,8 @@ const Navbar = () => {
     top: 0
   }} className="fixed -top-0.5 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40 py-0">
       <div className="flex h-12 items-center justify-between px-2 sm:px-3 lg:px-4 max-w-6xl mx-auto mt-[10px] mb-[10px] py-[2px]">
-        {/* Left: Menu Button (Mobile only) */}
-        {isMobile && <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0">
-              <SettingsSidebar isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
-            </SheetContent>
-          </Sheet>}
-        
-        {/* Center: Logo and Title */}
-        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-center md:justify-start mx-1 my-[3px]">
+        {/* Left: Logo and Title */}
+        <div onClick={handleLogoClick} className="flex items-center cursor-pointer hover:opacity-90 transition-opacity flex-1 justify-start mx-1 my-[3px]">
           <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Hisaab Dost logo" className="h-9 w-9 mr-2" />
           <div className="flex flex-col">
             <h2 className="font-bold text-sm text-foreground leading-tight">

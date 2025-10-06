@@ -43,6 +43,12 @@ const Sidebar = () => {
     setSelectedMonth(date);
   };
 
+  const handleAddExpense = () => {
+    window.dispatchEvent(new CustomEvent('open-expense-form', { 
+      detail: { mode: 'manual' }
+    }));
+  };
+
   return (
     <SidebarComponent>
       <SidebarContent>
@@ -56,6 +62,17 @@ const Sidebar = () => {
           <span className="font-bold text-lg bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] bg-clip-text text-transparent">
             Hisab Dost
           </span>
+        </div>
+
+        {/* Prominent Add Expense Button */}
+        <div className="px-3 mb-4">
+          <button
+            onClick={handleAddExpense}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-semibold shadow-md hover:shadow-lg hover:bg-primary/90 transition-all active:scale-[0.98]"
+          >
+            <span className="text-2xl leading-none">+</span>
+            <span>Add Expense</span>
+          </button>
         </div>
         
         <div className="px-3 mb-4">
