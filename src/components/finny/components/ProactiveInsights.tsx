@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
 import { startOfMonth } from 'date-fns';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 
 interface ProactiveInsightsProps {
   onInsightAction: (action: string) => void;
@@ -18,20 +19,29 @@ interface ProactiveInsightsProps {
 export const ProactiveInsights = ({ onInsightAction }: ProactiveInsightsProps) => {
   const { user } = useAuth();
   const { currencyCode } = useCurrency();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
   const [motivationalMessage, setMotivationalMessage] = useState<string>('');
 
   // Fetch expenses
   const { data: expenses = [] } = useQuery({
-    queryKey: ['expenses'],
+    queryKey: ['expenses', activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
       const startDate = startOfMonth(new Date());
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
         .gte('date', startDate.toISOString().split('T')[0]);
+      
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else {
+        query = query.eq('family_id', activeFamilyId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -40,13 +50,21 @@ export const ProactiveInsights = ({ onInsightAction }: ProactiveInsightsProps) =
 
   // Fetch budgets
   const { data: budgets = [] } = useQuery({
-    queryKey: ['budgets'],
+    queryKey: ['budgets', activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('budgets')
-        .select('*')
-        .eq('user_id', user.id);
+        .select('*');
+      
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else {
+        query = query.eq('family_id', activeFamilyId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -55,14 +73,22 @@ export const ProactiveInsights = ({ onInsightAction }: ProactiveInsightsProps) =
 
   // Fetch monthly income
   const { data: monthlyIncome = 0 } = useQuery({
-    queryKey: ['monthly-income'],
+    queryKey: ['monthly-income', activeFamilyId],
     queryFn: async () => {
       if (!user) return 0;
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('budgets')
         .select('monthly_income')
-        .eq('user_id', user.id)
         .limit(1);
+      
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else {
+        query = query.eq('family_id', activeFamilyId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data?.[0]?.monthly_income || 0;
     },

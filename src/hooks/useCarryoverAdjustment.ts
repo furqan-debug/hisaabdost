@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 
 export function useCarryoverAdjustment() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
 
   const adjustCarryover = useCallback(async (expenseMonth: Date) => {
     if (!user) return;
@@ -28,14 +30,20 @@ export function useCarryoverAdjustment() {
     console.log(`Checking carryover adjustment for ${expenseMonthKey} -> ${nextMonthKey}`);
 
     // Check if there's a carryover entry for the next month
-    const { data: existingCarryover, error: carryoverError } = await supabase
+    let carryoverQuery = supabase
       .from('wallet_additions')
       .select('*')
-      .eq('user_id', user.id)
       .eq('fund_type', 'carryover')
       .eq('carryover_month', nextMonthKey)
-      .eq('is_deleted_by_user', false)
-      .maybeSingle();
+      .eq('is_deleted_by_user', false);
+    
+    if (isPersonalMode) {
+      carryoverQuery = carryoverQuery.eq('user_id', user.id).is('family_id', null);
+    } else {
+      carryoverQuery = carryoverQuery.eq('family_id', activeFamilyId);
+    }
+    
+    const { data: existingCarryover, error: carryoverError } = await carryoverQuery.maybeSingle();
 
     if (carryoverError) {
       console.error('Error checking carryover:', carryoverError);
@@ -49,12 +57,18 @@ export function useCarryoverAdjustment() {
 
     // Calculate the ACTUAL leftover for the expense month NOW
     // Get monthly income for the expense month
-    const { data: incomeData, error: incomeError } = await supabase
+    let incomeQuery = supabase
       .from('monthly_incomes')
       .select('income_amount')
-      .eq('user_id', user.id)
-      .eq('month_year', expenseMonthKey)
-      .maybeSingle();
+      .eq('month_year', expenseMonthKey);
+    
+    if (isPersonalMode) {
+      incomeQuery = incomeQuery.eq('user_id', user.id).is('family_id', null);
+    } else {
+      incomeQuery = incomeQuery.eq('family_id', activeFamilyId);
+    }
+    
+    const { data: incomeData, error: incomeError } = await incomeQuery.maybeSingle();
 
     if (incomeError || !incomeData) {
       console.error('Error fetching income data:', incomeError);
@@ -67,12 +81,19 @@ export function useCarryoverAdjustment() {
     const firstDayOfMonth = format(startOfMonth(expenseMonth), 'yyyy-MM-dd');
     const lastDayOfMonth = format(new Date(expenseMonth.getFullYear(), expenseMonth.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-    const { data: expenses, error: expensesError } = await supabase
+    let expenseQuery = supabase
       .from('expenses')
       .select('amount')
-      .eq('user_id', user.id)
       .gte('date', firstDayOfMonth)
       .lte('date', lastDayOfMonth);
+    
+    if (isPersonalMode) {
+      expenseQuery = expenseQuery.eq('user_id', user.id).is('family_id', null);
+    } else {
+      expenseQuery = expenseQuery.eq('family_id', activeFamilyId);
+    }
+    
+    const { data: expenses, error: expensesError } = await expenseQuery;
 
     if (expensesError) {
       console.error('Error fetching expenses:', expensesError);
@@ -82,14 +103,21 @@ export function useCarryoverAdjustment() {
     const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
 
     // Get wallet additions for the expense month (excluding carryover from previous month)
-    const { data: walletAdditions, error: walletError } = await supabase
+    let walletQuery = supabase
       .from('wallet_additions')
       .select('amount')
-      .eq('user_id', user.id)
       .gte('date', firstDayOfMonth)
       .lte('date', lastDayOfMonth)
       .eq('is_deleted_by_user', false)
       .neq('carryover_month', expenseMonthKey); // Exclude carryover TO this month
+    
+    if (isPersonalMode) {
+      walletQuery = walletQuery.eq('user_id', user.id).is('family_id', null);
+    } else {
+      walletQuery = walletQuery.eq('family_id', activeFamilyId);
+    }
+    
+    const { data: walletAdditions, error: walletError } = await walletQuery;
 
     if (walletError) {
       console.error('Error fetching wallet additions:', walletError);
@@ -162,7 +190,7 @@ export function useCarryoverAdjustment() {
     } else {
       console.log('No significant difference, no adjustment needed');
     }
-  }, [user, queryClient]);
+  }, [user, queryClient, activeFamilyId, isPersonalMode]);
 
   return { adjustCarryover };
 }

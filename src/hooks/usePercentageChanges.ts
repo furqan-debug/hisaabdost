@@ -4,10 +4,12 @@ import { format, subMonths } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useMonthContext } from "@/hooks/use-month-context";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export const usePercentageChanges = (monthlyExpenses: number, monthlyIncome: number, savingsRate: number) => {
   const { user } = useAuth();
   const { selectedMonth } = useMonthContext();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const [percentageChanges, setPercentageChanges] = useState({
     expenses: 0,
     income: 0,
@@ -24,12 +26,19 @@ export const usePercentageChanges = (monthlyExpenses: number, monthlyIncome: num
 
       try {
         // Fetch previous month's expenses from the database
-        const { data: prevExpenses } = await supabase
+        let expenseQuery = supabase
           .from('expenses')
           .select('amount')
-          .eq('user_id', user.id)
           .gte('date', prevMonthStart)
           .lte('date', prevMonthEnd);
+        
+        if (isPersonalMode) {
+          expenseQuery = expenseQuery.eq('user_id', user.id).is('family_id', null);
+        } else {
+          expenseQuery = expenseQuery.eq('family_id', activeFamilyId);
+        }
+        
+        const { data: prevExpenses } = await expenseQuery;
 
         // Calculate previous month's total expenses
         const prevMonthExpenses = prevExpenses?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0;
@@ -92,7 +101,7 @@ export const usePercentageChanges = (monthlyExpenses: number, monthlyIncome: num
     };
 
     fetchPreviousMonthData();
-  }, [user, selectedMonth, monthlyExpenses, monthlyIncome, savingsRate]);
+  }, [user, selectedMonth, monthlyExpenses, monthlyIncome, savingsRate, activeFamilyId, isPersonalMode]);
 
   return percentageChanges;
 };

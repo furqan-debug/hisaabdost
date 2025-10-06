@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/formatters';
 import { useCurrency } from '@/hooks/use-currency';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,7 @@ interface ActivityHistorySectionProps {
 export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySectionProps) => {
   const { user } = useAuth();
   const { currencyCode } = useCurrency();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,11 +106,18 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
-      const { data, error } = await supabase
+      let activityQuery = supabase
         .from('activity_logs')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+      
+      if (isPersonalMode) {
+        activityQuery = activityQuery.eq('user_id', user.id);
+      } else {
+        activityQuery = activityQuery.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await activityQuery;
 
       if (error) {
         console.error('❌ Error fetching activities:', error);

@@ -10,10 +10,12 @@ import { motion } from "framer-motion";
 import { ExpenseFilters } from "@/components/expenses/ExpenseFilters";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { AnalyticsTabs } from "@/components/analytics/AnalyticsTabs";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 export default function Analytics() {
   const { user } = useAuth();
   const { selectedMonth } = useMonthContext();
   const queryClient = useQueryClient();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState({
@@ -64,28 +66,28 @@ export default function Analytics() {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['analytics-expenses', dateRange.start, dateRange.end, user?.id],
+    queryKey: ['analytics-expenses', dateRange.start, dateRange.end, user?.id, activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
       
-      // Handle empty date range (when filters are cleared)
-      if (!dateRange.start || !dateRange.end) {
-        const { data, error } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false });
-        if (error) throw error;
-        return data || [];
-      }
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
-        .gte('date', dateRange.start)
-        .lte('date', dateRange.end)
         .order('date', { ascending: false });
+      
+      // Apply family context filter
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else {
+        query = query.eq('family_id', activeFamilyId);
+      }
+      
+      // Handle date range
+      if (dateRange.start && dateRange.end) {
+        query = query.gte('date', dateRange.start).lte('date', dateRange.end);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data || [];
