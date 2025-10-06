@@ -104,8 +104,20 @@ serve(async (req) => {
   - Recognize receipts with tabular formats containing columns like: Item/Description, Quantity/تعداد, Rate/ریٹ, Amount/قیمت, Price, etc.
   - Extract data from table rows even when headers are in non-Latin scripts
   
+  TABLE COLUMN INTERPRETATION (CRITICAL):
+  - When extracting from table formats, identify columns carefully:
+    * Quantity/Liters/تعداد/Units columns contain VOLUMES or COUNTS (NOT prices)
+    * Rate/Unit Price/ریٹ/Price Per Unit columns contain PRICE PER UNIT
+    * Amount/Total/قیمت/Price columns (usually rightmost) contain the FINAL PRICE
+  - ALWAYS use the rightmost numeric column in a table row as the item price/amount
+  - If a table shows [quantity × rate = total], extract the TOTAL (rightmost column) as the price, NOT the quantity
+  - IGNORE quantity/liter/count values when determining the expense amount - they are NOT prices
+  - Example: If you see "1018" (quantity/liters), "255" (rate), "25798" (total) → use 25798 as the price
+  
   EXTRACTION REQUIREMENTS:
   - Extract ALL items with individual prices, quantities, and descriptions
+  - For table-based receipts: Use the TOTAL/AMOUNT column (rightmost numeric column) as the price, NOT the quantity or rate columns
+  - When quantity and rate are separate columns: The price MUST be the rightmost column (the pre-calculated total)
   - For receipts with MINIMAL ITEMIZATION (single-line purchases, fuel receipts, service bills, utility payments): Create ONE comprehensive item entry using the merchant name/service type and the total amount (e.g., "KPK Petroleum Purchase", "Medical Clinic Service", "Grocery Store Purchase")
   - Extract merchant/store name (or indicate "Unknown Store" if illegible)
   - Extract date and time (or indicate "Date unclear" if illegible)
