@@ -55,7 +55,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                   type="button"
                   onClick={() => onChange(cat.value)}
                   className={cn(
-                    "relative snap-start flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
+                    "relative snap-start flex flex-col items-center justify-center gap-1 p-3 rounded-2xl transition-all duration-300",
                     "active:scale-90 w-[100px] h-[100px]",
                     isSelected 
                       ? "bg-primary/5 scale-105 shadow-lg" 
