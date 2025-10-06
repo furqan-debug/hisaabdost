@@ -1,7 +1,5 @@
 
-import { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Expense } from "@/components/expenses/types";
+import { useState } from "react";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
 import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
@@ -14,34 +12,14 @@ import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 
 const Expenses = () => {
-  const queryClient = useQueryClient();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
-  const { expenses, isLoading: isExpensesLoading, refetch } = useExpenseQueries();
+  const { expenses, isLoading: isExpensesLoading } = useExpenseQueries();
   
-  // Enable comprehensive data synchronization
+  // Enable comprehensive data synchronization - this handles all cache invalidation
   useFinnyDataSync();
   
   const [showAddExpense, setShowAddExpense] = useState(false);
-
-  // Listen for expense-related events and invalidate cache
-  useEffect(() => {
-    const handleExpensesUpdated = async () => {
-      console.log('Expenses updated event received - invalidating and refetching...');
-      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      refetch();
-    };
-
-    window.addEventListener('expenses-updated', handleExpensesUpdated);
-    window.addEventListener('expense-added', handleExpensesUpdated);
-    window.addEventListener('expense-deleted', handleExpensesUpdated);
-    
-    return () => {
-      window.removeEventListener('expenses-updated', handleExpensesUpdated);
-      window.removeEventListener('expense-added', handleExpensesUpdated);
-      window.removeEventListener('expense-deleted', handleExpensesUpdated);
-    };
-  }, [refetch, queryClient]);
 
 
   const {

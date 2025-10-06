@@ -46,11 +46,11 @@ export function useExpenseQueries() {
       })) as Expense[];
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2,     // 2 minutes for mobile optimization
+    staleTime: 30000,             // 30 seconds - more responsive for receipt scans
     gcTime: 1000 * 60 * 10,       // 10 minutes
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,     // Only refetch on reconnect
-    refetchOnMount: false,        // Only fetch if data is stale
+    refetchOnReconnect: true,
+    refetchOnMount: true,         // Always refetch on mount to catch new data
   });
 
   return {
