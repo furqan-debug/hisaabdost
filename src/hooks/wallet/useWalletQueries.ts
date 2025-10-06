@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { WalletAddition } from "./types";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useWalletQueries(selectedMonth?: Date) {
   const { user } = useAuth();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
 
   // Use the provided month or default to current month
   const targetMonth = selectedMonth || new Date();
@@ -15,19 +17,50 @@ export function useWalletQueries(selectedMonth?: Date) {
 
   // Query wallet additions for selected month with optimized polling
   const { data: walletAdditions = [], isLoading } = useQuery({
-    queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
+    queryKey: ['wallet-additions', user?.id, firstDayOfMonth, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('🔄 Fetching wallet additions for selected month:', firstDayOfMonth);
-      const { data, error } = await supabase
-        .from('wallet_additions')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('date', firstDayOfMonth)
-        .lte('date', lastDayOfMonth)
-        .neq('is_deleted_by_user', true)
-        .order('date', { ascending: false });
+      console.log('🔄 Fetching wallet additions for selected month:', firstDayOfMonth, "Mode:", isPersonalMode ? 'personal' : `family: ${activeFamilyId}`);
+      
+      let data, error;
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('family_id', null)
+          .gte('date', firstDayOfMonth)
+          .lte('date', lastDayOfMonth)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      } else if (activeFamilyId) {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('family_id', activeFamilyId as string)
+          .gte('date', firstDayOfMonth)
+          .lte('date', lastDayOfMonth)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('date', firstDayOfMonth)
+          .lte('date', lastDayOfMonth)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('❌ Error fetching wallet additions:', error);
@@ -48,17 +81,44 @@ export function useWalletQueries(selectedMonth?: Date) {
 
   // Query all wallet additions with optimized polling
   const { data: allWalletAdditions = [], isLoading: isLoadingAll } = useQuery({
-    queryKey: ['wallet-additions-all', user?.id],
+    queryKey: ['wallet-additions-all', user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
 
       console.log('🔄 Fetching all wallet additions');
-      const { data, error } = await supabase
-        .from('wallet_additions')
-        .select('*')
-        .eq('user_id', user.id)
-        .neq('is_deleted_by_user', true)
-        .order('date', { ascending: false });
+      
+      let data, error;
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('family_id', null)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      } else if (activeFamilyId) {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('family_id', activeFamilyId as string)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('wallet_additions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_deleted_by_user', false)
+          .order('date', { ascending: false });
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('❌ Error fetching all wallet additions:', error);

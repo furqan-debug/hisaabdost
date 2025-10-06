@@ -6,19 +6,50 @@ export class MonthlyIncomeService {
   /**
    * Get monthly income for a specific month
    */
-  static async getMonthlyIncome(userId: string, monthDate: Date): Promise<number> {
+  static async getMonthlyIncome(
+    userId: string, 
+    monthDate: Date, 
+    familyId?: string | null, 
+    isPersonalMode?: boolean
+  ): Promise<number> {
     const monthKey = format(monthDate, 'yyyy-MM');
     
     try {
-      console.log("Fetching monthly income for:", userId, monthKey);
+      console.log("Fetching monthly income for:", userId, monthKey, "Mode:", isPersonalMode ? 'personal' : `family: ${familyId}`);
       
       // First check the new monthly_incomes table
-      const { data: monthlyIncomeData, error: monthlyError } = await supabase
-        .from('monthly_incomes')
-        .select('income_amount')
-        .eq('user_id', userId)
-        .eq('month_year', monthKey)
-        .maybeSingle();
+      let monthlyIncomeData, monthlyError;
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        const result = await supabase
+          .from('monthly_incomes')
+          .select('income_amount')
+          .eq('user_id', userId)
+          .is('family_id', null)
+          .eq('month_year', monthKey)
+          .maybeSingle();
+        monthlyIncomeData = result.data;
+        monthlyError = result.error;
+      } else if (familyId) {
+        const result = await supabase
+          .from('monthly_incomes')
+          .select('income_amount')
+          .eq('family_id', familyId as string)
+          .eq('month_year', monthKey)
+          .maybeSingle();
+        monthlyIncomeData = result.data;
+        monthlyError = result.error;
+      } else {
+        const result = await supabase
+          .from('monthly_incomes')
+          .select('income_amount')
+          .eq('user_id', userId)
+          .eq('month_year', monthKey)
+          .maybeSingle();
+        monthlyIncomeData = result.data;
+        monthlyError = result.error;
+      }
         
       if (!monthlyError && monthlyIncomeData?.income_amount) {
         console.log("Found monthly income:", monthlyIncomeData.income_amount);
@@ -51,21 +82,33 @@ export class MonthlyIncomeService {
   /**
    * Set monthly income for a specific month
    */
-  static async setMonthlyIncome(userId: string, monthDate: Date, amount: number): Promise<boolean> {
+  static async setMonthlyIncome(
+    userId: string, 
+    monthDate: Date, 
+    amount: number, 
+    familyId?: string | null
+  ): Promise<boolean> {
     const monthKey = format(monthDate, 'yyyy-MM');
     
     try {
-      console.log("Setting monthly income:", userId, monthKey, amount);
+      console.log("Setting monthly income:", userId, monthKey, amount, "Family:", familyId);
       
       // Update in monthly_incomes table using proper upsert with onConflict
+      const upsertData: any = {
+        user_id: userId,
+        month_year: monthKey,
+        income_amount: amount,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Add family_id if in family mode
+      if (familyId) {
+        upsertData.family_id = familyId;
+      }
+      
       const { error: monthlyError } = await supabase
         .from('monthly_incomes')
-        .upsert({
-          user_id: userId,
-          month_year: monthKey,
-          income_amount: amount,
-          updated_at: new Date().toISOString()
-        }, {
+        .upsert(upsertData, {
           onConflict: 'user_id,month_year'
         });
 

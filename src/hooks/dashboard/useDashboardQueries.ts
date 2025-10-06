@@ -5,17 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { Expense } from "@/components/expenses/types";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useDashboardQueries(selectedMonth: Date) {
   const { user } = useAuth();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const currentMonthKey = format(selectedMonth, 'yyyy-MM');
 
   // Fetch monthly income
   const incomeQuery = useQuery({
-    queryKey: ['monthly_income', user?.id, currentMonthKey],
+    queryKey: ['monthly_income', user?.id, currentMonthKey, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return { monthlyIncome: 0 };
-      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
+      const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth, activeFamilyId, isPersonalMode);
       return { monthlyIncome: income };
     },
     enabled: !!user,
@@ -26,20 +28,30 @@ export function useDashboardQueries(selectedMonth: Date) {
 
   // Fetch current month's expenses
   const expensesQuery = useQuery({
-    queryKey: ['expenses', currentMonthKey, user?.id],
+    queryKey: ['expenses', currentMonthKey, user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
       
       const monthStart = startOfMonth(selectedMonth);
       const monthEnd = endOfMonth(selectedMonth);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
         .order('date', { ascending: false });
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error('Error fetching expenses:', error);
@@ -66,19 +78,29 @@ export function useDashboardQueries(selectedMonth: Date) {
 
   // Fetch all expenses for analytics (last 6 months)
   const allExpensesQuery = useQuery({
-    queryKey: ['all_expenses', user?.id],
+    queryKey: ['all_expenses', user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
       
       const sixMonthsAgo = subMonths(new Date(), 5);
       const startDate = startOfMonth(sixMonthsAgo);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
         .gte('date', startDate.toISOString().split('T')[0])
         .order('date', { ascending: false });
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error('Error fetching all expenses:', error);

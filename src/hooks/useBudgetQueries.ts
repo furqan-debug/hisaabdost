@@ -5,28 +5,41 @@ import { Budget } from "@/pages/Budget";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { MonthlyIncomeService } from "@/services/monthlyIncomeService";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useBudgetQueries(selectedMonth: Date) {
   const { user } = useAuth();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const monthKey = format(selectedMonth, 'yyyy-MM');
   
   console.log("useBudgetQueries: Starting queries for user:", user?.id, "month:", monthKey);
   
   // Query budgets with optimized settings
   const { data: budgets = [], isLoading: budgetsLoading, error: budgetsError } = useQuery({
-    queryKey: ['budgets', user?.id],
+    queryKey: ['budgets', user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) {
         console.log("useBudgetQueries: No user, returning empty budgets");
         return [];
       }
       
-      console.log("Fetching budgets for user:", user.id);
-      const { data, error } = await supabase
+      console.log("Fetching budgets for user:", user.id, "Mode:", isPersonalMode ? 'personal' : `family: ${activeFamilyId}`);
+      
+      let query = supabase
         .from('budgets')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching budgets:", error);
@@ -46,7 +59,7 @@ export function useBudgetQueries(selectedMonth: Date) {
   
   // Query monthly income with optimized settings
   const { data: incomeData = { monthlyIncome: 0 }, isLoading: incomeLoading, error: incomeError } = useQuery({
-    queryKey: ['monthly_income', user?.id, monthKey],
+    queryKey: ['monthly_income', user?.id, monthKey, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) {
         console.log("useBudgetQueries: No user, returning default income");
@@ -56,7 +69,7 @@ export function useBudgetQueries(selectedMonth: Date) {
       console.log("Fetching income for user:", user.id, "month:", monthKey);
       
       try {
-        const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth);
+        const income = await MonthlyIncomeService.getMonthlyIncome(user.id, selectedMonth, activeFamilyId, isPersonalMode);
         console.log("Income from service:", income);
         
         return { monthlyIncome: income };
@@ -74,7 +87,7 @@ export function useBudgetQueries(selectedMonth: Date) {
 
   // Query expenses with optimized settings
   const { data: expenses = [], isLoading: expensesLoading, error: expensesError } = useQuery({
-    queryKey: ['expenses', monthKey, user?.id],
+    queryKey: ['expenses', monthKey, user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) {
         console.log("useBudgetQueries: No user, returning empty expenses");
@@ -86,12 +99,22 @@ export function useBudgetQueries(selectedMonth: Date) {
       
       console.log("Fetching expenses for user:", user.id, "month:", monthKey);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0]);
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching expenses:", error);

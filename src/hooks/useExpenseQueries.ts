@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Expense } from "@/components/expenses/types";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useExpenseQueries() {
   const { user } = useAuth();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
 
   // Simplified expenses query with better performance
   const {
@@ -14,17 +16,30 @@ export function useExpenseQueries() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['expenses', user?.id],
+    queryKey: ['expenses', user?.id, isPersonalMode ? 'personal' : activeFamilyId],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log("Fetching expenses for user:", user.id);
+      console.log("Fetching expenses for user:", user.id, "Mode:", isPersonalMode ? 'personal' : `family: ${activeFamilyId}`);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
         .select('*')
-        .eq('user_id', user.id)
         .order('date', { ascending: false });
+
+      // Filter by family context
+      if (isPersonalMode) {
+        // Personal mode: only expenses with no family_id
+        query = query.eq('user_id', user.id).is('family_id', null);
+      } else if (activeFamilyId) {
+        // Family mode: only expenses with the active family_id
+        query = query.eq('family_id', activeFamilyId);
+      } else {
+        // Fallback: user's expenses (shouldn't happen)
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching expenses:', error);

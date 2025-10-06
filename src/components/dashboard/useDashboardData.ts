@@ -9,9 +9,11 @@ import { useAuth } from "@/lib/auth";
 import { useDashboardQueries } from "@/hooks/dashboard/useDashboardQueries";
 import { useDashboardCalculations } from "@/hooks/dashboard/useDashboardCalculations";
 import { useDashboardState } from "@/hooks/dashboard/useDashboardState";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useDashboardData(overrideMonth?: Date) {
   const { user } = useAuth();
+  const { activeFamilyId } = useFamilyContext();
   const { selectedMonth: globalSelectedMonth, getCurrentMonthData, updateMonthData } = useMonthContext();
   
   // Use override month if provided, otherwise use global context
@@ -89,7 +91,7 @@ export function useDashboardData(overrideMonth?: Date) {
     formatPercentage,
     setMonthlyIncome: async (newIncome: number) => {
       if (user) {
-        const success = await MonthlyIncomeService.setMonthlyIncome(user.id, selectedMonth, newIncome);
+        const success = await MonthlyIncomeService.setMonthlyIncome(user.id, selectedMonth, newIncome, activeFamilyId);
         if (success) {
           setMonthlyIncome(newIncome);
         }

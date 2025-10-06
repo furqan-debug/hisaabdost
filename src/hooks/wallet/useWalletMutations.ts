@@ -7,9 +7,11 @@ import { logWalletActivity } from "@/services/activityLogService";
 import { WalletAdditionInput, WalletAddition } from "./types";
 import { offlineStorage } from "@/services/offlineStorageService";
 import { useCarryoverAdjustment } from "@/hooks/useCarryoverAdjustment";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
   const { user } = useAuth();
+  const { activeFamilyId } = useFamilyContext();
   const queryClient = useQueryClient();
   const { adjustCarryover } = useCarryoverAdjustment();
 
@@ -40,16 +42,23 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         return offlineFund;
       }
       
+      const insertData: any = {
+        user_id: user.id,
+        amount: addition.amount,
+        description: addition.description || 'Added funds',
+        date: addition.date || new Date().toISOString().split('T')[0],
+        fund_type: addition.fund_type || 'manual',
+        carryover_month: addition.carryover_month,
+      };
+      
+      // Add family_id if in family mode
+      if (activeFamilyId) {
+        insertData.family_id = activeFamilyId;
+      }
+      
       const { data, error } = await supabase
         .from('wallet_additions')
-        .insert({
-          user_id: user.id,
-          amount: addition.amount,
-          description: addition.description || 'Added funds',
-          date: addition.date || new Date().toISOString().split('T')[0],
-          fund_type: addition.fund_type || 'manual',
-          carryover_month: addition.carryover_month,
-        })
+        .insert(insertData)
         .select()
         .single();
 
