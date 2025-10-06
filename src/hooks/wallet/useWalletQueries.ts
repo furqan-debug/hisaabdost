@@ -5,21 +5,21 @@ import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { WalletAddition } from "./types";
 
-export function useWalletQueries() {
+export function useWalletQueries(selectedMonth?: Date) {
   const { user } = useAuth();
 
-  // Get the current month for filtering
-  const currentDate = new Date();
-  const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
-  const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+  // Use the provided month or default to current month
+  const targetMonth = selectedMonth || new Date();
+  const firstDayOfMonth = format(new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1), 'yyyy-MM-dd');
+  const lastDayOfMonth = format(new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-  // Query wallet additions for current month with optimized polling
+  // Query wallet additions for selected month with optimized polling
   const { data: walletAdditions = [], isLoading } = useQuery({
     queryKey: ['wallet-additions', user?.id, firstDayOfMonth],
     queryFn: async () => {
       if (!user) return [];
 
-      console.log('🔄 Fetching wallet additions for current month');
+      console.log('🔄 Fetching wallet additions for selected month:', firstDayOfMonth);
       const { data, error } = await supabase
         .from('wallet_additions')
         .select('*')
@@ -34,7 +34,7 @@ export function useWalletQueries() {
         return [];
       }
 
-      console.log(`✅ Found ${data?.length || 0} wallet additions for current month`);
+      console.log(`✅ Found ${data?.length || 0} wallet additions for selected month`);
       return data as WalletAddition[];
     },
     enabled: !!user,

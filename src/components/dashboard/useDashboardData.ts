@@ -28,7 +28,7 @@ export function useDashboardData(overrideMonth?: Date) {
   
   // Use specialized hooks
   const { expenses, allExpenses, isExpensesLoading, isIncomeLoading, incomeData } = useDashboardQueries(selectedMonth);
-  const { monthlyExpenses, totalBalance, walletBalance, totalAdditions, savingsRate, formatPercentage } = useDashboardCalculations({ expenses, monthlyIncome });
+  const { monthlyExpenses, totalBalance, walletBalance, totalAdditions, savingsRate, formatPercentage } = useDashboardCalculations({ expenses, monthlyIncome, selectedMonth });
   const { expenseToEdit, setExpenseToEdit, chartType, setChartType, showAddExpense, setShowAddExpense } = useDashboardState();
   
   // Update local income state when data is fetched

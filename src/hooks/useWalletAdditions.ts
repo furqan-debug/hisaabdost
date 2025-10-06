@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export type { WalletAddition, WalletAdditionInput } from "./wallet/types";
 
-export function useWalletAdditions() {
+export function useWalletAdditions(selectedMonth?: Date) {
   const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -78,14 +78,14 @@ export function useWalletAdditions() {
     };
   }, [queryClient]);
 
-  // Use the separated query and mutation hooks
+  // Use the separated query and mutation hooks with selected month
   const {
     walletAdditions,
     allWalletAdditions,
     totalAdditions,
     isLoading,
     isLoadingAll,
-  } = useWalletQueries();
+  } = useWalletQueries(selectedMonth);
 
   const {
     addFundsMutation,

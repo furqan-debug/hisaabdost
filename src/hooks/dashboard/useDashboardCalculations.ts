@@ -1,14 +1,14 @@
-
 import { useWalletAdditions } from "@/hooks/useWalletAdditions";
 import { Expense } from "@/components/expenses/types";
 
 interface DashboardCalculationsProps {
   expenses: Expense[];
   monthlyIncome: number;
+  selectedMonth?: Date;
 }
 
-export function useDashboardCalculations({ expenses, monthlyIncome }: DashboardCalculationsProps) {
-  const { totalAdditions, isLoading } = useWalletAdditions();
+export function useDashboardCalculations({ expenses, monthlyIncome, selectedMonth }: DashboardCalculationsProps) {
+  const { totalAdditions, isLoading } = useWalletAdditions(selectedMonth);
 
   // Calculate financial metrics
   const monthlyExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
