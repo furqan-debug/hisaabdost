@@ -69,32 +69,25 @@ serve(async (req) => {
       );
     }
 
-    // Check if user with this email exists in auth.users
-    const { data: invitedUser, error: userLookupError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // Get user by listing all users and filtering by email
+    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (userLookupError && userLookupError.status === 404) {
-      return new Response(
-        JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (userLookupError) {
-      console.error("Error looking up user:", userLookupError);
+    if (listError) {
+      console.error("Error listing users:", listError);
       return new Response(
         JSON.stringify({ error: "Failed to verify email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!invitedUser || !invitedUser.user) {
+    const userToAdd = users.find(u => u.email === email);
+
+    if (!userToAdd) {
       return new Response(
         JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const userToAdd = invitedUser.user;
 
     // Get inviter's profile information
     const { data: inviterProfile } = await supabaseAdmin
