@@ -40,7 +40,7 @@ export function BottomNavigation() {
   
   return (
     <>
-      <div className="fixed left-0 right-0 bottom-0 z-50 w-full overflow-visible pt-8" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="fixed left-0 right-0 bottom-0 z-50 w-full overflow-visible pt-12" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="relative bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t-2 border-border/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] overflow-visible">
           <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
             {/* First 2 items: Home, Expenses */}
@@ -83,7 +83,7 @@ export function BottomNavigation() {
               <Button
                 onClick={openChat}
                 size="icon"
-                className="h-14 w-14 -mt-6 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 hover:from-purple-400 hover:via-purple-500 hover:to-indigo-500 shadow-2xl shadow-purple-500/50 hover:shadow-purple-400/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-purple-400/30 transition-all duration-200 animate-pulse-subtle border-2 border-white/30 p-2.5"
+                className="h-16 w-16 -mt-10 rounded-full bg-white dark:bg-gray-900 shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/20 transition-all duration-200 border-4 border-primary/20 p-3"
               >
                 <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
               </Button>
