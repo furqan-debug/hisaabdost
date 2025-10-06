@@ -9,4 +9,5 @@ export interface Expense {
   notes?: string;
   isRecurring?: boolean;
   receiptUrl?: string;
+  familyId?: string | null;
 }

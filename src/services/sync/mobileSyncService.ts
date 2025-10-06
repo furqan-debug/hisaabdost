@@ -60,6 +60,16 @@ export class MobileSyncService {
         return false;
       }
 
+      // Get user's active family context for syncing
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('active_family_id')
+        .eq('id', user.id)
+        .single();
+      
+      const activeFamilyId = profileData?.active_family_id || null;
+      console.log('🔄 Syncing with family context:', activeFamilyId);
+
       const pendingData = offlineStorage.getPendingSync();
       let totalSyncCount = 0;
 
@@ -84,7 +94,8 @@ export class MobileSyncService {
           const expenseCount = await BatchOperations.batchInsertExpenses(
             pendingData.expense, 
             user.id, 
-            this.connectionQuality
+            this.connectionQuality,
+            activeFamilyId
           );
           totalSyncCount += expenseCount;
         }
@@ -94,7 +105,8 @@ export class MobileSyncService {
           const walletCount = await BatchOperations.batchInsertWalletAdditions(
             pendingData.wallet, 
             user.id, 
-            this.connectionQuality
+            this.connectionQuality,
+            activeFamilyId
           );
           totalSyncCount += walletCount;
         }
@@ -104,7 +116,8 @@ export class MobileSyncService {
           const budgetCount = await BatchOperations.batchInsertBudgets(
             pendingData.budget, 
             user.id, 
-            this.connectionQuality
+            this.connectionQuality,
+            activeFamilyId
           );
           totalSyncCount += budgetCount;
         }

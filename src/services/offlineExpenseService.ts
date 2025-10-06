@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Expense } from "@/components/expenses/types";
 import { offlineStorage } from "./offlineStorageService";
 
-export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
+export async function saveExpenseOffline(expense: Expense, familyId?: string | null): Promise<boolean> {
   try {
     // Check if user is authenticated and online
     const { data: { user } } = await supabase.auth.getUser();
@@ -29,6 +29,7 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
     }
 
     // If online, try to save to server with timeout for mobile
+    console.log('💾 Saving expense with family_id:', familyId);
     const expenseData = {
       user_id: user.id,
       amount: parseFloat(expense.amount.toString()),
@@ -39,7 +40,7 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
       notes: expense.notes || "",
       is_recurring: expense.isRecurring || false,
       receipt_url: expense.receiptUrl || null,
-      family_id: (expense as any).familyId || null
+      family_id: familyId || null
     };
 
     // Add timeout for mobile networks (5 seconds)

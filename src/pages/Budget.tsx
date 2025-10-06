@@ -7,6 +7,7 @@ import { BudgetTabs } from "@/components/budget/BudgetTabs";
 import { BudgetForm } from "@/components/budget/BudgetForm";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { LoadingSkeleton, BudgetCardSkeleton, StatCardSkeleton } from "@/components/ui/loading-skeleton";
+import { ContextIndicator } from "@/components/ui/context-indicator";
 
 export interface Budget {
   id: string;
@@ -127,7 +128,8 @@ const Budget = () => {
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <div className="container mx-auto max-w-7xl px-2 sm:px-4 pt-6 space-y-8 pb-24 md:pb-8">
-        <BudgetHeader 
+        <ContextIndicator />
+        <BudgetHeader
           onAddBudget={handleAddBudget}
           onExport={exportBudgetData || (() => {})} 
         />

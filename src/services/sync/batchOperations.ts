@@ -6,7 +6,8 @@ export class BatchOperations {
   static async batchInsertExpenses(
     expenses: any[], 
     userId: string, 
-    connectionQuality: ConnectionQuality
+    connectionQuality: ConnectionQuality,
+    familyId?: string | null
   ): Promise<number> {
     if (expenses.length === 0) return 0;
 
@@ -20,6 +21,7 @@ export class BatchOperations {
       const chunk = expenses.slice(i, i + chunkSize);
       
       try {
+        console.log('💾 Batch inserting expenses with family_id:', familyId);
         const expenseData = chunk.map(expense => ({
           user_id: userId,
           amount: parseFloat(expense.amount.toString()),
@@ -29,7 +31,8 @@ export class BatchOperations {
           payment: expense.paymentMethod || 'Cash',
           notes: expense.notes || '',
           is_recurring: expense.isRecurring || false,
-          receipt_url: expense.receiptUrl || null
+          receipt_url: expense.receiptUrl || null,
+          family_id: familyId || null
         }));
 
         const timeout = this.getTimeoutForOperation(8000, connectionQuality); // 8 second base timeout
@@ -64,19 +67,22 @@ export class BatchOperations {
   static async batchInsertWalletAdditions(
     walletAdditions: any[], 
     userId: string, 
-    connectionQuality: ConnectionQuality
+    connectionQuality: ConnectionQuality,
+    familyId?: string | null
   ): Promise<number> {
     if (walletAdditions.length === 0) return 0;
 
     console.log(`Batch inserting ${walletAdditions.length} wallet additions`);
 
     try {
+      console.log('💾 Batch inserting wallet additions with family_id:', familyId);
       const walletData = walletAdditions.map(addition => ({
         user_id: userId,
         amount: addition.amount,
         description: addition.description || 'Added funds',
         date: addition.date || new Date().toISOString().split('T')[0],
-        fund_type: addition.fund_type || 'manual'
+        fund_type: addition.fund_type || 'manual',
+        family_id: familyId || null
       }));
 
       const timeout = this.getTimeoutForOperation(6000, connectionQuality);
@@ -102,19 +108,22 @@ export class BatchOperations {
   static async batchInsertBudgets(
     budgets: any[], 
     userId: string, 
-    connectionQuality: ConnectionQuality
+    connectionQuality: ConnectionQuality,
+    familyId?: string | null
   ): Promise<number> {
     if (budgets.length === 0) return 0;
 
     console.log(`Batch inserting ${budgets.length} budgets`);
 
     try {
+      console.log('💾 Batch inserting budgets with family_id:', familyId);
       const budgetData = budgets.map(budget => ({
         user_id: userId,
         category: budget.category,
         amount: budget.amount,
         period: budget.period,
-        monthly_income: budget.monthly_income || 0
+        monthly_income: budget.monthly_income || 0,
+        family_id: familyId || null
       }));
 
       const timeout = this.getTimeoutForOperation(6000, connectionQuality);

@@ -10,6 +10,7 @@ import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
 import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
+import { ContextIndicator } from "@/components/ui/context-indicator";
 
 const Expenses = () => {
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
@@ -98,7 +99,8 @@ const Expenses = () => {
 
   return (
     <div className="space-y-5 px-3 md:px-6 pt-4 pb-24 md:pb-8">
-        <ExpenseHeader 
+        <ContextIndicator />
+        <ExpenseHeader
           selectedExpenses={selectedExpenses}
           onDeleteSelected={handleDeleteSelected}
           onAddExpense={handleExpenseAdded}

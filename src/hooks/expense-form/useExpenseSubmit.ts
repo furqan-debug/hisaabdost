@@ -28,7 +28,7 @@ export function useExpenseSubmit({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { adjustCarryover } = useCarryoverAdjustment();
-  const { activeFamilyId } = useFamilyContext();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,10 +141,16 @@ export function useExpenseSubmit({
           paymentMethod: formData.paymentMethod,
           notes: formData.notes || "",
           isRecurring: formData.isRecurring,
-          receiptUrl: formData.receiptUrl || ""
+          receiptUrl: formData.receiptUrl || "",
+          familyId: isPersonalMode ? null : activeFamilyId,
         };
 
-        const success = await saveExpenseOffline(newExpense);
+        console.log("💾 Saving new expense with context:", { 
+          isPersonalMode, 
+          activeFamilyId, 
+          family_id: newExpense.familyId 
+        });
+        const success = await saveExpenseOffline(newExpense, newExpense.familyId);
         
         if (success && user) {
           // Log expense creation activity

@@ -8,6 +8,7 @@ import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
 import { useMonthCarryover } from "@/hooks/useMonthCarryover";
 import { useAnalyticsNotifications } from "@/hooks/useAnalyticsNotifications";
 import { useOptimizedDataSync } from "@/hooks/useOptimizedDataSync";
+import { ContextIndicator } from "@/components/ui/context-indicator";
 
 /**
  * Dashboard page component that displays financial overview
@@ -66,6 +67,9 @@ const Dashboard = () => {
 
   return (
     <div className="pb-24 md:pb-8">
+      <div className="px-3 md:px-6 pt-4 pb-2">
+        <ContextIndicator />
+      </div>
       <EnhancedDashboardContent
           isNewUser={isNewUser}
           isLoading={isLoading}
