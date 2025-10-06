@@ -42,6 +42,16 @@ export class SyncService {
         return false;
       }
 
+      // Get user's active family context
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('active_family_id')
+        .eq('id', user.id)
+        .single();
+      
+      const activeFamilyId = profile?.active_family_id || null;
+      console.log('Syncing with family context:', activeFamilyId);
+
       const pendingData = offlineStorage.getPendingSync();
       let syncCount = 0;
 
@@ -61,7 +71,8 @@ export class SyncService {
                 payment: expense.paymentMethod || 'Cash',
                 notes: expense.notes || '',
                 is_recurring: expense.isRecurring || false,
-                receipt_url: expense.receiptUrl || null
+                receipt_url: expense.receiptUrl || null,
+                family_id: activeFamilyId
               });
 
             if (error) {
@@ -87,7 +98,8 @@ export class SyncService {
                 amount: walletAddition.amount,
                 description: walletAddition.description || 'Added funds',
                 date: walletAddition.date || new Date().toISOString().split('T')[0],
-                fund_type: walletAddition.fund_type || 'manual'
+                fund_type: walletAddition.fund_type || 'manual',
+                family_id: activeFamilyId
               });
 
             if (error) {
@@ -113,7 +125,8 @@ export class SyncService {
                 category: budget.category,
                 amount: budget.amount,
                 period: budget.period,
-                monthly_income: budget.monthly_income || 0
+                monthly_income: budget.monthly_income || 0,
+                family_id: activeFamilyId
               });
 
             if (error) {

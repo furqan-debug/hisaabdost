@@ -6,6 +6,7 @@ import { QuickReply } from './types';
 import { DEFAULT_QUICK_REPLIES, FINNY_MESSAGES } from './constants/quickReplies';
 import { useMessageHandling } from './hooks/useMessageHandling';
 import { useCurrency } from '@/hooks/use-currency';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 import { useFinny } from '../context/FinnyContext';
 import { CurrencyCode } from '@/utils/currencyUtils';
 import { useChatInitialization } from './hooks/useChatInitialization';
@@ -18,6 +19,7 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { currencyCode: contextCurrencyCode } = useCurrency();
+  const { activeFamilyId } = useFamilyContext();
   const { remainingDailyMessages, isMessageLimitReached } = useFinny();
   
   const currencyCode = userCurrencyCode || contextCurrencyCode;
@@ -52,7 +54,8 @@ export const useChatLogic = (queuedMessage: string | null, userCurrencyCode?: Cu
     setIsLoading,
     setIsTyping,
     setInsights,
-    currencyCode
+    currencyCode,
+    familyId: activeFamilyId
   });
 
   useEffect(() => {

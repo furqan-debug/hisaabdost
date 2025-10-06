@@ -117,6 +117,11 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-additions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-additions-all'] });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['loan-summary'] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
       toast.success(familyId ? 'Switched to family context' : 'Switched to personal context');
     },

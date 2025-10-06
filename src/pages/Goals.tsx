@@ -10,6 +10,7 @@ import { GoalsGrid } from "@/components/goals/GoalsGrid";
 import { useCurrency } from "@/hooks/use-currency";
 import { useGoalCalculations } from "@/hooks/useGoalCalculations";
 import { useGoalManagement } from "@/hooks/useGoalManagement";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 import { startOfMonth, endOfMonth } from "date-fns";
 
 interface Goal {
@@ -29,6 +30,7 @@ export default function Goals() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const { currencyCode } = useCurrency();
   const { refreshTrigger, handleDeleteGoal, syncGoalProgress } = useGoalManagement();
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
 
 
   const { data: goals, isLoading } = useQuery({
@@ -36,12 +38,23 @@ export default function Goals() {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log("Fetching goals for user:", user.id, "refreshTrigger:", refreshTrigger);
-      const { data, error } = await supabase
+      console.log("Fetching goals for user:", user.id, "context:", isPersonalMode ? 'personal' : activeFamilyId);
+      
+      let query = supabase
         .from('goals')
         .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id);
+      
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      }
+      
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching goals:", error);

@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrency } from "@/hooks/use-currency";
 import { useExpenseDelete } from "@/components/expenses/useExpenseDelete";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ export const RecentExpensesCard = ({
   const isMobile = useIsMobile();
   const { currencyCode } = useCurrency();
   const { deleteExpense } = useExpenseDelete();
+  const { activeFamilyId } = useFamilyContext();
 
   const handleDeleteExpense = async (expenseId: string) => {
     await deleteExpense(expenseId);
@@ -75,6 +77,7 @@ export const RecentExpensesCard = ({
                   description: exp.description,
                   date: exp.date,
                   category: exp.category,
+                  family_id: activeFamilyId || null,
                 }));
                 
                 const { error } = await supabase

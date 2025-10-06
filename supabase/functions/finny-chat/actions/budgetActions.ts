@@ -95,7 +95,8 @@ export async function setBudget(
           category: action.category,
           amount: action.amount,
           period: period,
-          carry_forward: false
+          carry_forward: false,
+          family_id: action.family_id || null
         }).select().single();
 
         if (error) {

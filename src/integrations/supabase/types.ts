@@ -357,6 +357,7 @@ export type Database = {
           created_at: string
           current_amount: number
           deadline: string
+          family_id: string | null
           id: string
           target_amount: number
           title: string
@@ -367,6 +368,7 @@ export type Database = {
           created_at?: string
           current_amount?: number
           deadline: string
+          family_id?: string | null
           id?: string
           target_amount: number
           title: string
@@ -377,12 +379,21 @@ export type Database = {
           created_at?: string
           current_amount?: number
           deadline?: string
+          family_id?: string | null
           id?: string
           target_amount?: number
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "goals_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       loan_installments: {
         Row: {
@@ -465,6 +476,7 @@ export type Database = {
           amount: number
           created_at: string
           due_date: string | null
+          family_id: string | null
           id: string
           loan_type: string
           note: string | null
@@ -478,6 +490,7 @@ export type Database = {
           amount: number
           created_at?: string
           due_date?: string | null
+          family_id?: string | null
           id?: string
           loan_type: string
           note?: string | null
@@ -491,6 +504,7 @@ export type Database = {
           amount?: number
           created_at?: string
           due_date?: string | null
+          family_id?: string | null
           id?: string
           loan_type?: string
           note?: string | null
@@ -500,11 +514,20 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "loans_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monthly_incomes: {
         Row: {
           created_at: string
+          family_id: string | null
           id: string
           income_amount: number
           month_year: string
@@ -513,6 +536,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          family_id?: string | null
           id?: string
           income_amount?: number
           month_year: string
@@ -521,13 +545,22 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          family_id?: string | null
           id?: string
           income_amount?: number
           month_year?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "monthly_incomes_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_analytics: {
         Row: {
@@ -926,6 +959,7 @@ export type Database = {
           created_at: string
           date: string
           description: string | null
+          family_id: string | null
           fund_type: string | null
           id: string
           is_deleted_by_user: boolean | null
@@ -937,6 +971,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          family_id?: string | null
           fund_type?: string | null
           id?: string
           is_deleted_by_user?: boolean | null
@@ -948,12 +983,21 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string | null
+          family_id?: string | null
           fund_type?: string | null
           id?: string
           is_deleted_by_user?: boolean | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wallet_additions_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

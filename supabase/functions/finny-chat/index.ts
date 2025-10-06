@@ -108,7 +108,8 @@ serve(async (req) => {
       currencyCode = 'USD',
       userName,
       userAge,
-      userGender
+      userGender,
+      familyId = null
     } = requestBody;
 
     // Validate required fields
@@ -320,6 +321,9 @@ Current Budgets: ${JSON.stringify(budgets)}`;
       try {
         const actionData = JSON.parse(actionMatch[1]);
         console.log("Processing action:", actionData);
+        
+        // Add family_id to action data
+        actionData.family_id = familyId;
         
         const actionResult = await processAction(actionData, userId, supabase);
         processedActions.push({ action: actionData, result: actionResult });

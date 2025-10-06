@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAllCategories } from "@/hooks/useAllCategories";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
@@ -60,6 +61,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { categories } = useAllCategories();
+  const { activeFamilyId } = useFamilyContext();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<GoalFormData>({
     resolver: zodResolver(goalSchema),
@@ -89,6 +91,7 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
         user_id: user.id,
         // Progress always starts at 0 and will be calculated automatically
         current_amount: goal?.current_amount || 0,
+        family_id: activeFamilyId || null,
       };
 
       if (goal) {

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useCurrency } from '@/hooks/use-currency';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 import { formatCurrency } from '@/utils/formatters';
 import { validateCategory } from '../utils/categoryUtils';
 import { CurrencyCode } from '@/utils/currencyUtils';
@@ -14,6 +15,9 @@ export const useFinnyChat = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>('USD'); // Default fallback
+  
+  // Get family context
+  const { activeFamilyId } = useFamilyContext();
   
   // Get user authentication with error handling
   const auth = useAuth();
@@ -90,6 +94,7 @@ export const useFinnyChat = () => {
     isInitialized,
     user,
     currencyCode,
+    activeFamilyId,
     resetChat,
     setIsOpen
   };

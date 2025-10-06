@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFamilyContext } from '@/hooks/useFamilyContext';
 
 export type LoanType = 'i_gave' | 'i_took';
 export type LoanStatus = 'active' | 'partially_paid' | 'fully_paid';
@@ -37,13 +38,21 @@ interface LoanFilters {
 }
 
 export const useLoans = (filters?: LoanFilters) => {
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
+  
   return useQuery({
-    queryKey: ['loans', filters],
+    queryKey: ['loans', filters, activeFamilyId],
     queryFn: async () => {
       let query = supabase
         .from('loans')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      }
 
       if (filters?.type) {
         query = query.eq('loan_type', filters.type);
@@ -52,6 +61,8 @@ export const useLoans = (filters?: LoanFilters) => {
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
+
+      query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
 
@@ -62,12 +73,23 @@ export const useLoans = (filters?: LoanFilters) => {
 };
 
 export const useLoanSummary = () => {
+  const { activeFamilyId, isPersonalMode } = useFamilyContext();
+  
   return useQuery({
-    queryKey: ['loan-summary'],
+    queryKey: ['loan-summary', activeFamilyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('loans')
         .select('loan_type, remaining_amount, status');
+
+      // Filter by family context
+      if (isPersonalMode) {
+        query = query.is('family_id', null);
+      } else if (activeFamilyId) {
+        query = query.eq('family_id', activeFamilyId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -95,6 +117,7 @@ export const useLoanSummary = () => {
 
 export const useAddLoan = () => {
   const queryClient = useQueryClient();
+  const { activeFamilyId } = useFamilyContext();
 
   return useMutation({
     mutationFn: async (input: LoanInput) => {
@@ -110,6 +133,7 @@ export const useAddLoan = () => {
         note: input.note || null,
         remaining_amount: input.amount,
         status: 'active' as LoanStatus,
+        family_id: activeFamilyId || null,
       };
 
       const { data: loan, error } = await supabase

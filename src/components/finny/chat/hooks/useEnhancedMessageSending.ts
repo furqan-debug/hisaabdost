@@ -21,6 +21,7 @@ interface UseEnhancedMessageSendingProps {
   setIsTyping: (typing: boolean) => void;
   setInsights: (insights: any) => void;
   currencyCode: string;
+  familyId?: string | null;
 }
 
 export const useEnhancedMessageSending = ({
@@ -30,7 +31,8 @@ export const useEnhancedMessageSending = ({
   setIsLoading,
   setIsTyping,
   setInsights,
-  currencyCode
+  currencyCode,
+  familyId
 }: UseEnhancedMessageSendingProps) => {
   const [newMessage, setNewMessage] = useState('');
   const { user } = useAuth();
@@ -72,7 +74,8 @@ export const useEnhancedMessageSending = ({
           currencyCode,
           userName: user.user_metadata?.full_name,
           userAge: user.user_metadata?.age,
-          userGender: user.user_metadata?.gender
+          userGender: user.user_metadata?.gender,
+          familyId: familyId || null
         }
       });
 

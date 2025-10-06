@@ -60,6 +60,7 @@ export async function addExpense(
     payment: action.paymentMethod || "Cash", // Use 'payment' not 'payment_method'
     notes: action.notes || null,
     is_recurring: action.isRecurring || false,
+    family_id: action.family_id || null,
   };
 
   console.log(`Inserting expense with data:`, JSON.stringify(expenseData, null, 2));

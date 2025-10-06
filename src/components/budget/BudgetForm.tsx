@@ -33,6 +33,7 @@ import { useBudgetValidation } from "@/hooks/useBudgetValidation";
 import { useBudgetQueries } from "@/hooks/useBudgetQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -63,6 +64,7 @@ export function BudgetForm({
   const { currencyCode } = useCurrency();
   const { categories, loading } = useAllCategories();
   const queryClient = useQueryClient();
+  const { activeFamilyId } = useFamilyContext();
   
   // Get all budgets for validation
   const { budgets = [] } = useBudgetQueries(new Date());
@@ -113,6 +115,7 @@ export function BudgetForm({
         period: formData.period,
         carry_forward: formData.carry_forward,
         user_id: user.id,
+        family_id: activeFamilyId || null,
       };
 
       if (budget) {
@@ -132,8 +135,8 @@ export function BudgetForm({
 
       // Immediately invalidate and refresh budget queries
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['budgets', user.id] }),
-        queryClient.refetchQueries({ queryKey: ['budgets', user.id] })
+        queryClient.invalidateQueries({ queryKey: ['budgets'] }),
+        queryClient.refetchQueries({ queryKey: ['budgets'] })
       ]);
 
       // Dispatch budget update event for other components
