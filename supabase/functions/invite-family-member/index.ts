@@ -69,45 +69,92 @@ serve(async (req) => {
       );
     }
 
-    // Generate secure token
-    const token = crypto.randomUUID();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
-
-    // Create invitation using admin client to bypass RLS
-    const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from("family_invitations")
-      .insert({
-        family_id: familyId,
-        email,
-        invited_by: user.id,
-        token,
-        expires_at: expiresAt.toISOString(),
-        status: "pending",
-      })
-      .select()
-      .single();
-
-    if (inviteError) {
-      console.error("Error creating invitation:", inviteError);
+    // Check if user with this email exists in auth.users
+    const { data: existingUser, error: userLookupError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (userLookupError) {
+      console.error("Error looking up user:", userLookupError);
       return new Response(
-        JSON.stringify({ error: "Failed to create invitation" }),
+        JSON.stringify({ error: "Failed to verify email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get family name for email
+    const invitedUser = existingUser.users.find(u => u.email === email);
+
+    if (!invitedUser) {
+      return new Response(
+        JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if user is already a member of this family
+    const { data: existingMember } = await supabaseAdmin
+      .from("family_members")
+      .select("id, is_active")
+      .eq("family_id", familyId)
+      .eq("user_id", invitedUser.id)
+      .single();
+
+    if (existingMember) {
+      if (existingMember.is_active) {
+        return new Response(
+          JSON.stringify({ error: "This user is already a member of the family" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } else {
+        // Reactivate the member
+        const { error: reactivateError } = await supabaseAdmin
+          .from("family_members")
+          .update({ is_active: true })
+          .eq("id", existingMember.id);
+
+        if (reactivateError) {
+          console.error("Error reactivating member:", reactivateError);
+          return new Response(
+            JSON.stringify({ error: "Failed to add member" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, message: "Member added successfully!" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Add user directly to family_members
+    const { data: newMember, error: addMemberError } = await supabaseAdmin
+      .from("family_members")
+      .insert({
+        family_id: familyId,
+        user_id: invitedUser.id,
+        role: "member",
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (addMemberError) {
+      console.error("Error adding member:", addMemberError);
+      return new Response(
+        JSON.stringify({ error: "Failed to add member" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get family name for notification email
     const { data: family } = await supabaseAdmin
       .from("families")
       .select("name")
       .eq("id", familyId)
       .single();
 
-    // Send invitation email via Resend
+    // Send notification email via Resend (optional)
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (RESEND_API_KEY) {
-      const inviteUrl = `${req.headers.get("origin")}/app/family/accept?token=${token}`;
-      
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -117,21 +164,19 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Hisaab Dost <onboarding@resend.dev>",
           to: [email],
-          subject: `You've been invited to join ${family?.name || 'a family'} on Hisaab Dost`,
+          subject: `You've been added to ${family?.name || 'a family'} on Hisaab Dost`,
           html: `
-            <h1>Family Invitation</h1>
-            <p>You've been invited to join ${family?.name || 'a family'} on Hisaab Dost!</p>
-            <p>Click the link below to accept the invitation:</p>
-            <p><a href="${inviteUrl}" style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px;">Accept Invitation</a></p>
-            <p>This invitation will expire in 7 days.</p>
-            <p>If you don't have an account yet, you'll be able to create one when you accept the invitation.</p>
+            <h1>Welcome to ${family?.name || 'a family'}!</h1>
+            <p>You've been added to ${family?.name || 'a family'} on Hisaab Dost!</p>
+            <p>You can now access shared family expenses and budgets.</p>
+            <p><a href="${req.headers.get("origin")}/app/family" style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px;">Go to Family</a></p>
           `,
         }),
       });
     }
 
     return new Response(
-      JSON.stringify({ success: true, invitation }),
+      JSON.stringify({ success: true, message: "Member added successfully!", member: newMember }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

@@ -86,15 +86,17 @@ export default function Family() {
         body: { familyId: currentFamily.id, email },
       });
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
       return data;
     },
     onSuccess: () => {
-      toast.success('Invitation sent successfully!');
+      toast.success('Member added successfully!');
       setInviteEmail('');
       setInviteDialogOpen(false);
+      refetch();
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to send invitation');
+      toast.error(error.message || 'Failed to add member');
       console.error('Invite member error:', error);
     },
   });
@@ -245,15 +247,15 @@ export default function Family() {
                 <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Invite Member
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Member
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Invite Family Member</DialogTitle>
+                      <DialogTitle>Add Family Member</DialogTitle>
                       <DialogDescription>
-                        Send an invitation email to add a new member to {currentFamily.name}
+                        Enter the email address of an existing Hisaab Dost user to add them to {currentFamily.name}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -272,7 +274,7 @@ export default function Family() {
                         onClick={() => inviteMemberMutation.mutate(inviteEmail)}
                         disabled={!inviteEmail.trim() || inviteMemberMutation.isPending}
                       >
-                        Send Invitation
+                        Add Member
                       </Button>
                     </div>
                   </DialogContent>
