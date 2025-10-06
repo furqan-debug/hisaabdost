@@ -10,6 +10,7 @@ import { saveExpenseOffline } from "@/services/offlineExpenseService";
 import { updateExpenseCache } from "@/utils/expenseCacheUtils";
 import { logExpenseActivity } from "@/services/activityLogService";
 import { useCarryoverAdjustment } from "@/hooks/useCarryoverAdjustment";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 
 interface UseExpenseSubmitProps extends UseExpenseFormProps {
   formData: ExpenseFormData;
@@ -27,6 +28,7 @@ export function useExpenseSubmit({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { adjustCarryover } = useCarryoverAdjustment();
+  const { activeFamilyId } = useFamilyContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +57,8 @@ export function useExpenseSubmit({
           payment: formData.paymentMethod,
           notes: formData.notes,
           is_recurring: formData.isRecurring,
-          receipt_url: formData.receiptUrl
+          receipt_url: formData.receiptUrl,
+          family_id: activeFamilyId
         };
 
         const { error } = await supabase

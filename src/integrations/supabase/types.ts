@@ -94,7 +94,9 @@ export type Database = {
           carry_forward: boolean | null
           category: string
           created_at: string
+          family_id: string | null
           id: string
+          is_shared: boolean | null
           monthly_income: number
           period: string
           user_id: string
@@ -104,7 +106,9 @@ export type Database = {
           carry_forward?: boolean | null
           category: string
           created_at?: string
+          family_id?: string | null
           id?: string
+          is_shared?: boolean | null
           monthly_income?: number
           period: string
           user_id: string
@@ -114,12 +118,22 @@ export type Database = {
           carry_forward?: boolean | null
           category?: string
           created_at?: string
+          family_id?: string | null
           id?: string
+          is_shared?: boolean | null
           monthly_income?: number
           period?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budgets_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -182,6 +196,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          family_id: string | null
           id: string
           is_recurring: boolean | null
           notes: string | null
@@ -195,6 +210,7 @@ export type Database = {
           created_at?: string
           date: string
           description: string
+          family_id?: string | null
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
@@ -208,6 +224,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          family_id?: string | null
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
@@ -215,7 +232,115 @@ export type Database = {
           receipt_url?: string | null
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
         Relationships: []
+      }
+      family_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          family_id: string
+          id: string
+          invited_by: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          family_id: string
+          id?: string
+          invited_by: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          invited_by?: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invitations_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          family_id: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          role: Database["public"]["Enums"]["family_role"]
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: Database["public"]["Enums"]["family_role"]
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: Database["public"]["Enums"]["family_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       goals: {
         Row: {
@@ -528,9 +653,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_family_id: string | null
           age: number | null
           avatar_url: string | null
           created_at: string
+          display_name: string | null
           full_name: string | null
           gender: string | null
           id: string
@@ -546,9 +673,11 @@ export type Database = {
           preferred_currency: string | null
         }
         Insert: {
+          active_family_id?: string | null
           age?: number | null
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           full_name?: string | null
           gender?: string | null
           id: string
@@ -564,9 +693,11 @@ export type Database = {
           preferred_currency?: string | null
         }
         Update: {
+          active_family_id?: string | null
           age?: number | null
           avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           full_name?: string | null
           gender?: string | null
           id?: string
@@ -581,7 +712,15 @@ export type Database = {
           onboarding_completed_at?: string | null
           preferred_currency?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_active_family_id_fkey"
+            columns: ["active_family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -816,13 +955,32 @@ export type Database = {
         Args: { category_filter?: string }
         Returns: string
       }
+      get_user_family_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          family_id: string
+        }[]
+      }
+      has_family_role: {
+        Args: {
+          _family_id: string
+          _role: Database["public"]["Enums"]["family_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_family_member: {
+        Args: { _family_id: string; _user_id: string }
+        Returns: boolean
+      }
       trigger_daily_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      family_role: "owner" | "admin" | "member"
+      invitation_status: "pending" | "accepted" | "expired" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -949,6 +1107,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      family_role: ["owner", "admin", "member"],
+      invitation_status: ["pending", "accepted", "expired", "rejected"],
+    },
   },
 } as const

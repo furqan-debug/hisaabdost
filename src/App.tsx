@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/lib/auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { MonthProvider } from "@/hooks/use-month-context";
+import { FamilyProvider } from "@/hooks/useFamilyContext";
 import { FinnyProvider } from "@/components/finny/FinnyProvider";
 import { OfflineProvider } from "@/components/offline/OfflineProvider";
 import { AppOpenAd } from "@/components/ads/AppOpenAd";
@@ -22,6 +23,7 @@ import Analytics from "@/pages/Analytics";
 import AppGuide from "@/pages/AppGuide";
 import Budget from "@/pages/Budget";
 import Expenses from "@/pages/Expenses";
+import Family from "@/pages/Family";
 import FinnyChat from "@/pages/FinnyChat";
 import Goals from "@/pages/Goals";
 import History from "@/pages/History";
@@ -78,7 +80,8 @@ const App = () => {
                 <OfflineProvider>
                   <CurrencyProvider>
                     <MonthProvider>
-                      <FinnyProvider>
+                      <FamilyProvider>
+                        <FinnyProvider>
                       <BrowserRouter>
                       <Routes>
                         {/* Welcome route for first-time visitors */}
@@ -101,6 +104,7 @@ const App = () => {
           <Route path="goals" element={<Goals />} />
           <Route path="loans" element={<Loans />} />
           <Route path="history" element={<History />} />
+          <Route path="family" element={<Family />} />
           <Route path="settings" element={<Settings />} />
           <Route path="finny-chat" element={<FinnyChat />} />
           <Route path="guide" element={<AppGuide />} />
@@ -123,7 +127,8 @@ const App = () => {
                     
                     <Toaster />
                     <Sonner />
-                    </FinnyProvider>
+                      </FinnyProvider>
+                    </FamilyProvider>
                   </MonthProvider>
                 </CurrencyProvider>
               </OfflineProvider>

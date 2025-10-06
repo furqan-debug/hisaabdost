@@ -38,7 +38,8 @@ export async function saveExpenseOffline(expense: Expense): Promise<boolean> {
       payment: expense.paymentMethod || "Cash",
       notes: expense.notes || "",
       is_recurring: expense.isRecurring || false,
-      receipt_url: expense.receiptUrl || null
+      receipt_url: expense.receiptUrl || null,
+      family_id: (expense as any).familyId || null
     };
 
     // Add timeout for mobile networks (5 seconds)

@@ -18,7 +18,7 @@ interface ExpenseItem {
 /**
  * Save a single expense to the database
  */
-export async function saveExpense(expense: Expense): Promise<boolean> {
+export async function saveExpense(expense: Expense, familyId?: string | null): Promise<boolean> {
   try {
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser();
@@ -37,7 +37,8 @@ export async function saveExpense(expense: Expense): Promise<boolean> {
       payment: expense.paymentMethod || "Cash",
       notes: expense.notes || "",
       is_recurring: expense.isRecurring || false,
-      receipt_url: expense.receiptUrl || null
+      receipt_url: expense.receiptUrl || null,
+      family_id: familyId || null
     };
 
     const { error } = await supabase

@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Expense } from "@/components/expenses/types";
 import { formatCurrency } from "@/utils/formatters";
 import { ViewReceiptDialog } from "./ViewReceiptDialog";
+import { MemberAvatar } from "@/components/family/MemberAvatar";
+import { useFamilyContext } from "@/hooks/useFamilyContext";
 import { useState, useCallback, memo } from "react";
 import { useCurrency } from "@/hooks/use-currency";
 import {
@@ -17,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface ExpenseRowProps {
-  expense: Expense;
+  expense: Expense & { user_id?: string };
   selectedExpenses: Set<string>;
   toggleExpenseSelection: (id: string) => void;
   onDelete: (id: string) => void;
@@ -33,6 +35,7 @@ export const ExpenseRow = memo(function ExpenseRow({
   const isSelected = selectedExpenses.has(expense.id);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const { currencyCode } = useCurrency();
+  const { isPersonalMode } = useFamilyContext();
   
   const handleViewReceipt = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -67,7 +70,12 @@ export const ExpenseRow = memo(function ExpenseRow({
         {format(new Date(expense.date), "MMM dd, yyyy")}
       </TableCell>
       <TableCell>
-        {expense.description}
+        <div className="flex items-center gap-2">
+          {!isPersonalMode && expense.user_id && (
+            <MemberAvatar userId={expense.user_id} size="sm" />
+          )}
+          <span>{expense.description}</span>
+        </div>
       </TableCell>
       <TableCell>
         <span className="font-mono">
