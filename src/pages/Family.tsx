@@ -43,13 +43,28 @@ export default function Family() {
   const createFamilyMutation = useMutation({
     mutationFn: async (name: string) => {
       if (!user?.id) throw new Error('Not authenticated');
-      const { data, error } = await supabase
+      
+      // Create the family
+      const { data: family, error: familyError } = await supabase
         .from('families')
         .insert({ name, created_by: user.id })
         .select()
         .single();
-      if (error) throw error;
-      return data;
+      
+      if (familyError) throw familyError;
+      
+      // Add the creator as owner
+      const { error: memberError } = await supabase
+        .from('family_members')
+        .insert({
+          family_id: family.id,
+          user_id: user.id,
+          role: 'owner'
+        });
+      
+      if (memberError) throw memberError;
+      
+      return family;
     },
     onSuccess: () => {
       toast.success('Family created successfully!');
