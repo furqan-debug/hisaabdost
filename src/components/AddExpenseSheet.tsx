@@ -37,6 +37,7 @@ const AddExpenseSheet = ({
   const initialFileProcessed = useRef(false);
   const initialFileFingerprint = useRef<string | null>(null);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [isAutoProcessing, setIsAutoProcessing] = useState(false);
   const { setModalOpen } = useModalState();
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -67,8 +68,8 @@ const AddExpenseSheet = ({
   // For upload/camera modes, we should show scan dialog when file is available
   const shouldShowScanDialog = !isManualEntry && initialFile && filePreviewUrl && !processingComplete;
   
-  // Only show the manual form for true manual entry, or when processing is complete and we need to show results
-  const shouldShowManualForm = isManualEntry && !shouldShowScanDialog;
+  // Only show the manual form for true manual entry, never during auto-processing
+  const shouldShowManualForm = isManualEntry && !shouldShowScanDialog && !isAutoProcessing;
 
   // Ensure the sheet restores correctly when the keyboard hides
   useKeyboardViewportFix({ sheetRef, scrollRef, enabled: !!open });
@@ -90,6 +91,11 @@ const AddExpenseSheet = ({
       console.log(`Processing initial file: ${initialFile.name} (${fingerprint})`);
       processingFiles.set(fingerprint, true);
       initialFileProcessed.current = true;
+      
+      // Mark as auto-processing to prevent manual form from showing
+      if (initialCaptureMode !== 'manual') {
+        setIsAutoProcessing(true);
+      }
       
       try {
         // Create a preview URL for the dialog
@@ -145,6 +151,7 @@ const AddExpenseSheet = ({
         initialFileFingerprint.current = null;
       }
       setProcessingComplete(false);
+      setIsAutoProcessing(false);
     }
   }, [open]);
 
