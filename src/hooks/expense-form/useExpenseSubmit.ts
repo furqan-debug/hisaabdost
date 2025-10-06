@@ -102,6 +102,9 @@ export function useExpenseSubmit({
         await queryClient.invalidateQueries({ 
           queryKey: ['expenses']
         });
+        await queryClient.invalidateQueries({ 
+          queryKey: ['activity_logs']
+        });
 
         // Dispatch multiple events to ensure all components update
         window.dispatchEvent(new CustomEvent('expense-updated', { 
@@ -164,6 +167,9 @@ export function useExpenseSubmit({
           // Invalidate ALL expense-related queries to ensure budget page updates
           await queryClient.invalidateQueries({ 
             queryKey: ['expenses']
+          });
+          await queryClient.invalidateQueries({ 
+            queryKey: ['activity_logs']
           });
 
           // Dispatch multiple events to ensure all components update immediately
