@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, Wallet, MoreHorizontal, Bot } from "lucide-react";
+import { Home, Receipt, Wallet, MoreHorizontal } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -83,9 +83,9 @@ export function BottomNavigation() {
               <Button
                 onClick={openChat}
                 size="icon"
-                className="h-14 w-14 -mt-6 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 hover:from-purple-400 hover:via-purple-500 hover:to-indigo-500 shadow-2xl shadow-purple-500/50 hover:shadow-purple-400/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-purple-400/30 transition-all duration-200 animate-pulse-subtle border-2 border-white/30"
+                className="h-14 w-14 -mt-6 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 hover:from-purple-400 hover:via-purple-500 hover:to-indigo-500 shadow-2xl shadow-purple-500/50 hover:shadow-purple-400/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-purple-400/30 transition-all duration-200 animate-pulse-subtle border-2 border-white/30 p-2.5"
               >
-                <Bot className="h-6 w-6" strokeWidth={2.5} />
+                <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
               </Button>
             </div>
           
