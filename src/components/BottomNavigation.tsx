@@ -52,58 +52,93 @@ export function BottomNavigation() {
             <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
           </Button>
 
-          <div className="relative grid grid-cols-4 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
-            {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <div key={item.label} className="flex items-center justify-center">
-                {item.path ? (
-                  <Link to={item.path} className="w-full flex items-center justify-center">
-                    <div className={cn(
-                      "relative flex flex-col items-center justify-center gap-1.5 px-2 py-2 transition-all duration-200 active:scale-95",
-                      isActive && "scale-105"
-                    )}>
-                      <item.icon 
-                        size={24} 
-                        strokeWidth={isActive ? 2.5 : 2} 
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive ? "text-primary" : "text-muted-foreground"
-                        )}
-                      />
-                      <span className={cn(
-                        "text-[11px] font-medium leading-none transition-colors duration-200",
+          <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
+            {/* First 2 items: Home, Expenses */}
+            {navItems.slice(0, 2).map((item) => {
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <Link key={item.label} to={item.path!} className="flex items-center justify-center">
+                  <div className={cn(
+                    "relative flex flex-col items-center justify-center gap-1 w-full py-2 transition-all duration-200 active:scale-95",
+                    isActive && "scale-105"
+                  )}>
+                    <item.icon 
+                      size={22} 
+                      strokeWidth={isActive ? 2.5 : 2} 
+                      className={cn(
+                        "transition-all duration-200",
                         isActive ? "text-primary" : "text-muted-foreground"
-                      )}>
-                        {item.label}
-                      </span>
-                      {/* Active indicator line */}
-                      {isActive && (
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full animate-scale-in" />
                       )}
-                    </div>
-                  </Link>
-                ) : (
-                  <button 
-                    onClick={() => setMoreSheetOpen(true)}
-                    className="w-full flex items-center justify-center"
-                  >
-                    <div className="relative flex flex-col items-center justify-center gap-1.5 px-2 py-2 transition-all duration-200 active:scale-95">
-                      <item.icon 
-                        size={24} 
-                        strokeWidth={2} 
-                        className="text-muted-foreground transition-all duration-200"
-                      />
-                      <span className="text-[11px] font-medium leading-none text-muted-foreground transition-colors duration-200">
-                        {item.label}
-                      </span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            );
-          })}
+                    />
+                    <span className={cn(
+                      "text-[10px] font-medium leading-none transition-colors duration-200",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+            
+            {/* Center column - visual space for FAB */}
+            <div className="flex items-center justify-center" />
+            
+            {/* Last 2 items: Budget, More */}
+            {navItems.slice(2, 4).map((item) => {
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <div key={item.label} className="flex items-center justify-center">
+                  {item.path ? (
+                    <Link to={item.path} className="flex items-center justify-center w-full">
+                      <div className={cn(
+                        "relative flex flex-col items-center justify-center gap-1 w-full py-2 transition-all duration-200 active:scale-95",
+                        isActive && "scale-105"
+                      )}>
+                        <item.icon 
+                          size={22} 
+                          strokeWidth={isActive ? 2.5 : 2} 
+                          className={cn(
+                            "transition-all duration-200",
+                            isActive ? "text-primary" : "text-muted-foreground"
+                          )}
+                        />
+                        <span className={cn(
+                          "text-[10px] font-medium leading-none transition-colors duration-200",
+                          isActive ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {item.label}
+                        </span>
+                        {isActive && (
+                          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+                        )}
+                      </div>
+                    </Link>
+                  ) : (
+                    <button 
+                      onClick={() => setMoreSheetOpen(true)}
+                      className="flex items-center justify-center w-full"
+                    >
+                      <div className="relative flex flex-col items-center justify-center gap-1 w-full py-2 transition-all duration-200 active:scale-95">
+                        <item.icon 
+                          size={22} 
+                          strokeWidth={2} 
+                          className="text-muted-foreground transition-all duration-200"
+                        />
+                        <span className="text-[10px] font-medium leading-none text-muted-foreground transition-colors duration-200">
+                          {item.label}
+                        </span>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
