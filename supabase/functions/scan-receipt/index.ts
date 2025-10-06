@@ -96,18 +96,28 @@ serve(async (req) => {
   - Use common receipt patterns (e.g., typical item names, price formats) to fill gaps
   - Indicate uncertainty in confidence score but ALWAYS provide an interpretation
   
+  MULTI-SCRIPT & HANDWRITTEN SUPPORT:
+  - Recognize and extract text from ALL scripts: Latin, Arabic, Urdu, Persian, Chinese, Japanese, Korean, Hindi, Bengali, Thai, Cyrillic, and any other writing system
+  - Handle right-to-left (RTL) languages like Arabic, Urdu, and Hebrew
+  - Process HANDWRITTEN amounts and text - analyze pen strokes, context, and number formations
+  - For handwritten numbers, consider local digit forms (e.g., Eastern Arabic numerals ٠١٢٣)
+  - Recognize receipts with tabular formats containing columns like: Item/Description, Quantity/تعداد, Rate/ریٹ, Amount/قیمت, Price, etc.
+  - Extract data from table rows even when headers are in non-Latin scripts
+  
   EXTRACTION REQUIREMENTS:
   - Extract ALL items with individual prices, quantities, and descriptions
+  - For receipts with MINIMAL ITEMIZATION (single-line purchases, fuel receipts, service bills, utility payments): Create ONE comprehensive item entry using the merchant name/service type and the total amount (e.g., "KPK Petroleum Purchase", "Medical Clinic Service", "Grocery Store Purchase")
   - Extract merchant/store name (or indicate "Unknown Store" if illegible)
   - Extract date and time (or indicate "Date unclear" if illegible)
   - Extract subtotal, tax, fees, tips, and final total
   - Extract payment method if visible
   - Format all amounts as numbers (e.g., "12.99" not "$12.99")
-  - Assign appropriate categories to items based on description
+  - Assign appropriate categories to items based on description (Food, Transport, Healthcare, Shopping, Utilities, etc.)
   
   CONFIDENCE SCORING:
   - Set confidence to 0.9+ for clear, readable receipts
   - Set confidence to 0.6-0.8 for partially damaged/faded receipts where most info is extractable
+  - Set confidence to 0.7-0.8 for non-Latin scripts and handwritten receipts when total is clearly visible
   - Set confidence to 0.3-0.5 for heavily damaged receipts where significant interpretation is needed
   - NEVER return confidence below 0.3 - always provide your best attempt
   
