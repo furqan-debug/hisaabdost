@@ -17,11 +17,12 @@ export class MonthlyIncomeService {
     try {
       console.log("Fetching monthly income for:", userId, monthKey, "Mode:", isPersonalMode ? 'personal' : `family: ${familyId}`);
       
-      // First check the new monthly_incomes table
-      let monthlyIncomeData, monthlyError;
+      // Execute query based on family context - separate queries to avoid TS type issues
+      let monthlyIncomeData: any = null;
+      let monthlyError: any = null;
       
-      // Filter by family context
       if (isPersonalMode) {
+        // Personal mode: user's data only, no family
         const result = await supabase
           .from('monthly_incomes')
           .select('income_amount')
@@ -32,15 +33,19 @@ export class MonthlyIncomeService {
         monthlyIncomeData = result.data;
         monthlyError = result.error;
       } else if (familyId) {
+        // Family mode: family's data only
+        const familyIdValue = String(familyId);
+        // @ts-ignore - TypeScript has issues with deep type inference on family_id filtering
         const result = await supabase
           .from('monthly_incomes')
           .select('income_amount')
-          .eq('family_id', familyId as string)
+          .eq('family_id', familyIdValue)
           .eq('month_year', monthKey)
           .maybeSingle();
         monthlyIncomeData = result.data;
         monthlyError = result.error;
       } else {
+        // Fallback: user's data
         const result = await supabase
           .from('monthly_incomes')
           .select('income_amount')

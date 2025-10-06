@@ -23,10 +23,12 @@ export function useWalletQueries(selectedMonth?: Date) {
 
       console.log('🔄 Fetching wallet additions for selected month:', firstDayOfMonth, "Mode:", isPersonalMode ? 'personal' : `family: ${activeFamilyId}`);
       
-      let data, error;
+      // Execute query based on family context - separate queries to avoid TS type issues
+      let data: any = null;
+      let error: any = null;
       
-      // Filter by family context
       if (isPersonalMode) {
+        // Personal mode: user's data only, no family
         const result = await supabase
           .from('wallet_additions')
           .select('*')
@@ -39,10 +41,13 @@ export function useWalletQueries(selectedMonth?: Date) {
         data = result.data;
         error = result.error;
       } else if (activeFamilyId) {
+        // Family mode: family's data only
+        const familyIdValue = String(activeFamilyId);
+        // @ts-ignore - TypeScript has issues with deep type inference on family_id filtering
         const result = await supabase
           .from('wallet_additions')
           .select('*')
-          .eq('family_id', activeFamilyId as string)
+          .eq('family_id', familyIdValue)
           .gte('date', firstDayOfMonth)
           .lte('date', lastDayOfMonth)
           .eq('is_deleted_by_user', false)
@@ -50,6 +55,7 @@ export function useWalletQueries(selectedMonth?: Date) {
         data = result.data;
         error = result.error;
       } else {
+        // Fallback: user's data
         const result = await supabase
           .from('wallet_additions')
           .select('*')
@@ -87,10 +93,12 @@ export function useWalletQueries(selectedMonth?: Date) {
 
       console.log('🔄 Fetching all wallet additions');
       
-      let data, error;
+      // Execute query based on family context - separate queries to avoid TS type issues
+      let data: any = null;
+      let error: any = null;
       
-      // Filter by family context
       if (isPersonalMode) {
+        // Personal mode: user's data only, no family
         const result = await supabase
           .from('wallet_additions')
           .select('*')
@@ -101,15 +109,19 @@ export function useWalletQueries(selectedMonth?: Date) {
         data = result.data;
         error = result.error;
       } else if (activeFamilyId) {
+        // Family mode: family's data only
+        const familyIdValue = String(activeFamilyId);
+        // @ts-ignore - TypeScript has issues with deep type inference on family_id filtering
         const result = await supabase
           .from('wallet_additions')
           .select('*')
-          .eq('family_id', activeFamilyId as string)
+          .eq('family_id', familyIdValue)
           .eq('is_deleted_by_user', false)
           .order('date', { ascending: false });
         data = result.data;
         error = result.error;
       } else {
+        // Fallback: user's data
         const result = await supabase
           .from('wallet_additions')
           .select('*')
