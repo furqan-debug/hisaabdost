@@ -20,6 +20,20 @@ export interface ScanResult {
 }
 
 /**
+ * Validates if a date string is a valid date
+ */
+function isValidDate(dateString?: string): boolean {
+  if (!dateString || 
+      dateString.toLowerCase().includes('unclear') || 
+      dateString.toLowerCase().includes('unknown') ||
+      dateString.toLowerCase().includes('invalid')) {
+    return false;
+  }
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date.getTime());
+}
+
+/**
  * Process scan results and save expenses to database
  */
 export async function processScanResults(
@@ -66,7 +80,9 @@ export async function processScanResults(
         user_id: user.id,
         amount: amount,
         description: item.description.trim() || 'Store Purchase',
-        date: item.date || scanResults.date || new Date().toISOString().split('T')[0],
+        date: isValidDate(item.date) ? item.date : 
+              (isValidDate(scanResults.date) ? scanResults.date : 
+               new Date().toISOString().split('T')[0]),
         category: item.category || 'Other',
         payment: item.paymentMethod || 'Card',
         notes: scanResults.merchant ? `From ${scanResults.merchant}` : null,
