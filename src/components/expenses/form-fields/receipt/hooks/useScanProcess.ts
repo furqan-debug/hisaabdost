@@ -74,21 +74,36 @@ export function useScanProcess(props: ScanProcessProps) {
           try {
             updateProgress(30, "Processing with OCR...");
             
-            // Use the unique timestamp to prevent duplicate scans
-            formData.set('timestamp', uniqueTimestamp);
+            // Convert file to base64 for JSON payload
+            const fileToSend = formData.get('file') as File;
+            if (!fileToSend) {
+              throw new Error('No file found in FormData');
+            }
             
-            // Add request metadata for tracking
-            formData.set('retry', '0'); // Initial attempt
-            formData.set('enhanced', 'true');
+            // Read file as base64
+            const arrayBuffer = await fileToSend.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            const base64File = btoa(binary);
             
-            // IMPORTANT: DO NOT manually set the Content-Type header for multipart/form-data
+            // Create JSON payload as expected by edge function
+            const payload = {
+              file: base64File,
+              fileName: fileToSend.name,
+              fileType: fileToSend.type,
+              fileSize: fileToSend.size,
+              timestamp: uniqueTimestamp,
+              requestId: scanId
+            };
+            
+            console.log(`Sending file to scan-receipt: ${fileToSend.name} (${(fileToSend.size / 1024).toFixed(1)}KB)`);
+            
             const { data, error } = await supabase.functions.invoke('scan-receipt', {
               method: 'POST',
-              body: formData,
-              headers: {
-                'X-Processing-Level': 'high',
-                'X-Request-ID': scanId // Add a request ID for tracking
-              }
+              body: payload
             });
             
             clearTimeout(timeoutId);
