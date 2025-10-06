@@ -48,45 +48,24 @@ export default function Family() {
         throw new Error('You must be logged in to create a family');
       }
 
-      // Verify session is active
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error('Session error:', sessionError);
-        throw new Error('Your session has expired. Please log in again.');
-      }
-
       console.log('Creating family with user:', user.id);
       
-      // Create the family
-      const { data: family, error: familyError } = await supabase
-        .from('families')
-        .insert({ name, created_by: user.id })
-        .select()
-        .single();
+      // Call the edge function to create the family
+      const { data, error } = await supabase.functions.invoke('create-family', {
+        body: { name },
+      });
       
-      if (familyError) {
-        console.error('Family creation error:', familyError);
-        throw familyError;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to create family');
       }
 
-      console.log('Family created, adding owner:', family.id);
-      
-      // Add the creator as owner
-      const { error: memberError } = await supabase
-        .from('family_members')
-        .insert({
-          family_id: family.id,
-          user_id: user.id,
-          role: 'owner'
-        });
-      
-      if (memberError) {
-        console.error('Member creation error:', memberError);
-        throw memberError;
+      if (!data?.family) {
+        throw new Error('No family data returned');
       }
 
-      console.log('Family and owner created successfully');
-      return family;
+      console.log('Family created successfully:', data.family);
+      return data.family;
     },
     onSuccess: () => {
       toast.success('Family created successfully!');

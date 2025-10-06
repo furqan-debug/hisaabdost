@@ -1,5 +1,8 @@
 project_id = "bklfolfivjonzpprytkz"
 
+[functions.create-family]
+verify_jwt = true
+
 [functions.invite-family-member]
 verify_jwt = true
 
