@@ -45,9 +45,9 @@ export function BottomNavigation() {
   
   return (
     <>
-      <div className="fixed left-0 right-0 bottom-0 z-50 w-full" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="relative bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t-2 border-border/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
-          <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2">
+      <div className="fixed left-0 right-0 bottom-0 z-50 w-full overflow-visible pt-8" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="relative bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t-2 border-border/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] overflow-visible">
+          <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
             {/* First 2 items: Home, Expenses */}
             {navItems.slice(0, 2).map((item) => {
               const isActive = location.pathname === item.path;
