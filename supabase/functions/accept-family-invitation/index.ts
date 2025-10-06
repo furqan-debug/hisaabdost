@@ -102,6 +102,7 @@ serve(async (req) => {
         family_id: invitation.family_id,
         user_id: user.id,
         role: "member",
+        is_active: true,
       });
 
     if (addMemberError) {
@@ -111,6 +112,12 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Update user's active family to the newly joined family
+    await supabaseClient
+      .from("profiles")
+      .update({ active_family_id: invitation.family_id })
+      .eq("id", user.id);
 
     // Update invitation status
     await supabaseClient
@@ -122,8 +129,11 @@ serve(async (req) => {
     await supabaseClient.from("activity_logs").insert({
       user_id: user.id,
       action_type: "family_joined",
-      action_description: `Joined family via invitation`,
-      metadata: { family_id: invitation.family_id },
+      action_description: `Joined family: ${invitation.family_name || 'Unknown'}`,
+      metadata: { 
+        family_id: invitation.family_id,
+        invited_by: invitation.invited_by,
+      },
     });
 
     return new Response(

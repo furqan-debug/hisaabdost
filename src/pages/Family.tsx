@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Plus, Mail, Trash2, Crown, Shield, User } from 'lucide-react';
+import { PendingInvitations } from '@/components/family/PendingInvitations';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -190,6 +191,9 @@ export default function Family() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Pending Invitations */}
+        <PendingInvitations />
 
         {/* Your Families */}
         <Card>

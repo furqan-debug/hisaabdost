@@ -28,6 +28,9 @@ export interface FamilyInvitation {
   family_id: string;
   email: string;
   invited_by: string;
+  invited_user_id?: string;
+  inviter_name?: string;
+  family_name?: string;
   token: string;
   status: InvitationStatus;
   expires_at: string;
