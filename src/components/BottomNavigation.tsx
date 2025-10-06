@@ -47,9 +47,9 @@ export function BottomNavigation() {
           <Button
             onClick={openChat}
             size="icon"
-            className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-16 w-16 rounded-full bg-gradient-to-br from-primary/90 to-primary shadow-2xl shadow-primary/40 hover:shadow-primary/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/30 transition-all duration-200 border-4 border-background p-3 z-10"
+            className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-20 w-20 rounded-full bg-white dark:bg-white shadow-2xl shadow-primary/50 hover:shadow-primary/70 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/40 transition-all duration-200 border-4 border-primary/30 dark:border-primary/50 p-3.5 z-10"
           >
-            <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain drop-shadow-lg" />
+            <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
           </Button>
 
           <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
