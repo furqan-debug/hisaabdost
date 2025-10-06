@@ -12,12 +12,25 @@ serve(async (req) => {
   }
 
   try {
+    // Client for auth verification
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
           headers: { Authorization: req.headers.get("Authorization")! },
+        },
+      }
+    );
+
+    // Admin client for database operations
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
         },
       }
     );
@@ -61,8 +74,8 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
 
-    // Create invitation
-    const { data: invitation, error: inviteError } = await supabaseClient
+    // Create invitation using admin client to bypass RLS
+    const { data: invitation, error: inviteError } = await supabaseAdmin
       .from("family_invitations")
       .insert({
         family_id: familyId,
@@ -84,7 +97,7 @@ serve(async (req) => {
     }
 
     // Get family name for email
-    const { data: family } = await supabaseClient
+    const { data: family } = await supabaseAdmin
       .from("families")
       .select("name")
       .eq("id", familyId)
