@@ -35,8 +35,8 @@ const FinnyButton = ({ onClick, isOpen }: FinnyButtonProps) => {
 
 
 
-  // Don't show the button when chat is open, user is not authenticated, or not ready
-  if (isOpen || !user || !isReady) return null;
+  // Hide the floating button completely - Finny is now in the bottom navigation
+  return null;
 
   return (
     <motion.div

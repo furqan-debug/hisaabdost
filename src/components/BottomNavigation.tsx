@@ -1,11 +1,11 @@
-
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, Wallet, MoreHorizontal, Plus } from "lucide-react";
+import { Home, Receipt, Wallet, MoreHorizontal, Bot } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MoreSheet } from "./navigation/MoreSheet";
+import { useFinny } from "@/components/finny";
 
 const navItems = [{
   icon: Home,
@@ -30,18 +30,13 @@ export function BottomNavigation() {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const { openChat } = useFinny();
   
   useEffect(() => {
     setMounted(true);
   }, []);
   
   if (!isMobile || !mounted) return null;
-
-  const handleAddExpense = () => {
-    window.dispatchEvent(new CustomEvent('open-expense-form', { 
-      detail: { mode: 'manual' }
-    }));
-  };
   
   return (
     <>
@@ -83,14 +78,14 @@ export function BottomNavigation() {
               );
             })}
             
-            {/* Center FAB embedded in navbar */}
+            {/* Center Finny AI FAB embedded in navbar */}
             <div className="flex items-center justify-center relative">
               <Button
-                onClick={handleAddExpense}
+                onClick={openChat}
                 size="icon"
-                className="h-14 w-14 -mt-6 rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-2xl shadow-primary/50 hover:shadow-primary/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/30 transition-all duration-200 animate-pulse-subtle"
+                className="h-14 w-14 -mt-6 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 hover:from-purple-400 hover:via-purple-500 hover:to-indigo-500 shadow-2xl shadow-purple-500/50 hover:shadow-purple-400/60 hover:scale-110 active:scale-95 active:ring-4 active:ring-purple-400/30 transition-all duration-200 animate-pulse-subtle border-2 border-white/30"
               >
-                <Plus className="h-6 w-6" strokeWidth={2.5} />
+                <Bot className="h-6 w-6" strokeWidth={2.5} />
               </Button>
             </div>
           
