@@ -221,7 +221,7 @@ const AddExpenseSheet = ({
     }
   };
 
-  // Handle scan completion by closing the sheet after a delay
+  // Handle scan completion by closing the sheet immediately
   const handleScanSuccess = () => {
     setProcessingComplete(true);
     
@@ -231,15 +231,13 @@ const AddExpenseSheet = ({
       onAddExpense();
     }
     
-    // Close the sheet automatically after a delay
-    setTimeout(() => {
-      if (onOpenChange) {
-        onOpenChange(false);
-      }
-      if (onClose) {
-        onClose();
-      }
-    }, 1500);
+    // Close the sheet immediately - toast already provides feedback
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
