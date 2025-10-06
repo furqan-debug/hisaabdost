@@ -59,7 +59,7 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                     "active:scale-90 w-[100px] h-[100px]",
                     isSelected 
                       ? "bg-primary/5 scale-105 shadow-lg" 
-                      : "bg-card/50 hover:bg-card hover:scale-102"
+                      : "bg-card hover:bg-card/80 hover:scale-102"
                   )}
                 >
                   <div 
@@ -68,27 +68,29 @@ export function CategoryIconPicker({ value, onChange }: CategoryIconPickerProps)
                       isSelected ? "shadow-md" : ""
                     )}
                     style={{ 
-                      backgroundColor: isSelected ? cat.color : `${cat.color}20`,
-                      opacity: isSelected ? 1 : 0.6,
+                      backgroundColor: isSelected ? cat.color : `${cat.color}50`,
                     }}
                   >
                     {Icon ? (
                       <Icon 
                         className="w-7 h-7 transition-all duration-300" 
                         style={{ 
-                          color: "#fff",
+                          color: isSelected ? "#fff" : "#333",
                           strokeWidth: isSelected ? 2.5 : 2
                         }} 
                       />
                     ) : (
                       <div
-                        className="w-5 h-5 rounded-full bg-white"
+                        className={cn(
+                          "w-5 h-5 rounded-full",
+                          isSelected ? "bg-white" : "bg-foreground/30"
+                        )}
                       />
                     )}
                   </div>
                   <span className={cn(
                     "text-[11px] text-center leading-tight line-clamp-2 w-full px-1 transition-all duration-300",
-                    isSelected ? "font-bold" : "font-medium text-muted-foreground/70"
+                    isSelected ? "font-bold" : "font-medium text-foreground/80"
                   )}
                   style={{
                     color: isSelected ? cat.color : undefined
