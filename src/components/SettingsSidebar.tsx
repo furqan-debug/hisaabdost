@@ -128,9 +128,9 @@ const SettingsSidebar = ({
   console.log('Current currency code in settings:', currencyCode, 'version:', version);
   return <div className="h-full flex flex-col bg-background">
       {/* Header with proper safe area handling */}
-      <div className="px-6 py-6 border-b safe-area-top">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+      <div className="px-4 py-4 border-b safe-area-top">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <Settings className="w-4 h-4 text-primary" />
           </div>
           <div>
@@ -145,14 +145,14 @@ const SettingsSidebar = ({
         <div className="space-y-0">
 
           {/* Currency */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
               <h2 className="font-medium">Currency</h2>
             </div>
-            <div className="ml-11">
+            <div className="ml-9">
               <p className="text-xs text-muted-foreground mb-2">Current: {currencyCode}</p>
               <Select value={currencyCode} onValueChange={handleCurrencyChange} key={`currency-select-${currencyCode}-${version}`}>
                 <SelectTrigger className="w-full bg-background border-input">
@@ -173,9 +173,9 @@ const SettingsSidebar = ({
           </div>
 
           {/* Income Settings - Improved UI/UX */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                 <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
@@ -184,7 +184,7 @@ const SettingsSidebar = ({
               </div>
             </div>
             
-            <div className="ml-11 space-y-4">
+            <div className="ml-9 space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label htmlFor="income-date-select" className="text-sm font-medium text-foreground">
@@ -231,14 +231,14 @@ const SettingsSidebar = ({
           </div>
 
           {/* Categories */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
                 <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h2 className="font-medium">Categories</h2>
             </div>
-            <div className="ml-11">
+            <div className="ml-9">
               <Button variant="ghost" className="w-full justify-start" onClick={handleManageCategoriesClick}>
                 <Tag className="w-4 h-4 mr-3" />
                 Manage Categories
@@ -247,14 +247,14 @@ const SettingsSidebar = ({
           </div>
 
           {/* Wallet Settings */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                 <ArrowRightLeft className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <h2 className="font-medium">Wallet</h2>
             </div>
-            <div className="ml-11">
+            <div className="ml-9">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="font-medium">Auto Carryover</p>
@@ -268,14 +268,14 @@ const SettingsSidebar = ({
           </div>
 
           {/* Theme - Updated to work properly with ThemeProvider */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
                 <Palette className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
               <h2 className="font-medium">Appearance</h2>
             </div>
-            <div className="ml-11 space-y-2">
+            <div className="ml-9 space-y-2">
               <Button variant={theme === 'light' ? 'default' : 'ghost'} className="w-full justify-start" onClick={() => setTheme('light')}>
                 <Sun className="w-4 h-4 mr-3" />
                 Light
@@ -292,14 +292,14 @@ const SettingsSidebar = ({
           </div>
 
           {/* Help & Support */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h2 className="font-medium">Help & Support</h2>
             </div>
-            <div className="ml-11 space-y-2">
+            <div className="ml-9 space-y-2">
               <Button variant="ghost" className="w-full justify-start" onClick={handleAppGuideClick}>
                 <BookOpen className="w-4 h-4 mr-3" />
                 App Guide
@@ -308,14 +308,14 @@ const SettingsSidebar = ({
           </div>
 
           {/* Activity */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
                 <History className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
               <h2 className="font-medium">Activity</h2>
             </div>
-            <div className="ml-11 space-y-2">
+            <div className="ml-9 space-y-2">
               <Button variant="ghost" className="w-full justify-start" onClick={handleMonthlySummaryClick}>
                 <History className="w-4 h-4 mr-3" />
                 Monthly Summary
@@ -328,16 +328,16 @@ const SettingsSidebar = ({
           </div>
 
           {/* Account */}
-          <div className="p-6 safe-area-bottom my-0 py-[15px]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900/20 flex items-center justify-center">
+          <div className="p-4 safe-area-bottom my-0 py-[15px]">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-slate-50 dark:bg-slate-900/20 flex items-center justify-center">
                 <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
               </div>
               <h2 className="font-medium">Account</h2>
             </div>
             
             {/* User Info */}
-            <div className="ml-11 mb-4">
+            <div className="ml-9 mb-4">
               <div className="p-3 rounded-lg bg-muted/50 border">
                 <p className="text-sm font-medium truncate">
                   {getDisplayName()}
@@ -349,7 +349,7 @@ const SettingsSidebar = ({
             </div>
 
             {/* Sign Out */}
-            <div className="ml-11">
+            <div className="ml-9">
               <Button variant="destructive" className="w-full justify-start" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-3" />
                 Sign Out
