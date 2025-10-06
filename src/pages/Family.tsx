@@ -42,7 +42,20 @@ export default function Family() {
 
   const createFamilyMutation = useMutation({
     mutationFn: async (name: string) => {
-      if (!user?.id) throw new Error('Not authenticated');
+      // Explicit authentication check
+      if (!user?.id) {
+        console.error('User not authenticated:', user);
+        throw new Error('You must be logged in to create a family');
+      }
+
+      // Verify session is active
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError);
+        throw new Error('Your session has expired. Please log in again.');
+      }
+
+      console.log('Creating family with user:', user.id);
       
       // Create the family
       const { data: family, error: familyError } = await supabase
@@ -51,7 +64,12 @@ export default function Family() {
         .select()
         .single();
       
-      if (familyError) throw familyError;
+      if (familyError) {
+        console.error('Family creation error:', familyError);
+        throw familyError;
+      }
+
+      console.log('Family created, adding owner:', family.id);
       
       // Add the creator as owner
       const { error: memberError } = await supabase
@@ -62,8 +80,12 @@ export default function Family() {
           role: 'owner'
         });
       
-      if (memberError) throw memberError;
-      
+      if (memberError) {
+        console.error('Member creation error:', memberError);
+        throw memberError;
+      }
+
+      console.log('Family and owner created successfully');
       return family;
     },
     onSuccess: () => {
