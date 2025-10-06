@@ -36,8 +36,10 @@ serve(async (req) => {
     );
 
     const { familyId, email } = await req.json();
+    console.log("📨 Invite member request:", { familyId, email });
 
     if (!familyId || !email) {
+      console.error("❌ Missing required fields:", { familyId, email });
       return new Response(
         JSON.stringify({ error: "Family ID and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -47,13 +49,17 @@ serve(async (req) => {
     // Get current user
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
+      console.error("❌ User authentication failed:", userError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("✅ User authenticated:", user.id);
+
     // Check if user has permission to invite (owner or admin)
+    console.log("🔐 Checking permissions for user:", user.id, "in family:", familyId);
     const { data: membership, error: membershipError } = await supabaseClient
       .from("family_members")
       .select("role")
@@ -62,6 +68,18 @@ serve(async (req) => {
       .eq("is_active", true)
       .single();
 
+    if (membershipError) {
+      console.error("❌ Membership query error:", membershipError);
+    }
+    
+    if (!membership) {
+      console.error("❌ User is not a member of this family");
+    }
+    
+    if (membership && membership.role !== "owner" && membership.role !== "admin") {
+      console.error("❌ User role insufficient:", membership.role);
+    }
+
     if (membershipError || !membership || (membership.role !== "owner" && membership.role !== "admin")) {
       return new Response(
         JSON.stringify({ error: "You don't have permission to invite members" }),
@@ -69,25 +87,49 @@ serve(async (req) => {
       );
     }
 
-    // Get user by listing all users and filtering by email
-    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    console.log("✅ Permission check passed. User role:", membership.role);
+
+    // Find user by email using auth.admin.listUsers with page size limit
+    console.log("🔍 Looking up user by email:", email);
+    let userToAdd = null;
+    let page = 1;
+    const perPage = 100;
     
-    if (listError) {
-      console.error("Error listing users:", listError);
-      return new Response(
-        JSON.stringify({ error: "Failed to verify email" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Search through pages (max 10 pages to prevent infinite loops)
+    while (!userToAdd && page <= 10) {
+      console.log(`📄 Searching page ${page}...`);
+      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage,
+      });
+      
+      if (listError) {
+        console.error("❌ Error listing users:", listError);
+        return new Response(
+          JSON.stringify({ error: "Failed to verify email" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      userToAdd = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      
+      if (!userToAdd && users.length < perPage) {
+        // We've reached the last page
+        break;
+      }
+      
+      page++;
     }
 
-    const userToAdd = users.find(u => u.email === email);
-
     if (!userToAdd) {
+      console.error("❌ User not found:", email);
       return new Response(
         JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("✅ User found:", userToAdd.id);
 
     // Get inviter's profile information
     const { data: inviterProfile } = await supabaseAdmin
