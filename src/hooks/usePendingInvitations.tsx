@@ -18,9 +18,15 @@ export const usePendingInvitations = () => {
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ["pending-invitations"],
     queryFn: async () => {
+      console.log("🔔 Fetching pending invitations...");
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      console.log("🔔 User for invitations:", user?.id);
+      if (!user) {
+        console.log("🔔 No user found, returning empty array");
+        return [];
+      }
 
+      console.log("🔔 Querying family_invitations table...");
       const { data, error } = await supabase
         .from("family_invitations")
         .select("id, family_id, family_name, inviter_name, invited_by, expires_at, created_at")
@@ -29,7 +35,11 @@ export const usePendingInvitations = () => {
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("🔔 Error fetching invitations:", error);
+        throw error;
+      }
+      console.log("🔔 Invitations fetched:", data?.length || 0, "invitations");
       return data as PendingInvitation[];
     },
   });

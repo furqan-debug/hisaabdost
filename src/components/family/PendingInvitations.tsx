@@ -6,7 +6,10 @@ import { UserPlus, Clock, Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const PendingInvitations = () => {
+  console.log("🔔 PendingInvitations component mounted");
   const { invitations, isLoading, acceptInvitation, rejectInvitation, isAccepting, isRejecting } = usePendingInvitations();
+  
+  console.log("🔔 PendingInvitations state:", { invitationsCount: invitations?.length, isLoading });
 
   if (isLoading) {
     return (
