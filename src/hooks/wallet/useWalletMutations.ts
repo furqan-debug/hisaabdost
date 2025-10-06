@@ -6,10 +6,12 @@ import { toast } from "@/components/ui/use-toast";
 import { logWalletActivity } from "@/services/activityLogService";
 import { WalletAdditionInput, WalletAddition } from "./types";
 import { offlineStorage } from "@/services/offlineStorageService";
+import { useCarryoverAdjustment } from "@/hooks/useCarryoverAdjustment";
 
 export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { adjustCarryover } = useCarryoverAdjustment();
 
   // Add funds mutation with immediate real-time updates
   const addFundsMutation = useMutation({
@@ -124,6 +126,12 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         // Continue even if activity logging fails
       }
       
+      // Check if carryover adjustment is needed (if manually adding funds to a past month)
+      if (data.date) {
+        const additionDate = new Date(data.date);
+        await adjustCarryover(additionDate);
+      }
+
       // Show appropriate toast message
       if (navigator.onLine && data.fund_type === 'manual') {
         toast({
@@ -221,6 +229,12 @@ export function useWalletMutations(allWalletAdditions: WalletAddition[]) {
         );
       } catch (error) {
         console.error('❌ Failed to log wallet activity:', error);
+      }
+
+      // Check if carryover adjustment is needed (if deleting from a past month)
+      if (deletedFund.date) {
+        const additionDate = new Date(deletedFund.date);
+        await adjustCarryover(additionDate);
       }
       
       toast({

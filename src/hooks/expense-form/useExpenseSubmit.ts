@@ -9,6 +9,7 @@ import { Expense } from "@/components/expenses/types";
 import { saveExpenseOffline } from "@/services/offlineExpenseService";
 import { updateExpenseCache } from "@/utils/expenseCacheUtils";
 import { logExpenseActivity } from "@/services/activityLogService";
+import { useCarryoverAdjustment } from "@/hooks/useCarryoverAdjustment";
 
 interface UseExpenseSubmitProps extends UseExpenseFormProps {
   formData: ExpenseFormData;
@@ -25,6 +26,7 @@ export function useExpenseSubmit({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { adjustCarryover } = useCarryoverAdjustment();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,6 +111,9 @@ export function useExpenseSubmit({
           detail: { timestamp: Date.now() } 
         }));
 
+        // Check if carryover adjustment is needed
+        await adjustCarryover(new Date(formData.date));
+
         if (onAddExpense) {
           onAddExpense(updatedExpense);
         }
@@ -171,6 +176,9 @@ export function useExpenseSubmit({
           window.dispatchEvent(new CustomEvent('finny-expense-added', { 
             detail: { expense: newExpense, source: 'manual-entry', timestamp: Date.now() } 
           }));
+
+          // Check if carryover adjustment is needed
+          await adjustCarryover(new Date(formData.date));
 
           if (onAddExpense) {
             onAddExpense(newExpense);
