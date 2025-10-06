@@ -40,13 +40,17 @@ export const logExpenseActivity = async (action: 'added' | 'updated' | 'deleted'
   amount: number;
   category: string;
   id?: string;
+  date?: string;
 }) => {
   await logActivity({
     action_type: 'expense',
     action_description: `${action.charAt(0).toUpperCase() + action.slice(1)} ${expense.description} expense`,
     amount: expense.amount,
     category: expense.category,
-    metadata: { expense_id: expense.id }
+    metadata: { 
+      expense_id: expense.id,
+      expense_date: expense.date // Store the actual expense date
+    }
   });
 };
 

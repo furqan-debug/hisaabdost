@@ -54,7 +54,8 @@ export function useExpenseDelete() {
           description: expense.description,
           amount: expense.amount,
           category: expense.category,
-          id: expense.id
+          id: expense.id,
+          date: expense.date
         });
       } catch (logError) {
         console.error('Failed to log expense deletion activity:', logError);

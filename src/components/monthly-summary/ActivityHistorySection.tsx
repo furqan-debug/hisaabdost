@@ -108,8 +108,6 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
         .from('activity_logs')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', monthStart.toISOString())
-        .lte('created_at', monthEnd.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -117,8 +115,23 @@ export const ActivityHistorySection = ({ selectedMonth }: ActivityHistorySection
         throw error;
       }
       
-      console.log(`✅ Found ${data?.length || 0} activities for ${format(selectedMonth, 'yyyy-MM')}`);
-      setActivities(data || []);
+      // Filter activities by expense date (from metadata) or created_at for non-expense activities
+      const filteredData = (data || []).filter(activity => {
+        // For expense activities, use the expense_date from metadata
+        if (activity.action_type === 'expense' && activity.metadata) {
+          const metadata = activity.metadata as { expense_date?: string };
+          if (metadata.expense_date) {
+            const expenseDate = new Date(metadata.expense_date);
+            return expenseDate >= monthStart && expenseDate <= monthEnd;
+          }
+        }
+        // For other activities, use created_at
+        const activityDate = new Date(activity.created_at);
+        return activityDate >= monthStart && activityDate <= monthEnd;
+      });
+      
+      console.log(`✅ Found ${filteredData.length} activities for ${format(selectedMonth, 'yyyy-MM')}`);
+      setActivities(filteredData);
     } catch (error) {
       console.error('❌ Error fetching activities:', error);
     } finally {

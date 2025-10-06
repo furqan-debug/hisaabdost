@@ -83,7 +83,8 @@ export function useExpenseSubmit({
             description: updatedExpense.description,
             amount: updatedExpense.amount,
             category: updatedExpense.category,
-            id: updatedExpense.id
+            id: updatedExpense.id,
+            date: updatedExpense.date
           });
         } catch (logError) {
           console.error('Failed to log expense update activity:', logError);
@@ -149,7 +150,8 @@ export function useExpenseSubmit({
               description: newExpense.description,
               amount: newExpense.amount,
               category: newExpense.category,
-              id: newExpense.id
+              id: newExpense.id,
+              date: newExpense.date
             });
           } catch (logError) {
             console.error('Failed to log expense creation activity:', logError);
