@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/components/expenses/types";
 import { useExpenseFilter } from "@/hooks/use-expense-filter";
 import { useExpenseSelection } from "@/hooks/use-expense-selection";
@@ -10,27 +11,37 @@ import { exportExpensesToCSV, exportExpensesToPDF } from "@/utils/exportUtils";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseQueries } from "@/hooks/useExpenseQueries";
+import { useFinnyDataSync } from "@/hooks/useFinnyDataSync";
 
 const Expenses = () => {
+  const queryClient = useQueryClient();
   const { deleteExpense, deleteMultipleExpenses } = useExpenseDelete();
   const { selectedMonth, isLoading: isMonthDataLoading } = useMonthContext();
   const { expenses, isLoading: isExpensesLoading, refetch } = useExpenseQueries();
   
+  // Enable comprehensive data synchronization
+  useFinnyDataSync();
+  
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  // Listen for Finny expense additions to refresh the list
+  // Listen for expense-related events and invalidate cache
   useEffect(() => {
-    const handleExpensesUpdated = () => {
-      console.log('Expenses updated event received - refetching...');
+    const handleExpensesUpdated = async () => {
+      console.log('Expenses updated event received - invalidating and refetching...');
+      await queryClient.invalidateQueries({ queryKey: ['expenses'] });
       refetch();
     };
 
     window.addEventListener('expenses-updated', handleExpensesUpdated);
+    window.addEventListener('expense-added', handleExpensesUpdated);
+    window.addEventListener('expense-deleted', handleExpensesUpdated);
     
     return () => {
       window.removeEventListener('expenses-updated', handleExpensesUpdated);
+      window.removeEventListener('expense-added', handleExpensesUpdated);
+      window.removeEventListener('expense-deleted', handleExpensesUpdated);
     };
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
 
   const {
