@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export interface PendingInvitation {
   id: string;
@@ -14,6 +15,41 @@ export interface PendingInvitation {
 
 export const usePendingInvitations = () => {
   const queryClient = useQueryClient();
+
+  // Real-time subscription for invitation updates
+  useEffect(() => {
+    console.log("🔔 Setting up real-time subscription for invitations");
+    
+    const channel = supabase
+      .channel("family-invitations-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "family_invitations",
+        },
+        (payload) => {
+          console.log("🔔 Real-time invitation update:", payload);
+          // Refetch invitations when changes occur
+          queryClient.invalidateQueries({ queryKey: ["pending-invitations"] });
+          
+          // Show toast for new invitations
+          if (payload.eventType === "INSERT") {
+            toast({
+              title: "New Family Invitation",
+              description: "You have a new family invitation!",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log("🔔 Cleaning up real-time subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ["pending-invitations"],
@@ -46,11 +82,16 @@ export const usePendingInvitations = () => {
 
   const acceptInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
+      console.log("🚀 Accepting invitation:", invitationId);
       const { data, error } = await supabase.functions.invoke("accept-family-invitation", {
-        body: { token: invitationId },
+        body: { invitationId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Accept invitation error:", error);
+        throw error;
+      }
+      console.log("✅ Invitation accepted:", data);
       return data;
     },
     onSuccess: () => {

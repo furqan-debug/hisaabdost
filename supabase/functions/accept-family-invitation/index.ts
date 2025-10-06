@@ -22,11 +22,12 @@ serve(async (req) => {
       }
     );
 
-    const { token } = await req.json();
+    const { invitationId } = await req.json();
+    console.log("📨 Accept invitation request:", { invitationId });
 
-    if (!token) {
+    if (!invitationId) {
       return new Response(
-        JSON.stringify({ error: "Token is required" }),
+        JSON.stringify({ error: "Invitation ID is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -34,29 +35,25 @@ serve(async (req) => {
     // Get current user
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
+      console.error("❌ User authentication failed:", userError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get user email
-    const userEmail = user.email;
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: "User email not found" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    console.log("✅ User authenticated:", user.id);
 
     // Find and validate invitation
     const { data: invitation, error: inviteError } = await supabaseClient
       .from("family_invitations")
       .select("*")
-      .eq("token", token)
-      .eq("email", userEmail)
+      .eq("id", invitationId)
+      .eq("invited_user_id", user.id)
       .eq("status", "pending")
       .single();
+
+    console.log("🔍 Invitation lookup result:", { invitation, inviteError });
 
     if (inviteError || !invitation) {
       return new Response(
