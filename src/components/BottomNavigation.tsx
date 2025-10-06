@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, Receipt, Wallet, MoreHorizontal } from "lucide-react";
+import { Home, Receipt, Wallet, MoreHorizontal, Bot, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,13 @@ export function BottomNavigation() {
           <Button
             onClick={openChat}
             size="icon"
-            className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-20 w-20 rounded-full bg-white dark:bg-white shadow-2xl shadow-primary/50 hover:shadow-primary/70 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/40 transition-all duration-200 border-4 border-primary/30 dark:border-primary/50 p-3.5 z-10"
+            className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-20 w-20 rounded-full bg-gradient-to-br from-primary via-primary to-primary/90 shadow-2xl shadow-primary/50 hover:shadow-primary/70 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/40 transition-all duration-200 border-4 border-background p-0 z-10 overflow-hidden relative group"
           >
-            <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
+            {/* Sparkle effect in corner */}
+            <Sparkles className="absolute top-2 right-2 h-4 w-4 text-white opacity-80 animate-pulse" />
+            
+            {/* Bot icon */}
+            <Bot className="h-10 w-10 text-white drop-shadow-lg" strokeWidth={2.5} />
           </Button>
 
           <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
