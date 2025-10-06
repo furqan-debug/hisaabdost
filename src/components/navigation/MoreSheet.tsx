@@ -60,7 +60,11 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
       {/* Settings Sheet */}
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetContent side="left" className="w-[280px] p-0">
-          <SettingsSidebar isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <SettingsSidebar 
+            isOpen={settingsOpen} 
+            onClose={() => setSettingsOpen(false)}
+            onParentClose={() => onOpenChange(false)}
+          />
         </SheetContent>
       </Sheet>
     </>

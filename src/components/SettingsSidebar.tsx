@@ -16,10 +16,12 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 interface SettingsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onParentClose?: () => void;
 }
 const SettingsSidebar = ({
   isOpen,
-  onClose
+  onClose,
+  onParentClose
 }: SettingsSidebarProps) => {
   const {
     theme,
@@ -55,18 +57,22 @@ const SettingsSidebar = ({
   const handleMonthlySummaryClick = () => {
     navigate('/app/history');
     onClose();
+    onParentClose?.();
   };
   const handleManageFundsClick = () => {
     navigate('/app/manage-funds');
     onClose();
+    onParentClose?.();
   };
   const handleAppGuideClick = () => {
     navigate('/app/guide');
     onClose();
+    onParentClose?.();
   };
   const handleManageCategoriesClick = () => {
     navigate('/app/manage-categories');
     onClose();
+    onParentClose?.();
   };
   const handleSignOut = async () => {
     await signOut();
