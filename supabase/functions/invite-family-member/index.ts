@@ -70,8 +70,15 @@ serve(async (req) => {
     }
 
     // Check if user with this email exists in auth.users
-    const { data: existingUser, error: userLookupError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: invitedUser, error: userLookupError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
     
+    if (userLookupError && userLookupError.status === 404) {
+      return new Response(
+        JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (userLookupError) {
       console.error("Error looking up user:", userLookupError);
       return new Response(
@@ -80,21 +87,21 @@ serve(async (req) => {
       );
     }
 
-    const invitedUser = existingUser.users.find(u => u.email === email);
-
-    if (!invitedUser) {
+    if (!invitedUser || !invitedUser.user) {
       return new Response(
         JSON.stringify({ error: "This email is not registered on Hisaab Dost" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const userToAdd = invitedUser.user;
+
     // Check if user is already a member of this family
     const { data: existingMember } = await supabaseAdmin
       .from("family_members")
       .select("id, is_active")
       .eq("family_id", familyId)
-      .eq("user_id", invitedUser.id)
+      .eq("user_id", userToAdd.id)
       .single();
 
     if (existingMember) {
@@ -130,7 +137,7 @@ serve(async (req) => {
       .from("family_members")
       .insert({
         family_id: familyId,
-        user_id: invitedUser.id,
+        user_id: userToAdd.id,
         role: "member",
         is_active: true,
       })
