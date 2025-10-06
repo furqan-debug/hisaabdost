@@ -14,6 +14,9 @@ export interface ScanResult {
   merchant?: string;
   date?: string;  
   total?: string;
+  tax?: string;
+  subtotal?: string;
+  tip?: string;
   error?: string;
   warning?: string;
   isTimeout?: boolean;
@@ -99,6 +102,26 @@ export async function processScanResults(
 
       return expense;
     }).filter(expense => expense.amount > 0); // Only include expenses with valid amounts
+
+    // Add tax as separate item if present
+    if (scanResults.tax) {
+      const taxAmount = parseFloat(scanResults.tax);
+      if (!isNaN(taxAmount) && taxAmount > 0) {
+        expensesToInsert.push({
+          user_id: user.id,
+          amount: taxAmount,
+          description: 'Sales Tax',
+          date: isValidDate(scanResults.date) ? scanResults.date : 
+                new Date().toISOString().split('T')[0],
+          category: 'Other',
+          payment: scanResults.items?.[0]?.paymentMethod || 'Card',
+          notes: scanResults.merchant ? `Tax from ${scanResults.merchant}` : 'Tax from receipt',
+          is_recurring: false,
+          receipt_url: null
+        });
+        console.log(`📝 ProcessScanResults: Added tax item: ${taxAmount}`);
+      }
+    }
 
     if (expensesToInsert.length === 0) {
       console.error('❌ ProcessScanResults: No valid expenses to insert');
