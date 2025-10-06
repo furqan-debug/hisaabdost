@@ -2,15 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePendingInvitations } from "@/hooks/usePendingInvitations";
-import { UserPlus, Clock, Check, X, Loader2 } from "lucide-react";
+import { UserPlus, Clock, Check, X, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const PendingInvitations = () => {
   console.log("🔔 PendingInvitations component mounted");
-  const { invitations, isLoading, acceptInvitation, rejectInvitation, isAccepting, isRejecting } = usePendingInvitations();
+  const { invitations, isLoading, error, refetch, acceptInvitation, rejectInvitation, isAccepting, isRejecting } = usePendingInvitations();
   
-  console.log("🔔 PendingInvitations state:", { invitationsCount: invitations?.length, isLoading });
+  console.log("🔔 PendingInvitations state:", { invitationsCount: invitations?.length, isLoading, error });
 
   if (isLoading) {
     return (
@@ -18,6 +18,31 @@ export const PendingInvitations = () => {
         <CardContent className="pt-6 flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <p className="text-muted-foreground text-sm">Loading invitations...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    console.error("🔔 Error in PendingInvitations:", error);
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CardTitle>Error Loading Invitations</CardTitle>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {error instanceof Error ? error.message : "Failed to load invitations"}
+          </p>
         </CardContent>
       </Card>
     );
@@ -31,10 +56,21 @@ export const PendingInvitations = () => {
   return (
     <Card className="border-primary/20 bg-primary/5">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <UserPlus className="h-5 w-5 text-primary" />
-          <CardTitle>Family Invitations</CardTitle>
-          <Badge variant="secondary">{invitations.length}</Badge>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-primary" />
+            <CardTitle>Family Invitations</CardTitle>
+            <Badge variant="secondary">{invitations.length}</Badge>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </div>
         <CardDescription>
           You have pending invitations to join families

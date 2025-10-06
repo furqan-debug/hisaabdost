@@ -90,8 +90,9 @@ export default function Family() {
       if (data.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
-      toast.success('Member added successfully!');
+    onSuccess: (_, email) => {
+      toast.success(`Invitation sent to ${email}!`);
+      toast.info('They will see the invitation in their Family page', { duration: 4000 });
       setInviteEmail('');
       setInviteDialogOpen(false);
       refetch();

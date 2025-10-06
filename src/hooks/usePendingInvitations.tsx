@@ -30,7 +30,10 @@ export const usePendingInvitations = () => {
           table: "family_invitations",
         },
         (payload) => {
-          console.log("🔔 Real-time invitation update:", payload);
+          console.log("🔔 Real-time invitation update received:", payload);
+          console.log("🔔 Event type:", payload.eventType);
+          console.log("🔔 Payload data:", payload.new);
+          
           // Refetch invitations when changes occur
           queryClient.invalidateQueries({ queryKey: ["pending-invitations"] });
           
@@ -43,7 +46,9 @@ export const usePendingInvitations = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("🔔 Real-time subscription status:", status);
+      });
 
     return () => {
       console.log("🔔 Cleaning up real-time subscription");
@@ -51,18 +56,23 @@ export const usePendingInvitations = () => {
     };
   }, [queryClient]);
 
-  const { data: invitations = [], isLoading } = useQuery({
+  const { data: invitations = [], isLoading, error, refetch } = useQuery({
     queryKey: ["pending-invitations"],
     queryFn: async () => {
-      console.log("🔔 Fetching pending invitations...");
+      console.log("🔔 [QUERY] Starting to fetch pending invitations...");
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("🔔 User for invitations:", user?.id);
+      console.log("🔔 [QUERY] Current user:", user?.id, "Email:", user?.email);
+      
       if (!user) {
-        console.log("🔔 No user found, returning empty array");
+        console.log("🔔 [QUERY] No user authenticated, returning empty array");
         return [];
       }
 
-      console.log("🔔 Querying family_invitations table...");
+      console.log("🔔 [QUERY] Querying family_invitations table with filters:");
+      console.log("  - invited_user_id:", user.id);
+      console.log("  - status: pending");
+      console.log("  - expires_at > now()");
+      
       const { data, error } = await supabase
         .from("family_invitations")
         .select("id, family_id, family_name, inviter_name, invited_by, expires_at, created_at")
@@ -72,10 +82,16 @@ export const usePendingInvitations = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("🔔 Error fetching invitations:", error);
+        console.error("🔔 [QUERY] Error fetching invitations:", error);
+        console.error("🔔 [QUERY] Error details:", JSON.stringify(error, null, 2));
         throw error;
       }
-      console.log("🔔 Invitations fetched:", data?.length || 0, "invitations");
+      
+      console.log("🔔 [QUERY] Successfully fetched invitations:", data?.length || 0);
+      if (data && data.length > 0) {
+        console.log("🔔 [QUERY] Invitation details:", JSON.stringify(data, null, 2));
+      }
+      
       return data as PendingInvitation[];
     },
   });
@@ -140,6 +156,8 @@ export const usePendingInvitations = () => {
   return {
     invitations,
     isLoading,
+    error,
+    refetch,
     acceptInvitation: acceptInvitation.mutate,
     rejectInvitation: rejectInvitation.mutate,
     isAccepting: acceptInvitation.isPending,
