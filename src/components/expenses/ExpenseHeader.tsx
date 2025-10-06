@@ -4,12 +4,18 @@ import { Plus, Upload, Camera } from "lucide-react";
 import AddExpenseSheet from "@/components/AddExpenseSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ReceiptFileInput } from "@/components/expenses/form-fields/receipt/ReceiptFileInput";
 import { ExportActions } from "@/components/expenses/header/ExportActions";
 import { useReceiptCapture } from "@/hooks/useReceiptCapture";
 import { useSearchParams } from "react-router-dom";
+import { 
+  PageHeader, 
+  PageHeaderTitle, 
+  PageHeaderDescription 
+} from "@/components/ui/page-header";
+import { buttonVariants } from "@/utils/animations";
 
 interface ExpenseHeaderProps {
   selectedExpenses: Set<string>;
@@ -110,31 +116,17 @@ export function ExpenseHeader({
     setCaptureMode('manual');
   };
 
-  const buttonVariants = {
-    initial: { scale: 1 },
-    active: { 
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    },
-    hover: { 
-      scale: 1.03,
-      transition: { duration: 0.2 }
-    }
-  };
-
   return (
     <header className={cn(
       "space-y-3 mb-4",
       isMobile ? "px-1" : "flex justify-between items-center space-y-0"
     )}>
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Expenses
-        </h1>
-        <p className="text-sm text-muted-foreground">
+      <PageHeader variant="simple" animated={false}>
+        <PageHeaderTitle gradient animated={false}>Expenses</PageHeaderTitle>
+        <PageHeaderDescription animated={false}>
           Manage and analyze your expenses
-        </p>
-      </div>
+        </PageHeaderDescription>
+      </PageHeader>
       
       <div className={cn(
         "flex items-center gap-2",

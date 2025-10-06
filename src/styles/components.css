@@ -167,3 +167,21 @@
 .clean-button {
   @apply bg-primary text-white rounded-lg px-4 py-2 transition-all duration-200 hover:bg-primary/90 active:scale-[0.98];
 }
+
+/* Page Header Styles */
+.page-header-card {
+  @apply rounded-lg border border-border/50 bg-gradient-to-br from-background via-background to-muted/20 
+         backdrop-blur-md shadow-xl shadow-primary/10 
+         transition-all duration-300 hover:shadow-2xl hover:shadow-primary/15 hover:border-border/80;
+}
+
+.page-header-gradient-text {
+  @apply bg-gradient-to-r from-foreground via-foreground to-muted-foreground 
+         bg-clip-text text-transparent;
+}
+
+.page-header-badge {
+  @apply flex items-center gap-1.5 px-2.5 py-1.5 rounded-full 
+         bg-muted/50 border border-border/50 backdrop-blur-sm
+         transition-all duration-200 hover:bg-muted/70;
+}

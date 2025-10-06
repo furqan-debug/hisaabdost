@@ -2,6 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Download, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  PageHeader, 
+  PageHeaderTitle, 
+  PageHeaderDescription, 
+  PageHeaderActions 
+} from "@/components/ui/page-header";
 
 interface BudgetHeaderProps {
   onAddBudget: () => void;
@@ -13,16 +19,14 @@ export const BudgetHeader = ({ onAddBudget, onExport }: BudgetHeaderProps) => {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-1">
-      <div className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-bold text-primary">
-          My Budget
-        </h1>
-        <p className="text-muted-foreground text-sm md:text-base">
+      <PageHeader variant="simple">
+        <PageHeaderTitle gradient>My Budget</PageHeaderTitle>
+        <PageHeaderDescription>
           Track and manage your monthly spending plan.
-        </p>
-      </div>
+        </PageHeaderDescription>
+      </PageHeader>
       
-      <div className="flex items-center gap-3">
+      <PageHeaderActions>
         <Button 
           variant="outline" 
           onClick={onExport}
@@ -34,13 +38,13 @@ export const BudgetHeader = ({ onAddBudget, onExport }: BudgetHeaderProps) => {
         </Button>
         <Button 
           onClick={onAddBudget}
-          className="flex-1 sm:flex-none h-10 bg-primary hover:bg-primary/90"
+          className="flex-1 sm:flex-none h-10"
           size={isMobile ? "sm" : "default"}
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Budget
         </Button>
-      </div>
+      </PageHeaderActions>
     </div>
   );
 };

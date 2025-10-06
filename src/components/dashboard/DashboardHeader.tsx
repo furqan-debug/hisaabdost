@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useMonthContext } from "@/hooks/use-month-context";
 import { format } from "date-fns";
 import { Calendar, TrendingUp } from "lucide-react";
+import { PageHeaderBadge } from "@/components/ui/page-header";
 interface DashboardHeaderProps {
   isNewUser: boolean;
 }
@@ -23,7 +24,7 @@ export function DashboardHeader({
     duration: 0.5,
     ease: "easeOut"
   }} className="relative overflow-hidden mt-2">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm my-[-9px] py-px">
+      <Card className="page-header-card border border-border/50 backdrop-blur-md shadow-xl shadow-primary/10 hover:shadow-2xl hover:shadow-primary/15 hover:border-border/80">
         <CardContent className="py-2 md:py-4 px-3 md:px-4 relative">
           {/* Subtle background pattern */}
           <div className="absolute inset-0 opacity-5">
@@ -62,26 +63,18 @@ export function DashboardHeader({
                 y: 0
               }} transition={{
                 delay: 0.3
-              }} className="text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent leading-tight">
+              }} className="text-xl md:text-3xl lg:text-4xl font-bold page-header-gradient-text leading-tight">
                   Dashboard
                 </motion.h1>
               </div>
               
               {/* Date Badge */}
-              <motion.div className="flex items-center gap-1 md:gap-1.5 px-1.5 md:px-2.5 py-1 md:py-1.5 rounded-full bg-muted/50 border flex-shrink-0 ml-1 md:ml-2" initial={{
-              opacity: 0,
-              scale: 0.8
-            }} animate={{
-              opacity: 1,
-              scale: 1
-            }} transition={{
-              delay: 0.4
-            }}>
+              <PageHeaderBadge className="flex-shrink-0 ml-1 md:ml-2">
                 <Calendar className="h-2.5 w-2.5 md:h-3.5 md:w-3.5 text-muted-foreground" />
                 <span className="text-xs md:text-sm font-medium text-muted-foreground whitespace-nowrap">
                   {format(selectedMonth, 'MMM yyyy')}
                 </span>
-              </motion.div>
+              </PageHeaderBadge>
             </div>
             
             {/* Subtitle Section */}
