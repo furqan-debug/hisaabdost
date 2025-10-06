@@ -41,56 +41,19 @@ export function BottomNavigation() {
   return (
     <>
       <div className="fixed left-0 right-0 bottom-0 z-50 w-full overflow-visible pt-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="relative bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t-2 border-border/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] overflow-visible pt-10">
-          <div className="relative grid grid-cols-5 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
-            {/* First 2 items: Home, Expenses */}
-            {navItems.slice(0, 2).map((item) => {
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <div key={item.label} className="flex items-center justify-center">
-                  <Link to={item.path!} className="w-full flex items-center justify-center">
-                    <div className={cn(
-                      "relative flex flex-col items-center justify-center gap-1.5 px-2 py-2 transition-all duration-200 active:scale-95",
-                      isActive && "scale-105"
-                    )}>
-                      <item.icon 
-                        size={24} 
-                        strokeWidth={isActive ? 2.5 : 2} 
-                        className={cn(
-                          "transition-all duration-200",
-                          isActive ? "text-primary" : "text-muted-foreground"
-                        )}
-                      />
-                      <span className={cn(
-                        "text-[11px] font-medium leading-none transition-colors duration-200",
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      )}>
-                        {item.label}
-                      </span>
-                      {/* Active indicator line */}
-                      {isActive && (
-                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full animate-scale-in" />
-                      )}
-                    </div>
-                  </Link>
-                </div>
-              );
-            })}
-            
-            {/* Center Finny AI FAB embedded in navbar */}
-            <div className="flex items-center justify-center relative">
-              <Button
-                onClick={openChat}
-                size="icon"
-                className="h-16 w-16 -mt-12 rounded-full bg-white dark:bg-gray-900 shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/20 transition-all duration-200 border-4 border-primary/20 p-3"
-              >
-                <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
-              </Button>
-            </div>
+        <div className="relative bg-gradient-to-t from-background via-background/98 to-background/95 backdrop-blur-xl border-t-2 border-border/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] overflow-visible">
           
-          {/* Last 2 items: Budget, More */}
-          {navItems.slice(2, 4).map((item) => {
+          {/* Finny AI FAB - Absolutely positioned above navbar */}
+          <Button
+            onClick={openChat}
+            size="icon"
+            className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 h-16 w-16 rounded-full bg-white dark:bg-gray-900 shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:scale-110 active:scale-95 active:ring-4 active:ring-primary/20 transition-all duration-200 border-4 border-primary/20 p-3 z-10"
+          >
+            <img src="/lovable-uploads/865d9039-b9ca-4d0f-9e62-7321253ffafa.png" alt="Finny AI" className="w-full h-full object-contain" />
+          </Button>
+
+          <div className="relative grid grid-cols-4 h-16 items-center max-w-[480px] mx-auto px-2 overflow-visible">
+            {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             
             return (
